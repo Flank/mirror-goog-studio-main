@@ -1,0 +1,150 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal
+
+import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.sdk.SdkInfo
+import com.android.builder.sdk.TargetInfo
+import com.android.repository.Revision
+import com.android.sdklib.BuildToolInfo
+import com.android.sdklib.IAndroidTarget
+import com.android.utils.ILogger
+import com.google.common.base.Suppliers
+import org.gradle.api.Project
+import org.gradle.api.provider.Provider
+import java.io.File
+import java.util.function.Supplier
+
+// TODO: Remove open, make it an interface and move impl to a separate class.
+open class SdkComponents(
+    private val platformTargetHashSupplier: Supplier<String>,
+    private val buildToolRevisionSupplier: Supplier<Revision>,
+    private val fallbackSdkHandler: SdkHandler,
+    private val evalIssueReporter: EvalIssueReporter,
+    private val projectOptions: ProjectOptions,
+    private val logger: ILogger) {
+
+    private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
+
+    private fun runFallbackSdkHandler(): Pair<SdkInfo, TargetInfo>? {
+        val result = fallbackSdkHandler.initTarget(
+            checkNotNull(platformTargetHashSupplier.get()) {"Extension not initialized yet, couldn't access compileSdkVersion."},
+            checkNotNull(buildToolRevisionSupplier.get()) {"Extension not initialized yet, couldn't access buildToolsVersion."},
+            evalIssueReporter)
+        // TODO: sdk components downloads must be removed into it's own task when not running in sync
+        // mode.
+        fallbackSdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure(evalIssueReporter)
+        return result?.let { Pair(result.first, result.second) }
+    }
+
+    fun unload() {
+        fallbackSdkHandler.unload()
+        // Reset the memoized supplier.
+        fallbackResultsSupplier = Suppliers.memoize { runFallbackSdkHandler() }
+    }
+
+    // These old methods are expensive and require SDK Parsing or some kind of installation/download.
+    // TODO: Add mechanism to warn if those are called during configuration time.
+
+    fun installNdk(ndkHandler: NdkHandler) {
+        fallbackResultsSupplier.get() // SDK needs to be initialized in order to install to work.
+        fallbackSdkHandler.installNdk(ndkHandler)
+    }
+
+    fun installCmake(version: String) {
+        fallbackResultsSupplier.get() // SDK needs to be initialized in order to install to work.
+        fallbackSdkHandler.installCMake(version)
+    }
+
+    fun getSdkInfo(): SdkInfo? {
+        return fallbackResultsSupplier.get()?.first
+    }
+
+    fun getAdbExecutable(): File? {
+        return getSdkInfo()?.adb
+    }
+
+    fun getAnnotationsJar(): File? {
+        return getSdkInfo()?.annotationsJar
+    }
+
+    fun getTargetInfo(): TargetInfo? {
+        return  fallbackResultsSupplier.get()?.second
+    }
+
+    fun getTarget(): IAndroidTarget? {
+        return fallbackResultsSupplier.get()?.second?.target
+    }
+
+    fun getBuildToolsInfo(): BuildToolInfo? {
+        return fallbackResultsSupplier.get()?.second?.buildTools
+    }
+
+    // These old methods are less expensive and are computed on SdkHandler creation by navigating
+    // through the directories set by the user using the configuration mechanisms.
+
+    fun getSdkFolder(): File? {
+        return fallbackSdkHandler.sdkFolder
+    }
+
+    fun getNdkFolder(): File? {
+        return fallbackSdkHandler.ndkFolder
+    }
+
+    fun getCMakeExecutable(): File? {
+        return fallbackSdkHandler.cmakePathInLocalProp
+    }
+
+    fun getNdkSymlinkDirInLocalProp(): File? {
+        return fallbackSdkHandler.ndkSymlinkDirInLocalProp
+    }
+
+    // TODO: Do we need to unload() the loader used as fallback from SdkComponents?
+
+    // New Provider<> methods, so tasks can load everything lazily during execution.
+    // We should migrate all usages above to these ones.
+
+    fun getSdkInfoProvider(project: Project): Provider<SdkInfo> {
+        return project.providers.provider { getSdkInfo() }
+    }
+
+    fun getAdbExecutableProvider(project: Project): Provider<File> {
+        return project.providers.provider { getAdbExecutable() }
+    }
+
+    fun getAnnotationsJarProvider(project: Project): Provider<File> {
+        return project.providers.provider { getAnnotationsJar() }
+    }
+
+    fun getTargetInfoProvider(project: Project): Provider<TargetInfo> {
+        return project.providers.provider { getTargetInfo() }
+    }
+
+    fun getTargetProvider(project: Project): Provider<IAndroidTarget> {
+        return project.providers.provider { getTarget() }
+    }
+
+    fun getPathForTargetElementProvider(id: Int, project: Project): Provider<String> {
+        return project.providers.provider { getTarget()!!.getPath(id) }
+    }
+
+    fun getBuildToolInfoProvider(project: Project): Provider<BuildToolInfo> {
+        return project.providers.provider { getBuildToolsInfo() }
+    }
+}

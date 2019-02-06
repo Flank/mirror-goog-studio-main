@@ -46,6 +46,8 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.sdklib.BuildToolInfo;
+import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -62,6 +64,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
@@ -101,6 +104,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     @VisibleForTesting @Nullable Supplier<String> featureNameSupplier;
     @Nullable private FileCollection applicationIdOverride;
     @Nullable private FileCollection aapt2FromMaven;
+
+    private Provider<IAndroidTarget> androidTargetProvider;
+    private Provider<BuildToolInfo> buildToolInfoProvider;
 
     @Input
     public String getApplicationId() {
@@ -183,12 +189,12 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                                 .setDebuggable(debuggable)
                                 .setResourceOutputApk(resPackageFile)
                                 .setVariantType(variantType)
-                                .setAndroidTarget(builder.getTarget())
+                                .setAndroidTarget(androidTargetProvider.get())
                                 .build();
 
                 Aapt2ServiceKey aapt2ServiceKey =
                         Aapt2DaemonManagerService.registerAaptService(
-                                aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
+                                aapt2FromMaven, buildToolInfoProvider.get(), builder.getLogger());
                 Aapt2ProcessResourcesRunnable.Params params =
                         new Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, aaptConfig);
                 workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
@@ -347,6 +353,13 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             task.debuggable = config.getBuildType().isDebuggable();
             task.aaptOptions = scope.getGlobalScope().getExtension().getAaptOptions();
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
+
+            task.buildToolInfoProvider =
+                    scope.getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolInfoProvider(task.getProject());
+            task.androidTargetProvider =
+                    scope.getGlobalScope().getSdkComponents().getTargetProvider(task.getProject());
 
             // if BASE_FEATURE get the app ID from the app module
             if (variantType.isBaseModule() && variantType.isHybrid()) {

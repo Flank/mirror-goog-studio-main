@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -63,7 +62,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
@@ -77,7 +75,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                         project,
                         projectOptions,
                         globalScope,
-                        sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
@@ -104,7 +101,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -114,7 +110,6 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
                 projectOptions,
                 dataBindingBuilder,
                 androidConfig,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);

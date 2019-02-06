@@ -25,7 +25,6 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -51,7 +50,6 @@ import com.android.builder.core.LibraryRequest;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
@@ -116,8 +114,6 @@ public abstract class BaseExtension implements AndroidConfig {
     private final List<List<Object>> transformDependencies = Lists.newArrayList();
 
     protected final GlobalScope globalScope;
-
-    private final SdkHandler sdkHandler;
 
     private final DefaultConfig defaultConfig;
 
@@ -191,7 +187,6 @@ public abstract class BaseExtension implements AndroidConfig {
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
@@ -200,7 +195,6 @@ public abstract class BaseExtension implements AndroidConfig {
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isBaseModule) {
         this.globalScope = globalScope;
-        this.sdkHandler = sdkHandler;
         this.buildTypes = buildTypes;
         //noinspection unchecked
         this.productFlavors = productFlavors;
@@ -887,7 +881,7 @@ public abstract class BaseExtension implements AndroidConfig {
      * with the SDK Manager</a>.
      */
     public File getSdkDirectory() {
-        return sdkHandler.getSdkFolder();
+        return globalScope.getSdkComponents().getSdkFolder();
     }
 
     /**
@@ -900,30 +894,27 @@ public abstract class BaseExtension implements AndroidConfig {
      * the standalone NDK package</a>.
      */
     public File getNdkDirectory() {
-        return sdkHandler.getNdkFolder();
+        return globalScope.getSdkComponents().getNdkFolder();
     }
 
     @Override
     public List<File> getBootClasspath() {
-        if (!ensureTargetSetup()) {
-            // In sync mode where the SDK could not be installed.
-            return ImmutableList.of();
-        }
-
         boolean usingJava8 = compileOptions.getTargetCompatibility().isJava8Compatible();
         List<File> bootClasspath = Lists.newArrayListWithExpectedSize(usingJava8 ? 2 : 1);
         bootClasspath.addAll(
                 globalScope
                         .getAndroidBuilder()
                         .computeFilteredBootClasspath(
-                                globalScope.getExtension().getLibraryRequests()));
+                                globalScope.getSdkComponents().getTarget(),
+                                globalScope.getExtension().getLibraryRequests(),
+                                globalScope.getSdkComponents().getAnnotationsJar()));
 
         if (usingJava8) {
             bootClasspath.add(
                     new File(
                             globalScope
-                                    .getAndroidBuilder()
-                                    .getBuildToolInfo()
+                                    .getSdkComponents()
+                                    .getBuildToolsInfo()
                                     .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS)));
         }
 
@@ -936,7 +927,7 @@ public abstract class BaseExtension implements AndroidConfig {
      * (ADB)</a> executable from the Android SDK.
      */
     public File getAdbExecutable() {
-        return sdkHandler.getSdkInfo().getAdb();
+        return globalScope.getSdkComponents().getSdkInfo().getAdb();
     }
 
     /** This property is deprecated. Instead, use {@link #getAdbExecutable()}. */
@@ -1029,19 +1020,6 @@ public abstract class BaseExtension implements AndroidConfig {
     @Override
     public TestOptions getTestOptions() {
         return testOptions;
-    }
-
-    private boolean ensureTargetSetup() {
-        // check if the target has been set.
-        TargetInfo targetInfo = globalScope.getAndroidBuilder().getTargetInfo();
-        if (targetInfo == null) {
-            return sdkHandler.initTarget(
-                    getCompileSdkVersion(),
-                    buildToolsRevision,
-                    globalScope.getErrorHandler(),
-                    globalScope.getAndroidBuilder());
-        }
-        return true;
     }
 
     // For compatibility with LibraryExtension.

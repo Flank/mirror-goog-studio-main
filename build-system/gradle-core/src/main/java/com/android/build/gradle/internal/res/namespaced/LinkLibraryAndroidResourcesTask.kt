@@ -32,6 +32,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -77,6 +78,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputFile lateinit var staticLibApk: File private set
 
+    private lateinit var androidJarPathProvider: Provider<String>
+
     private val workers = Workers.getWorker(workerExecutor)
 
     @TaskAction
@@ -91,7 +94,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
         imports.addAll(sharedLibraryDependencies.files)
 
         val request = AaptPackageConfig(
-                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                androidJarPath = androidJarPathProvider.get(),
                 manifestFile = manifestFile.single(),
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
@@ -169,6 +172,8 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+
+            task.androidJarPathProvider = variantScope.globalScope.sdkComponents.getPathForTargetElementProvider(IAndroidTarget.ANDROID_JAR, task.project)
         }
     }
 

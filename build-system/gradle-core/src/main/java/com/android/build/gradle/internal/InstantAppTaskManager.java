@@ -46,7 +46,6 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
@@ -56,7 +55,6 @@ public class InstantAppTaskManager extends TaskManager {
                 projectOptions,
                 dataBindingBuilder,
                 extension,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 threadRecorder);

@@ -76,6 +76,7 @@ open class ProcessAndroidAppResourcesTask
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
+    private lateinit var androidJarSdkProvider: Provider<String>
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory lateinit var rClassSource: File private set
@@ -94,7 +95,7 @@ open class ProcessAndroidAppResourcesTask
         }
         staticLibraries.add(thisSubProjectStaticLibrary.single())
         val config = AaptPackageConfig(
-                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                androidJarPath = androidJarSdkProvider.get(),
                 manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
                 options = AaptOptions(null, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
@@ -182,6 +183,7 @@ open class ProcessAndroidAppResourcesTask
             task.resourceApUnderscore = resourceApUnderscore
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            task.androidJarSdkProvider = variantScope.globalScope.sdkComponents.getPathForTargetElementProvider(IAndroidTarget.ANDROID_JAR, task.project)
         }
     }
 

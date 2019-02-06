@@ -69,7 +69,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -79,7 +78,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 projectOptions,
                 dataBindingBuilder,
                 extension,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);
@@ -130,7 +128,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 variantScope,
                                 new ConnectedDeviceProvider(
-                                        sdkHandler.getSdkInfo().getAdb(),
+                                        () -> globalScope.getSdkComponents().getAdbExecutable(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(getLogger())),
                                 testData,

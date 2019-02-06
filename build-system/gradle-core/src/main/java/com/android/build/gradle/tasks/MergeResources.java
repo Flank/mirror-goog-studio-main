@@ -22,8 +22,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.DependecyResourcesComputer;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
@@ -33,7 +31,6 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -58,6 +55,7 @@ import com.android.ide.common.resources.SingleFileProcessor;
 import com.android.ide.common.vectordrawable.ResourcesNotSupportedException;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.Density;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableSet;
@@ -73,8 +71,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -125,6 +123,8 @@ public class MergeResources extends ResourceAwareTask {
 
     private Supplier<Integer> minSdk;
 
+    private Provider<BuildToolInfo> buildToolInfoProvider;
+
     @Nullable private FileCollection aapt2FromMaven;
 
     @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
@@ -141,6 +141,7 @@ public class MergeResources extends ResourceAwareTask {
     @NonNull
     private static ResourceCompilationService getResourceProcessor(
             @NonNull AndroidBuilder builder,
+            @NonNull BuildToolInfo buildToolInfo,
             @Nullable FileCollection aapt2FromMaven,
             @NonNull WorkerExecutorFacade workerExecutor,
             ImmutableSet<Flag> flags,
@@ -159,14 +160,14 @@ public class MergeResources extends ResourceAwareTask {
 
         Aapt2ServiceKey aapt2ServiceKey =
                 Aapt2DaemonManagerService.registerAaptService(
-                        aapt2FromMaven, builder.getBuildToolInfo(), builder.getLogger());
+                        aapt2FromMaven, buildToolInfo, builder.getLogger());
 
         return new WorkerExecutorResourceCompilationService(workerExecutor, aapt2ServiceKey);
     }
 
     @Input
     public String getBuildToolsVersion() {
-        return getBuildTools().getRevision().toString();
+        return buildToolInfoProvider.get().getRevision().toString();
     }
 
     @Override
@@ -212,6 +213,7 @@ public class MergeResources extends ResourceAwareTask {
         try (ResourceCompilationService resourceCompiler =
                 getResourceProcessor(
                         getBuilder(),
+                        buildToolInfoProvider.get(),
                         aapt2FromMaven,
                         workerExecutorFacade,
                         flags,
@@ -310,6 +312,7 @@ public class MergeResources extends ResourceAwareTask {
             try (ResourceCompilationService resourceCompiler =
                     getResourceProcessor(
                             getBuilder(),
+                            buildToolInfoProvider.get(),
                             aapt2FromMaven,
                             workerExecutorFacade,
                             flags,
@@ -626,7 +629,6 @@ public class MergeResources extends ResourceAwareTask {
             VariantScope variantScope = getVariantScope();
             GlobalScope globalScope = variantScope.getGlobalScope();
             BaseVariantData variantData = variantScope.getVariantData();
-            Project project = globalScope.getProject();
 
             task.minSdk =
                     TaskInputHelper.memoize(
@@ -719,6 +721,12 @@ public class MergeResources extends ResourceAwareTask {
                             .getBuildType()
                             .isPseudoLocalesEnabled();
             task.flags = flags;
+
+            task.buildToolInfoProvider =
+                    variantScope
+                            .getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolInfoProvider(task.getProject());
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 

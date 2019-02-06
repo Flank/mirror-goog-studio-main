@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantAppTaskManager;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
@@ -30,7 +29,6 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
-import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
@@ -62,7 +60,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
@@ -76,7 +73,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
                         project,
                         projectOptions,
                         globalScope,
-                        sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
@@ -99,7 +95,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -109,7 +104,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
                 projectOptions,
                 dataBindingBuilder,
                 androidConfig,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);

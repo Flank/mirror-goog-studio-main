@@ -56,20 +56,6 @@ public abstract class AndroidBuilderTask extends AndroidVariantTask {
         return iLogger;
     }
 
-    /**
-     * Returns the BuildToolInfo.
-     *
-     * @throws IllegalStateException if androidBuilder.targetInfo has not been set,
-     */
-    @NonNull
-    @Internal("No influence on output, this is to give access to the build tools")
-    protected BuildToolInfo getBuildTools() {
-        TargetInfo targetInfo = getBuilder().getTargetInfo();
-        Preconditions.checkState(targetInfo != null,
-                "androidBuilder.targetInfo required for task '%s'.", getName());
-        return targetInfo.getBuildTools();
-    }
-
     public void setAndroidBuilder(@NonNull AndroidBuilder androidBuilder) {
         this.androidBuilder = androidBuilder;
     }

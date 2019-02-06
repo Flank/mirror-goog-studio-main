@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
@@ -55,7 +54,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
@@ -69,7 +67,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
                         project,
                         projectOptions,
                         globalScope,
-                        sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
@@ -110,7 +107,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -120,7 +116,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
                 projectOptions,
                 dataBindingBuilder,
                 androidConfig,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);

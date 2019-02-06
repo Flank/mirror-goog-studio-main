@@ -253,7 +253,7 @@ public class AidlCompile extends AndroidVariantTask {
             final VariantConfiguration<?, ?, ?> variantConfiguration = scope
                     .getVariantConfiguration();
 
-            compileTask.targetInfo = scope.getGlobalScope().getTargetInfo();
+            compileTask.targetInfo = scope.getGlobalScope().getSdkComponents().getTargetInfo();
             compileTask.processExecutor = scope.getGlobalScope().getProcessExecutor();
 
             compileTask.sourceDirs = variantConfiguration::getAidlSourceList;

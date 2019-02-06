@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.Version;
 import com.android.builder.sdk.TargetInfo;
 import com.android.sdklib.BuildToolInfo;
@@ -70,7 +69,7 @@ public abstract class LintBaseTask extends DefaultTask {
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 
     @Nullable FileCollection lintClassPath;
-    protected AndroidBuilder androidBuilder;
+    protected Provider<TargetInfo> targetInfoProvider;
 
     /** Lint classpath */
     @InputFiles
@@ -99,7 +98,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
     @Internal("No influence on output, this is to give access to the build tools")
     private BuildToolInfo getBuildTools() {
-        TargetInfo targetInfo = androidBuilder.getTargetInfo();
+        TargetInfo targetInfo = targetInfoProvider.get();
         Preconditions.checkState(
                 targetInfo != null, "androidBuilder.targetInfo required for task '%s'.", getName());
         return targetInfo.getBuildTools();
@@ -306,14 +305,15 @@ public abstract class LintBaseTask extends DefaultTask {
         public void configure(@NonNull T lintTask) {
             lintTask.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
             lintTask.lintOptions = globalScope.getExtension().getLintOptions();
-            File sdkFolder = globalScope.getSdkHandler().getSdkFolder();
+            File sdkFolder = globalScope.getSdkComponents().getSdkFolder();
             if (sdkFolder != null) {
                 lintTask.sdkHome = sdkFolder;
             }
 
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
-            lintTask.androidBuilder = globalScope.getAndroidBuilder();
+            lintTask.targetInfoProvider =
+                    globalScope.getSdkComponents().getTargetInfoProvider(lintTask.getProject());
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

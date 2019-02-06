@@ -89,7 +89,6 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -99,7 +98,6 @@ public class ApplicationTaskManager extends TaskManager {
                 projectOptions,
                 dataBindingBuilder,
                 extension,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);

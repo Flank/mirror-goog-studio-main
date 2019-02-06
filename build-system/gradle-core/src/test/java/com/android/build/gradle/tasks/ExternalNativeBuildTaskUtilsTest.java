@@ -21,45 +21,40 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.cmake.CmakeUtils;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class ExternalNativeBuildTaskUtilsTest {
     static final String CMAKE_FILE_NAME =
             SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS ? "cmake.exe" : "cmake";
     File sdkFolder;
-    SdkHandler sdkHandler;
+
+    static final Consumer<String> NOOP_DOWNLOADER = (v) -> {};
 
     @Before
     public void setUp() {
         sdkFolder = TestUtils.getSdk();
-        sdkHandler = Mockito.mock(SdkHandler.class);
     }
 
     @Test
     public void testCMakeFolderFromSdkHandler() {
         File expectedCmakeFolder = new File(sdkFolder, "cmake");
 
-        Mockito.when(sdkHandler.getCmakePathInLocalProp()).thenReturn(expectedCmakeFolder);
-
         File actualReturn =
-                ExternalNativeBuildTaskUtils.doFindCmakeExecutableFolder(null, sdkHandler, null);
+                ExternalNativeBuildTaskUtils.doFindCmakeExecutableFolder(
+                        null, expectedCmakeFolder, sdkFolder, NOOP_DOWNLOADER, null);
         assertThat(actualReturn).isEqualTo(expectedCmakeFolder);
     }
 
     @Test
     public void testCMakeFolderFromFoldersToSearch() {
-        Mockito.when(sdkHandler.getCmakePathInLocalProp()).thenReturn(null);
-        Mockito.when(sdkHandler.getSdkFolder()).thenReturn(sdkFolder);
-
         // Go through all the cmake versions available in the test Sdk folder and get their
         // versions.
         for (File file : FileUtils.getAllFiles(new File(sdkFolder, "cmake"))) {
@@ -74,7 +69,11 @@ public class ExternalNativeBuildTaskUtilsTest {
 
             File actualReturn =
                     ExternalNativeBuildTaskUtils.doFindCmakeExecutableFolder(
-                            getInstalledCmakeVersion(cmakeBinFolder), sdkHandler, fileListToSearch);
+                            getInstalledCmakeVersion(cmakeBinFolder),
+                            null,
+                            sdkFolder,
+                            NOOP_DOWNLOADER,
+                            fileListToSearch);
             assertThat(actualReturn).isEqualTo(expectedCmakeFolder);
         }
     }

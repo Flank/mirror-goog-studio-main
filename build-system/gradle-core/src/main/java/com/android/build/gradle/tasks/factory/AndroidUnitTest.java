@@ -213,6 +213,9 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                                             .getAndroidBuilder()
                                             .computeAdditionalAndRequestedOptionalLibraries(
                                                     scope.getGlobalScope()
+                                                            .getSdkComponents()
+                                                            .getTarget(),
+                                                    scope.getGlobalScope()
                                                             .getExtension()
                                                             .getLibraryRequests())));
 

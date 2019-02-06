@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -41,6 +42,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -64,9 +66,11 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
 
     private int targetSdkVersion;
 
+    private Provider<BuildToolInfo> buildToolInfoProvider;
+
     @Input
     public String getBuildToolsVersion() {
-        return getBuildTools().getRevision().toString();
+        return buildToolInfoProvider.get().getRevision().toString();
     }
 
     @TaskAction
@@ -122,7 +126,12 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            builder.generateApkData(apk, outDir, getMainPkgName(), ANDROID_WEAR_MICRO_APK);
+            builder.generateApkData(
+                    apk,
+                    outDir,
+                    getMainPkgName(),
+                    ANDROID_WEAR_MICRO_APK,
+                    buildToolInfoProvider.get());
         } else {
             builder.generateUnbundledWearApkData(outDir, getMainPkgName());
         }
@@ -224,6 +233,11 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             task.mainPkgName = variantConfiguration::getApplicationId;
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
+
+            task.buildToolInfoProvider =
+                    scope.getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolInfoProvider(task.getProject());
         }
     }
 }

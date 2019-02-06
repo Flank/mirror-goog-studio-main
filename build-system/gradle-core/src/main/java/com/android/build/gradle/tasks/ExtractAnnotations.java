@@ -32,6 +32,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
@@ -395,18 +396,22 @@ public class ExtractAnnotations extends AndroidVariantTask {
             task.libraries = variantScope.getArtifactCollection(
                     COMPILE_CLASSPATH, EXTERNAL, CLASSES);
 
+            GlobalScope globalScope = variantScope.getGlobalScope();
+
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
             task.setBootClasspath(
                     () ->
                             androidBuilder.getFilteredBootClasspathAsStrings(
-                                    variantScope
-                                            .getGlobalScope()
-                                            .getExtension()
-                                            .getLibraryRequests()));
+                                    globalScope.getSdkComponents().getTarget(),
+                                    globalScope.getExtension().getLibraryRequests(),
+                                    globalScope.getSdkComponents().getAnnotationsJar()));
 
-            task.lintClassPath = variantScope.getGlobalScope().getProject().getConfigurations()
-                    .getByName(LintBaseTask.LINT_CLASS_PATH);
+            task.lintClassPath =
+                    globalScope
+                            .getProject()
+                            .getConfigurations()
+                            .getByName(LintBaseTask.LINT_CLASS_PATH);
         }
     }
 

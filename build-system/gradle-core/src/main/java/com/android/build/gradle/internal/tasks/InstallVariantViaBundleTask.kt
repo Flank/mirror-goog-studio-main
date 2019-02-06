@@ -34,6 +34,7 @@ import com.android.utils.ILogger
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -51,7 +52,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
     private val workers = Workers.getWorker(workerExecutor)
 
-    private lateinit var adbExe: () -> File
+    private lateinit var adbExecutableProvider: Provider<File>
     private lateinit var projectName: String
 
     private var minSdkVersion = 0
@@ -75,7 +76,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
             it.submit(
                 InstallRunnable::class.java,
                 Params(
-                    adbExe(),
+                    adbExecutableProvider.get(),
                     apkBundle.singleFile(),
                     timeOutInMs,
                     installOptions,
@@ -214,8 +215,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
             task.timeOutInMs = variantScope.globalScope.extension.adbOptions.timeOutInMs
 
-            task.adbExe = { variantScope.globalScope.sdkHandler.sdkInfo?.adb!! }
-
+            task.adbExecutableProvider = variantScope.globalScope.sdkComponents.getAdbExecutableProvider(task.project)
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out InstallVariantViaBundleTask>) {

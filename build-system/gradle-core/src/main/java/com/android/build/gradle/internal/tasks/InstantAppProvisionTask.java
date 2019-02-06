@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
@@ -33,6 +32,7 @@ import java.io.File;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -44,7 +44,7 @@ public class InstantAppProvisionTask extends DefaultTask {
 
     private Supplier<File> instantAppSdk;
 
-    private Supplier<File> adbExe;
+    private Provider<File> adbExecutableProvider;
 
     @TaskAction
     public void provisionDevices() throws ProvisionException, DeviceException {
@@ -52,12 +52,13 @@ public class InstantAppProvisionTask extends DefaultTask {
             throw new GradleException("No Instant App Sdk found.");
         }
 
-        if (adbExe.get() == null) {
+        if (!adbExecutableProvider.isPresent()) {
             throw new GradleException("No adb file found.");
         }
 
         DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(adbExe.get(), 0, new LoggerWrapper(getLogger()));
+                new ConnectedDeviceProvider(
+                        adbExecutableProvider.get(), 0, new LoggerWrapper(getLogger()));
 
         InstantAppProvisioner provisioner =
                 new InstantAppProvisioner(instantAppSdk.get(), deviceProvider, getLogger());
@@ -66,9 +67,8 @@ public class InstantAppProvisionTask extends DefaultTask {
     }
 
     @InputFile
-    @Nullable
-    public File getAdbExe() {
-        return adbExe.get();
+    public Provider<File> getAdbExe() {
+        return adbExecutableProvider;
     }
 
     @InputDirectory
@@ -101,17 +101,13 @@ public class InstantAppProvisionTask extends DefaultTask {
         public void configure(@NonNull InstantAppProvisionTask task) {
             task.setDescription("Provision all connected devices for Instant App.");
 
-            task.adbExe =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                SdkInfo sdkInfo = globalScope.getSdkHandler().getSdkInfo();
-                                return sdkInfo == null ? null : sdkInfo.getAdb();
-                            });
+            task.adbExecutableProvider =
+                    globalScope.getSdkComponents().getAdbExecutableProvider(task.getProject());
 
             task.instantAppSdk =
                     TaskInputHelper.memoize(
                             () -> {
-                                File sdkFolder = globalScope.getSdkHandler().getSdkFolder();
+                                File sdkFolder = globalScope.getSdkComponents().getSdkFolder();
                                 if (sdkFolder != null) {
                                     LocalPackage instantAppSdk =
                                             AndroidSdkHandler.getInstance(sdkFolder)

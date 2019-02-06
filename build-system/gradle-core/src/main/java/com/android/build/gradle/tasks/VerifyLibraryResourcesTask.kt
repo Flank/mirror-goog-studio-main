@@ -39,6 +39,8 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.QueueableResourceCompiler
 import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.sdklib.BuildToolInfo
+import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableSet
@@ -91,6 +93,10 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     var aapt2FromMaven: FileCollection? = null
         private set
 
+    private lateinit var androidTargetProvider: Provider<IAndroidTarget>
+
+    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
+
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     override fun isIncremental(): Boolean {
@@ -127,7 +133,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
-        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildTools, iLogger)
+        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildToolInfoProvider.get(), iLogger)
         // If we're using AAPT2 we need to compile the resources into the compiled directory
         // first as we need the .flat files for linking.
         workers.use { facade ->
@@ -152,7 +158,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
                 .setOptions(AaptOptions(failOnMissingConfigEntry = false))
                 .setVariantType(VariantTypeImpl.LIBRARY)
-                .setAndroidTarget(builder.target)
+                .setAndroidTarget(androidTargetProvider.get())
                 .build()
     }
 
@@ -187,6 +193,9 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             }
             task.manifestFiles = variantScope.artifacts
                     .getFinalProduct(task.taskInputType)
+
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
         }
     }
 

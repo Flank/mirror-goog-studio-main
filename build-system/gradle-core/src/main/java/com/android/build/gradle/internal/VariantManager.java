@@ -463,6 +463,9 @@ public class VariantManager implements VariantModel {
                                                 .getAndroidBuilder()
                                                 .getRenderScriptSupportJar(
                                                         globalScope
+                                                                .getSdkComponents()
+                                                                .getBuildToolsInfo(),
+                                                        globalScope
                                                                 .getProjectOptions()
                                                                 .get(
                                                                         BooleanOption
@@ -1132,6 +1135,7 @@ public class VariantManager implements VariantModel {
                     globalScope
                             .getAndroidBuilder()
                             .getRenderScriptSupportJar(
+                                    globalScope.getSdkComponents().getBuildToolsInfo(),
                                     globalScope
                                             .getProjectOptions()
                                             .get(BooleanOption.USE_ANDROID_X));

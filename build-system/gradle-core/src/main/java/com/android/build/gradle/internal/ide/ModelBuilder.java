@@ -96,6 +96,7 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.Version;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
+import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -324,10 +325,12 @@ public class ModelBuilder<Extension extends AndroidConfig>
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
         final AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
-        if (androidBuilder.getTargetInfo() != null) {
+        if (globalScope.getSdkComponents().getTargetInfo() != null) {
             bootClasspath =
                     androidBuilder.getFilteredBootClasspathAsStrings(
-                            globalScope.getExtension().getLibraryRequests());
+                            globalScope.getSdkComponents().getTarget(),
+                            globalScope.getExtension().getLibraryRequests(),
+                            globalScope.getSdkComponents().getAnnotationsJar());
         } else {
             // SDK not set up, error will be reported as a sync issue.
             bootClasspath = Collections.emptyList();
@@ -389,6 +392,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
             }
         }
 
+        IAndroidTarget androidTarget = globalScope.getSdkComponents().getTarget();
+
         return new DefaultAndroidProject(
                 project.getName(),
                 defaultConfig,
@@ -397,9 +402,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 productFlavors,
                 variants,
                 variantNames,
-                androidBuilder.getTargetInfo() != null
-                        ? androidBuilder.getTarget().hashString()
-                        : "",
+                androidTarget != null ? androidTarget.hashString() : "",
                 bootClasspath,
                 frameworkSource,
                 cloneSigningConfigs(extension.getSigningConfigs()),
@@ -732,6 +735,10 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                                     .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)));
         }
 
+        // No files are possible if the SDK was not configured properly.
+        File mockableJar =
+                globalScope.getMockableJarArtifact().getFiles().stream().findFirst().orElse(null);
+
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
                 scope.getTaskContainer().getAssembleTask().getName(),
@@ -741,7 +748,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 Iterables.getOnlyElement(scope.getArtifacts().getArtifactFiles(JAVAC)),
                 additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
-                globalScope.getMockableJarArtifact().getSingleFile(),
+                mockableJar,
                 result.getFirst(),
                 result.getSecond(),
                 sourceProviders.variantSourceProvider,

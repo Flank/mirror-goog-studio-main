@@ -29,6 +29,7 @@ import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,9 +79,11 @@ public class ShaderCompile extends AndroidBuilderTask {
         this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
     }
 
+    private Provider<BuildToolInfo> buildToolInfoProvider;
+
     @Input
     public String getBuildToolsVersion() {
-        return getBuildTools().getRevision().toString();
+        return buildToolInfoProvider.get().getRevision().toString();
     }
 
     private Provider<Directory> sourceDir;
@@ -198,6 +201,11 @@ public class ShaderCompile extends AndroidBuilderTask {
             task.setOutputDir(outputDir);
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
+
+            task.buildToolInfoProvider =
+                    scope.getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolInfoProvider(task.getProject());
         }
     }
 }

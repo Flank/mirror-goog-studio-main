@@ -535,19 +535,24 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            task.splitSelectExec = TaskInputHelper.memoize(() -> {
-                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
-                // if the task is not going to run, so use a supplier.
-                final TargetInfo info = scope.getGlobalScope().getAndroidBuilder()
-                        .getTargetInfo();
-                String path = info == null ? null : info.getBuildTools().getPath(SPLIT_SELECT);
-                if (path != null) {
-                    File splitSelectExe = new File(path);
-                    return splitSelectExe.exists() ? splitSelectExe : null;
-                } else {
-                    return null;
-                }
-            });
+            task.splitSelectExec =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
+                                // if the task is not going to run, so use a supplier.
+                                final TargetInfo info =
+                                        scope.getGlobalScope().getSdkComponents().getTargetInfo();
+                                String path =
+                                        info == null
+                                                ? null
+                                                : info.getBuildTools().getPath(SPLIT_SELECT);
+                                if (path != null) {
+                                    File splitSelectExe = new File(path);
+                                    return splitSelectExe.exists() ? splitSelectExe : null;
+                                } else {
+                                    return null;
+                                }
+                            });
 
             String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
                     .getResultsDir();

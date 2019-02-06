@@ -301,7 +301,6 @@ public abstract class TaskManager {
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final DataBindingBuilder dataBindingBuilder;
-    @NonNull protected final SdkHandler sdkHandler;
     @NonNull protected final AndroidConfig extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
@@ -320,7 +319,6 @@ public abstract class TaskManager {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -328,7 +326,6 @@ public abstract class TaskManager {
         this.project = project;
         this.projectOptions = projectOptions;
         this.dataBindingBuilder = dataBindingBuilder;
-        this.sdkHandler = sdkHandler;
         this.extension = extension;
         this.variantFactory = variantFactory;
         this.toolingRegistry = toolingRegistry;
@@ -552,10 +549,14 @@ public abstract class TaskManager {
                 .add(
                         CONFIG_NAME_ANDROID_APIS,
                         project.files(
-                                globalScope
-                                        .getAndroidBuilder()
-                                        .getTarget()
-                                        .getPath(IAndroidTarget.ANDROID_JAR)));
+                                (Callable)
+                                        () -> {
+                                            IAndroidTarget target =
+                                                    globalScope.getSdkComponents().getTarget();
+                                            return target == null
+                                                    ? null
+                                                    : target.getPath(IAndroidTarget.ANDROID_JAR);
+                                        }));
 
         // Adding this task to help the IDE find the mockable JAR.
         createMockableJar = project.getTasks().register("createMockableJar");
@@ -977,13 +978,27 @@ public abstract class TaskManager {
                                     .get());
 
             File rsLibs =
-                    variantScope.getGlobalScope().getAndroidBuilder().getSupportNativeLibFolder();
+                    variantScope
+                            .getGlobalScope()
+                            .getAndroidBuilder()
+                            .getSupportNativeLibFolder(
+                                    variantScope
+                                            .getGlobalScope()
+                                            .getSdkComponents()
+                                            .getBuildToolsInfo());
             if (rsLibs != null && rsLibs.isDirectory()) {
                 rsFileCollection.from(rsLibs);
             }
             if (variantScope.getVariantConfiguration().getRenderscriptSupportModeBlasEnabled()) {
                 File rsBlasLib =
-                        variantScope.getGlobalScope().getAndroidBuilder().getSupportBlasLibFolder();
+                        variantScope
+                                .getGlobalScope()
+                                .getAndroidBuilder()
+                                .getSupportBlasLibFolder(
+                                        variantScope
+                                                .getGlobalScope()
+                                                .getSdkComponents()
+                                                .getBuildToolsInfo());
 
                 if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
                     throw new GradleException(
@@ -1526,7 +1541,6 @@ public abstract class TaskManager {
                                 checkNotNull(pathResolution.buildSystem),
                                 pathResolution.makeFile,
                                 globalScope.getAndroidBuilder(),
-                                sdkHandler,
                                 scope));
     }
 
@@ -2019,7 +2033,7 @@ public abstract class TaskManager {
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 testVariantScope,
                                 new ConnectedDeviceProvider(
-                                        sdkHandler.getSdkInfo().getAdb(),
+                                        () -> globalScope.getSdkComponents().getAdbExecutable(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(logger)),
                                 testData,
@@ -2357,11 +2371,14 @@ public abstract class TaskManager {
                 new DexArchiveBuilderTransformBuilder()
                         .setAndroidJarClasspath(
                                 () ->
-                                        variantScope
-                                                .getGlobalScope()
+                                        globalScope
                                                 .getAndroidBuilder()
                                                 .computeFilteredBootClasspath(
-                                                        extension.getLibraryRequests()))
+                                                        globalScope.getSdkComponents().getTarget(),
+                                                        extension.getLibraryRequests(),
+                                                        globalScope
+                                                                .getSdkComponents()
+                                                                .getAnnotationsJar()))
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
                         .setErrorFormatMode(

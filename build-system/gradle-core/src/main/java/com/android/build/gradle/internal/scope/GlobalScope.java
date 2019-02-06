@@ -29,7 +29,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.internal.FeatureModelBuilder;
-import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.ProcessExecutor;
@@ -61,7 +60,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final FilesProvider filesProvider;
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private AndroidConfig extension;
-    @NonNull private final SdkHandler sdkHandler;
+    @NonNull private final SdkComponents sdkComponents;
     @NonNull private NdkHandler ndkHandler;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
@@ -87,7 +86,7 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull SdkHandler sdkHandler,
+            @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @Nullable FileCache buildCache) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
@@ -96,7 +95,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.dslScope = checkNotNull(dslScope);
         this.filesProvider = filesProvider;
         this.androidBuilder = checkNotNull(androidBuilder);
-        this.sdkHandler = checkNotNull(sdkHandler);
+        this.sdkComponents = checkNotNull(sdkComponents);
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
@@ -134,13 +133,6 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    public TargetInfo getTargetInfo() {
-        // Workaround to give access to task that they need without knowing about the
-        // androidbuilder which will be removed in the long term.
-        return Preconditions.checkNotNull(androidBuilder.getTargetInfo(), "TargetInfo unavailable");
-    }
-
-    @NonNull
     public ProcessExecutor getProcessExecutor() {
         // Workaround to give access to task that they need without knowing about the
         // androidbuilder which will be removed in the long term.
@@ -153,8 +145,8 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    public SdkHandler getSdkHandler() {
-        return sdkHandler;
+    public SdkComponents getSdkComponents() {
+        return sdkComponents;
     }
 
     @NonNull

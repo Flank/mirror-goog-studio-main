@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
 import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.CoreBuildType
@@ -34,6 +35,8 @@ import com.android.build.gradle.internal.variant.FeatureVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
+import com.android.sdklib.BuildToolInfo
+import com.android.sdklib.IAndroidTarget
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
@@ -71,6 +74,9 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var mockedOutputFactory: OutputFactory
     @Mock private lateinit var provider: FeatureSetMetadata.SupplierProvider
     @Mock private lateinit var projectOptionsMock: ProjectOptions
+    @Mock private lateinit var mockedSdkComponents: SdkComponents
+    @Mock private lateinit var mockedAndroidTarget: IAndroidTarget
+    @Mock private lateinit var mockedBuildToolInfo: BuildToolInfo
 
     private val apkData = OutputFactory.ConfigurationSplitApkData(
             VariantOutput.FilterType.ABI,
@@ -91,9 +97,14 @@ class GenerateSplitAbiResTest {
         with(mockedGlobalScope) {
             `when`(androidBuilder).thenReturn(mockedAndroidBuilder)
             `when`(extension).thenReturn(mockedAndroidConfig)
-//            `when`(projectBaseName).thenReturn("featureA")
             `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
             `when`(projectOptions).thenReturn(projectOptionsMock)
+            `when`(sdkComponents).thenReturn(mockedSdkComponents)
+        }
+
+        with(mockedSdkComponents) {
+            `when`(getTarget()).thenReturn(mockedAndroidTarget)
+            `when`(getBuildToolsInfo()).thenReturn(mockedBuildToolInfo)
         }
 
         with(mockedVariantScope) {

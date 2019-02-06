@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
-import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
@@ -54,6 +53,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -67,7 +67,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class InstallVariantTask extends AndroidBuilderTask {
 
-    private Supplier<File> adbExe;
+    private Provider<File> adbExecutableProvider;
     private Supplier<File> splitSelectExe;
 
     private ProcessExecutor processExecutor;
@@ -92,9 +92,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
     @TaskAction
     public void install() throws DeviceException, ProcessException {
         final ILogger iLogger = getILogger();
-        DeviceProvider deviceProvider = new ConnectedDeviceProvider(adbExe.get(),
-                getTimeOutInMs(),
-                iLogger);
+        DeviceProvider deviceProvider =
+                new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
         deviceProvider.init();
 
         try {
@@ -194,8 +193,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
     }
 
     @InputFile
-    public File getAdbExe() {
-        return adbExe.get();
+    public Provider<File> getAdbExe() {
+        return adbExecutableProvider;
     }
 
     @InputFile
@@ -291,20 +290,17 @@ public class InstallVariantTask extends AndroidBuilderTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
-            task.adbExe =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                final SdkInfo info =
-                                        scope.getGlobalScope().getSdkHandler().getSdkInfo();
-                                return (info == null ? null : info.getAdb());
-                            });
+            task.adbExecutableProvider =
+                    scope.getGlobalScope()
+                            .getSdkComponents()
+                            .getAdbExecutableProvider(task.getProject());
             task.splitSelectExe =
                     TaskInputHelper.memoize(
                             () -> {
                                 // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
                                 // if the task is not going to run, so use a supplier.
                                 final TargetInfo info =
-                                        scope.getGlobalScope().getAndroidBuilder().getTargetInfo();
+                                        scope.getGlobalScope().getSdkComponents().getTargetInfo();
                                 String path =
                                         info == null
                                                 ? null

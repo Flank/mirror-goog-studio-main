@@ -684,7 +684,7 @@ public class PluginDslTest {
     public void testSetOlderBuildToolsVersion() {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
-        assertThat(plugin.getAndroidBuilder().getBuildToolInfo().getRevision())
+        assertThat(android.globalScope.getSdkComponents().getBuildToolsInfo().getRevision())
                 .isEqualTo(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
         Collection<SyncIssue> syncIssues =

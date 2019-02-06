@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
@@ -27,6 +28,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
+import com.android.sdklib.IAndroidTarget
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -305,8 +307,6 @@ class ProGuardTransformTest {
     private fun createScope(configFiles: Set<File> = setOf()) : VariantScope {
         val androidBuilder = Mockito.mock(AndroidBuilder::class.java)
         val bootClassPath = listOf(TestUtils.getPlatformFile("android.jar"))
-        Mockito.`when`(androidBuilder.computeFullBootClasspath()).thenReturn(bootClassPath)
-        Mockito.`when`(androidBuilder.computeFilteredBootClasspath(ArgumentMatchers.anyCollection())).thenReturn(bootClassPath)
 
         val project = Mockito.mock(Project::class.java)
         val configFilesCollection = FakeConfigurableFileCollection(configFiles)
@@ -316,6 +316,15 @@ class ProGuardTransformTest {
         Mockito.`when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.buildDir).thenReturn(outputDir.toFile())
+
+        val sdkComponents = Mockito.mock(SdkComponents::class.java)
+        Mockito.`when`(globalScope.sdkComponents).thenReturn(sdkComponents)
+        val target = Mockito.mock(IAndroidTarget::class.java)
+        Mockito.`when`(sdkComponents.getTarget()).thenReturn(target)
+        val annotationsJar = newFile("ANNOTATIONS_JAR_mock")
+        Mockito.`when`(sdkComponents.getAnnotationsJar()).thenReturn(annotationsJar)
+        Mockito.`when`(androidBuilder.computeFullBootClasspath(
+            ArgumentMatchers.eq(target), ArgumentMatchers.eq(annotationsJar))).thenReturn(bootClassPath)
 
         val variantData = Mockito.mock(BaseVariantData::class.java)
         Mockito.`when`(variantData.type).thenReturn(VariantTypeImpl.BASE_APK)

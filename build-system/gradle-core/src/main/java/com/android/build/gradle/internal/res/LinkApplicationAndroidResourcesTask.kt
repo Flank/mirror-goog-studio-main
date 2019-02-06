@@ -61,6 +61,7 @@ import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
+import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -68,6 +69,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -164,6 +166,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     private var isLibrary: Boolean = false
 
+    private lateinit var androidTargetProvider: Provider<IAndroidTarget>
+
+    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
+
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     @Input
@@ -225,7 +231,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             emptySet()
         run {
             val aapt2ServiceKey = registerAaptService(
-                aapt2FromMaven, buildTools, iLogger
+                aapt2FromMaven, buildToolInfoProvider.get(), iLogger
             )
 
             // do a first pass at the list so we generate the code synchronously since it's required
@@ -511,6 +517,9 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
             task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
+
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
         }
     }
 
@@ -847,7 +856,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val debuggable: Boolean = task.getDebuggable()
         val packageId: Int? = task.getResOffset()
         val incrementalFolder: File = task.incrementalFolder
-        val androidJarPath: String = task.builder.target.getPath(IAndroidTarget.ANDROID_JAR)
+        val androidJarPath: String = task.androidTargetProvider.get().getPath(IAndroidTarget.ANDROID_JAR)
         val convertedLibraryDependenciesPath: Path? = if (task.convertedLibraryDependencies == null)
             null
         else
@@ -919,7 +928,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     @Input
     fun getBuildToolsVersion(): String {
-        return buildTools.revision.toString()
+        return buildToolInfoProvider.get().revision.toString()
     }
 
     @InputFiles

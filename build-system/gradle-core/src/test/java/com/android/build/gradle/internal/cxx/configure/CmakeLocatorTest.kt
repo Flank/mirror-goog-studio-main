@@ -23,6 +23,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
 import java.io.IOException
+import java.util.function.Consumer
 
 class CmakeLocatorTest {
     private val newline = System.lineSeparator()
@@ -70,7 +71,7 @@ class CmakeLocatorTest {
                     encounter.sdkPackagesRetrieved = true
                     repositoryPackages()
                 },
-                downloader = {
+                downloader = Consumer {
                     encounter.downloadAttempts = encounter.downloadAttempts + 1
                     downloader()
                 }

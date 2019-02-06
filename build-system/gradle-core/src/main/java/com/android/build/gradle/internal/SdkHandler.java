@@ -22,7 +22,6 @@ import static com.android.SdkConstants.NDK_SYMLINK_DIR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.GuardedBy;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
@@ -71,10 +70,6 @@ public class SdkHandler {
     // Used for injecting SDK location in tests.
     public static File sTestSdkFolder;
 
-    private static final Object LOCK_FOR_SDK_HANDLER = new Object();
-    @GuardedBy("LOCK_FOR_SDK_HANDLER")
-    private static SdkLoader sSdkLoader;
-
     @NonNull
     private final ILogger logger;
 
@@ -93,15 +88,12 @@ public class SdkHandler {
         sTestSdkFolder = testSdkFolder;
     }
 
-    public SdkHandler(@NonNull Project project,
-                      @NonNull ILogger logger) {
+    public SdkHandler(
+            @NonNull Project project,
+            @NonNull ILogger logger,
+            @NonNull EvalIssueReporter evalIssueReporter) {
         this.logger = logger;
-        findLocation(project);
-    }
-
-    public SdkInfo getSdkInfo() {
-        SdkLoader sdkLoader = getSdkLoader();
-        return sdkLoader.getSdkInfo(logger);
+        findLocation(project, evalIssueReporter);
     }
 
     /**
@@ -110,17 +102,18 @@ public class SdkHandler {
      * @return true on success, false on failure after reporting errors via the issue reporter,
      *     which throws exceptions when not in sync mode.
      */
-    public boolean initTarget(
+    public Pair<SdkInfo, TargetInfo> initTarget(
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
-            @NonNull EvalIssueReporter evalIssueReporter,
-            @NonNull AndroidBuilder androidBuilder) {
+            @NonNull EvalIssueReporter evalIssueReporter) {
         Preconditions.checkNotNull(targetHash, "android.compileSdkVersion is missing!");
         Preconditions.checkNotNull(buildToolRevision, "android.buildToolsVersion is missing!");
 
-        synchronized (LOCK_FOR_SDK_HANDLER) {
-            logger.verbose("Parsing the SDK");
-            sSdkLoader = getSdkLoader();
+        SdkLoader sdkLoader = getSdkLoader();
+        if (sdkLoader == null) {
+            // SdkLoader couldn't be constructed, probably because we're missing the sdk dir configuration.
+            // If so, getSdkLoader() already reported to the evalIssueReporter.
+            return null;
         }
 
         if (buildToolRevision.compareTo(AndroidBuilder.MIN_BUILD_TOOLS_REV) < 0) {
@@ -162,7 +155,7 @@ public class SdkHandler {
                                             .stream()
                                             .map(RepoPackage::getPath)
                                             .collect(Collectors.joining(" "))));
-            return false;
+            return null;
         } catch (InstallFailedException e) {
             evalIssueReporter
                     .reportError(
@@ -173,14 +166,16 @@ public class SdkHandler {
                                             .stream()
                                             .map(RepoPackage::getPath)
                                             .collect(Collectors.joining(" "))));
-            return false;
+            return null;
+        } catch (IllegalStateException e) {
+            evalIssueReporter.reportError(
+                    EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
+                    new EvalIssueException(e, e.getMessage()));
+            return null;
         }
 
-        androidBuilder.setSdkInfo(sdkInfo);
-        androidBuilder.setTargetInfo(targetInfo);
-
         logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
-        return true;
+        return Pair.of(sdkInfo, targetInfo);
     }
 
     /**
@@ -188,8 +183,10 @@ public class SdkHandler {
      *
      * <p>Reports an evaluation warning if the platform tools package is not present and could not
      * be automatically downloaded and installed.
+     *
+     * @return true if some download operation was attempted.
      */
-    public void ensurePlatformToolsIsInstalledWarnOnFailure(
+    public boolean ensurePlatformToolsIsInstalledWarnOnFailure(
             @NonNull EvalIssueReporter issueReporter) {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
@@ -202,6 +199,7 @@ public class SdkHandler {
             if (sdkLibData.useSdkDownload()) {
                 try {
                     sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
+                    return true;
                 } catch (LicenceNotAcceptedException e) {
                     issueReporter.reportWarning(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
@@ -222,6 +220,7 @@ public class SdkHandler {
                         SdkConstants.FD_PLATFORM_TOOLS);
             }
         }
+        return false;
     }
 
     @Nullable
@@ -243,28 +242,21 @@ public class SdkHandler {
         return ndkSymlinkDirInLocalProp;
     }
 
-
-    @NonNull
-    public File checkAndGetSdkFolder() {
-        if (sdkFolder == null) {
-            throw new MissingSdkException("SDK location not found.");
-        }
-
-        return sdkFolder;
-    }
-
-    public synchronized SdkLoader getSdkLoader() {
+    @Nullable
+    private synchronized SdkLoader getSdkLoader() {
         if (sdkLoader == null) {
             if (isRegularSdk) {
-                checkAndGetSdkFolder();
+                if (sdkFolder == null) {
+                    return null;
+                }
 
                 // check if the SDK folder actually exist.
                 // For internal test we provide a fake SDK location through
                 // setTestSdkFolder in order to have an SDK, even though we don't use it
                 // so in this case we ignore the check.
                 if (sTestSdkFolder == null && !sdkFolder.isDirectory()) {
-                    throw new RuntimeException(String.format(
-                            "The SDK directory '%1$s' does not exist.", sdkFolder));
+                    throw new IllegalStateException(
+                            String.format("The SDK directory '%1$s' does not exist.", sdkFolder));
                 }
 
                 sdkLoader = DefaultSdkLoader.getLoader(sdkFolder);
@@ -342,7 +334,8 @@ public class SdkHandler {
         return Pair.of(null, true);
     }
 
-    private void findLocation(@NonNull Project project) {
+    private void findLocation(
+            @NonNull Project project, @NonNull EvalIssueReporter evalIssueReporter) {
         if (sTestSdkFolder != null) {
             sdkFolder = sTestSdkFolder;
             return;
@@ -378,6 +371,22 @@ public class SdkHandler {
         Pair<File, Boolean> sdkLocation = findSdkLocation(properties, rootDir);
         sdkFolder = sdkLocation.getFirst();
         isRegularSdk = sdkLocation.getSecond();
+
+        if (sdkFolder == null) {
+            String filePath =
+                    new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
+                            .getAbsolutePath();
+            String message =
+                    "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
+                            + "variable or by setting the sdk.dir path in your project's local "
+                            + "properties file at '"
+                            + filePath
+                            + "'.";
+            evalIssueReporter.reportError(
+                    Type.SDK_NOT_SET, new EvalIssueException(message, filePath, null));
+        }
+
+
         ndkFolder = NdkHandler.findNdkDirectory(properties, rootDir);
 
         // Check if the user has specified a cmake directory in local properties and assign the
@@ -431,7 +440,14 @@ public class SdkHandler {
     }
 
     public void addLocalRepositories(Project project) {
-        for (final File repository : getSdkLoader().getRepositories()) {
+        SdkLoader sdkLoader = getSdkLoader();
+        if (sdkLoader == null) {
+            // SdkLoader couldn't be constructed, probably because we're missing the sdk dir configuration.
+            // If so, getSdkLoader() already reported to the evalIssueReporter.
+            return;
+        }
+
+        for (final File repository : sdkLoader.getRepositories()) {
             MavenArtifactRepository mavenRepository = project.getRepositories()
                     .maven(newRepository -> {
                         newRepository.setName(repository.getPath());
@@ -443,24 +459,6 @@ public class SdkHandler {
             // support libraries and associated.
             project.getRepositories().remove(mavenRepository);
             project.getRepositories().addFirst(mavenRepository);
-        }
-    }
-
-    /**
-     * This method checks if the cache of the local and remote repositories has been already reset
-     * this build.
-     */
-    public boolean checkResetCache() {
-        return sdkLibData.needsCacheReset();
-    }
-
-    public static class MissingSdkException extends RuntimeException {
-        public MissingSdkException(String message) {
-            super(message);
-        }
-
-        public MissingSdkException(String message, Exception e) {
-            super(message, e);
         }
     }
 }

@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
+import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
@@ -77,7 +78,6 @@ import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AndroidProject;
@@ -86,7 +86,6 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
-import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
 import com.android.ide.common.repository.GradleVersion;
@@ -119,7 +118,6 @@ import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
-import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -151,8 +149,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     protected ProjectOptions projectOptions;
 
     private GlobalScope globalScope;
-
-    private SdkHandler sdkHandler;
 
     private DataBindingBuilder dataBindingBuilder;
 
@@ -186,7 +182,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
@@ -209,7 +204,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig androidConfig,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
@@ -350,16 +344,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
 
-        sdkHandler = new SdkHandler(project, getLogger());
-        if (!gradle.getStartParameter().isOffline()
-                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)) {
-            SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
-            sdkHandler.setSdkLibData(sdkLibData);
-        }
+        SdkComponents sdkComponents = createSdkComponents(gradle);
 
         AndroidBuilder androidBuilder =
                 new AndroidBuilder(
-                        project == project.getRootProject() ? project.getName() : project.getPath(),
                         creator,
                         new GradleProcessExecutor(project),
                         new GradleJavaProcessExecutor(project),
@@ -411,7 +399,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         projectOptions,
                         dslScope,
                         androidBuilder,
-                        sdkHandler,
+                        sdkComponents,
                         registry,
                         buildCache);
 
@@ -445,7 +433,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             return;
                         }
                         ModelBuilder.clearCaches();
-                        sdkHandler.unload();
+                        sdkComponents.unload();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
                                 project.getPath(),
@@ -461,6 +449,27 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 });
 
         createLintClasspathConfiguration(project);
+    }
+
+    private SdkComponents createSdkComponents(Gradle gradle) {
+        SdkHandler sdkHandler =
+                new SdkHandler(project, getLogger(), extraModelInfo.getSyncIssueHandler());
+        if (!gradle.getStartParameter().isOffline()
+                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)) {
+            SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
+            sdkHandler.setSdkLibData(sdkLibData);
+        }
+        if (projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS)) {
+            sdkHandler.addLocalRepositories(project);
+        }
+
+        return new SdkComponents(
+                () -> getExtension().getCompileSdkVersion(),
+                () -> getExtension().getBuildToolsRevision(),
+                sdkHandler,
+                extraModelInfo.getSyncIssueHandler(),
+                projectOptions,
+                getLogger());
     }
 
     /** Creates a lint class path Configuration for the given project */
@@ -517,7 +526,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         project,
                         projectOptions,
                         globalScope,
-                        sdkHandler,
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
@@ -536,7 +544,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         projectOptions,
                         dataBindingBuilder,
                         extension,
-                        sdkHandler,
                         variantFactory,
                         registry,
                         threadRecorder);
@@ -714,17 +721,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
         }
 
-        boolean targetSetupSuccess = ensureTargetSetup();
-        sdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure(
-                extraModelInfo.getSyncIssueHandler());
-        // Stop trying to configure the project if the SDK is not ready.
-        // Sync issues will already have been collected at this point in sync.
-        if (!targetSetupSuccess) {
-            project.getLogger()
-                    .warn("Aborting configuration as SDK is missing components in sync mode.");
+        // TODO(112700217): Only force the SDK resolution when in sync mode. Also move this to
+        // as late as possible so we configure most tasks as possible  during sync.
+        if (globalScope.getSdkComponents().getSdkFolder() == null) {
             return;
         }
-
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
@@ -752,11 +753,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         if (kotlinPluginVersion != null) {
             ProcessProfileWriter.getProject(project.getPath())
                     .setKotlinPluginVersion(kotlinPluginVersion);
-        }
-
-        // setup SDK repositories.
-        if (projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS)) {
-            sdkHandler.addLocalRepositories(project);
         }
 
         List<VariantScope> variantScopes = variantManager.createAndroidTasks();
@@ -849,41 +845,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                                     + "from your build.gradle file.\n"
                                     + "To learn more, see "
                                     + configApkUrl);
-        }
-    }
-
-    private boolean ensureTargetSetup() {
-        // check if the target has been set.
-        TargetInfo targetInfo = globalScope.getAndroidBuilder().getTargetInfo();
-        // noinspection VariableNotUsedInsideIf Directly checking if initialized.
-        if (targetInfo != null) {
-            return true;
-        }
-        if (extension.getCompileOptions() == null) {
-            throw new GradleException("Calling getBootClasspath before compileSdkVersion");
-        }
-
-        try {
-            return sdkHandler.initTarget(
-                    extension.getCompileSdkVersion(),
-                    extension.getBuildToolsRevision(),
-                    globalScope.getErrorHandler(),
-                    globalScope.getAndroidBuilder());
-
-        } catch (SdkHandler.MissingSdkException e) {
-            String filePath =
-                    new File(project.getRootDir(), SdkConstants.FN_LOCAL_PROPERTIES)
-                            .getAbsolutePath();
-            String message =
-                    "SDK location not found. Define location with an ANDROID_SDK_ROOT environment "
-                            + "variable or by setting the sdk.dir path in your project's local "
-                            + "properties file at '"
-                            + filePath
-                            + "'.";
-            extraModelInfo
-                    .getSyncIssueHandler()
-                    .reportError(Type.SDK_NOT_SET, new EvalIssueException(message, filePath, null));
-            return false;
         }
     }
 

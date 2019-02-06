@@ -64,7 +64,9 @@ class D8MainDexListTransform(
                         variantScope
                                 .globalScope
                                 .androidBuilder
-                                .computeFullBootClasspath()
+                                .computeFullBootClasspath(
+                                    variantScope.globalScope.sdkComponents.getTarget(),
+                                    variantScope.globalScope.sdkComponents.getAnnotationsJar())
                                 .map { it.toPath() }},
                     variantScope.globalScope.messageReceiver)
 

@@ -35,6 +35,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.sdklib.AndroidVersion
+import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -75,6 +76,8 @@ open class LinkAndroidResForBundleTask
     private var mergeBlameLogFolder: File? = null
 
     private var buildTargetDensity: String? = null
+
+    private lateinit var androidTargetProvider: Provider<IAndroidTarget>
 
     @get:OutputFile
     lateinit var bundledResFile: File
@@ -136,7 +139,7 @@ open class LinkAndroidResForBundleTask
         }
 
         val config = AaptPackageConfig(
-                androidJarPath = builder.target.getPath(IAndroidTarget.ANDROID_JAR),
+                androidJarPath = androidTargetProvider.get().getPath(IAndroidTarget.ANDROID_JAR),
                 generateProtos = true,
                 manifestFile = manifestFile,
                 options = aaptOptions.convert(),
@@ -181,9 +184,11 @@ open class LinkAndroidResForBundleTask
     @get:Input
     lateinit var resConfig: Collection<String> private set
 
+    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
+
     @Input
     fun getBuildToolsVersion(): String {
-        return buildTools.revision.toString()
+        return buildToolInfoProvider.get().revision.toString()
     }
 
     @Nested
@@ -263,6 +268,9 @@ open class LinkAndroidResForBundleTask
 
             task.resConfig =
                     variantScope.variantConfiguration.mergedFlavor.resourceConfigurations
+
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
         }
     }
 }

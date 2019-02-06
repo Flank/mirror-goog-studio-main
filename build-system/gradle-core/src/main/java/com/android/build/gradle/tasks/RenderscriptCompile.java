@@ -33,6 +33,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
+import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -88,9 +89,11 @@ public class RenderscriptCompile extends NdkTask {
 
     private boolean ndkMode;
 
+    private Provider<BuildToolInfo> buildToolInfoProvider;
+
     @Input
     public String getBuildToolsVersion() {
-        return getBuildTools().getRevision().toString();
+        return buildToolInfoProvider.get().getRevision().toString();
     }
 
     @OutputDirectory
@@ -220,7 +223,8 @@ public class RenderscriptCompile extends NdkTask {
                         isSupportMode(),
                         useAndroidX(),
                         getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
-                        new LoggedProcessOutputHandler(getILogger()));
+                        new LoggedProcessOutputHandler(getILogger()),
+                        buildToolInfoProvider.get());
     }
 
     // get the import folders. If the .rsh files are not directly under the import folders,
@@ -322,6 +326,11 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.libOutputDir = libOutputDir;
 
             renderscriptTask.setNdkConfig(config.getNdkConfig());
+
+            renderscriptTask.buildToolInfoProvider =
+                    scope.getGlobalScope()
+                            .getSdkComponents()
+                            .getBuildToolInfoProvider(renderscriptTask.getProject());
 
             if (config.getType().isTestComponent()) {
                 renderscriptTask.dependsOn(scope.getTaskContainer().getProcessManifestTask());

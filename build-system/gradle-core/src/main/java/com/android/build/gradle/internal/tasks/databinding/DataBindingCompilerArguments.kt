@@ -197,7 +197,7 @@ class DataBindingCompilerArguments constructor(
                 artifactType = artifactType,
                 modulePackageProvider = { variantConfig.originalApplicationId },
                 minApi = variantConfig.minSdkVersion.apiLevel,
-                sdkDir = globalScope.sdkHandler.checkAndGetSdkFolder(),
+                sdkDir = globalScope.sdkComponents.getSdkFolder()!!,
                 dependencyArtifactsDir =
                         artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir =

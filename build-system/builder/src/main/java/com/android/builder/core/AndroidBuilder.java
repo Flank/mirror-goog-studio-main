@@ -22,15 +22,11 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import static com.android.manifmerger.ManifestMerger2.Invoker;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.files.IncrementalRelativeFileSets;
-import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.BlockingResourceLinker;
@@ -39,11 +35,6 @@ import com.android.builder.internal.aapt.v2.Aapt2InternalException;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
-import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.SigningConfig;
-import com.android.builder.packaging.PackagerException;
-import com.android.builder.sdk.SdkInfo;
-import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
@@ -51,10 +42,6 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-import com.android.ide.common.resources.FileStatus;
-import com.android.ide.common.signing.CertificateInfo;
-import com.android.ide.common.signing.KeystoreHelper;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.ide.common.symbols.RGeneration;
 import com.android.ide.common.symbols.SymbolIo;
 import com.android.ide.common.symbols.SymbolTable;
@@ -68,21 +55,15 @@ import com.android.manifmerger.PlaceholderHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
-import com.android.tools.build.apkzlib.sign.SigningOptions;
-import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
-import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,8 +75,8 @@ import java.util.stream.Collectors;
  * DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing
  * specific build steps.
  *
- * <p>To use: create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor,
- * JavaProcessExecutor, EvalIssueReporter, MessageReceiver, ILogger)}
+ * <p>To use: create a builder with {@link #AndroidBuilder(ProcessExecutor, JavaProcessExecutor,
+ * EvalIssueReporter, MessageReceiver, ILogger)}
  *
  * <p>then build steps can be done with:
  *
@@ -128,11 +109,6 @@ public class AndroidBuilder {
      */
     public static final Revision DEFAULT_BUILD_TOOLS_REVISION = MIN_BUILD_TOOLS_REV;
 
-    /** API level for split APKs. */
-    private static final int API_LEVEL_SPLIT_APK = 21;
-
-    @NonNull
-    private final String mProjectId;
     @NonNull
     private final ILogger mLogger;
 
@@ -144,10 +120,6 @@ public class AndroidBuilder {
     @NonNull private final MessageReceiver messageReceiver;
 
     @Nullable private String mCreatedBy;
-
-
-    private Supplier<SdkInfo> mSdkInfoProvider = () -> null;
-    private Supplier<TargetInfo> mTargetInfoProvider = () -> null;
 
     private List<File> mBootClasspathFiltered;
     private List<File> mBootClasspathAll;
@@ -162,87 +134,18 @@ public class AndroidBuilder {
      * @param logger the Logger
      */
     public AndroidBuilder(
-            @NonNull String projectId,
             @Nullable String createdBy,
             @NonNull ProcessExecutor processExecutor,
             @NonNull JavaProcessExecutor javaProcessExecutor,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull MessageReceiver messageReceiver,
             @NonNull ILogger logger) {
-        mProjectId = checkNotNull(projectId);
         mCreatedBy = createdBy;
         mProcessExecutor = checkNotNull(processExecutor);
         mJavaProcessExecutor = checkNotNull(javaProcessExecutor);
         this.issueReporter = checkNotNull(issueReporter);
         this.messageReceiver = messageReceiver;
         mLogger = checkNotNull(logger);
-    }
-
-    /**
-     * Sets the SdkInfo and the targetInfo on the builder. This is required to actually
-     * build (some of the steps).
-     *
-     * @see com.android.builder.sdk.SdkLoader
-     */
-    public void setTargetInfo(@NonNull TargetInfo targetInfo) {
-        mTargetInfoProvider = () -> targetInfo;
-    }
-
-    /**
-     * Sets the SdkInfo and the targetInfo on the builder. This is required to actually
-     * build (some of the steps).
-     *
-     * @see com.android.builder.sdk.SdkLoader
-     */
-    public void setTargetInfo(@NonNull Supplier<TargetInfo> targetInfoProvider) {
-        mTargetInfoProvider = targetInfoProvider;
-    }
-
-    public void setSdkInfo(@NonNull SdkInfo sdkInfo) {
-        mSdkInfoProvider = () -> sdkInfo;
-    }
-
-    public void setSdkInfoProvider(@NonNull Supplier<SdkInfo> sdkInfoProvider) {
-        mSdkInfoProvider = sdkInfoProvider;
-    }
-
-    /**
-     * Returns the SdkInfo, if set.
-     */
-    @Nullable
-    public SdkInfo getSdkInfo() {
-        return mSdkInfoProvider.get();
-    }
-
-    /**
-     * Returns the TargetInfo, if set.
-     */
-    @Nullable
-    public TargetInfo getTargetInfo() {
-        TargetInfo targetInfo = mTargetInfoProvider.get();
-
-        if (targetInfo != null && targetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
-            issueReporter.reportError(
-                    EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
-                    new EvalIssueException(
-                            String.format(
-                                    "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
-                                            + "Minimum required is %3$s",
-                                    targetInfo.getBuildTools().getRevision(),
-                                    mProjectId,
-                                    MIN_BUILD_TOOLS_REV),
-                            MIN_BUILD_TOOLS_REV.toString()));
-        }
-
-        return targetInfo;
-    }
-
-    /** Returns the build tools for this builder. */
-    @NonNull
-    public BuildToolInfo getBuildToolInfo() {
-        checkNotNull(
-                getTargetInfo(), "Cannot call getBuildToolInfo() before setTargetInfo() is called.");
-        return getTargetInfo().getBuildTools();
     }
 
     @NonNull
@@ -260,23 +163,6 @@ public class AndroidBuilder {
         return messageReceiver;
     }
 
-    /** Returns the compilation target, if set. */
-    @NonNull
-    public IAndroidTarget getTarget() {
-        checkState(getTargetInfo() != null,
-                "Cannot call getTarget() before setTargetInfo() is called.");
-        return getTargetInfo().getTarget();
-    }
-
-    /**
-     * Returns whether the compilation target is a preview.
-     */
-    public boolean isPreviewTarget() {
-        checkState(getTargetInfo() != null,
-                "Cannot call isTargetAPreview() before setTargetInfo() is called.");
-        return getTargetInfo().getTarget().getVersion().isPreview();
-    }
-
     /**
      * Returns the list of additional and requested optional library jar files
      *
@@ -285,9 +171,9 @@ public class AndroidBuilder {
      *     filtered boot classpath
      */
     public List<File> computeAdditionalAndRequestedOptionalLibraries(
-            Collection<LibraryRequest> libraryRequests) {
+            IAndroidTarget target, Collection<LibraryRequest> libraryRequests) {
         return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
-                getTargetInfo().getTarget(), ImmutableList.copyOf(libraryRequests), issueReporter);
+                target, ImmutableList.copyOf(libraryRequests), issueReporter);
     }
 
     /**
@@ -298,20 +184,20 @@ public class AndroidBuilder {
      *
      * @return a list of jar files that forms the filtered classpath.
      */
-    public List<File> computeFilteredBootClasspath(Collection<LibraryRequest> libraryRequests) {
+    public List<File> computeFilteredBootClasspath(
+            IAndroidTarget target,
+            Collection<LibraryRequest> libraryRequests,
+            File annotationsJar) {
         // computes and caches the filtered boot classpath.
         // Changes here should be applied to #computeFullClasspath()
 
         if (mBootClasspathFiltered == null) {
-            checkState(getTargetInfo() != null,
-                    "Cannot call getBootClasspath() before setTargetInfo() is called.");
-
             mBootClasspathFiltered =
                     BootClasspathBuilder.computeFilteredClasspath(
-                            getTargetInfo().getTarget(),
+                            target,
                             ImmutableList.copyOf(libraryRequests),
                             issueReporter,
-                            getSdkInfo().getAnnotationsJar());
+                            annotationsJar);
         }
 
         return mBootClasspathFiltered;
@@ -324,17 +210,13 @@ public class AndroidBuilder {
      * @return a list of jar files that forms the filtered classpath.
      */
     @NonNull
-    public List<File> computeFullBootClasspath() {
+    public List<File> computeFullBootClasspath(IAndroidTarget androidTarget, File annotationsJar) {
         // computes and caches the full boot classpath.
         // Changes here should be applied to #computeFilteredClasspath()
 
         if (mBootClasspathAll == null) {
-            checkState(getTargetInfo() != null,
-                    "Cannot call getBootClasspath() before setTargetInfo() is called.");
-
-            mBootClasspathAll = BootClasspathBuilder.computeFullBootClasspath(
-                    getTargetInfo().getTarget(),
-                    getSdkInfo().getAnnotationsJar());
+            mBootClasspathAll =
+                    BootClasspathBuilder.computeFullBootClasspath(androidTarget, annotationsJar);
         }
 
         return mBootClasspathAll;
@@ -347,8 +229,10 @@ public class AndroidBuilder {
      */
     @NonNull
     public List<String> getFilteredBootClasspathAsStrings(
-            Collection<LibraryRequest> libraryRequests) {
-        return computeFilteredBootClasspath(libraryRequests)
+            IAndroidTarget target,
+            Collection<LibraryRequest> libraryRequests,
+            File annotationsJar) {
+        return computeFilteredBootClasspath(target, libraryRequests, annotationsJar)
                 .stream()
                 .map(c -> c.getAbsolutePath())
                 .collect(Collectors.toList());
@@ -361,54 +245,37 @@ public class AndroidBuilder {
      *
      * @param useAndroidX whether to use AndroidX dependencies
      * @return the jar file, or null.
-     * @see #setTargetInfo(TargetInfo)
      */
     @Nullable
-    public File getRenderScriptSupportJar(boolean useAndroidX) {
-        if (getTargetInfo() != null) {
-            return RenderScriptProcessor.getSupportJar(
-                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath(), useAndroidX);
-        }
-
-        return null;
+    public File getRenderScriptSupportJar(BuildToolInfo buildTools, boolean useAndroidX) {
+        return RenderScriptProcessor.getSupportJar(
+                buildTools.getLocation().getAbsolutePath(), useAndroidX);
     }
 
     /**
      * Returns the native lib folder for the renderscript mode.
      *
-     * This may return null if the SDK has not been loaded yet.
+     * <p>This may return null if the SDK has not been loaded yet.
      *
      * @return the folder, or null.
-     *
-     * @see #setTargetInfo(TargetInfo)
      */
     @Nullable
-    public File getSupportNativeLibFolder() {
-        if (getTargetInfo() != null) {
-            return RenderScriptProcessor.getSupportNativeLibFolder(
-                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath());
-        }
-
-        return null;
+    public File getSupportNativeLibFolder(BuildToolInfo buildTools) {
+        return RenderScriptProcessor.getSupportNativeLibFolder(
+                buildTools.getLocation().getAbsolutePath());
     }
 
     /**
      * Returns the BLAS lib folder for renderscript support mode.
      *
-     * This may return null if the SDK has not been loaded yet.
+     * <p>This may return null if the SDK has not been loaded yet.
      *
      * @return the folder, or null.
-     *
-     * @see #setTargetInfo(TargetInfo)
      */
     @Nullable
-    public File getSupportBlasLibFolder() {
-        if (getTargetInfo() != null) {
-            return RenderScriptProcessor.getSupportBlasLibFolder(
-                    getTargetInfo().getBuildTools().getLocation().getAbsolutePath());
-        }
-
-        return null;
+    public File getSupportBlasLibFolder(BuildToolInfo buildTools) {
+        return RenderScriptProcessor.getSupportBlasLibFolder(
+                buildTools.getLocation().getAbsolutePath());
     }
 
     @NonNull
@@ -793,49 +660,6 @@ public class AndroidBuilder {
         }
     }
 
-    /**
-     * Process the resources and generate R.java and/or the packaged resources.
-     *
-     * @param aapt the interface to the {@code aapt} tool
-     * @param aaptConfigBuilder aapt command invocation parameters; this will receive some
-     *     additional data (build tools, Android target and logger) and will be used to request
-     *     package invocation in {@code aapt} (see {@link
-     *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
-     * @throws IOException failed
-     * @throws ProcessException failed
-     */
-    public void processResources(
-            @NonNull BlockingResourceLinker aapt,
-            @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
-            throws IOException, ProcessException {
-        processResources(
-                aapt, aaptConfigBuilder, getTarget().getPath(IAndroidTarget.ANDROID_JAR), mLogger);
-    }
-
-    /**
-     * Process the resources and generate R.java and/or the packaged resources.
-     *
-     * @param aapt the interface to the {@code aapt} tool
-     * @param aaptConfigBuilder aapt command invocation parameters
-     * @param androidJarPath the android jar path used in {@link AaptPackageConfig}
-     * @param logger the logger used to request package invocation in {@code aapt} (see {@link
-     *     BlockingResourceLinker#link(AaptPackageConfig, ILogger)})
-     * @throws IOException failed
-     * @throws ProcessException failed
-     */
-    public static void processResources(
-            @NonNull BlockingResourceLinker aapt,
-            @NonNull AaptPackageConfig.Builder aaptConfigBuilder,
-            @NonNull String androidJarPath,
-            @NonNull ILogger logger)
-            throws IOException, ProcessException {
-
-        aaptConfigBuilder.setAndroidJarPath(androidJarPath);
-
-        AaptPackageConfig aaptConfig = aaptConfigBuilder.build();
-        processResources(aapt, aaptConfig, logger);
-    }
-
     public static void processResources(
             @NonNull BlockingResourceLinker aapt,
             @NonNull AaptPackageConfig aaptConfig,
@@ -884,10 +708,9 @@ public class AndroidBuilder {
             @NonNull File apkFile,
             @NonNull File outResFolder,
             @NonNull String mainPkgName,
-            @NonNull String resName) throws ProcessException, IOException {
-
-        // need to run aapt to get apk information
-        BuildToolInfo buildToolInfo = getTargetInfo().getBuildTools();
+            @NonNull String resName,
+            @NonNull BuildToolInfo buildToolInfo)
+            throws ProcessException, IOException {
 
         String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
         if (aapt == null) {
@@ -984,8 +807,6 @@ public class AndroidBuilder {
             throws IOException {
         checkNotNull(sourceFolder, "sourceFolder cannot be null.");
         checkNotNull(outputDir, "outputDir cannot be null.");
-        checkState(getTargetInfo() != null,
-                "Cannot call compileAllShaderFiles() before setTargetInfo() is called.");
 
         Supplier<ShaderProcessor> processor =
                 () ->
@@ -1049,16 +870,13 @@ public class AndroidBuilder {
             boolean supportMode,
             boolean useAndroidX,
             @Nullable Set<String> abiFilters,
-            @NonNull ProcessOutputHandler processOutputHandler)
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull BuildToolInfo buildToolInfo)
             throws InterruptedException, ProcessException, IOException {
         checkNotNull(sourceFolders, "sourceFolders cannot be null.");
         checkNotNull(importFolders, "importFolders cannot be null.");
         checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
         checkNotNull(resOutputDir, "resOutputDir cannot be null.");
-        checkState(getTargetInfo() != null,
-                "Cannot call compileAllRenderscriptFiles() before setTargetInfo() is called.");
-
-        BuildToolInfo buildToolInfo = getTargetInfo().getBuildTools();
 
         String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
         if (renderscript == null || !new File(renderscript).isFile()) {
@@ -1083,84 +901,6 @@ public class AndroidBuilder {
                         abiFilters,
                         mLogger);
         processor.build(mProcessExecutor, processOutputHandler);
-    }
-
-    /**
-     * Creates a new split APK containing only code.
-     *
-     * <p>This is used for instant run cold swaps on N and above.
-     */
-    public void packageCodeSplitApk(
-            @NonNull File androidResPkg,
-            @NonNull Set<File> dexFiles,
-            @Nullable SigningConfig signingConfig,
-            @NonNull File outApkLocation,
-            @NonNull File incrementalDir,
-            @NonNull ApkCreatorFactory apkCreatorFactory)
-            throws KeytoolException, PackagerException, IOException {
-        packageCodeSplitApk(
-                androidResPkg,
-                dexFiles,
-                signingConfig,
-                outApkLocation,
-                incrementalDir,
-                apkCreatorFactory,
-                mCreatedBy);
-    }
-
-    /**
-     * Creates a new split APK containing only code.
-     *
-     * <p>This is used for instant run cold swaps on N and above.
-     */
-    public static void packageCodeSplitApk(
-            @NonNull File androidResPkg,
-            @NonNull Set<File> dexFiles,
-            @Nullable SigningConfig signingConfig,
-            @NonNull File outApkLocation,
-            @NonNull File incrementalDir,
-            @NonNull ApkCreatorFactory apkCreatorFactory,
-            @Nullable String createdBy)
-            throws KeytoolException, PackagerException, IOException {
-
-        ApkCreatorFactory.CreationData.Builder creationDataBuilder =
-                ApkCreatorFactory.CreationData.builder()
-                        .setApkPath(outApkLocation)
-                        .setCreatedBy(createdBy)
-                        .setNativeLibrariesPackagingMode(NativeLibrariesPackagingMode.COMPRESSED);
-
-        if (signingConfig != null && signingConfig.isSigningReady()) {
-            CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-                    signingConfig.getStoreType(),
-                    Preconditions.checkNotNull(signingConfig.getStoreFile()),
-                    Preconditions.checkNotNull(signingConfig.getStorePassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyPassword()),
-                    Preconditions.checkNotNull(signingConfig.getKeyAlias()));
-            creationDataBuilder.setSigningOptions(
-                    SigningOptions.builder()
-                            .setKey(certificateInfo.getKey())
-                            .setCertificates(certificateInfo.getCertificate())
-                            .setV1SigningEnabled(signingConfig.isV1SigningEnabled())
-                            .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
-                            .setMinSdkVersion(API_LEVEL_SPLIT_APK)
-                            .build());
-        }
-
-        try (IncrementalPackager packager =
-                new IncrementalPackager(
-                        creationDataBuilder.build(),
-                        incrementalDir,
-                        apkCreatorFactory,
-                        new HashSet<>(),
-                        true)) {
-            ImmutableMap<RelativeFile, FileStatus> androidResources =
-                    IncrementalRelativeFileSets.fromZip(androidResPkg);
-            packager.updateAndroidResources(androidResources);
-            for (File dexFile : dexFiles) {
-                RelativeFile dex = new RelativeFile(dexFile.getParentFile(), dexFile);
-                packager.updateDex(ImmutableMap.of(dex, FileStatus.NEW));
-            }
-        }
     }
 
     /**

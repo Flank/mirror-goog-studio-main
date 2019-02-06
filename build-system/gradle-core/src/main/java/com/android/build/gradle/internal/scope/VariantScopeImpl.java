@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -91,11 +90,7 @@ import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
@@ -510,7 +505,7 @@ public class VariantScopeImpl implements VariantScope {
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
-                || globalScope.getAndroidBuilder().isPreviewTarget()
+                || globalScope.getSdkComponents().getTarget().getVersion().isPreview()
                 || getMinSdkVersion().getCodename() != null
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
     }
@@ -1219,36 +1214,6 @@ public class VariantScopeImpl implements VariantScope {
     @Override
     public File getAnnotationProcessorOutputDir() {
         return FileUtils.join(globalScope.getGeneratedDir(), "source", "apt", getDirName());
-    }
-
-    /**
-     * Calls the sdklib machinery to construct the {@link IAndroidTarget} for the given hash string.
-     *
-     * @return appropriate {@link IAndroidTarget} or null if the matching platform package is not
-     *         installed.
-     */
-    @Nullable
-    private static IAndroidTarget getAndroidTarget(
-            @NonNull SdkHandler sdkHandler,
-            @NonNull String targetHash) {
-        File sdkLocation = sdkHandler.getSdkFolder();
-        ProgressIndicator progressIndicator = new LoggerProgressIndicatorWrapper(LOGGER);
-        IAndroidTarget target = AndroidSdkHandler.getInstance(sdkLocation)
-                .getAndroidTargetManager(progressIndicator)
-                .getTargetFromHashString(targetHash, progressIndicator);
-        if (target != null) {
-            return target;
-        }
-        // reset the cached AndroidSdkHandler, next time a target is looked up,
-        // this will force the re-parsing of the SDK.
-        AndroidSdkHandler.resetInstance(sdkLocation);
-
-        // and let's try immediately, it's possible the platform was installed since the SDK
-        // handler was initialized in the this VM, since we reset the instance just above, it's
-        // possible we find it.
-        return AndroidSdkHandler.getInstance(sdkLocation)
-                .getAndroidTargetManager(progressIndicator)
-                .getTargetFromHashString(targetHash, progressIndicator);
     }
 
     @FunctionalInterface

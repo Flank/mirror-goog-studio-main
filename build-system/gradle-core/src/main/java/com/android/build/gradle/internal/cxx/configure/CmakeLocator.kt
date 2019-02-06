@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
-import com.android.build.gradle.internal.SdkHandler
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.sdklib.repository.AndroidSdkHandler
@@ -27,6 +26,7 @@ import com.android.sdklib.repository.LoggerProgressIndicatorWrapper
 import com.android.utils.ILogger
 import java.io.File
 import java.io.IOException
+import java.util.function.Consumer
 
 /**
  * This is the logic for locating CMake needed for gradle build. This logic searches for CMake in
@@ -333,7 +333,7 @@ private class CmakeSearchContext(
      * Search within the already-download SDK packages.
      */
     internal fun tryLocalRepositoryPackages(
-        downloader: (String) -> Unit,
+        downloader: Consumer<String>,
         repositoryPackages: () -> List<LocalPackage>
     ): CmakeSearchContext {
         if (resultCmakeInstallFolder != null) {
@@ -357,7 +357,7 @@ private class CmakeSearchContext(
         if (versionEquals(requestedCmakeVersion, forkCmakeReportedVersion)) {
             // The version is exactly the default version. Download it if possible.
             info("- Downloading '$forkCmakeSdkVersionRevision'.")
-            downloader(FORK_CMAKE_SDK_VERSION)
+            downloader.accept(FORK_CMAKE_SDK_VERSION)
 
             val res = repositoryPackages().find { versionEquals(it.version, forkCmakeSdkVersionRevision) }
             if (res != null) {
@@ -491,10 +491,10 @@ private fun getCanarySdkPaths(sdkRoot : File?) : List<File> {
 }
 
 private fun getSdkCmakePackages(
-    sdkHandler: SdkHandler,
+    sdkFolder: File?,
     logger: ILogger
 ): List<LocalPackage> {
-    val androidSdkHandler = AndroidSdkHandler.getInstance(sdkHandler.sdkFolder)
+    val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder)
     val sdkManager = androidSdkHandler.getSdkManager(LoggerProgressIndicatorWrapper(logger))
     val packages = sdkManager.packages
     return packages.getLocalPackagesForPrefix(FD_CMAKE).toList()
@@ -525,7 +525,7 @@ private fun getCmakeRevisionFromExecutable(cmakeFolder: File): Revision? {
 fun findCmakePathLogic(
     cmakeVersionFromDsl: String?,
     cmakePathFromLocalProperties: File?,
-    downloader: (String) -> Unit,
+    downloader: Consumer<String>,
     environmentPaths: () -> List<File>,
     canarySdkPaths: () -> List<File>,
     cmakeVersion: (File) -> Revision?,
@@ -550,14 +550,17 @@ fun findCmakePathLogic(
  */
 fun findCmakePath(
     cmakeVersionFromDsl: String?,
-    sdkHandler: SdkHandler,
+    cmakeFile: File?,
+    sdkFolder: File?,
+    downloader: Consumer<String>,
     logger: ILogger) : File? {
     return findCmakePathLogic(
             cmakeVersionFromDsl,
-            sdkHandler.cmakePathInLocalProp,
-            { version -> sdkHandler.installCMake(version) },
+            cmakeFile,
+            downloader,
+            // { version -> sdkHandler.installCMake(version) },
             { getEnvironmentPaths() },
-            { getCanarySdkPaths(sdkHandler.sdkFolder) },
+            { getCanarySdkPaths(sdkFolder) },
             { folder -> getCmakeRevisionFromExecutable(folder) },
-            { getSdkCmakePackages(sdkHandler, logger) })
+            { getSdkCmakePackages(sdkFolder, logger) })
 }

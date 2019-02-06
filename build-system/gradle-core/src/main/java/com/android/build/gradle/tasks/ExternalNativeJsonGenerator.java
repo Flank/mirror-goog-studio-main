@@ -31,9 +31,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.external.cmake.CmakeUtils;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
@@ -468,7 +466,6 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull NativeBuildSystem buildSystem,
             @NonNull File makefile,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
         Set<String> configurationFailures = new HashSet<>();
         try (GradleSyncLoggingEnvironment ignore =
@@ -488,7 +485,6 @@ public abstract class ExternalNativeJsonGenerator {
                     buildSystem,
                     makefile,
                     androidBuilder,
-                    sdkHandler,
                     scope);
         }
     }
@@ -504,15 +500,14 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull NativeBuildSystem buildSystem,
             @NonNull File makefile,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
-        checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
         GlobalScope globalScope = scope.getGlobalScope();
+        checkNotNull(globalScope.getSdkComponents().getSdkFolder(), "No Android SDK folder found");
         NdkHandler ndkHandler = globalScope.getNdkHandler();
         File ndkFolder = ndkHandler.getNdkDirectory();
         if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
-            sdkHandler.installNdk(ndkHandler);
-            ndkFolder = sdkHandler.getNdkFolder();
+            globalScope.getSdkComponents().installNdk(ndkHandler);
+            ndkFolder = globalScope.getSdkComponents().getNdkFolder();
             if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
                 throw new InvalidUserDataException(
                         String.format(
@@ -623,11 +618,11 @@ public abstract class ExternalNativeJsonGenerator {
                         nativeBuildVariantConfig,
                         variantData.getName(),
                         makefile,
-                        sdkHandler.getSdkFolder(),
+                        globalScope.getSdkComponents().getSdkFolder(),
                         trySymlinkNdk(
-                                sdkHandler.getNdkFolder(),
+                                globalScope.getSdkComponents().getNdkFolder(),
                                 externalNativeBuildFolder,
-                                sdkHandler.getNdkSymlinkDirInLocalProp()),
+                                globalScope.getSdkComponents().getNdkSymlinkDirInLocalProp()),
                         soFolder,
                         objFolder,
                         externalNativeBuildFolder,
@@ -646,12 +641,7 @@ public abstract class ExternalNativeJsonGenerator {
                         config, configurationFailures, androidBuilder, projectDir, stats);
             case CMAKE:
                 return createCmakeExternalNativeJsonGenerator(
-                        config,
-                        configurationFailures,
-                        variantData,
-                        sdkHandler,
-                        androidBuilder,
-                        stats);
+                        config, configurationFailures, globalScope, androidBuilder, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }
@@ -665,30 +655,29 @@ public abstract class ExternalNativeJsonGenerator {
     private static ExternalNativeJsonGenerator createCmakeExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
             @NonNull Set<String> configurationFailures,
-            @NonNull BaseVariantData variantData,
-            @NonNull SdkHandler sdkHandler,
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        AndroidConfig extension = variantData.getScope().getGlobalScope().getExtension();
-        CoreExternalNativeBuild externalNativeBuild = extension.getExternalNativeBuild();
+        CoreExternalNativeBuild externalNativeBuild =
+                globalScope.getExtension().getExternalNativeBuild();
 
         File cmakeFolder;
-        if (variantData
-                .getScope()
-                .getGlobalScope()
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)) {
             cmakeFolder =
                     CmakeLocatorKt.findCmakePath(
                             externalNativeBuild.getCmake().getVersion(),
-                            sdkHandler,
+                            globalScope.getSdkComponents().getCMakeExecutable(),
+                            globalScope.getSdkComponents().getSdkFolder(),
+                            (version) -> globalScope.getSdkComponents().installCmake(version),
                             androidBuilder.getLogger());
 
         } else {
             cmakeFolder =
                     ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
                             Objects.requireNonNull(externalNativeBuild.getCmake().getVersion()),
-                            sdkHandler);
+                            globalScope.getSdkComponents().getCMakeExecutable(),
+                            globalScope.getSdkComponents().getSdkFolder(),
+                            (version) -> globalScope.getSdkComponents().installCmake(version));
         }
 
         Revision cmakeVersion;

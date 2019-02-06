@@ -43,7 +43,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
-            @NonNull SdkHandler sdkHandler,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -53,7 +52,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 projectOptions,
                 dataBindingBuilder,
                 extension,
-                sdkHandler,
                 variantFactory,
                 toolingRegistry,
                 recorder);

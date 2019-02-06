@@ -22,7 +22,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.cmake.CmakeUtils;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -40,6 +39,7 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Shared utility methods for dealing with external native build tasks.
@@ -195,13 +195,16 @@ public class ExternalNativeBuildTaskUtils {
      * Returns the folder with the CMake binary. For more info, check the comments on
      * doFindCmakeExecutableFolder below.
      *
-     * @param sdkHandler sdk handler
      * @return Folder with the required CMake binary
      */
     @NonNull
     public static File findCmakeExecutableFolder(
-            @NonNull String cmakeVersion, @NonNull SdkHandler sdkHandler) {
-        return doFindCmakeExecutableFolder(cmakeVersion, sdkHandler, getEnvironmentPathList());
+            @NonNull String cmakeVersion,
+            File cmakeExecutable,
+            File sdkFolder,
+            Consumer<String> cmakeInstaller) {
+        return doFindCmakeExecutableFolder(
+                cmakeVersion, cmakeExecutable, sdkFolder, cmakeInstaller, getEnvironmentPathList());
     }
 
     /**
@@ -240,18 +243,24 @@ public class ExternalNativeBuildTaskUtils {
      * <p>- Find CMake in the Sdk folder (or install CMake if it's unavailable) and return the CMake
      * folder.
      *
-     * @param sdkHandler sdk handler
-     * @param foldersToSearch folders to search if not found specified in local.properties
+     * @param cmakeVersion the CMake version that we'll look for if none is set in the local
+     *     properties.
+     * @param cmakeExecutable the path to the CMake installation.
+     * @param sdkFolder the directory were the SDK ins installed.
+     * @param cmakeInstaller consumer/callable that can install a specific CMake version.
+     * @param foldersToSearch folders to search if not found specified in local.properties.
      * @return Folder with the required CMake binary
      */
     @VisibleForTesting
     @NonNull
     static File doFindCmakeExecutableFolder(
             @Nullable String cmakeVersion,
-            @NonNull SdkHandler sdkHandler,
+            File cmakeExecutable,
+            File sdkFolder,
+            Consumer<String> cmakeInstaller,
             @NonNull List<File> foldersToSearch) {
-        if (sdkHandler.getCmakePathInLocalProp() != null) {
-            return sdkHandler.getCmakePathInLocalProp();
+        if (cmakeExecutable != null) {
+            return cmakeExecutable;
         }
 
         if (cmakeVersion != null && !isDefaultSdkCmakeVersion(cmakeVersion)) {
@@ -263,7 +272,7 @@ public class ExternalNativeBuildTaskUtils {
             return new File(cmakeFolder.getParent());
         }
 
-        return getCmakeFolderFromSdkPackage(sdkHandler);
+        return getCmakeFolderFromSdkPackage(sdkFolder, cmakeInstaller);
     }
 
     /**
@@ -336,23 +345,24 @@ public class ExternalNativeBuildTaskUtils {
      * and return the CMake folder.
      */
     @NonNull
-    private static File getCmakeFolderFromSdkPackage(@NonNull SdkHandler sdkHandler) {
+    private static File getCmakeFolderFromSdkPackage(
+            File sdkFolder, Consumer<String> cmakeInstaller) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
-        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkFolder);
         LocalPackage cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {
             return cmakePackage.getLocation();
         }
         // If CMake package is not found, we install it and try to find it.
-        sdkHandler.installCMake("3.6.4111459");
+        cmakeInstaller.accept("3.6.4111459");
         cmakePackage =
                 sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {
             return cmakePackage.getLocation();
         }
 
-        return new File(sdkHandler.getSdkFolder(), SdkConstants.FD_CMAKE);
+        return new File(sdkFolder, SdkConstants.FD_CMAKE);
     }
 
     public static class ExternalNativeBuildProjectPathResolution {

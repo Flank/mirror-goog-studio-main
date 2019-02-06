@@ -6,7 +6,6 @@ import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -31,7 +30,6 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull GlobalScope globalScope,
-            @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
@@ -42,7 +40,6 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
                 project,
                 projectOptions,
                 globalScope,
-                sdkHandler,
                 buildTypes,
                 productFlavors,
                 signingConfigs,
