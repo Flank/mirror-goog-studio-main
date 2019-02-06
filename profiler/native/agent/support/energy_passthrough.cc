@@ -112,16 +112,19 @@ const SteadyClock& GetClock() {
 // appropriate metadata must be set by the caller.
 void SubmitEnergyEvent(const EnergyEvent& energy_event,
                        const std::string& stack = {}) {
-  Agent::Instance().SubmitEnergyTasks(
-      {[energy_event, stack](InternalEnergyService::Stub& stub,
-                             ClientContext& ctx) {
-        AddEnergyEventRequest request;
-        request.mutable_energy_event()->CopyFrom(energy_event);
-        request.set_callstack(stack);
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
 
-        EmptyEnergyReply response;
-        return stub.AddEnergyEvent(&ctx, request, &response);
-      }});
+  Agent::Instance().SubmitEnergyTasks({[energy_event, stack](
+      InternalEnergyService::Stub& stub, ClientContext& ctx) {
+    AddEnergyEventRequest request;
+    request.mutable_energy_event()->CopyFrom(energy_event);
+    request.set_callstack(stack);
+
+    EmptyEnergyReply response;
+    return stub.AddEnergyEvent(&ctx, request, &response);
+  }});
 }
 
 AlarmSet::Type ParseAlarmType(jint type) {

@@ -43,6 +43,10 @@ const SteadyClock& GetClock() {
 namespace profiler {
 
 void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
   Agent::Instance().memory_component().SubmitMemoryTasks(
@@ -62,6 +66,10 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
 }
 
 void EnqueueGcStats(int64_t start_time, int64_t end_time) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   int32_t pid = getpid();
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[start_time, end_time, pid](InternalMemoryService::Stub& stub,
@@ -79,8 +87,11 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
 }
 
 void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
-  request.set_pid(getpid());
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
 
+  request.set_pid(getpid());
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
@@ -89,8 +100,11 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
 }
 
 void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
-  request.set_pid(getpid());
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
 
+  request.set_pid(getpid());
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
@@ -100,6 +114,10 @@ void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
 
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
                                         int32_t sampling_num_interval) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   int32_t pid = getpid();
   Agent::Instance().memory_component().SubmitMemoryTasks(
       {[timestamp, sampling_num_interval, pid](

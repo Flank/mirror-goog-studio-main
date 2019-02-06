@@ -111,12 +111,17 @@ void TraceMonitor::CheckFixTracePathCall(int32_t tid,
 }
 
 void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   if (tid != unconfirmed_start_request_.thread_id()) {
     Log::E(
         "startMethodTracing called from thread %d but fixTracePath exits from "
         "thread %d",
         unconfirmed_start_request_.thread_id(), tid);
   }
+
   int64_t timestamp = clock_.GetCurrentTime();
   Agent::Instance().SubmitCpuTasks({[this, fixed_path, timestamp](
                                         InternalCpuService::Stub& stub,
@@ -149,6 +154,10 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
 }
 
 void TraceMonitor::SubmitStopEvent(int tid) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   if (!api_initiated_trace_in_progress_) return;
   int64_t timestamp = clock_.GetCurrentTime();
   Agent::Instance().SubmitCpuTasks(

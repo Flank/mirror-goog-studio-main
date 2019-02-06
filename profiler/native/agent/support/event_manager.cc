@@ -61,6 +61,10 @@ void EventManager::CacheAndEnqueueActivityEvent(
 
 void EventManager::EnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
+  if (Agent::Instance().agent_config().unified_pipeline()) {
+    return;
+  }
+
   Agent::Instance().SubmitEventTasks(
       {[activity](InternalEventService::Stub& stub, ClientContext& ctx) {
         EmptyEventResponse response;
