@@ -259,7 +259,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                     val resources =
                         client.getResourceRepository(context.mainProject, true, false) ?: return
 
-                    val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
+                    val items =
+                        resources.getResources(ResourceNamespace.TODO(), ResourceType.ID, id)
                     if (!items.isEmpty()) {
                         val compatible = HashSet<String>()
                         for (item in items) {
@@ -533,17 +534,17 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
             if (node is UVariable && node.typeReference != null) {
                 location = context.getLocation(node.typeReference!!)
                 location.secondary =
-                        createSecondary(context, displayTag, resourceReference, sampleLayout)
+                    createSecondary(context, displayTag, resourceReference, sampleLayout)
             } else {
                 location = context.getLocation(node)
             }
             message =
-                    "Unexpected implicit cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
+                "Unexpected implicit cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
         } else {
             location = context.getLocation(node)
             if (sampleLayout != null) {
                 location.secondary =
-                        createSecondary(context, displayTag, resourceReference, sampleLayout)
+                    createSecondary(context, displayTag, resourceReference, sampleLayout)
             }
             message = "Unexpected cast to `$incompatibleTag`: $type tag $verb `$displayTag`"
         }

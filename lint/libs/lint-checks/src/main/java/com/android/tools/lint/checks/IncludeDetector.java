@@ -109,10 +109,10 @@ public class IncludeDetector extends LayoutDetector {
 
                     LintFix.GroupBuilder fixes = fix().alternatives();
                     if (!hasWidth) {
-                        fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_WIDTH, "").build());
+                        fixes.add(fix().set().todo(ANDROID_URI, ATTR_LAYOUT_WIDTH).build());
                     }
                     if (!hasHeight) {
-                        fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_HEIGHT, "").build());
+                        fixes.add(fix().set().todo(ANDROID_URI, ATTR_LAYOUT_HEIGHT).build());
                     }
                     context.report(
                             ISSUE, element, context.getLocation(attribute), message, fixes.build());

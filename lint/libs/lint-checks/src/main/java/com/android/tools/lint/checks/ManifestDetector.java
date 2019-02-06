@@ -607,7 +607,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
-            LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_CODE, "").build();
+            LintFix fix = fix().set().todo(ANDROID_URI, ATTR_VERSION_CODE).build();
             context.report(
                     SET_VERSION,
                     element,
@@ -621,7 +621,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
-            LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_NAME, "").build();
+            LintFix fix = fix().set().todo(ANDROID_URI, ATTR_VERSION_NAME).build();
             context.report(
                     SET_VERSION,
                     element,

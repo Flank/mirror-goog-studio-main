@@ -618,18 +618,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 var message: String
                 if (issue === UNSUPPORTED) {
                     message =
-                            "`<$realTag>` requires API level $api (current min is $minSdk)"
+                        "`<$realTag>` requires API level $api (current min is $minSdk)"
                     if (gradleVersion != null) {
                         message +=
-                                " or building with Android Gradle plugin $gradleVersion or higher"
+                            " or building with Android Gradle plugin $gradleVersion or higher"
                     } else if (realTag.contains(".")) {
                         message =
-                                "Custom drawables requires API level $api (current min is $minSdk)"
+                            "Custom drawables requires API level $api (current min is $minSdk)"
                     }
                 } else {
                     assert(issue === UNUSED) { issue }
                     message =
-                            "`<$realTag>` is only used in API level $api and higher (current min is $minSdk)"
+                        "`<$realTag>` is only used in API level $api and higher (current min is $minSdk)"
                 }
                 context.report(issue, element, location, message, apiLevelFix(api))
             }
@@ -1507,17 +1507,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             val signature: String
             signature =
-                    if (fqcn == null) {
-                        name
-                    } else if (CONSTRUCTOR_NAME == name) {
-                        if (isKotlin(reference.sourcePsi)) {
-                            "$fqcn()"
-                        } else {
-                            "new $fqcn"
-                        }
+                if (fqcn == null) {
+                    name
+                } else if (CONSTRUCTOR_NAME == name) {
+                    if (isKotlin(reference.sourcePsi)) {
+                        "$fqcn()"
                     } else {
-                        "$fqcn${'#'}$name"
+                        "new $fqcn"
                     }
+                } else {
+                    "$fqcn${'#'}$name"
+                }
 
             val nameIdentifier = if (call != null) call.methodIdentifier else reference
 

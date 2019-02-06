@@ -509,7 +509,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             if (where == "from within the same library (groupId=com.android.support)") {
                 // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
                 message =
-                        "This API is marked as internal to the support library and should not be accessed from apps"
+                    "This API is marked as internal to the support library and should not be accessed from apps"
             }
         }
 

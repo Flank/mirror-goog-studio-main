@@ -23,7 +23,6 @@ import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_META_DATA
 import com.android.SdkConstants.VALUE_TRUE
-import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX
 import com.android.resources.ResourceFolderType
@@ -43,6 +42,7 @@ import com.android.utils.XmlUtils.getPreviousTagByName
 import com.android.utils.iterator
 import com.android.utils.next
 import com.android.utils.subtag
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Sets
 import org.w3c.dom.Document
 import org.w3c.dom.Element

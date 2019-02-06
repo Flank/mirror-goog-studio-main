@@ -97,8 +97,10 @@ class JavaScriptInterfaceDetector : Detector(), SourceCodeScanner {
                 }
                 for (annotation in node.annotations) {
                     if (annotation.qualifiedName == JAVASCRIPT_INTERFACE_CLS) {
-                        context.report(ISSUE, node as UElement, context.getNameLocation(node),
-                            "Must be public when using `@JavascriptInterface`")
+                        context.report(
+                            ISSUE, node as UElement, context.getNameLocation(node),
+                            "Must be public when using `@JavascriptInterface`"
+                        )
                     }
                 }
             }

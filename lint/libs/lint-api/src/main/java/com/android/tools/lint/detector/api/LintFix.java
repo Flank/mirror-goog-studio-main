@@ -43,6 +43,9 @@ import org.jetbrains.annotations.Nls;
  * <p>The set of operations is quite limited at the moment; more will be added over time.
  */
 public class LintFix {
+    /** Marker inserted in various places to indicate that something is expected from the user */
+    public static final String TODO = "TODO";
+
     @Nls @Nullable protected final String displayName;
     @Nls @Nullable protected final String familyName;
 
@@ -824,7 +827,7 @@ public class LintFix {
                 sb.append(prefix);
             }
             int start = sb.length();
-            sb.append("TODO");
+            sb.append(TODO);
             int end = sb.length();
             if (suffix != null) {
                 sb.append(suffix);

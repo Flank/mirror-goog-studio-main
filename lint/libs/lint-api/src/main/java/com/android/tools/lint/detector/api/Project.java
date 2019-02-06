@@ -1070,8 +1070,8 @@ public class Project {
     /**
      * Whether this project is a base application with dynamic features.
      *
-     * @return true if this is an application project that has any dynamic features,
-     * false in all other cases.
+     * @return true if this is an application project that has any dynamic features, false in all
+     *     other cases.
      */
     public boolean hasDynamicFeatures() {
         return false;

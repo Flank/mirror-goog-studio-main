@@ -16,9 +16,9 @@
 
 package com.android.tools.lint.checks
 
-import com.google.common.annotations.VisibleForTesting
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.assertionsEnabled
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import com.google.common.base.Splitter
 import com.google.common.io.ByteStreams

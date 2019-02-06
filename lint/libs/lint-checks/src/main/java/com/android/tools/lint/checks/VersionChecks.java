@@ -308,6 +308,7 @@ public class VersionChecks {
                 } else if (last instanceof UCallExpression) {
                     UCallExpression call = (UCallExpression) last;
                     String methodName = getMethodName(call);
+                    // Look for Kotlin runtime library methods that unconditionally exit
                     if ("error".equals(methodName) || "TODO".equals(methodName)) {
                         return true;
                     }

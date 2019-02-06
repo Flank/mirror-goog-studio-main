@@ -833,19 +833,19 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 1: Set versionCode:\n"
+                                + "Fix for AndroidManifest.xml line 2: Set versionCode:\n"
                                 + "@@ -3 +3\n"
                                 + "  <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "-     package=\"foo.bar2\" >\n"
                                 + "+     package=\"foo.bar2\"\n"
-                                + "+     android:versionCode=\"|\" >\n"
+                                + "+     android:versionCode=\"[TODO]|\" >\n"
                                 + "  \n"
-                                + "Fix for AndroidManifest.xml line 1: Set versionName:\n"
+                                + "Fix for AndroidManifest.xml line 2: Set versionName:\n"
                                 + "@@ -3 +3\n"
                                 + "  <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                                 + "-     package=\"foo.bar2\" >\n"
                                 + "+     package=\"foo.bar2\"\n"
-                                + "+     android:versionName=\"|\" >\n"
+                                + "+     android:versionName=\"[TODO]|\" >\n"
                                 + "  \n");
     }
 

@@ -23,6 +23,7 @@ import static com.android.SdkConstants.ATTR_IMPORTANT_FOR_ACCESSIBILITY;
 import static com.android.SdkConstants.IMAGE_BUTTON;
 import static com.android.SdkConstants.IMAGE_VIEW;
 import static com.android.SdkConstants.VALUE_NO;
+import static com.android.tools.lint.detector.api.LintFix.TODO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -116,7 +117,7 @@ public class AccessibilityDetector extends LayoutDetector {
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
-            if (attribute.isEmpty() || attribute.equals("TODO")) {
+            if (attribute.isEmpty() || attribute.equals(TODO)) {
                 LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
                 context.report(
                         ISSUE,

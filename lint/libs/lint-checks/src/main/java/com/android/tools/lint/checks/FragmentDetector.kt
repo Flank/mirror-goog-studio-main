@@ -76,7 +76,8 @@ class FragmentDetector : Detector(), SourceCodeScanner {
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
         if (declaration is UAnonymousClass) {
-            context.report(ISSUE, declaration, context.getNameLocation(declaration),
+            context.report(
+                ISSUE, declaration, context.getNameLocation(declaration),
                 "Fragments should be static such that they can be re-instantiated by the system, and anonymous classes are not static"
             )
             return
@@ -88,7 +89,8 @@ class FragmentDetector : Detector(), SourceCodeScanner {
         }
 
         if (!evaluator.isPublic(declaration)) {
-            context.report(ISSUE, declaration, context.getNameLocation(declaration),
+            context.report(
+                ISSUE, declaration, context.getNameLocation(declaration),
                 "This fragment class should be public (${declaration.qualifiedName})"
             )
             return

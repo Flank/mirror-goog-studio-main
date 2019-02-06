@@ -124,22 +124,22 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                 .window(2)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/note_edit.xml line 42: Set inputType:\n"
+                                + "Fix for res/layout/note_edit.xml line 43: Set inputType:\n"
                                 + "@@ -65 +65\n"
                                 + "              android:freezesText=\"true\"\n"
                                 + "              android:gravity=\"top\"\n"
                                 + "-             android:hint=\"@string/note_hint\" >\n"
                                 + "+             android:hint=\"@string/note_hint\"\n"
-                                + "+             android:inputType=\"|\" >\n"
+                                + "+             android:inputType=\"[TODO]|\" >\n"
                                 + "          </EditText>\n"
                                 + "  \n"
-                                + "Fix for res/layout/note_edit.xml line 49: Set inputType:\n"
+                                + "Fix for res/layout/note_edit.xml line 50: Set inputType:\n"
                                 + "@@ -74 +74\n"
                                 + "              android:layout_weight=\"1\"\n"
                                 + "              android:freezesText=\"true\"\n"
                                 + "-             android:gravity=\"top\" >\n"
                                 + "+             android:gravity=\"top\"\n"
-                                + "+             android:inputType=\"|\" >\n"
+                                + "+             android:inputType=\"[TODO]|\" >\n"
                                 + "  \n"
                                 + "              <requestFocus />\n");
     }

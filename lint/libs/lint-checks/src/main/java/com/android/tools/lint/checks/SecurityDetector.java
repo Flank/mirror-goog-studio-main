@@ -35,6 +35,7 @@ import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
+import static com.android.tools.lint.detector.api.LintFix.TODO;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 
 import com.android.annotations.NonNull;
@@ -249,7 +250,7 @@ public class SecurityDetector extends Detector implements XmlScanner, SourceCode
         // Used to check whether an activity, service or broadcast receiver are
         // protected by a permission.
         String permission = element.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
-        if ("TODO".equals(permission)) { // temporary quickfix state: don't accept as solved
+        if (TODO.equals(permission)) { // temporary quickfix state: don't accept as solved
             return true;
         }
         if (permission == null || permission.isEmpty()) {

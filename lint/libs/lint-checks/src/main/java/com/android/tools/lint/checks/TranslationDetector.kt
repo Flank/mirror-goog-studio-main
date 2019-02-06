@@ -30,9 +30,9 @@ import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.configuration.DensityQualifier
 import com.android.ide.common.resources.configuration.FolderConfiguration
 import com.android.ide.common.resources.configuration.VersionQualifier
+import com.android.ide.common.resources.getLocales
 import com.android.ide.common.resources.usage.ResourceUsageModel
 import com.android.ide.common.resources.usage.ResourceUsageModel.getResourceFieldName
-import com.android.ide.common.resources.getLocales
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceFolderType.VALUES

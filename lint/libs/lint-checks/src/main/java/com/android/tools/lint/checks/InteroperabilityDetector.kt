@@ -478,7 +478,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 return
             }
             if (node is UField &&
-                node.modifierList?.hasModifierProperty(PsiModifier.FINAL) == true) {
+                node.modifierList?.hasModifierProperty(PsiModifier.FINAL) == true
+            ) {
                 return
             }
             for (annotation in node.annotations) {

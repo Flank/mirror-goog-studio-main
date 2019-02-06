@@ -127,7 +127,6 @@ public class AutofillDetector extends LayoutDetector {
                                             .caretBegin()
                                             .build(),
                                     fix().set(ANDROID_URI, ATTR_IMPORTANT_FOR_AUTOFILL, "no")
-                                            .caretBegin()
                                             .build());
             xmlContext.report(ISSUE, element, xmlContext.getNameLocation(element), MESSAGE, fix);
         }

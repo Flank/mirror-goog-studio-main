@@ -182,9 +182,9 @@ public class LabelForDetector extends LayoutDetector {
                         || contentDescriptionNode.getValue().isEmpty())) {
             LintFix fix =
                     fix().alternatives(
-                                    fix().set(ANDROID_URI, ATTR_TEXT, "").caretBegin().build(),
-                                    fix().set(ANDROID_URI, ATTR_CONTENT_DESCRIPTION, "")
-                                            .caretBegin()
+                                    fix().set().todo(ANDROID_URI, ATTR_TEXT).build(),
+                                    fix().set()
+                                            .todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION)
                                             .build());
 
             context.report(

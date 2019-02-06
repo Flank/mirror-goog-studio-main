@@ -185,8 +185,8 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     evaluator.extendsClass(containingClass, CONTENT_RESOLVER_CLS, false) ||
                     evaluator.extendsClass(containingClass, CLASS_CONTENTPROVIDER, false) ||
                     evaluator.extendsClass(
-                containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
-            ))
+                        containingClass, CONTENT_PROVIDER_CLIENT_CLS, false
+                    ))
         ) {
             // Other potential cursors-returning methods that should be tracked:
             //    android.app.DownloadManager#query
@@ -361,7 +361,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                                 } else if (resolved is PsiMethod &&
                                     operand is UCallExpression &&
                                     isCommittedInChainedCalls(
-                                    this.context, operand
+                                        this.context, operand
                                     )
                                 ) {
                                     // Check that the target of the committed chains is the
@@ -490,7 +490,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                 val commitVisitor = object : FinishVisitor(context, boundVariable) {
                     override fun isCleanupCall(call: UCallExpression): Boolean {
                         if (isEditorApplyMethodCall(this.context, call) || isEditorCommitMethodCall(
-                            this.context,
+                                this.context,
                                 call
                             )
                         ) {
@@ -508,7 +508,7 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                                 } else if (resolved is PsiMethod &&
                                     operand is UCallExpression &&
                                     isEditorCommittedInChainedCalls(
-                                    this.context, operand
+                                        this.context, operand
                                     )
                                 ) {
                                     // Check that the target of the committed chains is the
@@ -636,9 +636,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     return true
                 }
             } else if (call.valueArgumentCount == 0) {
-                    // Couldn't find method but it *looks* like an apply call
-                    return true
-                }
+                // Couldn't find method but it *looks* like an apply call
+                return true
+            }
         }
 
         return false
@@ -658,9 +658,9 @@ class CleanupDetector : Detector(), SourceCodeScanner {
                     containingClass, ANDROID_CONTENT_SHARED_PREFERENCES_EDITOR, false
                 )
             } else if (call.valueArgumentCount == 0) {
-                    // Couldn't find method but it *looks* like an apply call
-                    return true
-                }
+                // Couldn't find method but it *looks* like an apply call
+                return true
+            }
         }
 
         return false

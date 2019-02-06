@@ -59,7 +59,8 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
     override fun getApplicableUastTypes(): List<Class<out UElement>> =
         listOf(UMethod::class.java, UClass::class.java)
 
-    override fun createUastHandler(context: JavaContext): UElementHandler = IgnoreAnnotationVisitor(context)
+    override fun createUastHandler(context: JavaContext): UElementHandler =
+        IgnoreAnnotationVisitor(context)
 
     internal class IgnoreAnnotationVisitor(private val context: JavaContext) : UElementHandler() {
         override fun visitMethod(node: UMethod) = processAnnotations(node, node)
@@ -68,16 +69,18 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
 
         private fun processAnnotations(element: UElement, annotated: UAnnotated) {
             val annotations = context.evaluator.getAllAnnotations(annotated, false)
-            val ignoreAnnotation = annotations.firstOrNull { it.qualifiedName == "org.junit.Ignore" }
+            val ignoreAnnotation =
+                annotations.firstOrNull { it.qualifiedName == "org.junit.Ignore" }
 
             if (ignoreAnnotation != null) {
                 val attribute = ignoreAnnotation.findAttributeValue(ATTR_VALUE)
                 val hasDescription =
                     attribute != null &&
-                    run {
-                        val value = ConstantEvaluator.evaluate(context, attribute) as? String
-                        value != null && value.isNotBlank() && value != "TODO"
-                    }
+                            run {
+                                val value =
+                                    ConstantEvaluator.evaluate(context, attribute) as? String
+                                value != null && value.isNotBlank() && value != "TODO"
+                            }
                 if (!hasDescription) {
                     val fix =
                         if (attribute == null || ignoreAnnotation.attributeValues.isEmpty()) {
@@ -91,8 +94,10 @@ class IgnoreWithoutReasonDetector : Detector(), Detector.UastScanner {
                         } else {
                             null
                         }
-                    context.report(ISSUE, element, context.getLocation(ignoreAnnotation),
-                        "Test is ignored without giving any explanation.", fix)
+                    context.report(
+                        ISSUE, element, context.getLocation(ignoreAnnotation),
+                        "Test is ignored without giving any explanation.", fix
+                    )
                 }
             }
         }

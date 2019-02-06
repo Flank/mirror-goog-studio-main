@@ -2771,7 +2771,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             -     debugCompile 'androidx.appcompat:appcompat:1.0.0'
             +     debugImplementation 'androidx.appcompat:appcompat:1.0.0'""".trimIndent()
 
-
         lint()
             .files(
                 gradle(
@@ -2882,7 +2881,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(fixDiff)
     }
-
 
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here

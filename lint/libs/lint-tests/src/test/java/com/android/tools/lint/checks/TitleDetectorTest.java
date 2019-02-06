@@ -43,19 +43,19 @@ public class TitleDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/menu/titles.xml line 2: Set title:\n"
+                                + "Fix for res/menu/titles.xml line 3: Set title:\n"
                                 + "@@ -9 +9\n"
                                 + "          android:selectableItemBackground=\"@null\"\n"
                                 + "-         android:showAsAction=\"always\"/>\n"
                                 + "+         android:showAsAction=\"always\"\n"
-                                + "+         android:title=\"|\"/>\n"
+                                + "+         android:title=\"[TODO]|\"/>\n"
                                 + "      <item\n"
-                                + "Fix for res/menu/titles.xml line 11: Set title:\n"
+                                + "Fix for res/menu/titles.xml line 12: Set title:\n"
                                 + "@@ -18 +18\n"
                                 + "          android:icon=\"@drawable/ic_menu_plus1\"\n"
                                 + "-         android:showAsAction=\"always\"/>\n"
                                 + "+         android:showAsAction=\"always\"\n"
-                                + "+         android:title=\"|\"/>\n"
+                                + "+         android:title=\"[TODO]|\"/>\n"
                                 + "  \n");
     }
 

@@ -190,7 +190,8 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 if (method?.name == "getAllCellInfo" &&
                     missingPermissions.size == 1 &&
                     missingPermissions.first() == "android.permission.ACCESS_COARSE_LOCATION" &&
-                    permissions.hasPermission("android.permission.ACCESS_FINE_LOCATION")) {
+                    permissions.hasPermission("android.permission.ACCESS_FINE_LOCATION")
+                ) {
                     // Special case for issue 63962416:
                     // TelephonyManager.getAllCellInfo is incorrectly annotated as requiring
                     // ACCESS_COARSE_LOCATION or ACCESS_FINE_LOCATION; instead it's annotated
@@ -222,8 +223,11 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
 
                 // See if the requirement is passed on via surrounding requires permissions
                 val localRequirements = addLocalPermissions(
-                    PermissionHolder.SetPermissionLookup(mutableSetOf(), mutableSetOf(),
-                        permissions.minSdkVersion, permissions.targetSdkVersion), node)
+                    PermissionHolder.SetPermissionLookup(
+                        mutableSetOf(), mutableSetOf(),
+                        permissions.minSdkVersion, permissions.targetSdkVersion
+                    ), node
+                )
                 if (requirement.isSatisfied(localRequirements)) {
                     return
                 }
@@ -303,7 +307,7 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         val containingClass = method.getContainingUClass()
         if (containingClass != null) {
             annotation = containingClass.findAnnotation(PERMISSION_ANNOTATION.oldName())
-                    ?: containingClass.findAnnotation(PERMISSION_ANNOTATION.newName())
+                ?: containingClass.findAnnotation(PERMISSION_ANNOTATION.newName())
             merged = mergeAnnotationPermissions(merged, annotation)
         }
         return merged

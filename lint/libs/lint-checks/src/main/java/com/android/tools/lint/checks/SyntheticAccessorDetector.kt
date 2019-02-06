@@ -248,7 +248,8 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     // Sealed class? This will create a private constructor we can't delete
                     val modifierList = target.modifierList
                     if (modifierList != null &&
-                        modifierList.text.contains("sealed")) {
+                        modifierList.text.contains("sealed")
+                    ) {
                         return
                     }
                 }

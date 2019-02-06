@@ -441,7 +441,6 @@ open class GradleDetector : Detector(), GradleScanner {
                     }
                 }
                 checkDeprecatedConfigurations(property, context, propertyCookie)
-
             }
         } else if (property == "packageNameSuffix") {
             val message = "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
@@ -471,8 +470,9 @@ open class GradleDetector : Detector(), GradleScanner {
         } else if (property == "enabled" && parent == "dataBinding") {
             if (value == SdkConstants.VALUE_TRUE) {
                 if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
-                  val message = "If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin."
-                  report(context, valueCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
+                    val message =
+                        "If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin."
+                    report(context, valueCookie, DATA_BINDING_WITHOUT_KAPT, message, null)
                 }
             }
         }
@@ -518,8 +518,8 @@ open class GradleDetector : Detector(), GradleScanner {
         for (deprecatedConfiguration in DeprecatedConfiguration.values()) {
             if (deprecatedConfiguration.matches(configuration)) {
                 // Compile was replaced by API and Implementation, but only suggest API if it was used
-                if (deprecatedConfiguration == DeprecatedConfiguration.COMPILE
-                    && suggestApiConfigurationUse(context.project, configuration)
+                if (deprecatedConfiguration == DeprecatedConfiguration.COMPILE &&
+                    suggestApiConfigurationUse(context.project, configuration)
                 ) {
                     val implementation: String
                     val api: String
@@ -1771,7 +1771,7 @@ open class GradleDetector : Detector(), GradleScanner {
                 "`jarjar`."
         if (direct) {
             message =
-                    "`${path[0].resolvedCoordinates.artifactId}` defines classes that conflict with classes now provided by Android. $resolution"
+                "`${path[0].resolvedCoordinates.artifactId}` defines classes that conflict with classes now provided by Android. $resolution"
         } else {
             val sb = StringBuilder()
             var first = true
@@ -2290,7 +2290,6 @@ open class GradleDetector : Detector(), GradleScanner {
             androidSpecific = true,
             implementation = IMPLEMENTATION
         )
-
 
         /** Using data binding with Kotlin but not Kotlin annotation processing */
         @JvmField

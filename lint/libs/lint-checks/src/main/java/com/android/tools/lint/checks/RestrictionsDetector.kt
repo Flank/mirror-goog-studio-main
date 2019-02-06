@@ -21,7 +21,6 @@ import com.android.SdkConstants.ATTR_TITLE
 import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.STRING_PREFIX
 import com.android.SdkConstants.XMLNS_PREFIX
-import com.google.common.annotations.VisibleForTesting
 import com.android.resources.ResourceFolderType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
@@ -31,6 +30,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.tools.lint.detector.api.getChildren
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Maps
 import org.w3c.dom.Attr
 import org.w3c.dom.Document

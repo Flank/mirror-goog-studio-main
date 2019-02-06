@@ -44,7 +44,8 @@ class C2dmDetector : Detector(), XmlScanner {
         val attribute = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME) ?: return
         val receiverName = attribute.value
         if (receiverName != "com.google.android.c2dm.C2DMBroadcastReceiver" &&
-                        receiverName != "com.google.android.gcm.GCMBroadcastReceiver") {
+            receiverName != "com.google.android.gcm.GCMBroadcastReceiver"
+        ) {
             return
         }
 

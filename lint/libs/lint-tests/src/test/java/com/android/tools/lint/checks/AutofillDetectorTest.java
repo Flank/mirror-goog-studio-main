@@ -104,18 +104,19 @@ public class AutofillDetectorTest extends AbstractCheckTest {
                 .verifyFixes()
                 .window(2)
                 .expectFixDiffs(
-                        "Fix for res/layout/autofill.xml line 5: Set autofillHints:\n"
+                        ""
+                                + "Fix for res/layout/autofill.xml line 6: Set autofillHints:\n"
                                 + "@@ -11 +11\n"
                                 + "          android:layout_width=\"match_parent\"\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "+         android:autofillHints=\"|\"\n"
                                 + "          android:hint=\"hint\"\n"
                                 + "          android:inputType=\"password\" >\n"
-                                + "Fix for res/layout/autofill.xml line 5: Set importantForAutofill=\"no\":\n"
+                                + "Fix for res/layout/autofill.xml line 6: Set importantForAutofill=\"no\":\n"
                                 + "@@ -12 +12\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "          android:hint=\"hint\"\n"
-                                + "+         android:importantForAutofill=\"|no\"\n"
+                                + "+         android:importantForAutofill=\"no\"\n"
                                 + "          android:inputType=\"password\" >\n"
                                 + "  \n");
     }
@@ -206,19 +207,19 @@ public class AutofillDetectorTest extends AbstractCheckTest {
                 .window(2)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/autofill.xml line 6: Set autofillHints:\n"
+                                + "Fix for res/layout/autofill.xml line 7: Set autofillHints:\n"
                                 + "@@ -12 +12\n"
                                 + "          android:layout_width=\"match_parent\"\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "+         android:autofillHints=\"|\"\n"
                                 + "          android:hint=\"hint\"\n"
                                 + "          android:importantForAutofill=\"yes\"\n"
-                                + "Fix for res/layout/autofill.xml line 6: Set importantForAutofill=\"no\":\n"
+                                + "Fix for res/layout/autofill.xml line 7: Set importantForAutofill=\"no\":\n"
                                 + "@@ -13 +13\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "          android:hint=\"hint\"\n"
                                 + "-         android:importantForAutofill=\"yes\"\n"
-                                + "+         android:importantForAutofill=\"|no\"\n"
+                                + "+         android:importantForAutofill=\"no\"\n"
                                 + "          android:inputType=\"password\" >\n"
                                 + "  \n");
     }
@@ -292,18 +293,18 @@ public class AutofillDetectorTest extends AbstractCheckTest {
                 .window(2)
                 .expectFixDiffs(
                         ""
-                                + "Fix for res/layout/autofill.xml line 6: Set autofillHints:\n"
+                                + "Fix for res/layout/autofill.xml line 7: Set autofillHints:\n"
                                 + "@@ -12 +12\n"
                                 + "          android:layout_width=\"match_parent\"\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "+         android:autofillHints=\"|\"\n"
                                 + "          android:hint=\"hint\"\n"
                                 + "          android:inputType=\"password\" >\n"
-                                + "Fix for res/layout/autofill.xml line 6: Set importantForAutofill=\"no\":\n"
+                                + "Fix for res/layout/autofill.xml line 7: Set importantForAutofill=\"no\":\n"
                                 + "@@ -13 +13\n"
                                 + "          android:layout_height=\"wrap_content\"\n"
                                 + "          android:hint=\"hint\"\n"
-                                + "+         android:importantForAutofill=\"|no\"\n"
+                                + "+         android:importantForAutofill=\"no\"\n"
                                 + "          android:inputType=\"password\" >\n"
                                 + "  \n");
         ;

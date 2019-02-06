@@ -21,6 +21,7 @@ import static com.android.SdkConstants.ATTR_TITLE;
 import static com.android.SdkConstants.ATTR_VISIBLE;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.tools.lint.detector.api.LintFix.TODO;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -79,7 +80,8 @@ public class TitleDetector extends ResourceXmlDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        if (element.hasAttributeNS(ANDROID_URI, ATTR_TITLE)) {
+        if (element.hasAttributeNS(ANDROID_URI, ATTR_TITLE)
+                || TODO.equals(element.getAttributeNS(ANDROID_URI, ATTR_TITLE))) {
             return;
         }
 
@@ -93,7 +95,7 @@ public class TitleDetector extends ResourceXmlDetector {
             return;
         }
 
-        LintFix fix = fix().set(ANDROID_URI, ATTR_TITLE, "").build();
+        LintFix fix = fix().set().todo(ANDROID_URI, ATTR_TITLE).build();
         String message = "Menu items should specify a `title`";
         context.report(ISSUE, element, context.getNameLocation(element), message, fix);
     }

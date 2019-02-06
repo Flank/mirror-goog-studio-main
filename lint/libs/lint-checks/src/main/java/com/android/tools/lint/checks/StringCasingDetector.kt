@@ -158,7 +158,7 @@ class StringCasingDetector : ResourceXmlDetector() {
 
                 if (caseVaries) {
                     message += ". Use `android:inputType` or `android:capitalize` " +
-                        "to treat these as the same and avoid string duplication."
+                            "to treat these as the same and avoid string duplication."
                 }
                 context.report(DUPLICATE_STRINGS, firstLocation, message)
             }

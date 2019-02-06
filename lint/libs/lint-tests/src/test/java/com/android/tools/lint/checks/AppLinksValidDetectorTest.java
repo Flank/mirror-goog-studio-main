@@ -757,7 +757,7 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 14: Set scheme=\"http\":\n"
+                                + "Fix for AndroidManifest.xml line 15: Set scheme=\"http\":\n"
                                 + "@@ -15 +15\n"
                                 + "              android:theme=\"@style/FullscreenTheme\" >\n"
                                 + "-             <intent-filter android:label=\"@string/title_activity_fullscreen\" >\n"
@@ -765,15 +765,15 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                                 + "+                 android:label=\"@string/title_activity_fullscreen\"\n"
                                 + "+                 android:scheme=\"http\" >\n"
                                 + "                  <action android:name=\"android.intent.action.VIEW\" />\n"
-                                + "Fix for AndroidManifest.xml line 16: Set host:\n"
+                                + "Fix for AndroidManifest.xml line 17: Set host:\n"
                                 + "@@ -18 +18\n"
                                 + "  \n"
                                 + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
                                 + "+                 <data\n"
-                                + "+                     android:host=\"|\"\n"
+                                + "+                     android:host=\"[TODO]|\"\n"
                                 + "+                     android:pathPrefix=\"/gizmos\" />\n"
                                 + "  \n"
-                                + "Fix for AndroidManifest.xml line 16: Set scheme=\"http\":\n"
+                                + "Fix for AndroidManifest.xml line 17: Set scheme=\"http\":\n"
                                 + "@@ -18 +18\n"
                                 + "  \n"
                                 + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
@@ -909,10 +909,10 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                 .window(1)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 20: Set host:\n"
+                                + "Fix for AndroidManifest.xml line 21: Set host:\n"
                                 + "@@ -24 +24\n"
                                 + "                  <data\n"
-                                + "+                     android:host=\"|\"\n"
+                                + "+                     android:host=\"[TODO]|\"\n"
                                 + "                      android:pathPrefix=\"/gizmos\"\n");
     }
 
