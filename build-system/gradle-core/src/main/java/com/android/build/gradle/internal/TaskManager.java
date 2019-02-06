@@ -588,9 +588,16 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
                         .build());
 
+        // We include RESOURCES in externalContentTypes if EXTERNAL_LIBRARIES isn't in the set of
+        // java res merging scopes.
+        final Set<QualifiedContent.ContentType> externalContentTypes =
+                getResMergingScopes(variantScope).contains(Scope.EXTERNAL_LIBRARIES)
+                        ? ImmutableSet.of(ExtendedContentType.NATIVE_LIBS)
+                        : ImmutableSet.of(
+                                ExtendedContentType.NATIVE_LIBS, DefaultContentType.RESOURCES);
         transformManager.addStream(
-                OriginalStream.builder(project, "ext-libs-native")
-                        .addContentTypes(ExtendedContentType.NATIVE_LIBS)
+                OriginalStream.builder(project, "ext-libs-res-plus-native")
+                        .addContentTypes(externalContentTypes)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
@@ -617,10 +624,17 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, MODULE, CLASSES))
                         .build());
 
-        // same for the resources which can be java-res or jni
+        // same for the resources which can be java-res or jni.
+        // We include RESOURCES in subProjectContentTypes if SUB_PROJECTS isn't in the set of java
+        // res merging scopes.
+        final Set<QualifiedContent.ContentType> subProjectContentTypes =
+                getResMergingScopes(variantScope).contains(Scope.SUB_PROJECTS)
+                        ? ImmutableSet.of(ExtendedContentType.NATIVE_LIBS)
+                        : ImmutableSet.of(
+                                ExtendedContentType.NATIVE_LIBS, DefaultContentType.RESOURCES);
         transformManager.addStream(
-                OriginalStream.builder(project, "sub-projects-native")
-                        .addContentTypes(ExtendedContentType.NATIVE_LIBS)
+                OriginalStream.builder(project, "sub-projects-res-plus-native")
+                        .addContentTypes(subProjectContentTypes)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
