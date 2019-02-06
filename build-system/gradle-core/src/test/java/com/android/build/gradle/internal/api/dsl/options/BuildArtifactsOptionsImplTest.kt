@@ -69,7 +69,6 @@ class BuildArtifactsOptionsImplTest {
     @Before
     fun setUp() {
         project = ProjectBuilder().build()!!
-        BuildableArtifactImpl.disableResolution()
         taskHolder =
                 VariantBuildArtifactsHolder(
                     project,
@@ -87,7 +86,6 @@ class BuildArtifactsOptionsImplTest {
             inputFiles = input
             outputFile = output
         }
-        BuildableArtifactImpl.enableResolution()
         buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->
@@ -119,7 +117,6 @@ class BuildArtifactsOptionsImplTest {
                         task.outputFile = output.file
                     }
                 })
-        BuildableArtifactImpl.enableResolution()
         buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->
@@ -150,7 +147,6 @@ class BuildArtifactsOptionsImplTest {
                         task.outputFile = output.file
                     }
                 })
-        BuildableArtifactImpl.enableResolution()
         buildArtifactsActions.runAll()
 
         project.tasks.getByName("task1Debug") { t ->

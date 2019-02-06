@@ -46,13 +46,6 @@ class OutputFileProviderImplTest {
             FakeDeprecationReporter(),
             FakeObjectFactory())
 
-    companion object {
-        @BeforeClass @JvmStatic
-        fun setUp() {
-            BuildableArtifactImpl.disableResolution()
-        }
-    }
-
     @Test
     fun replaceOutput() {
         val holder = newTaskOutputHolder()
@@ -68,7 +61,6 @@ class OutputFileProviderImplTest {
             listOf(outputFile),
             task.name)
         assertThat(outputFile).hasName("foo")
-        BuildableArtifactImpl.enableResolution()
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).single()).hasName("foo")
     }
 
@@ -92,7 +84,6 @@ class OutputFileProviderImplTest {
             BuildArtifactsHolder.OperationType.APPEND,
             task.name,
             "bar")
-        BuildableArtifactImpl.enableResolution()
         assertThat(fooFile).hasName("foo")
         assertThat(holder.getArtifactFiles(JAVAC_CLASSES).map(File::getName)).containsExactly("foo", "bar")
     }
@@ -122,7 +113,6 @@ class OutputFileProviderImplTest {
             BuildArtifactsHolder.OperationType.APPEND,
             listOf(barFile, fooFile),
             task.name)
-        BuildableArtifactImpl.enableResolution()
 
         assertThat(output.getFile("foo")).hasName("foo")
         assertThat(output.getFile("bar")).hasName("bar")

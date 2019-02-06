@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
-import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.build.gradle.tasks.JavaCompileUtils;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -40,7 +39,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
 
 /** Test for AndroidJavaCompileTest. */
 public class AndroidJavaCompileTest {
@@ -55,7 +53,6 @@ public class AndroidJavaCompileTest {
         File testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         ProcessProfileWriterFactory.initializeForTests();
-        BuildableArtifactImpl.Companion.enableResolution();
     }
 
     @Test
@@ -65,8 +62,7 @@ public class AndroidJavaCompileTest {
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile =
-                new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
+        task.processorListFile = new BuildableArtifactImpl(project.files(inputFile));
 
         Set<String> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(
@@ -87,8 +83,7 @@ public class AndroidJavaCompileTest {
         Files.write(
                 inputFile.toPath(), "{\"processor1\":false,\"processor2\":true}".getBytes("utf-8"));
         task.variantName = VARIANT_NAME;
-        task.processorListFile =
-                new BuildableArtifactImpl(project.files(inputFile), Mockito.mock(DslScope.class));
+        task.processorListFile = new BuildableArtifactImpl(project.files(inputFile));
 
         Set<String> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(

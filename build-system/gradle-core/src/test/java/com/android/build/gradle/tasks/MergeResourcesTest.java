@@ -23,10 +23,6 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter;
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter;
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory;
-import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.ResourceSet;
@@ -66,7 +62,6 @@ public class MergeResourcesTest {
 
     @Before
     public void setUp() throws IOException {
-        BuildableArtifactImpl.Companion.enableResolution();
         File testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
@@ -251,13 +246,7 @@ public class MergeResourcesTest {
             String name,
             File... files) {
         ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
-        BuildableArtifact artifact =
-                new BuildableArtifactImpl(
-                        project.files(Arrays.asList(files)),
-                        new DslScopeImpl(
-                                new FakeEvalIssueReporter(true),
-                                new FakeDeprecationReporter(),
-                                new FakeObjectFactory()));
+        BuildableArtifact artifact = new BuildableArtifactImpl(project.files(Arrays.asList(files)));
         artifactMap.put(name, artifact);
         mainSet.addSources(artifact.getFiles());
         folderSets.add(mainSet);
