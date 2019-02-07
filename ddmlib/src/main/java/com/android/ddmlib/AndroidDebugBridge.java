@@ -39,6 +39,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -646,51 +648,101 @@ public class AndroidDebugBridge {
         }
     }
 
+    interface AdbOutputProcessor<T> {
+        T process(BufferedReader r) throws IOException;
+    }
+
+    private static <T> ListenableFuture<T> runAdb(
+            @NonNull final File adb, AdbOutputProcessor<T> resultParser, String... command) {
+        final SettableFuture<T> future = SettableFuture.create();
+        new Thread(
+                        () -> {
+                            List<String> args = new ArrayList<>();
+                            args.add(adb.getPath());
+                            args.addAll(Arrays.asList(command));
+                            ProcessBuilder pb = new ProcessBuilder(args);
+                            pb.redirectErrorStream(true);
+
+                            Process p;
+                            try {
+                                p = pb.start();
+                            } catch (IOException e) {
+                                future.setException(e);
+                                return;
+                            }
+
+                            try (BufferedReader br =
+                                    new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                                future.set(resultParser.process(br));
+                            } catch (IOException e) {
+                                future.setException(e);
+                                return;
+                            } catch (RuntimeException e) {
+                                future.setException(e);
+                            }
+                        },
+                        "Running adb")
+                .start();
+        return future;
+    }
+
     public static ListenableFuture<AdbVersion> getAdbVersion(@NonNull final File adb) {
-        final SettableFuture<AdbVersion> future = SettableFuture.create();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                ProcessBuilder pb = new ProcessBuilder(adb.getPath(), "version");
-                pb.redirectErrorStream(true);
-
-                Process p = null;
-                try {
-                    p = pb.start();
-                } catch (IOException e) {
-                    future.setException(e);
-                    return;
-                }
-
-                StringBuilder sb = new StringBuilder();
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                try {
+        return runAdb(
+                adb,
+                (BufferedReader br) -> {
+                    StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
                         AdbVersion version = AdbVersion.parseFrom(line);
                         if (version != AdbVersion.UNKNOWN) {
-                            future.set(version);
-                            return;
+                            return version;
                         }
                         sb.append(line);
                         sb.append('\n');
                     }
-                } catch (IOException e) {
-                    future.setException(e);
-                    return;
-                } finally {
-                    try {
-                        br.close();
-                    } catch (IOException e) {
-                        future.setException(e);
-                    }
-                }
 
-                future.setException(new RuntimeException(
-                        "Unable to detect adb version, adb output: " + sb.toString()));
-            }
-        }, "Obtaining adb version").start();
-        return future;
+                    throw new RuntimeException(
+                            "Unable to detect adb version, adb output: " + sb.toString());
+                },
+                "version");
+    }
+
+    private static ListenableFuture<List<AdbDevice>> getRawDeviceList(@NonNull final File adb) {
+        return runAdb(
+                adb,
+                (BufferedReader br) -> {
+                    // The first line of output is a header, not part of the device list. Skip it.
+                    br.readLine();
+                    List<AdbDevice> result = new ArrayList<>();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        AdbDevice device = AdbDevice.parseAdbLine(line);
+
+                        if (device != null) {
+                            result.add(device);
+                        }
+                    }
+
+                    return result;
+                },
+                "devices",
+                "-l");
+    }
+
+    /**
+     * Returns the set of devices reported by the adb command-line. This is mainly intended for the
+     * Connection Assistant or other diagnostic tools that need to validate the state of the {@link
+     * #getDevices()} list via another channel. Code that just needs to access the list of devices
+     * should call {@link #getDevices()} instead.
+     */
+    public ListenableFuture<List<AdbDevice>> getRawDeviceList() {
+        if (mAdbOsLocation == null) {
+            SettableFuture<List<AdbDevice>> result = SettableFuture.create();
+            result.set(Collections.emptyList());
+            return result;
+        }
+        File adb = new File(mAdbOsLocation);
+        return getRawDeviceList(adb);
     }
 
     /**
