@@ -38,6 +38,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.net.URL
 import java.net.URLClassLoader
+import java.util.concurrent.ForkJoinPool
 import com.google.common.collect.ImmutableMap.of as map
 import com.google.common.collect.ImmutableSet.of as set
 
@@ -45,9 +46,9 @@ class AutoNamespaceDependenciesTaskTest {
     @get:Rule
     var tempFolder = TemporaryFolder()
 
-    private lateinit var project: Project
-    private lateinit var task: AutoNamespaceDependenciesTask
-    private lateinit var javacOutput: File
+    lateinit private var project: Project
+    lateinit private var task: AutoNamespaceDependenciesTask
+    lateinit private var javacOutput: File
 
     @Before
     fun setUp() {
@@ -111,7 +112,7 @@ class AutoNamespaceDependenciesTaskTest {
         val notNamespacedResources = getArtifactCollection(map())
         val jarFiles = getArtifactCollection(map("libA", testClassesJar))
         val manifestsArtifact = getArtifactCollection(map("libA", manifest))
-        AutoNamespaceDependenciesTask.log = log
+        task.log = log
 
         val graph = DependenciesGraph.create(
             set(node),
@@ -125,6 +126,7 @@ class AutoNamespaceDependenciesTaskTest {
         )
         task.namespaceDependencies(
             graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
             outputRewrittenClasses = outputRewrittenClasses,
             outputRClasses = outputRClasses,
             outputManifests = outputRewrittenManifests,
@@ -213,7 +215,7 @@ class AutoNamespaceDependenciesTaskTest {
         val rFilesArtifact = getArtifactCollection(rFiles)
         val jarFiles = getArtifactCollection(classesJars)
         val manifestsArtifact = getArtifactCollection(manifests)
-        AutoNamespaceDependenciesTask.log = log
+        task.log = log
 
 
         val graph = DependenciesGraph.create(
@@ -228,6 +230,7 @@ class AutoNamespaceDependenciesTaskTest {
         )
         task.namespaceDependencies(
             graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
             outputRewrittenClasses = outputRewrittenClasses,
             outputRClasses = outputRClasses,
             outputManifests = outputRewrittenManifests,
@@ -329,7 +332,7 @@ class AutoNamespaceDependenciesTaskTest {
         val notNamespacedResources = getArtifactCollection(map())
         val jarFiles = getArtifactCollection(classesJars)
         val manifestsArtifact = getArtifactCollection(manifests)
-        AutoNamespaceDependenciesTask.log = log
+        task.log = log
 
         // Execute the task.
         val graph = DependenciesGraph.create(
@@ -345,6 +348,7 @@ class AutoNamespaceDependenciesTaskTest {
 
         task.namespaceDependencies(
             graph = graph,
+            forkJoinPool = ForkJoinPool.commonPool(),
             outputRewrittenClasses = outputRewrittenClasses,
             outputRClasses = outputRClasses,
             outputManifests = outputRewrittenManifests,
@@ -470,19 +474,19 @@ class AutoNamespaceDependenciesTaskTest {
     ) {
         val testClass = FileUtils.join(javacOutput, "com", "example", name, "Test.class")
         assertThat(testClass).exists()
-        testClasses[identifier] = testClass
+        testClasses.put(identifier, testClass)
         val rClass = FileUtils.join(javacOutput, "com", "example", name, "R.class")
         assertThat(rClass).exists()
-        rClasses[identifier] = rClass
+        rClasses.put(identifier, rClass)
         val rStringClass = FileUtils.join(rClass.parentFile, "R\$string.class")
         assertThat(rStringClass).exists()
-        rStringClasses[identifier] = rStringClass
+        rStringClasses.put(identifier, rStringClass)
 
         val classesJar = File(tempFolder.newFolder(name), ("classes.jar"))
         ZFile.openReadWrite(classesJar).use {
             it.add("com/example/$name/Test.class", testClass.inputStream())
         }
-        classesJars[identifier] = classesJar
+        classesJars.put(identifier, classesJar)
 
         val manifest = tempFolder.newFile("$name-AndroidManifest.txt")
         FileUtils.writeToFile(manifest,"""<?xml version="1.0" encoding="UTF-8"?>
@@ -500,11 +504,11 @@ class AutoNamespaceDependenciesTaskTest {
     </application>
 
 </manifest>""")
-        manifests[identifier] = manifest
+        manifests.put(identifier, manifest)
 
         val rFile = tempFolder.newFile("com.example.$name-R-def.txt")
         SymbolIo.writeRDef(symbolTable.rename( "com.example.$name"), rFile.toPath())
-        rFiles[identifier] = rFile
+        rFiles.put(identifier, rFile)
     }
 
     private fun getFile(name: String): File {
