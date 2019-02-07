@@ -81,6 +81,7 @@ class AgentServerTest : public ::testing::Test {
   }
 
   bool IsServerShutdown() {
+#if defined(__linux__)
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
@@ -93,6 +94,9 @@ class AgentServerTest : public ::testing::Test {
     int result = sigtimedwait(&set, nullptr, &wait_time);
     pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
     return result == SIGCHLD;
+#else
+    return true;
+#endif
   }
 
   void TearDown() override {
@@ -168,6 +172,9 @@ TEST_F(AgentServerTest, ForwardManyAgents) {
   ASSERT_EQ(pids.size(), MANY);
 }
 
+// The following tests rely on IsServerShutdown which is implemented properly
+// on Linux only.
+#if defined(__linux__)
 // Test server shutdown if installer exits after agent connection.
 TEST_F(AgentServerTest, InstallerExit) {
   StartServer(1, "InstallerExit");
@@ -191,5 +198,6 @@ TEST_F(AgentServerTest, InstallerExitAfterResponse) {
   output_->Close();
   ASSERT_TRUE(IsServerShutdown());
 }
+#endif
 
 }  // namespace deploy
