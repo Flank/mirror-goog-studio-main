@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.createBuildArtifact
-import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.DexArchiveBuilderConfig
@@ -29,6 +27,7 @@ import com.android.dx.command.dexer.DxContext
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.testutils.truth.PathSubject
+import com.google.common.collect.ImmutableSet
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -46,16 +45,18 @@ class DexMergingTaskTest {
         val dexFiles = generateArchive("test/A")
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.MONO_DEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            21,
-            true,
-            0,
-            null,
-            FakeFileCollection(dexFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.MONO_DEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                0,
+                null,
+                ImmutableSet.of(dexFiles),
+                output
+            )
         ).run()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(listOf("Ltest/A;"))
     }
@@ -65,16 +66,18 @@ class DexMergingTaskTest {
         val dexFiles = generateArchive("test/A", "test/B", "test/C")
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.MONO_DEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            21,
-            true,
-            0,
-            null,
-            FakeFileCollection(dexFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.MONO_DEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                0,
+                null,
+                ImmutableSet.of(dexFiles),
+                output
+            )
         ).run()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
             listOf(
@@ -93,16 +96,18 @@ class DexMergingTaskTest {
         mainDexList.writeText("test/A.class")
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.LEGACY_MULTIDEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            19,
-            true,
-            0,
-            createBuildArtifact(mainDexList),
-            FakeFileCollection(dexFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.LEGACY_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                19,
+                true,
+                0,
+                mainDexList,
+                ImmutableSet.of(dexFiles),
+                output
+            )
         ).run()
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(listOf("Ltest/A;"))
         assertThatDex(output.resolve("classes2.dex")).containsExactlyClassesIn(
@@ -121,16 +126,18 @@ class DexMergingTaskTest {
         }
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.NATIVE_MULTIDEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            21,
-            true,
-            numInputs + 1,
-            null,
-            FakeFileCollection(inputFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.NATIVE_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                numInputs + 1,
+                null,
+                inputFiles.toSet(),
+                output
+            )
         ).run()
 
         (0 until numInputs).forEach {
@@ -146,16 +153,18 @@ class DexMergingTaskTest {
         }
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.NATIVE_MULTIDEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            21,
-            true,
-            numInputs,
-            null,
-            FakeFileCollection(inputFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.NATIVE_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                numInputs,
+                null,
+                inputFiles.toSet(),
+                output
+            )
         ).run()
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
@@ -183,16 +192,18 @@ class DexMergingTaskTest {
         val inputFiles = listOf(directoryB, directoryA)
 
         val output = tmp.newFolder()
-        DexMergingTaskDelegate(
-            DexingType.NATIVE_MULTIDEX,
-            NoOpMessageReceiver(),
-            DexMergerTool.D8,
-            21,
-            true,
-            Int.MAX_VALUE,
-            null,
-            FakeFileCollection(inputFiles),
-            output
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.NATIVE_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                Int.MAX_VALUE,
+                null,
+                inputFiles.toSet(),
+                output
+            )
         ).run()
 
         // Ordering within file collection should not change, but entries inside directories should
