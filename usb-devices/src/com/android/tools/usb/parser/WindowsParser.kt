@@ -67,7 +67,9 @@ class WindowsParser : OutputParser {
                 stringGroups.add(ArrayList())
             }
 
-            stringGroups.last().add(line)
+            if (!stringGroups.isEmpty()) {
+                stringGroups.last().add(line)
+            }
         }
 
         override fun combiner() = BinaryOperator<MutableList<MutableList<String>>> { t, u ->
