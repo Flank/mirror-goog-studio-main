@@ -56,6 +56,15 @@ class LintDriverCrashTest : AbstractCheckTest() {
             // time there is an edit
             .check(TestResultChecker {
                 assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                assertThat(it.contains("""
+                    The crash seems to involve the detector com.android.tools.lint.client.api.LintDriverCrashTest${"$"}CrashingDetector.
+                    You can try disabling it with something like this:
+                        android {
+                            lintOptions {
+                                disable "_TestCrash"
+                            }
+                        }
+                """.trimIndent()))
                 assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
                 assertThat(it).contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
                 assertThat(it).contains("1 errors, 0 warnings")

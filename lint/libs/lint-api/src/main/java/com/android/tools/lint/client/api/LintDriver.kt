@@ -31,7 +31,6 @@ import com.android.SdkConstants.SUPPRESS_ALL
 import com.android.SdkConstants.SUPPRESS_LINT
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.VALUE_TRUE
-import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.repository.GradleCoordinate
 import com.android.ide.common.repository.GradleVersion
 import com.android.ide.common.repository.ResourceVisibilityLookup
@@ -76,6 +75,7 @@ import com.android.tools.lint.detector.api.isXmlFile
 import com.android.utils.Pair
 import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.annotations.Beta
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
@@ -2949,6 +2949,21 @@ class LintDriver
             if (throwable.message?.isNotBlank() == true) {
                 sb.append("Message: ${throwable.message}\n")
             }
+
+            val associated = getAssociatedDetector(throwable, driver)
+            if (associated != null) {
+                sb.append("\n")
+                sb.append("The crash seems to involve the detector `${associated.first}`.\n")
+                sb.append("You can try disabling it with something like this:\n")
+                val indent = "\u00a0\u00a0\u00a0\u00a0" // non-breaking spaces
+                sb.append("${indent}android {\n")
+                sb.append("$indent${indent}lintOptions {\n")
+                sb.append("$indent$indent${indent}disable ${associated.second.joinToString { "\"${it.id}\"" }}\n")
+                sb.append("$indent$indent}\n")
+                sb.append("$indent}\n")
+                sb.append("\n")
+            }
+
             sb.append("Stack: ")
             sb.append("`")
             sb.append(throwable.javaClass.simpleName)
@@ -3016,6 +3031,40 @@ class LintDriver
             }
 
             return true
+        }
+
+        /**
+         * Given a stack trace from a detector crash, returns the issues associated with
+         * the most likely crashing detector
+         */
+        private fun getAssociatedDetector(
+            throwable: Throwable,
+            driver: LintDriver
+        ): kotlin.Pair<String, List<Issue>>? {
+            val issues = mutableListOf<Issue>()
+
+            for (frame in throwable.stackTrace) {
+                val className = frame.className
+                if (className.endsWith("Detector") || className.contains("Detector$")) {
+                    for (issue in driver.registry.issues) {
+                        val detectorClass = issue.implementation.detectorClass.name
+                        if (className == detectorClass || className.startsWith(detectorClass) &&
+                            className[detectorClass.length] == '$'
+                        ) {
+                            issues.add(issue)
+                        }
+                    }
+
+                    val detector = if (issues.isNotEmpty()) {
+                        issues.first().implementation.detectorClass.name
+                    } else {
+                        className
+                    }
+                    return kotlin.Pair(detector, issues)
+                }
+            }
+
+            return null
         }
 
         fun appendStackTraceSummary(throwable: Throwable, sb: StringBuilder) {
