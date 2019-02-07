@@ -81,6 +81,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
 import com.android.tools.lint.detector.api.ResourceFolderScanner
 import com.android.tools.lint.detector.api.ResourceXmlDetector
@@ -159,14 +160,12 @@ import org.w3c.dom.Node
 import java.lang.Boolean.TRUE
 import java.util.ArrayList
 import java.util.EnumSet
-import java.util.HashSet
 
 /**
  * Looks for usages of APIs that are not supported in all the versions targeted by this application
  * (according to its minimum API requirement in the manifest).
  */
 class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScanner {
-
     private var apiDatabase: ApiLookup? = null
     private var cachedMinApi = -1
 
@@ -202,8 +201,9 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val name = attribute.localName
             if (name != ATTR_LAYOUT_WIDTH &&
                 name != ATTR_LAYOUT_HEIGHT &&
-                !isSupportedByAppcompat(name, context) &&
-                name != ATTR_ID
+                name != ATTR_ID &&
+                ((!isAttributeOfGradientOrGradientItem(attribute) && name != "fillType") ||
+                        !dependsOnAppCompat(context.project))
             ) {
                 val owner = "android/R\$attr"
                 attributeApiLevel = apiDatabase.getFieldVersion(owner, name)
@@ -269,9 +269,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                         // Supported by appcompat
                         if ("fontFamily" == localName) {
-                            val mainProject = context.mainProject
-                            val appCompat = mainProject.dependsOn(APPCOMPAT_LIB_ARTIFACT)
-                            if (appCompat != null && appCompat) {
+                            if (dependsOnAppCompat(context.mainProject)) {
                                 val prefix = XmlUtils.lookupNamespacePrefix(
                                     attribute, AUTO_URI, "app", false
                                 )
@@ -440,6 +438,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
             }
         }
+    }
+
+    private fun isAttributeOfGradientOrGradientItem(attribute: Attr): Boolean {
+        val element = attribute.ownerElement
+        if (element.nodeName == "gradient") {
+            return true
+        }
+        if (element.nodeName == "item") {
+            return element.parentNode?.localName == "gradient"
+        }
+        return false
     }
 
     override fun visitElement(context: XmlContext, element: Element) {
@@ -2101,9 +2110,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return evaluator.extendsClass(psiClass, FQCN_FRAME_LAYOUT, false)
         }
 
-        private fun isSupportedByAppcompat(name: String, context: XmlContext): Boolean {
-            return name == "fillType" && TRUE == context.project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
-        }
+        private fun dependsOnAppCompat(project: Project) =
+            TRUE == project.dependsOn(APPCOMPAT_LIB_ARTIFACT)
 
         private fun apiLevelFix(api: Int): LintFix {
             return LintFix.create().data(api)
@@ -2487,13 +2495,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                     }
                                 }
                             }
-                        } else if (expression is UReferenceExpression) {
-                            val name = expression.resolvedName
-                            if (name != null) {
-                                return codeNameToApi(name)
-                            }
                         } else {
-                            return codeNameToApi(expression.asSourceString())
+                            val apiLevel = ConstantEvaluator.evaluate(null, expression) as? Int
+                            if (apiLevel != null) {
+                                return apiLevel
+                            } else if (expression is UReferenceExpression) {
+                                val name = expression.resolvedName
+                                if (name != null) {
+                                    return codeNameToApi(name)
+                                }
+                            } else {
+                                return codeNameToApi(expression.asSourceString())
+                            }
                         }
                     }
                 } else if (fqcn == null) {

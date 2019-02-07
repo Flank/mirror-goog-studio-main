@@ -291,8 +291,12 @@ public enum InternalArtifactType implements ArtifactType {
     FEATURE_AND_RUNTIME_DEPS_JAVA_RES,
 
     // The signing configuration the feature module should be using, which is taken from the
-    // application module. Also used for androidTest variants (bug 118611693).
+    // application module. Also used for androidTest variants (bug 118611693). This has already
+    // been validated
     SIGNING_CONFIG,
+    // The validated signing config output, to allow the task to be up to date, and for allowing
+    // other tasks to depend on the output.
+    VALIDATE_SIGNING_CONFIG,
 
     // Project metadata
     METADATA_FEATURE_DECLARATION,

@@ -176,7 +176,13 @@ public class BasicInstallerTest extends TestCase {
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
                 new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop);
+        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
+        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
+        assertFalse(fop.exists(unzipDir));
         basicInstaller.prepare(progress.createSubProgress(0.5));
+        // Verify that downloading & unzipping happens at the temp directory under the repo root, not at the system temp directory.
+        assertTrue(fop.exists(unzipDir));
         basicInstaller.complete(progress.createSubProgress(1));
         progress.assertNoErrorsOrWarnings();
 
@@ -263,8 +269,14 @@ public class BasicInstallerTest extends TestCase {
         RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
         Installer basicInstaller =
           spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
+        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
+        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
+        assertFalse(fop.exists(unzipDir));
         basicInstaller.prepare(progress.createSubProgress(0.5));
+        assertFalse(fop.exists(unzipDir));
         basicInstaller.complete(progress.createSubProgress(1));
+        assertFalse(fop.exists(unzipDir));
         progress.assertNoErrorsOrWarnings();
         verify((BasicInstaller)basicInstaller, times(1)).cleanup(any());
 

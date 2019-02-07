@@ -174,10 +174,9 @@ public class ApplicationTaskManager extends TaskManager {
             // Base feature specific tasks.
             taskFactory.register(new FeatureSetMetadataWriterTask.CreationAction(variantScope));
 
-            // Add a task to produce the signing config file
-            taskFactory.register(
-                    new SigningConfigWriterTask.CreationAction(
-                            variantScope, getValidateSigningTask(variantScope)));
+            createValidateSigningTask(variantScope);
+            // Add a task to produce the signing config file.
+            taskFactory.register(new SigningConfigWriterTask.CreationAction(variantScope));
 
             if (extension.getDataBinding().isEnabled()) {
                 // Create a task that will package the manifest ids(the R file packages) of all

@@ -12,11 +12,12 @@
             <#if dynamicFeatureInstallTimeWithConditionsDelivery>
             <dist:install-time>
                 <dist:conditions>
-                    <#if dynamicFeatureMinSdkDelivery!="">
-                    <dist:min-sdk dist:value="${dynamicFeatureMinSdkDelivery}"/>
-                    </#if>
                     <#list dynamicFeatureDeviceFeatureList as deviceFeature>
-                    <dist:device-feature ${deviceFeature.deviceFeatureType().get().getDisplayName()}="${deviceFeature.deviceFeatureValue()}" />
+                        <#if deviceFeature.deviceFeatureType().get().getDisplayName() == "Name">
+                            <dist:device-feature dist:name="${deviceFeature.deviceFeatureValue()}" />
+                        <#elseif deviceFeature.deviceFeatureType().get().getDisplayName() == "OpenGL ES Version">
+                            <dist:device-feature dist:name="android.hardware.opengles.version" dist:version="${deviceFeature.deviceFeatureValue()}" />
+                        </#if>
                     </#list>
                 </dist:conditions>
             </dist:install-time>
