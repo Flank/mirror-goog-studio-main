@@ -121,5 +121,6 @@
     <orderEntry type="library" scope="PROVIDED" name="jacoco-core" level="project" />
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />
   </component>
 </module>

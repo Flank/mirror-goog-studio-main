@@ -70,8 +70,8 @@ java_binary(
     main_class = "com.android.tools.kotlin.KotlinCompiler",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.11:jar",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.11:jar",
     ],
     deps = [
         ":utils",
@@ -459,5 +459,16 @@ coverage_java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
+    ],
+)
+
+java_binary(
+    name = "BazelLintWrapper",
+    srcs = ["src/com/android/tools/binaries/BazelLintWrapper.java"],
+    main_class = "com.android.tools.binaries.BazelLintWrapper",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/lint/cli",
+        "//tools/base/third_party:com.google.guava_guava",
     ],
 )

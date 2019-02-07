@@ -2,6 +2,7 @@ load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "create_option_file", "explicit_target", "label_workspace_path", "workspace_path")
 load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_impl")
+load(":lint.bzl", "lint_test")
 load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
 
 # This is a custom implementation of label "tags".
@@ -482,6 +483,7 @@ def iml_module(
         iml_files = None,
         bundle_data = [],
         test_main_class = None,
+        lint_baseline = None,
         back_deps = []):
     if name == "intellij.groovy":
         test_srcs = []  # workaround for b/111900968
@@ -544,6 +546,14 @@ def iml_module(
             "//tools/base/bazel:langtools",
         ] + test_utils,
     )
+
+    lint_srcs = srcs.javas + srcs.kotlins
+    if lint_srcs and lint_baseline:
+        lint_test(
+            name = name + "_lint_test",
+            srcs = lint_srcs,
+            baseline = lint_baseline,
+        )
 
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
     if test_srcs:

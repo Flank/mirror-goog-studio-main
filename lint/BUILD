@@ -7,6 +7,7 @@ iml_module(
     name = "studio.android.sdktools.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
     iml_files = ["libs/lint-api/android.sdktools.lint-api.iml"],
+    lint_baseline = "libs/lint-api/lint_baseline.xml",
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
