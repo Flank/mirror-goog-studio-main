@@ -202,6 +202,7 @@ public final class GradleTestProject implements TestRule {
     private final boolean withDependencyChecker;
     // Indicates if CMake's directory information needs to be saved in local.properties
     private final boolean withCmakeDirInLocalProp;
+    private final String ndkSymlinkPath;
     // CMake's version to be used
     @NonNull private final String cmakeVersion;
 
@@ -246,6 +247,7 @@ public final class GradleTestProject implements TestRule {
             @Nullable Path profileDirectory,
             @NonNull String cmakeVersion,
             boolean withCmake,
+            @Nullable String ndkSymlinkPath,
             boolean withDeviceProvider,
             boolean withSdk,
             boolean withAndroidGradlePlugin,
@@ -280,6 +282,7 @@ public final class GradleTestProject implements TestRule {
         this.profileDirectory = profileDirectory;
         this.cmakeVersion = cmakeVersion;
         this.withCmakeDirInLocalProp = withCmake;
+        this.ndkSymlinkPath = ndkSymlinkPath;
         this.testDir = testDir;
         this.repoDirectories = repoDirectories;
         this.androidHome = androidHome;
@@ -323,6 +326,7 @@ public final class GradleTestProject implements TestRule {
         this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
         this.withKotlinGradlePlugin = rootProject.withKotlinGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
+        this.ndkSymlinkPath = rootProject.ndkSymlinkPath;
         this.withIncludedBuilds = ImmutableList.of();
         this.repoDirectories = rootProject.repoDirectories;
         this.androidHome = rootProject.androidHome;
@@ -1351,6 +1355,10 @@ public final class GradleTestProject implements TestRule {
             localProp.setProperty(
                     ProjectProperties.PROPERTY_CMAKE,
                     getCmakeVersionFolder(cmakeVersion).getAbsolutePath());
+        }
+
+        if (ndkSymlinkPath != null) {
+            localProp.setProperty(ProjectProperties.PROPERTY_NDK_SYMLINKDIR, ndkSymlinkPath);
         }
 
         localProp.save();

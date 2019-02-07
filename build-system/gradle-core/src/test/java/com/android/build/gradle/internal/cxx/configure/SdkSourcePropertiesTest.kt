@@ -43,4 +43,25 @@ class SdkSourcePropertiesTest {
         assertThat(properties.getValue(SDK_PKG_REVISION))
             .isEqualTo("17.2.4988734")
     }
+
+    @Test
+    fun revision() {
+        val file = tmpFolder.newFile("source.properties")
+        file.parentFile.mkdirs()
+        file.writeText("""
+            Pkg.Desc = Android NDK
+            Pkg.Revision = 17.2.4988734
+        """.trimIndent())
+        val revision = SdkSourceProperties.tryReadPackageRevision(file.parentFile)
+        assertThat(revision)
+            .isEqualTo("17.2.4988734")
+    }
+
+    @Test
+    fun revisionNoFile() {
+        val file = tmpFolder.newFile("source.properties")
+        file.parentFile.mkdirs()
+        val revision = SdkSourceProperties.tryReadPackageRevision(file.parentFile)
+        assertThat(revision).isNull()
+    }
 }

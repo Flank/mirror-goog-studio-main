@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironment
 import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.info;
 import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.warn;
 import static com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfigurationKt.createNativeBuildSystemVariantConfig;
+import static com.android.build.gradle.internal.cxx.configure.NdkSymlinkerKt.trySymlinkNdk;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -616,34 +617,6 @@ public abstract class ExternalNativeJsonGenerator {
                         ? new File(userSpecifiedCxxCacheFolder)
                         : defaultProjectCacheFolder;
 
-        // Symlink the NDK into a local .cxx folder so that it will have a short enough path on
-        // Windows. Note that this path may or may not be shorter than the true NDK location.
-        // It will still be shorter when relative paths are used because it is closer to user's
-        // CMakeLists.txt or Android.mk. Also, sym-linking is done even when not on Windows for
-        // consistency.
-        final File originalNdkFolder = sdkHandler.getNdkFolder();
-        final File ndkLinkCandidate =
-                FileUtils.join(projectDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER, "ndk");
-        // CMake cannot handle paths with $ sign (even with escaping) so we need to not symlink
-        // if this project's path would contain that character.
-        if (originalNdkFolder.isDirectory()
-                && !ndkLinkCandidate.getPath().contains("$")
-                && !ndkLinkCandidate.isDirectory()) {
-            try {
-                info("Symlinking NDK folder %s to %s", originalNdkFolder, ndkLinkCandidate);
-                ndkLinkCandidate.getParentFile().mkdirs();
-                Files.createSymbolicLink(
-                        ndkLinkCandidate.toPath(), originalNdkFolder.toPath().toRealPath());
-            } catch (IOException e) {
-                // Couldn't create a link so use the original folder
-                info(
-                        "Could not symlink NDK folder %s to %s due to exception %s",
-                        originalNdkFolder, ndkLinkCandidate, e);
-            }
-        }
-        final File finalNdkFolder =
-                ndkLinkCandidate.isDirectory() ? ndkLinkCandidate : originalNdkFolder;
-
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
                         rootBuildGradlePath,
@@ -651,7 +624,10 @@ public abstract class ExternalNativeJsonGenerator {
                         variantData.getName(),
                         makefile,
                         sdkHandler.getSdkFolder(),
-                        finalNdkFolder,
+                        trySymlinkNdk(
+                                sdkHandler.getNdkFolder(),
+                                externalNativeBuildFolder,
+                                sdkHandler.getNdkSymlinkDirInLocalProp()),
                         soFolder,
                         objFolder,
                         externalNativeBuildFolder,

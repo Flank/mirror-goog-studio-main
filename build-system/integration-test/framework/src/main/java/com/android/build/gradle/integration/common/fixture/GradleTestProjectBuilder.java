@@ -57,6 +57,12 @@ public final class GradleTestProjectBuilder {
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
     private boolean withCmakeDirInLocalProp = false;
+    // NDK symlink path is relative to the module's .cxx/cmake/debug folder. A full path example of
+    // this is like this on bazel:
+    // /private/var/tmp/_bazel/cd7382de6c57d974eabcf5c1270266ca/sandbox
+    //   /darwin-sandbox/9/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967
+    //   /tests/CmakeBasicProjectTest/checkCleanAfterAbiSubset/project/.cxx/cmake/debug
+    private String ndkSymlinkPath = "../../../../../../ndk-symlink";
     @Nullable String cmakeVersion;
     @Nullable private List<Path> repoDirectories;
     @Nullable private File androidHome;
@@ -144,6 +150,7 @@ public final class GradleTestProjectBuilder {
                 profileDirectory,
                 cmakeVersion,
                 withCmakeDirInLocalProp,
+                ndkSymlinkPath,
                 withDeviceProvider,
                 withSdk,
                 withAndroidGradlePlugin,
@@ -422,6 +429,12 @@ public final class GradleTestProjectBuilder {
     /** Enables setting cmake.dir in local.properties */
     public GradleTestProjectBuilder setWithCmakeDirInLocalProp(boolean withCmakeDirInLocalProp) {
         this.withCmakeDirInLocalProp = withCmakeDirInLocalProp;
+        return this;
+    }
+
+    /** Enables setting ndk.symlinkdir in local.properties */
+    public GradleTestProjectBuilder setWithNdkSymlinkDirInLocalProp(String ndkSymlinkPath) {
+        this.ndkSymlinkPath = ndkSymlinkPath;
         return this;
     }
 

@@ -38,6 +38,8 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
     }
 
     companion object {
+        private const val SOURCE_PROPERTIES = "source.properties"
+
         /**
          * Enum of known properties.
          */
@@ -46,18 +48,33 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
             SDK_PKG_REVISION("Pkg.Revision");
         }
 
+        private fun sourcePropertiesFile(folder : File) = File(folder, SOURCE_PROPERTIES)
+
         /**
          * Read a source properties file.
          */
         fun fromInstallFolder(folder : File) : SdkSourceProperties {
             val map = mutableMapOf<String, String>()
-            val sourceProperties = File(folder, "source.properties")
+            val sourceProperties = sourcePropertiesFile(folder)
             for (line in sourceProperties.readLines()) {
                 val key = line.substringBefore("=").trim()
                 val value = line.substringAfter("=").trim()
                 map[key] = value
             }
             return SdkSourceProperties(map)
+        }
+
+        /**
+         * Try to read the Pkg.Revision from the source.properties file. Returns null
+         * if the folder or file can't be found or if there is no Pkg.Revision in the
+         * file.
+         */
+        fun tryReadPackageRevision(folder : File) : String? {
+            if (!folder.isDirectory || !sourcePropertiesFile(folder).isFile) {
+                return null
+            }
+            val properties = SdkSourceProperties.fromInstallFolder(folder)
+            return properties.getValue(SdkSourceProperty.SDK_PKG_REVISION)
         }
     }
 }

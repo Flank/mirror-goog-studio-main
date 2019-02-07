@@ -77,6 +77,7 @@ public class ProjectProperties implements IPropertySource {
 
     public static final String PROPERTY_SDK = "sdk.dir";
     public static final String PROPERTY_NDK = "ndk.dir";
+    public static final String PROPERTY_NDK_SYMLINKDIR = "ndk.symlinkdir";
     public static final String PROPERTY_CMAKE = "cmake.dir";
     
     // LEGACY - Kept so that we can actually remove it from local.properties.

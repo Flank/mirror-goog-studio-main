@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
+import static com.android.SdkConstants.NDK_SYMLINK_DIR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -81,6 +82,7 @@ public class SdkHandler {
     private File sdkFolder;
     private File ndkFolder;
     private File cmakePathInLocalProp = null;
+    private File ndkSymlinkDirInLocalProp = null;
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
 
@@ -232,6 +234,15 @@ public class SdkHandler {
     public File getCmakePathInLocalProp() {
         return cmakePathInLocalProp;
     }
+
+    // Returns the NDK symlink folder in local.properties. The may be relative, in which
+    // case the caller should resolve it relative to the C++ variant build system folder
+    // which is like .cxx/cmake/debug.
+    @Nullable
+    public File getNdkSymlinkDirInLocalProp() {
+        return ndkSymlinkDirInLocalProp;
+    }
+
 
     @NonNull
     public File checkAndGetSdkFolder() {
@@ -385,6 +396,9 @@ public class SdkHandler {
                 cmakePathInLocalProp = new File(cmakeProperty);
             }
         }
+
+        String symLinkDirPath = properties.getProperty(NDK_SYMLINK_DIR);
+        ndkSymlinkDirInLocalProp = symLinkDirPath != null ? new File(symLinkDirPath) : null;
     }
 
     public void setSdkLibData(SdkLibData sdkLibData) {
