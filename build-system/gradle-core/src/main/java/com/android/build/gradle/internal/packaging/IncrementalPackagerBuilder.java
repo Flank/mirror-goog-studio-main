@@ -234,12 +234,15 @@ public class IncrementalPackagerBuilder {
                     (targetApi == null || targetApi < NO_V1_SDK)
                             && minSdk < NO_V1_SDK
                             && signingConfig.isV1SigningEnabled();
+            boolean enableV2Signing =
+                    (targetApi == null || targetApi >= NO_V1_SDK)
+                            && signingConfig.isV2SigningEnabled();
             creationDataBuilder.setSigningOptions(
                     SigningOptions.builder()
                             .setKey(certificateInfo.getKey())
                             .setCertificates(certificateInfo.getCertificate())
                             .setV1SigningEnabled(enableV1Signing)
-                            .setV2SigningEnabled(signingConfig.isV2SigningEnabled())
+                            .setV2SigningEnabled(enableV2Signing)
                             .setMinSdkVersion(minSdk)
                             .setValidation(computeValidation())
                             .build());
