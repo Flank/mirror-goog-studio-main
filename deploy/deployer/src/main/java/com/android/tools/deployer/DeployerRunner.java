@@ -65,11 +65,12 @@ public class DeployerRunner implements UIService {
             return;
         }
 
-        String command = args[0];
-        String packageName = args[1];
+        DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
+        String packageName = parameters.get(0);
+
         ArrayList<String> apks = new ArrayList<>();
-        for (int i = 2; i < args.length; i++) {
-            apks.add(args[i]);
+        for (int i = 1; i < parameters.size(); i++) {
+            apks.add(parameters.get(i));
         }
 
         Trace.begin("getDevice()");
@@ -87,18 +88,23 @@ public class DeployerRunner implements UIService {
         TaskRunner runner = new TaskRunner(service);
         Deployer deployer = new Deployer(adb, db, runner, installer, this, LOGGER);
         try {
-            if (command.equals("install")) {
+            if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
                 if (device.supportsFeature(IDevice.HardwareFeature.EMBEDDED)) {
                     options.setGrantAllPermissions();
                 }
-                deployer.install(packageName, apks, options.build());
-            } else {
-                if (command.equals("fullswap")) {
-                    deployer.fullSwap(apks);
-                } else if (command.equals("codeswap")) {
-                    deployer.codeSwap(apks, ImmutableMap.of());
+
+                Deployer.InstallMode installMode = Deployer.InstallMode.FULL;
+                if (parameters.isDeltaInstall()) {
+                    installMode = Deployer.InstallMode.DELTA;
                 }
+                deployer.install(packageName, apks, options.build(), installMode);
+            } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
+                    deployer.fullSwap(apks);
+            } else if (parameters.getCommand() == DeployRunnerParameters.Command.CODESWAP) {
+                    deployer.codeSwap(apks, ImmutableMap.of());
+            } else {
+                throw new RuntimeException("UNKNOWN command");
             }
             runner.run();
         } catch (DeployerException e) {

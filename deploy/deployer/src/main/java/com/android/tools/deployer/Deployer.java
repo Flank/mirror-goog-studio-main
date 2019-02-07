@@ -65,16 +65,22 @@ public class Deployer {
         PARSE_PATHS
     }
 
+    public enum InstallMode {
+        DELTA, // If an application is already installed on the a device, send only what has changed.
+        FULL // Send application full apk regardless of the device state.
+    }
+
     /**
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
     public List<InstallMetric> install(
-            String packageName, List<String> apks, InstallOptions options)
+            String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
-            List<InstallMetric> metrics = apkInstaller.install(packageName, apks, options);
+            List<InstallMetric> metrics =
+                    apkInstaller.install(packageName, apks, options, installMode);
 
 
             // Inputs

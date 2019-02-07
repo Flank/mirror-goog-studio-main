@@ -54,7 +54,10 @@ public class ApkInstaller {
     }
 
     public List<InstallMetric> install(
-            String packageName, List<String> apks, InstallOptions options)
+            String packageName,
+            List<String> apks,
+            InstallOptions options,
+            Deployer.InstallMode installMode)
             throws DeployerException {
         DeltaInstallResult deltaInstallResult = null;
         List<InstallMetric> metrics = new ArrayList<>();
@@ -63,7 +66,7 @@ public class ApkInstaller {
         boolean allowReinstall = true;
         long deltaInstallStart = System.currentTimeMillis();
         try {
-            deltaInstallResult = deltaInstall(apks, options, allowReinstall);
+            deltaInstallResult = deltaInstall(apks, options, allowReinstall, installMode);
         } catch (DeployerException e) {
             logger.error(e, "Unable to delta install");
         }
@@ -130,9 +133,17 @@ public class ApkInstaller {
     }
 
     DeltaInstallResult deltaInstall(
-            List<String> apks, InstallOptions options, boolean allowReinstall)
+            List<String> apks,
+            InstallOptions options,
+            boolean allowReinstall,
+            Deployer.InstallMode installMode)
             throws DeployerException {
         DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
+
+        if (installMode != Deployer.InstallMode.DELTA) {
+            deltaInstallResult.status = DeltaInstallStatus.NOT_PATCHABLE;
+            return deltaInstallResult;
+        }
 
         // We use "cmd" on the device side which was only added in Android N (API 24)
         // Note that we also use "install-create" which was only added in Android LOLLIPOP (API 21)
