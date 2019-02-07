@@ -50,7 +50,6 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
     var dummyOutputDirectory: Provider<Directory>? = null
         private set
 
-    @InputFiles
     @Classpath
     fun getClassesFiles(): FileCollection = classesArtifacts.artifactFiles
 
