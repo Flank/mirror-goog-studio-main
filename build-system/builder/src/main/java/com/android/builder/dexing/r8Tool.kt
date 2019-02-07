@@ -40,6 +40,7 @@ import com.android.tools.r8.utils.ArchiveResourceProvider
 import com.google.common.io.ByteStreams
 import java.io.BufferedOutputStream
 import java.io.IOException
+import java.io.ObjectInput
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Level
@@ -308,21 +309,28 @@ private class ResourceOnlyProvider(val originalProvider: ProgramResourceProvider
 }
 
 /** Custom Java resources consumer to make sure we compress Java resources in the jar. */
-private class JavaResourcesConsumer(val outputJar: Path): DataResourceConsumer {
+private class JavaResourcesConsumer(private val outputJar: Path): DataResourceConsumer {
 
     private val output = lazy { ZipOutputStream(BufferedOutputStream(outputJar.toFile().outputStream())) }
+    private val zipLock = Any()
 
+    /** Accept can be called from multiple threads. */
     override fun accept(directory: DataDirectoryResource, diagnosticsHandler: DiagnosticsHandler) {
-        val entry:ZipEntry = createNewZipEntry(directory.getName() + "/")
-        output.value.putNextEntry(entry)
-        output.value.closeEntry()
+        val entry: ZipEntry = createNewZipEntry(directory.getName() + "/")
+        synchronized(zipLock) {
+            output.value.putNextEntry(entry)
+            output.value.closeEntry()
+        }
     }
 
+    /** Accept can be called from multiple threads. */
     override fun accept(file: DataEntryResource, diagnosticsHandler: DiagnosticsHandler) {
         val entry:ZipEntry = createNewZipEntry(file.getName())
-        output.value.putNextEntry(entry)
-        output.value.write(ByteStreams.toByteArray(file.getByteStream()))
-        output.value.closeEntry()
+        synchronized(zipLock) {
+            output.value.putNextEntry(entry)
+            output.value.write(ByteStreams.toByteArray(file.getByteStream()))
+            output.value.closeEntry()
+        }
     }
 
     override fun finished(handler: DiagnosticsHandler) {
