@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.VariantOutput
-import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.collect.ImmutableList
@@ -39,8 +38,6 @@ import java.util.stream.Stream
  */
 open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<BuildOutput> {
 
-    private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool()
-
     override fun iterator(): Iterator<BuildOutput> = elements.iterator()
 
     fun element(apkData: ApkData): BuildOutput? {
@@ -61,23 +58,6 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
     fun size(): Int = elements.size
     fun isEmpty(): Boolean = elements.isEmpty()
     fun stream(): Stream<BuildOutput> = elements.stream()
-
-    /**
-     * Register an action to use all current build elements and create new built elements.
-     * The passed action will not be invoked until one of the [BuildElementActionScheduler] API
-     * is used.
-     *
-     * @param action a lambda to transform an owned element into a new file.
-     */
-    @Deprecated(
-        "", ReplaceWith(
-            "transform(workers, transformRunnableClass, paramsFactory)",
-            "com.android.build.gradle.internal.scope.BuildElements"
-        )
-    )
-    open fun transform(action: (apkData: ApkData, input: File) -> File?): BuildElementActionScheduler {
-        return ExecutorBasedScheduler(this, action)
-    }
 
     /**
      * Register a runnable to use all current build elements and create new built elements.
@@ -143,50 +123,6 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
             "com.android.build.gradle.internal.scope.BuildElements.WorkersBasedScheduler"
         )
     )
-    private class ExecutorBasedScheduler(
-        val input: BuildElements,
-        val action: (apkData: ApkData, input: File) -> File?
-    ) : BuildElementActionScheduler() {
-
-        @Throws(BuildException::class)
-        override fun into(type: InternalArtifactType): BuildElements {
-            return transform(type, action)
-        }
-
-        @Throws(BuildException::class)
-        private fun transform(
-            to: InternalArtifactType,
-            action: (apkData: ApkData, input: File) -> File?
-        ): BuildElements {
-            input.elements.forEach {
-                input.executor.execute {
-                    ActionItem(it.apkData, action(it.apkData, it.outputFile))
-                }
-            }
-
-            val tasksResults = try {
-                input.executor.waitForAllTasks<ActionItem>()
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                throw RuntimeException(e)
-            }
-
-            return BuildElements(tasksResults.asSequence()
-                .onEach {
-                    if (it.exception != null)
-                        throw BuildException(it.exception?.message, it.exception)
-                }
-                .filter { it.value?.output != null }
-                .map {
-                    BuildOutput(
-                        to,
-                        (it.value as ActionItem).apkData,
-                        (it.value as ActionItem).output!!
-                    )
-                }.toList()
-            )
-        }
-    }
 
     internal data class ActionItem(val apkData: ApkData, val output: File?)
 
