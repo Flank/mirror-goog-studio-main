@@ -26,6 +26,7 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.api.Repository;
 import com.android.repository.api.SchemaModule;
+import com.android.repository.impl.installer.AbstractPackageOperation;
 import com.android.repository.impl.meta.CommonFactory;
 import com.android.repository.impl.meta.LocalPackageImpl;
 import com.android.repository.impl.meta.SchemaModuleUtil;
@@ -220,6 +221,11 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
         if (depth > MAX_SCAN_DEPTH) {
             return;
         }
+        // Do not scan metadata folders and return right away. Allow the SDK root to start with the prefix though.
+        if ((root != mRoot) && mFop.isDirectory(root) && root.getName().startsWith(AbstractPackageOperation.METADATA_FILENAME_PREFIX)) {
+            return;
+        }
+
         File packageXml = new File(root, PACKAGE_XML_FN);
         if (mFop.exists(packageXml) ||
             (mFallback != null && mFallback.shouldParse(root))) {

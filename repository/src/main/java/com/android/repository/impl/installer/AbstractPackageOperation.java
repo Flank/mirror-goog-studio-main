@@ -25,6 +25,7 @@ import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
+import com.android.repository.impl.manager.LocalRepoLoaderImpl;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
@@ -62,16 +63,21 @@ public abstract class AbstractPackageOperation implements PackageOperation {
     private static final String CLASSNAME_KEY = "class";
 
     /**
+     * The filename prefix used to store SDK manager metadata. Directories starting with this prefix should not be scanned for packages.
+     */
+    public static final String METADATA_FILENAME_PREFIX = ".";
+
+    /**
      * Name of the marker file that's written into the temporary directory when the prepare phase
      * has completed successfully.
      */
-    private static final String PREPARE_COMPLETE_FN = ".prepareComplete";
+    private static final String PREPARE_COMPLETE_FN = METADATA_FILENAME_PREFIX + "prepareComplete";
 
     /**
      * Name of the directory created in the final install location containing data to get the
      * install restarted if it stops.
      */
-    private static final String INSTALL_DATA_FN = ".installData";
+    private static final String INSTALL_DATA_FN = METADATA_FILENAME_PREFIX + "installData";
 
     /**
      * Name of the directory used as the base for temporary files and located within the repo root.
@@ -79,7 +85,7 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      * that wouldn't always fit into a system-managed temp directory, but should fit into the SDK
      * directory (since this is where the uncompressed package will be installed anyway).
      */
-    static final String REPO_TEMP_DIR_FN = ".temp";
+    static final String REPO_TEMP_DIR_FN = METADATA_FILENAME_PREFIX + "temp";
 
     /**
      * Prefix used when creating temporary directories.

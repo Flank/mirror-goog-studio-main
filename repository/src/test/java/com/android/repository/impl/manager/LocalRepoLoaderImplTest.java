@@ -15,13 +15,17 @@
  */
 package com.android.repository.impl.manager;
 
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.repository.api.LocalPackage;
 import com.android.repository.api.RepoManager;
+import com.android.repository.impl.installer.AbstractPackageOperation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import java.io.File;
+import java.util.Map;
 import org.junit.Test;
 
 /**
@@ -121,5 +125,28 @@ public class LocalRepoLoaderImplTest {
 
     }
 
+    @Test
+    public void testNoScanningForMetadataFolders() throws Exception {
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        MockFileOp fop = new MockFileOp();
+        // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
+        // be the case, there is no reason to disallow that.
+        File repoRoot = new File("/" + AbstractPackageOperation.METADATA_FILENAME_PREFIX + "repo");
+        fop.mkdirs(repoRoot);
+        RepoManager mgr = new RepoManagerImpl(fop);
+
+        // Check that the metadata folders are not scanned for packages.
+        File package1 = new File(repoRoot, "foo/package.xml");
+        fop.recordExistingFile(package1.getPath(),
+                               LOCAL_PACKAGE.getBytes());
+        File package2 = new File(repoRoot, AbstractPackageOperation.METADATA_FILENAME_PREFIX + "bar/package.xml");
+        fop.recordExistingFile(package2.getPath(),
+                               LOCAL_PACKAGE_2.getBytes());
+        // loader caches the packages it found, so we need to recreate it
+        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
+        Map<String, LocalPackage> localPackages = loader.getPackages(progress);
+        assertEquals(1, localPackages.size());
+        assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation().getPath());
+    }
 
 }
