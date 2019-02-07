@@ -6,6 +6,7 @@ load("//tools/base/bazel:bazel.bzl", "java_jarjar")
 #The long list is as we want to jar-jar specific jars, and not all of their depenendencies,
 #as those are already present on the studio classpath.
 java_jarjar(
+    # TODO (b/126378478): Rename jarjar to something that indicates it includes more than grpc / profilers.
     name = "studio-profiler-grpc-1.0-jarjar",
     srcs = [
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
@@ -29,6 +30,7 @@ java_jarjar(
         "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
         "//tools/base/transport/proto:java_proto",
+        "@perfetto_repo//:java_proto",
     ],
     rules = "jarjar_rules.txt",
     visibility = ["//visibility:public"],

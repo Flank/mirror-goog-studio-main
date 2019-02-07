@@ -15,6 +15,11 @@ _repositories = [
         "path": "external/dexter/slicer",
     },
     {
+        "name": "perfetto_repo",
+        "build_file": "tools/base/profiler/native/external/perfetto.BUILD",
+        "path": "external/perfetto",
+    },
+    {
         "name": "protobuf_repo",
         "path": "external/protobuf",
     },

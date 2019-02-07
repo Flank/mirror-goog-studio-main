@@ -119,7 +119,7 @@ def java_proto_library(
         visibility = None,
         grpc_support = False,
         protoc_version = "3.4.0",
-        proto_java_runtime_library = ["//tools/base/third_party:com.google.protobuf_protobuf-java"],
+        proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
         **kwargs):
     srcs_name = name + "_srcs"
     outs = [srcs_name + ".srcjar"]
@@ -127,12 +127,12 @@ def java_proto_library(
         name = srcs_name,
         srcs = srcs,
         deps = proto_deps,
-        include = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
+        include = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + protoc_version + "/include",
         outs = outs,
         proto_include_version = protoc_version,
-        protoc = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/" + protoc_version + ":exe",
+        protoc = "@//prebuilts/tools/common/m2/repository/com/google/protobuf/protoc/" + protoc_version + ":exe",
         grpc_plugin =
-            "//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.3:exe" if grpc_support else None,
+            "@//prebuilts/tools/common/m2/repository/io/grpc/protoc-gen-grpc-java/1.0.3:exe" if grpc_support else None,
         target_language = proto_languages.JAVA,
         visibility = visibility,
     )
@@ -140,7 +140,7 @@ def java_proto_library(
     java_deps = list(java_deps)
     java_deps += proto_java_runtime_library
     if grpc_support:
-        java_deps += ["//tools/base/third_party:io.grpc_grpc-all"]
+        java_deps += ["@//tools/base/third_party:io.grpc_grpc-all"]
 
     if pom:
         maven_java_library(
