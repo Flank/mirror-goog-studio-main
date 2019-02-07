@@ -25,10 +25,12 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@Ignore
 public class CmakeJniLibConnectedTest {
     @Rule
     public GradleTestProject project =
