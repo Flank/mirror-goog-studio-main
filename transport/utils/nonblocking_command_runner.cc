@@ -1,0 +1,148 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "nonblocking_command_runner.h"
+#include "utils/log.h"
+#include "utils/thread_name.h"
+
+#include <signal.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <sstream>
+
+using profiler::Log;
+using std::string;
+namespace profiler {
+
+// Const for index in pipe to read from
+// Note: Child processes read from to stdin_pipe[kPipeRead] and parent processes
+// write to stdin_pip[kPipeWrite]
+const uint kPipeRead = 0;
+// Const for index in pipe to write to
+// Note: Child processes write to stdout_pipe[kPipeWrite] and parent processes
+// read from stdout_pipe[kPipeRead]
+const uint kPipeWrite = 1;
+
+const size_t kReadBufferSize = 1024;
+
+bool NonBlockingCommandRunner::Run(const char* const arguments[],
+                                   const StdoutCallback& callback) {
+  return Run(arguments, std::string(), const_cast<StdoutCallback*>(&callback));
+}
+
+bool NonBlockingCommandRunner::Run(const char* const arguments[],
+                                   const string& input) {
+  return Run(arguments, input, nullptr);
+}
+
+bool NonBlockingCommandRunner::Run(const char* const arguments[],
+                                   const string& input,
+                                   StdoutCallback* callback) {
+  // stdin_pipe referrs to the stdin of the child.
+  int stdin_pipe[2];
+  // stdout_pipe referrs to the stdout of the child.
+  int stdout_pipe[2];
+
+  if (log_command_) {
+    Log::D("Forking Command: %s", executable_path_.c_str());
+  }
+
+  pipe(stdin_pipe);
+  pipe(stdout_pipe);
+  child_process_id_ = fork();
+  if (child_process_id_ == 0) {
+    // child continues here
+    // close the write portion of the stdin_pipe since pipes are one direction
+    // only, and we will read from this pipe.
+    close(stdin_pipe[kPipeWrite]);
+    // close the read portion of the stdout_pipe since we will write to this
+    // pipe only.
+    close(stdout_pipe[kPipeRead]);
+    // redirect stdin
+    if (stdin_pipe[kPipeRead] != STDIN_FILENO) {
+      dup2(stdin_pipe[kPipeRead], STDIN_FILENO);
+      close(stdin_pipe[kPipeRead]);
+    }
+    // redirect stdout
+    if (stdout_pipe[kPipeWrite] != STDOUT_FILENO) {
+      dup2(stdout_pipe[kPipeWrite], STDOUT_FILENO);
+      close(stdout_pipe[kPipeWrite]);
+    }
+
+    // run child process image
+    execv(executable_path_.c_str(), (char* const*)arguments);
+    // if we get here at all, an error occurred, but we are in the child
+    // process, so just exit
+    Log::W("Child process exited with code %d", errno);
+    _exit(EXIT_FAILURE);
+  } else if (child_process_id_ > 0) {
+    // parent continues here
+    // close unused file descriptors, these are for child only
+    close(stdin_pipe[kPipeRead]);
+    close(stdout_pipe[kPipeWrite]);
+    if (!input.empty()) {
+      // open a handle to pipe input to.
+      FILE* handle = fdopen(stdin_pipe[kPipeWrite], "wb");
+      fwrite(input.c_str(), sizeof(char), input.size(), handle);
+      // closing the handle interrupts the input stream (required to end the
+      // input).
+      fclose(handle);
+    }
+    close(stdin_pipe[kPipeWrite]);
+
+    if (callback != nullptr) {
+      read_data_thread_ = std::thread([this, callback, stdout_pipe]() -> void {
+        SetThreadName("Studio::CommandRunner");
+        // open a handle to read output from.
+        FILE* handle = fdopen(stdout_pipe[kPipeRead], "r");
+        char buffer[kReadBufferSize];
+        size_t read_size = 0;
+        while (IsRunning() && read_size >= 0) {
+          read_size = fread(buffer, sizeof(char), kReadBufferSize, handle);
+          if (read_size > 0) {
+            string output(buffer, read_size);
+            (*callback)(output);
+          }
+        }
+        close(stdout_pipe[kPipeRead]);
+      });
+    } else {
+      close(stdout_pipe[kPipeRead]);
+    }
+  } else {
+    // failed to create child
+    close(stdin_pipe[kPipeRead]);
+    close(stdin_pipe[kPipeWrite]);
+    close(stdout_pipe[kPipeRead]);
+    close(stdout_pipe[kPipeWrite]);
+    return false;
+  }
+  return true;
+}  // namespace profiler
+
+void NonBlockingCommandRunner::Kill() {
+  if (IsRunning()) {
+    int status;
+    kill(child_process_id_, SIGINT);
+    waitpid(child_process_id_, &status, 0);
+    child_process_id_ = 0;
+    if (read_data_thread_.joinable()) {
+      read_data_thread_.join();
+    }
+  }
+}
+
+}  // namespace profiler
