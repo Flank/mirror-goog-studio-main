@@ -15,21 +15,6 @@ _repositories = [
         "path": "external/dexter/slicer",
     },
     {
-        "name": "AntennaPod",
-        "build_file": "tools/base/build-system/integration-test/AntennaPod.BUILD",
-        "path": "external/AntennaPod",
-    },
-    {
-        "name": "gradle_perf_android_medium",
-        "build_file": "tools/base/build-system/integration-test/gradle_perf_android_medium.BUILD",
-        "path": "external/gradle-perf-android-medium",
-    },
-    {
-        "name": "android_studio_gradle_test",
-        "build_file": "tools/base/build-system/integration-test/android_studio_gradle_test.BUILD",
-        "path": "external/android-studio-gradle-test",
-    },
-    {
         "name": "protobuf_repo",
         "path": "external/protobuf",
     },
