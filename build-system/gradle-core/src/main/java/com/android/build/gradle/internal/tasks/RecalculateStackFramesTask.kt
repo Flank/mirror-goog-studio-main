@@ -53,7 +53,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     lateinit var referencedClasses: FileCollection
         private set
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     private var userCache: FileCache? = null
 

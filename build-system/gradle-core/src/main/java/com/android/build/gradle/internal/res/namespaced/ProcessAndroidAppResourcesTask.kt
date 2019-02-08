@@ -61,7 +61,7 @@ import javax.inject.Inject
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
@@ -108,8 +108,10 @@ open class ProcessAndroidAppResourcesTask
             aapt2FromMaven = aapt2FromMaven, logger = iLogger
         )
         workers.use {
-            it.submit(Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, config))
+            it.submit(
+                Aapt2LinkRunnable::class.java,
+                Aapt2LinkRunnable.Params(aapt2ServiceKey, config)
+            )
         }
     }
 

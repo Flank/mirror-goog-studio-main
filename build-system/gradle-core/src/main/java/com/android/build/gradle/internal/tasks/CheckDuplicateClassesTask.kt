@@ -53,7 +53,7 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
     @Classpath
     fun getClassesFiles(): FileCollection = classesArtifacts.artifactFiles
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun taskAction() {

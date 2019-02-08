@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
 import com.android.utils.FileUtils
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -53,13 +52,13 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     @get:InputFiles lateinit var featureDeclarations: FileCollection
         private set
 
-    val workers = Workers.getWorker(workerExecutor)
+    val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun fullTaskAction() {
         workers.use {
-            it.submit(ExportApplicationIdsRunnable::class.java,
-                ExportApplicationIdsParams(
+            it.submit(
+                ExportApplicationIdsRunnable::class.java, ExportApplicationIdsParams(
                     featureDeclarations = featureDeclarations.asFileTree.files,
                     packageListOutFolder = packageListOutFolder
                 )

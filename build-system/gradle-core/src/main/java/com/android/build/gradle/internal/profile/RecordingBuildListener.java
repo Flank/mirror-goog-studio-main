@@ -40,9 +40,7 @@ public class RecordingBuildListener implements TaskExecutionListener {
 
     @NonNull private final ProfileRecordWriter recordWriter;
     // map of outstanding tasks executing, keyed by their path.
-    @NonNull
-    private final Map<String, GradleBuildProfileSpan.Builder> taskRecords =
-            new ConcurrentHashMap<>();
+    @NonNull private final Map<String, TaskProfilingRecord> taskRecords = new ConcurrentHashMap<>();
 
     RecordingBuildListener(@NonNull ProfileRecordWriter recorder) {
         recordWriter = recorder;
@@ -53,29 +51,52 @@ public class RecordingBuildListener implements TaskExecutionListener {
         GradleBuildProfileSpan.Builder builder = GradleBuildProfileSpan.newBuilder();
         builder.setType(ExecutionType.TASK_EXECUTION);
         builder.setId(recordWriter.allocateRecordId());
-        builder.setStartTimeInMs(System.currentTimeMillis());
+        builder.setThreadId(Thread.currentThread().getId());
 
-        taskRecords.put(task.getPath(), builder);
+        TaskProfilingRecord taskRecord =
+                new TaskProfilingRecord(
+                        recordWriter,
+                        builder,
+                        task.getPath(),
+                        task.getProject().getPath(),
+                        getVariantName(task));
+
+        taskRecords.put(task.getPath(), taskRecord);
     }
 
     @Override
     public void afterExecute(@NonNull Task task, @NonNull TaskState taskState) {
-        GradleBuildProfileSpan.Builder record = taskRecords.remove(task.getPath());
 
-        record.setDurationInMs(System.currentTimeMillis() - record.getStartTimeInMs());
+        try {
+            TaskProfilingRecord taskRecord = taskRecords.get(task.getPath());
+            GradleBuildProfileSpan.Builder record = taskRecord.getSpanBuilder();
 
-        //noinspection ThrowableResultOfMethodCallIgnored Just logging the failure.
-        record.setTask(
-                GradleTaskExecution.newBuilder()
-                        .setType(AnalyticsUtil.getTaskExecutionType(task.getClass()).getNumber())
-                        .setDidWork(taskState.getDidWork())
-                        .setSkipped(taskState.getSkipped())
-                        .setUpToDate(taskState.getUpToDate())
-                        .setFailed(taskState.getFailure() != null));
+            //noinspection ThrowableResultOfMethodCallIgnored Just logging the failure.
 
-        recordWriter.writeRecord(task.getProject().getPath(), getVariantName(task), record);
-        ProcessProfileWriter.recordMemorySample();
+            record.setTask(
+                    GradleTaskExecution.newBuilder()
+                            .setType(
+                                    AnalyticsUtil.getTaskExecutionType(task.getClass()).getNumber())
+                            .setDidWork(taskState.getDidWork())
+                            .setSkipped(taskState.getSkipped())
+                            .setUpToDate(taskState.getUpToDate())
+                            .setFailed(taskState.getFailure() != null));
+
+            taskRecord.setTaskFinished();
+            // check that all workers are done before closing this span.
+            if (taskRecord.allWorkersFinished()) {
+                taskRecord.writeTaskSpan();
+                closeTaskRecord(task.getPath());
+            }
+        } finally {
+            ProcessProfileWriter.recordMemorySample();
+        }
     }
+
+    public TaskProfilingRecord getTaskRecord(String taskPath) {
+        return taskRecords.get(taskPath);
+    }
+
 
     @Nullable
     private static String getVariantName(@NonNull Task task) {
@@ -87,5 +108,9 @@ public class RecordingBuildListener implements TaskExecutionListener {
             return null;
         }
         return variantName;
+    }
+
+    public void closeTaskRecord(@NonNull String taskPath) {
+        taskRecords.remove(taskPath);
     }
 }

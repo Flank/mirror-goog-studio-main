@@ -86,7 +86,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun generateTestConfig() {

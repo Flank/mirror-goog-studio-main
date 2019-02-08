@@ -68,7 +68,7 @@ open class CompileSourceSetResources
     lateinit var partialRDirectory: File
         private set
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     override fun isIncremental() = true
 
@@ -130,7 +130,8 @@ open class CompileSourceSetResources
         }
         workers.use {
             if (!deletes.isEmpty()) {
-                workers.submit(Aapt2CompileDeleteRunnable::class.java,
+                workers.submit(
+                    Aapt2CompileDeleteRunnable::class.java,
                     Aapt2CompileDeleteRunnable.Params(
                         outputDirectory = outputDirectory,
                         deletedInputs = deletes,
@@ -163,7 +164,8 @@ open class CompileSourceSetResources
             logger = iLogger
         )
         for (request in requests) {
-            workers.submit(Aapt2CompileRunnable::class.java,
+            workers.submit(
+                Aapt2CompileRunnable::class.java,
                 Aapt2CompileRunnable.Params(
                     aapt2ServiceKey = aapt2ServiceKey,
                     requests = listOf(request)

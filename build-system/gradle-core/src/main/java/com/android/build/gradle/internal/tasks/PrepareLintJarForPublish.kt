@@ -44,13 +44,13 @@ open class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerEx
         private set
     @get:OutputFile lateinit var outputLintJar: File
         private set
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun prepare() {
         workers.use {
-            it.submit(PublishLintJarWorkerRunnable::class.java,
-                PublishLintJarRequest(
+            it.submit(
+                PublishLintJarWorkerRunnable::class.java, PublishLintJarRequest(
                     files = lintChecks.files,
                     outputLintJar = outputLintJar
                 )

@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -65,7 +64,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
     val resOffset: Int
         get() = resOffsetSupplier.get()
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     /**
      * In a feature, we only need to generate code for its Runtime dependencies as compile
@@ -78,8 +77,8 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
     @Throws(IOException::class)
     fun fullTaskAction() {
         workers.use {
-            it.submit(ExportFeatureInfoRunnable::class.java,
-                ExportFeatureInfoParams(
+            it.submit(
+                ExportFeatureInfoRunnable::class.java, ExportFeatureInfoParams(
                     outFolder = outFolder,
                     resOffset = resOffset,
                     directDependencies = directDependencies.asFileTree.files

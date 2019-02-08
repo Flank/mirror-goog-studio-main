@@ -55,7 +55,7 @@ open class LibraryDexingTask @Inject constructor(
     executor: WorkerExecutor) : AndroidVariantTask() {
 
     private val workers: WorkerExecutorFacade =
-        getWorker(executor, MoreExecutors.newDirectExecutorService())
+        getWorker(path, executor, MoreExecutors.newDirectExecutorService())
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)

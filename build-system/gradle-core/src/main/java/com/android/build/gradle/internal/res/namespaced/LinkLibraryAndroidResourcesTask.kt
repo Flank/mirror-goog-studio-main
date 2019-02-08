@@ -80,7 +80,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
 
     private lateinit var androidJarPathProvider: Provider<String>
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun taskAction() {
@@ -110,8 +110,10 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
             logger = iLogger
         )
         workers.use {
-            it.submit(Aapt2LinkRunnable::class.java,
-                Aapt2LinkRunnable.Params(aapt2ServiceKey, request))
+            it.submit(
+                Aapt2LinkRunnable::class.java,
+                Aapt2LinkRunnable.Params(aapt2ServiceKey, request)
+            )
         }
     }
 

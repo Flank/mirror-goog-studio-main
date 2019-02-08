@@ -44,13 +44,15 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
     @get:Input val packageName get() = packageNameSupplier.get()
     @get:OutputFile lateinit var manifestFile: File private set
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun createManifest() {
         workers.use {
-            it.submit(StaticLibraryManifestRunnable::class.java,
-                StaticLibraryManifestRequest(manifestFile, packageName))
+            it.submit(
+                StaticLibraryManifestRunnable::class.java,
+                StaticLibraryManifestRequest(manifestFile, packageName)
+            )
         }
     }
 

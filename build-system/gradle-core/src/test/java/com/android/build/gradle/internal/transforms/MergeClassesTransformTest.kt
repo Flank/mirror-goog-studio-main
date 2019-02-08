@@ -77,6 +77,7 @@ class MergeClassesTransformTest {
 
         context = Mockito.mock(Context::class.java)
         Mockito.`when`(context.workerExecutor).thenReturn(workerExecutor)
+        Mockito.`when`(context.path).thenReturn(":test")
     }
 
     @After

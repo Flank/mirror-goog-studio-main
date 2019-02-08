@@ -55,7 +55,7 @@ public class BundleInstantApp extends AndroidVariantTask {
 
     @Inject
     public BundleInstantApp(WorkerExecutor workerExecutor) {
-        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+        this.workers = Workers.INSTANCE.getWorker(getPath(), workerExecutor);
     }
 
     @TaskAction

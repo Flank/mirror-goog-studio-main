@@ -119,7 +119,7 @@ public class RecordingBuildListenerTest {
         GradleBuildProfileSpan record = writer.getRecords().get(0);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class RecordingBuildListenerTest {
 
         GradleBuildProfileSpan record = getRecordForId(profile.getSpanList(), 2);
         assertEquals(0, record.getParentId());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
 
         record = getRecordForId(profile.getSpanList(), 3);
         assertNotNull(record);
@@ -182,7 +182,7 @@ public class RecordingBuildListenerTest {
         record = getRecordForId(profile.getSpanList(), 3);
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
 
         record = getRecordForId(profile.getSpanList(), 4);
         assertNotNull(record);
@@ -214,13 +214,13 @@ public class RecordingBuildListenerTest {
         GradleBuildProfileSpan record = getRecordForId(writer.getRecords(), 1);
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
 
         record = getRecordForId(writer.getRecords(), 2);
         assertEquals(2, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
     }
 
     @Test
@@ -248,13 +248,13 @@ public class RecordingBuildListenerTest {
         assertEquals(1, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
 
         record = getRecordForId(writer.getRecords(), 2);
         assertEquals(2, record.getId());
         assertEquals(0, record.getParentId());
         assertEquals(1, record.getProject());
-        assertEquals(0, record.getThreadId());
+        assertEquals(Thread.currentThread().getId(), record.getThreadId());
     }
 
     @Test

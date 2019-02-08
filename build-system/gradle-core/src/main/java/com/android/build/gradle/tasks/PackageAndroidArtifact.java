@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
@@ -107,6 +108,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.workers.WorkerExecutor;
 
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends IncrementalTask {
@@ -227,8 +229,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private final WorkerExecutorFacade workers;
 
-    public PackageAndroidArtifact(WorkerExecutorFacade workers) {
-        this.workers = workers;
+    public PackageAndroidArtifact(WorkerExecutor workerExecutor) {
+        this.workers = Workers.INSTANCE.getWorker(getPath(), workerExecutor);
     }
 
     @Input

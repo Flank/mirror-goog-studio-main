@@ -101,7 +101,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     @Inject
     public MergeSourceSetFolders(WorkerExecutor workerExecutor, ObjectFactory objectFactory) {
-        this.workerExecutor = Workers.INSTANCE.getWorker(workerExecutor);
+        this.workerExecutor = Workers.INSTANCE.getWorker(getPath(), workerExecutor);
         this.outputDir = objectFactory.directoryProperty();
     }
 

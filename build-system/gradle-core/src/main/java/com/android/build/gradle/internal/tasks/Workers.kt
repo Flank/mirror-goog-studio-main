@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.profile.ProfilerInitializer
+import com.android.build.gradle.internal.profile.TaskProfilingRecord
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
@@ -26,8 +28,10 @@ import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
 import java.io.Serializable
+import java.lang.reflect.Constructor
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ForkJoinPool
+import javax.inject.Inject
 
 /**
  * Singleton object responsible for providing instances of [WorkerExecutorFacade]
@@ -50,13 +54,14 @@ object Workers {
      * Factory function for creating instances of [WorkerExecutorFacade].
      * Initialized with a default version using the the [ForkJoinPool.commonPool]
      */
-    private var factory: (worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
-        { _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool()) }
+    private var factory: (owner: String, worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
+        { _, _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool()) }
 
     /**
      * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor], delegating
      * to the [factory] method for the actual instantiation of the interface.
      *
+     * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
      * @param worker [WorkerExecutor] to use if Gradle's worker executor are enabled.
      * @param executor [ExecutorService] to use if the Gradle's worker are not enabled or null
      * if the default installed version is to be used.
@@ -64,11 +69,11 @@ object Workers {
      * [ExecutorService] depending on the project options.
      */
     @JvmOverloads
-    fun getWorker(worker: WorkerExecutor, executor: ExecutorService? = null)
+    fun getWorker(owner: String, worker: WorkerExecutor, executor: ExecutorService? = null)
             : WorkerExecutorFacade {
         return if (useDirectWorkerExecutor) {
             DirectWorkerExecutor()
-        } else factory(worker, executor)
+        } else factory(owner, worker, executor)
     }
 
     /**
@@ -87,10 +92,10 @@ object Workers {
     fun initFromProject(options: ProjectOptions, defaultExecutor: ExecutorService) {
         factory = when {
             options.get(BooleanOption.ENABLE_GRADLE_WORKERS) -> {
-                { worker, _ -> WorkerExecutorAdapter(worker) }
+                { owner, worker, _ -> WorkerExecutorAdapter(owner, worker) }
             }
             else -> {
-                { _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor) }
+                { _, _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor) }
             }
         }
     }
@@ -124,21 +129,41 @@ object Workers {
      * to submit new work actions.
      *
      */
-    private class WorkerExecutorAdapter(private val workerExecutor: WorkerExecutor) :
+    private class WorkerExecutorAdapter(
+        private val owner: String,
+        private val workerExecutor: WorkerExecutor
+    ) :
         WorkerExecutorFacade {
+
+        val taskRecord by lazy {
+            (ProfilerInitializer.getListener()?.getTaskRecord(owner)
+                ?: TaskProfilingRecord.dummyTaskRecord)
+        }
 
         override fun submit(
             actionClass: Class<out Runnable>,
             parameter: Serializable
         ) {
-            workerExecutor.submit(actionClass) {
+
+            val workerKey = "$owner${actionClass.name}${parameter.hashCode()}"
+            val submissionParameters = ActionParameters(
+                actionClass,
+                parameter,
+                owner,
+                workerKey
+            )
+
+            taskRecord.addWorker(workerKey)
+
+            workerExecutor.submit(ActionFacade::class.java) {
                 it.isolationMode = IsolationMode.NONE
-                it.params(parameter)
+                it.params(submissionParameters)
             }
         }
 
         override fun await() {
             try {
+                taskRecord.setTaskWaiting()
                 workerExecutor.await()
             } catch (e: WorkerExecutionException) {
                 throw WorkerExecutorException(e.causes)
@@ -161,7 +186,49 @@ object Workers {
          * @TaskAction starts (so, we are safe!).
          */
         override fun close() {
-            // do nothing.
+            taskRecord.setTaskClosed()
         }
+    }
+
+    class ActionParameters(
+        val delegateAction: Class<out Runnable>,
+        val delegateParameters: Serializable,
+        val taskOwner: String,
+        private val workerKey: String
+    ) : Serializable {
+
+        private fun taskRecord() =
+            (ProfilerInitializer.getListener()?.getTaskRecord(taskOwner)
+                ?: TaskProfilingRecord.dummyTaskRecord)
+
+        fun getWorker() = taskRecord().get(workerKey)
+    }
+
+    class ActionFacade @Inject constructor(val params: ActionParameters) : Runnable {
+
+        override fun run() {
+            val constructor = findAppropriateConstructor()
+                ?: throw RuntimeException("Cannot find constructor with @Inject in ${params.delegateAction.name}")
+
+            val delegate = constructor.newInstance(params.delegateParameters) as Runnable
+            params.getWorker().executionStarted()
+            delegate.run()
+            params.getWorker().executionFinished()
+        }
+
+        private fun findAppropriateConstructor(): Constructor<*>? {
+            for (constructor in params.delegateAction.constructors) {
+                if (constructor.parameterTypes.size == 1
+                    && constructor.isAnnotationPresent(Inject::class.java)
+                    && Serializable::class.java.isAssignableFrom(constructor.parameterTypes[0])
+                ) {
+                    constructor.isAccessible = true
+                    return constructor
+                }
+            }
+            return null
+        }
+
+
     }
 }

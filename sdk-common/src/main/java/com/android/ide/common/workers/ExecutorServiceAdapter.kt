@@ -32,7 +32,10 @@ open class ExecutorServiceAdapter(
 
     private val futures = mutableListOf<Future<*>>()
 
-    override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
+    override fun submit(
+        actionClass: Class<out Runnable>,
+        parameter: Serializable
+    ) {
         val submission = executor.submit {
             val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
             constructor.isAccessible = true

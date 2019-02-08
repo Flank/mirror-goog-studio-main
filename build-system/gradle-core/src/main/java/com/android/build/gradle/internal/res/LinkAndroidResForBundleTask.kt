@@ -65,7 +65,7 @@ import javax.inject.Inject
 open class LinkAndroidResForBundleTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @get:Input
     var debuggable: Boolean = false
@@ -160,8 +160,10 @@ open class LinkAndroidResForBundleTask
         )
         //TODO: message rewriting.
         workers.use {
-            it.submit(Aapt2ProcessResourcesRunnable::class.java,
-                Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config))
+            it.submit(
+                Aapt2ProcessResourcesRunnable::class.java,
+                Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config)
+            )
         }
     }
 

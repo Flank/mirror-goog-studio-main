@@ -23,10 +23,6 @@ import com.android.builder.dexing.ClassFileInput
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.collect.Maps
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.component.ComponentIdentifier
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier
-import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import java.io.File
 import java.io.Serializable
 import java.util.concurrent.ConcurrentHashMap

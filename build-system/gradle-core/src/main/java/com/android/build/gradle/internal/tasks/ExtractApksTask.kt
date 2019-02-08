@@ -51,7 +51,7 @@ open class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) :
         fun getTaskName(scope: VariantScope) = scope.getTaskName("extractApksFor")
     }
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)

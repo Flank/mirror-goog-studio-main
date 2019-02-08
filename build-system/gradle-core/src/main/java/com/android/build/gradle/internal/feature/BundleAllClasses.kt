@@ -51,7 +51,7 @@ import javax.inject.Inject
  */
 open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     @get:OutputFile
     lateinit var outputJar: File
@@ -100,10 +100,11 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
         thisRClassClasses?.get()?.asFileTree?.visit(collector)
 
         workers.use {
-            it.submit(JarWorkerRunnable::class.java,
-                JarRequest(toFile = outputJar,
+            it.submit(
+                JarWorkerRunnable::class.java, JarRequest(toFile = outputJar,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                    fromFiles = files))
+                    fromFiles = files)
+            )
         }
     }
 

@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +41,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
     @Inject
     public PackageApplication(WorkerExecutor workerExecutor) {
-        super(Workers.INSTANCE.getWorker(workerExecutor));
+        super(workerExecutor);
     }
 
     @Override

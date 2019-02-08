@@ -82,7 +82,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
     lateinit var signingConfig: FileCollection
         private set
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun generateApk() {

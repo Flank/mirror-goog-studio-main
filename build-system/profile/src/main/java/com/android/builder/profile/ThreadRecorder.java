@@ -50,8 +50,8 @@ public final class ThreadRecorder implements Recorder {
     protected final ThreadLocal<Deque<Long>> recordStacks =
             ThreadLocal.withInitial(ArrayDeque::new);
 
-    protected final ThreadLocal<Long> threadId =
-            ThreadLocal.withInitial(THREAD_ID_ALLOCATOR::getAndIncrement);
+    //protected final ThreadLocal<Long> threadId =
+    //        ThreadLocal.withInitial(THREAD_ID_ALLOCATOR::getAndIncrement);
 
     public static Recorder get() {
         return ProcessProfileWriterFactory.getFactory().isInitialized() ? RECORDER : NO_OP_RECORDER;
@@ -83,6 +83,9 @@ public final class ThreadRecorder implements Recorder {
             throw new UncheckedIOException(e);
         } finally {
             write(profileRecordWriter, currentRecord, projectPath, variant);
+            if (recordStacks.get().isEmpty()) {
+                recordStacks.remove();
+            }
         }
     }
 
@@ -104,6 +107,9 @@ public final class ThreadRecorder implements Recorder {
             block.handleException(e);
         } finally {
             write(profileRecordWriter, currentRecord, projectPath, variant);
+            if (recordStacks.get().isEmpty()) {
+                recordStacks.remove();
+            }
         }
         // we always return null when an exception occurred and was not rethrown.
         return null;
@@ -125,6 +131,7 @@ public final class ThreadRecorder implements Recorder {
                 GradleBuildProfileSpan.newBuilder()
                         .setId(thisRecordId)
                         .setType(executionType)
+                        .setThreadId(Thread.currentThread().getId())
                         .setStartTimeInMs(startTimeInMs);
 
         if (transform != null) {
@@ -135,7 +142,7 @@ public final class ThreadRecorder implements Recorder {
             currentRecord.setParentId(parentId);
         }
 
-        currentRecord.setThreadId(threadId.get());
+        currentRecord.setThreadId(Thread.currentThread().getId());
         recordStacks.get().push(thisRecordId);
         return currentRecord;
     }

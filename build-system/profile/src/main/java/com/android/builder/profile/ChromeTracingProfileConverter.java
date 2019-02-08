@@ -133,6 +133,8 @@ public class ChromeTracingProfileConverter {
                         .collect(Collectors.toMap(GradleBuildProject::getId, ProjectHolder::new));
 
         try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(out))) {
+            writer.beginObject();
+            writer.name("traceEvents");
             writer.beginArray();
             long previousTime = 0;
             for (GradleBuildMemorySample memorySample : profile.getMemorySampleList()) {
@@ -154,6 +156,14 @@ public class ChromeTracingProfileConverter {
                 }
                 writer.endObject();
             }
+
+            Map<Long, String> taskList =
+                    profile.getSpanList()
+                            .stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            GradleBuildProfileSpan::getId,
+                                            ChromeTracingProfileConverter::getSpanName));
             for (GradleBuildProfileSpan span : profile.getSpanList()) {
                 writer
                         .beginObject()
@@ -163,31 +173,34 @@ public class ChromeTracingProfileConverter {
                 ImmutableMap.Builder<String, Object> args = ImmutableMap.builder();
 
                 args.put("span_id", span.getId());
-                ProjectHolder projectHolder = projects.get(span.getProject());
-                if (projectHolder != null ) {
-                    args.put("project", projectHolder.project);
-                    if (span.getVariant() != 0) {
-                        GradleBuildVariant variant = projectHolder.variants.get(span.getVariant());
-                        if (variant != null) {
-                            args.put("variant", variant);
+                if (span.getParentId() != 0) {
+                    args.put("parent_span_id", span.getParentId());
+                } else {
+                    ProjectHolder projectHolder = projects.get(span.getProject());
+                    if (projectHolder != null) {
+                        args.put("project", projectHolder.project);
+                        if (span.getVariant() != 0) {
+                            GradleBuildVariant variant =
+                                    projectHolder.variants.get(span.getVariant());
+                            if (variant != null) {
+                                args.put("variant", variant);
+                            }
                         }
                     }
                 }
+                writer.name("name").value(getSpanName(span));
                 switch (span.getType()) {
                     case TASK_EXECUTION:
-                        writer.name("name").value("task: " + taskName(span));
                         args.put("task", span.getTask());
                         break;
                     case TASK_TRANSFORM:
-                        writer.name("name").value("transform: " + transformName(span));
                         args.put("transform", span.getTransform());
                         break;
                     case TASK_TRANSFORM_PREPARATION:
-                        writer.name("name").value("transform prep: " + transformName(span));
-                        args.put("transform", span.getTransform());
+                        args.put("transform prep", span.getTransform());
                         break;
-                    default:
-                        writer.name("name").value(pretty(span.getType()));
+                    case WORKER_EXECUTION:
+                        args.put("initiating task", taskList.get(span.getParentId()));
                         break;
                 }
 
@@ -204,8 +217,38 @@ public class ChromeTracingProfileConverter {
                         .endObject();
             }
             writer.endArray();
+            writeStackFrames(writer, profile);
+            writer.endObject();
         }
+    }
 
+    static String getSpanName(GradleBuildProfileSpan span) {
+        switch (span.getType()) {
+            case TASK_EXECUTION:
+                return taskName(span);
+            case TASK_TRANSFORM:
+                return transformName(span);
+            case TASK_TRANSFORM_PREPARATION:
+                return "Prep for " + transformName(span);
+            case WORKER_EXECUTION:
+                return "Worker for " + span.getParentId();
+            default:
+                return pretty(span.getType());
+        }
+    }
+
+    static void writeStackFrames(JsonWriter writer, GradleBuildProfile profile) throws IOException {
+        writer.name("stackFrames");
+        writer.beginObject();
+        for (GradleBuildProfileSpan span : profile.getSpanList()) {
+            writer.name(String.valueOf(span.getId()));
+            writer.beginObject().name("name").value(getSpanName(span));
+            if (span.getParentId() != 0) {
+                writer.name("parent").value(String.valueOf(span.getParentId()));
+            }
+            writer.endObject();
+        }
+        writer.endObject();
     }
 
     static final class ProjectHolder {

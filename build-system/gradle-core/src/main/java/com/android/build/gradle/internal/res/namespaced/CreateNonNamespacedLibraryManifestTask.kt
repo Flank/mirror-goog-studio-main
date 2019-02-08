@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -54,14 +52,16 @@ open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExec
     lateinit var libraryManifest: Provider<RegularFile>
     private set
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @TaskAction
     fun createManifest() {
         workers.use {
-            it.submit(CreateNonNamespacedLibraryManifestRunnable::class.java,
+            it.submit(
+                CreateNonNamespacedLibraryManifestRunnable::class.java,
                 CreateNonNamespacedLibraryManifestRequest(
-                    libraryManifest.get().asFile, outputStrippedManifestFile))
+                    libraryManifest.get().asFile, outputStrippedManifestFile)
+            )
         }
     }
 

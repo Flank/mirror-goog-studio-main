@@ -45,7 +45,7 @@ import javax.inject.Inject
 open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor) :
     AndroidVariantTask() {
 
-    private val workers = Workers.getWorker(workerExecutor)
+    private val workers = Workers.getWorker(path, workerExecutor)
 
     @get:InputFiles
     lateinit var inputFiles: FileCollection

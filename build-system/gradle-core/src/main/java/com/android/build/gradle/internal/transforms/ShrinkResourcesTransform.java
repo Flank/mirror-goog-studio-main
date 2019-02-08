@@ -259,7 +259,9 @@ public class ShrinkResourcesTransform extends Transform {
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests);
 
         try (WorkerExecutorFacade workers =
-                Workers.INSTANCE.getWorker(invocation.getContext().getWorkerExecutor())) {
+                Workers.INSTANCE.getWorker(
+                        invocation.getContext().getPath(),
+                        invocation.getContext().getWorkerExecutor())) {
             ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
                     .transform(
                             workers,

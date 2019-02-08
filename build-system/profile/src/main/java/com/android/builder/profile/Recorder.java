@@ -115,4 +115,5 @@ public interface Recorder {
             @NonNull String projectPath,
             @Nullable String variant,
             @NonNull Block<T> block);
+
 }

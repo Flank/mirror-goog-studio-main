@@ -330,7 +330,7 @@ class BuildElementsTest {
                     + ":{}}]"
         )
 
-        val workers = Workers.getWorker(DirectWorkerExecutor())
+        val workers = Workers.getWorker(":test", DirectWorkerExecutor())
 
         ExistingBuildElements.from(DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, folder).transform(
             workers,

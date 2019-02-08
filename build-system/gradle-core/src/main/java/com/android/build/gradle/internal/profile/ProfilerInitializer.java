@@ -56,6 +56,11 @@ public final class ProfilerInitializer {
         //Static singleton class.
     }
 
+    @Nullable
+    public static RecordingBuildListener getListener() {
+        return recordingBuildListener;
+    }
+
     /**
      * Initialize the {@link ProcessProfileWriterFactory}. Idempotent.
      *

@@ -92,7 +92,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     private lateinit var androidTargetProvider: Provider<IAndroidTarget>
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     override fun isIncremental(): Boolean {
         return true

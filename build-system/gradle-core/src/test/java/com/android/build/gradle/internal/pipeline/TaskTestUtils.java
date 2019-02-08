@@ -36,18 +36,15 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.profile.Recorder;
+import com.android.builder.profile.NoOpRecorder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
-import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
@@ -165,47 +162,6 @@ public class TaskTestUtils {
         }
     }
 
-    public static final class FakeRecorder implements Recorder {
-        @Nullable
-        @Override
-        public <T> T record(
-                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
-                @NonNull String projectPath,
-                @Nullable String variant,
-                @NonNull Block<T> block) {
-            try {
-                return block.call();
-            } catch (Exception e) {
-                block.handleException(e);
-            }
-            return null;
-        }
-
-        @Override
-        public void record(
-                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
-                @NonNull String projectPath,
-                @Nullable String variant,
-                @NonNull VoidBlock block) {
-            try {
-                block.call();
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
-
-        @Nullable
-        @Override
-        public <T> T record(
-                @NonNull GradleBuildProfileSpan.ExecutionType executionType,
-                @Nullable GradleTransformExecution transform,
-                @NonNull String projectPath,
-                @Nullable String variant,
-                @NonNull Block<T> block) {
-            return record(executionType, projectPath, variant, block);
-        }
-    }
-
     @Before
     public void setUp() throws IOException {
         File projectDirectory = temporaryFolder.newFolder();
@@ -213,7 +169,7 @@ public class TaskTestUtils {
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
         errorReporter = new FakeConfigurableErrorReporter();
-        transformManager = new TransformManager(project, errorReporter, new FakeRecorder());
+        transformManager = new TransformManager(project, errorReporter, new NoOpRecorder());
         taskFactory = new TaskFactoryImpl(project.getTasks());
         mTransformTaskFailed = () -> new RuntimeException(
                 String.format("Transform task creation failed.  Sync issue:\n %s",
