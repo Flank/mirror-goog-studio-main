@@ -263,3 +263,30 @@ kotlin_test(
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
 )
+
+kotlin_library(
+    name = "studio-checks",
+    srcs = ["studio-checks/src/main/java"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tools.lint-api",
+        "//prebuilts/tools/common/lint-psi/uast",
+        "//tools/base/annotations",
+    ],
+)
+
+kotlin_test(
+    name = "studio-checks-tests",
+    srcs = ["studio-checks/src/test/java"],
+    jvm_flags = [
+        "-Dtest.suite.jar=studio-checks-tests.jar",
+    ],
+    test_class = "com.android.testutils.JarTestSuite",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":studio-checks",
+        ":tools.lint-api",
+        "//tools/base/lint/libs/lint-tests",
+        "//tools/base/third_party:junit_junit",
+    ],
+)

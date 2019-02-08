@@ -39,6 +39,7 @@
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-gradle/android.sdktools.base.lint.gradle.iml" filepath="$PROJECT_DIR$/lint/libs/lint-gradle/android.sdktools.base.lint.gradle.iml" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-gradle-api/android.sdktools.base.lint.gradle-api.iml" filepath="$PROJECT_DIR$/lint/libs/lint-gradle-api/android.sdktools.base.lint.gradle-api.iml" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-api/android.sdktools.base.lint.lint-api-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-api/android.sdktools.base.lint.lint-api-base.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lint/studio-checks/android.sdktools.base.lint.studio-checks.iml" filepath="$PROJECT_DIR$/lint/studio-checks/android.sdktools.base.lint.studio-checks.iml" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-tests/android.sdktools.base.lint.tests.iml" filepath="$PROJECT_DIR$/lint/libs/lint-tests/android.sdktools.base.lint.tests.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk-common/android.sdktools.base.sdk-common-base.iml" filepath="$PROJECT_DIR$/sdk-common/android.sdktools.base.sdk-common-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk-common/generate-locale-data/android.sdktools.base.sdk-common.generate-locale-data.iml" filepath="$PROJECT_DIR$/sdk-common/generate-locale-data/android.sdktools.base.sdk-common.generate-locale-data.iml" />
