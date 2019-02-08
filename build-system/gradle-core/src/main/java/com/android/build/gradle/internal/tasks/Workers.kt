@@ -21,6 +21,7 @@ import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
@@ -36,11 +37,21 @@ import java.util.concurrent.ForkJoinPool
 object Workers {
 
     /**
+     * A flag to force using a [DirectWorkerExecutor] instead of Gradle's executor.
+     *
+     * This should be used only in unit tests testing code that uses [WorkerExecutorFacade]. This
+     * should be set to true only before the test and reset back to false after the test to not
+     * affect other tests.
+     */
+    @VisibleForTesting
+    var useDirectWorkerExecutor: Boolean = false
+
+    /**
      * Factory function for creating instances of [WorkerExecutorFacade].
      * Initialized with a default version using the the [ForkJoinPool.commonPool]
      */
     private var factory: (worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
-        { _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool())}
+        { _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool()) }
 
     /**
      * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor], delegating
@@ -54,13 +65,18 @@ object Workers {
      */
     @JvmOverloads
     fun getWorker(worker: WorkerExecutor, executor: ExecutorService? = null)
-            : WorkerExecutorFacade = factory(worker, executor)
+            : WorkerExecutorFacade {
+        return if (useDirectWorkerExecutor) {
+            DirectWorkerExecutor()
+        } else factory(worker, executor)
+    }
 
     /**
      * factory function initializer that uses the project's [ProjectOptions] to decide which
      * instance of [WorkerExecutorFacade] should be used. This function should be registered as the
      * [factory] method early during our plugin instantiation.
      *
+     * if [useDirectWorkerExecutor] is enabled, will use [DirectWorkerExecutor] otherwise
      * will use [BooleanOption.ENABLE_GRADLE_WORKERS] to determine if [WorkerExecutor] or
      * [ExecutorService] should be used.
      *
@@ -69,10 +85,37 @@ object Workers {
      * invoking [getWorker] API.
      */
     fun initFromProject(options: ProjectOptions, defaultExecutor: ExecutorService) {
-        factory = if (options.get(BooleanOption.ENABLE_GRADLE_WORKERS)) {
-            { worker, _ -> WorkerExecutorAdapter(worker) }
-        } else {
-            { _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor)}
+        factory = when {
+            options.get(BooleanOption.ENABLE_GRADLE_WORKERS) -> {
+                { worker, _ -> WorkerExecutorAdapter(worker) }
+            }
+            else -> {
+                { _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor) }
+            }
+        }
+    }
+
+    /** An implementation of [WorkerExecutorFacade] that executes runnables directly */
+    private class DirectWorkerExecutor : WorkerExecutorFacade {
+
+        override fun submit(
+            actionClass: Class<out Runnable>,
+            parameter: Serializable
+        ) {
+            val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
+            val isConstructorAccessible = constructor.isAccessible
+            constructor.isAccessible = true
+            val action = constructor.newInstance(parameter)
+            action.run()
+            constructor.isAccessible = isConstructorAccessible
+        }
+
+        override fun await() {
+            // do nothing.
+        }
+
+        override fun close() {
+            // do nothing.
         }
     }
 
@@ -101,7 +144,7 @@ object Workers {
                 throw WorkerExecutorException(e.causes)
             }
         }
-        
+
         /**
          * In a normal situation you would like to call await() here, however:
          * 1) Gradle currently can only run a SINGLE @TaskAction for a given project
