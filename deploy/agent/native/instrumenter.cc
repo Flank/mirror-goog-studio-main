@@ -48,7 +48,7 @@ static unordered_map<string, Transform*> transforms;
 std::string GetInstrumentJarPath(const std::string& package_name) {
 #ifdef __ANDROID__
   std::string target_jar_dir_ =
-      std::string("/data/data/") + package_name + "/.studio/";
+      std::string("/data/data/") + package_name + "/code_cache/.studio/";
   std::string target_jar = target_jar_dir_ + kInstrumentationJarName;
   return target_jar;
 #else

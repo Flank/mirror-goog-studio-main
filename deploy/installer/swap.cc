@@ -70,7 +70,8 @@ void SwapCommand::ParseParameters(int argc, char** argv) {
   request_bytes_ = data;
 
   // Set this value here so we can re-use it in other methods.
-  target_dir_ = "/data/data/" + request_.package_name() + "/.studio/";
+  target_dir_ =
+      "/data/data/" + request_.package_name() + "/code_cache/.studio/";
   ready_to_run_ = true;
 }
 
