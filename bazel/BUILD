@@ -70,7 +70,7 @@ java_binary(
     main_class = "com.android.tools.kotlin.KotlinCompiler",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.11:jar",
         "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-stdlib",
     ],
     deps = [

@@ -36,6 +36,7 @@ iml_module(
         "//tools/idea/java/java-psi-impl:intellij.java.psi.impl[module]",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-reflect",
         "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
         "//tools/idea/uast/uast-java:intellij.java.uast[module]",
         "//tools/idea/.idea/libraries:kotlin-plugin",

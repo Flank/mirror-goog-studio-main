@@ -132,7 +132,7 @@ kotlin_test(
     test_class = "com.android.build.gradle.internal.GradleCoreBazelSuite",
     deps = [
         ":gradle-core",
-        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-reflect",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.3.11:jar",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apkzlib",
         "//tools/base/annotations",

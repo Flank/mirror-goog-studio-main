@@ -19,6 +19,7 @@
     <orderEntry type="module" module-name="intellij.java.psi.impl" />
     <orderEntry type="module" module-name="android.sdktools.manifest-merger" exported="" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="kotlin-reflect" level="project" />
     <orderEntry type="module" module-name="intellij.platform.uast" exported="" />
     <orderEntry type="module" module-name="intellij.java.uast" exported="" />
     <orderEntry type="library" exported="" scope="PROVIDED" name="kotlin-plugin" level="project" />

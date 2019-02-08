@@ -38,6 +38,7 @@ iml_module(
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.56:jar",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-reflect",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
