@@ -30,6 +30,7 @@ import com.android.testutils.truth.FileSubject
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -59,6 +60,8 @@ class BundleAllClassesTest {
 
     @Before
     fun setUp() {
+        Workers.useDirectWorkerExecutor = true
+
         MockitoAnnotations.initMocks(this)
         Mockito.`when`(scope.artifacts).thenReturn(artifacts)
         Mockito.`when`(scope.globalScope).thenReturn(globalScope)
@@ -92,6 +95,11 @@ class BundleAllClassesTest {
         val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)
         configAction.configure(task)
+    }
+
+    @After
+    fun tearDown() {
+        Workers.useDirectWorkerExecutor = false
     }
 
     @Test

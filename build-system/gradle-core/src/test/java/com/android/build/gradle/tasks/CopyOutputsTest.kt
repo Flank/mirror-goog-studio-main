@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.collect.ImmutableList
 import org.gradle.testfixtures.ProjectBuilder
@@ -40,6 +41,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
+import org.junit.After
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -74,6 +76,8 @@ class CopyOutputsTest {
 
     @Before
     fun setUp() {
+        Workers.useDirectWorkerExecutor = true
+
         MockitoAnnotations.initMocks(this)
         testDir = temporaryFolder.newFolder()
         outputDir = temporaryFolder.newFolder()
@@ -158,6 +162,11 @@ class CopyOutputsTest {
         `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)).thenReturn(
             BuildableArtifactImpl(project.files(getOrCreateFile(resDir, "output.json")))
         )
+    }
+
+    @After
+    fun tearDown() {
+        Workers.useDirectWorkerExecutor = false
     }
 
     @Test

@@ -29,12 +29,14 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.ModuleMetadata
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -66,6 +68,8 @@ class BundleInstantAppTest {
 
     @Before
     fun setUp() {
+        Workers.useDirectWorkerExecutor = true
+
         MockitoAnnotations.initMocks(this)
 
         bundleDirectory = temporaryFolder.newFolder()
@@ -133,6 +137,11 @@ class BundleInstantAppTest {
                 AndroidArtifacts.ArtifactType.APK
             )
         ).thenReturn(FakeFileCollection(ImmutableList.of(apkDirectory1, apkDirectory2)))
+    }
+
+    @After
+    fun tearDown() {
+        Workers.useDirectWorkerExecutor = false
     }
 
     @Test
