@@ -2101,6 +2101,58 @@ public class ManifestMerger2SmallTest {
         }
     }
 
+    @Test
+    public void testRemoveSplitFromDynamicFeature() throws Exception {
+
+        MockLog mockLog = new MockLog();
+        String featureMainManifestText =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"foo.bar\" split=\"feature1\">\n"
+                        + "        <activity android:name=\"foo.bar.MainActivity\" />\n"
+                        + "</manifest>";
+
+        File featureManifest = TestUtils.inputAsFile("FeatureManifest", featureMainManifestText);
+        assertTrue(featureManifest.exists());
+
+        String featureOverlayManifestText =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    split=\"feature1\">\n"
+                        + "</manifest>";
+
+        File featureOverlayManifest =
+                TestUtils.inputAsFile("FeatureOverlayManifest", featureOverlayManifestText);
+        assertTrue(featureOverlayManifest.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    featureManifest, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addFlavorAndBuildTypeManifest(featureOverlayManifest)
+                            .setFeatureName("feature1")
+                            .merge();
+            assertEquals(MergingReport.Result.WARNING, mergingReport.getResult());
+            assertStringPresenceInLogRecords(
+                    mergingReport, "Attribute 'split' was removed from FeatureManifest");
+            assertStringPresenceInLogRecords(
+                    mergingReport, "Attribute 'split' was removed from FeatureOverlayManifest");
+            assertStringPresenceInLogRecords(
+                    mergingReport,
+                    "The Android Gradle plugin includes it for you when building your project.");
+            assertStringPresenceInLogRecords(
+                    mergingReport,
+                    "See https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest for details");
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            assertThat(mergingReport.getMergedDocument(MergedManifestKind.MERGED))
+                    .doesNotContain("split");
+        } finally {
+            assertTrue(featureManifest.delete());
+        }
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {

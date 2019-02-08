@@ -16,6 +16,7 @@
 
 package com.android.manifmerger;
 
+import static com.android.SdkConstants.ATTR_SPLIT;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
@@ -67,6 +68,9 @@ public class ManifestMerger2 {
 
     static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER =
             "com.android.tools.ir.server.InstantRunContentProvider";
+
+    private static final String SPLIT_IN_DYNAMIC_FEATURE =
+            "https://d.android.com/r/studio-ui/dynamic-delivery/dynamic-feature-manifest";
 
     @NonNull
     private final File mManifestFile;
@@ -170,6 +174,12 @@ public class ManifestMerger2 {
             return mergingReportBuilder.build();
         }
 
+        if (!mFeatureName.isEmpty()) {
+            loadedMainManifestInfo =
+                    removeDynamicFeatureManifestSplitAttributeIfSpecified(
+                            loadedMainManifestInfo, mergingReportBuilder);
+        }
+
         // load all the libraries xml files early to have a list of all possible node:selector
         // values.
         List<LoadedManifestInfo> loadedLibraryDocuments =
@@ -209,6 +219,12 @@ public class ManifestMerger2 {
                                     mainPackageAttribute.transform(it -> it.getValue())),
                             selectors,
                             mergingReportBuilder);
+
+            if (!mFeatureName.isEmpty()) {
+                overlayDocument =
+                        removeDynamicFeatureManifestSplitAttributeIfSpecified(
+                                overlayDocument, mergingReportBuilder);
+            }
 
             // check package declaration.
             Optional<XmlAttribute> packageAttribute =
@@ -413,6 +429,42 @@ public class ManifestMerger2 {
         }
 
         return mergingReport;
+    }
+
+    private LoadedManifestInfo removeDynamicFeatureManifestSplitAttributeIfSpecified(
+            @NonNull LoadedManifestInfo dynamicFeatureManifest,
+            @NonNull MergingReport.Builder mergingReportBuilder) {
+        Optional<XmlAttribute> splitAttribute =
+                dynamicFeatureManifest
+                        .getXmlDocument()
+                        .getRootNode()
+                        .getAttribute(XmlNode.fromXmlName(ATTR_SPLIT));
+        if (splitAttribute.isPresent()) {
+            String message =
+                    String.format(
+                            "Attribute '%1$s' was removed from %2$s.\n"
+                                    + "The Android Gradle plugin includes it for you "
+                                    + "when building your project.\n"
+                                    + "See %3$s for details.",
+                            ATTR_SPLIT,
+                            splitAttribute.get().printPosition(),
+                            SPLIT_IN_DYNAMIC_FEATURE);
+            mergingReportBuilder.addMessage(
+                    dynamicFeatureManifest.getXmlDocument().getSourceFile(),
+                    MergingReport.Record.Severity.WARNING,
+                    message);
+            dynamicFeatureManifest
+                    .getXmlDocument()
+                    .getXml()
+                    .getDocumentElement()
+                    .removeAttribute(ATTR_SPLIT);
+            return new LoadedManifestInfo(
+                    dynamicFeatureManifest,
+                    dynamicFeatureManifest.getOriginalPackageName(),
+                    dynamicFeatureManifest.getXmlDocument().reparse());
+        }
+
+        return dynamicFeatureManifest;
     }
 
     /**
