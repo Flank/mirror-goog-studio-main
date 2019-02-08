@@ -26,7 +26,10 @@ import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
+import com.android.build.gradle.internal.scope.InternalArtifactType.JAVA_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.files.FileCacheByPath
@@ -181,9 +184,7 @@ open class MergeJavaResourceTask
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
-            outputFile =
-                    variantScope.artifacts
-                        .appendArtifact(InternalArtifactType.MERGED_JAVA_RES, taskName, "out.jar")
+            outputFile = variantScope.artifacts.appendArtifact(MERGED_JAVA_RES, taskName, "out.jar")
         }
 
         override fun configure(task: MergeJavaResourceTask) {
@@ -294,13 +295,27 @@ private class MergeJavaResRunnable @Inject constructor(val params: MergeJavaResP
 
 fun getProjectJavaRes(scope: VariantScope): FileCollection {
     val javaRes = scope.globalScope.project.files()
-    javaRes.from(scope.artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES).get())
-    javaRes.from(scope.artifacts.getFinalArtifactFiles(InternalArtifactType.JAVAC).get())
+    javaRes.from(scope.artifacts.getFinalArtifactFiles(JAVA_RES).get())
+    // use lazy file collection in case annotationProcessor dependency added via
+    // defaultDependencies, for example.
+    javaRes.from(
+        {
+            if (projectHasAnnotationProcessors(scope)) {
+                scope.artifacts.getFinalArtifactFiles(JAVAC).get()
+            } else {
+                listOf<File>()
+            }
+        }
+    )
     javaRes.from(scope.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(scope.variantData.allPostJavacGeneratedBytecode)
-    javaRes.from(
-        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_CLASSES).get()
-    )
+    javaRes.from(scope.artifacts.getFinalArtifactFiles(RUNTIME_R_CLASS_CLASSES).get())
     return javaRes
 }
 
+/**
+ * Returns true if the annotation processor configuration or any of it superconfigurations have
+ * dependencies.
+ */
+fun projectHasAnnotationProcessors(scope: VariantScope) =
+    scope.variantDependencies.annotationProcessorConfiguration.allDependencies.isNotEmpty()
