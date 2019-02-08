@@ -42,6 +42,7 @@ cc_library(
 cc_test(
     name = "daemon_test",
     srcs = [
+        "daemon_test.cc",
         "event_buffer_test.cc",
         "transport_service_test.cc",
     ],
