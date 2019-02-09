@@ -24,7 +24,6 @@ iml_module(
     srcs = ["instant-run-client/src/main/java"],
     iml_files = ["instant-run-client/android.sdktools.instant-run-client.iml"],
     test_resources = ["instant-run-client/src/test/resources"],
-    test_srcs = ["instant-run-client/src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     deps = [
