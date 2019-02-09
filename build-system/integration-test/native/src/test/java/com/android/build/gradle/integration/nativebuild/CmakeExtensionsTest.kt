@@ -55,7 +55,7 @@ import com.android.build.gradle.options.BooleanOption.*
  *   compiler settings may not be reliable and shouldn't be cached.
  */
 @RunWith(Parameterized::class)
-class CmakeAndroidGradleBuildExtensionsTest(
+class CmakeExtensionsTest(
     cmakeVersion : String,
     private val enableCaching : Boolean?,
     private val alternateCacheFolder : String?,

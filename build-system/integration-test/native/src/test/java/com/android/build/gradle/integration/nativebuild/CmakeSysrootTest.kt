@@ -33,7 +33,7 @@ import java.io.File
  * This test ensures that CMake server codepath returns sufficient information for Android Studio
  * to accept source files as targeting Android.
  */
-class VanillaCmakeSysrootAndTargetFlagsTest {
+class CmakeSysrootTest {
 
     @Rule
     @JvmField
