@@ -7,7 +7,7 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.android-annotations.iml"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/idea/.idea/libraries:KotlinJavaRuntime"],
+    deps = ["//tools/idea/.idea/libraries:kotlin-stdlib-jdk8"],
 )
 
 maven_java_library(

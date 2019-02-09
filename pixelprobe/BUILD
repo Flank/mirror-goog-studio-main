@@ -19,6 +19,6 @@ iml_module(
         "//tools/base/chunkio:studio.android.sdktools.chunkio[module]",
         "//tools/base/chunkio-processor:studio.android.sdktools.chunkio-processor[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

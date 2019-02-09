@@ -34,7 +34,7 @@ iml_module(
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/repository:studio.android.sdktools.repository[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
     ],
 )
 

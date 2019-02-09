@@ -6,5 +6,5 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.chunkio.iml"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/idea/.idea/libraries:KotlinJavaRuntime"],
+    deps = ["//tools/idea/.idea/libraries:kotlin-stdlib-jdk8"],
 )

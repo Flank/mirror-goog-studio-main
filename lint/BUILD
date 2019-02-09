@@ -35,7 +35,7 @@ iml_module(
         "//tools/idea/java/java-psi-api:intellij.java.psi[module]",
         "//tools/idea/java/java-psi-impl:intellij.java.psi.impl[module]",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger[module]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
         "//tools/idea/.idea/libraries:kotlin-reflect",
         "//tools/idea/uast/uast-common:intellij.platform.uast[module]",
         "//tools/idea/uast/uast-java:intellij.java.uast[module]",
@@ -95,7 +95,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/lint:studio.android.sdktools.lint-api[module]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 

@@ -9,6 +9,6 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/chunkio:studio.android.sdktools.chunkio[module]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )

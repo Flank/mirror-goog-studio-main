@@ -14,7 +14,7 @@ iml_module(
     # do not sort: must match IML order
     deps = [
         "//tools/base/common:studio.android.sdktools.common[module]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 

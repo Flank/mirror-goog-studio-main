@@ -18,7 +18,7 @@ iml_module(
         "//tools/idea/.idea/libraries:dexlib2[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/idea/.idea/libraries:asm-tools[test]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
     ],
 )
 
@@ -40,7 +40,7 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:dexlib2[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8[test]",
         "//tools/idea/.idea/libraries:kotlin-test[test]",
         "//tools/idea/.idea/libraries:truth-java8-extension",
     ],

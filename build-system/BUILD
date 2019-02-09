@@ -29,7 +29,7 @@ iml_module(
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common[module]",
         "//tools/base/testutils:studio.android.sdktools.testutils[module, test]",
         "//tools/idea/.idea/libraries:truth[test]",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:kotlin-stdlib-jdk8",
     ],
 )
 
