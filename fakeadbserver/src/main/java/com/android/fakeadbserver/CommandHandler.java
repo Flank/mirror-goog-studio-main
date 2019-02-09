@@ -30,12 +30,9 @@ public abstract class CommandHandler {
 
     protected static void writeOkayResponse(@NonNull OutputStream stream, @NonNull String response)
             throws IOException {
-        try {
-            writeOkay(stream);
-            write4ByteHexIntString(stream, response.length());
-            writeString(stream, response);
-        } catch (IOException ignored) {
-        }
+        writeOkay(stream);
+        write4ByteHexIntString(stream, response.length());
+        writeString(stream, response);
     }
 
     protected static void writeFail(@NonNull OutputStream stream) throws IOException {

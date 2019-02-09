@@ -33,6 +33,7 @@ iml_module(
         "//tools/idea/.idea/libraries:sqlite",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/base/tracer:studio.android.sdktools.tracer[module]",
+        "//tools/base/fakeadbserver:studio.android.sdktools.fakeadbserver[module, test]",
     ],
 )
 
@@ -97,8 +98,11 @@ coverage_java_test(
         ":tools.deployer",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
+        "//tools/base/annotations",
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/deploy/proto:deploy_java_proto",
+        "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",

@@ -29,6 +29,7 @@ public class DeployRunnerParameters {
 
     private Command command = Command.UNKNOWN;
     private boolean deltaInstall = false;
+    private String installersPath = null;
     private List<String> parameters = new ArrayList<>();
 
     private DeployRunnerParameters() {}
@@ -36,9 +37,11 @@ public class DeployRunnerParameters {
     private void parseFlag(String arg) {
         if ("--deltainstall".equals(arg)) {
             deltaInstall = true;
-            return;
+        } else if (arg.startsWith("--installers-path=")) {
+            installersPath = arg.substring(18);
+        } else {
+            throw new RuntimeException("Unknown flag: '" + arg + "'");
         }
-        throw new RuntimeException("Unknown flag: '" + arg + "'");
     }
 
     private Command parseCommand(String arg) {
@@ -86,5 +89,9 @@ public class DeployRunnerParameters {
 
     public boolean isDeltaInstall() {
         return deltaInstall;
+    }
+
+    public String getInstallersPath() {
+        return installersPath;
     }
 }

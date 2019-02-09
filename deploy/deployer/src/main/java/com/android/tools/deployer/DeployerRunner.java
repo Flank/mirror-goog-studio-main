@@ -24,9 +24,12 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class DeployerRunner implements UIService {
 
@@ -58,11 +61,11 @@ public class DeployerRunner implements UIService {
         this.db = db;
     }
 
-    public void run(String[] args) throws IOException {
+    public List<String> run(String[] args) {
         // Check that we have the parameters we need to run.
         if (args.length < 2) {
             printUsage();
-            return;
+            return Collections.emptyList();
         }
 
         DeployRunnerParameters parameters = DeployRunnerParameters.parse(args);
@@ -77,16 +80,17 @@ public class DeployerRunner implements UIService {
         IDevice device = getDevice();
         if (device == null) {
             LOGGER.error(null, "%s", "No device found.");
-            return;
+            return Collections.emptyList();
         }
         Trace.end();
 
         // Run
         AdbClient adb = new AdbClient(device, LOGGER);
-        Installer installer = new AdbInstaller(adb, LOGGER);
+        Installer installer = new AdbInstaller(parameters.getInstallersPath(), adb, LOGGER);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
         Deployer deployer = new Deployer(adb, db, runner, installer, this, LOGGER);
+        List<String> metrics;
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
@@ -98,11 +102,13 @@ public class DeployerRunner implements UIService {
                 if (parameters.isDeltaInstall()) {
                     installMode = Deployer.InstallMode.DELTA;
                 }
-                deployer.install(packageName, apks, options.build(), installMode);
+                metrics =
+                        collectIds(
+                                deployer.install(packageName, apks, options.build(), installMode));
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
-                    deployer.fullSwap(apks);
+                metrics = collectTaskIds(deployer.fullSwap(apks));
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.CODESWAP) {
-                    deployer.codeSwap(apks, ImmutableMap.of());
+                metrics = collectTaskIds(deployer.codeSwap(apks, ImmutableMap.of()));
             } else {
                 throw new RuntimeException("UNKNOWN command");
             }
@@ -110,8 +116,19 @@ public class DeployerRunner implements UIService {
         } catch (DeployerException e) {
             e.printStackTrace(System.out);
             LOGGER.error(e, "Error executing the deployer");
+            return Collections.emptyList();
+        } finally {
+            service.shutdown();
         }
-        service.shutdown();
+        return metrics;
+    }
+
+    private List<String> collectTaskIds(List<TaskRunner.Task<?>> tasks) {
+        return tasks.stream().map(TaskRunner.Task::getName).collect(Collectors.toList());
+    }
+
+    private List<String> collectIds(List<InstallMetric> install) {
+        return install.stream().map(InstallMetric::getName).collect(Collectors.toList());
     }
 
     private IDevice getDevice() {

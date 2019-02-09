@@ -54,16 +54,6 @@ public class AdbInstaller implements Installer {
 
     private static final int HEX_LINE_SIZE = 10;
 
-    /**
-     * The on-device binary facade.
-     *
-     * @param path a path to a directory with all the per-abi android executables.
-     * @param adb the {@code AdbClient} to use.
-     */
-    public AdbInstaller(AdbClient adb, ILogger logger) {
-        this(null, adb, logger);
-    }
-
     public AdbInstaller(String installersFolder, AdbClient adb, ILogger logger) {
         this.adb = adb;
         this.installersFolder = installersFolder;
