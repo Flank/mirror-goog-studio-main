@@ -109,6 +109,7 @@ fun trySymlinkNdk(
     // If the target folder already exists then return it. This assumes it was symlinked.
     if (versionedSymlinkFolder.toFile().exists()) {
         info("Symlink target $versionedSymlinkFolder already existed")
+        return versionedSymlinkFolder.toFile()
     }
 
     // Follow any already-existing symlink to get the underlying real path
