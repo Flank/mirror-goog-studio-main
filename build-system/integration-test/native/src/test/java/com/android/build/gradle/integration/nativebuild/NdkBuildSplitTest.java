@@ -52,7 +52,6 @@ public class NdkBuildSplitTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"

@@ -567,7 +567,6 @@ public class NativeModelTest {
 
     @Before
     public void setup() throws Exception {
-        assumeNotCMakeOnWindows();
         if (config.nativeBuildOutputPath.equals("ABSOLUTE_PATH")) {
             File tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
             config.buildGradle =
@@ -582,7 +581,6 @@ public class NativeModelTest {
 
     @Test
     public void checkSingleVariantModel() throws Exception {
-        assumeNotCMakeOnWindows();
         Map<String, ParameterizedAndroidProject> parameterizedAndroidProject =
                 project.model().fetchMulti(ParameterizedAndroidProject.class);
 
@@ -599,7 +597,6 @@ public class NativeModelTest {
 
     @Test
     public void checkModel() throws Exception {
-        assumeNotCMakeOnWindows();
         AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
         assertThat(androidProject.getSyncIssues()).hasSize(0);
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
@@ -679,7 +676,6 @@ public class NativeModelTest {
     @Test
     public void checkUpToDate() throws Exception {
         AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
-        assumeNotCMakeOnWindows();
         File jsonFile = getJsonFile("debug", "x86_64");
         File miniConfigFile = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(jsonFile);
 
@@ -868,7 +864,6 @@ public class NativeModelTest {
      */
     @Test
     public void checkNdkBuildCleanHasNoJobsFlags() throws Exception {
-        assumeNotCMakeOnWindows();
         if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
             project.model().fetch(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
@@ -882,7 +877,6 @@ public class NativeModelTest {
 
     @Test
     public void checkDebugVsRelease() throws Exception {
-        assumeNotCMakeOnWindows();
         // Sync
         project.model().fetch(NativeAndroidProject.class);
 
@@ -1132,13 +1126,5 @@ public class NativeModelTest {
 
     private static String escapeWindowsCharacters(String path) {
         return path.replace("\\", "\\\\");
-    }
-
-    private void assumeNotCMakeOnWindows() {
-        // CMake project generation is too slow on Windows. Disable test there until performance
-        // is improved. This leaves the test on for Linux/PSQ
-        Assume.assumeTrue(
-                SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS
-                        || this.config.buildSystem != NativeBuildSystem.CMAKE);
     }
 }

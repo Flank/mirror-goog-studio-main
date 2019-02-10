@@ -101,7 +101,6 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     public void assembleX86Release() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleX86Release");
 
         // Verify .so are built for all platform.
@@ -113,7 +112,6 @@ public class NoSplitNdkVariantsTest {
 
     @Test
     public void assembleArmRelease() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleArmRelease");
 
         // Verify .so are built for all platform.

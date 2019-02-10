@@ -64,7 +64,6 @@ public class NdkBuildJniLibTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         new File(project.getTestDir(), "lib/src/main/jni")
                 .renameTo(new File(project.getTestDir(), "lib/src/main/cxx"));
         GradleTestProject lib = project.getSubproject("lib");

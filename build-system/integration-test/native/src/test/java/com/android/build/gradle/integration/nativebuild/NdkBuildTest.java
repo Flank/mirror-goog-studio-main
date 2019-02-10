@@ -101,7 +101,6 @@ public class NdkBuildTest {
 
     @Test
     public void apk() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
@@ -117,7 +116,6 @@ public class NdkBuildTest {
 
     @Test
     public void injectedAbi() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         // Pass invalid-abi, x86 and armeabi. The first (invalid-abi) should be ignored because
         // it is not valid for the build . The second (x86) should be the one chosen to build.
         // Finally, armeabi is valid but it will be ignored because x86 is "preferred".
@@ -167,7 +165,6 @@ public class NdkBuildTest {
 
     @Test
     public void clean() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(4);
@@ -182,7 +179,6 @@ public class NdkBuildTest {
 
     @Test
     public void abiSubset() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).hasBuildOutputCountEqualTo(4);

@@ -35,14 +35,6 @@ class VulkanTest {
 
     @Test
     fun assembleDebug() {
-        // does not pass on Windows : b/120110719
-        AssumeUtil.assumeNotWindows();
-        // This test uses 3.6 CMake whose ninja doesn't support long enough paths to work on
-        // some buildbot.
-        Assume.assumeFalse(
-            SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN
-                    && System.getenv("BUILDBOT_BUILDERNAME") != null
-        )
         project.executor().run("assembleDebug")
 
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->

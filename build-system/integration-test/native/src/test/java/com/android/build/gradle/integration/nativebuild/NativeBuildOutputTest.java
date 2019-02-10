@@ -90,7 +90,6 @@ public class NativeBuildOutputTest {
 
     @Test
     public void checkNdkBuildErrorInSourceCode() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'");
@@ -142,7 +141,6 @@ public class NativeBuildOutputTest {
     // Make sure that the STDOUT of ndk-build -n doesn't appear for the user.
     @Test
     public void checkNdkBuildNoDashNOutput() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.externalNativeBuild.ndkBuild.path 'src/main/cpp/Android.mk'\n");
@@ -235,7 +233,6 @@ public class NativeBuildOutputTest {
     // Only "x86" should be built
     @Test
     public void checkNdkIntersectNativeBuild() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"

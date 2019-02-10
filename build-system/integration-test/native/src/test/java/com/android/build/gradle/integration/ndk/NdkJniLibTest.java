@@ -40,7 +40,6 @@ public class NdkJniLibTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         GradleTestProject lib = project.getSubproject("lib");
         TestFileUtils.appendToFile(
                 lib.getBuildFile(),

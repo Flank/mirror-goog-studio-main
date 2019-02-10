@@ -122,7 +122,6 @@ public class NdkBuildAndroidMkLibraryTest {
 
     @Test
     public void checkApkContent() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("clean", "assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).hasVersionCode(1);

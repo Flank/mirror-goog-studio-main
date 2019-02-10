@@ -85,7 +85,6 @@ public class NdkBuildTargetsTest {
 
     @Test
     public void checkSingleTarget() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"
@@ -117,7 +116,6 @@ public class NdkBuildTargetsTest {
 
     @Test
     public void checkMultiTargets() throws IOException, InterruptedException {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.executor().run("clean", "assembleDebug");
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);

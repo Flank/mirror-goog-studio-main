@@ -99,7 +99,6 @@ public class Pre21SplitTest {
 
     @Test
     public void checkSplitsDslWorksWithApiLevelLessThan21() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         project.execute("assembleDebug");
 
         // Verify .so are built for all platform.

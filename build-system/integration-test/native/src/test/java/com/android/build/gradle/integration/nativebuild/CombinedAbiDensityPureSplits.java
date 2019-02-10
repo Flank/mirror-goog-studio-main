@@ -49,9 +49,6 @@ public class CombinedAbiDensityPureSplits {
 
     @Before
     public void setup() {
-        // This test uses the deprecated NDK integration, which does not work properly on Windows.
-        AssumeUtil.assumeNotWindows();
-        AssumeUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Test

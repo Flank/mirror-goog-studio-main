@@ -51,7 +51,6 @@ public class NdkSanAngelesTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         outputModel = project.executeAndReturnOutputModel("clean", "assembleDebug");
     }
 

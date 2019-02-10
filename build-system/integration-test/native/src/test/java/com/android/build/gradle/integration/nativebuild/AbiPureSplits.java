@@ -67,7 +67,6 @@ public class AbiPureSplits {
 
     @Test
     public void testAbiPureSplits() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         ProjectBuildOutput outputModel = assembleAndGetModel();
 
         // build a set of expected outputs
@@ -113,8 +112,6 @@ public class AbiPureSplits {
 
     @Test
     public void testAddingAnAbiPureSplit() throws Exception {
-        // This test uses the deprecated NDK integration, which does not work properly on Windows.
-        AssumeUtil.assumeNotWindows();
 
         ProjectBuildOutput outputModel = assembleAndGetModel();
 
@@ -165,8 +162,6 @@ public class AbiPureSplits {
 
     @Test
     public void testDeletingAnAbiPureSplit() throws Exception {
-        // This test uses the deprecated NDK integration, which does not work properly on Windows.
-        AssumeUtil.assumeNotWindows();
 
         ProjectBuildOutput outputModel = assembleAndGetModel();
 
