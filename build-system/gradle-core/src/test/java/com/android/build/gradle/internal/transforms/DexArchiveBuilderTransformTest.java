@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.transforms.testdata.Animal;
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
 import com.android.build.gradle.internal.transforms.testdata.Dog;
 import com.android.build.gradle.internal.transforms.testdata.Toy;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -340,6 +341,7 @@ public class DexArchiveBuilderTransformTest {
                         .setAndroidJarClasspath(() -> Collections.emptyList())
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
+                        .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                         .setUserLevelCache(userCache)
                         .setMinSdkVersion(20)
                         .setDexer(dexerTool == DexerTool.DX ? DexerTool.D8 : DexerTool.DX)
@@ -697,6 +699,7 @@ public class DexArchiveBuilderTransformTest {
                         .setAndroidJarClasspath(Collections::emptyList)
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
+                        .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                         .setMinSdkVersion(21)
                         .setDexer(dexerTool)
                         .setIsDebuggable(true)
@@ -756,6 +759,7 @@ public class DexArchiveBuilderTransformTest {
                         .setAndroidJarClasspath(Collections::emptyList)
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
+                        .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                         .setUserLevelCache(userCache)
                         .setMinSdkVersion(21)
                         .setDexer(dexerTool)
@@ -794,6 +798,7 @@ public class DexArchiveBuilderTransformTest {
                 .setAndroidJarClasspath(Collections::emptyList)
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
+                .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                 .setUserLevelCache(userCache)
                 .setMinSdkVersion(minSdkVersion)
                 .setDexer(dexerTool)

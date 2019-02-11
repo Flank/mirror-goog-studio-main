@@ -171,6 +171,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
@@ -2363,6 +2364,9 @@ public abstract class TaskManager {
                                                         extension.getLibraryRequests()))
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
+                        .setErrorFormatMode(
+                                SyncOptions.getErrorFormatMode(
+                                        variantScope.getGlobalScope().getProjectOptions()))
                         .setUserLevelCache(userLevelCache)
                         .setMinSdkVersion(variantScope.getMinSdkVersion().getFeatureLevel())
                         .setDexer(variantScope.getDexer())

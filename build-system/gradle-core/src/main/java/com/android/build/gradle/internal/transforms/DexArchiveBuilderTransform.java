@@ -37,13 +37,14 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.crash.PluginCrashReporter;
+import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
-import com.android.builder.core.SerializableMessageReceiver;
 import com.android.builder.dexing.ClassFileEntry;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.ClassFileInputs;
@@ -96,6 +97,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+import org.gradle.api.logging.Logging;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.IsolationMode;
 
@@ -181,6 +183,7 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final MessageReceiver messageReceiver;
+    @NonNull private final SyncOptions.ErrorFormatMode errorFormatMode;
     @VisibleForTesting @NonNull final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
@@ -200,6 +203,7 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull Supplier<List<File>> androidJarClasspath,
             @NonNull DexOptions dexOptions,
             @NonNull MessageReceiver messageReceiver,
+            @NonNull SyncOptions.ErrorFormatMode errorFormatMode,
             @Nullable FileCache userLevelCache,
             int minSdkVersion,
             @NonNull DexerTool dexer,
@@ -215,6 +219,7 @@ public class DexArchiveBuilderTransform extends Transform {
         this.androidJarClasspath = androidJarClasspath;
         this.dexOptions = dexOptions;
         this.messageReceiver = messageReceiver;
+        this.errorFormatMode = errorFormatMode;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.projectVariant = projectVariant;
@@ -622,7 +627,7 @@ public class DexArchiveBuilderTransform extends Transform {
         private final boolean isIncremental;
         private final VariantScope.Java8LangSupport java8LangSupportType;
         @NonNull private final Set<File> additionalPaths;
-        @Nonnull private final MessageReceiver messageReceiver;
+        @Nonnull private final SyncOptions.ErrorFormatMode errorFormatMode;
 
         public DexConversionParameters(
                 @NonNull QualifiedContent input,
@@ -640,7 +645,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 boolean isIncremental,
                 @NonNull VariantScope.Java8LangSupport java8LangSupportType,
                 @NonNull Set<File> additionalPaths,
-                @Nonnull MessageReceiver messageReceiver) {
+                @Nonnull SyncOptions.ErrorFormatMode errorFormatMode) {
             this.input = input;
             this.bootClasspath = bootClasspath;
             this.classpath = classpath;
@@ -656,7 +661,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.isIncremental = isIncremental;
             this.java8LangSupportType = java8LangSupportType;
             this.additionalPaths = additionalPaths;
-            this.messageReceiver = messageReceiver;
+            this.errorFormatMode = errorFormatMode;
         }
 
         public boolean belongsToThisBucket(String path) {
@@ -684,7 +689,9 @@ public class DexArchiveBuilderTransform extends Transform {
                         dexConversionParameters,
                         System.out,
                         System.err,
-                        dexConversionParameters.messageReceiver);
+                        new MessageReceiverImpl(
+                                dexConversionParameters.errorFormatMode,
+                                Logging.getLogger(DexArchiveBuilderTransform.class)));
             } catch (Exception e) {
                 throw new BuildException(e.getMessage(), e);
             }
@@ -795,7 +802,7 @@ public class DexArchiveBuilderTransform extends Transform {
                             isIncremental,
                             java8LangSupportType,
                             additionalPaths,
-                            new SerializableMessageReceiver(messageReceiver));
+                            errorFormatMode);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()

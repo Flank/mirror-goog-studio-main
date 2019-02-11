@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
 import com.android.build.gradle.internal.transforms.testdata.Cat;
 import com.android.build.gradle.internal.transforms.testdata.Tiger;
 import com.android.build.gradle.internal.transforms.testdata.Toy;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -510,6 +511,7 @@ public class DexArchiveBuilderTransformDesugaringTest {
                 .setAndroidJarClasspath(() -> androidJasClasspath)
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
+                .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
                 .setUserLevelCache(userCache)
                 .setMinSdkVersion(minSdkVersion)
                 .setDexer(DexerTool.D8)

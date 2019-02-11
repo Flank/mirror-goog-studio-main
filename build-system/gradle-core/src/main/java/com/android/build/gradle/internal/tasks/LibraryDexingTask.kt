@@ -17,18 +17,19 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers.getWorker
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.core.SerializableMessageReceiver
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
-import com.android.ide.common.blame.MessageReceiver
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.Directory
+import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -39,7 +40,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -71,7 +71,7 @@ open class LibraryDexingTask @Inject constructor(
         private set
 
     @get:Internal
-    lateinit var messageReceiver: MessageReceiver
+    lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
     @TaskAction
@@ -81,7 +81,7 @@ open class LibraryDexingTask @Inject constructor(
                 DexingRunnable::class.java,
                 DexParams(
                     minSdkVersion,
-                    SerializableMessageReceiver(messageReceiver),
+                    errorFormatMode,
                     classes.single(),
                     output.get().asFile
                 )
@@ -106,14 +106,15 @@ open class LibraryDexingTask @Inject constructor(
                     scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_LIBRARY_CLASSES)
             task.minSdkVersion = scope.minSdkVersion.featureLevel
             task.output = output
-            task.messageReceiver = scope.globalScope.messageReceiver
+            task.errorFormatMode =
+                SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
         }
     }
 }
 
 private class DexParams(
     val minSdkVersion: Int,
-    val messageReceiver: MessageReceiver,
+    val errorFormatMode: SyncOptions.ErrorFormatMode,
     val input: File,
     val output: File
 ) : Serializable
@@ -126,7 +127,10 @@ private class DexingRunnable @Inject constructor(val params: DexParams) : Runnab
             ClassFileProviderFactory(listOf()),
             ClassFileProviderFactory(listOf()),
             false,
-            params.messageReceiver
+            MessageReceiverImpl(
+                params.errorFormatMode,
+                Logging.getLogger(LibraryDexingTask::class.java)
+            )
         )
 
         ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
