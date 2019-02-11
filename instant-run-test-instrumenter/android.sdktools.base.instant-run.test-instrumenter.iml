@@ -14,6 +14,5 @@
     <orderEntry type="module" module-name="android.sdktools.base.instant-run.runtime" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" name="asm-tools" level="project" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
