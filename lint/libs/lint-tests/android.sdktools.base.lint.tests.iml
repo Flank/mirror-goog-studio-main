@@ -31,7 +31,7 @@
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="module" module-name="android.sdktools.binary-resources" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.base.apkparser.analyzer-base" scope="TEST" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" scope="TEST" name="kotlin-compiler" level="project" />
     <orderEntry type="module" module-name="android.sdktools.analytics.testing-base" scope="TEST" />
     <orderEntry type="library" scope="TEST" name="studio-analytics-proto" level="project" />

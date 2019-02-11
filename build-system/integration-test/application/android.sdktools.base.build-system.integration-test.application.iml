@@ -24,7 +24,6 @@
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
     <orderEntry type="module" module-name="android.sdktools.apkzlib" />
-    <orderEntry type="module" module-name="android.sdktools.base.instant-run.instrumentation" />
     <orderEntry type="module" module-name="android.sdktools.apksig" exported="" />
     <orderEntry type="library" name="commons-lang" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
@@ -35,11 +34,11 @@
     <orderEntry type="module" module-name="android.sdktools.base.layoutlib-api-base" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.gradle-api" />
     <orderEntry type="module" module-name="android.sdktools.java-lib-model" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="kotlin-test" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" scope="TEST" name="commons-io" level="project" />
     <orderEntry type="library" scope="TEST" name="commons-compress" level="project" />
-    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="truth-java8-extension" level="project" />
   </component>
 </module>
