@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -738,11 +738,15 @@ public final class SdkConstants {
     public static final String CLASS_FRAMELAYOUT =
             "android.widget." + CLASS_NAME_FRAMELAYOUT; //$NON-NLS-1$
     public static final String CLASS_PREFERENCE = "android.preference.Preference"; //$NON-NLS-1$
+    public static final AndroidxName CLASS_PREFERENCE_ANDROIDX =
+            AndroidxName.of("android.support.v7.preference.", "Preference");
     public static final String CLASS_NAME_PREFERENCE_SCREEN = "PreferenceScreen"; //$NON-NLS-1$
     public static final String CLASS_PREFERENCES =
             "android.preference." + CLASS_NAME_PREFERENCE_SCREEN; //$NON-NLS-1$
-    public static final String CLASS_PREFERENCEGROUP =
+    public static final String CLASS_PREFERENCE_GROUP =
             "android.preference.PreferenceGroup"; //$NON-NLS-1$
+    public static final AndroidxName CLASS_PREFERENCE_GROUP_ANDROIDX =
+            AndroidxName.of("android.support.v7.preference.", "PreferenceGroup");
     public static final String CLASS_PARCELABLE = "android.os.Parcelable"; //$NON-NLS-1$
     public static final String CLASS_PARCEL = "android.os.Parcel"; //$NON-NLS-1$
     public static final String CLASS_FRAGMENT = "android.app.Fragment"; //$NON-NLS-1$
