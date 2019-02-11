@@ -18,6 +18,7 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.build.gradle.options.BooleanOption
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
@@ -27,6 +28,9 @@ import org.gradle.api.InvalidUserDataException
 
 /** Throws if the Android Studio version used has a lower major/minor version than the current plugin */
 fun verifyStudioIsNotOld(projectOptions: ProjectOptions) {
+    if (!projectOptions[BooleanOption.ENABLE_STUDIO_VERSION_CHECK]) {
+        return
+    }
     verifyStudioIsNotOld(
         projectOptions.get(StringOption.IDE_ANDROID_STUDIO_VERSION),
         ANDROID_GRADLE_PLUGIN_VERSION

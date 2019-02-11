@@ -53,6 +53,7 @@ enum class BooleanOption(
     WARN_ABOUT_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.warn"),
     DISALLOW_DEPENDENCY_RESOLUTION_AT_CONFIGURATION("android.dependencyResolutionAtConfigurationTime.disallow"),
     DEBUG_OBSOLETE_API("android.debug.obsoleteApi", false, Option.Status.STABLE),
+    ENABLE_STUDIO_VERSION_CHECK("android.injected.studio.version.check", true, Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Experimental stage, not yet enabled by default
@@ -117,7 +118,6 @@ enum class BooleanOption(
         "android.injectSdkMavenRepos",
         false,
         Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.SDK_MAVEN_REPOS)),
-
     ;
     constructor(
         propertyName: String,
