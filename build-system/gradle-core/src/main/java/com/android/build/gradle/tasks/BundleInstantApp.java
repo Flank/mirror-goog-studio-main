@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.tools.build.apkzlib.zip.ZFileOptions;
@@ -39,7 +40,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.ForkJoinPool;
 import java.util.zip.Deflater;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -61,40 +66,15 @@ public class BundleInstantApp extends AndroidVariantTask {
     @TaskAction
     public void taskAction() throws IOException {
         // FIXME: Make this task incremental.
-        FileUtils.mkdirs(bundleDirectory);
-
-        File bundleFile = new File(bundleDirectory, bundleName);
-        FileUtils.deleteIfExists(bundleFile);
-
-        ZFileOptions zFileOptions = new ZFileOptions();
-        zFileOptions.setCompressor(
-                new DeflateExecutionCompressor(
-                        (compressTask) ->
-                                workers.submit(
-                                        BundleInstantAppRunnable.class,
-                                        new BundleInstantAppParams(compressTask)),
-                        Deflater.DEFAULT_COMPRESSION));
-        try (ZFile file = ZFile.openReadWrite(bundleFile, zFileOptions)) {
-            for (File apkDirectory : apkDirectories) {
-                for (BuildOutput buildOutput :
-                        ExistingBuildElements.from(InternalArtifactType.APK, apkDirectory)) {
-                    File apkFile = buildOutput.getOutputFile();
-                    try (FileInputStream fileInputStream = new FileInputStream(apkFile)) {
-                        file.add(apkFile.getName(), fileInputStream);
-                    }
-                }
-            }
+        try (WorkerExecutorFacade workers = this.workers) {
+            workers.submit(
+                    BundleInstantAppRunnable.class,
+                    new BundleInstantAppParams(
+                            bundleDirectory,
+                            bundleName,
+                            ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
+                            new TreeSet<>(apkDirectories.getFiles())));
         }
-
-        workers.await();
-
-        // Write the json output.
-        InstantAppOutputScope instantAppOutputScope =
-                new InstantAppOutputScope(
-                        ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
-                        bundleFile,
-                        new ArrayList<>(apkDirectories.getFiles()));
-        instantAppOutputScope.save(bundleDirectory);
     }
 
     @OutputDirectory
@@ -191,15 +171,88 @@ public class BundleInstantApp extends AndroidVariantTask {
 
         @Override
         public void run() {
-            params.compressTask.run();
+            try {
+                FileUtils.mkdirs(params.bundleDirectory);
+
+                File bundleFile = new File(params.bundleDirectory, params.bundleName);
+                FileUtils.deleteIfExists(bundleFile);
+
+                ZFileOptions zFileOptions = new ZFileOptions();
+
+                try (ExecutorServiceAdapter executor =
+                        new ExecutorServiceAdapter(ForkJoinPool.commonPool())) {
+                    zFileOptions.setCompressor(
+                            new DeflateExecutionCompressor(
+                                    (compressJob) ->
+                                            executor.submit(
+                                                    CompressorRunnable.class,
+                                                    new CompressorParams(compressJob)),
+                                    Deflater.DEFAULT_COMPRESSION));
+                    try (ZFile file = ZFile.openReadWrite(bundleFile, zFileOptions)) {
+                        for (File apkDirectory : params.apkDirectories) {
+                            for (BuildOutput buildOutput :
+                                    ExistingBuildElements.from(
+                                            InternalArtifactType.APK, apkDirectory)) {
+                                File apkFile = buildOutput.getOutputFile();
+                                try (FileInputStream fileInputStream =
+                                        new FileInputStream(apkFile)) {
+                                    file.add(apkFile.getName(), fileInputStream);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Write the json output.
+                InstantAppOutputScope instantAppOutputScope =
+                        new InstantAppOutputScope(
+                                params.applicationId,
+                                bundleFile,
+                                new ArrayList<>(params.apkDirectories));
+                instantAppOutputScope.save(params.bundleDirectory);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+
+        static class CompressorRunnable implements Runnable {
+            private final Runnable compressJob;
+
+            @Inject
+            CompressorRunnable(CompressorParams params) {
+                this.compressJob = params.compressJob;
+            }
+
+            @Override
+            public void run() {
+                compressJob.run();
+            }
+        }
+
+        static class CompressorParams implements Serializable {
+            private final Runnable compressJob;
+
+            CompressorParams(Runnable compressJob) {
+                this.compressJob = compressJob;
+            }
         }
     }
 
     private static class BundleInstantAppParams implements Serializable {
-        private final Runnable compressTask;
+        @NonNull private final File bundleDirectory;
+        @NonNull private final String bundleName;
+        @NonNull private final String applicationId;
+        @NonNull private final Set<File> apkDirectories;
 
-        BundleInstantAppParams(Runnable compressTask) {
-            this.compressTask = compressTask;
+        BundleInstantAppParams(
+                @NonNull File bundleDirectory,
+                @NonNull String bundleName,
+                @NonNull String applicationId,
+                @NonNull Set<File> apkDirectories) {
+            this.bundleDirectory = bundleDirectory;
+            this.bundleName = bundleName;
+            this.applicationId = applicationId;
+            this.apkDirectories = apkDirectories;
         }
     }
 }
