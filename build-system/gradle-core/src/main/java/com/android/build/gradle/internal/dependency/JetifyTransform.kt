@@ -43,10 +43,11 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
 
         @JvmStatic
         val jetifyProcessor: Processor by lazy {
-            Processor.createProcessor2(
+            Processor.createProcessor3(
                 config = ConfigParser.loadDefaultConfig()!!,
+                dataBindingVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 allowAmbiguousPackages = false,
-                dataBindingVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION
+                stripSignatures = false
             )
         }
 
@@ -80,7 +81,8 @@ class JetifyTransform @Inject constructor() : ArtifactTransform() {
             val blackList = mutableListOf<String>()
             if (jetifierBlackList != null) {
                 blackList.addAll(
-                    Splitter.on(",").trimResults().splitToList(jetifierBlackList))
+                    Splitter.on(",").trimResults().splitToList(jetifierBlackList)
+                )
             }
 
             // Jetifier should not jetify itself (http://issuetracker.google.com/119135578)
