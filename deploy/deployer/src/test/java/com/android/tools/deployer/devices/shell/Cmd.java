@@ -16,8 +16,10 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 public class Cmd extends ShellCommand {
 
@@ -32,76 +34,89 @@ public class Cmd extends ShellCommand {
     }
 
     @Override
-    public String execute(FakeDevice device, String[] args, InputStream input) throws IOException {
+    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         try {
-            return run(device, new Arguments(args), input);
+            run(device, new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
-            return e.getMessage();
+            stdout.println(e.getMessage());
         }
     }
 
-    public String run(FakeDevice device, Arguments args, InputStream input) throws IOException {
+    public void run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         String service = args.nextArgument();
         if (service == null) {
-            return "cmd: no service specified; use -l to list all services\n";
+            stdout.println("cmd: no service specified; use -l to list all services");
+            return;
         }
 
         switch (service) {
             case "package":
                 String action = args.nextArgument();
                 if (action == null) {
-                    return "Usage\n...message...\n";
+                    stdout.println("Usage\n...message...");
+                    return;
                 }
                 switch (action) {
                         // eg: pm install-create -r -t -S 5047
                     case "install-create":
-                        return String.format(
+                        stdout.format(
                                 "Success: created install session [%d]\n", device.createSession());
+                        return;
                         // eg: install-write -S 5047 100000000 0_sample -
                     case "install-write":
                         {
                             String opt = args.nextOption();
                             if (opt == null) {
-                                return "Error: must specify a APK size\n";
+                                stdout.println("Error: must specify a APK size");
+                                return;
                             } else if (!opt.equals("-S")) {
-                                return String.format(
+                                stdout.format(
                                         "\nException occurred while dumping:\n"
                                                 + "java.lang.IllegalArgumentException: Unknown option %s\n\tat com...\n",
                                         opt);
+                                return;
                             }
                             // This should be a long, but we keep all the files in memory. Int is enough for tests.
                             int size = parseInt(args.nextArgument());
                             int session = parseSession(device, args);
                             String name = args.nextArgument();
                             if (name == null) {
-                                return "\nException occurred while dumping:\n"
-                                        + "java.lang.IllegalArgumentException: Invalid name: null\n\tat com...\n";
+                                stdout.println(
+                                        "\nException occurred while dumping:\n"
+                                                + "java.lang.IllegalArgumentException: Invalid name: null\n\tat com...");
+                                return;
                             }
                             String path = args.nextArgument();
                             byte[] apk;
                             if (path == null || path.equals("-")) {
                                 apk = new byte[size];
-                                input.read(apk);
+                                ByteStreams.readFully(stdin, apk);
                             } else {
-                                return "Error: APK content must be streamed\n";
+                                stdout.println("Error: APK content must be streamed");
+                                return;
                             }
                             device.writeToSession(session, apk);
-                            return String.format("Success: streamed %d bytes\n", size);
+                            stdout.format("Success: streamed %d bytes\n", size);
+                            return;
                         }
                     case "install-commit":
                         {
                             device.commitSession(parseSession(device, args));
                             // On some APIs the "Success" part of install-commit is not printed. We allow this
                             // to be configured so we can reproduce that odd behaviour.
-                            return (reportCommitSuccess ? "Success\n" : "");
+                            stdout.println(reportCommitSuccess ? "Success" : "");
+                            return;
                         }
                     case "install-abandon":
                         device.abandonSession(parseSession(device, args));
-                        return "Success\n";
+                        stdout.println("Success");
+                        return;
                 }
                 break;
         }
-        return "Can't find service: " + service;
+        stdout.println("Can't find service: " + service);
     }
 
     public int parseSession(FakeDevice device, Arguments args) {

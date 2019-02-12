@@ -27,6 +27,7 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -80,10 +81,7 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
                 while (chunkId.equals("DATA")) {
                     int chunk = readLength(input);
                     byte[] bytes = new byte[chunk];
-                    int read = 0;
-                    while (read < chunk) {
-                        read += input.read(bytes, read, chunk - read);
-                    }
+                    ByteStreams.readFully(input, bytes);
                     data.write(bytes);
                     chunkId = readString(input, 4);
                 }
@@ -120,9 +118,13 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
             cmdArgs = splitArguments(allArguments);
         }
         CommandHandler.writeOkay(output);
-        String stdout =
-                device.getShell().execute(device, cmd, cmdArgs.toArray(new String[] {}), input);
-        CommandHandler.writeString(output, stdout);
+        device.getShell()
+                .execute(
+                        device,
+                        cmd,
+                        cmdArgs.toArray(new String[] {}),
+                        input,
+                        new PrintStream(output));
         return true;
     }
 

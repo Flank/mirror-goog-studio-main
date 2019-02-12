@@ -16,21 +16,23 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.Map;
 
 public class GetProp extends ShellCommand {
     @Override
-    public String execute(FakeDevice device, String[] args, InputStream input) {
+    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         if (args.length == 0) {
-            StringBuilder out = new StringBuilder("# This is some build info\n");
+            stdout.println("# This is some build info");
             for (Map.Entry<String, String> entry : device.getProps().entrySet()) {
-                out.append(String.format("[%s]: [%s]\n", entry.getKey(), entry.getValue()));
+                stdout.format("[%s]: [%s]\n", entry.getKey(), entry.getValue());
             }
-            return out.toString();
         } else {
             String value = device.getProps().get(args[0]);
-            return (value == null ? "" : value) + "\n";
+            stdout.println(value == null ? "" : value);
         }
     }
 

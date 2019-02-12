@@ -16,32 +16,38 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 public class SessionPm extends ShellCommand {
 
     @Override
-    public String execute(FakeDevice device, String[] args, InputStream input) throws IOException {
+    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         try {
-            return run(device, new Arguments(args), input);
+            run(device, new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
-            return e.getMessage();
+            stdout.println(e.getMessage());
         }
     }
 
-    public String run(FakeDevice device, Arguments args, InputStream input) throws IOException {
+    public void run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
+            throws IOException {
         String action = args.nextArgument();
         if (action == null) {
-            return "Usage\n...message...\n";
+            stdout.println("Usage\n...message...");
+            return;
         }
 
         switch (action) {
                 // eg: pm install-create -r -t -S 5047
             case "install-create":
                 {
-                    return String.format(
+                    stdout.format(
                             "Success: created install session [%d]\n", device.createSession());
+                    return;
                 }
                 // eg: install-write -S 5047 100000000 0_sample -
             case "install-write":
@@ -54,32 +60,37 @@ public class SessionPm extends ShellCommand {
                     }
                     int session = parseSession(device, args);
                     if (args.nextArgument() == null) {
-                        return "Error: java.lang.IllegalArgumentException: Invalid name: null";
+                        stdout.println(
+                                "Error: java.lang.IllegalArgumentException: Invalid name: null");
+                        return;
                     }
 
                     String path = args.nextArgument();
                     byte[] apk;
                     if (path == null || path.equals("-")) {
                         apk = new byte[size];
-                        input.read(apk);
+                        ByteStreams.readFully(stdin, apk);
                     } else {
                         apk = device.readFile(path);
                     }
                     device.writeToSession(session, apk);
-                    return String.format("Success: streamed %d bytes\n", size);
+                    stdout.format("Success: streamed %d bytes\n", size);
+                    return;
                 }
             case "install-commit":
                 {
                     device.commitSession(parseSession(device, args));
-                    return "Success\n";
+                    stdout.println("Success");
+                    return;
                 }
             case "install-abandon":
                 {
                     device.abandonSession(parseSession(device, args));
-                    return "Success\n";
+                    stdout.println("Success");
+                    return;
                 }
         }
-        return "Usage\n...message...\n";
+        stdout.println("Usage\n...message...");
     }
 
     public int parseSession(FakeDevice device, Arguments args) {

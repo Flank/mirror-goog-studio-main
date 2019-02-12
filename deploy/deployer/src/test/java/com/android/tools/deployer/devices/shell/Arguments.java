@@ -25,7 +25,7 @@ public class Arguments {
         this.args = args;
     }
 
-    String nextOption() {
+    public String nextOption() {
         if (next < args.length && args[next].startsWith("-")) {
             next++;
             return args[next - 1];
@@ -33,7 +33,7 @@ public class Arguments {
         return null;
     }
 
-    String nextArgument() {
+    public String nextArgument() {
         return next < args.length ? args[next++] : null;
     }
 }

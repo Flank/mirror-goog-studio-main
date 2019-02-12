@@ -18,6 +18,7 @@ package com.android.tools.deployer.devices.shell;
 import com.android.tools.deployer.devices.FakeDevice;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,16 +30,18 @@ public class Shell {
         this.commands = new HashMap<>();
     }
 
-    public String execute(FakeDevice device, String cmd, String[] args, InputStream input)
+    public void execute(
+            FakeDevice device, String cmd, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
 
         // The most basic shell interpreter ever
         ShellCommand command = commands.get(cmd);
         if (command != null) {
-            return command.execute(device, args, input);
+            command.execute(device, args, stdin, stdout);
+        } else {
+            // Adb does not return an error code, just this:
+            stdout.format("/system/bin/sh: %s: not found\n", cmd);
         }
-        // Adb does not return an error code, just this:
-        return String.format("/system/bin/sh: %s: not found\n", cmd);
     }
 
     public void addComand(ShellCommand command) {

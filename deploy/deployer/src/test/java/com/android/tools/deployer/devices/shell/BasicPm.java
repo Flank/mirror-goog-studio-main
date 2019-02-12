@@ -17,10 +17,11 @@ package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
 import java.io.InputStream;
+import java.io.PrintStream;
 
 public class BasicPm extends ShellCommand {
     @Override
-    public String execute(FakeDevice device, String[] args, InputStream input) {
+    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout) {
         Arguments arguments = new Arguments(args);
         String action = arguments.nextArgument();
         if ("install".equals(action)) {
@@ -29,16 +30,19 @@ public class BasicPm extends ShellCommand {
             }
             String pkg = arguments.nextArgument();
             if (pkg == null) {
-                return "\tpkg: null\nError: no package specified\n";
+                stdout.print("\tpkg: null\nError: no package specified\n");
+                return;
             }
             byte[] file = device.readFile(pkg);
             if (file == null) {
-                return "\tpkg: /data/local/tmp/sample.apk2\nFailure [INSTALL_FAILED_INVALID_URI]\n";
+                stdout.print(
+                        "\tpkg: /data/local/tmp/sample.apk2\nFailure [INSTALL_FAILED_INVALID_URI]\n");
+                return;
             }
             device.addApk(file);
-            return "Success";
+            stdout.println("Success");
         } else {
-            return "pm usage:\n...\n";
+            stdout.println("pm usage:\n...");
         }
     }
 
