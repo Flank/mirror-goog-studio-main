@@ -53,6 +53,7 @@ public class AdbClient {
         MULTI_APKS_NO_SUPPORTED_BELOW21,
         INSTALL_FAILED_INSUFFICIENT_STORAGE,
         INSTALL_PARSE_FAILED_NO_CERTIFICATES,
+        SKIPPED_INSTALL, // no changes.
         ;
 
         private String reason = null;

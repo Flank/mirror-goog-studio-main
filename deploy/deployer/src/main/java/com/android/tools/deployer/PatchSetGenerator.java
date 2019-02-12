@@ -72,6 +72,9 @@ public class PatchSetGenerator {
         for (Pair<Apk, Apk> pair : pairs) {
             Apk localApk = pair.getFirst();
             Apk remoteApk = pair.getSecond();
+            if (remoteApk.checksum.equals(localApk.checksum)) {
+                continue;
+            }
             Deploy.PatchInstruction instruction = generateDelta(remoteApk, localApk);
             patches.add(instruction);
         }

@@ -17,6 +17,7 @@ package com.android.tools.deployer;
 
 import static com.android.tools.deployer.AdbClient.InstallResult.INSTALL_PARSE_FAILED_NO_CERTIFICATES;
 import static com.android.tools.deployer.AdbClient.InstallResult.OK;
+import static com.android.tools.deployer.AdbClient.InstallResult.SKIPPED_INSTALL;
 import static com.android.tools.deployer.DeployerException.Error.INSTALL_FAILED;
 
 import com.android.ddmlib.InstallReceiver;
@@ -34,6 +35,7 @@ public class ApkInstaller {
         SUCCESS,
         ERROR,
         NOT_PATCHABLE, // Patch size would be beyond limit or app is not installed.
+        NO_CHANGES,
     }
 
     private class DeltaInstallResult {
@@ -96,12 +98,21 @@ public class ApkInstaller {
                 }
                 break;
             case NOT_PATCHABLE:
-                // Delta install could not be attempted (app not install or delta above limit or API
-                // not supported),
-                InstallMetric instalMetric = new InstallMetric("INSTALL_SUCCESS");
-                result = adb.install(apks, options.getFlags(), allowReinstall);
-                instalMetric.finish(metrics);
-                break;
+                {
+                    // Delta install could not be attempted (app not install or delta above limit or API
+                    // not supported),
+                    InstallMetric instalMetric = new InstallMetric("INSTALL_SUCCESS");
+                    result = adb.install(apks, options.getFlags(), allowReinstall);
+                    instalMetric.finish(metrics);
+                    break;
+                }
+            case NO_CHANGES:
+                {
+                    InstallMetric instalMetric = new InstallMetric("DELTAINSTALL_NO_CHANGES");
+                    instalMetric.finish(metrics);
+                    result = SKIPPED_INSTALL;
+                    break;
+                }
         }
 
         String message = message(result);
@@ -126,7 +137,9 @@ public class ApkInstaller {
                 // Fall through
         }
 
-        if (result != OK) {
+        if (result == SKIPPED_INSTALL) {
+            // TODO: Show a message saying nothing is installed.
+        } else if (result != OK) {
             throw new DeployerException(INSTALL_FAILED, result, message, result.getReason());
         }
         return metrics;
@@ -172,8 +185,11 @@ public class ApkInstaller {
         }
         List<Deploy.PatchInstruction> patches =
                 new PatchSetGenerator().generateFromEntries(localEntries, dump.apkEntries);
-        if (patches == null || patches.isEmpty()) {
+        if (patches == null) {
             deltaInstallResult.status = DeltaInstallStatus.NOT_PATCHABLE;
+            return deltaInstallResult;
+        } else if (patches.isEmpty()) {
+            deltaInstallResult.status = DeltaInstallStatus.NO_CHANGES;
             return deltaInstallResult;
         }
         builder.addAllPatchInstructions(patches);

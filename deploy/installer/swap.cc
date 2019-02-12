@@ -79,6 +79,23 @@ void SwapCommand::Run() {
 
   response_ = new proto::SwapResponse();
   workspace_.GetResponse().set_allocated_swap_response(response_);
+  std::string install_session = request_.session_id();
+  CmdCommand cmd(workspace_);
+  std::string output;
+
+  if (install_session.compare("<SKIPPED-INSTALLATION>") == 0) {
+    if (request_.restart_activity()) {
+      if (cmd.UpdateAppInfo("all", request_.package_name(), &output)) {
+        response_->set_status(proto::SwapResponse::OK);
+      } else {
+        response_->set_status(proto::SwapResponse::ERROR);
+      }
+    } else {
+      response_->set_status(proto::SwapResponse::OK);
+    }
+    return;
+  }
+
   LogEvent("Got swap request for:" + request_.package_name());
 
   if (!Setup()) {
@@ -86,10 +103,6 @@ void SwapCommand::Run() {
     ErrEvent("Unable to setup workspace");
     return;
   }
-
-  CmdCommand cmd(workspace_);
-  std::string output;
-  std::string install_session = request_.session_id();
 
   if (Swap()) {
     if (cmd.CommitInstall(install_session, &output)) {

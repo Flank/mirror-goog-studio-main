@@ -33,6 +33,20 @@ import java.util.Map;
 
 public class ApkPreInstaller {
 
+    /**
+     * Thrown for cases where we bail out of using delta install. This is distinct from the case
+     * where the APK is unchanged and we don't need to install anything.
+     */
+    public static class DeltaPreInstallException extends Exception {
+        public DeltaPreInstallException(String msg) {
+            super(msg);
+        }
+
+        public DeltaPreInstallException(Exception e) {
+            super(e);
+        }
+    }
+
     private final AdbClient adb;
     private final Installer installer;
     private final ILogger logger;
@@ -52,13 +66,11 @@ public class ApkPreInstaller {
      *
      * @param remoteContent All APK entries on the device
      * @param localContent All APK entries on the local host
-     * @return Paths of the apks pushed on the device
+     * @return Session ID of the install session.
      */
     @Trace
     public String preinstall(ApplicationDumper.Dump remoteContent, List<ApkEntry> localContent)
             throws DeployerException {
-        String sessionId = "";
-
         // Build the list of local apks.
         HashMap<String, Apk> localApks = new HashMap<>();
         for (ApkEntry file : localContent) {
@@ -72,23 +84,23 @@ public class ApkPreInstaller {
         }
 
         // Attempt a DeltaPreinstall first and fallback on a FullPreinstall if it fails.
-        sessionId = deltaPreinstall(localApks, remoteApks);
-        if (sessionId.isEmpty()) {
+        try {
+            return deltaPreinstall(localApks, remoteApks);
+        } catch (DeltaPreInstallException e) {
             return fullPreinstall(localApks);
-        } else {
-            return sessionId;
         }
     }
 
     @Trace
-    private String deltaPreinstall(
-            HashMap<String, Apk> localApks, HashMap<String, Apk> remoteApks) {
+    /** @return Session ID. Empty if all APKs are unchanged from the device. */
+    private String deltaPreinstall(HashMap<String, Apk> localApks, HashMap<String, Apk> remoteApks)
+            throws DeltaPreInstallException {
         try {
             // Pair remote and local apks. Attempt to build an app delta.
             List<Pair<Apk, Apk>> pairs = new ArrayList<>();
             for (Map.Entry<String, Apk> localApk : localApks.entrySet()) {
                 if (!remoteApks.keySet().contains(localApk.getValue().name)) {
-                    return "";
+                    throw new DeltaPreInstallException("APK names changed.");
                 }
                 pairs.add(Pair.of(localApk.getValue(), remoteApks.get(localApk.getValue().name)));
             }
@@ -98,14 +110,14 @@ public class ApkPreInstaller {
             List<Deploy.PatchInstruction> patches =
                     new PatchSetGenerator().generateFromPairs(pairs);
             if (patches.isEmpty()) {
-                return "";
+                return "<SKIPPED-INSTALLATION>";
             }
             pushRequestBuilder.addAllPatchInstructions(patches);
 
             Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();
             // Don't push more than 40 MiB delta since it has to fit in RAM on the device.
             if (request.getSerializedSize() > 40 * 1024 * 1024) {
-                return "";
+                throw new DeltaPreInstallException("Patches too big.");
             }
 
             // Send the deltaPreinstall request here.
@@ -113,11 +125,11 @@ public class ApkPreInstaller {
             if (response.getStatus().equals(Deploy.DeltaPreinstallResponse.Status.OK)) {
                 return response.getSessionId();
             } else {
-                return "";
+                throw new DeltaPreInstallException("Failed to delta pre-install on device.");
             }
         } catch (IOException e) {
             logger.error(e, "Unable to deltaInstall");
-            return "";
+            throw new DeltaPreInstallException(e);
         }
     }
 

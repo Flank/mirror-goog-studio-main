@@ -119,9 +119,9 @@ public class PatchGenerator {
                                 localEntry.payloadStart - localEntry.extraLength - 1);
                 dirtyMap.markClean(headerUpToName);
 
-                ApkMap.Area compresseDataArea =
+                ApkMap.Area compressedDataArea =
                         new ApkMap.Area(localEntry.payloadStart, localEntry.end);
-                dirtyMap.markClean(compresseDataArea);
+                dirtyMap.markClean(compressedDataArea);
             }
         }
         Trace.end();
