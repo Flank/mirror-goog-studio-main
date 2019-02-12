@@ -6,9 +6,6 @@ import %workspace%/tools/base/bazel/common.bazel.rc
 # for a remote machine to execute them.
 build:remote --jobs=110
 
-build:coverage --jobs=70
-build:coverage --config=remote
-
 build:remote_common --remote_instance_name=projects/google.com:android-studio-alphasource/instances/default_instance
 
 build:remote --experimental_remote_platform_override='properties:{ name:"container-image" value:"docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:c8611373581bb39ee5320cdddb03a5c47641ff780bbc0b6cf9c812d8de86cd42"}'

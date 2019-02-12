@@ -29,7 +29,7 @@ CALL :NORMALIZE_PATH "%SCRIPTDIR%..\..\.."
 set BASEDIR=%RETVAL%
 
 @rem Capture location of command.log  Will be out as unix filepath
-FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info %CONFIGOPTIONS% %AUTHCREDS% command_log') DO (
+FOR /F "tokens=*" %%F IN ('%SCRIPTDIR%bazel.cmd info command_log') DO (
 SET COMMANDLOG=%%F
 )
 @rem convert unix path to windows path using cygpath.
