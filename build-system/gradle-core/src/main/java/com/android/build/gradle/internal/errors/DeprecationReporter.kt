@@ -30,13 +30,11 @@ interface DeprecationReporter {
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget  constructor(val removalTime: String) {
         // deprecation of compile in favor of api/implementation
-        CONFIG_NAME("at the end of 2018"),
+        CONFIG_NAME("soon"),
         // deprecation due to the move to the new DSL.
-        OLD_DSL("at the end of 2018"),
+        OLD_DSL("soon"),
         // Obsolete Dex Options
-        DEX_OPTIONS("at the end of 2018"),
-        // Deprecation of AAPT, replaced by AAPT2.
-        AAPT("at the end of 2018"),
+        DEX_OPTIONS("soon"),
         // When legacy dexer will be removed and fully replaced by D8.
         LEGACY_DEXER(
             "in the future AGP versions. For more details, see " +
