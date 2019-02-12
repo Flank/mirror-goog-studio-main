@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ATTR_SPLIT;
 import static com.android.manifmerger.PlaceholderHandler.APPLICATION_ID;
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import static com.android.manifmerger.PlaceholderHandler.PACKAGE_NAME;
+import static com.android.sdklib.AndroidVersion.VersionCodes.M;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -411,6 +412,11 @@ public class ManifestMerger2 {
             extractFqcns(finalMergedDocument);
         }
 
+        String minSdkVersion = finalMergedDocument.getMinSdkVersion();
+        if (mMergeType == MergeType.APPLICATION && parseMinSdkVersion(minSdkVersion) >= M) {
+            maybeAddExtractNativeLibAttribute(finalMergedDocument.getXml());
+        }
+
         // handle optional features which don't need access to XmlDocument layer.
         processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
 
@@ -472,6 +478,14 @@ public class ManifestMerger2 {
         }
 
         return dynamicFeatureManifest;
+    }
+
+    private static int parseMinSdkVersion(@NonNull String minSdkVersion) {
+        try {
+            return Integer.parseInt(minSdkVersion);
+        } catch (NumberFormatException ex) {
+            return 1;
+        }
     }
 
     /**
@@ -692,6 +706,23 @@ public class ManifestMerger2 {
             Element application = applicationElements.get(0);
             setAndroidAttributeIfMissing(
                     application, SdkConstants.ATTR_NAME, multiDexApplicationName);
+        }
+    }
+
+    /**
+     * Set android:extractNativeLibs="false" by default is minSdkVersion is M+
+     *
+     * @param document the document for which the extractNativeLibs attribute should be set to
+     *     false.
+     */
+    private static void maybeAddExtractNativeLibAttribute(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> applicationElements =
+                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
+        if (!applicationElements.isEmpty()) {
+            Element application = applicationElements.get(0);
+            setAndroidAttributeIfMissing(
+                    application, SdkConstants.ATTR_EXTRACT_NATIVE_LIBS, SdkConstants.VALUE_FALSE);
         }
     }
 

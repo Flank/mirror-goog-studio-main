@@ -20,6 +20,8 @@ import static com.android.SdkConstants.ATTR_ON_DEMAND;
 import static com.android.SdkConstants.DIST_URI;
 import static com.android.SdkConstants.MANIFEST_ATTR_TITLE;
 import static com.android.SdkConstants.TAG_MODULE;
+import static com.android.sdklib.AndroidVersion.VersionCodes.LOLLIPOP_MR1;
+import static com.android.sdklib.AndroidVersion.VersionCodes.M;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -2150,6 +2152,119 @@ public class ManifestMerger2SmallTest {
                     .doesNotContain("split");
         } finally {
             assertTrue(featureManifest.delete());
+        }
+    }
+
+    @Test
+    public void testExtractNativeLibs_notInjected() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"foo.bar\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_noExtractNativeLibs", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .setOverride(
+                                    ManifestSystemProperty.MIN_SDK_VERSION,
+                                    Integer.toString(LOLLIPOP_MR1))
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).doesNotContain("extractNativeLibs");
+        } finally {
+            assertTrue(tmpFile.delete());
+        }
+    }
+
+    @Test
+    public void testExtractNativeLibs_notInjected_forLIbs() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"example\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_noExtractNativeLibs", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(tmpFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
+                            .setOverride(
+                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).doesNotContain("extractNativeLibs");
+        } finally {
+            assertTrue(tmpFile.delete());
+        }
+    }
+
+    @Test
+    public void testExtractNativeLibs_injected() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"foo.bar\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_extractNativeLibsFalse", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .setOverride(
+                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).contains("android:extractNativeLibs=\"false\"");
+        } finally {
+            assertTrue(tmpFile.delete());
+        }
+    }
+
+    @Test
+    public void testExtractNativeLibs_notReplaced() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"foo.bar\">\n"
+                        + "    <application android:extractNativeLibs=\"true\"/>\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_extractNativeLibsTrue", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .setOverride(
+                                    ManifestSystemProperty.MIN_SDK_VERSION, Integer.toString(M))
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).contains("android:extractNativeLibs=\"true\"");
+            assertThat(mergedDocument).doesNotContain("android:extractNativeLibs=\"false\"");
+        } finally {
+            assertTrue(tmpFile.delete());
         }
     }
 
