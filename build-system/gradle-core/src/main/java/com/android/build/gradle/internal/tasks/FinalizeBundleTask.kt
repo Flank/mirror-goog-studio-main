@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.apksig.ApkSigner
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.dsl.SigningConfig
-import com.android.build.gradle.internal.process.JarSigner
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.StringOption
+import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -96,16 +96,30 @@ open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor
     private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
         override fun run() {
             FileUtils.cleanOutputDir(params.finalBundleFile.parentFile)
-            FileUtils.copyFile(params.intermediaryBundleFile, params.finalBundleFile)
 
-            SigningConfigMetadata.load(params.signingConfig)?.getSignature()?.let {
-                JarSigner().sign(params.finalBundleFile, it)
+            SigningConfigMetadata.load(params.signingConfig)?.let {
+                val certificateInfo =
+                    KeystoreHelper.getCertificateInfo(
+                        it.storeType,
+                        it.storeFile!!,
+                        it.storePassword!!,
+                        it.keyPassword!!,
+                        it.keyAlias!!)
+                val signingConfig =
+                    ApkSigner.SignerConfig.Builder(
+                        it.keyAlias!!.toUpperCase(), certificateInfo.key, listOf(certificateInfo.certificate))
+                        .build()
+                ApkSigner.Builder(listOf(signingConfig))
+                    .setOutputApk(params.finalBundleFile)
+                    .setInputApk(params.intermediaryBundleFile)
+                    .setV2SigningEnabled(false)
+                    .setV3SigningEnabled(false)
+                    .setMinSdkVersion(18) // So that RSA + SHA256 are used
+                    .build()
+                    .sign()
+            } ?: run {
+                FileUtils.copyFile(params.intermediaryBundleFile, params.finalBundleFile)
             }
-        }
-
-        private fun SigningConfig.getSignature(): JarSigner.Signature? {
-            return storeFile?.run {
-                JarSigner.Signature(storeFile!!, storePassword, keyAlias, keyPassword) }
         }
     }
 

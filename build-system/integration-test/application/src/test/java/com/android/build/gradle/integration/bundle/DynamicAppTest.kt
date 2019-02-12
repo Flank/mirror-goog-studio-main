@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.SdkConstants
+import com.android.apksig.ApkVerifier
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
@@ -26,6 +27,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
+import com.android.ide.common.signing.KeystoreHelper
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
@@ -741,6 +743,58 @@ class DynamicAppTest {
         }
     }
 
+    @Test
+    fun `test bundleRelease is signed correctly`() {
+        val unicodeStorePass = "парольОтStoreåçêÏñüöé"
+        val unicodeKeyPass = "парольОтKeyåçêÏñüöé"
+        val keyAlias = "key0"
+
+        val keyStoreFile = tmpFile.root.resolve("keystore")
+        KeystoreHelper.createNewStore(
+            "jks",
+            keyStoreFile,
+            unicodeStorePass,
+            unicodeKeyPass,
+            keyAlias,
+            "CN=Bundle signing test",
+            100)
+
+        val bundleTaskName = getBundleTaskName("release")
+        project.executor()
+            .with(StringOption.IDE_SIGNING_STORE_FILE, keyStoreFile.path)
+            .with(StringOption.IDE_SIGNING_STORE_PASSWORD, unicodeStorePass)
+            .with(StringOption.IDE_SIGNING_KEY_ALIAS, keyAlias)
+            .with(StringOption.IDE_SIGNING_KEY_PASSWORD, unicodeKeyPass)
+            .run("app:$bundleTaskName")
+
+        val bundleFile = getApkFolderOutput("release").bundleFile
+        FileSubject.assertThat(bundleFile).exists()
+
+        Zip(bundleFile).use {
+            val entries = it.entries.map { it.toString() }
+            Truth.assertThat(entries).contains("/META-INF/MANIFEST.MF")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase()}.RSA")
+            Truth.assertThat(entries).contains("/META-INF/${keyAlias.toUpperCase()}.SF")
+        }
+
+        val result = ApkVerifier.Builder(bundleFile)
+            .setMaxCheckedPlatformVersion(18)
+            .setMinCheckedPlatformVersion(18)
+            .build()
+            .verify()
+        assertThat(result.isVerified).isTrue()
+
+        assertThat(
+            ProcessBuilder(
+                listOf(
+                    getJarSignerPath(),
+                    "-verify",
+                    bundleFile.absolutePath))
+                .start()
+                .waitFor())
+            .isEqualTo(0)
+    }
+
     private fun getBundleTaskName(name: String): String {
         // query the model to get the task name
         val syncModels = project.model()
@@ -794,5 +848,41 @@ class DynamicAppTest {
         FileUtils.mkdirs(abiFolder)
 
         Files.write(File(abiFolder, libName).toPath(), "some content".toByteArray())
+    }
+
+    companion object {
+
+        private val jarSignerExecutable =
+            if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) "jarsigner.exe"
+            else "jarsigner"
+
+        /**
+         * Return the "jarsigner" tool location or null if it cannot be determined.
+         */
+        private fun locatedJarSigner(): File? {
+            // Look in the java.home bin folder, on jdk installations or Mac OS X, this is where the
+            // javasigner will be located.
+            val javaHome = File(System.getProperty("java.home"))
+            var jarSigner = getJarSigner(javaHome)
+            if (jarSigner.exists()) {
+                return jarSigner
+            } else {
+                // if not in java.home bin, it's probable that the java.home points to a JRE
+                // installation, we should then look one folder up and in the bin folder.
+                jarSigner = getJarSigner(javaHome.parentFile)
+                // if still cant' find it, give up.
+                return if (jarSigner.exists()) jarSigner else null
+            }
+        }
+
+        /**
+         * Returns the jarsigner tool location with the bin folder.
+         */
+        private fun getJarSigner(parentDir: File) = File(File(parentDir, "bin"), jarSignerExecutable)
+
+        fun getJarSignerPath(): String {
+            val jarSigner = locatedJarSigner()
+            return if (jarSigner!=null) jarSigner.absolutePath else jarSignerExecutable
+        }
     }
 }
