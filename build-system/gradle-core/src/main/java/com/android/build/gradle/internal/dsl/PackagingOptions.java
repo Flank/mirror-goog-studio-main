@@ -167,7 +167,6 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
 
         // Exclude hidden and backup files.
         exclude("**/.*/**");
-        // This also excludes "empty/.empty" entries which are added to BundleLibraryJavaRes jars
         exclude("**/.*");
         exclude("**/*~");
 

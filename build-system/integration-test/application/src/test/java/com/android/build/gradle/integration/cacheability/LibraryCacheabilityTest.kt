@@ -74,8 +74,7 @@ class LibraryCacheabilityTest {
                     ":lib:packageReleaseAssets",
                     ":lib:packageReleaseResources",
                     ":lib:processReleaseManifest",
-                    ":lib:verifyReleaseResources",
-                    ":lib:mergeReleaseJavaResource"
+                    ":lib:verifyReleaseResources"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -86,6 +85,7 @@ class LibraryCacheabilityTest {
                     ":lib:bundleReleaseAar" /*Bug 121275773 */,
                     ":lib:checkReleaseManifest" /* Bug 74595857 */,
                     ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
+                    ":lib:mergeReleaseJavaResource" /* Bug 74595224 */,
                     ":lib:prepareLintJar" /* Bug 120413672 */,
                     ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
                     ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
