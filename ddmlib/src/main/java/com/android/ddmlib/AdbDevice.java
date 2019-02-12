@@ -56,7 +56,10 @@ public final class AdbDevice {
         return Objects.hash(serial, state);
     }
 
-    /** Parse a single line returned from "adb devices -l" as an AdbDevice. */
+    /**
+     * Parse a single line returned from "adb devices -l" as an AdbDevice or null if the line
+     * doesn't match the expected format.
+     */
     public static AdbDevice parseAdbLine(String line) {
         Matcher matcher = SERIAL_PATTERN.matcher(line);
         if (matcher.matches()) {
@@ -69,6 +72,6 @@ public final class AdbDevice {
 
             return new AdbDevice(serial, IDevice.DeviceState.getState(stateName));
         }
-        return new AdbDevice(null, null);
+        return null;
     }
 }

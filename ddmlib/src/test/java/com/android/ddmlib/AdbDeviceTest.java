@@ -27,7 +27,8 @@ public class AdbDeviceTest {
                     "FA78B1A99999           unauthorized usb:1-10 transport_id:4",
                     "FA78B1A99999           device usb:1-10 product:walleye model:Pixel_2 device:walleye transport_id:4",
                     "(no serial number)     device",
-                    "BAADF00D               no permissions (problem descriptios goes here)"
+                    "BAADF00D               no permissions (problem descriptios goes here)",
+                    ""
                 };
 
         AdbDevice[] expected =
@@ -35,7 +36,8 @@ public class AdbDeviceTest {
                     new AdbDevice("FA78B1A99999", IDevice.DeviceState.UNAUTHORIZED),
                     new AdbDevice("FA78B1A99999", IDevice.DeviceState.ONLINE),
                     new AdbDevice(null, IDevice.DeviceState.ONLINE),
-                    new AdbDevice("BAADF00D", null)
+                    new AdbDevice("BAADF00D", null),
+                    null
                 };
 
         for (int idx = 0; idx < inputStrings.length; idx++) {
