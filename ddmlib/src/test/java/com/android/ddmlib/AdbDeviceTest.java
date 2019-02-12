@@ -21,7 +21,7 @@ import org.junit.Test;
 
 public class AdbDeviceTest {
     @Test
-    void parserTest() throws Exception {
+    public void parserTest() {
         String[] inputStrings =
                 new String[] {
                     "FA78B1A99999           unauthorized usb:1-10 transport_id:4",
