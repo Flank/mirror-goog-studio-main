@@ -11,5 +11,6 @@
     <orderEntry type="module" module-name="android.sdktools.base.build-system.test.project-test-lib" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="module" module-name="android.sdktools.common" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

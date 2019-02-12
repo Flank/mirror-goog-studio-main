@@ -51,6 +51,7 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.instrumentation" />
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="library" name="jopt-simple" level="project" />
     <orderEntry type="library" name="jsoup" level="project" />
@@ -63,6 +64,7 @@
     <orderEntry type="library" name="jacoco-core" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="android.sdktools.dx" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.gradle-api" exported="" />
     <orderEntry type="library" scope="TEST" name="intellij-annotations" level="project" />
@@ -75,7 +77,5 @@
     <orderEntry type="library" name="http-client" level="project" />
     <orderEntry type="module" module-name="db-compilerCommon" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
-    <orderEntry type="library" name="kotlin-reflect" level="project" />
-    <orderEntry type="library" scope="TEST" name="kotlin-test" level="project" />
   </component>
 </module>

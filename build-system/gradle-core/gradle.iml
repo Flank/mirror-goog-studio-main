@@ -26,8 +26,9 @@
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
     <orderEntry type="module" module-name="dx" />
-    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="lint-gradle-api" exported="" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="bundletool" level="project" />
   </component>
 </module>

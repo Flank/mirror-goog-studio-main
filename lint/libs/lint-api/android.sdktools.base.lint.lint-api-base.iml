@@ -10,8 +10,6 @@
     <orderEntry type="library" name="asm-tools" level="project" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />
     <orderEntry type="library" name="guava-tools" level="project" />
-    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
-    <orderEntry type="library" name="kotlin-reflect" level="project" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="module" module-name="android.sdktools.base.layoutlib-api-base" />
     <orderEntry type="module" module-name="android.sdktools.base.sdk-common-base" />
@@ -23,5 +21,6 @@
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

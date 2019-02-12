@@ -20,7 +20,7 @@
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
-    <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.lint-api-base" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.checks-base" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />
