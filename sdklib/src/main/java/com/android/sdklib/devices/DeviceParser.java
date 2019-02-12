@@ -182,6 +182,14 @@ public class DeviceParser {
                 mHardware.getScreen().setXDimension(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_Y_DIMENSION.equals(localName)) {
                 mHardware.getScreen().setYDimension(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_OFFSET.equals(localName)) {
+                mHardware.getScreen().setFoldedXOffset(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_OFFSET.equals(localName)) {
+                mHardware.getScreen().setFoldedYOffset(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_X_FOLDED_DIMENSION.equals(localName)) {
+                mHardware.getScreen().setFoldedWidth(getInteger(mStringAccumulator));
+            } else if (DeviceSchema.NODE_Y_FOLDED_DIMENSION.equals(localName)) {
+                mHardware.getScreen().setFoldedHeight(getInteger(mStringAccumulator));
             } else if (DeviceSchema.NODE_XDPI.equals(localName)) {
                 mHardware.getScreen().setXdpi(getDouble(mStringAccumulator));
             } else if (DeviceSchema.NODE_YDPI.equals(localName)) {

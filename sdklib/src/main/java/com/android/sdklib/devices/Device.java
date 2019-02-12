@@ -42,6 +42,18 @@ import java.util.regex.Pattern;
  */
 public final class Device {
 
+    /** Minimum diagonal size of a tablet, in inches.
+     *  A device with a smaller diagonal size is
+     *  considered a phone.
+     */
+    public final static double MINIMUM_TABLET_SIZE = 7.0;
+
+    /** Minimum diagonal size of a TV, in inches.
+     *  A device with a smaller diagonal size is
+     *  considered a phone or tablet
+     */
+    public final static double MINIMUM_TV_SIZE = 15.0;
+
     /** Name of the device */
     @NonNull
     private final String mName;

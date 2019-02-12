@@ -53,7 +53,7 @@ public class DeviceSchema {
      * The latest version of the device XML Schema.
      * Valid version numbers are between 1 and this number, included.
      */
-    public static final int NS_LATEST_VERSION = 3;
+    public static final int NS_LATEST_VERSION = 4;
 
     /** The XML namespace of the latest device XML. */
     public static final String NS_DEVICES_URI = getSchemaUri(NS_LATEST_VERSION);
@@ -177,6 +177,11 @@ public class DeviceSchema {
     public static final String NODE_KEYBOARD_STATE = "keyboard-state";
 
     public static final String NODE_X_DIMENSION = "x-dimension";
+
+    public static final String NODE_X_FOLDED_OFFSET = "x-folded-offset";
+    public static final String NODE_Y_FOLDED_OFFSET = "y-folded-offset";
+    public static final String NODE_X_FOLDED_DIMENSION = "x-folded-dimension";
+    public static final String NODE_Y_FOLDED_DIMENSION = "y-folded-dimension";
 
     public static final String NODE_CPU = "cpu";
 

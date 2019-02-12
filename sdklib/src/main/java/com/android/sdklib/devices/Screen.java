@@ -39,6 +39,10 @@ public class Screen {
     private int mChin;
     @Nullable
     private ScreenRound mScreenRound;
+    private int mFoldedXOffset;
+    private int mFoldedYOffset;
+    private int mFoldedWidth;
+    private int mFoldedHeight;
 
     public ScreenSize getSize() {
         return mScreenSize;
@@ -137,6 +141,34 @@ public class Screen {
         mScreenRound = screenRound;
     }
 
+    public boolean isFoldable() {
+        return mFoldedHeight > 0 && mFoldedWidth > 0;
+    }
+    public void setFoldedXOffset(int xOffset) {
+        mFoldedXOffset = xOffset;
+    }
+    public int getFoldedXOffset() {
+        return mFoldedXOffset;
+    }
+    public void setFoldedYOffset(int yOffset) {
+        mFoldedYOffset = yOffset;
+    }
+    public int getFoldedYOffset() {
+        return mFoldedYOffset;
+    }
+    public void setFoldedWidth(int width) {
+        mFoldedWidth = width;
+    }
+    public int getFoldedWidth() {
+        return mFoldedWidth;
+    }
+    public void setFoldedHeight(int height) {
+        mFoldedHeight = height;
+    }
+    public int getFoldedHeight() {
+        return mFoldedHeight;
+    }
+
     /**
      * Get the "chin" height in pixels. This is for round screens with a flat section at the
      * bottom. The "chin" height is the largest perpendicular distance from the flat section to
@@ -176,6 +208,10 @@ public class Screen {
         s.mScreenType = mScreenType;
         s.mScreenRound = mScreenRound;
         s.mChin = mChin;
+        s.mFoldedXOffset = mFoldedXOffset;
+        s.mFoldedYOffset = mFoldedYOffset;
+        s.mFoldedWidth = mFoldedWidth;
+        s.mFoldedHeight = mFoldedHeight;
         return s;
     }
 
@@ -200,7 +236,11 @@ public class Screen {
                 && s.mMechanism == mMechanism
                 && s.mScreenType == mScreenType
                 && s.mScreenRound == mScreenRound
-                && s.mChin == mChin;
+                && s.mChin == mChin
+                && s.mFoldedXOffset == mFoldedXOffset
+                && s.mFoldedYOffset == mFoldedYOffset
+                && s.mFoldedWidth == mFoldedWidth
+                && s.mFoldedHeight == mFoldedHeight;
     }
 
     @Override
@@ -224,6 +264,10 @@ public class Screen {
         if (mScreenRound != null) {
             hash = 31 * hash + mScreenRound.ordinal();
         }
+        hash = 31 * hash + mFoldedXOffset;
+        hash = 31 * hash + mFoldedYOffset;
+        hash = 31 * hash + mFoldedWidth;
+        hash = 31 * hash + mFoldedHeight;
         return hash;
     }
 
@@ -256,6 +300,14 @@ public class Screen {
         sb.append(mScreenRound);
         sb.append(", mChin=");
         sb.append(mChin);
+        sb.append(", mFoldableXOffset=");
+        sb.append(mFoldedXOffset);
+        sb.append(", mFoldableYOffset=");
+        sb.append(mFoldedYOffset);
+        sb.append(", mFoldableWidth=");
+        sb.append(mFoldedWidth);
+        sb.append(", mFoldableHeight=");
+        sb.append(mFoldedHeight);
         sb.append("]");
         return sb.toString();
     }

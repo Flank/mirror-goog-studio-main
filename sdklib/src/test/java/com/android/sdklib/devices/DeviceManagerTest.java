@@ -94,7 +94,7 @@ public class DeviceManagerTest {
                 "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)");
+                "7\" WSVGA (Tablet)", "Foldable A");
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
 
@@ -149,6 +149,7 @@ public class DeviceManagerTest {
                 "Android Wear Round",
                 "Android Wear Round Chin",
                 "Android Wear Square",
+                "Foldable A",
                 "Galaxy Nexus",
                 "Nexus 10",
                 "Nexus 4",
@@ -219,7 +220,7 @@ public class DeviceManagerTest {
                 "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)");
+                "7\" WSVGA (Tablet)", "Foldable A");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -269,6 +270,7 @@ public class DeviceManagerTest {
                 "Android Wear Round",
                 "Android Wear Round Chin",
                 "Android Wear Square",
+                "Foldable A",
                 "Galaxy Nexus",
                 "My Custom Tablet",
                 "Nexus 10",
@@ -329,7 +331,7 @@ public class DeviceManagerTest {
                 "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)");
+                "7\" WSVGA (Tablet)", "Foldable A");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -380,6 +382,7 @@ public class DeviceManagerTest {
                 "Android Wear Round",
                 "Android Wear Round Chin",
                 "Android Wear Square",
+                "Foldable A",
                 "Galaxy Nexus",
                 "Mock Tag 1 Device Name",
                 "Nexus 10",

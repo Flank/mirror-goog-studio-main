@@ -554,6 +554,17 @@ public class DeviceManager {
                 Integer.toString(hw.getScreen().getYDimension()));
         props.put(HardwareProperties.HW_PROXIMITY_SENSOR,
                 getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
+        if (hw.getScreen().isFoldable()) {
+            props.put(HardwareProperties.HW_KEYBOARD_LID, getBooleanVal(true));
+            props.put(HardwareProperties.HW_LCD_FOLDED_X_OFFSET,
+                      Integer.toString(hw.getScreen().getFoldedXOffset()));
+            props.put(HardwareProperties.HW_LCD_FOLDED_Y_OFFSET,
+                      Integer.toString(hw.getScreen().getFoldedYOffset()));
+            props.put(HardwareProperties.HW_LCD_FOLDED_HEIGHT,
+                      Integer.toString(hw.getScreen().getFoldedHeight()));
+            props.put(HardwareProperties.HW_LCD_FOLDED_WIDTH,
+                      Integer.toString(hw.getScreen().getFoldedWidth()));
+        }
         return props;
     }
 

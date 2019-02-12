@@ -239,6 +239,55 @@ public class DeviceParserTest extends TestCase {
         }
     }
 
+    public void testValidDevicesFull_v4() throws Exception {
+        InputStream stream = DeviceSchemaTest.class.getResourceAsStream("devices_v4.xml");
+        try {
+            Table<String, String, Device> devices = DeviceParser.parse(stream);
+            assertEquals("Parsing devices.xml produces the wrong number of devices",
+                         5, devices.size());
+
+            Device device0 = devices.get("foldable", "Phoney");
+            assertEquals(null, device0.getTagId());
+            assertEquals("{}", device0.getBootProps().toString());
+            assertEquals("arm64", device0.getDefaultHardware().getCpu());
+            assertEquals("[arm64-v8a]", device0.getDefaultHardware().getSupportedAbis().toString());
+            assertEquals(300, device0.getDefaultHardware().getScreen().getFoldedXOffset());
+            assertEquals(600, device0.getDefaultHardware().getScreen().getFoldedYOffset());
+            assertEquals(640, device0.getDefaultHardware().getScreen().getFoldedWidth());
+            assertEquals(720, device0.getDefaultHardware().getScreen().getFoldedHeight());
+
+            Device device1 = devices.get("Droid X86", "Letni");
+            assertEquals("tag-1", device1.getTagId());
+            assertEquals("{ro-myservice-port=1234, " +
+                         "ro.RAM.Size=1024 MiB, " +
+                         "ro.build.display.id=sdk-eng 4.3 JB_MR2 774058 test-keys}",
+                         device1.getBootProps().toString());
+            assertEquals("Intel Atom 64", device1.getDefaultHardware().getCpu());
+            assertEquals("[x86_64]", device1.getDefaultHardware().getSupportedAbis().toString());
+
+            Device device2 = devices.get("Mips 64", "Mips");
+            assertEquals("tag-2", device2.getTagId());
+            assertEquals("{ro-myservice-port=1234, " +
+                         "ro.RAM.Size=1024 MiB, " +
+                         "ro.build.display.id=sdk-eng 4.3 JB_MR2 774058 test-keys}",
+                         device2.getBootProps().toString());
+            assertEquals("MIPS32+64", device2.getDefaultHardware().getCpu());
+            assertEquals("[mips, mips64]", device2.getDefaultHardware().getSupportedAbis().toString());
+
+            assertEquals(device2.getChinSize(), 0);
+            assertFalse(device2.isScreenRound());
+
+            Device device3 = devices.get("wear_round_chin", "Google");
+            assertEquals("android-wear", device3.getTagId());
+            assertEquals(device3.getDefaultHardware().getScreen().getChin(), 30);
+            assertEquals(device3.getChinSize(), 30);
+            assertTrue(device3.isScreenRound());
+            assertEquals(device3.getDefaultHardware().getScreen().getScreenRound(), ScreenRound.ROUND);
+        } finally {
+            stream.close();
+        }
+    }
+
     public void testApiRange() throws Exception {
         Map<String, String> replacements = new HashMap<String, String>();
         replacements.put("api-level", "1-");

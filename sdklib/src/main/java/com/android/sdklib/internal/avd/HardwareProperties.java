@@ -70,6 +70,15 @@ public class HardwareProperties {
     /** AVD/config.ini key for LCD height. */
     public static final String HW_LCD_HEIGHT = "hw.lcd.height";
 
+    /** AVD/config.ini key for the device having Open/Closed state. */
+    public static final String HW_KEYBOARD_LID = "hw.keyboard.lid";
+
+    /** AVD/config.ini key for folded LCD offset and size. */
+    public static final String HW_LCD_FOLDED_X_OFFSET = "hw.displayRegion.0.1.xOffset";
+    public static final String HW_LCD_FOLDED_Y_OFFSET = "hw.displayRegion.0.1.yOffset";
+    public static final String HW_LCD_FOLDED_WIDTH = "hw.displayRegion.0.1.width";
+    public static final String HW_LCD_FOLDED_HEIGHT = "hw.displayRegion.0.1.height";
+
     /** AVD/config.ini key indicating whether proximity sensor present. */
     public static final String HW_PROXIMITY_SENSOR = "hw.sensors.proximity";
 

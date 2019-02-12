@@ -90,6 +90,26 @@ public class DeviceSchemaTest extends TestCase {
                 baos.toString().trim().isEmpty());
     }
 
+    public void testValidXml_v4() {
+        InputStream xml = new BufferedInputStream(
+                DeviceSchemaTest.class.getResourceAsStream("devices_v4.xml"));
+        xml.mark(500000);   // set mark to beginning of stream
+
+        // Check schema version
+        assertEquals(4, DeviceSchema.getXmlSchemaVersion(xml));
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        boolean result = DeviceSchema.validate(xml, baos, null);
+        String output = baos.toString().trim();
+        assertTrue(
+                String.format("Validation Assertion Failed, XML failed to validate when it was expected to pass\n%s\n", output),
+                result);
+        assertTrue(String.format(
+                "Regex Assertion Failed\nExpected No Output\nActual: %s\n",
+                baos.toString().trim()),
+                baos.toString().trim().isEmpty());
+    }
+
     public void testNoHardware() throws Exception {
         String regex = "Error: cvc-complex-type.2.4.a: Invalid content was found starting with "
                 + "element 'd:software'.*";

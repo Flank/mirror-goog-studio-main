@@ -583,11 +583,12 @@ public class AvdManagerTest extends TestCase {
         MockLog log = new MockLog();
 
         DeviceManager devMan = DeviceManager.createInstance(mAndroidSdkHandler, log);
-        Device myDevice = devMan.getDevice("Nexus 5", "Google");
+        Device myDevice = devMan.getDevice("Foldable_A", "Generic");
         Map<String, String> baseHardwareProperties = DeviceManager.getHardwareProperties(myDevice);
 
-        // Modify a hardware property that should change
+        // Modify hardware properties that should change
         baseHardwareProperties.put("hw.lcd.height", "960");
+        baseHardwareProperties.put("hw.displayRegion.0.1.height", "480");
         // Modify a hardware property that should NOT change
         baseHardwareProperties.put("hw.ramSize", "1536");
         // Add a user-settable property
@@ -609,19 +610,21 @@ public class AvdManagerTest extends TestCase {
           false,
           log);
 
-        // Verify the parameters that we changed and the parameter that we added
+        // Verify all the parameters that we changed and the parameter that we added
         Map<String, String> firstHardwareProperties = myDeviceInfo.getProperties();
         assertEquals("960",  firstHardwareProperties.get("hw.lcd.height"));
+        assertEquals("480",  firstHardwareProperties.get("hw.displayRegion.0.1.height"));
         assertEquals("1536", firstHardwareProperties.get("hw.ramSize"));
         assertEquals("yes",  firstHardwareProperties.get("hw.keyboard"));
 
         // Update the device using the original hardware definition
         AvdInfo updatedDeviceInfo = mAvdManager.updateDeviceChanged(myDeviceInfo, log);
 
-        // Verify that one hardware property changed, but the other hardware property
-        // and the user-settable property did not change.
+        // Verify that the two fixed hardware properties changed back, but the other hardware
+        // property and the user-settable property did not change.
         Map<String, String> updatedHardwareProperties = updatedDeviceInfo.getProperties();
-        assertEquals("1920", updatedHardwareProperties.get("hw.lcd.height"));
+        assertEquals("2152", updatedHardwareProperties.get("hw.lcd.height"));
+        assertEquals("1960",  updatedHardwareProperties.get("hw.displayRegion.0.1.height"));
         assertEquals("1536", updatedHardwareProperties.get("hw.ramSize"));
         assertEquals("yes",  updatedHardwareProperties.get("hw.keyboard"));
     }
