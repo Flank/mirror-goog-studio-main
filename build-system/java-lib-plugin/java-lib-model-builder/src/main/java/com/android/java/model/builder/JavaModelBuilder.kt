@@ -38,7 +38,8 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder
 import org.gradle.util.VersionNumber
 import java.io.File
 import java.io.IOException
-import java.util.*
+import java.util.ArrayList
+import java.util.HashMap
 
 /**
  * Builder for the custom Java library model.
@@ -124,13 +125,20 @@ class JavaModelBuilder : ToolingModelBuilder {
       else {
         sourceSet.compileConfigurationName
       }
+      val runtimeConfigurationName: String = if (isGradleAtLeast(project.gradle.gradleVersion, "3.4")) {
+        sourceSet.runtimeClasspathConfigurationName
+      }
+      else {
+        sourceSet.runtimeConfigurationName
+      }
       return SourceSetImpl(
         sourceSet.name,
         sourceSet.allJava.srcDirs,
         sourceSet.resources.srcDirs,
         getClassesDirs(sourceSet, project),
         sourceSet.output.resourcesDir,
-        getLibrariesForConfiguration(project, compileConfigurationName, buildMapping))
+        getLibrariesForConfiguration(project, compileConfigurationName, buildMapping),
+        getLibrariesForConfiguration(project, runtimeConfigurationName, buildMapping))
     }
 
     private fun getClassesDirs(sourceSet: org.gradle.api.tasks.SourceSet, project: Project): Collection<File> {

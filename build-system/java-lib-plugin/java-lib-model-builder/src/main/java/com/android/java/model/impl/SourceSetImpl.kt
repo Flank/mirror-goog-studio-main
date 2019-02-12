@@ -29,8 +29,8 @@ data class SourceSetImpl(private val myName: String,
                          private val myResourcesDirectories: Collection<File>,
                          private val myClassesOutputDirectories: Collection<File>,
                          private val myResourcesOutputDirectory: File?,
-                         private val myCompileClasspathDependencies: Collection<JavaLibrary>) : SourceSet, Serializable {
-
+                         private val myCompileClasspathDependencies: Collection<JavaLibrary>,
+                         private val myRuntimeClasspathDependencies: Collection<JavaLibrary>) : SourceSet, Serializable {
   override fun getName(): String {
     return myName
   }
@@ -53,5 +53,9 @@ data class SourceSetImpl(private val myName: String,
 
   override fun getCompileClasspathDependencies(): Collection<JavaLibrary> {
     return myCompileClasspathDependencies
+  }
+
+  override fun getRuntimeClasspathDependencies(): Collection<JavaLibrary> {
+    return myRuntimeClasspathDependencies
   }
 }
