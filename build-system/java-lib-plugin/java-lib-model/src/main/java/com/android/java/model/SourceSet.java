@@ -23,7 +23,7 @@ import java.util.Collection;
 
 /**
  * Represents a SourceSet in Java plugin, contains source folders, as well as a list of dependencies
- * of compileClasspath configuration.
+ * of compileClasspath and runtimeClasspath configuration.
  */
 public interface SourceSet {
 
@@ -74,4 +74,12 @@ public interface SourceSet {
      */
     @NonNull
     Collection<JavaLibrary> getCompileClasspathDependencies();
+
+    /**
+     * Returns a collection of dependencies of runtimeClasspath configuration.
+     *
+     * @return a collection of dependencies of runtimeClasspath configuration.
+     */
+    @NonNull
+    Collection<JavaLibrary> getRuntimeClasspathDependencies();
 }
