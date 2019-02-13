@@ -20,13 +20,14 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -35,7 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import javax.inject.Inject;
+import java.util.concurrent.ForkJoinPool;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -47,7 +48,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.util.PatternSet;
-import org.gradle.workers.WorkerExecutor;
 
 /** Task to compile Shaders */
 @CacheableTask
@@ -68,9 +68,14 @@ public class ShaderCompile extends AndroidBuilderTask {
 
     private final WorkerExecutorFacade workers;
 
-    @Inject
-    public ShaderCompile(WorkerExecutor workerExecutor) {
-        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+    /**
+     * TODO(b/124424292)
+     *
+     * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
+     * compiling shader files, which should not be serialized.
+     */
+    public ShaderCompile() {
+        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
     }
 
     @Input
@@ -109,7 +114,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         File destinationDir = getOutputDir();
         FileUtils.cleanOutputDir(destinationDir);
 
-        try {
+        try (WorkerExecutorFacade workers = this.workers) {
             getBuilder()
                     .compileAllShaderFiles(
                             sourceDir.get().getAsFile(),
@@ -119,9 +124,6 @@ public class ShaderCompile extends AndroidBuilderTask {
                             ndkLocation,
                             new LoggedProcessOutputHandler(getILogger()),
                             workers);
-            workers.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
