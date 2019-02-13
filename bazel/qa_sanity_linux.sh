@@ -48,5 +48,9 @@ ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
 
 fi
 
-# Always exit 0, as frequent test failures can wear down developers' tolerance
-exit 0
+# See http://docs.bazel.build/versions/master/guide.html#what-exit-code-will-i-get
+if [[ "${bazel_status}" == "3" ]]; then  # "Build OK, but some tests failed or timed out."
+  exit 0  # report build success; ignore test failure
+else
+  exit "${bazel_status}"
+fi
