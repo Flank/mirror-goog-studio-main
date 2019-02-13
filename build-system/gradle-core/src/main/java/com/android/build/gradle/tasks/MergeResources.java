@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_
 import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE;
 
 import android.databinding.tool.LayoutXmlProcessor;
+import android.databinding.tool.util.RelativizableFile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -681,7 +682,11 @@ public class MergeResources extends ResourceAwareTask {
 
                             @Override
                             public boolean processSingleFile(File file, File out) throws Exception {
-                                return getProcessor().processSingleFile(file, out);
+                                return getProcessor()
+                                        .processSingleFile(
+                                                RelativizableFile.Companion.fromAbsoluteFile(
+                                                        file, task.getProject().getProjectDir()),
+                                                out);
                             }
 
                             @Override
