@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ClassField;
@@ -245,7 +246,10 @@ public class ResValueTest {
         File outputFile =
                 new File(
                         project.getTestDir(),
-                        "build/generated/res/resValues/" + variantDir + "/values/generated.xml");
+                        "build/generated/res/resValues/"
+                                + variantDir
+                                + "/values/"
+                                + ResValueGenerator.RES_VALUE_FILENAME_XML);
         assertThat(outputFile).isFile();
         assertThat(outputFile).contentWithUnixLineSeparatorsIsExactly(expected);
     }

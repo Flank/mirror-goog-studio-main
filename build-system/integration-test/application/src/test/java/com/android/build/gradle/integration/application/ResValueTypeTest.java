@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.compiling.ResValueGenerator;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -98,7 +99,10 @@ public class ResValueTypeTest {
     public void checkStringTagIsUsedInGeneratedDotXmlFile()
             throws IOException, InterruptedException {
         project.execute("clean", "generateDebugResValue");
-        File outputFile = project.file("build/generated/res/resValues/debug/values/generated.xml");
+        File outputFile =
+                project.file(
+                        "build/generated/res/resValues/debug/values/"
+                                + ResValueGenerator.RES_VALUE_FILENAME_XML);
         assertTrue("Missing file: " + outputFile, outputFile.isFile());
         assertEquals(
                 ""

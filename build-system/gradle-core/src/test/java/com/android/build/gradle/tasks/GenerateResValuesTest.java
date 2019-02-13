@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
+import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.internal.ClassFieldImpl;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -49,7 +50,7 @@ public class GenerateResValuesTest {
 
         task.generate();
 
-        File output = new File(testDir, "values/generated.xml");
+        File output = new File(testDir, "values/" + ResValueGenerator.RES_VALUE_FILENAME_XML);
         assertThat(output).contentWithUnixLineSeparatorsIsExactly(
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<resources>\n"

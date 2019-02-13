@@ -51,7 +51,7 @@ import org.w3c.dom.Node;
  */
 public class ResValueGenerator {
 
-    public static final String RES_VALUE_FILENAME_XML = "generated.xml";
+    public static final String RES_VALUE_FILENAME_XML = "gradleResValues.xml";
 
     private static final List<ResourceType> RESOURCES_WITH_TAGS =
             ImmutableList.of(
