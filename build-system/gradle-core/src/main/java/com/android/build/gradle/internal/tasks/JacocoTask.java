@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dexing.DexerTool;
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +42,8 @@ public class JacocoTask extends AndroidVariantTask {
     private BuildableArtifact inputClasses;
     private File output;
     private JacocoTaskDelegate delegate;
+
+    private boolean areGradleWorkersEnabled;
 
     @Inject
     public JacocoTask(@NonNull WorkerExecutor executor) {
@@ -75,6 +78,15 @@ public class JacocoTask extends AndroidVariantTask {
     @TaskAction
     public void run(@NonNull IncrementalTaskInputs inputs) throws IOException {
         delegate.run(executor, inputs);
+
+        // We are here using a gradle worker directly even if Gradle workers are not enabled by
+        // default due to the classloader isolation mode existing in Gradle workers.
+        //
+        // In the case that gradle workers are not enabled by default we need to await on close, to
+        // have the same behaviour as a ForkJoinPool implementation.
+        if (!areGradleWorkersEnabled) {
+            executor.await();
+        }
     }
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoTask> {
@@ -123,6 +135,11 @@ public class JacocoTask extends AndroidVariantTask {
             task.delegate =
                     new JacocoTaskDelegate(
                             task.jacocoAntTaskConfiguration, task.output, task.inputClasses);
+            task.areGradleWorkersEnabled =
+                    getVariantScope()
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_GRADLE_WORKERS);
         }
     }
 }

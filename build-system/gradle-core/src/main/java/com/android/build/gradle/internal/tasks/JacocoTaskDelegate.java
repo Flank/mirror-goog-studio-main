@@ -96,8 +96,6 @@ public class JacocoTaskDelegate {
                         });
             }
         }
-
-        executor.await();
     }
 
     private void processIncrementally(
