@@ -57,7 +57,7 @@ readonly universe="//tools/... - //tools/adt/idea/android-uitests/..."
   || exit $?
 
 # Generate the Jacoco report
-readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs)"
+readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote ${auth_options})"
 
 "${script_dir}/bazel" \
   run \
