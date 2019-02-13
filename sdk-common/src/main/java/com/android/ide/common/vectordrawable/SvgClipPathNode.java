@@ -94,8 +94,9 @@ public class SvgClipPathNode extends SvgGroupNode {
     }
 
     @Override
-    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
-            @NonNull String indent) throws IOException {
+    public void writeXml(
+            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+            throws IOException {
         writer.write(indent);
         writer.write("<group>");
         writer.write(System.lineSeparator());
@@ -103,12 +104,12 @@ public class SvgClipPathNode extends SvgGroupNode {
         writer.write(INDENT_UNIT);
         writer.write("<clip-path android:pathData=\"");
         for (SvgNode node : mChildren) {
-            node.writeXML(writer, true, indent + INDENT_UNIT);
+            node.writeXml(writer, true, indent + INDENT_UNIT);
         }
         writer.write("\"/>");
         writer.write(System.lineSeparator());
         for (SvgNode node : mAffectedNodes) {
-            node.writeXML(writer, false, indent + INDENT_UNIT);
+            node.writeXml(writer, false, indent + INDENT_UNIT);
         }
         writer.write(indent);
         writer.write("</group>");

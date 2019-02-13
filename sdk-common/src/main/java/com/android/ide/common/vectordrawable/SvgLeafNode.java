@@ -36,11 +36,9 @@ import org.w3c.dom.Node;
 class SvgLeafNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
 
-    private String mPathData;
-    private boolean mHasFillGradient;
-    private boolean mHasStrokeGradient;
-    private SvgGradientNode mFillGradientNode;
-    private SvgGradientNode mStrokeGradientNode;
+    @Nullable private String mPathData;
+    @Nullable private SvgGradientNode mFillGradientNode;
+    @Nullable private SvgGradientNode mStrokeGradientNode;
 
     public SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
         super(svgTree, node, nodeName);
@@ -87,7 +85,6 @@ class SvgLeafNode extends SvgNode {
                         mFillGradientNode = (SvgGradientNode)node.deepCopy();
                         mFillGradientNode.setSvgLeafNode(this);
                         mFillGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
-                        mHasFillGradient = true;
                     } else if (key.equals("stroke")) {
                         SvgNode node = getTree().getSvgNodeFromId(vdValue);
                         if (node == null) {
@@ -96,7 +93,6 @@ class SvgLeafNode extends SvgNode {
                         mStrokeGradientNode = (SvgGradientNode)node.deepCopy();
                         mStrokeGradientNode.setSvgLeafNode(this);
                         mStrokeGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.STROKE);
-                        mHasStrokeGradient = true;
                     }
                     continue;
                 } else {
@@ -156,10 +152,11 @@ class SvgLeafNode extends SvgNode {
                                (mName != null ? mName : " null name "));
     }
 
-    public void setPathData(String pathData) {
+    public void setPathData(@NonNull String pathData) {
         mPathData = pathData;
     }
 
+    @Nullable
     public String getPathData() {
         return mPathData;
     }
@@ -170,7 +167,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     public boolean hasGradient() {
-        return mHasFillGradient || mHasStrokeGradient;
+        return mFillGradientNode != null || mStrokeGradientNode != null;
     }
 
     @Override
@@ -202,8 +199,9 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
-            @NonNull String indent) throws IOException {
+    public void writeXml(
+            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+            throws IOException {
         if (inClipPath) {
             // Write data that is part of the clip-path data.
             writer.write(mPathData);
@@ -230,7 +228,7 @@ class SvgLeafNode extends SvgNode {
         writer.write(indent);
         writer.write("<path");
         writer.write(System.lineSeparator());
-        if (fillColor == null && !mHasFillGradient) {
+        if (fillColor == null && mFillGradientNode == null) {
             logger.log(Level.FINE, "Adding default fill color");
             writer.write(indent);
             writer.write(CONTINUATION_INDENT);
@@ -239,7 +237,7 @@ class SvgLeafNode extends SvgNode {
         }
         if (!emptyStroke
                 && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
-                && !mHasStrokeGradient) {
+                && mStrokeGradientNode == null) {
             logger.log(Level.FINE, "Adding default stroke width");
             writer.write(indent);
             writer.write(CONTINUATION_INDENT);
@@ -258,11 +256,11 @@ class SvgLeafNode extends SvgNode {
         writer.write('>');
         writer.write(System.lineSeparator());
 
-        if (mHasFillGradient) {
-            mFillGradientNode.writeXML(writer, false, indent + INDENT_UNIT);
+        if (mFillGradientNode != null) {
+            mFillGradientNode.writeXml(writer, false, indent + INDENT_UNIT);
         }
-        if (mHasStrokeGradient) {
-            mStrokeGradientNode.writeXML(writer, false, indent + INDENT_UNIT);
+        if (mStrokeGradientNode != null) {
+            mStrokeGradientNode.writeXml(writer, false, indent + INDENT_UNIT);
         }
         if (hasGradient()) {
             writer.write(indent);

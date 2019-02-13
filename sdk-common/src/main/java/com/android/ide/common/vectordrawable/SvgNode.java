@@ -187,15 +187,16 @@ abstract class SvgNode {
      */
     public abstract void dumpNode(@NonNull String indent);
 
-     /**
+    /**
      * Writes content of the node into the VectorDrawable's XML file.
      *
      * @param writer the writer to write the group XML element to
      * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
      * @param indent whitespace used for indending output XML
      */
-    public abstract void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
-            @NonNull String indent) throws IOException;
+    public abstract void writeXml(
+            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+            throws IOException;
 
     /**
      * Returns true the node is a group node.

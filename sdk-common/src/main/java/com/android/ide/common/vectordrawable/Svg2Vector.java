@@ -57,6 +57,8 @@ public class Svg2Vector {
     private static final String HEAD =
             "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"";
     private static final String AAPT_BOUND = "xmlns:aapt=\"http://schemas.android.com/aapt\"";
+    private static final String SVG_DEFS = "defs";
+    private static final String SVG_USE = "use";
 
     public static final String SVG_POLYGON = "polygon";
     public static final String SVG_POLYLINE = "polyline";
@@ -227,7 +229,7 @@ public class Svg2Vector {
         svgTree.setRoot(root);
 
         // Parse all the group and path nodes recursively.
-        traverseSVGAndExtract(svgTree, root, rootNode);
+        traverseSvgAndExtract(svgTree, root, rootNode);
 
         // TODO: Handle "use" elements defined inside "defs"
         // Fill in all the use nodes in the svgTree.
@@ -262,7 +264,7 @@ public class Svg2Vector {
     }
 
     /** Traverse the tree in pre-order. */
-    private static void traverseSVGAndExtract(
+    private static void traverseSvgAndExtract(
             @NonNull SvgTree svgTree, @NonNull SvgGroupNode currentGroup, @NonNull Node item) {
         // Recursively traverse all the group and path nodes
         NodeList allChildren = item.getChildNodes();
@@ -293,18 +295,18 @@ public class Svg2Vector {
                 currentGroup.addChild(childGroup);
                 processIdName(svgTree, childGroup);
                 extractGroupNode(svgTree, childGroup, currentGroup);
-                traverseSVGAndExtract(svgTree, childGroup, currentNode);
-            } else if ("use".equals(nodeName)) {
+                traverseSvgAndExtract(svgTree, childGroup, currentNode);
+            } else if (SVG_USE.equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
                 svgTree.addToUseSet(childGroup);
-            } else if ("defs".equals(nodeName)) {
+            } else if (SVG_DEFS.equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
-                traverseSVGAndExtract(svgTree, childGroup, currentNode);
+                traverseSvgAndExtract(svgTree, childGroup, currentNode);
             } else if ("clipPath".equals(nodeName)) {
                 SvgClipPathNode clipPath = new SvgClipPathNode(svgTree, currentNode, nodeName + i);
                 processIdName(svgTree, clipPath);
-                traverseSVGAndExtract(svgTree, clipPath, currentNode);
+                traverseSvgAndExtract(svgTree, clipPath, currentNode);
             } else if (SVG_STYLE.equals(nodeName)) {
                 extractStyleNode(svgTree, currentNode);
             } else if ("linearGradient".equals(nodeName)) {
@@ -330,9 +332,7 @@ public class Svg2Vector {
                 }
                 // This is a workaround for the cases using defs to define a full icon size clip
                 // path, which is redundant information anyway.
-                if (!"defs".equals(nodeName)) {
-                    traverseSVGAndExtract(svgTree, currentGroup, currentNode);
-                }
+                traverseSvgAndExtract(svgTree, currentGroup, currentNode);
             }
         }
 
@@ -552,7 +552,7 @@ public class Svg2Vector {
         AffineTransform useTransform = new AffineTransform(1, 0, 0, 1, x, y);
         SvgNode definedNode = svgTree.getSvgNodeFromId(id);
         if (definedNode == null) {
-            svgTree.logErrorLine("Referenced id is missing", currentNode, SvgLogLevel.ERROR);
+            svgTree.logErrorLine("Referenced id not found", currentNode, SvgLogLevel.ERROR);
         } else {
             SvgNode copiedNode = definedNode.deepCopy();
             useGroupNode.addChild(copiedNode);
@@ -1120,18 +1120,19 @@ public class Svg2Vector {
 
         svgTree.normalize();
         // TODO: this has to happen in the tree mode!!!
-        writeXML(svgTree, writer);
+        writeXml(svgTree, writer);
         writer.write("</vector>");
         writer.write(System.lineSeparator());
 
         writer.close();
     }
 
-    private static void writeXML(SvgTree svgTree, OutputStreamWriter fw) throws IOException {
+    private static void writeXml(@NonNull SvgTree svgTree, @NonNull OutputStreamWriter fw)
+            throws IOException {
         if (svgTree.getRoot() == null) {
             throw new NullPointerException("SvgTree root is null.");
         }
-        svgTree.getRoot().writeXML(fw, false, INDENT_UNIT);
+        svgTree.getRoot().writeXml(fw, false, INDENT_UNIT);
     }
 
     /**

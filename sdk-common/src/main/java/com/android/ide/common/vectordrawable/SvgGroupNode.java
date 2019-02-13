@@ -117,10 +117,11 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void writeXML(@NonNull OutputStreamWriter writer, boolean inClipPath,
-            @NonNull String indent) throws IOException {
+    public void writeXml(
+            @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
+            throws IOException {
         for (SvgNode node : mChildren) {
-            node.writeXML(writer, inClipPath, indent);
+            node.writeXml(writer, inClipPath, indent);
         }
     }
 
