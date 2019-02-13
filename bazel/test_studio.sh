@@ -27,7 +27,7 @@ if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
 fi
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
-readonly command_log="$("${script_dir}"/bazel info command_log)"
+readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
 # Run Bazel
 "${script_dir}/bazel" \

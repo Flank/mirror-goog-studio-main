@@ -8,6 +8,7 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
+build_tag_filters=-no_linux
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
 
 # If the build number starts with a 'P', this is a pre-submit builder.
@@ -18,13 +19,13 @@ else
   config_options="--config=postsubmit"
 fi
 
+# We want to set local config however still stream results to upsalite
+config_options="${config_options} --config=local --config=results-local"
+
 # Conditionally add --auth_credentials option for BYOB machines.
 if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
   config_options="${config_options} --auth_credentials=${HOME}/.android-studio-alphasource.json"
 fi
-
-# We want to set local config however still stream results to upsalite
-config_options="${config_options} --config=local --config=results-local"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
@@ -34,7 +35,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   --max_idle_secs=60 \
   test \
   ${config_options} \
-  --build_tag_filters=-no_linux \
+  --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
   -- \
   $(< "${script_dir}/targets") \
