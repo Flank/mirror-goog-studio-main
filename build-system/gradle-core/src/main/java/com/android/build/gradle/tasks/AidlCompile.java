@@ -24,10 +24,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
@@ -36,6 +36,7 @@ import com.android.builder.internal.incremental.DependencyData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -47,6 +48,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -62,7 +64,6 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
-import org.gradle.workers.WorkerExecutor;
 
 /** Task to compile aidl files. Supports incremental update. */
 @CacheableTask
@@ -86,9 +87,14 @@ public class AidlCompile extends AndroidVariantTask {
 
     private WorkerExecutorFacade workers;
 
-    @Inject
-    public AidlCompile(WorkerExecutor workerExecutor) {
-        this.workers = Workers.INSTANCE.getWorker(workerExecutor);
+    /**
+     * TODO(b/124424292)
+     *
+     * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
+     * compiling aidl files, which should not be serialized.
+     */
+    public AidlCompile() {
+        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
     }
 
     @Input
@@ -122,7 +128,7 @@ public class AidlCompile extends AndroidVariantTask {
             FileUtils.cleanOutputDir(parcelableDir);
         }
 
-        try {
+        try (WorkerExecutorFacade workers = this.workers) {
             IAndroidTarget target = targetInfo.getTarget();
             BuildToolInfo buildToolInfo = targetInfo.getBuildTools();
 
@@ -154,9 +160,6 @@ public class AidlCompile extends AndroidVariantTask {
             for (File dir : sourceFolders) {
                 workers.submit(AidlCompileRunnable.class, new AidlCompileParams(dir, processor));
             }
-            workers.close();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
