@@ -507,6 +507,18 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_defs_use_use_first");
     }
 
+    public void testSvgDefsUseIndirect() throws Exception {
+        checkSvgConversion("test_defs_use_chain");
+    }
+
+    public void testSvgDefsUseCircularDependency() throws Exception {
+        checkSvgConversionAndContainsError(
+                "test_defs_use_circular_dependency",
+                "ERROR @ line 6: Circular dependency of <use> nodes: hhh -> hhh\n" +
+                "ERROR @ line 9: Circular dependency of <use> nodes: ccc -> ddd (line 11) -> eee (line 10) -> ccc\n" +
+                "ERROR @ line 12: Circular dependency of <use> nodes: ggg -> fff (line 8) -> ggg");
+    }
+
     // Clip Path Tests
     public void testSvgClipPathGroup() throws Exception {
         checkSvgConversion("test_clip_path_group");
