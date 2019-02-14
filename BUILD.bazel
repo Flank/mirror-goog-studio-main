@@ -341,7 +341,7 @@ coverage_report(
         "//tools/adt/idea/observable-demo:observable-demo",
         "//tools/adt/idea/observable:intellij.android.observable",
         "//tools/adt/idea/observable-ui:intellij.android.observable.ui",
-        "//tools/adt/idea/perfd-host:intellij.android.perfdHost",
+        "//tools/adt/idea/transport-database:intellij.android.transportDatabase",
         "//tools/adt/idea/profilers-android:intellij.android.profilersAndroid",
         "//tools/adt/idea/profilers-atrace:intellij.android.profilers.atrace",
         "//tools/adt/idea/profilers:intellij.android.profilers",

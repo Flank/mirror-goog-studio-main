@@ -48,7 +48,7 @@ def main():
       './tools/adt/idea/native-symbolizer/testSrc',
       './tools/adt/idea/observable-ui/testSrc',
       './tools/adt/idea/observable/testSrc',
-      './tools/adt/idea/perfd-host/testSrc',
+      './tools/adt/idea/transport-database/testSrc',
       './tools/adt/idea/profilers-android/testSrc',
       './tools/adt/idea/profilers-ui/testSrc',
       './tools/adt/idea/profilers/testSrc',
