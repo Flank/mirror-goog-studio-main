@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="96" height="96" viewBox="0 0 24 24">
+  <use xlink:href="#aaa"/>
+  <path id="myPath" d="M 2 2 h 20 v 20 h -20 v -20z" fill="#00e"/>
+  <defs>
+    <use id="bbb" xlink:href="#ccc"/>
+    <use id="hhh" xlink:href="#hhh"/>
+    <use id="aaa" xlink:href="#bbb"/>
+    <use id="fff" xlink:href="#ggg"/>
+    <use id="ccc" xlink:href="#ddd"/>
+    <use id="eee" xlink:href="#ccc"/>
+    <use id="ddd" xlink:href="#eee"/>
+    <use id="ggg" xlink:href="#fff"/>
+  </defs>
+</svg>
