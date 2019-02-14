@@ -89,7 +89,7 @@ class NdkSymlinkerKtTest {
             cxxVariantFolder,
             ndkSymlinkDirInLocalProp
         )
-        assertThat(result.toPath()).isEqualTo(ndkSymlinkDirInLocalProp.toPath().resolve("17.2.4988734"))
+        assertThat(result.toPath()).isEqualTo(ndkSymlinkDirInLocalProp.toPath().resolve("ndk/17.2.4988734"))
     }
 
     @Test
@@ -108,7 +108,7 @@ class NdkSymlinkerKtTest {
             cxxVariantFolder,
             ndkSymlinkDirInLocalProp
         )
-        assertThat(result.toPath()).isEqualTo(cxxVariantFolder.toPath().resolve("my-ndk/17.2.4988734"))
+        assertThat(result.toPath()).isEqualTo(cxxVariantFolder.toPath().resolve("my-ndk/ndk/17.2.4988734"))
     }
 
     @Test

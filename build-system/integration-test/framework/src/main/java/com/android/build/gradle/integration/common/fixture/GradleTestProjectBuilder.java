@@ -62,7 +62,8 @@ public final class GradleTestProjectBuilder {
     // /private/var/tmp/_bazel/cd7382de6c57d974eabcf5c1270266ca/sandbox
     //   /darwin-sandbox/9/execroot/__main__/_tmp/85abb3fc831caa67a0715d2cf3ce5967
     //   /tests/CmakeBasicProjectTest/checkCleanAfterAbiSubset/project/.cxx/cmake/debug
-    private String ndkSymlinkPath = "../../../../../../ndk-symlink";
+    // The resulting symlink path is always in the form */ndk/
+    private String ndkSymlinkPath = "../../../../../..";
     @Nullable String cmakeVersion;
     @Nullable private List<Path> repoDirectories;
     @Nullable private File androidHome;

@@ -99,7 +99,7 @@ fun trySymlinkNdk(
     }
 
     val absoluteNdkSymlinkFolder =
-        cxxVariantFolder.toPath().resolve(ndkSymlinkFolder.path).normalize()
+        cxxVariantFolder.toPath().resolve(ndkSymlinkFolder.path).resolve("ndk").normalize()
 
     // Create the parent folder of the symlink requested.
     absoluteNdkSymlinkFolder.toFile().mkdirs()
