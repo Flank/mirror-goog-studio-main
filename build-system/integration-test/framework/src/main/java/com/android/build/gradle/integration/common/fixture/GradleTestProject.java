@@ -209,7 +209,7 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private final Path profileDirectory;
 
-    @Nullable private String heapSize;
+    @NonNull private final GradleTestProjectBuilder.MemoryRequirement heapSize;
     @Nullable private final List<Path> repoDirectories;
 
     @NonNull private final File androidHome;
@@ -233,7 +233,7 @@ public final class GradleTestProject implements TestRule {
             boolean withoutNdk,
             boolean withDependencyChecker,
             @NonNull Collection<String> gradleProperties,
-            @Nullable String heapSize,
+            @NonNull GradleTestProjectBuilder.MemoryRequirement heapSize,
             @Nullable String compileSdkVersion,
             @Nullable String buildToolsVersion,
             @Nullable Path profileDirectory,
@@ -320,6 +320,7 @@ public final class GradleTestProject implements TestRule {
         this.gradleBuildCacheDirectory = rootProject.gradleBuildCacheDirectory;
         this.kotlinVersion = rootProject.kotlinVersion;
         this.outputLogOnFailure = rootProject.outputLogOnFailure;
+        this.heapSize = rootProject.heapSize;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -1458,8 +1459,8 @@ public final class GradleTestProject implements TestRule {
                 .write(Joiner.on(System.lineSeparator()).join(gradleProperties));
     }
 
-    @Nullable
-    String getHeapSize() {
+    @NonNull
+    GradleTestProjectBuilder.MemoryRequirement getHeapSize() {
         return heapSize;
     }
 

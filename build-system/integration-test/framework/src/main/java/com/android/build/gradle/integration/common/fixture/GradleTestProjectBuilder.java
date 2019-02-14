@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
@@ -50,6 +51,7 @@ public final class GradleTestProjectBuilder {
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
+    @Nullable private String metaspace;
     @Nullable private Path profileDirectory;
     @Nullable private File testDir = null;
     private boolean withDependencyChecker = true;
@@ -114,6 +116,8 @@ public final class GradleTestProjectBuilder {
             withDeviceProvider = GradleTestProject.APPLY_DEVICEPOOL_PLUGIN;
         }
 
+        MemoryRequirement memoryRequirement = MemoryRequirement.use(heapSize, metaspace);
+
         return new GradleTestProject(
                 name,
                 testProject,
@@ -121,7 +125,7 @@ public final class GradleTestProjectBuilder {
                 withoutNdk,
                 withDependencyChecker,
                 gradleProperties,
-                heapSize,
+                memoryRequirement,
                 compileSdkVersion,
                 buildToolsVersion,
                 profileDirectory,
@@ -142,6 +146,42 @@ public final class GradleTestProjectBuilder {
                 outputLogOnFailure);
     }
 
+    /** Policy for setting Heap Size for Gradle process */
+    public static class MemoryRequirement {
+
+        private static final String DEFAULT_HEAP = "1G";
+        private static final String DEFAULT_METASPACE = "512M";
+
+        /** use default heap size for gradle. */
+        public static MemoryRequirement useDefault() {
+            return use(null, null);
+        }
+
+        /**
+         * Use a provided heap size for Gradle
+         *
+         * @param heap the desired heap size
+         * @param metaspace the desired metaspace size
+         */
+        public static MemoryRequirement use(@Nullable String heap, @Nullable String metaspace) {
+            return new MemoryRequirement(
+                    heap != null ? heap : DEFAULT_HEAP,
+                    metaspace != null ? metaspace : DEFAULT_METASPACE);
+        }
+
+        @NonNull private final String heap;
+        @NonNull private final String metaspace;
+
+        private MemoryRequirement(@NonNull String heap, @NonNull String metaspace) {
+            this.heap = heap;
+            this.metaspace = metaspace;
+        }
+
+        @NonNull
+        public List<String> getJvmArgs() {
+            return ImmutableList.of("-Xmx" + heap, "-XX:MaxMetaspaceSize=" + metaspace);
+        }
+    }
     /**
      * Set the name of the project.
      *
@@ -315,6 +355,17 @@ public final class GradleTestProjectBuilder {
      */
     public GradleTestProjectBuilder withHeap(String heapSize) {
         this.heapSize = heapSize;
+        return this;
+    }
+
+    /**
+     * Sets the test metaspace size requirement. Example values : 128m, 1024m...
+     *
+     * @param metaspaceSize the metaspacesize in a format understood by the -Xmx JVM parameter
+     * @return itself.
+     */
+    public GradleTestProjectBuilder withMetaspace(String metaspaceSize) {
+        this.metaspace = metaspaceSize;
         return this;
     }
 

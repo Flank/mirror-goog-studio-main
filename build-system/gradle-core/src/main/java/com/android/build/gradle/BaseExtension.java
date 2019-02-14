@@ -629,21 +629,19 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * Configuring JaCoCo using this block is deprecated.
+     * Configure JaCoCo version that is used for offline instrumentation and coverage report.
      *
-     * <p>To specify the version of JaCoCo you want to use, you now need to include it as a
-     * buildscript dependency in your project-level <code>build.gradle</code> file, as follows:
+     * <p>To specify the version of JaCoCo you want to use, add the following to <code>build.gradle
+     * </code> file:
      *
      * <pre>
-     * buildscript {
-     *     dependencies {
-     *         classpath "org.jacoco:org.jacoco.core:&lt;jacoco-version&gt;"
-     *         ...
+     * android {
+     *     jacoco {
+     *         version "&lt;jacoco-version&gt;"
      *     }
      * }
      * </pre>
      */
-    @Deprecated
     public void jacoco(Action<JacocoOptions> action) {
         checkWritability();
         action.execute(jacoco);
