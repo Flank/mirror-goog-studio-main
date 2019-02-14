@@ -11,15 +11,15 @@ import android.view.ViewGroup
 <#if applicationPackage??>
 import ${applicationPackage}.R
 </#if>
-
+<#if includeFactory>
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
-
+</#if>
 /**
  * A simple [Fragment] subclass.
- <#if includeCallbacks>
+<#if includeCallbacks>
  * Activities that contain this fragment must implement the
  * [${className}.OnFragmentInteractionListener] interface
  * to handle interaction events.
@@ -28,7 +28,6 @@ private const val ARG_PARAM2 = "param2"
  * Use the [${className}.newInstance] factory method to
  * create an instance of this fragment.
  </#if>
- *
  */
 class ${className} : Fragment() {
 <#if includeFactory>
