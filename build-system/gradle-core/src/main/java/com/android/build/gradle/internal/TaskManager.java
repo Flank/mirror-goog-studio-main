@@ -37,6 +37,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
@@ -117,6 +118,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
+import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
 import com.android.build.gradle.internal.tasks.PackageForUnitTest;
@@ -2015,7 +2017,6 @@ public abstract class TaskManager {
      * proguard and jacoco
      */
     public void createPostCompilationTasks(
-
             @NonNull final VariantScope variantScope) {
 
         checkNotNull(variantScope.getTaskContainer().getJavacTask());
@@ -2024,6 +2025,8 @@ public abstract class TaskManager {
         final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
         TransformManager transformManager = variantScope.getTransformManager();
+
+        taskFactory.register(new MergeGeneratedProguardFilesCreationAction(variantScope));
 
         // ---- Code Coverage first -----
         boolean isTestCoverageEnabled =
@@ -3241,6 +3244,7 @@ public abstract class TaskManager {
                 project.files(
                         proguardConfigFiles,
                         scope.getArtifacts().getFinalArtifactFiles(aaptProguardFileType),
+                        scope.getArtifacts().getFinalArtifactFiles(GENERATED_PROGUARD_FILE),
                         scope.getArtifactFileCollection(
                                 RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
 

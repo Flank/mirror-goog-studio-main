@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
+import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
@@ -170,6 +171,8 @@ public class LibraryTaskManager extends TaskManager {
         TaskProvider<? extends JavaCompile> javacTask = createJavacTask(variantScope);
         addJavacClassesStream(variantScope);
         TaskManager.setJavaCompilerTask(javacTask, variantScope);
+
+        taskFactory.register(new MergeGeneratedProguardFilesCreationAction(variantScope));
 
         // External native build
         createExternalNativeBuildJsonGenerators(variantScope);

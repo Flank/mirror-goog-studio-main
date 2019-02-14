@@ -18,7 +18,8 @@
 
 package com.android.builder.dexing
 
-import com.android.SdkConstants
+import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.PROGUARD_RULES_FOLDER
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.ArchiveProgramResourceProvider
@@ -41,7 +42,6 @@ import com.android.tools.r8.utils.ArchiveResourceProvider
 import com.google.common.io.ByteStreams
 import java.io.BufferedOutputStream
 import java.io.IOException
-import java.io.ObjectInput
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.logging.Level
@@ -51,8 +51,8 @@ import java.util.zip.ZipOutputStream
 
 fun isProguardRule(name: String): Boolean {
     val lowerCaseName = name.toLowerCase()
-    return lowerCaseName.startsWith("meta-inf/proguard/")
-            || lowerCaseName.startsWith("/meta-inf/proguard/")
+    return lowerCaseName.startsWith("$PROGUARD_RULES_FOLDER/")
+            || lowerCaseName.startsWith("/$PROGUARD_RULES_FOLDER/")
 }
 
 fun getR8Version(): String = Version.getVersionString()
@@ -168,7 +168,7 @@ fun runR8(
             Files.isRegularFile(path) -> r8ProgramResourceProvider.addProgramResourceProvider(
                 ArchiveProgramResourceProvider.fromArchive(path))
             Files.isDirectory(path) -> Files.walk(path).use {
-                it.filter { Files.isRegularFile(it) && it.toString().endsWith(SdkConstants.DOT_CLASS) }
+                it.filter { Files.isRegularFile(it) && it.toString().endsWith(DOT_CLASS) }
                     .forEach { r8CommandBuilder.addProgramFiles(it) }
             }
             else -> throw IOException("Unexpected file format: $path")
@@ -282,7 +282,7 @@ private class R8DataResourceProvider(val dirResources: Collection<Path>) : DataR
                 it.forEach {
                     val relative = resourceBase.relativize(it)
                     if (it != resourceBase
-                        && !it.toString().endsWith(SdkConstants.DOT_CLASS)
+                        && !it.toString().endsWith(DOT_CLASS)
                         && seen.add(relative)) {
                         when {
                             Files.isDirectory(it) -> visitor!!.visit(

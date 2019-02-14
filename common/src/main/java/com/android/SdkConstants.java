@@ -2733,4 +2733,7 @@ public final class SdkConstants {
                 "The \"android\" command is no longer included in the SDK. Any references to it (e.g. "
                         + "by third-party plugins) should be removed.");
     }
+
+    /** Folder where proguard rules are located in jar, aar and project generated resources */
+    public static final String PROGUARD_RULES_FOLDER = "meta-inf/proguard";
 }

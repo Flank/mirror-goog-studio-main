@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,20 +17,20 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import java.io.File
 
-/** Configuration action for a task to merge aapt proguard files  */
-class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
-    VariantTaskCreationAction<MergeFileTask>(variantScope) {
+class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
+    : VariantTaskCreationAction<MergeFileTask>(variantScope) {
 
     override val name: String
-        get() = variantScope.getTaskName("merge", "AaptProguardFiles")
+        get() = variantScope.getTaskName("merge", "GeneratedProguardFiles")
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 
@@ -40,27 +40,29 @@ class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
         super.preConfigure(taskName)
         outputFile =
                 variantScope.artifacts.createArtifactFile(
-                        InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
-                        BuildArtifactsHolder.OperationType.APPEND,
-                        taskName,
-                        SdkConstants.FN_MERGED_AAPT_RULES)
+                    InternalArtifactType.GENERATED_PROGUARD_FILE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskName,
+                    SdkConstants.FN_PROGUARD_TXT)
     }
 
     override fun configure(task: MergeFileTask) {
         super.configure(task)
 
         task.outputFile = outputFile
-        val project = variantScope.globalScope.project
-        val inputFiles =
-            project
-                .files(
-                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.AAPT_PROGUARD_FILE),
-                    variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.MODULE,
-                        AndroidArtifacts.ArtifactType.AAPT_PROGUARD_RULES
-                    )
-                )
-        task.inputFiles = inputFiles
+
+        val allClasses =
+            variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES).get()
+
+        val proguardRulesFolder = SdkConstants.PROGUARD_RULES_FOLDER.replace('/', File.separatorChar)
+        val proguardFiles = allClasses.asFileTree.filter { f ->
+            val baseFolders = allClasses.files
+            val baseFolder = baseFolders.first { f.startsWith(it) }
+            f.toRelativeString(baseFolder)
+                .toLowerCase()
+                .startsWith(proguardRulesFolder)
+        }
+
+        task.inputFiles = proguardFiles
     }
 }

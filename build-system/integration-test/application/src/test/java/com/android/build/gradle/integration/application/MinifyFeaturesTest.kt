@@ -703,10 +703,6 @@ class MinifyFeaturesTest(
                     MultiApkMode.DYNAMIC_APP -> "minified"
                     MultiApkMode.INSTANT_APP -> "minifiedFeature"
                 },
-                when (multiApkMode) {
-                    MultiApkMode.DYNAMIC_APP -> "mergeMinifiedAaptProguardFiles"
-                    MultiApkMode.INSTANT_APP -> "mergeMinifiedFeatureAaptProguardFiles"
-                },
                 SdkConstants.FN_MERGED_AAPT_RULES)
         assertThat(mergedAaptProguardFile).exists()
         assertThat(mergedAaptProguardFile)

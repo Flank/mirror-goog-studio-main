@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -33,13 +35,13 @@ public class MergeFileTask extends AndroidVariantTask {
 
     private FileCollection mInputFiles;
 
-    private File mOutputFile;
+    private Provider<RegularFile> mOutputFile;
 
     @TaskAction
     public void mergeFiles() throws IOException {
 
         Set<File> inputFiles = getInputFiles().getFiles();
-        File output = getOutputFile();
+        File output = getOutputFile().get().getAsFile();
 
         // filter out any non-existent files
         List<File> existingFiles =
@@ -76,11 +78,11 @@ public class MergeFileTask extends AndroidVariantTask {
     }
 
     @OutputFile
-    public File getOutputFile() {
+    public Provider<RegularFile> getOutputFile() {
         return mOutputFile;
     }
 
-    public void setOutputFile(File outputFile) {
+    public void setOutputFile(Provider<RegularFile> outputFile) {
         mOutputFile = outputFile;
     }
 
