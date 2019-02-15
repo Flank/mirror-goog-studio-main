@@ -358,4 +358,56 @@ public class HardwareIdDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "}")));
     }
+
+    public void testCrash() {
+        // Regression test for https://issuetracker.google.com/121341637
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package com.example.linterror33rc3\n"
+                                        + "\n"
+                                        + "import android.support.annotation.StringRes\n"
+                                        + "import android.text.TextUtils\n"
+                                        + "import android.view.View\n"
+                                        + "import android.widget.AutoCompleteTextView\n"
+                                        + "\n"
+                                        + "class BillingAddressRib(val view: View, val activity: MainActivity) {\n"
+                                        + "\n"
+                                        + "    internal lateinit var addressField: AutoCompleteTextView\n"
+                                        + "\n"
+                                        + "\n"
+                                        + "    fun didBecomeActive() {\n"
+                                        + "        initViews(view)\n"
+                                        + "\n"
+                                        + "        addressField.apply {\n"
+                                        + "            setOnFocusChangeListener { _, hasFocus ->\n"
+                                        + "                if (!hasFocus) {\n"
+                                        + "                    if (!validateAddress(text.toString())) {\n"
+                                        + "                        error = getString(R.string.ck_field_error_street_address)\n"
+                                        + "                    } else {\n"
+                                        + "                        error = null\n"
+                                        + "                    }\n"
+                                        + "                }\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun initViews(view: View) {\n"
+                                        + "        addressField = view.findViewById(R.id.address_field) as AutoCompleteTextView\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    internal fun getString(@StringRes stringRes: Int): String {\n"
+                                        + "        return activity.getResources().getString(stringRes)\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    internal fun validateAddress(address: String): Boolean {\n"
+                                        + "        return !TextUtils.isEmpty(address)\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
 }
