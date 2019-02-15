@@ -141,7 +141,11 @@ class AndroidTestResourceArtifactCollection(
     private fun collect(
             keptComponents: MutableSet<ComponentIdentifier>,
             item: ResolvedDependencyResult) {
-        keptComponents.add(item.selected.id)
+        if (!keptComponents.add(item.selected.id)) {
+            // Avoid repeatedly traversing the same sub-graphs
+            // (Caused the scalability issue in https://issuetracker.google.com/124437190)
+            return
+        }
         for (dependency in item.selected.dependencies) {
             collect(keptComponents, dependency as ResolvedDependencyResult)
         }
