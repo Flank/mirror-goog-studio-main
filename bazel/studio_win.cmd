@@ -62,6 +62,8 @@ FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zi
 )
 
 @rem Create profile html in %DISTDIR% so it ends up in Artifacts.
+@rem We must cd back into %BASEDIR% so bazel config files are properly located.
+cd %BASEDIR%
 CALL %SCRIPTDIR%bazel.cmd analyze-profile --html %DISTDIR%\prof
 
 :ENDSCRIPT
