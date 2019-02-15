@@ -45,13 +45,12 @@ readonly bazel_status=$?
 
 if [[ -d "${dist_dir}" ]]; then
 
-  readonly bazel_bin="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
-  # The Android Studio Updater binary
-  cp ${bazel_bin}/tools/idea/updater/updater_deploy.jar ${dist_dir}/android-studio-updater.jar
-
   # Grab the upsalite_id from the stdout of the bazel command.  This is captured in command.log
   readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
+
+  readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
+  cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${dist_dir}/android-studio-updater.jar
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/bazel-testlogs
