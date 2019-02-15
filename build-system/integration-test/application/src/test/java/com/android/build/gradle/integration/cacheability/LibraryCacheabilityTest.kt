@@ -86,7 +86,7 @@ class LibraryCacheabilityTest {
                     ":lib:checkReleaseManifest" /* Bug 74595857 */,
                     ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
                     ":lib:mergeReleaseJavaResource" /* Bug 74595224 */,
-                    ":lib:prepareLintJar" /* Bug 120413672 */,
+                    ":lib:prepareLintJarForPublish" /* Bug 120413672 */,
                     ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
                     ":lib:transformNativeLibsWithMergeJniLibsForRelease" /* Bug 74595223 */,
                     ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
