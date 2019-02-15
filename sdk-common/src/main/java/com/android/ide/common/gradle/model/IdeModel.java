@@ -62,6 +62,16 @@ public abstract class IdeModel implements Serializable {
         }
     }
 
+    @Nullable
+    protected static <T> T copyNewPropertyWithDefault(
+            @NonNull Supplier<T> propertyInvoker, @NonNull Supplier<T> defaultValue) {
+        try {
+            return propertyInvoker.get();
+        } catch (UnsupportedOperationException ignored) {
+            return defaultValue.get();
+        }
+    }
+
     @NonNull
     protected static <K, V> List<K> copy(
             @NonNull Collection<K> original,

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.BuildType;
+import org.gradle.api.provider.Property;
 
 /**
  * A build type with addition properties for building with Gradle plugin.
@@ -61,4 +62,7 @@ public interface CoreBuildType extends BuildType {
     /** @deprecated Can go away once {@link AaptOptions#cruncherEnabled} is removed. */
     @Deprecated
     boolean isCrunchPngsDefault();
+
+    /** Whether this product flavor should be selected in Studio by default */
+    Property<Boolean> getIsDefault();
 }

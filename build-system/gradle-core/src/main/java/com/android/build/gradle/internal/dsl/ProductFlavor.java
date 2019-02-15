@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
 
 /**
  * Encapsulates all product flavors properties for this project.
@@ -68,7 +69,10 @@ public class ProductFlavor extends BaseFlavor {
             @NonNull DeprecationReporter deprecationReporter,
             @NonNull Logger logger) {
         super(name, project, objectFactory, deprecationReporter, logger);
+        isDefault = objectFactory.property(Boolean.class).convention(false);
     }
+
+    private final Property<Boolean> isDefault;
 
     private ImmutableList<String> matchingFallbacks;
 
@@ -150,6 +154,11 @@ public class ProductFlavor extends BaseFlavor {
             return ImmutableList.of();
         }
         return matchingFallbacks;
+    }
+
+    /** Whether this product flavor should be selected in Studio by default */
+    public Property<Boolean> getIsDefault() {
+        return isDefault;
     }
 
     @Override

@@ -5,6 +5,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>isDefault</td></tr>
             <tr><td>matchingFallbacks</td></tr>
         </table>
     </section>

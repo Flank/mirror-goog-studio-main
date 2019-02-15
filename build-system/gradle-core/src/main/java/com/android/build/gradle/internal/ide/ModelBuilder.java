@@ -381,6 +381,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                     extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
         }
 
+        String defaultVariant = variantManager.getDefaultVariant(syncIssues::add);
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
@@ -398,6 +399,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 productFlavors,
                 variants,
                 variantNames,
+                defaultVariant,
                 globalScope.getExtension().getCompileSdkVersion(),
                 bootClasspath,
                 frameworkSource,

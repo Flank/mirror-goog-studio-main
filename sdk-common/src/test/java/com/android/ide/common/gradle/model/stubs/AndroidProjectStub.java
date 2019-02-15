@@ -36,6 +36,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final Collection<SyncIssue> mySyncIssues;
     @NonNull private final Collection<Variant> myVariants;
     @NonNull private final Collection<String> myVariantNames;
+    @Nullable private final String myDefaultVariant;
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClasspath;
@@ -64,6 +65,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Lists.newArrayList(new SyncIssueStub()),
                 Lists.newArrayList(new VariantStub()),
                 Lists.newArrayList("debug", "release"),
+                "debug",
                 Lists.newArrayList("flavorDimension"),
                 "compileTarget",
                 Lists.newArrayList("bootClasspath"),
@@ -92,6 +94,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull Collection<Variant> variants,
             @NonNull Collection<String> variantNames,
+            @Nullable String defaultVariant,
             @NonNull Collection<String> flavorDimensions,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
@@ -117,6 +120,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         mySyncIssues = syncIssues;
         myVariants = variants;
         myVariantNames = variantNames;
+        myDefaultVariant = defaultVariant;
         myFlavorDimensions = flavorDimensions;
         myCompileTarget = compileTarget;
         myBootClasspath = bootClasspath;
@@ -187,6 +191,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull
     public Collection<String> getVariantNames() {
         return myVariantNames;
+    }
+
+    @Nullable
+    @Override
+    public String getDefaultVariant() {
+        return myDefaultVariant;
     }
 
     @Override
@@ -387,6 +397,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myVariants
                 + ", myVariantNames="
                 + myVariantNames
+                + ", myDefaultVariant="
+                + myDefaultVariant
                 + ", myFlavorDimensions="
                 + myFlavorDimensions
                 + ", myCompileTarget='"

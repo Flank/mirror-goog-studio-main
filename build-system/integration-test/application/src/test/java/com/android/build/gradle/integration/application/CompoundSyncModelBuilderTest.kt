@@ -54,6 +54,8 @@ class CompoundSyncModelBuilderTest {
                 "release"
             )
 
+            assertThat(androidProject.defaultVariant).isEqualTo("debug")
+
             // Verify that Variant models have the correct name.
             assertThat<String, Iterable<String>>(
                 variants.stream().map<String>{ it.name }.toList()

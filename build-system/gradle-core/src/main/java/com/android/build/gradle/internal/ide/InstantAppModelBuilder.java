@@ -199,6 +199,7 @@ public class InstantAppModelBuilder
                                     pfData.getProductFlavor().getName())));
         }
 
+        String defaultVariant = variantManager.getDefaultVariant(syncIssues::add);
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
@@ -216,6 +217,7 @@ public class InstantAppModelBuilder
                 productFlavors,
                 variants,
                 variantNames,
+                defaultVariant,
                 "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
                 Collections.emptyList(),
                 Collections.emptyList(),

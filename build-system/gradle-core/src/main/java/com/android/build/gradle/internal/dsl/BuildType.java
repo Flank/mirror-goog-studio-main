@@ -40,6 +40,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Incubating;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Internal;
 
 /** DSL object to configure build types. */
@@ -88,6 +89,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     private Boolean useProguard;
     private Boolean crunchPngs;
     private boolean isCrunchPngsDefault = true;
+    private final Property<Boolean> isDefault;
 
     @Inject
     public BuildType(
@@ -110,6 +112,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
         postProcessingBlock = objectFactory.newInstance(PostProcessingBlock.class, project);
+        isDefault = objectFactory.property(Boolean.class).convention(false);
     }
 
     @VisibleForTesting
@@ -128,6 +131,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         ndkConfig = new NdkOptions();
         externalNativeBuildOptions = new ExternalNativeBuildOptions();
         postProcessingBlock = new PostProcessingBlock(project);
+        isDefault = project.getObjects().property(Boolean.class).convention(false);
     }
 
     private ImmutableList<String> matchingFallbacks;
@@ -257,6 +261,14 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return (SigningConfig) super.getSigningConfig();
     }
 
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("UnnecessaryInheritDoc")
+    @Override
+    public Property<Boolean> getIsDefault() {
+        return isDefault;
+    }
+
     @Override
     protected void _initWith(@NonNull BaseConfig that) {
         super._initWith(that);
@@ -273,6 +285,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         //noinspection deprecation Must still be copied.
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
         matchingFallbacks = ImmutableList.copyOf(thatBuildType.getMatchingFallbacks());
+        isDefault.set(thatBuildType.getIsDefault());
     }
 
     /** Override as DSL objects have no reason to be compared for equality. */

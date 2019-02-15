@@ -17,6 +17,8 @@ package com.android.ide.common.gradle.model.stubs;
 
 import com.android.annotations.NonNull;
 import com.android.builder.model.*;
+import com.android.utils.StringHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +45,20 @@ public class VariantStub extends BaseStub implements Variant {
                 Lists.newArrayList(new JavaArtifactStub()),
                 "buildType",
                 Lists.newArrayList("flavor"),
+                new ProductFlavorStub(),
+                Lists.newArrayList(new TestedTargetVariantStub()),
+                false);
+    }
+
+    public VariantStub(String name, String buildType, String... flavors) {
+        this(
+                name,
+                "display" + StringHelper.capitalize(name),
+                new AndroidArtifactStub(),
+                Lists.newArrayList(new AndroidArtifactStub()),
+                Lists.newArrayList(new JavaArtifactStub()),
+                buildType,
+                ImmutableList.copyOf(flavors),
                 new ProductFlavorStub(),
                 Lists.newArrayList(new TestedTargetVariantStub()),
                 false);

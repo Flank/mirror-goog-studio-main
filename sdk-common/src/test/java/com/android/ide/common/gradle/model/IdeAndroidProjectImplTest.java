@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.ide.common.gradle.model.IdeAndroidProjectImpl.getDefaultVariant;
 import static com.android.ide.common.gradle.model.IdeModelTestUtils.*;
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.Arrays.asList;
@@ -23,6 +24,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
@@ -31,6 +33,7 @@ import com.android.ide.common.gradle.model.stubs.AndroidProjectStub;
 import com.android.ide.common.gradle.model.stubs.SyncIssueStub;
 import com.android.ide.common.gradle.model.stubs.VariantStub;
 import com.android.testutils.Serialization;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
@@ -180,6 +183,100 @@ public class IdeAndroidProjectImplTest {
         assertThat(copy.getVariants()).hasSize(2);
 
         verifyUsageOfImmutableCollections(copy);
+    }
+
+    @Test
+    public void defaultVariantBackwardCompatibilityTest() {
+        AndroidProjectStub original =
+                new AndroidProjectStub("1.5.0") {
+                    @NonNull
+                    @Override
+                    public Collection<Variant> getVariants() {
+                        return ImmutableList.of(
+                                new VariantStub("alphaRelease", "release", "alpha"),
+                                new VariantStub("betaDebug", "debug", "beta"),
+                                new VariantStub("betaRelease", "release", "beta"));
+                    }
+
+                    @NonNull
+                    @Override
+                    public Collection<String> getVariantNames() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Nullable
+                    @Override
+                    public String getDefaultVariant() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public int hashCode() {
+                        return Objects.hash(
+                                getModelVersion(),
+                                getName(),
+                                getDefaultConfig(),
+                                getBuildTypes(),
+                                getProductFlavors(),
+                                getBuildToolsVersion(),
+                                getSyncIssues(),
+                                getVariants(),
+                                getFlavorDimensions(),
+                                getCompileTarget(),
+                                getBootClasspath(),
+                                getNativeToolchains(),
+                                getSigningConfigs(),
+                                getLintOptions(),
+                                getUnresolvedDependencies(),
+                                getJavaCompileOptions(),
+                                getBuildFolder(),
+                                getResourcePrefix(),
+                                getApiVersion(),
+                                isLibrary(),
+                                getProjectType(),
+                                getPluginGeneration(),
+                                isBaseSplit());
+                    }
+                };
+        IdeAndroidProject androidProject =
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
+        assertThat(androidProject.getDefaultVariant()).isEqualTo("betaDebug");
+    }
+
+    @Test
+    public void defaultVariantCurrentTest() {
+        AndroidProjectStub original =
+                new AndroidProjectStub("3.5.0") {
+                    @Override
+                    public String getDefaultVariant() {
+                        return "release";
+                    }
+                };
+        IdeAndroidProject androidProject =
+                new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
+        assertThat(androidProject.getDefaultVariant()).isEqualTo("release");
+    }
+
+    @Test
+    public void defaultVariantHeuristicTest_allVariantsRemoved() {
+        assertThat(getDefaultVariant(ImmutableList.of())).isNull();
+    }
+
+    @Test
+    public void defaultVariantHeuristicTest_picksDebug() {
+        assertThat(getDefaultVariant(ImmutableList.of("a", "z", "debug", "release")))
+                .isEqualTo("debug");
+    }
+
+    @Test
+    public void defaultVariantHeuristicTest_picksDebugWithFlavors() {
+        assertThat(getDefaultVariant(ImmutableList.of("aRelease", "bRelease", "bDebug", "cDebug")))
+                .isEqualTo("bDebug");
+    }
+
+    @Test
+    public void defaultVariantHeuristicTest_alphabeticalFallback() {
+        assertThat(getDefaultVariant(ImmutableList.of("a", "b"))).isEqualTo("a");
     }
 
     @Test

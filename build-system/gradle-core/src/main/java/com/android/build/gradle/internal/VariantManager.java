@@ -68,6 +68,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
@@ -93,21 +94,28 @@ import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import kotlin.Pair;
@@ -1476,5 +1484,202 @@ public class VariantManager implements VariantModel {
 
     public void setHasCreatedTasks(boolean hasCreatedTasks) {
         this.hasCreatedTasks = hasCreatedTasks;
+    }
+
+    /**
+     * Calculates the default variant to put in the model
+     *
+     * @param syncIssueConsumer any arising user configuration issues will be reported here.
+     * @return the name of a variant that exists under the presence of the variant filter. Only
+     *     returns null if all variants are removed.
+     */
+    @Nullable
+    public String getDefaultVariant(Consumer<SyncIssue> syncIssueConsumer) {
+        // Finalize the DSL we are about to read.
+        finalizeDefaultVariantDsl();
+
+        // Exit early if all variants were filtered out, this is not a valid project
+        if (variantScopes.isEmpty()) {
+            return null;
+        }
+
+        String defaultBuildType = getDefaultBuildType(syncIssueConsumer);
+
+        if (productFlavors.isEmpty()) {
+            return defaultBuildType;
+        }
+
+        Map<String, String> defaultFlavorsPerDimension = getDefaultFlavors(syncIssueConsumer);
+
+        // Find the variant with those properties.
+        for (VariantScope variantScope : getVariantScopes()) {
+            if (isDefaultVariant(defaultBuildType, defaultFlavorsPerDimension, variantScope)) {
+                return variantScope.getFullVariantName();
+            }
+        }
+        throw new IllegalStateException("Variant must exist");
+    }
+
+    private boolean isDefaultVariant(
+            String defaultBuildType,
+            Map<String, String> defaultFlavorsPerDimension,
+            VariantScope variantScope) {
+        if (!variantScope
+                .getVariantData()
+                .getVariantConfiguration()
+                .getBuildType()
+                .getName()
+                .equals(defaultBuildType)) {
+            return false;
+        }
+        for (CoreProductFlavor productFlavor :
+                variantScope.getVariantData().getVariantConfiguration().getProductFlavors()) {
+            if (!defaultFlavorsPerDimension
+                    .get(productFlavor.getDimension())
+                    .equals(productFlavor.getName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void finalizeDefaultVariantDsl() {
+        for (BuildTypeData buildTypeData : buildTypes.values()) {
+            buildTypeData.getBuildType().getIsDefault().finalizeValue();
+        }
+        for (ProductFlavorData<CoreProductFlavor> productFlavorData : productFlavors.values()) {
+            ((com.android.build.gradle.internal.dsl.ProductFlavor)
+                            productFlavorData.getProductFlavor())
+                    .getIsDefault()
+                    .finalizeValue();
+        }
+    }
+
+    @NonNull
+    private String getDefaultBuildType(Consumer<SyncIssue> issueConsumer) {
+        ImmutableSortedSet<String> buildTypeNames = getBuildTypeNames();
+
+        if (buildTypeNames.isEmpty()) {
+            throw new IllegalStateException("Expected at least one build type.");
+        }
+
+        // First look for the user setting
+        List<String> buildTypesMarkedAsDefault = new ArrayList<>();
+        for (String buildType : buildTypeNames) {
+            if (buildTypes.get(buildType).getBuildType().getIsDefault().get()) {
+                buildTypesMarkedAsDefault.add(buildType);
+            }
+        }
+        if (buildTypesMarkedAsDefault.size() > 1) {
+            issueConsumer.accept(
+                    new SyncIssueImpl(
+                            EvalIssueReporter.Type.AMBIGUOUS_BUILD_TYPE_DEFAULT,
+                            EvalIssueReporter.Severity.WARNING,
+                            Joiner.on(',').join(buildTypesMarkedAsDefault),
+                            "Ambiguous default build type: '"
+                                    + Joiner.on("', '").join(buildTypesMarkedAsDefault)
+                                    + "'.\n"
+                                    + "Please only set `isDefault = true` for one build type."));
+        }
+
+        if (!buildTypesMarkedAsDefault.isEmpty()) {
+            // This picks the first alphabetically that was tagged, to make it stable,
+            // even if the user accidentally tags two build types as default.
+            return buildTypesMarkedAsDefault.get(0);
+        }
+
+        // Then default to debug
+        if (buildTypeNames.contains("debug")) {
+            return "debug";
+        }
+
+        // Otherwise pick the first alphabetically, and there's always at least one build type.
+        return buildTypeNames.first();
+    }
+
+    /** Returns a sorted set of build type names that were not ignored by the variant filter */
+    @NonNull
+    private ImmutableSortedSet<String> getBuildTypeNames() {
+        ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+        // This needs to iterate through the variants, as flavors might have been removed by the
+        // variant filter
+        for (VariantScope variantScope : getVariantScopes()) {
+            builder.add(
+                    variantScope
+                            .getVariantData()
+                            .getVariantConfiguration()
+                            .getBuildType()
+                            .getName());
+        }
+        return builder.build();
+    }
+
+    /**
+     * Computes default flavors for each dimension.
+     *
+     * @param issueConsumer any configuration issues will be added here.
+     * @return A map from flavor dimension to the default flavor for that dimension
+     */
+    @NonNull
+    private Map<String, String> getDefaultFlavors(Consumer<SyncIssue> issueConsumer) {
+        ImmutableSortedSet<String> flavorNames = getFlavorNames();
+        Map<String, String> defaults = new HashMap<>();
+        // Using ArrayListMultiMap to preserve sorting of flavor names.
+        ArrayListMultimap<String, String> userDefaults = ArrayListMultimap.create();
+
+        for (String flavorName : flavorNames) {
+            com.android.build.gradle.internal.dsl.ProductFlavor productFlavor =
+                    (com.android.build.gradle.internal.dsl.ProductFlavor)
+                            productFlavors.get(flavorName).getProductFlavor();
+            String dimension = productFlavor.getDimension();
+            // Store the first alphabetically as a default
+            defaults.putIfAbsent(dimension, flavorName);
+            // Store the user preference
+            if (productFlavor.getIsDefault().get()) {
+                userDefaults.put(dimension, flavorName);
+            }
+        }
+
+        // For each user preference, validate it and override the alphabetical default.
+        for (String dimension : userDefaults.keySet()) {
+            List<String> userDefault = userDefaults.get(dimension);
+            if (!userDefault.isEmpty()) {
+                // This picks the first alphabetically that was tagged, to make it stable,
+                // even if the user accidentally tags two flavors in the same dimension as default.
+                defaults.put(dimension, userDefault.get(0));
+            }
+            if (userDefault.size() > 1) {
+                // Report the ambiguous default setting.
+                issueConsumer.accept(
+                        new SyncIssueImpl(
+                                EvalIssueReporter.Type.AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT,
+                                EvalIssueReporter.Severity.WARNING,
+                                dimension,
+                                "Ambiguous default product flavors for flavor dimension '"
+                                        + dimension
+                                        + "': '"
+                                        + Joiner.on("', '").join(userDefault)
+                                        + "'.\n"
+                                        + "Please only set `isDefault = true` for one product flavor "
+                                        + "in each flavor dimension."));
+            }
+        }
+
+        return ImmutableMap.copyOf(defaults);
+    }
+
+    /** Returns a sorted set of flavor names that were not ignored by the variant filter */
+    @NonNull
+    private ImmutableSortedSet<String> getFlavorNames() {
+        ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
+        // This needs to iterate through the variants, as flavors might have been removed by the
+        // variant filter
+        for (VariantScope variantScope : getVariantScopes()) {
+            for (CoreProductFlavor productFlavor :
+                    variantScope.getVariantData().getVariantConfiguration().getProductFlavors()) {
+                builder.add(productFlavor.getName());
+            }
+        }
+        return builder.build();
     }
 }
