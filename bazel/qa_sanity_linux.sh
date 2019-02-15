@@ -11,7 +11,7 @@ readonly script_dir="$(dirname "$0")"
 build_tag_filters=-no_linux
 test_tag_filters=qa_sanity,-requires_emulator,-qa_unreliable,-no_linux,-no_test_linux
 
-config_options="--config=postsubmit --config=remote"
+config_options="--config=postsubmit"
 
 # Conditionally add --auth_credentials option for BYOB machines.
 if [[ -r "${HOME}/.android-studio-alphasource.json" ]]; then
