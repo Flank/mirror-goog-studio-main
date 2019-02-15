@@ -63,6 +63,7 @@ public class Svg2Vector {
     private static final String AAPT_BOUND = "xmlns:aapt=\"http://schemas.android.com/aapt\"";
     private static final String SVG_DEFS = "defs";
     private static final String SVG_USE = "use";
+    private static final String SVG_HREF = "href";
     private static final String SVG_XLINK_HREF = "xlink:href";
 
     public static final String SVG_POLYGON = "polygon";
@@ -262,8 +263,8 @@ public class Svg2Vector {
         }
 
         // Replaces elements that reference clipPaths and replaces them with clipPathNodes
-        // Note that clip path can be embedded within style, so it has to be called after the
-        // addStyleToPath().
+        // Note that clip path can be embedded within style, so it has to be called after
+        // addStyleToPath.
         for (Map.Entry<SvgNode, Pair<SvgGroupNode, String>> entry :
                 svgTree.getClipPathAffectedNodesSet()) {
             handleClipPath(
@@ -287,9 +288,12 @@ public class Svg2Vector {
             Element element = (Element) svgNode.getDocumentNode();
             String id = element.getAttribute("id");
             if (!id.isEmpty()) {
-                String targetId = element.getAttribute(SVG_XLINK_HREF);
+                String targetId = element.getAttribute(SVG_HREF);
+                if (targetId.isEmpty()) {
+                    targetId = element.getAttribute(SVG_XLINK_HREF);
+                }
                 if (!targetId.isEmpty()) {
-                    edges.put(id, targetId.substring(1));
+                    edges.put(id, getIdFromReference(targetId));
                     nodesById.put(id, element);
                 }
             }
@@ -605,16 +609,18 @@ public class Svg2Vector {
             @NonNull SvgGroupNode useGroupNode,
             @NonNull Node currentNode) {
         NamedNodeMap a = currentNode.getAttributes();
-        int len = a.getLength();
         float x = 0;
         float y = 0;
-        String id = "";
+        String id = null;
+        int len = a.getLength();
         for (int j = 0; j < len; j++) {
             Node n = a.item(j);
             String name = n.getNodeName();
             String value = n.getNodeValue();
-            if (name.equals(SVG_XLINK_HREF)) {
-                id = value.substring(1);
+            if (name.equals(SVG_HREF)) {
+                id = getIdFromReference(value);
+            } else if (name.equals(SVG_XLINK_HREF) && id == null) {
+                id = getIdFromReference(value);
             } else if (name.equals("x")) {
                 x = Float.parseFloat(value);
             } else if (name.equals("y")) {
@@ -624,7 +630,7 @@ public class Svg2Vector {
             }
         }
         AffineTransform useTransform = new AffineTransform(1, 0, 0, 1, x, y);
-        SvgNode definedNode = svgTree.getSvgNodeFromId(id);
+        SvgNode definedNode = id == null ? null : svgTree.getSvgNodeFromId(id);
         if (definedNode == null) {
             svgTree.logErrorLine("Referenced id not found", currentNode, SvgLogLevel.ERROR);
         } else {
@@ -644,6 +650,11 @@ public class Svg2Vector {
             useGroupNode.transformIfNeeded(useTransform);
         }
         return true;
+    }
+
+    @NonNull
+    private static String getIdFromReference(@NonNull String value) {
+        return value.isEmpty() ? "" : value.substring(1);
     }
 
     /**
