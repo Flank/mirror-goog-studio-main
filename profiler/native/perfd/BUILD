@@ -86,6 +86,7 @@ cc_test(
         "samplers/cpu_usage_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
+        "termination_service_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

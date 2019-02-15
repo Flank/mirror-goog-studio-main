@@ -15,11 +15,28 @@
  */
 #include "perfd/termination_service.h"
 
+#include <sstream>
 #include "utils/log.h"
+#include "utils/native_backtrace.h"
 
 namespace profiler {
 
-extern "C" void SignalHandler(int signal) {
+void SignalHandlerSigSegv(int signal) {
+  const int MAX_SIZE = 20;
+  std::vector<std::uintptr_t> stack = GetBacktrace(MAX_SIZE);
+  // printf so this can be printed on a single line.
+  printf("Perfd Segmentation Fault: ");
+  std::stringstream stringify;
+  for (int i = 0; i < stack.size(); i++) {
+    stringify << stack[i] << ",";
+  }
+  printf("%s\n", stringify.str().c_str());
+  // Force flush output.
+  fflush(stdout);
+  std::raise(signal);
+}
+
+extern "C" void SignalHandlerSigHup(int signal) {
   std::signal(signal, SIG_DFL);
   Log::D("Profiler:Signal received %d", signal);
   TerminationService::Instance()->NotifyShutdown(signal);
@@ -31,7 +48,10 @@ TerminationService* TerminationService::Instance() {
   return instance;
 }
 
-TerminationService::TerminationService() { std::signal(SIGHUP, SignalHandler); }
+TerminationService::TerminationService() {
+  std::signal(SIGHUP, SignalHandlerSigHup);
+  std::signal(SIGSEGV, SignalHandlerSigSegv);
+}
 
 void TerminationService::NotifyShutdown(int signal) {
   Log::D("Profiler:TerminationService shutting down with signal %d", signal);

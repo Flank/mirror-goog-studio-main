@@ -27,7 +27,10 @@ namespace profiler {
 using ShutdownCallback = std::function<void(int signal)>;
 
 // Process signalling takes a C-linkage handler of the following prototype.
-extern "C" void SignalHandler(int signal);
+extern "C" void SignalHandlerSigHup(int signal);
+
+// Process signalling events form seg faults.
+void SignalHandlerSigSegv(int signal);
 
 // A service which handles process signalling, giving the process a chance
 // to run shutdown code before finally being terminated.
@@ -55,7 +58,7 @@ class TerminationService {
   void NotifyShutdown(int signal);
 
   // Friend C-style function to allow access to internal methods.
-  friend void SignalHandler(int signal);
+  friend void SignalHandlerSigHup(int signal);
 };
 
 }  // namespace profiler
