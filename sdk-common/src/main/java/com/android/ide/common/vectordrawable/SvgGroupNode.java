@@ -56,12 +56,24 @@ class SvgGroupNode extends SvgNode {
         // Pass the presentation map down to the children, who can override the attributes.
         mChildren.add(child);
         // The child has its own attributes map. But the parents can still fill some attributes
-        // if they don't exists
+        // if they don't exist.
         child.fillEmptyAttributes(mVdAttributesMap);
     }
 
-    public void removeChild(@NonNull SvgNode child) {
-        mChildren.remove(child);
+    /**
+     * Replaces an existing child node with a new one.
+     *
+     * @param oldChild the child node to replace
+     * @param newChild the node to replace the existing child node with
+     */
+    public void replaceChild(@NonNull SvgNode oldChild, @NonNull SvgNode newChild) {
+        int index = mChildren.indexOf(oldChild);
+        if (index < 0) {
+            throw new IllegalArgumentException(
+                    "The child being replaced doesn't belong to this group");
+        }
+
+        mChildren.set(index, newChild);
     }
 
     @Override

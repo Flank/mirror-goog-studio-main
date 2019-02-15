@@ -560,6 +560,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_path_over_rect");
     }
 
+    public void testSvgClipPathOrdering() throws Exception {
+        checkSvgConversion("test_clip_path_ordering");
+    }
+
     // Style tests start here
     public void testSvgStyleBasicShapes() throws Exception {
         checkSvgConversion("test_style_basic_shapes");
