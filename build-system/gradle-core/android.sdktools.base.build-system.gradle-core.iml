@@ -5,6 +5,9 @@
     <content url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated">
       <sourceFolder url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated/source/proto/main/java" isTestSource="false" generated="true" />
     </content>
+    <content url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated-src">
+      <sourceFolder url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated-src/antlr/main" isTestSource="false" packagePrefix="com.android.build.gradle.shrinker.parser" generated="true" />
+    </content>
     <content url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt">
       <sourceFolder url="file://$MODULE_DIR$/../../../../prebuilts/tools/common/aapt" type="java-resource" relativeOutputPath="com/android/build/gradle/internal/res" generated="true" />
       <excludePattern pattern="darwin*" />
@@ -39,6 +42,8 @@
     <orderEntry type="library" scope="TEST" name="jacoco" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.instant-run-annotations" scope="TEST" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.runtime" scope="TEST" />
     <orderEntry type="library" name="antlr3-runtime" level="project" />
     <orderEntry type="library" name="slf4j-api" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
@@ -46,6 +51,7 @@
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.base.instant-run.instrumentation" />
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="library" name="jopt-simple" level="project" />
     <orderEntry type="library" name="jsoup" level="project" />
