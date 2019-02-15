@@ -16,9 +16,13 @@
 
 package com.android.build.gradle.integration.lint;
 
+import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.apk.Aar;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,5 +87,22 @@ public class LintCustomLocalAndPublishTest {
         assertThat(liblintfile).exists();
         assertThat(applintfile).contentWithUnixLineSeparatorsIsExactly(appexpected);
         assertThat(liblintfile).contentWithUnixLineSeparatorsIsExactly(libexpected);
+    }
+
+    @Test
+    public void checkAarHasLintJar() throws Exception {
+        project.executor().run("clean");
+        project.executor().run(":library:assembleDebug");
+        project.executor().run(":library-publish-only:assembleDebug");
+        project.executor().run(":library-local-only:assembleDebug");
+
+        Aar localAndPublish = project.getSubproject("library").getAar("debug");
+        assertNotNull(localAndPublish.getEntry(FN_LINT_JAR));
+
+        Aar publishOnly = project.getSubproject("library-publish-only").getAar("debug");
+        assertNotNull(publishOnly.getEntry(FN_LINT_JAR));
+
+        Aar localOnly = project.getSubproject("library-local-only").getAar("debug");
+        assertNull(localOnly.getEntry(FN_LINT_JAR));
     }
 }
