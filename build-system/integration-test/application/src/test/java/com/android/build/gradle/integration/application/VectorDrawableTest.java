@@ -26,7 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.VectorDrawablesOptions;
@@ -55,7 +55,7 @@ public class VectorDrawableTest {
 
     @BeforeClass
     public static void checkBuildTools() {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Test

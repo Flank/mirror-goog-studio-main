@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;

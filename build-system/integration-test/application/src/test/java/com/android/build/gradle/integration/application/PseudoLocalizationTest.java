@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -35,7 +35,7 @@ public class PseudoLocalizationTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
         project.execute("clean", "assembleDebug");
     }
 

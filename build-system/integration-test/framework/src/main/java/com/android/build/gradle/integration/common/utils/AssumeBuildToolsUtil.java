@@ -16,15 +16,12 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.repository.Revision;
 import org.junit.Assume;
 
-/**
- * Common assume for test.
- */
-public class AssumeUtil {
+/** Common assume for test. */
+public class AssumeBuildToolsUtil {
 
     public static void assumeBuildToolsAtLeast(int major) {
         assumeBuildToolsAtLeast(new Revision(major));
@@ -53,17 +50,4 @@ public class AssumeUtil {
                         .compareTo(revision) > 0);
     }
 
-    public static void assumeNotWindows() {
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-    }
-
-    public static void assumeNotWindowsBot() {
-        Assume.assumeFalse(
-                SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
-                        && System.getenv("BUILDBOT_BUILDERNAME") != null);
-    }
-
-    public static void assumeIsLinux() {
-        Assume.assumeTrue(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_LINUX);
-    }
 }

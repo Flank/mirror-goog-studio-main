@@ -23,7 +23,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.testutils.apk.Apk;

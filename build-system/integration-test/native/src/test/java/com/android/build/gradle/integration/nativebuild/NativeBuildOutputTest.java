@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;

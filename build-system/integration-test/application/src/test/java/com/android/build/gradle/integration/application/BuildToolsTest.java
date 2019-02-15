@@ -1,6 +1,6 @@
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.utils.AssumeUtil.assumeBuildToolsGreaterThan;
+import static com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil.assumeBuildToolsGreaterThan;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;

@@ -9,7 +9,7 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantBuildOutputUtils;
@@ -39,7 +39,7 @@ public class CombinedLanguageWithDisabledDensityTest {
 
     @Before
     public void setup() throws IOException {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android {\n"

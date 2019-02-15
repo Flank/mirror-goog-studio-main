@@ -19,11 +19,11 @@ package com.android.build.gradle.integration.resources
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
+import com.android.testutils.AssumeUtil
 import org.junit.Rule
 import org.junit.Test
 import java.nio.file.Files

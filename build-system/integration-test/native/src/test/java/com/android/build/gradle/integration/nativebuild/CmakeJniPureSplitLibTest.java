@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public class CmakeJniPureSplitLibTest {
     public static void setUp() throws IOException, InterruptedException {
         new File(project.getTestDir(), "src/main/jni")
                 .renameTo(new File(project.getTestDir(), "src/main/cxx"));
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
         GradleTestProject lib = project.getSubproject("lib");
         // No explicit project, but project "lights up" because CMakeLists.txt is present
         TestFileUtils.appendToFile(

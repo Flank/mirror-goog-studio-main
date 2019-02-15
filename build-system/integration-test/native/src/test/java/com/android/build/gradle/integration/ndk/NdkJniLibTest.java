@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

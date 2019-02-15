@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -74,7 +74,7 @@ public class VectorDrawableTest_Library {
 
     @Before
     public void checkBuildTools() {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Before

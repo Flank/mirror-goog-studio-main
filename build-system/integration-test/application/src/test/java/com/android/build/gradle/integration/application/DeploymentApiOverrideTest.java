@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -46,7 +46,7 @@ public class DeploymentApiOverrideTest {
 
     @BeforeClass
     public static void checkBuildTools() {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Test

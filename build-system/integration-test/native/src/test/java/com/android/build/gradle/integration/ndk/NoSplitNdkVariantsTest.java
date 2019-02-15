@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
 import java.io.File;

@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
 import com.android.builder.model.AndroidProject;
@@ -62,7 +62,7 @@ public class AbiPureSplits {
 
     @BeforeClass
     public static void setup() {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Test

@@ -16,15 +16,13 @@
 
 package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for multiDexWithLib. */
 public class MultiDexWithLibTest {
@@ -37,7 +35,7 @@ public class MultiDexWithLibTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
+        AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
         project.execute("clean", "assembleDebug", "assembleDebugAndroidTest");
     }
 

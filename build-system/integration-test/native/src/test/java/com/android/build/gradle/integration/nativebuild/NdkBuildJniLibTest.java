@@ -23,7 +23,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.NativeAndroidProject;
