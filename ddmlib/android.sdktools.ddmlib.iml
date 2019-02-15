@@ -11,7 +11,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module" module-name="android.sdktools.common" exported="" />
     <orderEntry type="library" exported="" name="kxml2" level="project" />
-    <orderEntry type="library" scope="TEST" name="easymock-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="Mocks" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android.sdktools.testutils" scope="TEST" />
