@@ -669,9 +669,8 @@ public class Svg2Vector {
         }
         SvgClipPathNode clipCopy = ((SvgClipPathNode) clipNode).deepCopy();
 
-        currentGroup.removeChild(child);
+        currentGroup.replaceChild(child, clipCopy);
 
-        currentGroup.addChild(clipCopy);
         clipCopy.addAffectedNode(child);
         clipCopy.setClipPathNodeAttributes();
     }
