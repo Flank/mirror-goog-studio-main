@@ -1033,6 +1033,50 @@ class PermissionDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun test72967236() {
+        lint().files(
+            manifest(
+                "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    package=\"test.pkg.permissiontest\">\n" +
+                        "\n" +
+                        "    <uses-sdk android:minSdkVersion=\"17\" android:targetSdkVersion=\"23\" />\n" +
+                        "\n" +
+                        "    <permission\n" +
+                        "        android:name=\"my.dangerous.P2\"\n" +
+                        "        android:protectionLevel=\"dangerous\" />\n" +
+                        "\n" +
+                        "</manifest>\n"
+            ),
+            java(
+                "" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresPermission;\n" +
+                        "\n" +
+                        "public class X {\n" +
+                        "    public void something() {\n" +
+                        "        methodRequiresCarrierOrP2();\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresPermission(anyOf = {\"my.dangerous.P2\", \"carrier privileges\"})\n" +
+                        "    public void methodRequiresCarrierOrP2() {\n" +
+                        "    }\n" +
+                        "}\n"
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/X.java:7: Error: Missing permissions required by X.methodRequiresCarrierOrP2: my.dangerous.P2 or carrier privileges (see TelephonyManager#hasCarrierPrivileges) [MissingPermission]
+                    methodRequiresCarrierOrP2();
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     fun test113159124() {
         lint().files(
             manifest(

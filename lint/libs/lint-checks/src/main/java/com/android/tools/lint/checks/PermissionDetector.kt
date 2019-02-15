@@ -173,6 +173,9 @@ class PermissionDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val message = String.format(
                     "Missing permissions required %1\$s %2\$s: %3\$s", operation.prefix(),
                     name, requirement.describeMissingPermissions(permissions)
+                ).replace(
+                    "carrier privileges",
+                    "carrier privileges (see TelephonyManager#hasCarrierPrivileges)"
                 )
                 // Report locations on the call, not just the flown parameter
                 var location = context.getLocation(node)
