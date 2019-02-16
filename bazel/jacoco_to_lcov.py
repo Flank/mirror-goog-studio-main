@@ -96,8 +96,6 @@ def main():
       './tools/base/draw9patch/src/test',
       './tools/base/fakeadbserver/src/test',
       './tools/base/flags/src/test',
-      './tools/base/instant-run/instant-run-client/src/test',
-      './tools/base/instant-run/instant-run-runtime/src/test',
       './tools/base/layoutinspector/testSrc',
       './tools/base/layoutlib-api/sample/testproject',
       './tools/base/layoutlib-api/src/test',

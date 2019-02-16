@@ -595,14 +595,8 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public File getInstantRunSplitApkOutputFolder() {
+    public File getSplitApkOutputFolder() {
         return new File(globalScope.getIntermediatesDir(), "/split-apk/" + getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getDefaultInstantRunApkLocation() {
-        return FileUtils.join(globalScope.getIntermediatesDir(), "instant-run-apk");
     }
 
     // Precomputed file paths.

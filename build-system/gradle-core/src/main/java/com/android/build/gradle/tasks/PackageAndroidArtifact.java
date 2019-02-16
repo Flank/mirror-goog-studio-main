@@ -113,8 +113,6 @@ import org.gradle.workers.WorkerExecutor;
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends IncrementalTask {
 
-    public static final String INSTANT_RUN_PACKAGES_PREFIX = "instant-run";
-
     // ----- PUBLIC TASK API -----
 
     // Path sensitivity here is absolute due to http://b/72085541

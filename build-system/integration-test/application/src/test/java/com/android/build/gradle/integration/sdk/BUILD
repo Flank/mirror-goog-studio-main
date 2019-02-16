@@ -49,7 +49,6 @@ gradle_integration_test(
         "//tools/base/build-system/integration-test/framework",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/instant-run:instant-run-client",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

@@ -21,7 +21,6 @@ dependencies {
     compile project(':base:builder')
     compile project(':base:builder-model')
     compile project(':base:gradle-core')
-    compile project(':base:instant-run:instant-run-client')
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')

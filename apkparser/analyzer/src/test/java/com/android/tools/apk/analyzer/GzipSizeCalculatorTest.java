@@ -54,7 +54,6 @@ public class GzipSizeCalculatorTest {
         // The expected values can be seen via unzip -lv resources/test.apk
         // Note: for this test apk, the re-compressing at "zip -9" actually has no impact.
         assertThat(downloadSizePerFile.get("/AndroidManifest.xml")).isEqualTo(11);
-        assertThat(downloadSizePerFile.get("/instant-run.zip")).isEqualTo(153);
         assertThat(downloadSizePerFile.get("/res/"))
                 .isNull(); // directories should not have any size
     }
@@ -65,7 +64,6 @@ public class GzipSizeCalculatorTest {
 
         // The expected values can be seen via unzip -lv resources/test.apk
         assertThat(rawSizePerFile.get("/AndroidManifest.xml")).isEqualTo(11);
-        assertThat(rawSizePerFile.get("/instant-run.zip")).isEqualTo(153);
         assertThat(rawSizePerFile.get("/res/")).isNull(); // directories should not have any size
     }
 }

@@ -14,7 +14,6 @@ dependencies {
     testCompile project(':apksig')
     testCompile project(':base:builder')
     testCompile project(':base:builder-model')
-    testCompile project(':base:instant-run:instant-run-client')
     testCompile project(':base:sdk-common')
     testCompile project(':base:testing-infrastructure:device-pool:device-provider')
     testCompile project(':base:testutils')
@@ -190,10 +189,6 @@ configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,
     }
 }
 
-task buildTestDependencies {
-    dependsOn ':base:instant-run:instant-run-server:jar'
-}
-
 DevicePool devicePool = new DevicePool();
 
 task('startDevicePool').doLast {
@@ -210,9 +205,8 @@ allConnectedTestTasks.forEach({task -> stopDevicePool.mustRunAfter(task)})
 
 automaticTest.dependsOn ':publishLocal'
 onlineTest.dependsOn ':publishLocal'
-test.dependsOn buildTestDependencies, ':publishAndroidGradleLocal'
-testPrebuilts.dependsOn buildTestDependencies
-allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool, ':base:testing-infrastructure:device-pool:device-provider:publishLocal'})
+test.dependsOn ':publishAndroidGradleLocal'
+allConnectedTestTasks.forEach({task -> task.dependsOn startDevicePool, ':base:testing-infrastructure:device-pool:device-provider:publishLocal'})
 connectedIntegrationTest.dependsOn ':publishLocal'
 connectedIntegrationTestQuarantine.dependsOn ':publishLocal'
 

@@ -136,10 +136,7 @@ public interface VariantScope extends TransformVariantScope {
     BaseVariantData getTestedVariantData();
 
     @NonNull
-    File getInstantRunSplitApkOutputFolder();
-
-    @NonNull
-    File getDefaultInstantRunApkLocation();
+    File getSplitApkOutputFolder();
 
     @NonNull
     FileCollection getJavaClasspath(

@@ -65,15 +65,9 @@ dependencies {
     compileOnly libs.jacoco_core
     compileOnly libs.jacoco_report
 
-    testCompile project(':base:instant-run:instant-run-annotations')
-    testCompile project(':base:instant-run:instant-run-runtime')
-
     // Add gradleApi to classpath for compilation, but use provided configuration so that groovy is
     // not exposed as a runtime dependency.
     provided gradleApi()
-
-    // Package the instant-run-server.jar, nothing else.
-    includeInJar project(path: ':base:instant-run:instant-run-server', configuration: 'archives')
 
     testCompile gradleApi()
     testCompile libs.junit
@@ -105,12 +99,6 @@ compileKotlin {
 compileTestKotlin {
     kotlinOptions {
         jvmTarget = "1.8"
-    }
-}
-
-jar {
-    into('instant-run') {
-        from configurations.includeInJar
     }
 }
 

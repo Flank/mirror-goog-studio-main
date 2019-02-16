@@ -12,7 +12,6 @@
     <orderEntry type="module" module-name="android.sdktools.base.build-system.builder" />
     <orderEntry type="library" name="jacoco" level="project" />
     <orderEntry type="library" name="truth" level="project" />
-    <orderEntry type="module" module-name="android.sdktools.instant-run-client" />
     <orderEntry type="library" name="JUnit4" level="project" />
     <orderEntry type="library" name="mockito" level="project" />
     <orderEntry type="module" module-name="android.sdktools.instant-run-common" />
@@ -23,7 +22,6 @@
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
     <orderEntry type="module" module-name="android.sdktools.apkzlib" />
-    <orderEntry type="module" module-name="android.sdktools.base.instant-run.instrumentation" />
     <orderEntry type="module" module-name="android.sdktools.apksig" exported="" />
     <orderEntry type="library" name="commons-lang" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />

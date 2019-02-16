@@ -34,7 +34,6 @@
     <orderEntry type="module" module-name="android.sdktools.base.build-system.gradle-api" />
     <orderEntry type="module" module-name="android.sdktools.apksig" />
     <orderEntry type="module" module-name="android.sdktools.base.build-system.testing-infrastructure.device-provider" />
-    <orderEntry type="module" module-name="android.sdktools.instant-run-client" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
     <orderEntry type="library" scope="TEST" name="mockito" level="project" />

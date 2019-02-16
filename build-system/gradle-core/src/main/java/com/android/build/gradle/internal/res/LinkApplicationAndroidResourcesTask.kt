@@ -529,7 +529,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             task.projectBaseName = baseName!!
             task.isLibrary = isLibrary
-            task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
+            task.supportDirectory = File(variantScope.splitApkOutputFolder, "resources")
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
         }
