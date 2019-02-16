@@ -35,7 +35,12 @@ public class DeployerException extends Exception {
     /** A possible multi-line, more verbose details on the issue that occurred. */
     private final String details;
 
+    /**
+     * The ordinal of this enum is used as the return code for the command line runners, the first
+     * value NO_ERROR is not used as is zero and represents no error on the command line.
+     */
     public enum Error {
+        NO_ERROR, // Should not be used
         DUMP_FAILED,
         CANNOT_SWAP_NEW_CLASS,
         REMOTE_APK_NOT_FOUND_ON_DB,
@@ -53,6 +58,7 @@ public class DeployerException extends Exception {
         INSTALL_FAILED,
         UNABLE_TO_PREINSTALL,
         OPERATION_NOT_SUPPORTED, // (yet)
+        CANNOT_SWAP_BEFORE_API_26,
     }
 
     public DeployerException(Error error, String message) {

@@ -83,7 +83,7 @@ public class AdbInstaller implements Installer {
                                 "dump", packageNames.toArray(new String[packageNames.size()])));
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, null);
         Deploy.DumpResponse response = installerResponse.getDumpResponse();
-        logger.info("Dump response:" + response.getStatus().toString());
+        logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
     }
 
@@ -93,7 +93,7 @@ public class AdbInstaller implements Installer {
         ByteArrayInputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.SwapResponse response = installerResponse.getSwapResponse();
-        logger.info("Swap response:" + response.getStatus().toString());
+        logger.verbose("installer swap: " + response.getStatus().toString());
         return response;
     }
 
@@ -104,7 +104,7 @@ public class AdbInstaller implements Installer {
         ByteArrayInputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.DeltaPreinstallResponse response = installerResponse.getDeltapreinstallResponse();
-        logger.info("DeltaPush response:" + response.getStatus().toString());
+        logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
         return response;
     }
 
@@ -115,7 +115,7 @@ public class AdbInstaller implements Installer {
         ByteArrayInputStream inputStream = wrap(request);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.DeltaInstallResponse response = installerResponse.getDeltainstallResponse();
-        logger.info("DeltaInstall response:" + response.getStatus().toString());
+        logger.verbose("installer deltainstall: " + response.getStatus().toString());
         return response;
     }
 

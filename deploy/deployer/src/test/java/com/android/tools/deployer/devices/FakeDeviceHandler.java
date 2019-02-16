@@ -27,12 +27,9 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
 
 public class FakeDeviceHandler extends DeviceCommandHandler {
     private final FakeDevice device;
@@ -59,6 +56,7 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
             }
             return false;
         } catch (IOException e) {
+            e.printStackTrace(System.err);
         }
         return false;
     }
@@ -107,50 +105,10 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
     }
 
     private boolean shell(String args, Socket socket) throws IOException {
-        // Interpret basic commands
         OutputStream output = socket.getOutputStream();
         InputStream input = socket.getInputStream();
-        String[] split = args.split(" ", 2);
-        String cmd = split[0];
-        List<String> cmdArgs = new ArrayList<>();
-        if (split.length > 1) {
-            String allArguments = split[1];
-            cmdArgs = splitArguments(allArguments);
-        }
         CommandHandler.writeOkay(output);
-        device.getShell()
-                .execute(
-                        device,
-                        cmd,
-                        cmdArgs.toArray(new String[] {}),
-                        input,
-                        new PrintStream(output));
+        device.getShell().execute(args, output, input, device);
         return true;
-    }
-
-    private List<String> splitArguments(String allArguments) {
-        // Basic bash un-quoting
-        StringBuilder arg = new StringBuilder();
-        List<String> cmdArgs = new ArrayList<>();
-        boolean inQuotes = false;
-        for (int i = 0; i < allArguments.length(); i++) {
-            char c = allArguments.charAt(i);
-            if (c == '\"') {
-                inQuotes = !inQuotes;
-                continue;
-            }
-            if (c == ' ' && !inQuotes) {
-                if (arg.length() > 0) {
-                    cmdArgs.add(arg.toString());
-                    arg = new StringBuilder();
-                }
-                continue;
-            }
-            arg.append(c);
-        }
-        if (arg.length() > 0) {
-            cmdArgs.add(arg.toString());
-        }
-        return cmdArgs;
     }
 }

@@ -19,65 +19,87 @@ import com.android.tools.deployer.devices.shell.BasicPm;
 import com.android.tools.deployer.devices.shell.Cmd;
 import com.android.tools.deployer.devices.shell.GetProp;
 import com.android.tools.deployer.devices.shell.SessionPm;
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 
 public class FakeDeviceLibrary {
 
-    ImmutableList<FakeDevice> devices;
-
-    public FakeDeviceLibrary() {
-        ImmutableList.Builder<FakeDevice> builder = ImmutableList.builder();
-
-        FakeDevice device = new FakeDevice("4.4", "19");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new BasicPm());
-        builder.add(device);
-
-        device = new FakeDevice("5.0", "21");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new SessionPm());
-        builder.add(device);
-
-        device = new FakeDevice("5.1", "22");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new SessionPm());
-        builder.add(device);
-
-        device = new FakeDevice("6.0", "23");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new SessionPm());
-        builder.add(device);
-
-        device = new FakeDevice("7.0", "24");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new Cmd(false));
-        builder.add(device);
-
-        device = new FakeDevice("7.1", "25");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new Cmd());
-        builder.add(device);
-
-        device = new FakeDevice("8.0", "26");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new Cmd());
-        builder.add(device);
-
-        device = new FakeDevice("8.1", "27");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new Cmd());
-        builder.add(device);
-
-        device = new FakeDevice("9.0", "28");
-        device.getShell().addComand(new GetProp());
-        device.getShell().addComand(new Cmd());
-        builder.add(device);
-
-        devices = builder.build();
+    public enum DeviceId {
+        API_19,
+        API_21,
+        API_22,
+        API_23,
+        API_24,
+        API_25,
+        API_26,
+        API_27,
+        API_28,
     }
 
-    public List<FakeDevice> getDevices() {
-        return devices;
+    public FakeDevice build(DeviceId id) {
+        switch (id) {
+            case API_19:
+                {
+                    FakeDevice device = new FakeDevice("4.4", "19");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new BasicPm());
+                    return device;
+                }
+            case API_21:
+                {
+                    FakeDevice device = new FakeDevice("5.0", "21");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new SessionPm());
+                    return device;
+                }
+            case API_22:
+                {
+                    FakeDevice device = new FakeDevice("5.1", "22");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new SessionPm());
+                    return device;
+                }
+            case API_23:
+                {
+                    FakeDevice device = new FakeDevice("6.0", "23");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new SessionPm());
+                    return device;
+                }
+            case API_24:
+                {
+                    FakeDevice device = new FakeDevice("7.0", "24");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new Cmd(false));
+                    return device;
+                }
+            case API_25:
+                {
+                    FakeDevice device = new FakeDevice("7.1", "25");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new Cmd());
+                    return device;
+                }
+            case API_26:
+                {
+                    FakeDevice device = new FakeDevice("8.0", "26");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new Cmd());
+                    return device;
+                }
+            case API_27:
+                {
+                    FakeDevice device = new FakeDevice("8.1", "27");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new Cmd());
+                    return device;
+                }
+            case API_28:
+                {
+                    FakeDevice device = new FakeDevice("9.0", "28");
+                    device.getShell().addCommand(new GetProp());
+                    device.getShell().addCommand(new Cmd());
+                    return device;
+                }
+        }
+        return null;
     }
 }

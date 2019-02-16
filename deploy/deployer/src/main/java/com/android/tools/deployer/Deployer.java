@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
@@ -115,6 +116,13 @@ public class Deployer {
     private List<Task<?>> swap(
             List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
+
+        if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
+            throw new DeployerException(
+                    DeployerException.Error.CANNOT_SWAP_BEFORE_API_26,
+                    "Apply Changes is only supported on API 26 or newer");
+        }
+
         // Inputs
         Task<List<String>> paths = runner.create(argPaths);
         Task<Boolean> restart = runner.create(argRestart);

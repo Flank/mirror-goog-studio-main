@@ -124,4 +124,8 @@ public class FakeDevice {
     public void abandonSession(int session) {
         sessions.put(session, null);
     }
+
+    public boolean supportsJvmti() {
+        return Integer.parseInt(api) >= 26;
+    }
 }
