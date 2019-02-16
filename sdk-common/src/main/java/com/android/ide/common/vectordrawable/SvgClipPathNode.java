@@ -30,10 +30,10 @@ import org.w3c.dom.Node;
  * writeXML by concatenating mChildren's paths. mAffectedNodes contains any group or leaf nodes that
  * are clipped by the path.
  */
-public class SvgClipPathNode extends SvgGroupNode {
+class SvgClipPathNode extends SvgGroupNode {
     private final ArrayList<SvgNode> mAffectedNodes = new ArrayList<>();
 
-    public SvgClipPathNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
+    SvgClipPathNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
         super(svgTree, docNode, name);
     }
 

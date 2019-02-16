@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.Node;
 
 /** Represents a SVG gradient that is referenced by a SvgLeafNode. */
-public class SvgGradientNode extends SvgNode {
+class SvgGradientNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
 
     private final ArrayList<GradientStop> myGradientStops = new ArrayList<>();
@@ -57,16 +57,16 @@ public class SvgGradientNode extends SvgNode {
         // to "objectBoundingBox".
         private final boolean mIsPercentage;
 
-        public GradientCoordResult(double value, boolean isPercentage) {
+        GradientCoordResult(double value, boolean isPercentage) {
             mValue = value;
             mIsPercentage = isPercentage;
         }
 
-        public double getValue() {
+        double getValue() {
             return mValue;
         }
 
-        public boolean isPercentage() {
+        boolean isPercentage() {
             return mIsPercentage;
         }
     }
@@ -85,8 +85,7 @@ public class SvgGradientNode extends SvgNode {
                     .put("y2", 3)
                     .build();
 
-    public SvgGradientNode(
-            @NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
+    SvgGradientNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
         super(svgTree, node, nodeName);
     }
 
@@ -174,11 +173,10 @@ public class SvgGradientNode extends SvgNode {
         writer.write(indent);
         if (mGradientUsage == GradientUsage.FILL) {
             writer.write("<aapt:attr name=\"android:fillColor\">");
-            writer.write(System.lineSeparator());
         } else {
             writer.write("<aapt:attr name=\"android:strokeColor\">");
-            writer.write(System.lineSeparator());
         }
+        writer.write(System.lineSeparator());
         writer.write(indent);
         writer.write(INDENT_UNIT);
         writer.write("<gradient ");
@@ -406,7 +404,8 @@ public class SvgGradientNode extends SvgNode {
         }
     }
 
-    public void addGradientStop(String color, String offset, String opacity) {
+    public void addGradientStop(
+            @NonNull String color, @NonNull String offset, @NonNull String opacity) {
         GradientStop stop = new GradientStop(color, offset);
         stop.setOpacity(opacity);
         myGradientStops.add(stop);

@@ -33,7 +33,7 @@ class SvgGroupNode extends SvgNode {
 
     protected final ArrayList<SvgNode> mChildren = new ArrayList<>();
 
-    public SvgGroupNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
+    SvgGroupNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
         super(svgTree, docNode, name);
     }
 
@@ -45,7 +45,7 @@ class SvgGroupNode extends SvgNode {
         return newInstance;
     }
 
-    protected void copyFrom(@NonNull SvgGroupNode from) {
+    protected <T extends SvgGroupNode> void copyFrom(@NonNull T from) {
         super.copyFrom(from);
         for (SvgNode child : from.mChildren) {
             addChild(child.deepCopy());

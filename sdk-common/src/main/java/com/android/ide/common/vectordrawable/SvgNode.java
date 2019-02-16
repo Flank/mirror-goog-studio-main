@@ -60,10 +60,8 @@ abstract class SvgNode {
     // This is the stacked transformation. And this will be used for the path data transform().
     protected AffineTransform mStackedTransform = new AffineTransform();
 
-    /**
-     * While parsing the translate() rotate() ..., update the {@code mLocalTransform}.
-     */
-    public SvgNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String name) {
+    /** While parsing the translate() rotate() ..., update the {@code mLocalTransform}. */
+    SvgNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String name) {
         mName = name;
         mSvgTree = svgTree;
         mDocumentNode = node;
@@ -271,7 +269,7 @@ abstract class SvgNode {
     @NonNull
     public abstract SvgNode deepCopy();
 
-    protected void copyFrom(@NonNull SvgNode from) {
+    protected <T extends SvgNode> void copyFrom(@NonNull T from) {
         fillEmptyAttributes(from.mVdAttributesMap);
         mLocalTransform = (AffineTransform) from.mLocalTransform.clone();
     }

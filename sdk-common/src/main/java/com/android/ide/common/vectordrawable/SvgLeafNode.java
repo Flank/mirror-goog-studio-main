@@ -40,7 +40,7 @@ class SvgLeafNode extends SvgNode {
     @Nullable private SvgGradientNode mFillGradientNode;
     @Nullable private SvgGradientNode mStrokeGradientNode;
 
-    public SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
+    SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
         super(svgTree, node, nodeName);
     }
 
@@ -202,6 +202,11 @@ class SvgLeafNode extends SvgNode {
     public void writeXml(
             @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
             throws IOException {
+        // First, decide whether or not we can skip this path, since it has no visible effect.
+        if (mPathData == null || mPathData.isEmpty()) {
+            return; // No path to draw.
+        }
+
         if (inClipPath) {
             // Write data that is part of the clip-path data.
             writer.write(mPathData);
@@ -211,10 +216,6 @@ class SvgLeafNode extends SvgNode {
             return;
         }
 
-        // First, decide whether or not we can skip this path, since it has no visible effect.
-        if (mPathData == null || mPathData.isEmpty()) {
-            return; // No path to draw.
-        }
         String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
         String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
         logger.log(Level.FINE, "fill color " + fillColor);
