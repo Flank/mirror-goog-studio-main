@@ -17,6 +17,7 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.Iterables;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -74,6 +75,9 @@ public class SvgClipPathNode extends SvgGroupNode {
         }
 
         mStackedTransform.setTransform(transform);
+        for (SvgNode n : mAffectedNodes) {
+            n.flatten(mStackedTransform); // mLocalTransform does not apply to mAffectedNodes.
+        }
         mStackedTransform.concatenate(mLocalTransform);
 
         if (mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
@@ -88,7 +92,7 @@ public class SvgClipPathNode extends SvgGroupNode {
 
     @Override
     public void transformIfNeeded(@NonNull AffineTransform rootTransform) {
-        for (SvgNode p : mChildren) {
+        for (SvgNode p : Iterables.concat(mChildren, mAffectedNodes)) {
             p.transformIfNeeded(rootTransform);
         }
     }

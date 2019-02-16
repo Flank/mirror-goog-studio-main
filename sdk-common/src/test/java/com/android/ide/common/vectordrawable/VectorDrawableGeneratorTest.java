@@ -528,8 +528,12 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_group_2");
     }
 
+    public void testSvgClipPathTranslateChildren() throws Exception {
+        checkSvgConversion("test_clip_path_translate_children");
+    }
+
     public void testSvgClipPathTranslateAffected() throws Exception {
-        checkSvgConversion("test_clip_path_group_translate");
+        checkSvgConversion("test_clip_path_translate_affected");
     }
 
     public void testSvgClipPathIsGroup() throws Exception {
