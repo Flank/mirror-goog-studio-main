@@ -1,9 +1,9 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
-import android.util.Log;
+import android.app.Service
+import android.content.Intent
+import android.os.IBinder
+import android.util.Log
 
 import com.google.android.things.contrib.driver.gps.NmeaGpsDriver
 

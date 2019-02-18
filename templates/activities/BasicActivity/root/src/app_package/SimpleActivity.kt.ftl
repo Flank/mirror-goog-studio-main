@@ -2,7 +2,7 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)}
-import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)};
+import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', useAndroidX)}
 <#if isNewProject>
 import android.view.Menu
 import android.view.MenuItem

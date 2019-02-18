@@ -14,7 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 <#if applicationPackage??>
-import ${applicationPackage}.R;
+import ${applicationPackage}.R
 </#if>
 import kotlinx.android.synthetic.main.${listLayout}.*
 import kotlinx.android.synthetic.main.${itemLayout}.view.*
