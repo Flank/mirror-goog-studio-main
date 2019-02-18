@@ -468,8 +468,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 () -> getExtension().getBuildToolsRevision(),
                 sdkHandler,
                 extraModelInfo.getSyncIssueHandler(),
-                projectOptions,
-                getLogger());
+                project);
     }
 
     /** Creates a lint class path Configuration for the given project */

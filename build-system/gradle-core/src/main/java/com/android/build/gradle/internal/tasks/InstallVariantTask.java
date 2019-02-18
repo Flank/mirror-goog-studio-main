@@ -291,9 +291,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
             task.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
             task.adbExecutableProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getAdbExecutableProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
             task.splitSelectExe =
                     TaskInputHelper.memoize(
                             () -> {

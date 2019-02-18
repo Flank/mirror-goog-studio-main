@@ -269,8 +269,8 @@ open class LinkAndroidResForBundleTask
             task.resConfig =
                     variantScope.variantConfiguration.mergedFlavor.resourceConfigurations
 
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
-            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.buildToolInfoProvider
         }
     }
 }

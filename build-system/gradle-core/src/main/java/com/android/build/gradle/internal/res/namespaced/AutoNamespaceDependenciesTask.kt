@@ -465,7 +465,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
         }
     }
 

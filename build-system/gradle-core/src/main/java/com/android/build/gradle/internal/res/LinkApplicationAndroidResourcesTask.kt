@@ -518,8 +518,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.isLibrary = isLibrary
             task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
 
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
-            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.buildToolInfoProvider
         }
     }
 

@@ -203,9 +203,7 @@ public class ShaderCompile extends AndroidBuilderTask {
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
 
             task.buildToolInfoProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getBuildToolInfoProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
         }
     }
 }

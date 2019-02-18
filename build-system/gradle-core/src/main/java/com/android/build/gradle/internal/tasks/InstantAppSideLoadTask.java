@@ -189,9 +189,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
             task.setGroup(TaskManager.INSTALL_GROUP);
 
             task.adbExecutableProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getAdbExecutableProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
             task.bundleDir =
                     scope.getArtifacts()
                             .getFinalArtifactFiles(InternalArtifactType.INSTANTAPP_BUNDLE);

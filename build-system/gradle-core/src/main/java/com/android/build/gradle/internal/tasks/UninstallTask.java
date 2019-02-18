@@ -136,9 +136,7 @@ public class UninstallTask extends AndroidBuilderTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
 
             task.adbExecutableProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getAdbExecutableProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
 
         }
 

@@ -101,8 +101,7 @@ public class InstantAppProvisionTask extends DefaultTask {
         public void configure(@NonNull InstantAppProvisionTask task) {
             task.setDescription("Provision all connected devices for Instant App.");
 
-            task.adbExecutableProvider =
-                    globalScope.getSdkComponents().getAdbExecutableProvider(task.getProject());
+            task.adbExecutableProvider = globalScope.getSdkComponents().getAdbExecutableProvider();
 
             task.instantAppSdk =
                     TaskInputHelper.memoize(

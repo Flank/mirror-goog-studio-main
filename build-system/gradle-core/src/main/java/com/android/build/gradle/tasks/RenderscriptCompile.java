@@ -328,9 +328,7 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.setNdkConfig(config.getNdkConfig());
 
             renderscriptTask.buildToolInfoProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getBuildToolInfoProvider(renderscriptTask.getProject());
+                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
 
             if (config.getType().isTestComponent()) {
                 renderscriptTask.dependsOn(scope.getTaskContainer().getProcessManifestTask());

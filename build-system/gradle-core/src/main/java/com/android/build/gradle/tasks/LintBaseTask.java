@@ -312,8 +312,7 @@ public abstract class LintBaseTask extends DefaultTask {
 
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
-            lintTask.targetInfoProvider =
-                    globalScope.getSdkComponents().getTargetInfoProvider(lintTask.getProject());
+            lintTask.targetInfoProvider = globalScope.getSdkComponents().getTargetInfoProvider();
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

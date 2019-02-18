@@ -215,7 +215,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
             task.timeOutInMs = variantScope.globalScope.extension.adbOptions.timeOutInMs
 
-            task.adbExecutableProvider = variantScope.globalScope.sdkComponents.getAdbExecutableProvider(task.project)
+            task.adbExecutableProvider = variantScope.globalScope.sdkComponents.adbExecutableProvider
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out InstallVariantViaBundleTask>) {

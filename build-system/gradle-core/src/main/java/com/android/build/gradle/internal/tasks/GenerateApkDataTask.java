@@ -235,9 +235,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
 
             task.buildToolInfoProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getBuildToolInfoProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
         }
     }
 }

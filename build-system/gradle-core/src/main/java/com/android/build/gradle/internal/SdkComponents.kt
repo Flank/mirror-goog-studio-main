@@ -17,14 +17,12 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.ndk.NdkHandler
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
-import com.android.utils.ILogger
 import com.google.common.base.Suppliers
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -37,8 +35,18 @@ open class SdkComponents(
     private val buildToolRevisionSupplier: Supplier<Revision>,
     private val fallbackSdkHandler: SdkHandler,
     private val evalIssueReporter: EvalIssueReporter,
-    private val projectOptions: ProjectOptions,
-    private val logger: ILogger) {
+    project: Project) {
+
+    // -- Public Api
+    // -- Users of this will be migrated to specific file/jar/components calls
+    val sdkInfoProvider = project.providers.provider { getSdkInfo()!! }
+    val targetInfoProvider = project.providers.provider { getTargetInfo()!! }
+    val targetProvider = project.providers.provider { getTarget()!! }
+    val buildToolInfoProvider = project.providers.provider { getBuildToolsInfo()!! }
+
+    // -- Stable Public Api
+    val adbExecutableProvider = project.providers.provider { getAdbExecutable()!! }
+    val annotationsJarProvider = project.providers.provider { getAnnotationsJar()!! }
 
     private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
 
@@ -115,36 +123,7 @@ open class SdkComponents(
         return fallbackSdkHandler.ndkSymlinkDirInLocalProp
     }
 
-    // TODO: Do we need to unload() the loader used as fallback from SdkComponents?
-
-    // New Provider<> methods, so tasks can load everything lazily during execution.
-    // We should migrate all usages above to these ones.
-
-    fun getSdkInfoProvider(project: Project): Provider<SdkInfo> {
-        return project.providers.provider { getSdkInfo() }
-    }
-
-    fun getAdbExecutableProvider(project: Project): Provider<File> {
-        return project.providers.provider { getAdbExecutable() }
-    }
-
-    fun getAnnotationsJarProvider(project: Project): Provider<File> {
-        return project.providers.provider { getAnnotationsJar() }
-    }
-
-    fun getTargetInfoProvider(project: Project): Provider<TargetInfo> {
-        return project.providers.provider { getTargetInfo() }
-    }
-
-    fun getTargetProvider(project: Project): Provider<IAndroidTarget> {
-        return project.providers.provider { getTarget() }
-    }
-
     fun getPathForTargetElementProvider(id: Int, project: Project): Provider<String> {
         return project.providers.provider { getTarget()!!.getPath(id) }
-    }
-
-    fun getBuildToolInfoProvider(project: Project): Provider<BuildToolInfo> {
-        return project.providers.provider { getBuildToolsInfo() }
     }
 }

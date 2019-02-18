@@ -194,8 +194,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.manifestFiles = variantScope.artifacts
                     .getFinalProduct(task.taskInputType)
 
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.getTargetProvider(task.project)
-            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.getBuildToolInfoProvider(task.project)
+            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.buildToolInfoProvider
         }
     }
 

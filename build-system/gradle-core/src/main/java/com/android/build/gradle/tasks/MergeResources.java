@@ -723,10 +723,7 @@ public class MergeResources extends ResourceAwareTask {
             task.flags = flags;
 
             task.buildToolInfoProvider =
-                    variantScope
-                            .getGlobalScope()
-                            .getSdkComponents()
-                            .getBuildToolInfoProvider(task.getProject());
+                    variantScope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 

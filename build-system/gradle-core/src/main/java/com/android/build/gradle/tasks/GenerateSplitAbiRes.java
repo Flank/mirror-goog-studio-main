@@ -355,11 +355,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
 
             task.buildToolInfoProvider =
-                    scope.getGlobalScope()
-                            .getSdkComponents()
-                            .getBuildToolInfoProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
             task.androidTargetProvider =
-                    scope.getGlobalScope().getSdkComponents().getTargetProvider(task.getProject());
+                    scope.getGlobalScope().getSdkComponents().getTargetProvider();
 
             // if BASE_FEATURE get the app ID from the app module
             if (variantType.isBaseModule() && variantType.isHybrid()) {
