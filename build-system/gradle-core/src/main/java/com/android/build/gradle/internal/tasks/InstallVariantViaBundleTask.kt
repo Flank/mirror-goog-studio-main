@@ -35,7 +35,10 @@ import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
@@ -52,7 +55,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
 
     private val workers = Workers.getWorker(path, workerExecutor)
 
-    private lateinit var adbExecutableProvider: Provider<File>
+
     private lateinit var projectName: String
 
     private var minSdkVersion = 0
@@ -61,6 +64,11 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
     private var timeOutInMs = 0
 
     private var installOptions = mutableListOf<String>()
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE) // We care about the binary itself, not where it is.
+    lateinit var adbExecutableProvider: Provider<File>
+        private set
 
     @get:InputFiles
     lateinit var apkBundle: BuildableArtifact

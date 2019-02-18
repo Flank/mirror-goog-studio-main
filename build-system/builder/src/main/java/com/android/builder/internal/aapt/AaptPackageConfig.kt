@@ -17,7 +17,6 @@
 package com.android.builder.internal.aapt
 
 import com.android.builder.core.VariantType
-import com.android.sdklib.IAndroidTarget
 import com.google.common.collect.ImmutableCollection
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
@@ -209,8 +208,8 @@ data class AaptPackageConfig(
             return this
         }
 
-        fun setAndroidTarget(androidTarget: IAndroidTarget): Builder {
-            this.androidJarPath = androidTarget.getPath(IAndroidTarget.ANDROID_JAR)
+        fun setAndroidTarget(androidJar: File): Builder {
+            this.androidJarPath = androidJar.absolutePath
             return this
         }
 

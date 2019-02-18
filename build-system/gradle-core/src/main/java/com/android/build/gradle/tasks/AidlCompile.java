@@ -33,13 +33,10 @@ import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.incremental.DependencyData;
-import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -53,8 +50,10 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -82,7 +81,9 @@ public class AidlCompile extends AndroidVariantTask {
     private Supplier<Collection<File>> sourceDirs;
     private FileCollection importDirs;
 
-    private TargetInfo targetInfo;
+    private Provider<File> aidlExecutableProvider;
+    private Provider<File> aidlFrameworkProvider;
+
     private ProcessExecutor processExecutor;
 
     private WorkerExecutorFacade workers;
@@ -97,9 +98,16 @@ public class AidlCompile extends AndroidVariantTask {
         this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
     }
 
-    @Input
-    public String getBuildToolsVersion() {
-        return targetInfo.getBuildTools().getRevision().toString();
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    public Provider<File> getAidlExecutableProvider() {
+        return aidlExecutableProvider;
+    }
+
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    public Provider<File> getAidlFrameworkProvider() {
+        return aidlFrameworkProvider;
     }
 
     @InputFiles
@@ -129,14 +137,6 @@ public class AidlCompile extends AndroidVariantTask {
         }
 
         try (WorkerExecutorFacade workers = this.workers) {
-            IAndroidTarget target = targetInfo.getTarget();
-            BuildToolInfo buildToolInfo = targetInfo.getBuildTools();
-
-            String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
-            if (aidl == null || !new File(aidl).isFile()) {
-                throw new IllegalStateException("aidl is missing from '" + aidl + "'");
-            }
-
             Collection<File> sourceFolders = sourceDirs.get();
             Set<File> importFolders = getImportDirs().getFiles();
 
@@ -147,8 +147,8 @@ public class AidlCompile extends AndroidVariantTask {
 
             AidlProcessor processor =
                     new AidlProcessor(
-                            aidl,
-                            target.getPath(IAndroidTarget.ANDROID_AIDL),
+                            aidlExecutableProvider.get().getAbsolutePath(),
+                            aidlFrameworkProvider.get().getAbsolutePath(),
                             fullImportList,
                             sourceOutputDir,
                             packagedDir,
@@ -253,7 +253,10 @@ public class AidlCompile extends AndroidVariantTask {
             final VariantConfiguration<?, ?, ?> variantConfiguration = scope
                     .getVariantConfiguration();
 
-            compileTask.targetInfo = scope.getGlobalScope().getSdkComponents().getTargetInfo();
+            compileTask.aidlExecutableProvider =
+                    scope.getGlobalScope().getSdkComponents().getAidlExecutableProvider();
+            compileTask.aidlFrameworkProvider =
+                    scope.getGlobalScope().getSdkComponents().getAidlFrameworkProvider();
             compileTask.processExecutor = scope.getGlobalScope().getProcessExecutor();
 
             compileTask.sourceDirs = variantConfiguration::getAidlSourceList;

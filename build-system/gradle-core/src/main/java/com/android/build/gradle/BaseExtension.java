@@ -54,7 +54,6 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.android.resources.Density;
-import com.android.sdklib.BuildToolInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -904,12 +903,7 @@ public abstract class BaseExtension implements AndroidConfig {
         bootClasspath.addAll(globalScope.getFilteredBootClasspathProvider().get());
 
         if (usingJava8) {
-            bootClasspath.add(
-                    new File(
-                            globalScope
-                                    .getSdkComponents()
-                                    .getBuildToolsInfo()
-                                    .getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS)));
+            bootClasspath.add(globalScope.getSdkComponents().getCoreLambdaStubsProvider().get());
         }
 
         return bootClasspath;
@@ -921,7 +915,7 @@ public abstract class BaseExtension implements AndroidConfig {
      * (ADB)</a> executable from the Android SDK.
      */
     public File getAdbExecutable() {
-        return globalScope.getSdkComponents().getSdkInfo().getAdb();
+        return globalScope.getSdkComponents().getAdbExecutableProvider().get();
     }
 
     /** This property is deprecated. Instead, use {@link #getAdbExecutable()}. */

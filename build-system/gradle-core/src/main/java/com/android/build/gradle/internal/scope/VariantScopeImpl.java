@@ -505,7 +505,7 @@ public class VariantScopeImpl implements VariantScope {
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
-                || globalScope.getSdkComponents().getTarget().getVersion().isPreview()
+                || globalScope.getSdkComponents().getTargetVersionProvider().get().isPreview()
                 || getMinSdkVersion().getCodename() != null
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
     }

@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.utils.toImmutableMap
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.android.sdklib.IAndroidTarget
 import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.tools.build.apkzlib.zip.ZFileOptions
@@ -49,6 +48,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -80,7 +80,11 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     lateinit var externalNotNamespacedResources: ArtifactCollection private set
     lateinit var externalResStaticLibraries: ArtifactCollection private set
     lateinit var publicFiles: ArtifactCollection private set
-    lateinit var androidTargetProvider: Provider<IAndroidTarget> private set
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var androidJar: Provider<File>
+        private set
 
     @InputFiles fun getRDefFiles(): FileCollection = rFiles.artifactFiles
     @InputFiles fun getManifestsFiles(): FileCollection = nonNamespacedManifests.artifactFiles
@@ -196,7 +200,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 intermediateDirectory = intermediateDirectory,
                 pool = forkJoinPool,
                 aapt2ServiceKey = aapt2ServiceKey,
-                androidJarPath = androidTargetProvider.get().getPath(IAndroidTarget.ANDROID_JAR)
+                androidJarPath = androidJar.get().absolutePath
             )
             nonNamespacedDependenciesLinker.link()
         } finally {
@@ -465,7 +469,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
 
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
         }
     }
 

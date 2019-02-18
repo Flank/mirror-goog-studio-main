@@ -95,7 +95,6 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.Version;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
@@ -323,7 +322,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
-        if (globalScope.getSdkComponents().getTargetInfo() != null) {
+        if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
             bootClasspath =
                     globalScope
                             .getFilteredBootClasspathProvider()
@@ -392,8 +391,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
             }
         }
 
-        IAndroidTarget androidTarget = globalScope.getSdkComponents().getTarget();
-
         return new DefaultAndroidProject(
                 project.getName(),
                 defaultConfig,
@@ -402,7 +399,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 productFlavors,
                 variants,
                 variantNames,
-                androidTarget != null ? androidTarget.hashString() : "",
+                globalScope.getSdkComponents().getTargetHashStringProvider().get(),
                 bootClasspath,
                 frameworkSource,
                 cloneSigningConfigs(extension.getSigningConfigs()),

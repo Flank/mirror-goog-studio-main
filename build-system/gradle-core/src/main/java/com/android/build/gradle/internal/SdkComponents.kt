@@ -22,6 +22,7 @@ import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.repository.Revision
+import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.google.common.base.Suppliers
@@ -39,13 +40,23 @@ open class SdkComponents(
 
     // -- Public Api
     // -- Users of this will be migrated to specific file/jar/components calls
-    val targetProvider = project.providers.provider { getTarget()!! }
-    val buildToolInfoProvider = project.providers.provider { getBuildToolsInfo()!! }
+    val targetProvider: Provider<IAndroidTarget> = project.providers.provider { getTarget() }
+    val buildToolInfoProvider: Provider<BuildToolInfo> = project.providers.provider { getBuildToolsInfo() }
 
     // -- Stable Public Api
-    val adbExecutableProvider = project.providers.provider { getAdbExecutable()!! }
-    val annotationsJarProvider = project.providers.provider { getAnnotationsJar()!! }
-    val buildToolsRevisionProvider = project.providers.provider { getBuildToolsRevision()!! }
+    val sdkSetupCorrectly: Provider<Boolean> = project.providers.provider { getTargetInfo() != null }
+
+    val buildToolsRevisionProvider: Provider<Revision> = project.providers.provider { getBuildToolsRevision() }
+    val aidlExecutableProvider: Provider<File> = project.providers.provider { getAidlExecutable() }
+    val adbExecutableProvider: Provider<File> = project.providers.provider { getAdbExecutable() }
+    val coreLambdaStubsProvider: Provider<File> = project.providers.provider { getCoreLambaStubs() }
+    val splitSelectExecutableProvider: Provider<File> = project.providers.provider { getSplitSelectExecutable() }
+
+    val androidJarProvider: Provider<File> = project.providers.provider { getAndroidJar() }
+    val annotationsJarProvider: Provider<File> = project.providers.provider { getAnnotationsJar() }
+    val aidlFrameworkProvider: Provider<File> = project.providers.provider { getAidlFramework() }
+    val targetVersionProvider: Provider<AndroidVersion> = project.providers.provider { getTargetVersion() }
+    val targetHashStringProvider: Provider<String> = project.providers.provider { getTargetHashString() }
 
     val renderScriptSupportJarProvider: Provider<File> = project.providers.provider { getRenderScriptSupportJar() }
     val supportNativeLibFolderProvider: Provider<File> = project.providers.provider { getSupportNativeLibFolder() }
@@ -88,32 +99,60 @@ open class SdkComponents(
         fallbackSdkHandler.installCMake(version)
     }
 
-    fun getSdkInfo(): SdkInfo? {
+    private fun getSdkInfo(): SdkInfo? {
         return fallbackResultsSupplier.get()?.first
     }
 
-    fun getAdbExecutable(): File? {
+    private fun getAidlExecutable(): File? {
+        return File(getBuildToolsInfo()?.getPath(BuildToolInfo.PathId.AIDL))
+    }
+
+    private fun getAidlFramework(): File? {
+        return File(getTarget()?.getPath(IAndroidTarget.ANDROID_AIDL))
+    }
+
+    private fun getAdbExecutable(): File? {
         return getSdkInfo()?.adb
     }
 
-    fun getAnnotationsJar(): File? {
+    private fun getAndroidJar(): File? {
+        return getTarget()?.getFile(IAndroidTarget.ANDROID_JAR)
+    }
+
+    private fun getAnnotationsJar(): File? {
         return getSdkInfo()?.annotationsJar
     }
 
-    fun getBuildToolsRevision(): Revision? {
+    private fun getBuildToolsRevision(): Revision? {
         return getBuildToolsInfo()?.revision
     }
 
-    fun getTargetInfo(): TargetInfo? {
+    private fun getSplitSelectExecutable(): File? {
+        return File(getBuildToolsInfo()?.getPath(BuildToolInfo.PathId.SPLIT_SELECT))
+    }
+
+    private fun getCoreLambaStubs(): File? {
+        return File(getBuildToolsInfo()?.getPath(BuildToolInfo.PathId.CORE_LAMBDA_STUBS))
+    }
+
+    private fun getTargetInfo(): TargetInfo? {
         return  fallbackResultsSupplier.get()?.second
     }
 
-    fun getTarget(): IAndroidTarget? {
-        return fallbackResultsSupplier.get()?.second?.target
+    private fun getTarget(): IAndroidTarget? {
+        return getTargetInfo()?.target
     }
 
-    fun getBuildToolsInfo(): BuildToolInfo? {
-        return fallbackResultsSupplier.get()?.second?.buildTools
+    private fun getBuildToolsInfo(): BuildToolInfo? {
+        return getTargetInfo()?.buildTools
+    }
+
+    private fun getTargetVersion(): AndroidVersion? {
+        return getTarget()?.version
+    }
+
+    private fun getTargetHashString(): String {
+        return getTarget()?.hashString() ?: ""
     }
 
     private fun getRenderScriptSupportJar(): File? {
@@ -151,10 +190,6 @@ open class SdkComponents(
 
     fun getNdkSymlinkDirInLocalProp(): File? {
         return fallbackSdkHandler.ndkSymlinkDirInLocalProp
-    }
-
-    fun getPathForTargetElementProvider(id: Int, project: Project): Provider<String> {
-        return project.providers.provider { getTarget()!!.getPath(id) }
     }
 }
 

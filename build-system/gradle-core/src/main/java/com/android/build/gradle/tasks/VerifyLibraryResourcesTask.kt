@@ -39,7 +39,6 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.QueueableResourceCompiler
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableSet
@@ -49,6 +48,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -90,7 +90,10 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    private lateinit var androidTargetProvider: Provider<IAndroidTarget>
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var androidJar: Provider<File>
+        private set
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
@@ -153,7 +156,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 .setLibrarySymbolTableFiles(ImmutableSet.of())
                 .setOptions(AaptOptions(failOnMissingConfigEntry = false))
                 .setVariantType(VariantTypeImpl.LIBRARY)
-                .setAndroidTarget(androidTargetProvider.get())
+                .setAndroidTarget(androidJar.get())
                 .build()
     }
 
@@ -189,7 +192,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.manifestFiles = variantScope.artifacts
                     .getFinalProduct(task.taskInputType)
 
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
         }
     }
 

@@ -37,6 +37,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
@@ -75,7 +76,11 @@ open class ProcessAndroidAppResourcesTask
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
-    private lateinit var androidJarSdkProvider: Provider<String>
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var androidJar: Provider<File>
+        private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory lateinit var rClassSource: File private set
@@ -94,7 +99,7 @@ open class ProcessAndroidAppResourcesTask
         }
         staticLibraries.add(thisSubProjectStaticLibrary.single())
         val config = AaptPackageConfig(
-                androidJarPath = androidJarSdkProvider.get(),
+                androidJarPath = androidJar.get().absolutePath,
                 manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
                 options = AaptOptions(null, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
@@ -184,7 +189,7 @@ open class ProcessAndroidAppResourcesTask
             task.resourceApUnderscore = resourceApUnderscore
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
-            task.androidJarSdkProvider = variantScope.globalScope.sdkComponents.getPathForTargetElementProvider(IAndroidTarget.ANDROID_JAR, task.project)
+            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
         }
     }
 

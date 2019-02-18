@@ -60,7 +60,6 @@ import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -70,6 +69,7 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -219,7 +219,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     var isLibrary: Boolean = false
         private set
 
-    private lateinit var androidTargetProvider: Provider<IAndroidTarget>
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    lateinit var androidJar: Provider<File>
+        private set
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
@@ -528,7 +531,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.isLibrary = isLibrary
             task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
 
-            task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
+            task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
         }
     }
 
@@ -866,7 +869,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val packageId: Int? = task.getResOffset()
         val incrementalFolder: File = task.incrementalFolder
         val androidJarPath: String =
-            task.androidTargetProvider.get().getPath(IAndroidTarget.ANDROID_JAR)
+            task.androidJar.get().absolutePath
         val convertedLibraryDependenciesPath: Path? =
             task.convertedLibraryDependencies?.singleFile()?.toPath()
         val inputResourcesDir: File? = task.inputResourcesDir?.singleFile()

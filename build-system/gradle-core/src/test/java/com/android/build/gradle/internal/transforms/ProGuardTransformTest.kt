@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.transform.Context
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
 import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
@@ -28,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
-import com.android.sdklib.IAndroidTarget
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -39,7 +37,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import java.io.File
 import java.nio.file.Files

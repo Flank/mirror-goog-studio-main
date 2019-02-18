@@ -15,8 +15,6 @@
  */
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
@@ -31,7 +29,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
-import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConfigProviderImpl;
 import com.android.builder.testing.api.DeviceConnector;
@@ -50,7 +47,6 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
@@ -58,6 +54,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -68,7 +66,7 @@ import org.gradle.api.tasks.TaskProvider;
 public class InstallVariantTask extends AndroidBuilderTask {
 
     private Provider<File> adbExecutableProvider;
-    private Supplier<File> splitSelectExe;
+    private Provider<File> splitSelectExeProvider;
 
     private ProcessExecutor processExecutor;
 
@@ -112,7 +110,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
                     deviceProvider,
                     variantConfig.getMinSdkVersion(),
                     getProcessExecutor(),
-                    getSplitSelectExe(),
+                    getSplitSelectExe().getOrNull(),
                     outputs,
                     variantConfig.getSupportedAbis(),
                     getInstallOptions(),
@@ -129,7 +127,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
             @NonNull DeviceProvider deviceProvider,
             @NonNull AndroidVersion minSkdVersion,
             @NonNull ProcessExecutor processExecutor,
-            @NonNull File splitSelectExe,
+            @Nullable File splitSelectExe,
             @NonNull List<OutputFile> outputs,
             @Nullable Set<String> supportedAbis,
             @NonNull Collection<String> installOptions,
@@ -199,8 +197,9 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
     @InputFile
     @Optional
-    public File getSplitSelectExe() {
-        return splitSelectExe.get();
+    @PathSensitive(PathSensitivity.NONE)
+    public Provider<File> getSplitSelectExe() {
+        return splitSelectExeProvider;
     }
 
     public ProcessExecutor getProcessExecutor() {
@@ -292,24 +291,8 @@ public class InstallVariantTask extends AndroidBuilderTask {
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
             task.adbExecutableProvider =
                     scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
-            task.splitSelectExe =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
-                                // if the task is not going to run, so use a supplier.
-                                final TargetInfo info =
-                                        scope.getGlobalScope().getSdkComponents().getTargetInfo();
-                                String path =
-                                        info == null
-                                                ? null
-                                                : info.getBuildTools().getPath(SPLIT_SELECT);
-                                if (path != null) {
-                                    File splitSelectExe = new File(path);
-                                    return splitSelectExe.exists() ? splitSelectExe : null;
-                                } else {
-                                    return null;
-                                }
-                            });
+            task.splitSelectExeProvider =
+                    scope.getGlobalScope().getSdkComponents().getSplitSelectExecutableProvider();
         }
 
         @Override

@@ -128,7 +128,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         new DeviceProviderInstrumentTestTask.CreationAction(
                                 variantScope,
                                 new ConnectedDeviceProvider(
-                                        () -> globalScope.getSdkComponents().getAdbExecutable(),
+                                        () ->
+                                                globalScope
+                                                        .getSdkComponents()
+                                                        .getAdbExecutableProvider()
+                                                        .get(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(getLogger())),
                                 testData,

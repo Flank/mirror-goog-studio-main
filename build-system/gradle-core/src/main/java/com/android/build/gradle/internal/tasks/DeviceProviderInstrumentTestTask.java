@@ -23,7 +23,6 @@ import static com.android.builder.core.BuilderConstants.FD_ANDROID_TESTS;
 import static com.android.builder.core.BuilderConstants.FD_FLAVORS;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
-import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -46,7 +45,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.internal.testing.SimpleTestRunnable;
 import com.android.builder.model.TestOptions;
-import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
 import com.android.builder.testing.ShardedTestRunner;
@@ -72,7 +70,6 @@ import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
@@ -84,10 +81,13 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
@@ -112,7 +112,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     private FileCollection testTargetManifests;
     private ProcessExecutor processExecutor;
     private String flavorName;
-    private Supplier<File> splitSelectExec;
+    private Provider<File> splitSelectExecProvider;
     private AbstractTestDataImpl testData;
     private TestRunnerFactory testRunnerFactory;
     private boolean ignoreFailures;
@@ -173,7 +173,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             deviceProvider.init();
 
             TestRunner testRunner =
-                    testRunnerFactory.build(splitSelectExec.get(), getProcessExecutor());
+                    testRunnerFactory.build(getSplitSelectExec().get(), getProcessExecutor());
 
             Collection<String> extraArgs =
                     installOptions == null || installOptions.isEmpty()
@@ -318,8 +318,9 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @InputFile
-    public File getSplitSelectExec() {
-        return splitSelectExec.get();
+    @PathSensitive(PathSensitivity.NONE)
+    public Provider<File> getSplitSelectExec() {
+        return splitSelectExecProvider;
     }
 
     public ProcessExecutor getProcessExecutor() {
@@ -534,24 +535,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            task.splitSelectExec =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
-                                // if the task is not going to run, so use a supplier.
-                                final TargetInfo info =
-                                        scope.getGlobalScope().getSdkComponents().getTargetInfo();
-                                String path =
-                                        info == null
-                                                ? null
-                                                : info.getBuildTools().getPath(SPLIT_SELECT);
-                                if (path != null) {
-                                    File splitSelectExe = new File(path);
-                                    return splitSelectExe.exists() ? splitSelectExe : null;
-                                } else {
-                                    return null;
-                                }
-                            });
+            task.splitSelectExecProvider =
+                    scope.getGlobalScope().getSdkComponents().getSplitSelectExecutableProvider();
 
             String rootLocation = scope.getGlobalScope().getExtension().getTestOptions()
                     .getResultsDir();

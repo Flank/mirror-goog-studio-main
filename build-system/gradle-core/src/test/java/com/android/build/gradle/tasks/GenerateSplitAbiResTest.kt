@@ -102,11 +102,6 @@ class GenerateSplitAbiResTest {
             `when`(sdkComponents).thenReturn(mockedSdkComponents)
         }
 
-        with(mockedSdkComponents) {
-            `when`(getTarget()).thenReturn(mockedAndroidTarget)
-            `when`(getBuildToolsInfo()).thenReturn(mockedBuildToolInfo)
-        }
-
         with(mockedVariantScope) {
             `when`(globalScope).thenReturn(mockedGlobalScope)
             `when`(variantData).thenReturn(mockedVariantData)
