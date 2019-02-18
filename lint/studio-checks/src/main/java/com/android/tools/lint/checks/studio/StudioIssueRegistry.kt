@@ -17,19 +17,19 @@
 package com.android.tools.lint.checks.studio
 
 import com.android.tools.lint.client.api.IssueRegistry
-import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.CURRENT_API
 
 class StudioIssueRegistry : IssueRegistry() {
-    private val list = listOf(
+
+    override val api = CURRENT_API
+
+    override val issues = listOf(
         ForkJoinPoolDetector.ISSUE,
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
-                FileComparisonDetector.ISSUE
+        FileComparisonDetector.ISSUE
     )
-
-    override val issues: List<Issue>
-        get() = list
 
 // TODO other checks:
 // TODO: Creating file writer without UTF-8!

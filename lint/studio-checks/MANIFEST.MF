@@ -1,0 +1,1 @@
+Lint-Registry-v2: com.android.tools.lint.checks.studio.StudioIssueRegistry

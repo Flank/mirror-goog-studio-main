@@ -1,6 +1,7 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:utils.bzl", "replace_manifest")
 
 # managed by go/iml_to_build
 iml_module(
@@ -273,6 +274,13 @@ kotlin_library(
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
     ],
+)
+
+replace_manifest(
+    name = "studio-checks.lint-rules",
+    manifest = "studio-checks/MANIFEST.MF",
+    original_jar = ":studio-checks",
+    visibility = ["//visibility:public"],
 )
 
 kotlin_test(

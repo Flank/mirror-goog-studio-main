@@ -271,6 +271,11 @@
     <inspection_tool class="MisspelledCompareTo" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledEquals" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="MisspelledHashcode" enabled="true" enabled_by_default="true" level="WARNING" />
+    <inspection_tool class="MisspelledHeader" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="CUSTOM_HEADERS">
+        <header value="Lint-Registry-v2" />
+      </option>
+    </inspection_tool>
     <inspection_tool class="MisspelledSetUp" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledTearDown" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledToString" enabled="true" enabled_by_default="true" level="WARNING" />

@@ -182,3 +182,32 @@ archive = rule(
     outputs = {"out": "%{name}.jar"},
     implementation = _archive_impl,
 )
+
+def _replace_manifest_iml(ctx):
+    java_runtime = ctx.attr._jdk[java_common.JavaRuntimeInfo]
+    jar_path = "%s/bin/jar" % java_runtime.java_home
+
+    ctx.actions.run_shell(
+        inputs = [ctx.file.original_jar, ctx.file.manifest] + ctx.files._jdk,
+        outputs = [ctx.outputs.output_jar],
+        command = "cp {input} {output}; {jar} ufm {output} {manifest}".format(
+            input = ctx.file.original_jar.path,
+            output = ctx.outputs.output_jar.path,
+            jar = jar_path,
+            manifest = ctx.file.manifest.path,
+        ),
+    )
+
+replace_manifest = rule(
+    attrs = {
+        "_jdk": attr.label(
+            default = Label("@bazel_tools//tools/jdk:current_java_runtime"),
+            providers = [java_common.JavaRuntimeInfo],
+        ),
+        "original_jar": attr.label(allow_single_file = True),
+        "manifest": attr.label(allow_single_file = True),
+    },
+    outputs = {"output_jar": "%{name}.jar"},
+    fragments = ["java"],
+    implementation = _replace_manifest_iml,
+)
