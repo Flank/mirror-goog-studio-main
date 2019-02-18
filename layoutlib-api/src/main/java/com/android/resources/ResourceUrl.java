@@ -475,6 +475,9 @@ public class ResourceUrl implements Serializable {
         if (resolvedNamespace == null) {
             return null;
         }
+        if (name.indexOf(':') >= 0 && type != ResourceType.SAMPLE_DATA) {
+            return null;
+        }
         return new ResourceReference(resolvedNamespace, type, name);
     }
 

@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.resources
 
+import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.resources.ResourceType.AAPT
 import com.android.resources.ResourceType.ATTR
 import com.android.resources.ResourceType.DIMEN
@@ -26,6 +27,7 @@ import com.android.resources.ResourceType.STYLE
 import com.android.resources.ResourceUrl
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -259,5 +261,20 @@ class ResourceUrlTest {
         assertTrue(resourceUrl.isFramework)
         assertFalse(resourceUrl.isTheme)
         assertEquals(SAMPLE_DATA, resourceUrl.type)
+    }
+
+    @Test
+    fun invalidResourceReference() {
+        var url = "@android:style/invalid:reference"
+        var resourceUrl = ResourceUrl.parse(url)!!
+        assertNull(resourceUrl.resolve(ResourceNamespace.TODO(), ResourceNamespace.Resolver.EMPTY_RESOLVER))
+
+        url = "@android:sample/lorem[4:10]"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertNotNull(resourceUrl.resolve(ResourceNamespace.TODO(), ResourceNamespace.Resolver.EMPTY_RESOLVER))
+
+        url = "@android:color/mycolor"
+        resourceUrl = ResourceUrl.parse(url)!!
+        assertNotNull(resourceUrl.resolve(ResourceNamespace.TODO(), ResourceNamespace.Resolver.EMPTY_RESOLVER))
     }
 }
