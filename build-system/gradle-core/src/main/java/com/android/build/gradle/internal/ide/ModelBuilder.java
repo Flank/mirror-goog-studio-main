@@ -65,7 +65,6 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
@@ -324,13 +323,14 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         // Get the boot classpath. This will ensure the target is configured.
         List<String> bootClasspath;
-        final AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
         if (globalScope.getSdkComponents().getTargetInfo() != null) {
             bootClasspath =
-                    androidBuilder.getFilteredBootClasspathAsStrings(
-                            globalScope.getSdkComponents().getTarget(),
-                            globalScope.getExtension().getLibraryRequests(),
-                            globalScope.getSdkComponents().getAnnotationsJar());
+                    globalScope
+                            .getFilteredBootClasspathProvider()
+                            .get()
+                            .stream()
+                            .map(c -> c.getAbsolutePath())
+                            .collect(Collectors.toList());
         } else {
             // SDK not set up, error will be reported as a sync issue.
             bootClasspath = Collections.emptyList();

@@ -2370,15 +2370,7 @@ public abstract class TaskManager {
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
                         .setAndroidJarClasspath(
-                                () ->
-                                        globalScope
-                                                .getAndroidBuilder()
-                                                .computeFilteredBootClasspath(
-                                                        globalScope.getSdkComponents().getTarget(),
-                                                        extension.getLibraryRequests(),
-                                                        globalScope
-                                                                .getSdkComponents()
-                                                                .getAnnotationsJar()))
+                                () -> globalScope.getFilteredBootClasspathProvider().get())
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
                         .setErrorFormatMode(

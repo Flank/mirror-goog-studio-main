@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -402,10 +403,12 @@ public class ExtractAnnotations extends AndroidVariantTask {
             // force the sdk to be parsed. (Same as in compileTask)
             task.setBootClasspath(
                     () ->
-                            androidBuilder.getFilteredBootClasspathAsStrings(
-                                    globalScope.getSdkComponents().getTarget(),
-                                    globalScope.getExtension().getLibraryRequests(),
-                                    globalScope.getSdkComponents().getAnnotationsJar()));
+                            globalScope
+                                    .getFilteredBootClasspathProvider()
+                                    .get()
+                                    .stream()
+                                    .map(c -> c.getAbsolutePath())
+                                    .collect(Collectors.toList()));
 
             task.lintClassPath =
                     globalScope

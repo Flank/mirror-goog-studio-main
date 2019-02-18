@@ -54,12 +54,10 @@ import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.PlaceholderHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as {@link
@@ -121,9 +118,6 @@ public class AndroidBuilder {
 
     @Nullable private String mCreatedBy;
 
-    private List<File> mBootClasspathFiltered;
-    private List<File> mBootClasspathAll;
-
     /**
      * Creates an AndroidBuilder.
      *
@@ -161,81 +155,6 @@ public class AndroidBuilder {
     @NonNull
     public MessageReceiver getMessageReceiver() {
         return messageReceiver;
-    }
-
-    /**
-     * Returns the list of additional and requested optional library jar files
-     *
-     * @param libraryRequests optional libraries requested to be included in the project.
-     * @return the list of files from the additional and optional libraries which appear in the
-     *     filtered boot classpath
-     */
-    public List<File> computeAdditionalAndRequestedOptionalLibraries(
-            IAndroidTarget target, Collection<LibraryRequest> libraryRequests) {
-        return BootClasspathBuilder.computeAdditionalAndRequestedOptionalLibraries(
-                target, ImmutableList.copyOf(libraryRequests), issueReporter);
-    }
-
-    /**
-     * Returns the boot classpath to be used during compilation with all available additional jars
-     * but only the requested optional ones.
-     *
-     * <p>Requested libraries not found will be reported to the issue handler.
-     *
-     * @return a list of jar files that forms the filtered classpath.
-     */
-    public List<File> computeFilteredBootClasspath(
-            IAndroidTarget target,
-            Collection<LibraryRequest> libraryRequests,
-            File annotationsJar) {
-        // computes and caches the filtered boot classpath.
-        // Changes here should be applied to #computeFullClasspath()
-
-        if (mBootClasspathFiltered == null) {
-            mBootClasspathFiltered =
-                    BootClasspathBuilder.computeFilteredClasspath(
-                            target,
-                            ImmutableList.copyOf(libraryRequests),
-                            issueReporter,
-                            annotationsJar);
-        }
-
-        return mBootClasspathFiltered;
-    }
-
-    /**
-     * Returns the boot classpath to be used during compilation with all available additional and
-     * optional jars (even those not requested).
-     *
-     * @return a list of jar files that forms the filtered classpath.
-     */
-    @NonNull
-    public List<File> computeFullBootClasspath(IAndroidTarget androidTarget, File annotationsJar) {
-        // computes and caches the full boot classpath.
-        // Changes here should be applied to #computeFilteredClasspath()
-
-        if (mBootClasspathAll == null) {
-            mBootClasspathAll =
-                    BootClasspathBuilder.computeFullBootClasspath(androidTarget, annotationsJar);
-        }
-
-        return mBootClasspathAll;
-    }
-
-    /**
-     * Helper method to get the boot classpath to be used during compilation.
-     *
-     * @param libraryRequests optional libraries requested to be included in the project.
-     */
-    @NonNull
-    public List<String> getFilteredBootClasspathAsStrings(
-            IAndroidTarget target,
-            Collection<LibraryRequest> libraryRequests,
-            File annotationsJar) {
-        return computeFilteredBootClasspath(target, libraryRequests, annotationsJar)
-                .stream()
-                .map(c -> c.getAbsolutePath())
-                .collect(Collectors.toList());
     }
 
     /**

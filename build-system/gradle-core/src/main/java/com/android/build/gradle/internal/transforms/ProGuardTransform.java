@@ -34,7 +34,6 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.WorkLimiter;
 import com.android.utils.FileUtils;
@@ -222,8 +221,6 @@ public class ProGuardTransform extends BaseProguardAction {
                             "combined_res_and_classes", outputTypes, scopes, Format.JAR);
             mkdirs(outFile.getParentFile());
 
-            GlobalScope globalScope = variantScope.getGlobalScope();
-
             // set the mapping file if there is one.
             File testedMappingFile = computeMappingFile();
             if (testedMappingFile != null) {
@@ -236,12 +233,7 @@ public class ProGuardTransform extends BaseProguardAction {
 
             // libraryJars: the runtime jars, with all optional libraries.
             variantScope.getBootClasspath().forEach(this::libraryJar);
-            globalScope
-                    .getAndroidBuilder()
-                    .computeFullBootClasspath(
-                            globalScope.getSdkComponents().getTarget(),
-                            globalScope.getSdkComponents().getAnnotationsJar())
-                    .forEach(this::libraryJar);
+            variantScope.getGlobalScope().getFullBootClasspath().forEach(this::libraryJar);
 
             // --- Out files ---
             outJar(outFile);

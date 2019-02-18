@@ -61,13 +61,7 @@ class D8MainDexListTransform(
                     variantScope.variantConfiguration.multiDexKeepFile?.toPath(),
                     includeDynamicFeatures,
                     Supplier {
-                        variantScope
-                                .globalScope
-                                .androidBuilder
-                                .computeFullBootClasspath(
-                                    variantScope.globalScope.sdkComponents.getTarget(),
-                                    variantScope.globalScope.sdkComponents.getAnnotationsJar())
-                                .map { it.toPath() }},
+                        variantScope.globalScope.fullBootClasspathProvider.get().map { it.toPath() }},
                     variantScope.globalScope.messageReceiver)
 
     override fun setMainDexListOutputFile(mainDexListFile: File) {

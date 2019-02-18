@@ -316,15 +316,7 @@ class ProGuardTransformTest {
         Mockito.`when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.buildDir).thenReturn(outputDir.toFile())
-
-        val sdkComponents = Mockito.mock(SdkComponents::class.java)
-        Mockito.`when`(globalScope.sdkComponents).thenReturn(sdkComponents)
-        val target = Mockito.mock(IAndroidTarget::class.java)
-        Mockito.`when`(sdkComponents.getTarget()).thenReturn(target)
-        val annotationsJar = newFile("ANNOTATIONS_JAR_mock")
-        Mockito.`when`(sdkComponents.getAnnotationsJar()).thenReturn(annotationsJar)
-        Mockito.`when`(androidBuilder.computeFullBootClasspath(
-            ArgumentMatchers.eq(target), ArgumentMatchers.eq(annotationsJar))).thenReturn(bootClassPath)
+        Mockito.`when`(globalScope.fullBootClasspath).thenReturn(bootClassPath)
 
         val variantData = Mockito.mock(BaseVariantData::class.java)
         Mockito.`when`(variantData.type).thenReturn(VariantTypeImpl.BASE_APK)
