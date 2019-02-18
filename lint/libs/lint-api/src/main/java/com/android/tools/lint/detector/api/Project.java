@@ -62,11 +62,11 @@ import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
 import com.android.projectmodel.ProjectType;
+import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxNameUtils;
@@ -161,7 +161,7 @@ public class Project {
     protected Set<Desugaring> desugaring;
     private Map<String, String> superClassMap;
     private ResourceVisibilityLookup resourceVisibility;
-    private BuildToolInfo buildTools;
+    private Revision buildToolsRevision;
     private Document mergedManifest;
     private com.intellij.openapi.project.Project ideaProject;
 
@@ -896,12 +896,12 @@ public class Project {
      * @return the build tools version in use, or null if not known
      */
     @Nullable
-    public BuildToolInfo getBuildTools() {
-        if (buildTools == null) {
-            buildTools = client.getBuildTools(this);
+    public Revision getBuildToolsRevision() {
+        if (buildToolsRevision == null) {
+            buildToolsRevision = client.getBuildToolsRevision(this);
         }
 
-        return buildTools;
+        return buildToolsRevision;
     }
 
     /**

@@ -228,8 +228,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         // However, as of build tools 23.0.1 aapt works around this by packaging
                         // the resources differently.
                         if (name == ATTR_PADDING_START) {
-                            val buildToolInfo = context.project.buildTools
-                            val buildTools = buildToolInfo?.revision
+                            val buildTools = context.project.buildToolsRevision
                             val isOldBuildTools =
                                 buildTools != null && (buildTools.major < 23 || (buildTools.major == 23 &&
                                         buildTools.minor == 0 &&

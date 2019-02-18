@@ -14,5 +14,6 @@
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.sdklib-base" />
     <orderEntry type="library" name="guava-tools" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.repository" />
   </component>
 </module>

@@ -17,7 +17,7 @@
 package com.android.tools.lint.gradle.api
 
 import com.android.builder.model.LintOptions
-import com.android.sdklib.BuildToolInfo
+import com.android.repository.Revision
 import org.gradle.api.Project
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import java.io.File
@@ -26,7 +26,7 @@ abstract class LintExecutionRequest {
     abstract val project: Project
     abstract val gradlePluginVersion: String
 
-    abstract val buildTools: BuildToolInfo?
+    abstract val buildToolsRevision: Revision?
 
     abstract val lintOptions: LintOptions?
 

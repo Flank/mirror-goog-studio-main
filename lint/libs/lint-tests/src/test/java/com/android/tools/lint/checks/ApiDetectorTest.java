@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.Revision;
-import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Context;
@@ -3153,7 +3152,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                     @NonNull File dir, @NonNull File referenceDir) {
                                 Project fromSuper = super.createProject(dir, referenceDir);
                                 Project spy = spy(fromSuper);
-                                when(spy.getBuildTools()).thenReturn(null);
+                                when(spy.getBuildToolsRevision()).thenReturn(null);
                                 return spy;
                             }
                         })
@@ -3190,12 +3189,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             protected Project createProject(
                                     @NonNull File dir, @NonNull File referenceDir) {
                                 Revision revision = new Revision(22, 2, 1);
-                                BuildToolInfo info =
-                                        BuildToolInfo.fromStandardDirectoryLayout(revision, dir);
-
                                 Project fromSuper = super.createProject(dir, referenceDir);
                                 Project spy = spy(fromSuper);
-                                when(spy.getBuildTools()).thenReturn(info);
+                                when(spy.getBuildToolsRevision()).thenReturn(revision);
                                 return spy;
                             }
                         })
@@ -3213,12 +3209,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                             protected Project createProject(
                                     @NonNull File dir, @NonNull File referenceDir) {
                                 Revision revision = new Revision(23, 0, 2);
-                                BuildToolInfo info =
-                                        BuildToolInfo.fromStandardDirectoryLayout(revision, dir);
-
                                 Project fromSuper = super.createProject(dir, referenceDir);
                                 Project spy = spy(fromSuper);
-                                when(spy.getBuildTools()).thenReturn(info);
+                                when(spy.getBuildToolsRevision()).thenReturn(revision);
                                 return spy;
                             }
                         })

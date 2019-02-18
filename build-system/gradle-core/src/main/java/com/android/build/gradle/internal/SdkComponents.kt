@@ -39,14 +39,14 @@ open class SdkComponents(
 
     // -- Public Api
     // -- Users of this will be migrated to specific file/jar/components calls
-    val sdkInfoProvider = project.providers.provider { getSdkInfo()!! }
-    val targetInfoProvider = project.providers.provider { getTargetInfo()!! }
     val targetProvider = project.providers.provider { getTarget()!! }
     val buildToolInfoProvider = project.providers.provider { getBuildToolsInfo()!! }
 
     // -- Stable Public Api
     val adbExecutableProvider = project.providers.provider { getAdbExecutable()!! }
     val annotationsJarProvider = project.providers.provider { getAnnotationsJar()!! }
+    val buildToolsRevisionProvider = project.providers.provider { getBuildToolsRevision()!! }
+
 
     private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
 
@@ -90,6 +90,10 @@ open class SdkComponents(
 
     fun getAnnotationsJar(): File? {
         return getSdkInfo()?.annotationsJar
+    }
+
+    fun getBuildToolsRevision(): Revision? {
+        return getBuildToolsInfo()?.revision
     }
 
     fun getTargetInfo(): TargetInfo? {

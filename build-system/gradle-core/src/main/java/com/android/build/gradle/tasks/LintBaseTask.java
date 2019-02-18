@@ -40,10 +40,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.model.Version;
-import com.android.builder.sdk.TargetInfo;
-import com.android.sdklib.BuildToolInfo;
+import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.File;
@@ -69,7 +67,7 @@ public abstract class LintBaseTask extends DefaultTask {
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 
     @Nullable FileCollection lintClassPath;
-    protected Provider<TargetInfo> targetInfoProvider;
+    protected Provider<Revision> buildToolsRevisionProvider;
 
     /** Lint classpath */
     @InputFiles
@@ -96,12 +94,10 @@ public abstract class LintBaseTask extends DefaultTask {
         }
     }
 
-    @Internal("No influence on output, this is to give access to the build tools")
-    private BuildToolInfo getBuildTools() {
-        TargetInfo targetInfo = targetInfoProvider.get();
-        Preconditions.checkState(
-                targetInfo != null, "androidBuilder.targetInfo required for task '%s'.", getName());
-        return targetInfo.getBuildTools();
+    @Internal("No influence on output, this is to give access to the build tools version")
+    @NonNull
+    private Revision getBuildToolsRevision() {
+        return buildToolsRevisionProvider.get();
     }
 
     protected abstract class LintBaseTaskDescriptor extends
@@ -138,8 +134,8 @@ public abstract class LintBaseTask extends DefaultTask {
 
         @NonNull
         @Override
-        public BuildToolInfo getBuildTools() {
-            return LintBaseTask.this.getBuildTools();
+        public Revision getBuildToolsRevision() {
+            return LintBaseTask.this.getBuildToolsRevision();
         }
 
         @Override
@@ -312,7 +308,8 @@ public abstract class LintBaseTask extends DefaultTask {
 
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
-            lintTask.targetInfoProvider = globalScope.getSdkComponents().getTargetInfoProvider();
+            lintTask.buildToolsRevisionProvider =
+                    globalScope.getSdkComponents().getBuildToolsRevisionProvider();
 
             lintTask.lintClassPath = globalScope.getProject().getConfigurations()
                     .getByName(LINT_CLASS_PATH);

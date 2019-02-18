@@ -224,7 +224,7 @@ public class LintGradleExecution {
                         descriptor.getSdkHome(),
                         variant,
                         variantInputs,
-                        descriptor.getBuildTools(),
+                        descriptor.getBuildToolsRevision(),
                         isAndroid,
                         variant != null ? variant.getName() : null);
         boolean fatalOnly = descriptor.isFatalOnly();
@@ -471,7 +471,7 @@ public class LintGradleExecution {
                             getSdkHome(),
                             variant,
                             variantInputs,
-                            descriptor.getBuildTools(),
+                            descriptor.getBuildToolsRevision(),
                             true,
                             isFatalOnly() ? VARIANT_FATAL : VARIANT_ALL);
             syncOptions(

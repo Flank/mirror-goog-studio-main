@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TY
 import com.android.build.gradle.tasks.LintBaseTask.LINT_CLASS_PATH
 import com.android.builder.model.LintOptions
 import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
+import com.android.repository.Revision
 import com.android.sdklib.BuildToolInfo
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner
@@ -101,7 +102,7 @@ open class LintStandaloneTask : DefaultTask() {
 
                 // Android specific : doesn't apply here
 
-                override val buildTools: BuildToolInfo? = null
+                override val buildToolsRevision: Revision? = null
                 override val variantName: String? = null
                 override val sdkHome: File? = null
                 override val toolingRegistry: ToolingModelBuilderRegistry? = null

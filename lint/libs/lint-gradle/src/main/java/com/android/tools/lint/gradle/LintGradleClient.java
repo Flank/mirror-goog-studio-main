@@ -25,7 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
-import com.android.sdklib.BuildToolInfo;
+import com.android.repository.Revision;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
@@ -69,7 +69,7 @@ public class LintGradleClient extends LintCliClient {
     private File sdkHome;
     @NonNull private final VariantInputs variantInputs;
     private String baselineVariantName;
-    private final BuildToolInfo buildToolInfo;
+    private final Revision buildToolInfoRevision;
     private final boolean isAndroid;
 
     public LintGradleClient(
@@ -80,7 +80,7 @@ public class LintGradleClient extends LintCliClient {
             @Nullable File sdkHome,
             @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
-            @Nullable BuildToolInfo buildToolInfo,
+            @Nullable Revision buildToolInfoRevision,
             boolean isAndroid,
             String baselineVariantName) {
         super(flags, CLIENT_GRADLE);
@@ -90,7 +90,7 @@ public class LintGradleClient extends LintCliClient {
         this.variantInputs = variantInputs;
         this.baselineVariantName = baselineVariantName;
         this.registry = registry;
-        this.buildToolInfo = buildToolInfo;
+        this.buildToolInfoRevision = buildToolInfoRevision;
         this.variant = variant;
         this.isAndroid = isAndroid;
     }
@@ -351,8 +351,8 @@ public class LintGradleClient extends LintCliClient {
 
     @Nullable
     @Override
-    public BuildToolInfo getBuildTools(@NonNull Project project) {
-        return buildToolInfo;
+    public Revision getBuildToolsRevision(@NonNull Project project) {
+        return buildToolInfoRevision;
     }
 
     @Nullable
