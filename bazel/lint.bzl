@@ -5,13 +5,20 @@ def _lint_project_impl(ctx):
     if ctx.file.baseline:
         content += "<baseline file=\"{0}\" />\n".format(ctx.file.baseline.path)
 
-    content += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
-    for file in ctx.files.srcs:
-        content += "  <src file=\"{0}\"/>\n".format(file.path)
-    content += "</module>\n"
-
     for jar in ctx.files.custom_rules:
         content += "<lint-checks jar=\"{0}\" />\n".format(jar.short_path)
+
+    content += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
+
+    for file in ctx.files.srcs:
+        content += "  <src file=\"{0}\" />\n".format(file.path)
+
+    for file in ctx.files.deps:
+        if not file.path.endswith(".jar"):
+            fail("Not a jar: " + file.path)
+        content += "  <classpath jar=\"{0}\" />\n".format(file.short_path)
+
+    content += "</module>\n"
 
     content += "</project>\n"
 
@@ -30,6 +37,7 @@ lint_project = rule(
         "custom_rules": attr.label_list(
             allow_files = True,
         ),
+        "deps": attr.label_list(allow_files = True),
         "baseline": attr.label(
             allow_single_file = True,
         ),
@@ -40,16 +48,25 @@ lint_project = rule(
     implementation = _lint_project_impl,
 )
 
-def lint_test(name, srcs, custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"], baseline = None):
+def lint_test(name, srcs, deps = [], custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"], baseline = None):
+    compile_deps_rule_name = name + "_compile_deps"
+    native.java_binary(
+        name = compile_deps_rule_name,
+        runtime_deps = deps,
+        main_class = "madeup",
+    )
+    compile_deps_jar = compile_deps_rule_name + "_deploy.jar"
+
     project_rule_name = name + "_project"
     lint_project(
         name = project_rule_name,
         srcs = srcs,
+        deps = [compile_deps_jar],
         baseline = baseline,
         custom_rules = custom_rules,
     )
 
-    data = [project_rule_name + ".xml"] + srcs + custom_rules + ([baseline] if baseline else [])
+    data = [project_rule_name + ".xml"] + srcs + custom_rules + ([baseline] if baseline else []) + [compile_deps_jar]
 
     native.java_test(
         name = name,

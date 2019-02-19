@@ -553,6 +553,7 @@ def iml_module(
             name = name + "_lint_test",
             srcs = lint_srcs,
             baseline = lint_baseline,
+            deps = prod_deps,
         )
 
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
