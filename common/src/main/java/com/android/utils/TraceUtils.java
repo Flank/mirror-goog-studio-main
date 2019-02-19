@@ -28,7 +28,7 @@ public class TraceUtils {
      */
     @NonNull
     public static String getCurrentStack() {
-        return getCurrentStack(0);
+        return getCurrentStack(1);
     }
 
     /**
