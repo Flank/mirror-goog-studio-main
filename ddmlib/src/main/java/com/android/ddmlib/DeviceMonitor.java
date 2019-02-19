@@ -569,7 +569,8 @@ final class DeviceMonitor implements ClientTracker {
                     "Failed to connect to client '" + pid + "': timeout");
             return;
         } catch (AdbCommandRejectedException e) {
-            Log.w("DeviceMonitor",
+            Log.d(
+                    "DeviceMonitor",
                     "Adb rejected connection to client '" + pid + "': " + e.getMessage());
             return;
 
@@ -599,7 +600,7 @@ final class DeviceMonitor implements ClientTracker {
                     client.listenForDebugger(debuggerPort);
                     String msg = String.format(Locale.US, "Opening a debugger listener at port %1$d for client with pid %2$d",
                                                debuggerPort, pid);
-                    Log.i("ddms", msg);
+                    Log.d("ddms", msg);
                 }
             } catch (IOException ioe) {
                 client.getClientData().setDebuggerConnectionStatus(DebuggerStatus.ERROR);
