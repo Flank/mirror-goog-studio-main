@@ -91,6 +91,23 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         }
     }
 
+    // Represents a single build command that builds one library.
+    // TODO(emrekultursay): Extend this to build multiple libraries in parallel.
+    private static class BuildStep {
+        @NonNull protected String buildCommand;
+        @NonNull protected NativeLibraryValueMini library;
+        @NonNull protected File outputFolder;
+
+        BuildStep(
+                @NonNull String buildCommand,
+                @NonNull NativeLibraryValueMini library,
+                @NonNull File outputFolder) {
+            this.buildCommand = buildCommand;
+            this.library = library;
+            this.outputFolder = outputFolder;
+        }
+    }
+
     private void buildImpl() throws BuildCommandException, IOException {
         info("starting build");
         checkNotNull(getVariantName());
@@ -98,40 +115,13 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
         List<NativeBuildConfigValueMini> miniConfigs = getNativeBuildConfigValueMinis();
         info("done reading expected JSONs");
 
-        List<String> buildCommands = Lists.newArrayList();
-        List<String> libraryNames = Lists.newArrayList();
-        List<File> outputFolders = Lists.newArrayList();
         if (targets.isEmpty()) {
             info("executing build commands for targets that produce .so files or executables");
         } else {
-            // Check the resulting JSON targets against the targets specified in ndkBuild.targets or
-            // cmake.targets. If a target name specified by the user isn't present then provide an
-            // error to the user that lists the valid target names.
-            info("executing build commands for targets: '%s'", Joiner.on(", ").join(targets));
-
-            // Search libraries for matching targets.
-            Set<String> matchingTargets = Sets.newHashSet();
-            Set<String> unmatchedTargets = Sets.newHashSet();
-            for (NativeBuildConfigValueMini config : miniConfigs) {
-                for (NativeLibraryValueMini libraryValue : config.libraries.values()) {
-                    if (targets.contains(libraryValue.artifactName)) {
-                        matchingTargets.add(libraryValue.artifactName);
-                    } else {
-                        unmatchedTargets.add(libraryValue.artifactName);
-                    }
-                }
-            }
-
-            // All targets must be found or it's a build error
-            for (String target : targets) {
-                if (!matchingTargets.contains(target)) {
-                    throw new GradleException(
-                            String.format(
-                                    "Unexpected native build target %s. Valid values are: %s",
-                                    target, Joiner.on(", ").join(unmatchedTargets)));
-                }
-            }
+            verifyTargetsExist(miniConfigs);
         }
+
+        List<BuildStep> buildSteps = Lists.newArrayList();
 
         for (int miniConfigIndex = 0; miniConfigIndex < miniConfigs.size(); ++miniConfigIndex) {
             NativeBuildConfigValueMini config = miniConfigs.get(miniConfigIndex);
@@ -188,28 +178,30 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                     }
                 }
 
-                buildCommands.add(libraryValue.buildCommand);
-                libraryNames.add(libraryValue.artifactName + " " + libraryValue.abi);
-                outputFolders.add(
-                        nativeBuildConfigurationsJsons.get(miniConfigIndex).getParentFile());
+                buildSteps.add(
+                        new BuildStep(
+                                libraryValue.buildCommand,
+                                libraryValue,
+                                nativeBuildConfigurationsJsons
+                                        .get(miniConfigIndex)
+                                        .getParentFile()));
                 info("about to build %s", libraryValue.buildCommand);
             }
         }
 
-        executeProcessBatch(libraryNames, buildCommands, outputFolders);
+        executeProcessBatch(buildSteps);
 
         info("check expected build outputs");
         for (NativeBuildConfigValueMini config : miniConfigs) {
             for (String library : config.libraries.keySet()) {
                 NativeLibraryValueMini libraryValue = config.libraries.get(library);
-                String libraryName = libraryValue.artifactName + " " + libraryValue.abi;
                 checkNotNull(libraryValue);
                 checkNotNull(libraryValue.output);
                 checkState(!Strings.isNullOrEmpty(libraryValue.artifactName));
                 if (!targets.isEmpty() && !targets.contains(libraryValue.artifactName)) {
                     continue;
                 }
-                if (!libraryNames.contains(libraryName)) {
+                if (buildSteps.stream().noneMatch(step -> step.library == libraryValue)) {
                     // Only need to check existence of output files we expect to create
                     continue;
                 }
@@ -280,6 +272,41 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
     }
 
     /**
+     * Verifies that all targets provided by the user will be built. Throws GradleException if it
+     * detects an unexpected target.
+     */
+    private void verifyTargetsExist(List<NativeBuildConfigValueMini> miniConfigs) {
+        // Check the resulting JSON targets against the targets specified in ndkBuild.targets or
+        // cmake.targets. If a target name specified by the user isn't present then provide an
+        // error to the user that lists the valid target names.
+        info("executing build commands for targets: '%s'", Joiner.on(", ").join(targets));
+
+        // Search libraries for matching targets.
+        Set<String> matchingTargets = Sets.newHashSet();
+        Set<String> unmatchedTargets = Sets.newHashSet();
+        for (NativeBuildConfigValueMini config : miniConfigs) {
+            for (NativeLibraryValueMini libraryValue : config.libraries.values()) {
+                if (targets.contains(libraryValue.artifactName)) {
+                    matchingTargets.add(libraryValue.artifactName);
+                } else {
+                    unmatchedTargets.add(libraryValue.artifactName);
+                }
+            }
+        }
+
+        // All targets must be found or it's a build error
+        for (String target : targets) {
+            if (!matchingTargets.contains(target)) {
+                // TODO(emrekultursay): Convert this into a warning.
+                throw new GradleException(
+                        String.format(
+                                "Unexpected native build target %s. Valid values are: %s",
+                                target, Joiner.on(", ").join(unmatchedTargets)));
+            }
+        }
+    }
+
+    /**
      * Get native build config minis. Also gather stats if they haven't already been gathered for
      * this variant
      *
@@ -299,20 +326,21 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
      * Given a list of build commands, execute each. If there is a failure, processing is stopped at
      * that point.
      */
-    private void executeProcessBatch(
-            @NonNull List<String> libraryNames,
-            @NonNull List<String> commands,
-            @NonNull List<File> output)
+    private void executeProcessBatch(@NonNull List<BuildStep> buildSteps)
             throws BuildCommandException, IOException {
         // Order of building doesn't matter to final result but building in reverse order causes
         // the dependencies to be built first for CMake and ndk-build. This gives better progress
         // visibility to the user because they will see "building XXXXX.a" before
         // "building XXXXX.so". Nicer still would be to have the dependency information in the JSON
         // so we can build in toposort order.
-        for (int library = libraryNames.size() - 1; library >= 0; --library) {
-            String libraryName = libraryNames.get(library);
-            getLogger().lifecycle(String.format("Build %s", libraryName));
-            String command = commands.get(library);
+        for (int step = buildSteps.size() - 1; step >= 0; --step) {
+            NativeLibraryValueMini library = buildSteps.get(step).library;
+            String command = buildSteps.get(step).buildCommand;
+            File output = buildSteps.get(step).outputFolder;
+
+            String artifactNameAndAbi = library.artifactName + "_" + library.abi;
+            getLogger().lifecycle(String.format("Build %s", artifactNameAndAbi));
+
             List<String> tokens = StringHelper.tokenizeCommandLineToEscaped(command);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
             processBuilder.setExecutable(tokens.get(0));
@@ -320,9 +348,10 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                 processBuilder.addArgs(tokens.get(i));
             }
             info("%s", processBuilder);
+
             createProcessOutputJunction(
-                            output.get(library),
-                            "android_gradle_build_" + libraryName.replace(" ", "_"),
+                            output,
+                            "android_gradle_build_" + artifactNameAndAbi,
                             processBuilder,
                             getBuilder(),
                             "")

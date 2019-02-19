@@ -243,7 +243,7 @@ public class NativeBuildOutputTest {
                         + "}\n");
 
         TestFileUtils.appendToFile(project.file("src/main/cpp/Android.mk"), androidMk);
-        checkSucceeded(ImmutableList.of("Build hello-jni x86"), ImmutableList.of("x86_64"));
+        checkSucceeded(ImmutableList.of("Build hello-jni_x86"), ImmutableList.of("x86_64"));
     }
 
     // In this test, ndk.abiFilters and ndkBuild.abiFilters have nothing in common.
