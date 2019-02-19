@@ -34,14 +34,13 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -49,33 +48,27 @@ import javax.inject.Inject
 
 /**
  * Task to merge java resources from multiple modules
- *
- * TODO: Make task cacheable. Using @get:Classpath instead of @get:InputFiles would allow caching
- * but leads to issues with incremental task action: https://github.com/gradle/gradle/issues/1931.
  */
+@CacheableTask
 open class MergeJavaResourceTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Classpath
     lateinit var projectJavaRes: FileCollection
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     var subProjectJavaRes: FileCollection? = null
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     var externalLibJavaRes: FileCollection? = null
         private set
 
-    @get:InputFiles
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     var featureJavaRes: FileCollection? = null
         private set
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -50,6 +51,7 @@ public class NativeSoPackagingTest {
     private GradleTestProject libProject2;
     private GradleTestProject testProject;
     private GradleTestProject jarProject;
+    private GradleTestProject jarProject2;
 
     private void execute(String... tasks) throws Exception {
         // TODO: Remove once we understand the cause of flakiness.
@@ -64,6 +66,7 @@ public class NativeSoPackagingTest {
         libProject2 = project.getSubproject("library2");
         testProject = project.getSubproject("test");
         jarProject = project.getSubproject("jar");
+        jarProject2 = project.getSubproject("jar2");
 
         // rewrite settings.gradle to remove un-needed modules
         Files.asCharSink(new File(project.getTestDir(), "settings.gradle"), Charsets.UTF_8)
@@ -72,29 +75,31 @@ public class NativeSoPackagingTest {
                                 + "include 'library'\n"
                                 + "include 'library2'\n"
                                 + "include 'test'\n"
-                                + "include 'jar'\n");
+                                + "include 'jar'\n"
+                                + "include 'jar2'\n");
 
         // setup dependencies.
-        TestFileUtils.appendToFile(appProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
                 "android {\n"
-                + "    publishNonDefault true\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "    compile project(':jar')\n"
-                + "}\n");
+                        + "    publishNonDefault true\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api project(':library')\n"
+                        + "    api project(':jar')\n"
+                        + "    api project(':jar2')\n"
+                        + "}\n");
 
-        TestFileUtils.appendToFile(libProject.getBuildFile(),
-                "dependencies {\n"
-                + "    compile project(':library2')\n"
-                + "}\n");
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(), "dependencies { api project(':library2') }\n");
 
-        TestFileUtils.appendToFile(testProject.getBuildFile(),
+        TestFileUtils.appendToFile(
+                testProject.getBuildFile(),
                 "android {\n"
-                + "    targetProjectPath ':app'\n"
-                + "    targetVariant 'debug'\n"
-                + "}\n");
+                        + "    targetProjectPath ':app'\n"
+                        + "    targetVariant 'debug'\n"
+                        + "}\n");
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
@@ -117,6 +122,11 @@ public class NativeSoPackagingTest {
         File resFolder = FileUtils.join(jarDir, "src", "main", "resources", "lib", "x86");
         FileUtils.mkdirs(resFolder);
         Files.asCharSink(new File(resFolder, "libjar.so"), Charsets.UTF_8).write("jar:abcd");
+
+        File jar2Dir = jarProject2.getTestDir();
+        File res2Folder = FileUtils.join(jar2Dir, "src", "main", "resources", "lib", "x86");
+        FileUtils.mkdirs(res2Folder);
+        Files.asCharSink(new File(res2Folder, "libjar2.so"), Charsets.UTF_8).write("jar2:abcd");
     }
 
     private static void createOriginalSoFile(
@@ -154,6 +164,7 @@ public class NativeSoPackagingTest {
         checkApk(    appProject, "liblibrary.so",      "library:abcd");
         checkApk(    appProject, "liblibrary2.so",     "library2:abcd");
         checkApk(    appProject, "libjar.so",          "jar:abcd");
+        checkApk(appProject, "libjar2.so", "jar2:abcd");
         checkTestApk(appProject, "libapptest.so",     "appTest:abcd");
         // app test does not contain dependencies' own test assets.
         checkTestApk(appProject, "liblibrarytest.so",  null);
@@ -232,6 +243,31 @@ public class NativeSoPackagingTest {
 
             checkApk(appProject, "libapp.so", "app:abcd");
         });
+    }
+
+    /**
+     * Check for correct behavior when the order of pre-merged so files changes. This must be
+     * supported in order to use @Classpath annotations on the MergeNativeLibsTask inputs.
+     */
+    @Test
+    public void testAppProjectWithReorderedDeps() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    // change order of dependencies in app from (jar, jar2) to (jar2, jar).
+                    searchAndReplace(appProject.getBuildFile(), ":jar2", ":tempJar2");
+                    searchAndReplace(appProject.getBuildFile(), ":jar", ":tempJar");
+                    searchAndReplace(appProject.getBuildFile(), ":tempJar2", ":jar");
+                    searchAndReplace(appProject.getBuildFile(), ":tempJar", ":jar2");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "liblibrary.so", "library:abcd");
+                    checkApk(appProject, "liblibrary2.so", "library2:abcd");
+                    checkApk(appProject, "libjar.so", "jar:abcd");
+                    checkApk(appProject, "libjar2.so", "jar2:abcd");
+                });
     }
 
     @Test
