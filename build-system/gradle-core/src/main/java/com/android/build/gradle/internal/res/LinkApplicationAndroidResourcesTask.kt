@@ -246,30 +246,32 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             aapt2FromMaven, iLogger
         )
 
-        // do a first pass at the list so we generate the code synchronously since it's required
-        // by the full splits asynchronous processing below.
-        val unprocessedManifest = manifestBuildElements.toMutableList()
+        workers.use {
+            val unprocessedManifest = manifestBuildElements.toMutableList()
+            val mainOutput = chooseOutput(manifestBuildElements)
 
-        val mainOutput = chooseOutput(manifestBuildElements)
+            unprocessedManifest.remove(mainOutput)
 
-        unprocessedManifest.remove(mainOutput)
-        AaptSplitInvoker(
-            AaptSplitInvokerParams(
-                mainOutput,
-                dependencies,
-                imports,
-                splitList,
-                featureResourcePackages,
-                mainOutput.apkData,
-                true,
-                aapt2ServiceKey,
-                this
+            it.submit(
+                AaptSplitInvoker::class.java,
+                AaptSplitInvokerParams(
+                    mainOutput,
+                    dependencies,
+                    imports,
+                    splitList,
+                    featureResourcePackages,
+                    mainOutput.apkData,
+                    true,
+                    aapt2ServiceKey,
+                    this
+                )
             )
-        ).run()
 
-        // now all remaining splits will be generated asynchronously.
-        if (variantScope.type.canHaveSplits) {
-            workers.use {
+            if (variantScope.type.canHaveSplits) {
+                // If there are remaining splits to be processed we await for the main split to
+                // finish since the output of the main split is used by the full splits bellow.
+                it.await()
+
                 for (manifestBuildOutput in unprocessedManifest) {
                     val apkInfo = manifestBuildOutput.apkData
                     if (apkInfo.requiresAapt()) {
