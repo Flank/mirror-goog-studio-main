@@ -59,7 +59,6 @@ import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
-import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
@@ -247,39 +246,38 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             sharedLibraryDependencies!!.files
         else
             emptySet()
-        run {
-            val aapt2ServiceKey = registerAaptService(
-                aapt2FromMaven, buildToolInfoProvider.get(), iLogger
+        val aapt2ServiceKey = registerAaptService(
+            aapt2FromMaven, buildToolInfoProvider.get(), iLogger
+        )
+
+        // do a first pass at the list so we generate the code synchronously since it's required
+        // by the full splits asynchronous processing below.
+        val unprocessedManifest = manifestBuildElements.toMutableList()
+
+        val mainOutput = chooseOutput(manifestBuildElements)
+
+        unprocessedManifest.remove(mainOutput)
+        AaptSplitInvoker(
+            AaptSplitInvokerParams(
+                mainOutput,
+                dependencies,
+                imports,
+                splitList,
+                featureResourcePackages,
+                mainOutput.apkData,
+                true,
+                aapt2ServiceKey,
+                this
             )
+        ).run()
 
-            // do a first pass at the list so we generate the code synchronously since it's required
-            // by the full splits asynchronous processing below.
-            val unprocessedManifest = manifestBuildElements.toMutableList()
-
-            val mainOutput = chooseOutput(manifestBuildElements)
-
-            unprocessedManifest.remove(mainOutput)
-            AaptSplitInvoker(
-                AaptSplitInvokerParams(
-                    mainOutput,
-                    dependencies,
-                    imports,
-                    splitList,
-                    featureResourcePackages,
-                    mainOutput.apkData,
-                    true,
-                    aapt2ServiceKey,
-                    this
-                )
-            )
-                .run()
-
-            // now all remaining splits will be generated asynchronously.
-            if (variantScope.type.canHaveSplits) {
+        // now all remaining splits will be generated asynchronously.
+        if (variantScope.type.canHaveSplits) {
+            workers.use {
                 for (manifestBuildOutput in unprocessedManifest) {
                     val apkInfo = manifestBuildOutput.apkData
                     if (apkInfo.requiresAapt()) {
-                        workers.submit(
+                        it.submit(
                             AaptSplitInvoker::class.java,
                             AaptSplitInvokerParams(
                                 manifestBuildOutput,
@@ -296,18 +294,14 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                     }
                 }
             }
-
-            try {
-                workers.await()
-            } catch (e: WorkerExecutorException) {
-                throw BuildException(e.message, e)
-            }
         }
 
         if (multiOutputPolicy === MultiOutputPolicy.SPLITS) {
-            val unprocessedManifest = manifestBuildElements.toList()
+            // The output of the worker runnables submitted before is used in this code block, so
+            // we have to make sure that all work is finished.
+            workers.await()
 
-            for (manifestBuildOutput in unprocessedManifest) {
+            for (manifestBuildOutput in manifestBuildElements.toList()) {
                 val apkInfo = manifestBuildOutput.apkData
                 if (apkInfo.filters
                         .stream()
