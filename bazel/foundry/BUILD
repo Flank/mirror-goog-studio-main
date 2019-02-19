@@ -44,8 +44,6 @@ coverage_java_test(
     jvm_flags = ["-Djava.security.debug=all"],
     tags = [
         "manual",
-        "no_mac",
-        "no_windows",
     ],
     test_class = "FoundryTest",
     deps = [
@@ -63,7 +61,6 @@ coverage_java_test(
         "-Xms10000M",
         "-Xmx10000M",
     ],
-    tags = ["no_rbe_windows"],  # Too much memory needed for rbe win.
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",

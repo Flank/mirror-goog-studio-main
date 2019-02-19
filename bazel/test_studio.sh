@@ -38,8 +38,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   --test_tag_filters=${test_tag_filters} \
   --profile=${dist_dir}/prof \
   -- \
-  $(< "${script_dir}/targets") \
-  //tools/base/bazel/foundry:test
+  $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
 
