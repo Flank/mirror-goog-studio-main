@@ -3594,6 +3594,7 @@ public abstract class TaskManager {
                                 scope.getTaskName("generate", "Sources"),
                                 task -> {
                                     task.dependsOn(PrepareLintJar.NAME);
+                                    task.dependsOn(PrepareLintJarForPublish.NAME);
                                     task.dependsOn(variantData.getExtraGeneratedResFolders());
                                 }));
         // and resGenTask

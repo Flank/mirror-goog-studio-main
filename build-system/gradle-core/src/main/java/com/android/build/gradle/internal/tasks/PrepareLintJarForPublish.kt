@@ -30,8 +30,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-private const val NAME = "prepareLintJarForPublish"
-
 /**
  * Task that takes the configuration result, and check that it's correct.
  *
@@ -45,6 +43,10 @@ open class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerEx
     @get:OutputFile lateinit var outputLintJar: File
         private set
     private val workers = Workers.getWorker(path, workerExecutor)
+
+    companion object {
+        const val NAME = "prepareLintJarForPublish"
+    }
 
     @TaskAction
     fun prepare() {
