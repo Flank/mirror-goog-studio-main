@@ -72,8 +72,8 @@ public class ApplicationDumper {
             }
 
             if (!entry.apk.packageName.equals(packageName)) {
-                throw new DeployerException(
-                        DeployerException.Error.DUMP_FAILED, "Cannot deploy multiple packages");
+                // This is intentionally a swap failure, not a dump failure; we just discover it during dump.
+                throw DeployerException.swapFailed("Cannot deploy multiple packages");
             }
 
             targetPackages.addAll(entry.apk.targetPackages);
@@ -87,7 +87,7 @@ public class ApplicationDumper {
         try {
             response = installer.dump(packagesToDump);
         } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.DUMP_FAILED, e);
+            throw DeployerException.dumpFailed(e.getMessage());
         }
 
         // TODO: To throw an exception here makes this component hard to re-use.
@@ -95,11 +95,7 @@ public class ApplicationDumper {
         // and exception if necessary. This check should be moved further down the
         // pipeline.
         if (response.getStatus() == Deploy.DumpResponse.Status.ERROR_PACKAGE_NOT_FOUND) {
-            throw new DeployerException(
-                    DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
-                    "Cannot list apks for package "
-                            + response.getFailedPackage()
-                            + ". Is the app installed?");
+            throw DeployerException.unknownPackage(response.getFailedPackage());
         }
 
         return new Dump(GetApkEntries(response.getPackages(0)), GetPids(response));

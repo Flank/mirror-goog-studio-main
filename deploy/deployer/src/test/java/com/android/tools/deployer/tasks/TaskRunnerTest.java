@@ -252,8 +252,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw new DeployerException(
-                                    DeployerException.Error.INSTALL_FAILED, "failed");
+                            throw DeployerException.swapFailed("failed");
                         },
                         start);
 
@@ -261,8 +260,8 @@ public class TaskRunnerTest {
             runner.run();
             fail("Exception should have been thrown");
         } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
-            assertEquals("failed", e.getMessage());
+            assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+            assertEquals("failed", e.getDetails());
         }
         service.shutdown();
     }
@@ -278,8 +277,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw new DeployerException(
-                                    DeployerException.Error.INSTALL_FAILED, "failed");
+                            throw DeployerException.swapFailed("failed");
                         },
                         start);
         Task<String> task2 = runner.create(Tasks.TASK2, a -> a + "2", task1);
@@ -288,8 +286,8 @@ public class TaskRunnerTest {
             runner.run();
             fail("Exception should have been thrown");
         } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
-            assertEquals("failed", e.getMessage());
+            assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+            assertEquals("failed", e.getDetails());
         }
         service.shutdown();
     }
@@ -322,8 +320,7 @@ public class TaskRunnerTest {
                 runner.create(
                         Tasks.TASK1,
                         a -> {
-                            throw new DeployerException(
-                                    DeployerException.Error.INSTALL_FAILED, "async failed");
+                            throw DeployerException.swapFailed("async failed");
                         },
                         start);
 
@@ -332,7 +329,7 @@ public class TaskRunnerTest {
             task1.get();
             fail("Task 1 should have thrown an exception");
         } catch (DeployerException e) {
-            assertEquals("async failed", e.getMessage());
+            assertEquals("async failed", e.getDetails());
         }
         waitLatch(exceptionLatch);
 
@@ -341,8 +338,8 @@ public class TaskRunnerTest {
         assertTrue(t instanceof RuntimeException);
         assertTrue(t.getCause() instanceof DeployerException);
         DeployerException e = (DeployerException) t.getCause();
-        assertEquals(DeployerException.Error.INSTALL_FAILED, e.getError());
-        assertEquals("async failed", e.getMessage());
+        assertEquals(DeployerException.Error.SWAP_FAILED, e.getError());
+        assertEquals("async failed", e.getDetails());
         service.shutdown();
     }
 

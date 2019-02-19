@@ -50,12 +50,11 @@ public class ApkSwapper {
      */
     public boolean swap(ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
             throws DeployerException {
+
         // The application dump contains a map of [package name --> process ids]. If there are no
         // packages with running processes, the swap cannot be performed.
         if (dump.packagePids.isEmpty()) {
-            throw new DeployerException(
-                    DeployerException.Error.DUMP_UNKNOWN_PACKAGE,
-                    "Cannot list processes for package. Is the app running?");
+            throw DeployerException.unknownProcess();
         }
 
         // The native installer can't handle swapping more than one package at a time. The dump does
@@ -63,8 +62,7 @@ public class ApkSwapper {
         // multiple applications to swap. This could happen if an instrumentation package targets
         // multiple other packages; we may elect to fix this limitation in the future.
         if (dump.packagePids.size() > 1) {
-            throw new DeployerException(
-                    DeployerException.Error.REDEFINER_ERROR, "Cannot swap multiple packages");
+            throw DeployerException.swapFailed("Cannot swap multiple packages");
         }
 
         Deploy.SwapRequest request = buildSwapRequest(dump, sessionId, toSwap);
@@ -111,10 +109,11 @@ public class ApkSwapper {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
         if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
             if (swapResponse.getJvmtiErrorCodeCount() == 0) {
-                throw new DeployerException(
-                        DeployerException.Error.REDEFINER_ERROR, "Redefiner Error");
+                // TODO: We probably want to start reporting actual errors from the device.
+                throw DeployerException.swapFailed("Unknown error");
             } else {
-                throw new JvmtiRedefinerException(swapResponse.getJvmtiErrorCodeList());
+                // TODO: How to properly handle multiple errors? Multiple errors can only occur in multiprocess apps.
+                throw DeployerException.jvmtiError(swapResponse.getJvmtiErrorCodeList().get(0));
             }
         }
     }

@@ -32,14 +32,11 @@ public class ApkDiffer {
         Map<String, Map<String, ApkEntry>> newMap = groupFiles(newFiles);
 
         if (newMap.size() != oldMap.size()) {
-            throw new DeployerException(
-                    DeployerException.Error.DIFFERENT_NUMBER_OF_APKS,
-                    "Local and remote apk counts differ");
+            throw DeployerException.apkCountMismatch();
         }
+
         if (!newMap.keySet().equals(oldMap.keySet())) {
-            throw new DeployerException(
-                    DeployerException.Error.DIFFERENT_NAMES_OF_APKS,
-                    "Local and remote apk naming scheme differs");
+            throw DeployerException.apkNameMismatch();
         }
 
         // Traverse local and remote list of crcs in order to detect what has changed in a local apk.

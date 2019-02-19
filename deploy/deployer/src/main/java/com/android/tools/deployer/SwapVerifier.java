@@ -21,14 +21,6 @@ import java.util.List;
 
 /** A verifier that determines whether or not a swap operation can be performed. */
 class SwapVerifier {
-
-    public static final String STATIC_LIB_MODIFIED_ERROR =
-            "Changes were not applied: Modifying .so files requires an app restart.";
-    public static final String MODIFYING_ANDROID_MANIFEST_XML_FILES_NOT_SUPPORTED =
-            "Changes were not applied: Modifying AndroidManifest.xml files requires an app restart.";
-    public static final String RESOURCE_MODIFICATION_NOT_ALLOWED =
-            "An activity restart is required to apply changes for the following resource:\n";
-
     public List<FileDiff> verify(List<FileDiff> diffs, boolean allChanges)
             throws DeployerException {
         List<FileDiff> dexes = new ArrayList<>();
@@ -37,14 +29,10 @@ class SwapVerifier {
             if (diff.status.equals(FileDiff.Status.MODIFIED)) {
                 String name = diff.oldFile.name;
                 if (name.endsWith(".so")) {
-                    throw new DeployerException(
-                            DeployerException.Error.CANNOT_SWAP_STATIC_LIB,
-                            STATIC_LIB_MODIFIED_ERROR);
+                    throw DeployerException.changedSharedObject(name);
                 }
                 if (name.equals("AndroidManifest.xml")) {
-                    throw new DeployerException(
-                            DeployerException.Error.CANNOT_SWAP_MANIFEST,
-                            MODIFYING_ANDROID_MANIFEST_XML_FILES_NOT_SUPPORTED);
+                    throw DeployerException.changedManifest(name);
                 }
                 if (name.startsWith("META-INF/")) {
                     continue;
@@ -54,9 +42,7 @@ class SwapVerifier {
                     continue;
                 }
                 if (!allChanges) {
-                    throw new DeployerException(
-                            DeployerException.Error.CANNOT_SWAP_RESOURCE,
-                            RESOURCE_MODIFICATION_NOT_ALLOWED + name);
+                    throw DeployerException.changedResources(name);
                 }
             }
         }

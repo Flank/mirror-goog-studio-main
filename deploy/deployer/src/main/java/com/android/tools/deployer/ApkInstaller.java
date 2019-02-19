@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import static com.android.tools.deployer.AdbClient.InstallResult.INSTALL_PARSE_FAILED_NO_CERTIFICATES;
 import static com.android.tools.deployer.AdbClient.InstallResult.OK;
 import static com.android.tools.deployer.AdbClient.InstallResult.SKIPPED_INSTALL;
-import static com.android.tools.deployer.DeployerException.Error.INSTALL_FAILED;
 
 import com.android.ddmlib.InstallReceiver;
 import com.android.sdklib.AndroidVersion;
@@ -168,7 +167,7 @@ public class ApkInstaller {
         if (result == SKIPPED_INSTALL) {
             // TODO: Show a message saying nothing is installed.
         } else if (result != OK) {
-            throw new DeployerException(INSTALL_FAILED, result, message, result.getReason());
+            throw DeployerException.installFailed(result.name(), message);
         }
         return metrics;
     }
@@ -263,12 +262,12 @@ public class ApkInstaller {
             case INSTALL_FAILED_VERSION_DOWNGRADE:
                 return "The device already has a newer version of this application.";
             case DEVICE_NOT_RESPONDING:
-                return "Device not responding";
+                return "Device not responding.";
             case INSTALL_FAILED_UPDATE_INCOMPATIBLE:
             case INCONSISTENT_CERTIFICATES:
                 return "The device already has an application with the same package but a different signature.";
             case INSTALL_FAILED_DEXOPT:
-                return "The device possibly has stale dexed jars that don't match the current version (dexopt error)";
+                return "The device might have stale dexed jars that don't match the current version (dexopt error).";
             case NO_CERTIFICATE:
                 return "The APK was either not signed, or signed incorrectly.";
             case INSTALL_FAILED_OLDER_SDK:

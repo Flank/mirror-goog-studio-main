@@ -74,7 +74,7 @@ public class ApkParser {
             }
             return newFiles;
         } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.INVALID_APK, "Error reading APK");
+            throw DeployerException.parseFailed(e.getMessage());
         }
     }
 

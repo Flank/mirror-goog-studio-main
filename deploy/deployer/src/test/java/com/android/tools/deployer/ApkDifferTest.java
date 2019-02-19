@@ -93,7 +93,7 @@ public class ApkDifferTest {
       fail("Diff should't have thrown an exception");
     }
     catch (DeployerException e) {
-      assertEquals(DeployerException.Error.DIFFERENT_NAMES_OF_APKS, e.getError());
+            assertEquals(DeployerException.Error.DIFFERENT_APK_NAMES, e.getError());
     }
 
     // Diff in the other direction
@@ -102,7 +102,7 @@ public class ApkDifferTest {
       fail("Diff should't have thrown an exception");
     }
     catch (DeployerException e) {
-      assertEquals(DeployerException.Error.DIFFERENT_NAMES_OF_APKS, e.getError());
+            assertEquals(DeployerException.Error.DIFFERENT_APK_NAMES, e.getError());
     }
   }
 

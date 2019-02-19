@@ -86,7 +86,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
         try {
             vm.redefineClasses(redefinitionRequest);
         } catch (Throwable t) {
-            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, t);
+            throw DeployerException.swapFailed(t.getMessage());
         }
         response.setStatus(Deploy.SwapResponse.Status.OK);
         return response.build();

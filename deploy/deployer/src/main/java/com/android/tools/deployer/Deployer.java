@@ -118,9 +118,7 @@ public class Deployer {
             throws DeployerException {
 
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.O)) {
-            throw new DeployerException(
-                    DeployerException.Error.CANNOT_SWAP_BEFORE_API_26,
-                    "Apply Changes is only supported on API 26 or newer");
+            throw DeployerException.apiNotSupported();
         }
 
         // Inputs

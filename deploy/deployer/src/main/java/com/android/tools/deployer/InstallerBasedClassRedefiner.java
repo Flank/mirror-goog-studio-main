@@ -31,7 +31,7 @@ public class InstallerBasedClassRedefiner implements ClassRedefiner {
         try {
             return installer.swap(request);
         } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.REDEFINER_ERROR, e);
+            throw DeployerException.swapFailed(e.getMessage());
         }
     }
 }

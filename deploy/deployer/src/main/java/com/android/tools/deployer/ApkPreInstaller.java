@@ -143,7 +143,7 @@ public class ApkPreInstaller {
                 totalSize += Files.size(Paths.get(apk.path));
             }
         } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.UNABLE_TO_PREINSTALL, e);
+            throw DeployerException.preinstallFailed(e.getMessage());
         }
 
         String sessionId;
@@ -165,15 +165,14 @@ public class ApkPreInstaller {
             // "Success: created install session [X]" where X is the session id.
             String stringResponse = new String(rawResponse, "UTF-8");
             if (!stringResponse.startsWith("Success: created install session [")) {
-                throw new DeployerException(
-                        DeployerException.Error.UNABLE_TO_PREINSTALL,
+                throw DeployerException.preinstallFailed(
                         "Unable to create session : " + stringResponse);
             }
             sessionId =
                     stringResponse.substring(
                             stringResponse.indexOf('[') + 1, stringResponse.indexOf(']'));
         } catch (IOException e) {
-            throw new DeployerException(DeployerException.Error.UNABLE_TO_PREINSTALL, e);
+            throw DeployerException.preinstallFailed(e.getMessage());
         }
 
         for (Apk apk : fullApks.values()) {
@@ -194,11 +193,10 @@ public class ApkPreInstaller {
                                 stream);
                 String stringResponse = new String(rawResponse, "UTF-8");
                 if (!stringResponse.startsWith("Success")) {
-                    throw new DeployerException(
-                            DeployerException.Error.UNABLE_TO_PREINSTALL, stringResponse);
+                    throw DeployerException.preinstallFailed(stringResponse);
                 }
             } catch (IOException e) {
-                throw new DeployerException(DeployerException.Error.UNABLE_TO_PREINSTALL, e);
+                throw DeployerException.preinstallFailed(e.getMessage());
             }
         }
         return sessionId;

@@ -15,7 +15,6 @@
  */
 package com.android.tools.deployer;
 
-import com.google.common.collect.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -24,18 +23,17 @@ public class DeployerErrorMessagePresenterTest {
     @Test
     public void testJvmtiFailure() {
         DeployerException deployerException =
-                new JvmtiRedefinerException(
-                        Lists.newArrayList(
-                                "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED"));
-        String message = deployerException.getMessage();
-        Assert.assertTrue(message.contains("Changes to method modifiers"));
+                DeployerException.jvmtiError(
+                        "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED");
+        Assert.assertEquals(
+                deployerException.getError(),
+                DeployerException.Error.CANNOT_CHANGE_METHOD_MODIFIERS);
     }
 
     @Test
     public void testInternalFailure() {
-        DeployerException deployerException =
-                new DeployerException(DeployerException.Error.DUMP_FAILED, "ABCD");
-        String message = deployerException.getMessage();
+        DeployerException deployerException = DeployerException.dumpFailed("ABCD");
+        String message = deployerException.getDetails();
         Assert.assertTrue(message.contains("ABCD"));
     }
 }

@@ -178,7 +178,7 @@ public class TaskRunner {
             try {
                 return future.get();
             } catch (InterruptedException e) {
-                throw new DeployerException(DeployerException.Error.INTERRUPTED, e);
+                throw DeployerException.interrupted(e.getMessage());
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof DeployerException) {
                     throw (DeployerException) e.getCause();

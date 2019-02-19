@@ -37,9 +37,7 @@ public class CachedDexSplitter implements DexSplitter {
         List<DexClass> classes = db.getClasses(dex);
         if (classes.isEmpty() || keepCode != null) {
             if (dex.apk.path == null) {
-                throw new DeployerException(
-                        DeployerException.Error.REMOTE_APK_NOT_FOUND_ON_DB,
-                        "Cannot generate classes for unknown dex");
+                throw DeployerException.remoteApkNotFound();
             }
             classes = splitter.split(dex, keepCode);
             db.addClasses(classes);
