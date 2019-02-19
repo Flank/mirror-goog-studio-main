@@ -113,7 +113,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         // provides a streaming JsonReader rather than a full object.
         NativeBuildConfigValue buildConfig =
                 new NativeBuildConfigValueBuilder(getMakeFile(), projectDir)
-                        .addCommands(
+                        .setCommands(
                                 getBuildCommand(
                                         abiConfig, applicationMk, false /* removeJobsFlag */),
                                 getBuildCommand(abiConfig, applicationMk, true /* removeJobsFlag */)

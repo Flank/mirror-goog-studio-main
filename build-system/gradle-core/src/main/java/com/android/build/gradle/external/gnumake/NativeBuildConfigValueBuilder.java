@@ -17,10 +17,12 @@ package com.android.build.gradle.external.gnumake;
 
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
+import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.utils.NativeSourceFileExtensions;
 import com.android.utils.NdkUtils;
 import com.google.common.base.Joiner;
@@ -99,6 +101,8 @@ public class NativeBuildConfigValueBuilder {
     @NonNull private final List<Output> outputs;
     @NonNull private final OsFileConventions fileConventions;
 
+    @Nullable private String buildTargetsCommand;
+
     /**
      * Constructs a NativeBuildConfigValueBuilder which can be used to build a {@link
      * NativeBuildConfigValue}.
@@ -119,14 +123,14 @@ public class NativeBuildConfigValueBuilder {
         this.fileConventions = fileConventions;
     }
 
-
-    /** Add commands for a particular variant. */
+    /** Set the commands and variantName for the NativeBuildConfigValue being built. */
     @NonNull
-    public NativeBuildConfigValueBuilder addCommands(
-            String buildCommand,
-            String cleanCommand,
-            String variantName,
+    public NativeBuildConfigValueBuilder setCommands(
+            @NonNull String buildCommand,
+            @NonNull String cleanCommand,
+            @NonNull String variantName,
             @NonNull String commands) {
+        this.outputs.clear();
         ListMultimap<String, List<BuildStepInfo>> outputs =
                 FlowAnalyzer.analyze(commands, fileConventions);
         for (Map.Entry<String, List<BuildStepInfo>> entry : outputs.entries()) {
@@ -138,6 +142,8 @@ public class NativeBuildConfigValueBuilder {
                             cleanCommand,
                             variantName));
         }
+        this.buildTargetsCommand =
+                buildCommand + " " + ExternalNativeBuildTask.BUILD_TARGETS_PLACEHOLDER;
         return this;
     }
 
@@ -154,6 +160,7 @@ public class NativeBuildConfigValueBuilder {
         // Sort by library name so that output is stable
         Collections.sort(outputs, Comparator.comparing(o -> o.libraryName));
         config.cleanCommands = generateCleanCommands();
+        config.buildTargetsCommand = buildTargetsCommand;
         config.buildFiles = Lists.newArrayList(androidMk);
         config.libraries = generateLibraries();
         config.toolchains = generateToolchains();

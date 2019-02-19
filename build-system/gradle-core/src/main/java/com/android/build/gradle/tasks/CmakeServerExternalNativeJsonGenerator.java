@@ -440,6 +440,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 CmakeUtils.getCleanCommand(
                         getCmakeExecutable(), abiConfig.getExternalNativeBuildFolder()));
 
+        // Build targets command.
+        assert nativeBuildConfigValue.buildTargetsCommand != null;
+        nativeBuildConfigValue.buildTargetsCommand =
+                CmakeUtils.getBuildTargetsCommand(
+                        getCmakeExecutable(),
+                        getOutputFolder(getJsonFolder(), abiConfig.getAbiName()));
+
         CodeModel codeModel = cmakeServer.codemodel();
         if (!ServerUtils.isCodeModelValid(codeModel)) {
             throw new RuntimeException(

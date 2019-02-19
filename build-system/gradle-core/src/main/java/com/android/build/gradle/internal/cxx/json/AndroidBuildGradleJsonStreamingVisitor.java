@@ -72,6 +72,8 @@ public abstract class AndroidBuildGradleJsonStreamingVisitor {
 
     protected void visitCleanCommands(@NonNull String cleanCommand) {}
 
+    protected void visitBuildTargetsCommand(@NonNull String buildTargetsCommand) {}
+
     protected void visitCFileExtensions(@NonNull String buildFile) {}
 
     protected void visitCppFileExtensions(@NonNull String buildFile) {}

@@ -341,7 +341,7 @@ public class NdkSampleTest {
             String variantBuildOutputText = Joiner.on('\n')
                     .join(Files.readLines(variantBuildOutputFile, Charsets.UTF_8));
 
-            builder.addCommands(
+            builder.setCommands(
                     "echo build command",
                     "echo clean command",
                     variantName,

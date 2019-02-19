@@ -211,6 +211,12 @@ public class AndroidBuildGradleJsons {
         }
 
         @Override
+        protected void visitBuildTargetsCommand(@Nullable String buildTargetsCommand) {
+            super.visitBuildTargetsCommand(buildTargetsCommand);
+            miniConfig.buildTargetsCommand = buildTargetsCommand;
+        }
+
+        @Override
         protected void visitLibraryOutput(@NonNull String output) {
             super.visitLibraryOutput(output);
             miniConfig.libraries.get(libraryName).output = new File(output);

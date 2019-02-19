@@ -31,8 +31,8 @@ public class NativeBuildConfigValue {
     public Collection<File> buildFiles;
     @Nullable
     public List<String> cleanCommands;
-    @Nullable
-    public Map<String, NativeLibraryValue> libraries;
+    @Nullable public String buildTargetsCommand;
+    @Nullable public Map<String, NativeLibraryValue> libraries;
     @Nullable
     public Map<String, NativeToolchainValue> toolchains;
     @Nullable

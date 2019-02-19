@@ -43,12 +43,13 @@ import org.junit.Test;
 
 public class NativeBuildConfigValueBuilderTest {
 
-    private static void assertThatNativeBuildConfigEquals(@NonNull String string, String expected) {
+    private static void assertThatNativeBuildConfigEquals(
+            @NonNull String commands, @NonNull String expected) {
         File projectPath = new File("/projects/MyProject/jni/Android.mk");
 
         NativeBuildConfigValue actualValue =
                 new NativeBuildConfigValueBuilder(projectPath, projectPath.getParentFile())
-                        .addCommands("echo build command", "echo clean command", "debug", string)
+                        .setCommands("echo build command", "echo clean command", "debug", commands)
                         .build();
 
         if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
@@ -79,6 +80,7 @@ public class NativeBuildConfigValueBuilderTest {
                         + "  \"cleanCommands\": [\n"
                         + "    \"echo clean command\"\n"
                         + "  ],"
+                        + "  \"buildTargetsCommand\": \"echo build command {LIST_OF_TARGETS_TO_BUILD}\",\n"
                         + "  \"libraries\": {\n"
                         + "    \"a-debug-x86_64\": {\n"
                         + "      abi : \"x86_64\","
@@ -147,6 +149,7 @@ public class NativeBuildConfigValueBuilderTest {
                         + "  \"cleanCommands\": [\n"
                         + "    \"echo clean command\"\n"
                         + "  ],"
+                        + "  \"buildTargetsCommand\": \"echo build command {LIST_OF_TARGETS_TO_BUILD}\",\n"
                         + "  \"libraries\": {\n"
                         + "    \"aa-debug-x\": {\n"
                         + "      \"buildCommand\": \"echo build command x/aa.o\",\n"
@@ -195,6 +198,7 @@ public class NativeBuildConfigValueBuilderTest {
                         + "  \"cleanCommands\": [\n"
                         + "    \"echo clean command\"\n"
                         + "  ],"
+                        + "  \"buildTargetsCommand\": \"echo build command {LIST_OF_TARGETS_TO_BUILD}\",\n"
                         + "  \"libraries\": {\n"
                         + "    \"a-debug-x86\": {\n"
                         + "      abi : \"x86\","
@@ -250,6 +254,7 @@ public class NativeBuildConfigValueBuilderTest {
                         + "  \"cleanCommands\": [\n"
                         + "    \"echo clean command\"\n"
                         + "  ],"
+                        + "  \"buildTargetsCommand\": \"echo build command {LIST_OF_TARGETS_TO_BUILD}\",\n"
                         + "  \"libraries\": {\n"
                         + "    \"a-debug-x86\": {\n"
                         + "      abi : \"x86\","

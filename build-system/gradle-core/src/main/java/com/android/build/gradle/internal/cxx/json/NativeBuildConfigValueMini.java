@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -33,5 +34,6 @@ import java.util.Map;
 public class NativeBuildConfigValueMini {
     @NonNull public List<File> buildFiles = Lists.newArrayList();
     @NonNull public List<String> cleanCommands = Lists.newArrayList();
+    @Nullable public String buildTargetsCommand;
     @NonNull public Map<String, NativeLibraryValueMini> libraries = Maps.newHashMap();
 }

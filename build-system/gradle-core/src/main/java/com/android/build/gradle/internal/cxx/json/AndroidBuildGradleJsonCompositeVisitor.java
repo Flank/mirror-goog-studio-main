@@ -154,6 +154,11 @@ public class AndroidBuildGradleJsonCompositeVisitor extends AndroidBuildGradleJs
     }
 
     @Override
+    protected void visitBuildTargetsCommand(@NonNull String buildTargetsCommand) {
+        visitors.forEach(parser -> parser.visitBuildTargetsCommand(buildTargetsCommand));
+    }
+
+    @Override
     protected void visitCleanCommands(@NonNull String cleanCommand) {
         visitors.forEach(parser -> parser.visitCleanCommands(cleanCommand));
     }

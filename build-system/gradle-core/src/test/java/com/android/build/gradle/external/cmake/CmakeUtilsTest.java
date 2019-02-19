@@ -22,12 +22,16 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.external.cmake.server.CodeModel;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.repository.Revision;
+import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
+import kotlin.text.Charsets;
 import org.jetbrains.annotations.Contract;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 public class CmakeUtilsTest {
@@ -86,6 +90,88 @@ public class CmakeUtilsTest {
         nativeToolchainValue.cCompilerExecutable = Mockito.mock(File.class);
 
         assertThat(CmakeUtils.getToolchainHash(nativeToolchainValue)).isNotEqualTo(0);
+    }
+
+    @Test
+    public void testGetNinjaExecutable_findsNinjaNextToCMake() throws IOException {
+        TemporaryFolder temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+        File cmakeFolder = temporaryFolder.newFolder("cmakeFolder");
+        File cmakeExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
+        File ninjaExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
+
+        assertThat(CmakeUtils.getNinjaExecutable(cmakeExecutable))
+                .isEqualTo(ninjaExecutable.getPath());
+    }
+
+    @Test
+    public void testGetNinjaExecutable_cannotFindNinja() throws IOException {
+        TemporaryFolder temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+        File cmakeFolder = temporaryFolder.newFolder("cmakeFolder");
+        File cmakeExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
+
+        assertThat(CmakeUtils.getNinjaExecutable(cmakeExecutable))
+                .isEqualTo(CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
+    }
+
+    @Test
+    public void testGetBuildCommand() throws IOException {
+        TemporaryFolder temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+        File cmakeFolder = temporaryFolder.newFolder("cmakeFolder");
+        File cmakeExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
+        createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
+
+        String buildCommand =
+                CmakeUtils.getBuildCommand(cmakeExecutable, new File("/tmp"), "target");
+
+        if (CmakeUtils.isWindows()) {
+            assertThat(buildCommand).endsWith("ninja.exe -C \"C:\\tmp\" target");
+        } else {
+            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" target");
+        }
+    }
+
+    @Test
+    public void testGetCleanCommand() throws IOException {
+        TemporaryFolder temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+        File cmakeFolder = temporaryFolder.newFolder("cmakeFolder");
+        File cmakeExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
+        createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
+
+        String buildCommand = CmakeUtils.getCleanCommand(cmakeExecutable, new File("/tmp"));
+
+        if (CmakeUtils.isWindows()) {
+            assertThat(buildCommand).endsWith("ninja.exe -C \"C:\\tmp\" clean");
+        } else {
+            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" clean");
+        }
+    }
+
+    @Test
+    public void testGetBuildTargetsCommand() throws IOException {
+        TemporaryFolder temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
+        File cmakeFolder = temporaryFolder.newFolder("cmakeFolder");
+        File cmakeExecutable =
+                createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
+        createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
+
+        String buildCommand = CmakeUtils.getBuildTargetsCommand(cmakeExecutable, new File("/tmp"));
+
+        if (CmakeUtils.isWindows()) {
+            assertThat(buildCommand)
+                    .endsWith("ninja.exe -C \"C:\\tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+        } else {
+            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+        }
     }
 
     /**
@@ -187,5 +273,13 @@ public class CmakeUtilsTest {
                 + "\"inReplyTo\": \"codemodel\",\n"
                 + "\"type\": \"reply\"\n"
                 + "}";
+    }
+
+    /** Creates a file in the given folder and writes some dummy contents into the file. */
+    private static File createFile(@NonNull File folder, @NonNull String fileName)
+            throws IOException {
+        File file = new File(folder, fileName);
+        Files.asCharSink(file, Charsets.UTF_8).write("dummy file contents");
+        return file;
     }
 }

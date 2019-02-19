@@ -52,6 +52,9 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
                 case "cleanCommands":
                     parseCleanCommands();
                     break;
+                case "buildTargetsCommand":
+                    parseBuildTargetsCommand();
+                    break;
                 case "cFileExtensions":
                     parseCFileExtensions();
                     break;
@@ -270,6 +273,11 @@ public class AndroidBuildGradleJsonStreamingParser implements Closeable {
             visitor.visitCleanCommands(value);
         }
         reader.endArray();
+    }
+
+    private void parseBuildTargetsCommand() throws IOException {
+        String value = reader.nextString();
+        visitor.visitBuildTargetsCommand(value);
     }
 
     private void parseCFileExtensions() throws IOException {
