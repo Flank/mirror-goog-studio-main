@@ -39,4 +39,5 @@ class FakeResolvedComponentResult(
     override fun getSelectionReason() = selectionReason ?: error("value not set")
     override fun getVariant() = variant ?: error("value not set")
     override fun getModuleVersion() = moduleVersion ?: error("value not set")
+    override fun getVariants(): List<ResolvedVariantResult> = variant?.let { listOf(it) } ?: error("value not set")
 }

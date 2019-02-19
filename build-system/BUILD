@@ -107,7 +107,7 @@ maven_pom(
 )
 
 # The Gradle APIs to build against and run against.
-GRADLE_VERSION = "5.1.1"
+GRADLE_VERSION = "5.2.1"
 
 filegroup(
     name = "gradle-distrib",
@@ -158,6 +158,8 @@ GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
     "//tools/base/lint:tools.lint-gradle",
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",
     "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.1.3:jar",
+    "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.2.0:jar",
+    "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.2:jar",
 ]
 
 maven_repo(
