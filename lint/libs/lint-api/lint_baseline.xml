@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha05">
+<issues format="5" by="lint 26.5.0-alpha06">
 
     <issue
         id="DefaultLocale"
@@ -11,84 +11,268 @@
         explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
         url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
         urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="            var message = String.format("
-        errorLine2="                          ^">
+        errorLine1="                        String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintBaseline.kt"
-            line="183"
+            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
+            line="334"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        val classEntries = ClassEntry.fromClassPath(this, classFolders, true)"
+        errorLine2="                                      ~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
+            line="1049"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="            return ClassEntry.createSuperClassMap(this, classEntries)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
+            line="1051"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        val libraryEntries = ClassEntry.fromClassPath(this, libraries, true)"
+        errorLine2="                                        ~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
+            line="1053"
+            column="41"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        return ClassEntry.createSuperClassMap(this, libraryEntries, classEntries)"
+        errorLine2="                          ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
+            line="1054"
             column="27"/>
     </issue>
 
     <issue
-        id="DefaultLocale"
+        id="VisibleForTests"
         severity="Warning"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        message="This method should only be accessed from tests or within private scope"
         category="Correctness"
-        priority="6"
-        summary="Implied default locale in case conversion"
-        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
-        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="            sb.append(String.format(&quot;... (%1\$d more)&quot;, n - i - 1))"
-        errorLine2="                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)"
+        errorLine2="                                        ~~~~~~~~~~~~~">
         <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="227"
-            column="23"/>
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="1308"
+            column="41"/>
     </issue>
 
     <issue
-        id="DefaultLocale"
+        id="VisibleForTests"
         severity="Warning"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        message="This method should only be accessed from tests or within private scope"
         category="Correctness"
-        priority="6"
-        summary="Implied default locale in case conversion"
-        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
-        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="        errorCount == 0 -> String.format(&quot;%1\$d %2\$s&quot;, warningCount, warnings)"
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="            ClassEntry.fromClassPath(client, classFolders, true)"
+        errorLine2="                       ~~~~~~~~~~~~~">
         <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="337"
-            column="28"/>
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="1324"
+            column="24"/>
     </issue>
 
     <issue
-        id="DefaultLocale"
+        id="VisibleForTests"
         severity="Warning"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        message="This method should only be accessed from tests or within private scope"
         category="Correctness"
-        priority="6"
-        summary="Implied default locale in case conversion"
-        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
-        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="        warningCount == 0 -> String.format(&quot;%1\$d %2\$s&quot;, errorCount, errors)"
-        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        val entries = ClassEntry.fromClassFiles("
+        errorLine2="                                 ~~~~~~~~~~~~~~">
         <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="338"
-            column="30"/>
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="1355"
+            column="34"/>
     </issue>
 
     <issue
-        id="DefaultLocale"
+        id="VisibleForTests"
         severity="Warning"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        message="This method should only be accessed from tests or within private scope"
         category="Correctness"
-        priority="6"
-        summary="Implied default locale in case conversion"
-        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
-        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="            String.format("
-        errorLine2="            ^">
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                    if (prev != null &amp;&amp; prev.compareTo(entry) == 0) {"
+        errorLine2="                                             ~~~~~~~~~">
         <location
-            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="341"
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="1389"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                            &quot;Error processing ${entry.path()}: broken class file? (${t.message})&quot;"
+        errorLine2="                                                      ~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="1404"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="            if (file != project.dir) {"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="793"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="                        if (dir == project.dir) {"
+        errorLine2="                            ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="797"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="        if (parent == cachedFolder) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="2851"
             column="13"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="        file1 == file2 -> return file1"
+        errorLine2="        ~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
+            line="642"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="                    if (first == second) {"
+        errorLine2="                        ~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
+            line="651"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="        return dir.equals(other.dir);"
+        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
+            line="462"
+            column="16"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="                return dir.getCanonicalFile().equals(toCompare) &amp;&amp; dir.exists();"
+        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
+            line="1320"
+            column="24"/>
     </issue>
 
 </issues>
