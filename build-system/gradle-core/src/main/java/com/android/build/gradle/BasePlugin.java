@@ -35,7 +35,9 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkComponents;
+import com.android.build.gradle.internal.SdkComponentsOptions;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.SdkLibDataFactory;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
@@ -85,17 +87,9 @@ import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
-import com.android.builder.sdk.SdkLibData;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
 import com.android.ide.common.repository.GradleVersion;
-import com.android.repository.api.Channel;
-import com.android.repository.api.ConsoleProgressIndicator;
-import com.android.repository.api.Downloader;
-import com.android.repository.api.SettingsController;
-import com.android.repository.impl.downloader.LocalFileAwareDownloader;
-import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.repository.legacy.LegacyDownloader;
 import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -104,15 +98,10 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
@@ -454,21 +443,26 @@ public abstract class BasePlugin<E extends BaseExtension2>
     private SdkComponents createSdkComponents(Gradle gradle) {
         SdkHandler sdkHandler =
                 new SdkHandler(project, getLogger(), extraModelInfo.getSyncIssueHandler());
-        if (!gradle.getStartParameter().isOffline()
-                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)) {
-            SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
-            sdkHandler.setSdkLibData(sdkLibData);
-        }
-        if (projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS)) {
-            sdkHandler.addLocalRepositories(project);
-        }
+
+        boolean enableDownload =
+                !gradle.getStartParameter().isOffline()
+                        && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD);
+        SdkLibDataFactory factory =
+                new SdkLibDataFactory(
+                        enableDownload,
+                        projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL),
+                        getLogger());
+
+        SdkComponentsOptions options =
+                new SdkComponentsOptions(
+                        () -> getExtension().getCompileSdkVersion(),
+                        () -> getExtension().getBuildToolsRevision(),
+                        factory,
+                        projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS),
+                        projectOptions.get(BooleanOption.USE_ANDROID_X));
 
         return new SdkComponents(
-                () -> getExtension().getCompileSdkVersion(),
-                () -> getExtension().getBuildToolsRevision(),
-                sdkHandler,
-                extraModelInfo.getSyncIssueHandler(),
-                project);
+                options, sdkHandler, extraModelInfo.getSyncIssueHandler(), project);
     }
 
     /** Creates a lint class path Configuration for the given project */
@@ -904,104 +898,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     @Override
     public ToolingModelBuilderRegistry getModelBuilderRegistry() {
         return registry;
-    }
-
-    private SettingsController getSettingsController() {
-        Proxy proxy = createProxy(System.getProperties(), getLogger());
-        return new SettingsController() {
-            @Override
-            public boolean getForceHttp() {
-                return false;
-            }
-
-            @Override
-            public void setForceHttp(boolean force) {
-                // Default, doesn't allow to set force HTTP.
-            }
-
-            @Override
-            public boolean getDisableSdkPatches() {
-                return true;
-            }
-
-            @Override
-            public void setDisableSdkPatches(boolean disable) {
-                // Default, doesn't allow to enable SDK patches, since this is an IDEA thing.
-            }
-
-            @Nullable
-            @Override
-            public Channel getChannel() {
-                Integer channel = projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL);
-                if (channel != null) {
-                    return Channel.create(channel);
-                } else {
-                    return Channel.DEFAULT;
-                }
-            }
-
-            @NonNull
-            @Override
-            public Proxy getProxy() {
-                return proxy;
-            }
-        };
-    }
-
-    @VisibleForTesting
-    static Proxy createProxy(@NonNull Properties properties, @NonNull ILogger logger) {
-        String host = properties.getProperty("https.proxyHost");
-        int port = 443;
-        if (host != null) {
-            String maybePort = properties.getProperty("https.proxyPort");
-            if (maybePort != null) {
-                try {
-                    port = Integer.parseInt(maybePort);
-                } catch (NumberFormatException e) {
-                    logger.lifecycle(
-                            "Invalid https.proxyPort '" + maybePort + "', using default 443");
-                }
-            }
-        }
-        else {
-            host = properties.getProperty("http.proxyHost");
-            //noinspection VariableNotUsedInsideIf
-            if (host != null) {
-                port = 80;
-                String maybePort = properties.getProperty("http.proxyPort");
-                if (maybePort != null) {
-                    try {
-                        port = Integer.parseInt(maybePort);
-                    } catch (NumberFormatException e) {
-                        logger.lifecycle(
-                                "Invalid http.proxyPort '" + maybePort + "', using default 80");
-                    }
-                }
-            }
-        }
-        if (host != null) {
-            InetSocketAddress proxyAddr = createAddress(host, port);
-            if (proxyAddr != null) {
-                return new Proxy(Proxy.Type.HTTP, proxyAddr);
-            }
-        }
-        return Proxy.NO_PROXY;
-
-    }
-
-    private static InetSocketAddress createAddress(String proxyHost, int proxyPort) {
-        try {
-            InetAddress address = InetAddress.getByName(proxyHost);
-            return new InetSocketAddress(address, proxyPort);
-        } catch (UnknownHostException e) {
-            new ConsoleProgressIndicator().logWarning("Failed to parse host " + proxyHost);
-            return null;
-        }
-    }
-
-    private Downloader getDownloader() {
-        return new LocalFileAwareDownloader(
-                new LegacyDownloader(FileOpUtils.create(), getSettingsController()));
     }
 
     /**

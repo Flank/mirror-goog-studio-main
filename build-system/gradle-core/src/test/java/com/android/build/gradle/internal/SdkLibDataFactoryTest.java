@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle;
+package com.android.build.gradle.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -24,54 +24,85 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Properties;
+import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests for {@link BasePlugin}
- */
-public class BasePluginTest {
+/** Tests for {@link SdkLibDataFactory} */
+public class SdkLibDataFactoryTest {
+
+    MockLog log;
+    Properties properties;
+    SdkLibDataFactory factory;
+
+    @Before
+    public void setup() {
+        log = new MockLog();
+        properties = new Properties();
+        properties.clear();
+        factory = new SdkLibDataFactory(true, null, log);
+    }
+
     @Test
-    public void createProxy() throws Exception {
-        MockLog log = new MockLog();
-        Properties properties = new Properties();
+    public void createProxy_https_priority() throws Exception {
         InetAddress loopback = InetAddress.getByName(null);
         properties.setProperty("https.proxyHost", "localhost");
-        Proxy proxy = BasePlugin.createProxy(properties, log);
+        properties.setProperty("http.proxyHost", "8.8.8.8");
+        Proxy proxy = factory.createProxy(properties, log);
+        assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
+    }
+
+    @Test
+    public void createProxy_localhost_https_defaultPort() throws Exception {
+        InetAddress loopback = InetAddress.getByName(null);
+        properties.setProperty("https.proxyHost", "localhost");
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().isEmpty());
+    }
 
+    @Test
+    public void createProxy_localhost_port_override() throws Exception {
+        InetAddress loopback = InetAddress.getByName(null);
+        properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("https.proxyPort", "123");
-        proxy = BasePlugin.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress(loopback, 123), proxy.address());
         assertTrue(log.getMessages().isEmpty());
+    }
 
+    @Test
+    public void createProxy_localhost_bad_port_override() throws Exception {
+        InetAddress loopback = InetAddress.getByName(null);
+        properties.setProperty("https.proxyHost", "localhost");
         properties.setProperty("https.proxyPort", "bad");
-        proxy = BasePlugin.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
         assertTrue(log.getMessages().get(0).contains("bad"));
         assertTrue(log.getMessages().get(0).contains("443"));
-        log.clear();
+    }
 
-        properties.clear();
-        properties.setProperty("https.proxyHost", "localhost");
+    @Test
+    public void createProxy_remote_http() {
         properties.setProperty("http.proxyHost", "8.8.8.8");
-        proxy = BasePlugin.createProxy(properties, log);
-        assertEquals(new InetSocketAddress(loopback, 443), proxy.address());
-
-        properties.clear();
-        properties.setProperty("http.proxyHost", "8.8.8.8");
-        proxy = BasePlugin.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 80), proxy.address());
+    }
 
+    @Test
+    public void createProxy_remote_http_port_override() {
+        properties.setProperty("http.proxyHost", "8.8.8.8");
         properties.setProperty("http.proxyPort", "123");
-        proxy = BasePlugin.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 123), proxy.address());
+    }
 
+    @Test
+    public void createProxy_remote_http_bad_port_override() {
+        properties.setProperty("http.proxyHost", "8.8.8.8");
         properties.setProperty("http.proxyPort", "bad");
-        proxy = BasePlugin.createProxy(properties, log);
+        Proxy proxy = factory.createProxy(properties, log);
         assertEquals(new InetSocketAddress("8.8.8.8", 80), proxy.address());
         assertTrue(log.getMessages().get(0).contains("bad"));
         assertTrue(log.getMessages().get(0).contains("80"));
-        log.clear();
     }
 }

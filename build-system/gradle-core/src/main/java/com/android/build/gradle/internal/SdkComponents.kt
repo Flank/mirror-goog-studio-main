@@ -18,6 +18,7 @@ package com.android.build.gradle.internal
 
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.repository.Revision
@@ -31,11 +32,10 @@ import java.util.function.Supplier
 
 // TODO: Remove open, make it an interface and move impl to a separate class.
 open class SdkComponents(
-    private val platformTargetHashSupplier: Supplier<String>,
-    private val buildToolRevisionSupplier: Supplier<Revision>,
+    private val options: SdkComponentsOptions,
     private val fallbackSdkHandler: SdkHandler,
     private val evalIssueReporter: EvalIssueReporter,
-    project: Project) {
+    private val project: Project) {
 
     // -- Public Api
     // -- Users of this will be migrated to specific file/jar/components calls
@@ -51,9 +51,14 @@ open class SdkComponents(
     private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
 
     private fun runFallbackSdkHandler(): Pair<SdkInfo, TargetInfo>? {
+        fallbackSdkHandler.setSdkLibData(options.sdkLibDataFactory.getSdkLibData())
+        if (options.injectSdkMavenRepos) {
+            fallbackSdkHandler.addLocalRepositories(project)
+        }
+
         val result = fallbackSdkHandler.initTarget(
-            checkNotNull(platformTargetHashSupplier.get()) {"Extension not initialized yet, couldn't access compileSdkVersion."},
-            checkNotNull(buildToolRevisionSupplier.get()) {"Extension not initialized yet, couldn't access buildToolsVersion."},
+            checkNotNull(options.platformTargetHashSupplier.get()) {"Extension not initialized yet, couldn't access compileSdkVersion."},
+            checkNotNull(options.buildToolRevisionSupplier.get()) {"Extension not initialized yet, couldn't access buildToolsVersion."},
             evalIssueReporter)
         // TODO: sdk components downloads must be removed into it's own task when not running in sync
         // mode.
@@ -131,3 +136,10 @@ open class SdkComponents(
         return project.providers.provider { getTarget()!!.getPath(id) }
     }
 }
+
+class SdkComponentsOptions(
+    val platformTargetHashSupplier: Supplier<String>,
+    val buildToolRevisionSupplier: Supplier<Revision>,
+    val sdkLibDataFactory: SdkLibDataFactory,
+    val injectSdkMavenRepos: Boolean,
+    val useAndroidX: Boolean)
