@@ -232,6 +232,8 @@ message BeginSession {
   JvmtiConfig jvmti_config = 1;
   int64 request_time_epoch_ms = 2;
   string session_name = 3;
+  // See SdkConstans.CPU_ARCH_*
+  string process_abi = 4;
 }
 
 message EndSession {

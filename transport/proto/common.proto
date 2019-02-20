@@ -248,6 +248,8 @@ message SessionMetaData {
   bool live_allocation_enabled = 5;
   // Session's type which indicates what data it has.
   SessionType type = 6;
+  // See SdkConstans.CPU_ARCH_* as provided by the BeginSessionRequest.
+  string process_abi = 7;
 }
 
 message Stream {
@@ -309,6 +311,8 @@ message SessionData {
     bool live_allocation_enabled = 8;
     // Session's type which indicates what data it has.
     SessionType type = 9;
+    // See SdkConstans.CPU_ARCH_*
+    string process_abi = 10;
   }
 
   oneof union {

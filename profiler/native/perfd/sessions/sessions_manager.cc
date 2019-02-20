@@ -59,6 +59,7 @@ void SessionsManager::BeginSession(Daemon* daemon, int64_t stream_id,
   session_started->set_jvmti_enabled(data.jvmti_config().attach_agent());
   session_started->set_live_allocation_enabled(
       data.jvmti_config().live_allocation_enabled());
+  session_started->set_process_abi(data.process_abi());
   session_started->set_type(proto::SessionData::SessionStarted::FULL);
   daemon->buffer()->Add(event);
 

@@ -43,6 +43,7 @@ Status ProfilerServiceImpl::BeginSession(
 
   begin->set_request_time_epoch_ms(request->request_time_epoch_ms());
   begin->set_session_name(request->session_name());
+  begin->set_process_abi(request->process_abi());
 
   return daemon_->Execute(command, [response]() {
     profiler::Session* session = SessionsManager::Instance()->GetLastSession();

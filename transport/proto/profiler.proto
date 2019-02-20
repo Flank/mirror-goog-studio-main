@@ -73,6 +73,8 @@ message BeginSessionRequest {
   JvmtiConfig jvmti_config = 3;
   int64 request_time_epoch_ms = 4;
   string session_name = 5;
+  // See SdkConstans.CPU_ARCH_*
+  string process_abi = 6;
 }
 
 message BeginSessionResponse {
