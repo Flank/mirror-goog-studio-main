@@ -59,4 +59,3 @@ internal fun studioLint(): TestLintTask {
     task.allowMissingSdk()
     return task
 }
-

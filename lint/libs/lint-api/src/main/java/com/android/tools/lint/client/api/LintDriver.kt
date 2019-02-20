@@ -40,7 +40,6 @@ import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIF
 import com.android.repository.Revision
 import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType
-import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.client.api.LintListener.EventType

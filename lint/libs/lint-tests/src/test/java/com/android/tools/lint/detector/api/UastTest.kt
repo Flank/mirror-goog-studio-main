@@ -99,6 +99,91 @@ class UastTest : TestCase() {
         })
     }
 
+    fun test123923544() {
+        // Regression test for
+        //  https://youtrack.jetbrains.com/issue/KT-30033
+        // 	https://issuetracker.google.com/123923544
+        val source = kotlin(
+            """
+            interface Base {
+                fun print()
+            }
+
+            class BaseImpl(val x: Int) : Base {
+                override fun print() { print(x) }
+            }
+
+            fun createBase(i: Int): Base {
+                return BaseImpl(i)
+            }
+
+            class Derived(b: Base) : Base by createBase(10)
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals("" +
+                    "public final class BaseKt {\n" +
+                    "    public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {\n" +
+                    "        return <init>(i)\n" +
+                    "    }\n" +
+                    "}\n" +
+                    "\n" +
+                    "public abstract interface Base {\n" +
+                    "    public abstract fun print() : void = UastEmptyExpression\n" +
+                    "}\n" +
+                    "\n" +
+                    "public final class BaseImpl : Base {\n" +
+                    "    @org.jetbrains.annotations.NotNull private final var x: int\n" +
+                    "    public fun print() : void {\n" +
+                    "        print(x)\n" +
+                    "    }\n" +
+                    "    public final fun getX() : int = UastEmptyExpression\n" +
+                    "    public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression\n" +
+                    "}\n" +
+                    "\n" +
+                    "public final class Derived : Base {\n" +
+                    // Note: This isn't right; once we get an updated/fixed UAST we should update
+                    // this
+                    "    public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression\n" +
+                    "}\n", file.asSourceString())
+
+            assertEquals(
+                        "UFile (package = ) [public final class BaseKt {...]\n" +
+                                "    UClass (name = BaseKt) [public final class BaseKt {...}]\n" +
+                                "        UAnnotationMethod (name = createBase) [public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {...}]\n" +
+                                "            UParameter (name = i) [@org.jetbrains.annotations.NotNull var i: int]\n" +
+                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
+                                "            UBlockExpression [{...}] : PsiType:Void\n" +
+                                "                UReturnExpression [return <init>(i)] : PsiType:Void\n" +
+                                "                    UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(i)] : PsiType:BaseImpl\n" +
+                                "                        UIdentifier (Identifier (BaseImpl)) [UIdentifier (Identifier (BaseImpl))]\n" +
+                                "                        USimpleNameReferenceExpression (identifier = <init>) [<init>] : PsiType:BaseImpl\n" +
+                                "                        USimpleNameReferenceExpression (identifier = i) [i] : PsiType:int\n" +
+                                "    UClass (name = Base) [public abstract interface Base {...}]\n" +
+                                "        UAnnotationMethod (name = print) [public abstract fun print() : void = UastEmptyExpression]\n" +
+                                "    UClass (name = BaseImpl) [public final class BaseImpl : Base {...}]\n" +
+                                "        UField (name = x) [@org.jetbrains.annotations.NotNull private final var x: int]\n" +
+                                "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
+                                "        UAnnotationMethod (name = print) [public fun print() : void {...}]\n" +
+                                "            UBlockExpression [{...}] : PsiType:void\n" +
+                                "                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [print(x)] : PsiType:void\n" +
+                                "                    UIdentifier (Identifier (print)) [UIdentifier (Identifier (print))]\n" +
+                                "                    USimpleNameReferenceExpression (identifier = print) [print] : PsiType:void\n" +
+                                "                    USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int\n" +
+                                "        UAnnotationMethod (name = getX) [public final fun getX() : int = UastEmptyExpression]\n" +
+                                "        UAnnotationMethod (name = BaseImpl) [public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression]\n" +
+                                "            UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]\n" +
+                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
+                                "    UClass (name = Derived) [public final class Derived : Base {...}]\n" +
+                                "        UAnnotationMethod (name = Derived) [public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression]\n" +
+                                "            UParameter (name = b) [@org.jetbrains.annotations.NotNull var b: Base]\n" +
+                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
+                file.asLogTypes()
+            )
+        })
+    }
+
     fun test13Features() {
         check(
             kotlin(
