@@ -116,7 +116,7 @@ public class ApkPreInstaller {
 
             Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();
             // Don't push more than 40 MiB delta since it has to fit in RAM on the device.
-            if (request.getSerializedSize() > 40 * 1024 * 1024) {
+            if (request.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
                 throw new DeltaPreInstallException("Patches too big.");
             }
 

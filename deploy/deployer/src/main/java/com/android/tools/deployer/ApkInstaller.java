@@ -38,6 +38,7 @@ public class ApkInstaller {
         CANNOT_GENERATE_DELTA,
         API_NOT_SUPPORTED,
         DUMP_FAILED,
+        PATCH_SIZE_EXCEEDED,
         NO_CHANGES,
     }
 
@@ -114,6 +115,7 @@ public class ApkInstaller {
             case CANNOT_GENERATE_DELTA:
             case API_NOT_SUPPORTED:
             case DUMP_FAILED:
+            case PATCH_SIZE_EXCEEDED:
                 {
                     // Delta install could not be attempted (app not install or delta above limit or API
                     // not supported),
@@ -219,10 +221,17 @@ public class ApkInstaller {
         }
         builder.addAllPatchInstructions(patches);
 
+        Deploy.DeltaInstallRequest request = builder.build();
+        // Check that size if not beyond the limit.
+        if (request.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
+            deltaInstallResult.status = DeltaInstallStatus.PATCH_SIZE_EXCEEDED;
+            return deltaInstallResult;
+        }
+
         // Send delta install request.
         Deploy.DeltaInstallResponse res;
         try {
-            res = installer.deltaInstall(builder.build());
+            res = installer.deltaInstall(request);
         } catch (IOException e) {
             deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
             return deltaInstallResult;
