@@ -105,6 +105,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(CordovaVersionDetector.ISSUE);
         issues.add(CustomViewDetector.ISSUE);
         issues.add(CutPasteDetector.ISSUE);
+        issues.add(DataBindingDetector.ESCAPE_XML);
         issues.add(DateFormatDetector.DATE_FORMAT);
         issues.add(DeletedProviderDetector.ISSUE);
         issues.add(DeprecationDetector.ISSUE);
@@ -419,7 +420,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         } else {
             int initialSize = 12;
             if (scope.contains(Scope.RESOURCE_FILE)) {
-                initialSize += 103;
+                initialSize += 104;
             } else if (scope.contains(Scope.ALL_RESOURCE_FILES)) {
                 initialSize += 12;
             }
