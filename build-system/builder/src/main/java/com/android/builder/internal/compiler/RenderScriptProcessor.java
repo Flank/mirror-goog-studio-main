@@ -177,23 +177,24 @@ public class RenderScriptProcessor {
         }
     }
 
-    public static File getSupportJar(String buildToolsFolder, boolean useAndroidX) {
+    public static File getSupportJar(File buildToolsFolder, boolean useAndroidX) {
         return new File(
-                buildToolsFolder,
-                "renderscript/lib/" + (useAndroidX ? FN_ANDROIDX_RS_JAR : FN_RENDERSCRIPT_V8_JAR));
+                getBaseRenderscriptLibFolder(buildToolsFolder),
+                (useAndroidX ? FN_ANDROIDX_RS_JAR : FN_RENDERSCRIPT_V8_JAR));
     }
 
-    public static File getSupportNativeLibFolder(String buildToolsFolder) {
-        File rs = new File(buildToolsFolder, "renderscript");
-        File lib = new File(rs, "lib");
-        return new File(lib, "packaged");
+    public static File getSupportNativeLibFolder(File buildToolsFolder) {
+        return new File(getBaseRenderscriptLibFolder(buildToolsFolder), "packaged");
     }
 
-    public static File getSupportBlasLibFolder(String buildToolsFolder) {
-        File rs = new File(buildToolsFolder, "renderscript");
-        File lib = new File(rs, "lib");
-        return new File(lib, "blas");
+    public static File getSupportBlasLibFolder(File buildToolsFolder) {
+        return new File(getBaseRenderscriptLibFolder(buildToolsFolder), "blas");
     }
+
+    private static File getBaseRenderscriptLibFolder(File buildToolsFolder) {
+        return new File(buildToolsFolder, "renderscript/lib");
+    }
+
 
     public void build(
             @NonNull ProcessExecutor processExecutor,

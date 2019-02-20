@@ -248,7 +248,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
@@ -977,37 +976,18 @@ public abstract class TaskManager {
                                     .getFinalArtifactFiles(RENDERSCRIPT_LIB)
                                     .get());
 
-            File rsLibs =
+            rsFileCollection.from(
                     variantScope
                             .getGlobalScope()
-                            .getAndroidBuilder()
-                            .getSupportNativeLibFolder(
-                                    variantScope
-                                            .getGlobalScope()
-                                            .getSdkComponents()
-                                            .getBuildToolsInfo());
-            if (rsLibs != null && rsLibs.isDirectory()) {
-                rsFileCollection.from(rsLibs);
-            }
+                            .getSdkComponents()
+                            .getSupportNativeLibFolderProvider());
+
             if (variantScope.getVariantConfiguration().getRenderscriptSupportModeBlasEnabled()) {
-                File rsBlasLib =
+                rsFileCollection.from(
                         variantScope
                                 .getGlobalScope()
-                                .getAndroidBuilder()
-                                .getSupportBlasLibFolder(
-                                        variantScope
-                                                .getGlobalScope()
-                                                .getSdkComponents()
-                                                .getBuildToolsInfo());
-
-                if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
-                    throw new GradleException(
-                            "Renderscript BLAS support mode is not supported "
-                                    + "in BuildTools"
-                                    + rsBlasLib);
-                } else {
-                    rsFileCollection.from(rsBlasLib);
-                }
+                                .getSdkComponents()
+                                .getSupportBlasLibFolderProvider());
             }
 
             variantScope

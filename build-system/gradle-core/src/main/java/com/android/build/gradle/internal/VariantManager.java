@@ -460,16 +460,8 @@ public class VariantManager implements VariantModel {
                                 variantDep.getCompileClasspath().getName(),
                                 project.files(
                                         globalScope
-                                                .getAndroidBuilder()
-                                                .getRenderScriptSupportJar(
-                                                        globalScope
-                                                                .getSdkComponents()
-                                                                .getBuildToolsInfo(),
-                                                        globalScope
-                                                                .getProjectOptions()
-                                                                .get(
-                                                                        BooleanOption
-                                                                                .USE_ANDROID_X))));
+                                                .getSdkComponents()
+                                                .getRenderScriptSupportJarProvider()));
             }
 
             if (variantType.isApk()) { // ANDROID_TEST
@@ -1131,16 +1123,9 @@ public class VariantManager implements VariantModel {
         }
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar =
-                    globalScope
-                            .getAndroidBuilder()
-                            .getRenderScriptSupportJar(
-                                    globalScope.getSdkComponents().getBuildToolsInfo(),
-                                    globalScope
-                                            .getProjectOptions()
-                                            .get(BooleanOption.USE_ANDROID_X));
-
-            final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
+            final ConfigurableFileCollection fileCollection =
+                    project.files(
+                            globalScope.getSdkComponents().getRenderScriptSupportJarProvider());
             project.getDependencies()
                     .add(variantDep.getCompileClasspath().getName(), fileCollection);
             if (variantType.isApk() && !variantType.isForTesting()) {

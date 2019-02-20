@@ -47,6 +47,9 @@ open class SdkComponents(
     val annotationsJarProvider = project.providers.provider { getAnnotationsJar()!! }
     val buildToolsRevisionProvider = project.providers.provider { getBuildToolsRevision()!! }
 
+    val renderScriptSupportJarProvider: Provider<File> = project.providers.provider { getRenderScriptSupportJar() }
+    val supportNativeLibFolderProvider: Provider<File> = project.providers.provider { getSupportNativeLibFolder() }
+    val supportBlasLibFolderProvider: Provider<File> = project.providers.provider { getSupportBlasLibFolder() }
 
     private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
 
@@ -111,6 +114,24 @@ open class SdkComponents(
 
     fun getBuildToolsInfo(): BuildToolInfo? {
         return fallbackResultsSupplier.get()?.second?.buildTools
+    }
+
+    private fun getRenderScriptSupportJar(): File? {
+        return getBuildToolsInfo()?.let {
+            RenderScriptProcessor.getSupportJar(it.location, options.useAndroidX)
+        }
+    }
+
+    private fun getSupportNativeLibFolder(): File? {
+        return getBuildToolsInfo()?.let {
+            RenderScriptProcessor.getSupportNativeLibFolder(it.location)
+        }
+    }
+
+    private fun getSupportBlasLibFolder(): File? {
+        return getBuildToolsInfo()?.let {
+            RenderScriptProcessor.getSupportBlasLibFolder(it.location)
+        }
     }
 
     // These old methods are less expensive and are computed on SdkHandler creation by navigating

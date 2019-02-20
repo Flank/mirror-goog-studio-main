@@ -157,46 +157,6 @@ public class AndroidBuilder {
         return messageReceiver;
     }
 
-    /**
-     * Returns the jar file for the renderscript mode.
-     *
-     * <p>This may return null if the SDK has not been loaded yet.
-     *
-     * @param useAndroidX whether to use AndroidX dependencies
-     * @return the jar file, or null.
-     */
-    @Nullable
-    public File getRenderScriptSupportJar(BuildToolInfo buildTools, boolean useAndroidX) {
-        return RenderScriptProcessor.getSupportJar(
-                buildTools.getLocation().getAbsolutePath(), useAndroidX);
-    }
-
-    /**
-     * Returns the native lib folder for the renderscript mode.
-     *
-     * <p>This may return null if the SDK has not been loaded yet.
-     *
-     * @return the folder, or null.
-     */
-    @Nullable
-    public File getSupportNativeLibFolder(BuildToolInfo buildTools) {
-        return RenderScriptProcessor.getSupportNativeLibFolder(
-                buildTools.getLocation().getAbsolutePath());
-    }
-
-    /**
-     * Returns the BLAS lib folder for renderscript support mode.
-     *
-     * <p>This may return null if the SDK has not been loaded yet.
-     *
-     * @return the folder, or null.
-     */
-    @Nullable
-    public File getSupportBlasLibFolder(BuildToolInfo buildTools) {
-        return RenderScriptProcessor.getSupportBlasLibFolder(
-                buildTools.getLocation().getAbsolutePath());
-    }
-
     @NonNull
     public ProcessExecutor getProcessExecutor() {
         return mProcessExecutor;
