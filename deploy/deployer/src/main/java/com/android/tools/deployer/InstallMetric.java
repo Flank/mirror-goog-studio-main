@@ -20,20 +20,22 @@ import java.util.List;
 public class InstallMetric {
 
     private final String name;
+    private final String status;
     private final long threadId;
     private final long startMs;
     private long endMs;
 
-    public InstallMetric(String name) {
-        this(name, System.currentTimeMillis(), Thread.currentThread().getId());
+    public InstallMetric(String name, String status) {
+        this(name, status, System.currentTimeMillis(), Thread.currentThread().getId());
     }
 
-    public InstallMetric(String name, long startMs) {
-        this(name, startMs, Thread.currentThread().getId());
+    public InstallMetric(String name, String status, long startMs) {
+        this(name, status, startMs, Thread.currentThread().getId());
     }
 
-    public InstallMetric(String name, long startMs, long threadId) {
+    public InstallMetric(String name, String status, long startMs, long threadId) {
         this.name = name;
+        this.status = status;
         this.threadId = threadId;
         this.startMs = startMs;
     }
@@ -45,6 +47,10 @@ public class InstallMetric {
 
     public String getName() {
         return name;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     public long getThreadId() {
