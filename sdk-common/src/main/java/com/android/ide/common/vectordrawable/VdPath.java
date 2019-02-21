@@ -245,13 +245,13 @@ class VdPath extends VdElement {
                     break;
 
                 case 'm':
-                    // We also need to workaround a bug in API 21 that 'm' after 'z'
-                    // is not picking up the relative value correctly.
                     if (previousType == 'z' || previousType == 'Z') {
+                        // Replace 'm' with 'M' to work around a bug in API 21 that is triggered
+                        // when 'm' follows 'z'.
                         mType = 'M';
                         mParams[0] += currentSegmentStartX;
                         mParams[1] += currentSegmentStartY;
-                        currentSegmentStartX = mParams[0];
+                        currentSegmentStartX = mParams[0]; // Start a new segment.
                         currentSegmentStartY = mParams[1];
                         for (int i = step; i < paramsLen; i += step) {
                             mParams[i] += mParams[i - step];
@@ -262,27 +262,27 @@ class VdPath extends VdElement {
 
                         totalTransform.transform(mParams, 0, mParams, 0, paramsLen / 2);
                     } else {
-                        // We need to handle the initial 'm' similar to 'M' for first pair.
-                        // Then all the following numbers are handled as 'l'.
-                        int startIndex = 0;
-                        if (previousType == INIT_TYPE) {
-                            int paramsLenInitialM = 2;
-                            currentX = mParams[paramsLenInitialM - 2];
-                            currentY = mParams[paramsLenInitialM - 1];
-                            currentSegmentStartX = currentX;
-                            currentSegmentStartY = currentY;
+                        int headLen = 2;
+                        currentX += mParams[0];
+                        currentY += mParams[1];
+                        currentSegmentStartX = currentX; // Start a new segment.
+                        currentSegmentStartY = currentY;
 
-                            totalTransform.transform(mParams, 0, mParams, 0, paramsLenInitialM / 2);
-                            startIndex = step;
+                        if (previousType == INIT_TYPE) {
+                            // 'm' at the start of a path is handled similar to 'M'.
+                            // The coordinates are transformed as absolute.
+                            totalTransform.transform(mParams, 0, mParams, 0, headLen / 2);
+                        } else if (!isTranslationOnly(totalTransform)) {
+                            deltaTransform(totalTransform, mParams, 0, headLen);
                         }
-                        for (int i = startIndex; i < paramsLen; i += step) {
-                            currentX += mParams[i + step - 2];
-                            currentY += mParams[i + step - 1];
+
+                        for (int i = headLen; i < paramsLen; i += step) {
+                            currentX += mParams[i];
+                            currentY += mParams[i + 1];
                         }
 
                         if (!isTranslationOnly(totalTransform)) {
-                            deltaTransform(
-                                    totalTransform, mParams, startIndex, paramsLen - startIndex);
+                            deltaTransform(totalTransform, mParams, headLen, paramsLen - headLen);
                         }
                     }
                     break;

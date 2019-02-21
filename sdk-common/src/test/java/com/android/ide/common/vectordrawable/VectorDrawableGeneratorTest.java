@@ -443,11 +443,19 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_transform_ellipse_complex");
     }
 
-    public void testSvgMoveAfterCloseTransform() throws Exception {
-        checkSvgConversion("test_move_after_close");
+    public void testSvgMoveAfterClose1() throws Exception {
+        checkSvgConversion("test_move_after_close1");
     }
 
-    public void testSvgMoveAfterClose() throws Exception {
+    public void testSvgMoveAfterClose2() throws Exception {
+        checkSvgConversion("test_move_after_close2");
+    }
+
+    public void testSvgMoveAfterClose3() throws Exception {
+        checkSvgConversion("test_move_after_close3");
+    }
+
+    public void testSvgMoveAfterCloseTransform() throws Exception {
         checkSvgConversion("test_move_after_close_transform");
     }
 
