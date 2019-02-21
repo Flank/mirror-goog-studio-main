@@ -1,79 +1,84 @@
-def _lint_project_impl(ctx):
-    content = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-    content += "<project>\n"
+script_template = """\
+#!/bin/bash
+flags=""
+if [ "$1" = "--wrapper_script_flag=--debug" ]; then
+    flags="--debug"
+fi
+{binary} $flags {xml}
+"""
+
+def _lint_test_impl(ctx):
+    classpath = depset()
+    for dep in ctx.attr.deps:
+        if JavaInfo in dep:
+            classpath += dep[JavaInfo].transitive_compile_time_jars
+
+    # Create project XML:
+    project_xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+    project_xml += "<project>\n"
 
     if ctx.file.baseline:
-        content += "<baseline file=\"{0}\" />\n".format(ctx.file.baseline.path)
+        project_xml += "<baseline file=\"{0}\" />\n".format(ctx.file.baseline.path)
 
     for jar in ctx.files.custom_rules:
-        content += "<lint-checks jar=\"{0}\" />\n".format(jar.short_path)
+        project_xml += "<lint-checks jar=\"{0}\" />\n".format(jar.short_path)
 
-    content += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
+    project_xml += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
 
     for file in ctx.files.srcs:
-        content += "  <src file=\"{0}\" />\n".format(file.path)
+        project_xml += "  <src file=\"{0}\" />\n".format(file.path)
 
-    for file in ctx.files.deps:
-        if not file.path.endswith(".jar"):
-            fail("Not a jar: " + file.path)
-        content += "  <classpath jar=\"{0}\" />\n".format(file.short_path)
+    for file in classpath:
+        project_xml += "  <classpath jar=\"{0}\" />\n".format(file.short_path)
 
-    content += "</module>\n"
+    project_xml += "</module>\n"
+    project_xml += "</project>\n"
 
-    content += "</project>\n"
+    ctx.actions.write(output = ctx.outputs.project_xml, content = project_xml)
 
-    project_xml = ctx.outputs.xml
-    ctx.actions.write(output = project_xml, content = content)
+    # Create the launcher script:
+    ctx.actions.write(
+        output = ctx.outputs.launcher_script,
+        content = script_template.format(
+            binary = ctx.executable._binary.short_path,
+            xml = ctx.outputs.project_xml.short_path,
+        ),
+        is_executable = True,
+    )
 
-lint_project = rule(
+    # Compute runfiles:
+    runfiles = ctx.runfiles(
+        files = (
+            [ctx.outputs.project_xml, ctx.file.baseline] +
+            ctx.files.srcs +
+            ctx.files.custom_rules
+        ),
+        transitive_files = depset(
+            transitive = [
+                ctx.attr._binary[DefaultInfo].default_runfiles.files,
+                classpath,
+            ],
+        ),
+    )
+
+    return [DefaultInfo(executable = ctx.outputs.launcher_script, runfiles = runfiles)]
+
+lint_test = rule(
     attrs = {
-        "srcs": attr.label_list(
-            non_empty = True,
-            allow_files = FileType([
-                ".java",
-                ".kt",
-            ]),
-        ),
-        "custom_rules": attr.label_list(
-            allow_files = True,
-        ),
+        "srcs": attr.label_list(allow_files = True),
+        "custom_rules": attr.label_list(allow_files = True),
         "deps": attr.label_list(allow_files = True),
-        "baseline": attr.label(
-            allow_single_file = True,
+        "baseline": attr.label(allow_single_file = True),
+        "_binary": attr.label(
+            executable = True,
+            cfg = "target",
+            default = Label("//tools/base/bazel:BazelLintWrapper"),
         ),
     },
     outputs = {
-        "xml": "%{name}.xml",
+        "launcher_script": "%{name}.sh",
+        "project_xml": "%{name}_project.xml",
     },
-    implementation = _lint_project_impl,
+    implementation = _lint_test_impl,
+    test = True,
 )
-
-def lint_test(name, srcs, deps = [], custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"], baseline = None):
-    compile_deps_rule_name = name + "_compile_deps"
-    native.java_binary(
-        name = compile_deps_rule_name,
-        runtime_deps = deps,
-        main_class = "madeup",
-    )
-    compile_deps_jar = compile_deps_rule_name + "_deploy.jar"
-
-    project_rule_name = name + "_project"
-    lint_project(
-        name = project_rule_name,
-        srcs = srcs,
-        deps = [compile_deps_jar],
-        baseline = baseline,
-        custom_rules = custom_rules,
-    )
-
-    data = [project_rule_name + ".xml"] + srcs + custom_rules + ([baseline] if baseline else []) + [compile_deps_jar]
-
-    native.java_test(
-        name = name,
-        main_class = "com.android.tools.binaries.BazelLintWrapper",
-        use_testrunner = False,
-        runtime_deps = ["//tools/base/bazel:BazelLintWrapper", "//tools/base/lint/cli"],
-        data = data,
-        args = ["$(rootpath " + project_rule_name + ".xml)"],
-        tags = ["no_windows"],
-    )
