@@ -53,7 +53,7 @@ IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
 FOR /F "tokens=*" %%F IN ('sed -n -e "s/.*invocation_id: //p" %COMMANDLOGLOC%') DO (
 SET UPSALITEID=%%F
 )
-echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%" />" > %DISTDIR%\upsalite_test_results.html
+echo "<meta http-equiv="refresh" content="0; URL='https://source.cloud.google.com/results/invocations/%UPSALITEID%'" />" > %DISTDIR%\upsalite_test_results.html
 
 cd %BASEDIR%\bazel-testlogs
 
