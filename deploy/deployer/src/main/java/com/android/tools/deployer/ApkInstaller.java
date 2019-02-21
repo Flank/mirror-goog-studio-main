@@ -67,7 +67,8 @@ public class ApkInstaller {
             InstallOptions options,
             Deployer.InstallMode installMode)
             throws DeployerException {
-        DeltaInstallResult deltaInstallResult = null;
+        DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
+        deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
         List<InstallMetric> metrics = new ArrayList<>();
 
         // First attempt to delta install.
