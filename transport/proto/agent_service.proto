@@ -95,6 +95,8 @@ message AgentConfig {
     int32 art_stop_timeout_sec = 1;
     // equivalent to StudioFlags.PROFILER_SIMPLEPERF_HOST
     bool simpleperf_host = 2;
+    // equivalent to StudioFlags.PROFILER_USE_PERFETTO
+    bool use_perfetto = 3;
   }
 
   MemoryConfig mem_config = 1;
