@@ -27,6 +27,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
@@ -81,6 +82,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -1084,7 +1086,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             packageAndroidArtifact.assets =
                     variantScope.getArtifacts().getFinalProducts(MERGED_ASSETS);
-            packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
             packageAndroidArtifact.setJniDebugBuild(
                     variantConfiguration.getBuildType().isJniDebuggable());
             packageAndroidArtifact.setDebugBuild(
@@ -1097,6 +1098,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     globalScope.getExtension().getSplits().getAbi().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
+            if (variantConfiguration.getSupportedAbis() != null) {
+                packageAndroidArtifact.setAbiFilters(variantConfiguration.getSupportedAbis());
+            } else {
+                packageAndroidArtifact.setAbiFilters(
+                        projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+                                ? firstValidInjectedAbi(
+                                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
+                                : null);
+            }
             packageAndroidArtifact.buildTargetDensity =
                     globalScope.getExtension().getSplits().getDensity().isEnable()
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
@@ -1186,6 +1196,22 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
                             ImmutableMap.of(MODULE_PATH, project.getPath()));
+        }
+
+        @Nullable
+        private Set<String> firstValidInjectedAbi(@Nullable String abis) {
+            if (abis == null) {
+                return null;
+            }
+            Set<String> allowedAbis =
+                    Abi.getDefaultValues().stream().map(Abi::getName).collect(Collectors.toSet());
+            java.util.Optional<String> firstValidAbi =
+                    Arrays.asList(abis.split(","))
+                            .stream()
+                            .map(abi -> abi.trim())
+                            .filter(abi -> allowedAbis.contains(abi))
+                            .findFirst();
+            return firstValidAbi.isPresent() ? ImmutableSet.of(firstValidAbi.get()) : null;
         }
     }
 }
