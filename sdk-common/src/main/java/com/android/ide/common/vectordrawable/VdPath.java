@@ -18,10 +18,22 @@ package com.android.ide.common.vectordrawable;
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
-import java.awt.*;
-import java.awt.geom.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
+import java.awt.MultipleGradientPaint;
+import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +43,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
-/** Represents one path element of a VectorDrawable. */
+/** Represents one path element of a vector drawable. */
 class VdPath extends VdElement {
     private static final String PATH_ID = "android:name";
     private static final String PATH_DESCRIPTION = "android:pathData";
@@ -57,7 +69,32 @@ class VdPath extends VdElement {
     private static final String LINE_JOIN_MITER = "miter";
     private static final String LINE_JOIN_ROUND = "round";
     private static final String LINE_JOIN_BEVEL = "bevel";
-    public static final float EPSILON = 1e-6f;
+    private static final float EPSILON = 1e-6f;
+    private static final char INIT_TYPE = ' ';
+
+    private static final ImmutableMap<Character, Integer> COMMAND_STEP_MAP =
+            ImmutableMap.<Character, Integer>builder()
+                    .put('z', 2)
+                    .put('Z', 2)
+                    .put('m', 2)
+                    .put('M', 2)
+                    .put('l', 2)
+                    .put('L', 2)
+                    .put('t', 2)
+                    .put('T', 2)
+                    .put('h', 1)
+                    .put('H', 1)
+                    .put('v', 1)
+                    .put('V', 1)
+                    .put('c', 6)
+                    .put('C', 6)
+                    .put('s', 4)
+                    .put('S', 4)
+                    .put('q', 4)
+                    .put('Q', 4)
+                    .put('a', 7)
+                    .put('A', 7)
+                    .build();
 
 
     private VdGradient fillGradient;
@@ -79,7 +116,7 @@ class VdPath extends VdElement {
     private float mTrimPathEnd = 1;
     private float mTrimPathOffset;
 
-    private void toPath(Path2D path) {
+    private void toPath(@NonNull Path2D path) {
         path.reset();
         if (mNodeList != null) {
             VdNodeRender.createPath(mNodeList, path);
@@ -101,17 +138,17 @@ class VdPath extends VdElement {
             return mParams;
         }
 
-        public Node(char type, float[] params) {
+        public Node(char type, @NonNull float[] params) {
             this.mType = type;
             this.mParams = params;
         }
 
-        public Node(Node n) {
+        public Node(@NonNull Node n) {
             this.mType = n.mType;
             this.mParams = Arrays.copyOf(n.mParams, n.mParams.length);
         }
 
-        public static boolean hasRelMoveAfterClose(Node[] nodes) {
+        public static boolean hasRelMoveAfterClose(@NonNull Node[] nodes) {
             char preType = ' ';
             for (Node n : nodes) {
                 if ((preType == 'z' || preType == 'Z') && n.mType == 'm') {
@@ -122,7 +159,8 @@ class VdPath extends VdElement {
             return false;
         }
 
-        public static String nodeListToString(Node[] nodes, NumberFormat format) {
+        @NonNull
+        public static String nodeListToString(@NonNull Node[] nodes, @NonNull NumberFormat format) {
             StringBuilder result = new StringBuilder();
             for (Node node : nodes) {
                 result.append(node.mType);
@@ -152,9 +190,8 @@ class VdPath extends VdElement {
             return result.toString();
         }
 
-        private static final char INIT_TYPE = ' ';
-
-        public static void transform(AffineTransform totalTransform, Node[] nodes) {
+        public static void transform(
+                @NonNull AffineTransform totalTransform, @NonNull Node[] nodes) {
             Point2D.Float currentPoint = new Point2D.Float();
             Point2D.Float currentSegmentStartPoint = new Point2D.Float();
             char previousType = INIT_TYPE;
@@ -164,33 +201,12 @@ class VdPath extends VdElement {
             }
         }
 
-        private static final ImmutableMap<Character, Integer> commandStepMap =
-          ImmutableMap.<Character, Integer>builder()
-            .put('z', 2)
-            .put('Z', 2)
-            .put('m', 2)
-            .put('M', 2)
-            .put('l', 2)
-            .put('L', 2)
-            .put('t', 2)
-            .put('T', 2)
-            .put('h', 1)
-            .put('H', 1)
-            .put('v', 1)
-            .put('V', 1)
-            .put('c', 6)
-            .put('C', 6)
-            .put('s', 4)
-            .put('S', 4)
-            .put('q', 4)
-            .put('Q', 4)
-            .put('a', 7)
-            .put('A', 7)
-            .build();
-
-        private void transform(AffineTransform totalTransform, Point2D.Float currentPoint,
-                               Point2D.Float currentSegmentStartPoint, char previousType) {
-            // For Horizontal / Vertical lines, we have to convert to LineTo with 2 parameters
+        private void transform(
+                @NonNull AffineTransform totalTransform,
+                @NonNull Point2D.Float currentPoint,
+                @NonNull Point2D.Float currentSegmentStartPoint,
+                char previousType) {
+            // For horizontal and vertical lines, we have to convert to LineTo with 2 parameters
             // And for arcTo, we also need to isolate the parameters for transformation.
             // Therefore a looping will be necessary for such commands.
             //
@@ -204,7 +220,7 @@ class VdPath extends VdElement {
             float currentSegmentStartX = currentSegmentStartPoint.x;
             float currentSegmentStartY = currentSegmentStartPoint.y;
 
-            int step = commandStepMap.get(mType);
+            int step = COMMAND_STEP_MAP.get(mType);
             switch (mType) {
                 case 'z':
                 case 'Z':
@@ -247,7 +263,7 @@ class VdPath extends VdElement {
                         totalTransform.transform(mParams, 0, mParams, 0, paramsLen / 2);
                     } else {
                         // We need to handle the initial 'm' similar to 'M' for first pair.
-                        // Then all the following numbers are handled as 'l'
+                        // Then all the following numbers are handled as 'l'.
                         int startIndex = 0;
                         if (previousType == INIT_TYPE) {
                             int paramsLenInitialM = 2;
@@ -265,8 +281,8 @@ class VdPath extends VdElement {
                         }
 
                         if (!isTranslationOnly(totalTransform)) {
-                            deltaTransform(totalTransform, mParams, startIndex,
-                                    paramsLen - startIndex);
+                            deltaTransform(
+                                    totalTransform, mParams, startIndex, paramsLen - startIndex);
                         }
                     }
                     break;
@@ -396,7 +412,7 @@ class VdPath extends VdElement {
             currentSegmentStartPoint.setLocation(currentSegmentStartX, currentSegmentStartY);
         }
 
-        private static boolean isTranslationOnly(AffineTransform totalTransform) {
+        private static boolean isTranslationOnly(@NonNull AffineTransform totalTransform) {
             int type = totalTransform.getType();
             return type == AffineTransform.TYPE_IDENTITY
                     || type == AffineTransform.TYPE_TRANSLATION;
@@ -410,8 +426,11 @@ class VdPath extends VdElement {
          * @param offset in number of floats, not points
          * @param paramsLen in number of floats, not points
          */
-        private static void deltaTransform(AffineTransform totalTransform, float[] coordinates,
-                int offset, int paramsLen) {
+        private static void deltaTransform(
+                @NonNull AffineTransform totalTransform,
+                @NonNull float[] coordinates,
+                int offset,
+                int paramsLen) {
             double[] doubleArray = new double[paramsLen];
             for (int i = 0; i < paramsLen; i++) {
                 doubleArray[i] = (double) coordinates[i + offset];
@@ -425,7 +444,7 @@ class VdPath extends VdElement {
         }
     }
 
-    private void setNameValue(String name, String value) {
+    private void setNameValue(@NonNull String name, @NonNull String value) {
         if (value.startsWith("@")) {
             throw new ResourcesNotSupportedException(name, value);
         }
@@ -475,7 +494,7 @@ class VdPath extends VdElement {
         }
     }
 
-    private static int parseFillType(String value) {
+    private static int parseFillType(@NonNull String value) {
         if (FILL_TYPE_EVEN_ODD.equalsIgnoreCase(value)) {
             return PathIterator.WIND_EVEN_ODD;
         }
@@ -490,11 +509,13 @@ class VdPath extends VdElement {
         return color;
     }
 
-    /**
-     * Draws the current path.
-     */
+    /** Draws the current path. */
     @Override
-    public void draw(Graphics2D g, AffineTransform currentMatrix, float scaleX, float scaleY) {
+    public void draw(
+            @NonNull Graphics2D g,
+            @NonNull AffineTransform currentMatrix,
+            float scaleX,
+            float scaleY) {
         Path2D path2d = new Path2D.Double(mFillType);
         toPath(path2d);
 
@@ -508,6 +529,7 @@ class VdPath extends VdElement {
 
         if (mFillColor != 0 && fillGradient == null) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            @SuppressWarnings("UseJBColor")
             Color fillColor = new Color(applyAlpha(mFillColor, mFillAlpha), true);
             g.setColor(fillColor);
             g.fill(path2d);
@@ -516,6 +538,7 @@ class VdPath extends VdElement {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             BasicStroke stroke = new BasicStroke(mStrokeWidth, mStrokeLineCap, mStrokeLineJoin, mStrokeMiterlimit);
             g.setStroke(stroke);
+            @SuppressWarnings("UseJBColor")
             Color strokeColor = new Color(applyAlpha(mStrokeColor, mStrokeAlpha), true);
             g.setColor(strokeColor);
             g.draw(path2d);
@@ -540,7 +563,7 @@ class VdPath extends VdElement {
     }
 
     @Override
-    public void parseAttributes(NamedNodeMap attributes) {
+    public void parseAttributes(@NonNull NamedNodeMap attributes) {
         for (int i = 0; i < attributes.getLength(); i++) {
             org.w3c.dom.Node attribute = attributes.item(i);
 
@@ -561,8 +584,8 @@ class VdPath extends VdElement {
     }
 
     @Override
+    @NonNull
     public String toString() {
-        //noinspection ImplicitArrayToString
         return "Path:" +
                 " Name: " + mName +
                 " Node: " + Arrays.toString(mNodeList) +
@@ -579,7 +602,7 @@ class VdPath extends VdElement {
      * depending on what type, we set the fillGradient or strokeGradient of the current VdPath to a
      * new VdGradient and add the gradient information.
      */
-    protected void addGradientIfExists(org.w3c.dom.Node current) {
+    protected void addGradientIfExists(@NonNull org.w3c.dom.Node current) {
         // This should be guaranteed to be the gradient given the way we are writing the VD XMLs.
         org.w3c.dom.Node gradientNode = current.getFirstChild();
         VdGradient newGradient = new VdGradient();
@@ -658,7 +681,7 @@ class VdPath extends VdElement {
 
         VdGradient() {}
 
-        private void setGradientValue(String name, String value) {
+        private void setGradientValue(@NonNull String name, @NonNull String value) {
             switch (name) {
                 case "android:type":
                     mGradientType = value;
@@ -690,7 +713,7 @@ class VdPath extends VdElement {
             }
         }
 
-        private void drawGradient(Graphics2D g, Path2D path2d, boolean fill) {
+        private void drawGradient(@NonNull Graphics2D g, @NonNull Path2D path2d, boolean fill) {
             if (mGradientStops.isEmpty()) {
                 return;
             }
@@ -703,6 +726,7 @@ class VdPath extends VdElement {
                 float fraction = Float.parseFloat(stop.getOffset());
                 int colorInt = parseColorValue(stop.getColor());
                 //TODO: If opacity for android gradient items becomes supported, use mOpacity to modify colors.
+                @SuppressWarnings("UseJBColor")
                 Color color = new Color(colorInt, true);
 
                 mFractions[j] = fraction;
@@ -785,6 +809,7 @@ class VdPath extends VdElement {
         }
     }
 
+    @NonNull
     private static Logger getLogger() {
         return Logger.getLogger(VdPath.class.getSimpleName());
     }
