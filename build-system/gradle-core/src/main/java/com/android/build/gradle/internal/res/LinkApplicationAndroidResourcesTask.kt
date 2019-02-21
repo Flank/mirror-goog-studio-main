@@ -60,7 +60,6 @@ import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -144,9 +143,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     private lateinit var type: VariantType
 
     @get:InputFiles
-    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var aapt2FromMaven: FileCollection? = null
+    lateinit var aapt2FromMaven: FileCollection
         private set
 
     private var debuggable: Boolean = false
@@ -223,8 +221,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     private lateinit var androidTargetProvider: Provider<IAndroidTarget>
 
-    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
-
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
     // FIXME : make me incremental !
@@ -247,7 +243,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         else
             emptySet()
         val aapt2ServiceKey = registerAaptService(
-            aapt2FromMaven, buildToolInfoProvider.get(), iLogger
+            aapt2FromMaven, iLogger
         )
 
         // do a first pass at the list so we generate the code synchronously since it's required
@@ -531,8 +527,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.supportDirectory = File(variantScope.instantRunSplitApkOutputFolder, "resources")
 
             task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
-            task.buildToolInfoProvider =
-                variantScope.globalScope.sdkComponents.buildToolInfoProvider
         }
     }
 
@@ -914,11 +908,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     fun setAaptMainDexListProguardOutputFile(mainDexListProguardOutputFile: File) {
         this.mainDexListProguardOutputFile = mainDexListProguardOutputFile
-    }
-
-    @Input
-    fun getBuildToolsVersion(): String {
-        return buildToolInfoProvider.get().revision.toString()
     }
 
     @Input

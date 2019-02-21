@@ -112,9 +112,8 @@ open class LinkAndroidResForBundleTask
         private set
 
     @get:InputFiles
-    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var aapt2FromMaven: FileCollection? = null
+    lateinit var aapt2FromMaven: FileCollection
         private set
 
     @TaskAction
@@ -157,7 +156,6 @@ open class LinkAndroidResForBundleTask
 
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
-            buildToolInfo = null,
             logger = builder.logger
         )
         //TODO: message rewriting.

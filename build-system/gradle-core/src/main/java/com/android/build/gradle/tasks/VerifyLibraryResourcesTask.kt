@@ -39,7 +39,6 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.QueueableResourceCompiler
 import com.android.ide.common.workers.WorkerExecutorFacade
-import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -51,7 +50,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -88,14 +86,11 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         private set
 
     @get:InputFiles
-    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var aapt2FromMaven: FileCollection? = null
+    lateinit var aapt2FromMaven: FileCollection
         private set
 
     private lateinit var androidTargetProvider: Provider<IAndroidTarget>
-
-    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(workerExecutor)
 
@@ -133,7 +128,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
-        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, buildToolInfoProvider.get(), iLogger)
+        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, iLogger)
         // If we're using AAPT2 we need to compile the resources into the compiled directory
         // first as we need the .flat files for linking.
         workers.use { facade ->
@@ -195,7 +190,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                     .getFinalProduct(task.taskInputType)
 
             task.androidTargetProvider = variantScope.globalScope.sdkComponents.targetProvider
-            task.buildToolInfoProvider = variantScope.globalScope.sdkComponents.buildToolInfoProvider
         }
     }
 

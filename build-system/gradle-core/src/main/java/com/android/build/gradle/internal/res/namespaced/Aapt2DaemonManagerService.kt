@@ -25,15 +25,12 @@ import com.android.builder.internal.aapt.v2.Aapt2DaemonImpl
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager
 import com.android.builder.internal.aapt.v2.Aapt2DaemonTimeouts
 import com.android.ide.common.process.ProcessException
-import com.android.repository.Revision
-import com.android.sdklib.BuildToolInfo
 import com.android.utils.ILogger
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.FileCollection
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
@@ -50,8 +47,6 @@ private val maintenanceIntervalSeconds = TimeUnit.MINUTES.toSeconds(1)
 sealed class Aapt2ServiceKey : WorkerActionServiceRegistry.ServiceKey<Aapt2DaemonManager> {
     final override val type: Class<Aapt2DaemonManager> get() = Aapt2DaemonManager::class.java
 }
-
-private data class Aapt2SdkServiceKey(val aapt2Version: Revision) : Aapt2ServiceKey()
 
 private data class Aapt2FileServiceKey(val file: File) : Aapt2ServiceKey()
 
@@ -80,53 +75,35 @@ fun getAaptDaemon(
     serviceRegistry.getService(aapt2ServiceKey).service.leaseDaemon()
 
 @JvmOverloads
-fun getAaptPoolSize(
-    aapt2ServiceKey: Aapt2ServiceKey,
-    serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE)
-        : Int =
-    serviceRegistry.getService(aapt2ServiceKey).service.stats().poolSize
-
-@JvmOverloads
 fun registerAaptService(
-    aapt2FromMaven: FileCollection?,
-    buildToolInfo: BuildToolInfo? = null,
+    aapt2FromMaven: FileCollection,
     logger: ILogger,
     serviceRegistry: WorkerActionServiceRegistry = WorkerActionServiceRegistry.INSTANCE
 ): Aapt2ServiceKey {
-    val key: Aapt2ServiceKey
-    val aaptExecutablePath: Path
-    when {
-        aapt2FromMaven != null -> {
-            val dir = aapt2FromMaven.singleFile
-            key = Aapt2FileServiceKey(dir)
-            aaptExecutablePath =  dir.toPath().resolve(SdkConstants.FN_AAPT2)
-        }
-        buildToolInfo != null -> {
-            key = Aapt2SdkServiceKey(buildToolInfo.revision)
-            aaptExecutablePath = Paths.get(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT2))
-        }
-        else -> throw IllegalArgumentException(
-                "Must supply one of aapt2 from maven, build tool info or custom location.")
-    }
+    val dir = aapt2FromMaven.singleFile
+    val key = Aapt2FileServiceKey(dir)
+    val aaptExecutablePath = dir.toPath().resolve(SdkConstants.FN_AAPT2)
 
     if (!Files.exists(aaptExecutablePath)) {
-        error("Specified AAPT2 executable does not exist: $aaptExecutablePath")
+        throw InvalidUserDataException(
+            "Specified AAPT2 executable does not exist: $aaptExecutablePath. "
+                +"Must supply one of aapt2 from maven or custom location.")
     }
 
-    serviceRegistry.registerService(key, {
+    serviceRegistry.registerService(key) {
         val manager = Aapt2DaemonManager(logger = logger,
-                daemonFactory = { displayId ->
-                    Aapt2DaemonImpl(
-                            displayId = "#$displayId",
-                            aaptExecutable = aaptExecutablePath,
-                            daemonTimeouts = daemonTimeouts,
-                            logger = logger)
-                },
-                expiryTime = daemonExpiryTimeSeconds,
-                expiryTimeUnit = TimeUnit.SECONDS,
-                listener = Aapt2DaemonManagerMaintainer())
+            daemonFactory = { displayId ->
+                Aapt2DaemonImpl(
+                    displayId = "#$displayId",
+                    aaptExecutable = aaptExecutablePath,
+                    daemonTimeouts = daemonTimeouts,
+                    logger = logger)
+            },
+            expiryTime = daemonExpiryTimeSeconds,
+            expiryTimeUnit = TimeUnit.SECONDS,
+            listener = Aapt2DaemonManagerMaintainer())
         RegisteredAaptService(manager)
-    })
+    }
     return key
 }
 

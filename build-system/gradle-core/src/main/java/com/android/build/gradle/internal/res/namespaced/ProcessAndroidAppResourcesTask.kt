@@ -33,7 +33,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.sdklib.IAndroidTarget
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
-import com.google.common.collect.Iterables
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
@@ -74,7 +73,7 @@ open class ProcessAndroidAppResourcesTask
     var convertedLibraryDependencies: BuildableArtifact? = null
         private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
-    @get:InputFiles @get:Optional @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
     private lateinit var androidJarSdkProvider: Provider<String>
 
