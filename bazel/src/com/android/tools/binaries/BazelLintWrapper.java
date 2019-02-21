@@ -21,10 +21,13 @@ import static com.google.common.io.Files.getNameWithoutExtension;
 import com.android.tools.lint.Main;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,7 +55,7 @@ import org.xml.sax.SAXException;
  * appropriate exit code.
  */
 public class BazelLintWrapper {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         new BazelLintWrapper().run(Paths.get(args[0]));
     }
 
@@ -71,7 +74,7 @@ public class BazelLintWrapper {
         }
     }
 
-    private void run(Path projectXml) {
+    private void run(Path projectXml) throws IOException {
         if (!Files.exists(projectXml)) {
             System.err.println("Cannot find project XML: " + projectXml);
             System.exit(1);
@@ -84,7 +87,11 @@ public class BazelLintWrapper {
         // private to the custom client used by Main. So instead of creating a LintCliClient, for
         // now we call Main and deal with the exit exception (which is not public).
         Main lintMain = new Main();
+
+        PrintStream stdOut = System.out;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
+            System.setOut(new PrintStream(baos));
             lintMain.run(
                     new String[] {
                         "--project", projectXml.toString(),
@@ -105,12 +112,23 @@ public class BazelLintWrapper {
             } else {
                 throw e;
             }
+        } finally {
+            System.setOut(stdOut);
         }
 
-        checkOutput(outputXml);
+        boolean targetShouldPass = checkOutput(outputXml);
+        if (!targetShouldPass) {
+            System.out.println(
+                    "Lint found new issues or the baseline was out of date. "
+                            + "See the test.xml file (next to test.log, this file) for details.");
+            System.out.println(
+                    "\nOriginal lint output (note that paths in the sandbox may no longer exist):");
+            System.out.println(baos.toString(StandardCharsets.UTF_8.name()));
+            System.exit(1);
+        }
     }
 
-    private void checkOutput(Path outputXml) {
+    private boolean checkOutput(Path outputXml) {
         try {
             Document lintXmlReport = documentBuilder.parse(outputXml.toFile());
             Document junitXml = documentBuilder.newDocument();
@@ -125,12 +143,9 @@ public class BazelLintWrapper {
                 throw new RuntimeException(e);
             }
 
-            if (!targetShouldPass) {
-                System.exit(1);
-            }
+            return targetShouldPass;
         } catch (SAXException | IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 
