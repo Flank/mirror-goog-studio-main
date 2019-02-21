@@ -86,6 +86,10 @@ enum class RemovedOptions(
     ENABLE_DEPRECATED_NDK(
         "android.useDeprecatedNdk",
         "NdkCompile is no longer supported"),
+    SERIAL_AAPT2(
+        "android.injected.aapt2.serial",
+        "Invoking AAPT2 serially is no longer supported."
+    )
     ;
 
     override val status: Option.Status
