@@ -74,7 +74,7 @@ coverage_java_test(
 
 perf_test(
     name = "BasicTest",
-    size = "medium",
+    size = "small",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
     ],

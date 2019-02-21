@@ -3,16 +3,13 @@ package com.android.tools.profiler;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.fakeandroid.FakeAndroidDriver;
-import com.android.tools.profiler.proto.Common.*;
-import com.android.tools.profiler.proto.EnergyServiceGrpc;
+import com.android.tools.profiler.proto.*;
+import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
-import com.android.tools.profiler.proto.EventServiceGrpc;
-import com.android.tools.profiler.proto.MemoryServiceGrpc;
-import com.android.tools.profiler.proto.NetworkServiceGrpc;
-import com.android.tools.profiler.proto.Profiler.*;
-import com.android.tools.profiler.proto.ProfilerServiceGrpc;
-import com.android.tools.profiler.proto.TransportServiceGrpc;
+import com.android.tools.profiler.proto.Profiler.BeginSessionRequest;
+import com.android.tools.profiler.proto.Profiler.BeginSessionResponse;
+import com.android.tools.profiler.proto.Profiler.EndSessionRequest;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -98,27 +95,21 @@ public class GrpcUtils {
      * agentAttachPort.
      */
     public Session beginSessionWithAgent(int pid, int agentAttachPort) {
-        // The test infra calls attach-agent via the communication port instead of the app's pid.
-        // So here we are making an extra beginSession call with the attachPid (aka communication
-        // port) to allow the agent to attach.
-        BeginSessionRequest.Builder requestBuilder =
-                BeginSessionRequest.newBuilder()
-                        .setDeviceId(1234)
-                        .setPid(agentAttachPort)
-                        .setJvmtiConfig(
-                                BeginSessionRequest.JvmtiConfig.newBuilder()
-                                        .setAttachAgent(true)
-                                        .setAgentLibFileName("libperfa.so")
-                                        .build());
-        myProfilerServiceStub.beginSession(requestBuilder.build());
-
-        // Actually begin the session with the pid. Note that a beginSession call would end the previous
-        // active session, so we put this after the beginSession call that was used specifically to attach the
-        // agent.
-        Session session = beginSession(pid);
+        myTransportServiceStub.execute(
+                Transport.ExecuteRequest.newBuilder()
+                        .setCommand(
+                                Transport.Command.newBuilder()
+                                        .setType(Transport.Command.CommandType.ATTACH_AGENT)
+                                        .setPid(agentAttachPort)
+                                        .setStreamId(1234)
+                                        .setAttachAgent(
+                                                Transport.AttachAgent.newBuilder()
+                                                        .setAgentLibFileName("libperfa.so"))
+                                        .build())
+                        .build());
         // Block until we can verify the agent was fully attached, which takes a while.
         assertThat(myMockApp.waitForInput("Perfa connected to Perfd.")).isTrue();
-        return session;
+        return beginSession(pid);
     }
 
     /** Ends the profiler session for the specified sessionId. */
