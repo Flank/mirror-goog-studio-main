@@ -25,8 +25,10 @@ import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Deployer {
 
@@ -75,12 +77,12 @@ public class Deployer {
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
-    public List<InstallMetric> install(
+    public List<DeployMetric> install(
             String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
             throws DeployerException {
         try (Trace ignored = Trace.begin("install")) {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
-            List<InstallMetric> metrics =
+            List<DeployMetric> metrics =
                     apkInstaller.install(packageName, apks, options, installMode);
 
 
@@ -100,20 +102,20 @@ public class Deployer {
         }
     }
 
-    public List<Task<?>> codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
-            throws DeployerException {
+    public Collection<DeployMetric> codeSwap(
+            List<String> apks, Map<Integer, ClassRedefiner> redefiners) throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
             return swap(apks, false /* Restart Activity */, redefiners);
         }
     }
 
-    public List<Task<?>> fullSwap(List<String> apks) throws DeployerException {
+    public Collection<DeployMetric> fullSwap(List<String> apks) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
             return swap(apks, true /* Restart Activity */, ImmutableMap.of());
         }
     }
 
-    private List<Task<?>> swap(
+    private Collection<DeployMetric> swap(
             List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
 
@@ -169,6 +171,6 @@ public class Deployer {
         // Wait only for swap to finish
         runner.runAsync();
 
-        return tasks;
+        return tasks.stream().map(task -> task.getMetric()).collect(Collectors.toList());
     }
 }

@@ -17,32 +17,39 @@ package com.android.tools.deployer;
 
 import java.util.List;
 
-public class InstallMetric {
+public class DeployMetric {
+
+    public static long UNFINISHED = -1;
 
     private final String name;
-    private final String status;
+    private String status = null;
     private final long threadId;
     private final long startMs;
-    private long endMs;
+    private long endMs = UNFINISHED;
 
-    public InstallMetric(String name, String status) {
-        this(name, status, System.currentTimeMillis(), Thread.currentThread().getId());
+    public DeployMetric(String name) {
+        this(name, System.currentTimeMillis(), Thread.currentThread().getId());
     }
 
-    public InstallMetric(String name, String status, long startMs) {
-        this(name, status, startMs, Thread.currentThread().getId());
+    public DeployMetric(String name, long startMs) {
+        this(name, startMs, Thread.currentThread().getId());
     }
 
-    public InstallMetric(String name, String status, long startMs, long threadId) {
+    private DeployMetric(String name, long startMs, long threadId) {
         this.name = name;
-        this.status = status;
         this.threadId = threadId;
         this.startMs = startMs;
     }
 
-    public void finish(List<InstallMetric> metrics) {
-        endMs = System.currentTimeMillis();
+    public void finish(String status, List<DeployMetric> metrics) {
+        this.finish(status);
         metrics.add(this);
+    }
+
+    public void finish(String status) {
+        assert endMs == UNFINISHED;
+        this.status = status;
+        endMs = System.currentTimeMillis();
     }
 
     public String getName() {
@@ -51,6 +58,10 @@ public class InstallMetric {
 
     public String getStatus() {
         return status;
+    }
+
+    public boolean hasStatus() {
+        return status != null;
     }
 
     public long getThreadId() {
@@ -62,6 +73,7 @@ public class InstallMetric {
     }
 
     public long getEndTimeMs() {
+        assert endMs != UNFINISHED;
         return endMs;
     }
 }

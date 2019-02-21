@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer.tasks;
 
+import com.android.tools.deployer.DeployMetric;
 import com.android.tools.deployer.DeployerException;
 import com.android.tools.tracer.Trace;
 import com.google.common.util.concurrent.Futures;
@@ -152,24 +153,29 @@ public class TaskRunner {
         private final Callable<T> callable;
         private final Task<?>[] inputs;
         private final SettableFuture<T> future;
-        private final String name;
-        private long startTimeMs;
-        private long endTimeMs;
-        private long threadId;
+        private DeployMetric metric;
 
         // Only can be created through the interface enforcing a no-cycle dependency graph.
         Task(String name, Callable<T> callable, Task<?>... inputs) {
             this.future = SettableFuture.create();
             this.inputs = inputs;
-            this.name = name;
             this.callable =
                     () -> {
+                        String status = null;
+                        metric = new DeployMetric(name);
                         try (Trace ignored = Trace.begin(name)) {
-                            startTimeMs = System.currentTimeMillis();
-                            threadId = Thread.currentThread().getId();
                             T value = callable.call();
-                            endTimeMs = System.currentTimeMillis();
+                            status = "Success";
                             return value;
+                        } catch (ExecutionException e) {
+                            // Dropped this task because one of the previous task failed.
+                            status = "Dropped";
+                            throw e;
+                        } catch (Throwable t) {
+                            status = "Failed";
+                            throw t;
+                        } finally {
+                            metric.finish(status);
                         }
                     };
         }
@@ -194,20 +200,9 @@ public class TaskRunner {
             future.setFuture(Futures.whenAllComplete(futures).call(callable, executor));
         }
 
-        public String getName() {
-            return name;
-        }
-
-        public long getStartTimeMs() {
-            return startTimeMs;
-        }
-
-        public long getEndTimeMs() {
-            return endTimeMs;
-        }
-
-        public long getThreadId() {
-            return threadId;
+        public DeployMetric getMetric() {
+            assert metric != null;
+            return metric;
         }
     }
 

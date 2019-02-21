@@ -52,6 +52,10 @@ public class TaskRunnerTest {
 
         Assert.assertEquals("text added", output);
         service.shutdown();
+
+        Assert.assertNotNull(start.getMetric());
+        Assert.assertEquals(Tasks.TASK1.name(), add.getMetric().getName());
+        Assert.assertTrue(add.getMetric().getEndTimeMs() >= add.getMetric().getStartTimeMs());
     }
 
     @Test
@@ -98,6 +102,10 @@ public class TaskRunnerTest {
             assertEquals("java.lang.RuntimeException: abc", de.getCause().getMessage());
         }
         service.shutdown();
+
+        Assert.assertEquals("Failed", task1.getMetric().getStatus());
+        Assert.assertEquals("Success", task2.getMetric().getStatus());
+        Assert.assertEquals("Dropped", add.getMetric().getStatus());
     }
 
     @Test
