@@ -399,7 +399,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 productFlavors,
                 variants,
                 variantNames,
-                globalScope.getSdkComponents().getTargetHashStringProvider().get(),
+                globalScope.getExtension().getCompileSdkVersion(),
                 bootClasspath,
                 frameworkSource,
                 cloneSigningConfigs(extension.getSigningConfigs()),
