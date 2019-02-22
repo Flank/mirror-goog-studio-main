@@ -55,7 +55,6 @@ open class SdkComponents(
     val androidJarProvider: Provider<File> = project.providers.provider { getAndroidJar() }
     val annotationsJarProvider: Provider<File> = project.providers.provider { getAnnotationsJar() }
     val aidlFrameworkProvider: Provider<File> = project.providers.provider { getAidlFramework() }
-    val targetVersionProvider: Provider<AndroidVersion> = project.providers.provider { getTargetVersion() }
     val targetHashStringProvider: Provider<String> = project.providers.provider { getTargetHashString() }
 
     val renderScriptSupportJarProvider: Provider<File> = project.providers.provider { getRenderScriptSupportJar() }
@@ -145,10 +144,6 @@ open class SdkComponents(
 
     private fun getBuildToolsInfo(): BuildToolInfo? {
         return getTargetInfo()?.buildTools
-    }
-
-    private fun getTargetVersion(): AndroidVersion? {
-        return getTarget()?.version
     }
 
     private fun getTargetHashString(): String {
