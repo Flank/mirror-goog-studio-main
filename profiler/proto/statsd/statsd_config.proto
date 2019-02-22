@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto2";
+
+package android.os.statsd;
+
+option java_package = "com.android.internal.os";
+option java_outer_classname = "StatsdConfigProto";
+
+/**
+ * Forked from //framework/base/cmds/statsd, required to interface with statsd.
+ * Only contains atoms actually being used by Android Studio.
+ */
+
+enum Position {
+  POSITION_UNKNOWN = 0;
+
+  FIRST = 1;
+
+  LAST = 2;
+
+  ANY = 3;
+
+  ALL = 4;
+}
+
+message FieldValueMatcher {
+  optional int32 field = 1;
+
+  optional Position position = 2;
+
+  oneof value_matcher {
+    bool eq_bool = 3;
+    string eq_string = 4;
+    int64 eq_int = 5;
+
+    int64 lt_int = 6;
+    int64 gt_int = 7;
+    float lt_float = 8;
+    float gt_float = 9;
+
+    int64 lte_int = 10;
+    int64 gte_int = 11;
+
+    MessageMatcher matches_tuple = 12;
+
+    StringListMatcher eq_any_string = 13;
+    StringListMatcher neq_any_string = 14;
+  }
+}
+
+message MessageMatcher {
+  repeated FieldValueMatcher field_value_matcher = 1;
+}
+
+message StringListMatcher {
+  repeated string str_value = 1;
+}
+
+message SimpleAtomMatcher {
+  optional int32 atom_id = 1;
+
+  repeated FieldValueMatcher field_value_matcher = 2;
+}

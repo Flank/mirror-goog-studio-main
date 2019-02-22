@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto2";
+
+package android.os.statsd;
+option java_package = "com.android.os";
+option java_outer_classname = "AtomsProto";
+
+/**
+ * Forked from //framework/base/cmds/statsd, required to interface with statsd.
+ * Only contains atoms actually being used by Android Studio.
+ */
+
+/**
+ * The master atom class. This message defines all of the available
+ * raw stats log events from the Android system, also known as "atoms."
+ *
+ * This field contains a single oneof with all of the available messages.
+ * The stats-log-api-gen tool runs as part of the Android build and
+ * generates the android.util.StatsLog class, which contains the constants
+ * and methods that Android uses to log.
+ *
+ * This Atom class is not actually built into the Android system.
+ * Instead, statsd on Android constructs these messages synthetically,
+ * in the format defined here and in stats_log.proto.
+ */
+message Atom {
+  // Pushed atoms start at 2.
+
+  // Pulled events will start at field 10000.
+  // Next: 10048
+  oneof pulled {
+    WifiBytesTransfer wifi_bytes_transfer = 10000;
+    MobileBytesTransfer mobile_bytes_transfer = 10002;
+  }
+
+  // DO NOT USE field numbers above 100,000 in AOSP.
+  // Field numbers 100,000 - 199,999 are reserved for non-AOSP (e.g. OEMs) to
+  // use. Field numbers 200,000 and above are reserved for future use; do not
+  // use them at all.
+}
+
+/*
+ * *****************************************************************************
+ * Below are all of the individual atoms that are logged by Android via statsd.
+ *
+ * RULES:
+ *   - The field ids for each atom must start at 1, and count upwards by 1.
+ *     Skipping field ids is not allowed.
+ *   - These form an API, so renaming, renumbering or removing fields is
+ *     not allowed between android releases.  (This is not currently enforced,
+ *     but there will be a tool to enforce this restriction).
+ *   - The types must be built-in protocol buffer types, namely, no sub-messages
+ *     are allowed (yet).  The bytes type is also not allowed.
+ *   - The CamelCase name of the message type should match the
+ *     underscore_separated name as defined in Atom.
+ *   - If an atom represents work that can be attributed to an app, there can
+ *     be exactly one AttributionChain field. It must be field number 1.
+ *   - A field that is a uid should be a string field, tagged with the [xxx]
+ *     annotation. The generated code on android will be represented by UIDs,
+ *     and those UIDs will be translated in xxx to those strings.
+ *
+ * CONVENTIONS:
+ *   - Events are past tense. e.g. ScreenStateChanged, not ScreenStateChange.
+ *   - If there is a UID, it goes first. Think in an object-oriented fashion.
+ * *****************************************************************************
+ */
+
+//////////////////////////////////////////////////////////////////////
+// Pulled atoms below this line //
+//////////////////////////////////////////////////////////////////////
+
+/**
+ * Pulls bytes transferred via wifi (Sum of foreground and background usage).
+ *
+ * Pulled from:
+ *   StatsCompanionService (using BatteryStats to get which interfaces are wifi)
+ */
+message WifiBytesTransfer {
+  optional int32 uid = 1;
+
+  optional int64 rx_bytes = 2;
+
+  optional int64 rx_packets = 3;
+
+  optional int64 tx_bytes = 4;
+
+  optional int64 tx_packets = 5;
+}
+
+/**
+ * Pulls bytes transferred via mobile networks (Sum of foreground and background
+ * usage).
+ *
+ * Pulled from:
+ *   StatsCompanionService (using BatteryStats to get which interfaces are
+ * mobile data)
+ */
+message MobileBytesTransfer {
+  optional int32 uid = 1;
+
+  optional int64 rx_bytes = 2;
+
+  optional int64 rx_packets = 3;
+
+  optional int64 tx_bytes = 4;
+
+  optional int64 tx_packets = 5;
+}

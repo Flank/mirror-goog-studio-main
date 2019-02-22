@@ -1,0 +1,3 @@
+This directory contains protos from //frameworks/base/cmds/statsd/src. They are required to interface with statsd, a data collection daemon for OS-level system events and metrics, via its shell API.
+
+The protos are forked instead of repo sync'ed because they are part of platform/frameworks/base, a large project that shouldn't be sync'ed into platform/tools/base in its entirety. Both statsd_config.proto and atoms.proto are trimmed to only parts used by Android Studio, in order to keep the number of dependencies and binary size small.
