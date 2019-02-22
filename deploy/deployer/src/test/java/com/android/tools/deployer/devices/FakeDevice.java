@@ -126,6 +126,10 @@ public class FakeDevice {
     }
 
     public boolean supportsJvmti() {
-        return Integer.parseInt(api) >= 26;
+        return apiLevelAtLeast(26);
+    }
+
+    public boolean apiLevelAtLeast(int level) {
+        return Integer.parseInt(api) >= level;
     }
 }

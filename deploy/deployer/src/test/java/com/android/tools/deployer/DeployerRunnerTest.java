@@ -19,21 +19,14 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.ddmlib.AndroidDebugBridge;
-import com.android.fakeadbserver.FakeAdbServer;
-import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.devices.FakeDevice;
-import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.tools.deployer.devices.shell.Arguments;
 import com.android.tools.deployer.devices.shell.ShellCommand;
 import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
 import com.google.common.io.ByteStreams;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
@@ -45,22 +38,12 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class DeployerRunnerTest {
-
-    private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
-
-    private final FakeDevice device;
-    private FakeAdbServer myAdbServer;
-    private ILogger logger;
+public class DeployerRunnerTest extends FakeAdbTestBase {
 
     @Parameterized.Parameters(name = "{0}")
     public static DeviceId[] getDevices() {
@@ -68,27 +51,7 @@ public class DeployerRunnerTest {
     }
 
     public DeployerRunnerTest(DeviceId id) {
-        this.device = new FakeDeviceLibrary().build(id);
-    }
-
-    @Before
-    public void setup() throws Exception {
-        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setHostCommandHandler(
-                TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
-        builder.addDeviceHandler(new FakeDeviceHandler(device));
-
-        myAdbServer = builder.build();
-        device.connectTo(myAdbServer);
-        myAdbServer.start();
-        logger = new TestLogger();
-        AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
-    }
-
-    @After
-    public void teardown() throws Exception {
-        AndroidDebugBridge.terminate();
-        myAdbServer.close();
+        super(new FakeDeviceLibrary().build(id));
     }
 
     @Test
@@ -231,34 +194,6 @@ public class DeployerRunnerTest {
         @Override
         public String getExecutable() {
             return "/data/local/tmp/.studio/bin/installer";
-        }
-    }
-
-    private static class TestLogger implements ILogger {
-
-        List<String> errors = new ArrayList<>();
-        List<String> warnings = new ArrayList<>();
-        List<String> infos = new ArrayList<>();
-        List<String> verboses = new ArrayList<>();
-
-        @Override
-        public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
-            errors.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void warning(@NonNull String msgFormat, Object... args) {
-            warnings.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void info(@NonNull String msgFormat, Object... args) {
-            infos.add(String.format(msgFormat, args));
-        }
-
-        @Override
-        public void verbose(@NonNull String msgFormat, Object... args) {
-            verboses.add(String.format(msgFormat, args));
         }
     }
 }

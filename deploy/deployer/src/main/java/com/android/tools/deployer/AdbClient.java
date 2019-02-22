@@ -67,6 +67,11 @@ public class AdbClient {
         }
     }
 
+    /** Executes the given command with no stdin and returns stdout as a byte[] */
+    public byte[] shell(String[] parameters) throws IOException {
+        return shell(parameters, null);
+    }
+
     /**
      * Executes the given command and sends {@code input} to stdin and returns stdout as a byte[]
      */
