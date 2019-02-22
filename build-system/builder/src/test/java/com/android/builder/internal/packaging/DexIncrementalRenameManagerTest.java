@@ -346,4 +346,49 @@ public class DexIncrementalRenameManagerTest {
         assertEquals("classes2.dex", pfu4_2.getName());
         assertEquals("y/aaa.dex", pfu4_2.getSource().getRelativePath());
     }
+
+    @Test
+    public void testDexFileComparator() {
+        DexIncrementalRenameManager.DexFileComparator comparator =
+                new DexIncrementalRenameManager.DexFileComparator();
+
+        // Case 1. Both dex files have path classes.dex
+        RelativeFile dexFile1 = makeRelative("x/classes.dex");
+        RelativeFile dexFile2 = makeRelative("y/classes.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(-1);
+
+        dexFile1 = makeRelative("y/classes.dex");
+        dexFile2 = makeRelative("x/classes.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(1);
+
+        dexFile1 = makeRelative("x/classes.dex");
+        dexFile2 = makeRelative("x/classes.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(0);
+
+        // Case 2. Only one dex file has path classes.dex
+        dexFile1 = makeRelative("x/classes.dex");
+        dexFile2 = makeRelative("x/classes2.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(-1);
+
+        dexFile1 = makeRelative("x/classes2.dex");
+        dexFile2 = makeRelative("x/classes.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(1);
+
+        // Case 3. Neither dex files has path classes.dex
+        dexFile1 = makeRelative("x/classes2.dex");
+        dexFile2 = makeRelative("x/classes3.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(-1);
+
+        dexFile1 = makeRelative("x/classes3.dex");
+        dexFile2 = makeRelative("x/classes2.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(1);
+
+        dexFile1 = makeRelative("x/classes3.dex");
+        dexFile2 = makeRelative("y/classes2.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(-1);
+
+        dexFile1 = makeRelative("y/classes2.dex");
+        dexFile2 = makeRelative("x/classes3.dex");
+        assertThat(comparator.compare(dexFile1, dexFile2)).isEqualTo(1);
+    }
 }

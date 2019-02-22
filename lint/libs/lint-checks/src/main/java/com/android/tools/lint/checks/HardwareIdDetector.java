@@ -110,7 +110,7 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
             @NonNull UCallExpression node,
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
-        String className = null;
+        String className;
         String methodName = method.getName();
         switch (methodName) {
             case BLUETOOTH_ADAPTER_GET_ADDRESS:
@@ -134,8 +134,13 @@ public class HardwareIdDetector extends Detector implements SourceCodeScanner {
             case CLASSLOADER_LOAD_CLASS:
                 className = "java.lang.ClassLoader";
                 break;
+
             default:
-                assert false;
+                // call.getMethodName() and resolvedMethod.getName() may not always
+                // be identical, such as in the case of module private methods in
+                // Kotlin, but that's not an issue for the SDK methods we're looking
+                // up here
+                return;
         }
 
         if (!evaluator.isMemberInClass(method, className)) {
