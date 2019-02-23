@@ -31,6 +31,7 @@ public class Patcher {
         IntBuffer instructions = patch.instructions.asIntBuffer();
 
         destinationFile.delete();
+        destinationFile.getParentFile().mkdirs();
         destinationFile.createNewFile();
 
         // Generate the truncated destination with adequate size.
