@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -189,6 +190,20 @@ public class AidlTest {
     public void testAidl() throws IOException, InterruptedException {
         project.execute("assembleDebug");
         checkAar("ITest");
+
+        // Check for original file comment in the generated file (bug: 121251997)
+        File genSrcFile =
+                project.getGeneratedSourceFile(
+                        "aidl_source_output_dir",
+                        "debug",
+                        "compileDebugAidl",
+                        "out",
+                        "com",
+                        "example",
+                        "helloworld",
+                        "ITest.java");
+
+        assertThat(genSrcFile).doesNotContain(" * Original file: ");
 
         TestFileUtils.searchAndReplace(iTestAidl, "int getInt();", "");
         project.execute("assembleDebug");
