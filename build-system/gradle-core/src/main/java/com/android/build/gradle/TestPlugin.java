@@ -41,7 +41,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/** Gradle plugin class for 'application' projects. */
+/** Gradle plugin class for 'test' projects. */
 public class TestPlugin extends BasePlugin<TestExtensionImpl> {
     @Inject
     public TestPlugin(ToolingModelBuilderRegistry registry) {
