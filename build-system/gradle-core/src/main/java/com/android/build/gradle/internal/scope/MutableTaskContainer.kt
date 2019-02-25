@@ -32,6 +32,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.build.gradle.tasks.RenderscriptCompile
 import org.gradle.api.DefaultTask
 import org.gradle.api.Task
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
@@ -91,7 +92,7 @@ class MutableTaskContainer : TaskContainer {
     var connectedTask: TaskProvider<out Task>? = null
     var microApkTask: TaskProvider<out Task>? = null
     var externalNativeBuildTask: TaskProvider<out ExternalNativeBuildTask>? = null
-    var externalNativeJsonGenerator: ExternalNativeJsonGenerator? = null
+    var externalNativeJsonGenerator: Provider<ExternalNativeJsonGenerator>? = null
     var packageSplitResourcesTask: TaskProvider<out Task>? = null
     var packageSplitAbiTask: TaskProvider<out Task>? = null
     var generateResValuesTask: TaskProvider<out Task>? = null

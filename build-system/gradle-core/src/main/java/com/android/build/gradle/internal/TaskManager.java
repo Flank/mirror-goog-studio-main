@@ -125,6 +125,7 @@ import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
@@ -1414,21 +1415,25 @@ public abstract class TaskManager {
 
         scope.getTaskContainer()
                 .setExternalNativeJsonGenerator(
-                        ExternalNativeJsonGenerator.create(
-                                project.getRootDir(),
-                                project.getPath(),
-                                project.getProjectDir(),
-                                project.getBuildDir(),
-                                pathResolution.cxxBuildDir,
-                                checkNotNull(pathResolution.buildSystem),
-                                pathResolution.makeFile,
-                                globalScope.getAndroidBuilder(),
-                                scope));
+                        TaskInputHelper.memoizeToProvider(
+                                project,
+                                () ->
+                                        ExternalNativeJsonGenerator.create(
+                                                project.getRootDir(),
+                                                project.getPath(),
+                                                project.getProjectDir(),
+                                                project.getBuildDir(),
+                                                pathResolution.cxxBuildDir,
+                                                checkNotNull(pathResolution.buildSystem),
+                                                pathResolution.makeFile,
+                                                globalScope.getAndroidBuilder(),
+                                                scope)));
     }
 
     public void createExternalNativeBuildTasks(@NonNull VariantScope scope) {
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
-        ExternalNativeJsonGenerator generator = taskContainer.getExternalNativeJsonGenerator();
+        Provider<ExternalNativeJsonGenerator> generator =
+                taskContainer.getExternalNativeJsonGenerator();
         if (generator == null) {
             return;
         }

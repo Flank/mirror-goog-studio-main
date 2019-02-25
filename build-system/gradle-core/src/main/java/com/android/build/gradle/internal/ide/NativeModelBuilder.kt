@@ -49,7 +49,7 @@ class NativeModelBuilder(
     private val scopes get() = variantManager.variantScopes
         .filter { it.taskContainer.externalNativeJsonGenerator != null }
         .filterNotNull()
-    private val generators get() = scopes.map { it.taskContainer.externalNativeJsonGenerator!! }
+    private val generators get() = scopes.map { it.taskContainer.externalNativeJsonGenerator!!.get() }
 
     /**
      * Indicates which model classes that buildAll can support.
@@ -209,7 +209,7 @@ class NativeModelBuilder(
             for (variantScope in variantManager.variantScopes) {
                 val generator = variantScope
                     .taskContainer
-                    .externalNativeJsonGenerator
+                    .externalNativeJsonGenerator?.orNull
                 if (generator != null) {
                     // This will generate any out-of-date or non-existent JSONs.
                     // When refreshExternalNativeModel() is true it will also

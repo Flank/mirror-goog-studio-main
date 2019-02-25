@@ -23,30 +23,31 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
 
-    private ExternalNativeJsonGenerator generator;
+    private Provider<ExternalNativeJsonGenerator> generator;
 
     @TaskAction
     public void build() throws ProcessException, IOException {
         try (GradleBuildLoggingEnvironment ignore =
                 new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
-            generator.build();
+            generator.get().build();
         }
     }
 
     @Nested
-    public ExternalNativeJsonGenerator getExternalNativeJsonGenerator() {
+    public Provider<ExternalNativeJsonGenerator> getExternalNativeJsonGenerator() {
         return generator;
     }
 
     @NonNull
     public static VariantTaskCreationAction<ExternalNativeBuildJsonTask> createTaskConfigAction(
-            @NonNull final ExternalNativeJsonGenerator generator,
+            @NonNull final Provider<ExternalNativeJsonGenerator> generator,
             @NonNull final VariantScope scope) {
         return new CreationAction(scope, generator);
     }
@@ -54,9 +55,10 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
     private static class CreationAction
             extends VariantTaskCreationAction<ExternalNativeBuildJsonTask> {
 
-        private final ExternalNativeJsonGenerator generator;
+        private final Provider<ExternalNativeJsonGenerator> generator;
 
-        private CreationAction(VariantScope scope, ExternalNativeJsonGenerator generator) {
+        private CreationAction(
+                VariantScope scope, Provider<ExternalNativeJsonGenerator> generator) {
             super(scope);
             this.generator = generator;
         }

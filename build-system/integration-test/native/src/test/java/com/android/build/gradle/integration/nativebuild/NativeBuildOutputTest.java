@@ -28,9 +28,9 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("xx"),
                 StandardCharsets.UTF_8);
 
-        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of(), 0);
+        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of());
     }
 
     @Test
@@ -161,7 +161,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("xx"),
                 StandardCharsets.UTF_8);
 
-        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of(), 0);
+        checkFailed(ImmutableList.of("'xx'"), ImmutableList.of());
     }
 
     // Related to b.android.com/219899 -- no libraries in CMake caused a NullReferenceException
@@ -185,8 +185,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         FileUtils.toSystemDependentPath("non/existent/CMakeLists.txt"),
                         "doesn't exist"),
-                ImmutableList.of("cmake.path", "CMakeLists.txt but that file doesn't exist"),
-                1);
+                ImmutableList.of("cmake.path", "CMakeLists.txt but that file doesn't exist"));
     }
 
     @Test
@@ -206,8 +205,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
-                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["));
     }
 
     @Test
@@ -224,8 +222,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
-                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["));
     }
 
     // In this test, ndk.abiFilters and ndkBuild.abiFilters only have "x86" in common.
@@ -281,8 +278,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
                 ImmutableList.of(
-                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["),
-                1);
+                        "ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["));
     }
 
     @Test
@@ -296,8 +292,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         FileUtils.toSystemDependentPath("non/existent/Android.mk"),
                         "doesn't exist"),
-                ImmutableList.of("ndkBuild.path", "Android.mk but that file doesn't exist"),
-                1);
+                ImmutableList.of("ndkBuild.path", "Android.mk but that file doesn't exist"));
     }
 
     @Test
@@ -317,8 +312,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         "Unexpected native build target -unrecognized-target-",
                         "Valid values are: hello-jni"),
-                ImmutableList.of(),
-                0);
+                ImmutableList.of());
     }
 
     @Test
@@ -338,8 +332,7 @@ public class NativeBuildOutputTest {
                 ImmutableList.of(
                         "Unexpected native build target -unrecognized-target-",
                         "Valid values are: hello-jni"),
-                ImmutableList.of(),
-                0);
+                ImmutableList.of());
     }
 
     @Test
@@ -423,53 +416,8 @@ public class NativeBuildOutputTest {
         }
     }
 
-    private void checkFailed(
-            List<String> expectInStderr,
-            List<String> expectInSyncIssues,
-            int expectedSyncIssueCount)
+    private void checkFailed(List<String> expectInStderr, List<String> expectInExceptionRootCause)
             throws IOException, InterruptedException {
-        // Check the sync
-        AndroidProject androidProject =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        // Make sure we can get a NativeAndroidProject
-        project.model().fetch(NativeAndroidProject.class);
-
-        // Check for expected sync issues
-        assertThat(androidProject.getSyncIssues()).hasSize(expectedSyncIssueCount);
-        if (androidProject.getSyncIssues().isEmpty()) {
-            assertThat(expectedSyncIssueCount).isEqualTo(0);
-        } else {
-            if (!expectInSyncIssues.isEmpty()) {
-                SyncIssue issue =
-                        assertThat(androidProject)
-                                .hasIssue(
-                                        SyncIssue.SEVERITY_ERROR,
-                                        SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION);
-
-                for (String expect : expectInSyncIssues) {
-                    assertThat(issue.getMessage()).contains(expect);
-                }
-            }
-
-            // All other errors should be ProcessException with standard message
-            if (expectInSyncIssues.isEmpty() && expectedSyncIssueCount > 0) {
-                // There should be some expected stderr to be found in getData() of the sync issue
-                assertThat(expectInStderr.size()).isGreaterThan(0);
-                SyncIssue issue =
-                        assertThat(androidProject)
-                                .hasIssue(
-                                        SyncIssue.SEVERITY_ERROR,
-                                        SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION);
-                for (String expect : expectInStderr) {
-                    assertThat(issue.getData()).contains(expect);
-                }
-            }
-        }
-
-        // Make sure we can get a NativeAndroidProject
-        project.model().fetch(NativeAndroidProject.class);
-
-        // Check the build
         GradleBuildResult result =
                 project.executor()
                         .expectFailure()
@@ -479,6 +427,11 @@ public class NativeBuildOutputTest {
             try (Scanner stderr = result.getStderr()) {
                 ScannerSubject.assertThat(stderr).contains(expect);
             }
+        }
+
+        String rootCause = Throwables.getRootCause(result.getException()).getMessage();
+        for (String trace : expectInExceptionRootCause) {
+            assertThat(rootCause).contains(trace);
         }
     }
 }

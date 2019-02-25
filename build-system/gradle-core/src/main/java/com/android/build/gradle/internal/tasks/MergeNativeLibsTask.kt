@@ -55,20 +55,24 @@ open class MergeNativeLibsTask
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var projectNativeLibs: FileCollection
-        private set
+    val projectNativeLibs: FileCollection
+        get() = getProjectNativeLibs(variantScope)
 
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var subProjectNativeLibs: FileCollection? = null
-        private set
+    val subProjectNativeLibs: FileCollection?
+        get() = if (mergeScopes.contains(SUB_PROJECTS)) {
+                    getSubProjectNativeLibs(variantScope)
+                } else null
 
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var externalLibNativeLibs: FileCollection? = null
-        private set
+    val externalLibNativeLibs: FileCollection?
+        get() = if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
+                    getExternalNativeLibs(variantScope)
+                } else null
 
     @get:Input
     lateinit var mergeScopes: Collection<ScopeType>
@@ -89,7 +93,14 @@ open class MergeNativeLibsTask
     @get:OutputDirectory
     val outputDir: DirectoryProperty = objects.directoryProperty()
 
+    private lateinit var variantScope: VariantScope
+    private var containsSubProjects = false
+    private var containsExternalLibraries = false
+
+
     private val workers = Workers.getWorker(path, workerExecutor)
+
+
 
     override fun isIncremental() = true
 
@@ -165,15 +176,7 @@ open class MergeNativeLibsTask
         override fun configure(task: MergeNativeLibsTask) {
             super.configure(task)
 
-            task.projectNativeLibs = getProjectNativeLibs(variantScope)
-
-            if (mergeScopes.contains(SUB_PROJECTS)) {
-                task.subProjectNativeLibs = getSubProjectNativeLibs(variantScope)
-            }
-
-            if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
-                task.externalLibNativeLibs = getExternalNativeLibs(variantScope)
-            }
+            task.variantScope = variantScope
 
             task.mergeScopes = mergeScopes
             task.packagingOptions =
@@ -200,7 +203,7 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
     if (taskContainer.externalNativeJsonGenerator != null) {
         nativeLibs.from(
             project
-                .files(taskContainer.externalNativeJsonGenerator?.objFolder)
+                .files(taskContainer.externalNativeJsonGenerator!!.get().objFolder)
                 .builtBy(taskContainer.externalNativeBuildTask?.name)
         )
     }
