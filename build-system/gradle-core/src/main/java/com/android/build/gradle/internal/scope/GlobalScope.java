@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -358,7 +359,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public FileCollection getBootClasspath() {
         if (bootClasspath == null) {
-            bootClasspath = project.files(extension.getBootClasspath());
+            bootClasspath = project.files((Callable) () -> extension.getBootClasspath());
         }
 
         return bootClasspath;
