@@ -2,6 +2,7 @@ load(":coverage.bzl", "coverage_java_test")
 load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
+load(":lint.bzl", "lint_test")
 
 def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friends):
     merged = []
@@ -105,6 +106,7 @@ def kotlin_library(
         visibility = None,
         jar_name = None,
         testonly = None,
+        lint_baseline = None,
         **kwargs):
     kotlins = native.glob([src + "/**/*.kt" for src in srcs])
     javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
@@ -160,6 +162,17 @@ def kotlin_library(
             library = name,
             visibility = visibility,
             source = pom,
+        )
+
+    lint_srcs = javas + kotlins
+    if lint_srcs and lint_baseline:
+        lint_test(
+            name = name + "_lint_test",
+            srcs = lint_srcs,
+            baseline = lint_baseline,
+            deps = deps + bundled_deps,
+            custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
+            tags = ["no_windows"],
         )
 
 def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibility = None, **kwargs):

@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="5" by="lint 26.5.0-alpha07">
+
+    <issue
+        id="DefaultLocale"
+        severity="Warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        category="Correctness"
+        priority="6"
+        summary="Implied default locale in case conversion"
+        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
+        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        errorLine1="                name = String.format(&quot;%s [%s] (on %d/%d devices)&quot;, testName, test.getDevice(),"
+        errorLine2="                       ^">
+        <location
+            file="src/fromGradle/java/com/android/build/gradle/internal/test/report/ClassPageRenderer.java"
+            line="203"
+            column="24"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        severity="Warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `toUpperCase(Locale)` instead. For strings meant to be internal use `Locale.ROOT`, otherwise `Locale.getDefault()`."
+        category="Correctness"
+        priority="6"
+        summary="Implied default locale in case conversion"
+        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
+        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        errorLine1="    val upper = value.toUpperCase()"
+        errorLine2="                      ~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/cxx/cmake/CmakeLanguage.kt"
+            line="35"
+            column="23"/>
+    </issue>
+
+    <issue
+        id="DefaultLocale"
+        severity="Warning"
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
+        category="Correctness"
+        priority="6"
+        summary="Implied default locale in case conversion"
+        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
+        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
+        errorLine1="                                    String.format("
+        errorLine2="                                    ^">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/VariantManager.java"
+            line="1347"
+            column="37"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {"
+        errorLine2="                           ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/BaseExtension.java"
+            line="929"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                        AbstractCompilesUtil.getDefaultJavaVersion("
+        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/BasePlugin.java"
+            line="694"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        javaCompileOptions = new com.android.build.gradle.internal.dsl.JavaCompileOptions();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dsl/BuildType.java"
+            line="129"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        javaCompileOptions = new com.android.build.gradle.internal.dsl.JavaCompileOptions();"
+        errorLine2="                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dsl/BuildType.java"
+            line="129"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        externalNativeBuildOptions = new ExternalNativeBuildOptions();"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dsl/BuildType.java"
+            line="132"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        externalNativeBuildOptions = new ExternalNativeBuildOptions();"
+        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dsl/BuildType.java"
+            line="132"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="            logger.error(null, correctMakefilePaths(message.errorMessage, makeFileDirectory));"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/CmakeServerExternalNativeJsonGenerator.java"
+            line="303"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        String correctedMessage = correctMakefilePaths(message.message, makeFileDirectory);"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/CmakeServerExternalNativeJsonGenerator.java"
+            line="307"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        for (String name : ProguardFiles.KNOWN_FILE_NAMES) {"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/ExtractProguardFiles.java"
+            line="38"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        for (String name : ProguardFiles.KNOWN_FILE_NAMES) {"
+        errorLine2="                                         ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/ExtractProguardFiles.java"
+            line="52"
+            column="42"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                ProguardFiles.createProguardFile(name, defaultProguardFile);"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/ExtractProguardFiles.java"
+            line="55"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                FeatureSetMetadata.OUTPUT_FILE_NAME)"
+        errorLine2="                                   ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/featuresplit/FeatureSetMetadataWriterTask.kt"
+            line="131"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="                            params.packageId != null &amp;&amp; params.packageId &lt; FeatureSetMetadata.BASE_ID"
+        errorLine2="                                                                                              ~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
+            line="761"
+            column="95"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="        for (String knownFileName : ProguardFiles.KNOWN_FILE_NAMES) {"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/MergeConsumerProguardFilesTask.java"
+            line="73"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="            proguardWorkLimiter = new WorkLimiter(PROGUARD_CONCURRENCY_LIMIT);"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/transforms/ProGuardTransform.java"
+            line="101"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        severity="Warning"
+        message="This method should only be accessed from tests or within private scope"
+        category="Correctness"
+        priority="4"
+        summary="Visible Only For Tests"
+        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
+        errorLine1="            proguardWorkLimiter = new WorkLimiter(PROGUARD_CONCURRENCY_LIMIT);"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/transforms/ProGuardTransform.java"
+            line="101"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(libraryList.size)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="                    newIndex = Integer(libraryList.size)"
+        errorLine2="                               ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="91"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(libraryDep.libraryIndex)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="                    .setLibraryIndex(libIndexDict[Integer(libraryDep.libraryIndex)]!!.toInt())"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="100"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(depIndex)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="                        .addLibraryDepIndex(libIndexDict[Integer(depIndex)]!!.toInt())"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="103"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(depIndex)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="                        .addDependencyIndex(libIndexDict[Integer(depIndex)]!!.toInt())"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="116"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(libraries.size)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="                index = Integer(libraries.size)"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/PerModuleReportDependenciesTask.kt"
+            line="80"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(1)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="            minSdkVersion = DefaultApiVersion.create(new Integer(1));"
+        errorLine2="                                                     ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
+            line="912"
+            column="54"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        severity="Warning"
+        message="Use `Integer.valueOf(-1)` instead"
+        category="Performance"
+        priority="4"
+        summary="Should use `valueOf` instead of `new`"
+        explanation="You should not call the constructor for wrapper classes directly, such as`new Integer(42)`. Instead, call the `valueOf` factory method, such as `Integer.valueOf(42)`. This will typically use less memory because common integers such as 0 and 1 will share a single instance."
+        errorLine1="            targetSdkVersion = DefaultApiVersion.create(new Integer(-1));"
+        errorLine2="                                                        ~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/core/VariantConfiguration.java"
+            line="939"
+            column="57"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="        return if (request.inputFile == request.originalInputFile) {"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
+            line="41"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        severity="Error"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
+        category="Cross Platform"
+        priority="3"
+        summary="Invalid File Comparisons"
+        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
+        errorLine1="        if (it.file.sourceFile == request.originalInputFile) {"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
+            line="56"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/AidlCompile.java"
+            line="98"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="            ForkJoinPool("
+        errorLine2="            ^">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/res/namespaced/AutoNamespaceDependenciesTask.kt"
+            line="478"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="                ForkJoinPool.commonPool());"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/BasePlugin.java"
+            line="256"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="                                                    ForkJoinPool.commonPool());"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/BasePlugin.java"
+            line="433"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="                        new ExecutorServiceAdapter(ForkJoinPool.commonPool())) {"
+        errorLine2="                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/BundleInstantApp.java"
+            line="183"
+            column="52"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="                .setExecutorService(MoreExecutors.listeningDecorator(ForkJoinPool.commonPool()))"
+        errorLine2="                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleToApkTask.kt"
+            line="104"
+            column="70"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="                        ForkJoinPool.commonPool()))"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleToStandaloneApkTask.kt"
+            line="135"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="        executor = new ExecutorServiceAdapter(ForkJoinPool.commonPool());"
+        errorLine2="                                              ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/DeviceProviderInstrumentTestTask.java"
+            line="137"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="    @NonNull private final ForkJoinPool forkJoinPool = new ForkJoinPool();"
+        errorLine2="                                                       ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/transforms/DexMergerTransform.java"
+            line="123"
+            column="56"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="        val forkJoinPool = ForkJoinPool()"
+        errorLine2="                           ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
+            line="354"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="    private val forkJoinPool = ForkJoinPool()"
+        errorLine2="                               ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/transforms/ExternalLibsMergerTransform.kt"
+            line="54"
+            column="32"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/ShaderCompile.java"
+            line="79"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="        { _, _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool()) }"
+        errorLine2="                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
+            line="58"
+            column="64"/>
+    </issue>
+
+</issues>

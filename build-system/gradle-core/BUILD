@@ -37,6 +37,7 @@ kotlin_library(
     bundled_deps = [
         ":proto",
     ],
+    lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
