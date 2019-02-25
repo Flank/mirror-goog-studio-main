@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.test>
-  <monitor versions="1.1.1"/>
-  <runner versions="1.1.1"/>
-  <orchestrator versions="1.1.1"/>
-  <rules versions="1.1.1"/>
-  <core versions="1.1.0"/>
-  <core-ktx versions="1.1.0"/>
+  <monitor versions="1.1.1,1.1.2-alpha01"/>
+  <runner versions="1.1.1,1.1.2-alpha01"/>
+  <orchestrator versions="1.1.1,1.1.2-alpha01"/>
+  <rules versions="1.1.1,1.1.2-alpha01"/>
+  <core versions="1.1.0,1.1.1-alpha01"/>
+  <core-ktx versions="1.1.0,1.1.1-alpha01"/>
 </androidx.test>
 

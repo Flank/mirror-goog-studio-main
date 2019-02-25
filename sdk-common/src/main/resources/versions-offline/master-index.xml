@@ -117,4 +117,6 @@
   <com.android.tools.chunkio/>
   <com.android.tools.fakeadbserver/>
   <androidx.savedstate/>
+  <com.google.android.libraries.places/>
+  <androidx.viewpager2/>
 </metadata>

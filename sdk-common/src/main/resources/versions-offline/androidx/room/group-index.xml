@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.room>
-  <room-rxjava2 versions="2.0.0,2.1.0-alpha03"/>
-  <room-common versions="2.0.0,2.1.0-alpha03"/>
-  <room-compiler versions="2.0.0,2.1.0-alpha03"/>
-  <room-guava versions="2.0.0,2.1.0-alpha03"/>
-  <room-migration versions="2.0.0,2.1.0-alpha03"/>
-  <room-testing versions="2.0.0,2.1.0-alpha03"/>
-  <room-runtime versions="2.0.0,2.1.0-alpha03"/>
-  <room-coroutines versions="2.1.0-alpha03"/>
+  <room-rxjava2 versions="2.0.0,2.1.0-alpha04"/>
+  <room-common versions="2.0.0,2.1.0-alpha04"/>
+  <room-compiler versions="2.0.0,2.1.0-alpha04"/>
+  <room-guava versions="2.0.0,2.1.0-alpha04"/>
+  <room-migration versions="2.0.0,2.1.0-alpha04"/>
+  <room-testing versions="2.0.0,2.1.0-alpha04"/>
+  <room-runtime versions="2.0.0,2.1.0-alpha04"/>
+  <room-coroutines versions="2.1.0-alpha04"/>
 </androidx.room>
 

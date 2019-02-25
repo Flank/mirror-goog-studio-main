@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools.analytics-library>
-  <tracker versions="26.3.0,26.5.0-alpha01"/>
-  <protos versions="26.3.0,26.5.0-alpha01"/>
-  <inspector versions="26.3.0,26.5.0-alpha01"/>
-  <shared versions="26.3.0,26.5.0-alpha01"/>
-  <publisher versions="26.3.0,26.5.0-alpha01"/>
-  <crash versions="26.3.0,26.5.0-alpha01"/>
-  <testing versions="26.3.0,26.5.0-alpha01"/>
+  <tracker versions="26.3.1,26.5.0-alpha05"/>
+  <protos versions="26.3.1,26.5.0-alpha05"/>
+  <inspector versions="26.3.1,26.5.0-alpha05"/>
+  <shared versions="26.3.1,26.5.0-alpha05"/>
+  <publisher versions="26.3.1,26.5.0-alpha05"/>
+  <crash versions="26.3.1,26.5.0-alpha05"/>
+  <testing versions="26.3.1,26.5.0-alpha05"/>
 </com.android.tools.analytics-library>
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.core>
-  <core-ktx versions="0.3,1.0.1,1.1.0-alpha03"/>
-  <core versions="1.0.1,1.1.0-alpha03"/>
+  <core-ktx versions="0.3,1.0.1,1.1.0-alpha04"/>
+  <core versions="1.0.1,1.1.0-alpha04"/>
 </androidx.core>
 

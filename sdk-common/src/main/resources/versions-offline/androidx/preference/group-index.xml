@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.preference>
-  <preference versions="1.0.0,1.1.0-alpha02"/>
-  <preference-ktx versions="1.0.0,1.1.0-alpha02"/>
+  <preference versions="1.0.0,1.1.0-alpha03"/>
+  <preference-ktx versions="1.0.0,1.1.0-alpha03"/>
 </androidx.preference>
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.leanback>
-  <leanback versions="1.0.0"/>
-  <leanback-preference versions="1.0.0"/>
+  <leanback versions="1.0.0,1.1.0-alpha01"/>
+  <leanback-preference versions="1.0.0,1.1.0-alpha01"/>
 </androidx.leanback>
 
