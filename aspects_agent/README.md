@@ -26,6 +26,8 @@ If you do not want to intercept only a specific signature but all the methods wi
 sun.net.www.protocol.http.HttpURLConnection.getInputStream;=com.android.tools.checker.Assertions#warn
 ```
 
+Additionally you can also use annotations as a way to add certain behaviours. Simply replace the method name, with the annotation name you want to use with the "@" prefix.
+
 ### com.android.tools.checker.Assertions
 This file defines a few common assertions.
 
@@ -54,6 +56,9 @@ java.nio.file.Files.walk=#warn
 # VFS Methods
 com.intellij.openapi.vfs.VfsUtil.copyDirectory=#warn
 com.intellij.openapi.vfs.VfsUtil.copy=#warn
+
+# Annotations
+@com.android.annotations.concurrency.Blocking=#assertIsNotEdt
 ```
 
 ## How to build the agent

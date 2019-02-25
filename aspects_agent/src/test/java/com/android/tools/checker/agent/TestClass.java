@@ -1,5 +1,7 @@
 package com.android.tools.checker.agent;
 
+import com.android.tools.checker.BlockingTest;
+
 public class TestClass {
     public static void staticMethodThrows() {
         // This will throw after instrumentation
@@ -20,4 +22,7 @@ public class TestClass {
     }
 
     public void methodNop() {}
+
+    @BlockingTest
+    public void blockingMethod() {}
 }

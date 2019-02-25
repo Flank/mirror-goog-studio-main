@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 
 @SuppressWarnings("unused") // Used via -javaagent path
 public class Agent {
-    private static final Logger LOGGER = Logger.getLogger(Transform.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
 
     public static void premain(String agentArgs, Instrumentation inst) throws IOException {
         agentmain(agentArgs, inst);
@@ -42,14 +42,8 @@ public class Agent {
 
         Aspects aspects = new Aspects(aspectsMap);
 
-        aspectsMap
-                .entrySet()
-                .forEach(
-                        entry ->
-                                LOGGER.info(
-                                        String.format(
-                                                "Rule added %s=%s",
-                                                entry.getKey(), entry.getValue())));
+        aspectsMap.forEach(
+                (key, value) -> LOGGER.info(String.format("Rule added %s=%s", key, value)));
         inst.addTransformer(new Transform(aspects), inst.isRetransformClassesSupported());
 
         if (inst.isRetransformClassesSupported()) {

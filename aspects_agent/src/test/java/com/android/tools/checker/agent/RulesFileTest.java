@@ -18,7 +18,9 @@ public class RulesFileTest {
                         + "java.test.Test.method()V=#warn1\n"
                         + "\n"
                         + "# Another comment\n"
-                        + "java.test.Test.method2()V=#warn2\n";
+                        + "java.test.Test.method2()V=#warn2\n"
+                        + "# Annotation\n"
+                        + "@com.google.test.Blocking=#warn3\n";
 
         File outputTest = File.createTempFile("test", ".txt");
         outputTest.deleteOnExit();
@@ -27,6 +29,7 @@ public class RulesFileTest {
         Map<String, String> result = RulesFile.parserRulesFile(outputTest.getAbsolutePath());
         assertEquals("#warn1", result.get("java.test.Test.method()V"));
         assertEquals("#warn2", result.get("java.test.Test.method2()V"));
-        assertEquals(2, result.size());
+        assertEquals("#warn3", result.get("@com.google.test.Blocking"));
+        assertEquals(3, result.size());
     }
 }

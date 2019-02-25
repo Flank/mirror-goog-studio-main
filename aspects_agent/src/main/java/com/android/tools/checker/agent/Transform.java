@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -45,13 +46,12 @@ class Transform implements ClassFileTransformer {
     static byte[] transformClass(
             byte[] input,
             @NonNull String className,
-            @NonNull Function<String, String> methodAspects,
+            @NonNull Function<String, String> aspects,
             @NonNull Consumer<String> notMatchedCallback) {
         try {
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             ClassVisitor visitor =
-                    new InstrumentClassVisitor(
-                            writer, className, methodAspects, notMatchedCallback);
+                    new InstrumentClassVisitor(writer, className, aspects, notMatchedCallback);
             ClassReader reader = new ClassReader(input);
             reader.accept(visitor, ClassReader.EXPAND_FRAMES);
             return writer.toByteArray();
@@ -73,7 +73,22 @@ class Transform implements ClassFileTransformer {
         }
 
         if (!aspects.hasClass(className)) {
-            return classFileBuffer;
+            // The class has no method aspects defined in the configuration, however, we can still
+            // define aspects via annotations. Check if the class has any annotations and if the
+            // annotations has an aspect defined in the configuration file.
+            boolean hasAnnotations =
+                    Arrays.stream(classBeingRedefined.getDeclaredMethods())
+                            .flatMap(method -> Arrays.stream(method.getDeclaredAnnotations()))
+                            .anyMatch(
+                                    annotation ->
+                                            aspects.hasAnnotation(
+                                                    annotation
+                                                            .annotationType()
+                                                            .getCanonicalName()));
+
+            if (!hasAnnotations) {
+                return classFileBuffer;
+            }
         }
 
         return transformClass(classFileBuffer, className, aspects::getAspect, NOT_FOUND_CALLBACK);

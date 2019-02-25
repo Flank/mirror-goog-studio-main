@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.hamcrest.CoreMatchers;
@@ -75,9 +76,10 @@ public class InstrumentTest {
         String binaryTestClassName = TestClass.class.getCanonicalName().replace('.', '/');
         byte[] classInput =
                 ByteStreams.toByteArray(
-                        InstrumentTest.class
-                                .getClassLoader()
-                                .getResourceAsStream(binaryTestClassName + ".class"));
+                        Objects.requireNonNull(
+                                InstrumentTest.class
+                                        .getClassLoader()
+                                        .getResourceAsStream(binaryTestClassName + ".class")));
         byte[] newClass =
                 Transform.transformClass(
                         classInput,
@@ -143,6 +145,22 @@ public class InstrumentTest {
         TestAssertions.count = 0;
         assertEquals(0, TestAssertions.count);
         callMethod(instance, "methodNop");
+        assertEquals(1, TestAssertions.count);
+    }
+
+    @Test
+    public void testAnnotations()
+            throws IOException, IllegalAccessException, InstantiationException,
+                    NoSuchMethodException {
+        Set<String> notFound = new HashSet<>();
+        ImmutableMap<String, String> matcher =
+                ImmutableMap.of(
+                        "@com.android.tools.checker.BlockingTest",
+                        "com.android.tools.checker.TestAssertions#count");
+        Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
+        TestAssertions.count = 0;
+        assertEquals(0, TestAssertions.count);
+        callMethod(instance, "blockingMethod");
         assertEquals(1, TestAssertions.count);
     }
 
