@@ -676,11 +676,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
         }
 
-        // TODO(112700217): Only force the SDK resolution when in sync mode. Also move this to
-        // as late as possible so we configure most tasks as possible  during sync.
-        if (globalScope.getSdkComponents().getSdkFolder() == null) {
-            return;
-        }
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
         // This is because project don't get evaluated in the unit test setup.
