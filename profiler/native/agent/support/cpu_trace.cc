@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #include "agent/agent.h"
-#include "agent/support/jni_wrappers.h"
+#include "agent/jni_wrappers.h"
 #include "proto/internal_cpu.grpc.pb.h"
 #include "utils/file_reader.h"
 #include "utils/log.h"

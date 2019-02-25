@@ -35,12 +35,12 @@ necessary.
 
 ## To compile just host binaries
 ```
-bazel build perfa:libperfa.so perfd:perfd
+bazel build //tools/base/transport/agent:libjvmtiagent.so //tools/base/transport:transport_main
 ```
 
 ## To compile just Android binaries
 ```
-bazel build perfa:android perfd:android
+bazel build //tools/base/transport/agent:android //tools/base/transport:android
 ```
 
 ## To run the host unit tests

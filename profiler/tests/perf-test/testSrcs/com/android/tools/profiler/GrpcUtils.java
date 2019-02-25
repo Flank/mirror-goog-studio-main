@@ -104,7 +104,7 @@ public class GrpcUtils {
                                         .setStreamId(1234)
                                         .setAttachAgent(
                                                 Transport.AttachAgent.newBuilder()
-                                                        .setAgentLibFileName("libperfa.so"))
+                                                        .setAgentLibFileName("libjvmtiagent.so"))
                                         .build())
                         .build());
         // Block until we can verify the agent was fully attached, which takes a while.

@@ -25,7 +25,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "perfa/jni_function_table.h"
+#include "jni_function_table.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"

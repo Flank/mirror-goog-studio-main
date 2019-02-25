@@ -15,7 +15,7 @@
  */
 #include "event_manager.h"
 #include "agent/agent.h"
-#include "agent/support/jni_wrappers.h"
+#include "agent/jni_wrappers.h"
 
 namespace {
 using profiler::EventManager;

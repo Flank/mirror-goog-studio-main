@@ -21,7 +21,7 @@
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
-#include "perfa.h"
+#include "perfa/perfa.h"
 #include "utils/config.h"
 #include "utils/device_info.h"
 #include "utils/log.h"

@@ -15,7 +15,7 @@
  */
 #include <jni.h>
 #include "agent/agent.h"
-#include "agent/support/jni_wrappers.h"
+#include "agent/jni_wrappers.h"
 
 /**
  * This is the native implentation for EchoService::sendEchoMessage(String).

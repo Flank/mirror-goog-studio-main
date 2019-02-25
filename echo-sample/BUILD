@@ -46,7 +46,9 @@ cc_library(
         "echo_java_jni.cc",
     ],
     copts = ANDROID_COPTS + [
-        "-Itools/base/profiler/native",
+        # TODO: Remove dependency when agent.h no longer includes
+        # memory_component.h.
+        "-Itools/base/profiler/native/agent",
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
     ],
@@ -55,7 +57,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
-        "//tools/base/profiler/native/agent",
+        "//tools/base/transport/agent",
+        "//tools/base/transport/agent:jni_wrappers",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
     ],

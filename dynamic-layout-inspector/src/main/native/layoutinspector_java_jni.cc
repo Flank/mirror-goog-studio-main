@@ -16,7 +16,7 @@
 #include <jni.h>
 #include <sstream>
 #include "agent/agent.h"
-#include "agent/support/jni_wrappers.h"
+#include "agent/jni_wrappers.h"
 
 /**
  * Native calls to send the skia picture back to studio (using an event with a

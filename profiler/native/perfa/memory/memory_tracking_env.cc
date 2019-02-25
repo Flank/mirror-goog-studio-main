@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "agent/agent.h"
-#include "agent/support/memory_stats_logger.h"
-#include "perfa/jvmti_helper.h"
-#include "perfa/scoped_local_ref.h"
+#include "agent/jvmti_helper.h"
+#include "agent/scoped_local_ref.h"
+#include "support/memory_stats_logger.h"
 #include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/native_backtrace.h"

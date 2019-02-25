@@ -9,31 +9,25 @@ cc_binary(
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
     deps = [
-        ":agent",
+        ":support",
     ],
 )
 
 cc_library(
-    name = "agent",
+    name = "support",
     srcs = [
-        "agent.cc",
-        "agent.h",
-        "agent_component.h",
-        "memory_component.cc",
-        "memory_component.h",
         "support/cpu_trace.cc",
         "support/energy_passthrough.cc",
         "support/event_manager.cc",
         "support/event_manager.h",
         "support/event_passthrough.cc",
         "support/http_tracker.cc",
-        "support/jni_wrappers.h",
         "support/memory_stats_logger.cc",
         "support/memory_stats_logger.h",
         "support/profiler_service.cc",
     ],
     copts = ANDROID_COPTS + [
-        "-Itools/base/profiler/native",
+        "-Itools/base/profiler/native/agent",
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
     ],
@@ -42,6 +36,8 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/transport/agent",
+        "//tools/base/transport/agent:jni_wrappers",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
     ],
@@ -55,4 +51,20 @@ jni_library(
         "//tools/base/bazel:windows": [],
         "//conditions:default": [":libsupportjni.so.stripped"],
     }),
+)
+
+cc_library(
+    name = "memory_component",
+    srcs = ["memory_component.cc"],
+    hdrs = ["memory_component.h"],
+    copts = ANDROID_COPTS + [
+        "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/transport",
+    ],
+    tags = ["no_windows"],
+    visibility = ["//tools/base/transport/agent:__pkg__"],
+    deps = [
+        "//tools/base/transport/proto:cc_proto",
+        "//tools/base/transport/utils",
+    ],
 )

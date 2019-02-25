@@ -20,10 +20,10 @@
 #include <unordered_map>
 
 #include "agent/agent.h"
-#include "jvmti_helper.h"
+#include "agent/jvmti_helper.h"
+#include "agent/scoped_local_ref.h"
 #include "memory/memory_tracking_env.h"
 #include "proto/transport.grpc.pb.h"
-#include "scoped_local_ref.h"
 #include "utils/config.h"
 #include "utils/device_info.h"
 #include "utils/log.h"

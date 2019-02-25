@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 #include "agent/agent.h"
-#include "agent/support/jni_wrappers.h"
+#include "agent/jni_wrappers.h"
 #include "utils/clock.h"
 #include "utils/config.h"
 

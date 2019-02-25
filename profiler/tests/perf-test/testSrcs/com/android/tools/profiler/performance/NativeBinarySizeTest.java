@@ -38,7 +38,7 @@ public class NativeBinarySizeTest {
         Map<String, String> files =
                 ImmutableMap.of(
                         "perfd", "perfd",
-                        "perfa", "libperfa.so");
+                        "perfa", "libjvmtiagent.so");
 
         Benchmark benchmark =
                 new Benchmark.Builder("Profiler Native Binaries (bytes)")

@@ -188,12 +188,12 @@ public class PerfDriver extends ExternalResource {
 
     private void copyFilesForJvmti() {
         try {
-            File libPerfaFile = new File(ProcessRunner.getProcessPath("perfa.location"));
+            File libJvmtiAgentFile = new File(ProcessRunner.getProcessPath("perfa.location"));
             File perfaJarFile = new File(ProcessRunner.getProcessPath("perfa.jar.location"));
-            if (libPerfaFile.exists()) {
+            if (libJvmtiAgentFile.exists()) {
                 Files.copy(
-                        libPerfaFile.toPath(),
-                        new File("./libperfa.so").toPath(),
+                        libJvmtiAgentFile.toPath(),
+                        new File("./libjvmtiagent.so").toPath(),
                         StandardCopyOption.REPLACE_EXISTING);
             }
             if (perfaJarFile.exists()) {
