@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24">
+
+<clipPath id="p1">
+  <circle cx="12" cy="12" r="10" />
+</clipPath>
+<g style="clip-path:url(#p1);">
+  <circle fill="#000" cx="12" cy="12" r="10" />
+  <g>
+    <circle fill="#0E0" cx="12" cy="12" r="9" />
+  </g>
+</g>
+
+</svg>

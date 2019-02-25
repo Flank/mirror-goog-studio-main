@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="96" height="96" viewBox="0 0 24 24">
+  <use xlink:href="#myUse" stroke-width="3" stroke-linejoin="round"/>
+  <defs>   
+    <path id="myPath" d="M 2 2 h 20 v 20 h -20 v -20z" fill="#0e0"/>
+  </defs>
+  <defs>
+    <use id="myUse" xlink:href="#myPath" stroke="#090"/>
+  </defs>
+</svg>

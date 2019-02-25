@@ -433,11 +433,19 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_transform_ellipse_complex");
     }
 
-    public void testSvgMoveAfterCloseTransform() throws Exception {
-        checkSvgConversion("test_move_after_close");
+    public void testSvgMoveAfterClose1() throws Exception {
+        checkSvgConversion("test_move_after_close1");
     }
 
-    public void testSvgMoveAfterClose() throws Exception {
+    public void testSvgMoveAfterClose2() throws Exception {
+        checkSvgConversion("test_move_after_close2");
+    }
+
+    public void testSvgMoveAfterClose3() throws Exception {
+        checkSvgConversion("test_move_after_close3");
+    }
+
+    public void testSvgMoveAfterCloseTransform() throws Exception {
         checkSvgConversion("test_move_after_close_transform");
     }
 
@@ -497,6 +505,18 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_defs_use_use_first");
     }
 
+    public void testSvgDefsUseIndirect() throws Exception {
+        checkSvgConversion("test_defs_use_chain");
+    }
+
+    public void testSvgDefsUseCircularDependency() throws Exception {
+        checkSvgConversionAndContainsError(
+                "test_defs_use_circular_dependency",
+                "ERROR @ line 6: Circular dependency of <use> nodes: hhh -> hhh\n" +
+                "ERROR @ line 9: Circular dependency of <use> nodes: ccc -> ddd (line 11) -> eee (line 10) -> ccc\n" +
+                "ERROR @ line 12: Circular dependency of <use> nodes: ggg -> fff (line 8) -> ggg");
+    }
+
     // Clip Path Tests
     public void testSvgClipPathGroup() throws Exception {
         checkSvgConversion("test_clip_path_group");
@@ -506,8 +526,12 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_group_2");
     }
 
+    public void testSvgClipPathTranslateChildren() throws Exception {
+        checkSvgConversion("test_clip_path_translate_children");
+    }
+
     public void testSvgClipPathTranslateAffected() throws Exception {
-        checkSvgConversion("test_clip_path_group_translate");
+        checkSvgConversion("test_clip_path_translate_affected");
     }
 
     public void testSvgClipPathIsGroup() throws Exception {
@@ -536,6 +560,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgClipPathSinglePath() throws Exception {
         checkSvgConversion("test_clip_path_path_over_rect");
+    }
+
+    public void testSvgClipPathOrdering() throws Exception {
+        checkSvgConversion("test_clip_path_ordering");
     }
 
     // Style tests start here
