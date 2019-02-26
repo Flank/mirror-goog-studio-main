@@ -4,7 +4,7 @@ flags=""
 if [ "$1" = "--wrapper_script_flag=--debug" ]; then
     flags="--debug"
 fi
-{binary} $flags {xml}
+{binary} $flags {xml} {baseline}
 """
 
 def _lint_test_impl(ctx):
@@ -16,9 +16,6 @@ def _lint_test_impl(ctx):
     # Create project XML:
     project_xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
     project_xml += "<project>\n"
-
-    if ctx.file.baseline:
-        project_xml += "<baseline file=\"{0}\" />\n".format(ctx.file.baseline.path)
 
     for jar in ctx.files.custom_rules:
         project_xml += "<lint-checks jar=\"{0}\" />\n".format(jar.short_path)
@@ -42,6 +39,7 @@ def _lint_test_impl(ctx):
         content = script_template.format(
             binary = ctx.executable._binary.short_path,
             xml = ctx.outputs.project_xml.short_path,
+            baseline = ctx.file.baseline.path if ctx.file.baseline else "",
         ),
         is_executable = True,
     )

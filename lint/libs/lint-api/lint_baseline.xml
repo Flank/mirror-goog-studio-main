@@ -1,278 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha06">
+<issues format="5" by="lint 26.5.0-alpha08">
 
     <issue
         id="DefaultLocale"
-        severity="Warning"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead"
-        category="Correctness"
-        priority="6"
-        summary="Implied default locale in case conversion"
-        explanation="Calling `String#toLowerCase()` or `#toUpperCase()` **without specifying an explicit locale** is a common source of bugs. The reason for that is that those methods will use the current locale on the user&apos;s device, and even though the code appears to work correctly when you are developing the app, it will fail in some locales. For example, in the Turkish locale, the uppercase replacement for `i` is **not** `I`.&#xA;&#xA;If you want the methods to just perform ASCII replacement, for example to convert an enum name, call `String#toUpperCase(Locale.US)` instead. If you really want to use the current locale, call `String#toUpperCase(Locale.getDefault())` instead."
-        url="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        urls="http://developer.android.com/reference/java/util/Locale.html#default_locale"
-        errorLine1="                        String key = String.format(ANDROID_LIBRARY_REFERENCE_FORMAT, i);"
-        errorLine2="                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="334"
-            column="38"/>
+            line="334"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="        val classEntries = ClassEntry.fromClassPath(this, classFolders, true)"
-        errorLine2="                                      ~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1049"
-            column="39"/>
+            line="1053"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="            return ClassEntry.createSuperClassMap(this, classEntries)"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1051"
-            column="31"/>
+            line="1055"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="        val libraryEntries = ClassEntry.fromClassPath(this, libraries, true)"
-        errorLine2="                                        ~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1053"
-            column="41"/>
+            line="1057"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="        return ClassEntry.createSuperClassMap(this, libraryEntries, classEntries)"
-        errorLine2="                          ~~~~~~~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintClient.kt"
-            line="1054"
-            column="27"/>
+            line="1058"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="        val libraryEntries = ClassEntry.fromClassPath(client, libraries, true)"
-        errorLine2="                                        ~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1308"
-            column="41"/>
+            line="1311"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="            ClassEntry.fromClassPath(client, classFolders, true)"
-        errorLine2="                       ~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1324"
-            column="24"/>
+            line="1327"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="        val entries = ClassEntry.fromClassFiles("
-        errorLine2="                                 ~~~~~~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1355"
-            column="34"/>
+            line="1358"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="                    if (prev != null &amp;&amp; prev.compareTo(entry) == 0) {"
-        errorLine2="                                             ~~~~~~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1389"
-            column="46"/>
+            line="1392"/>
     </issue>
 
     <issue
         id="VisibleForTests"
-        severity="Warning"
-        message="This method should only be accessed from tests or within private scope"
-        category="Correctness"
-        priority="4"
-        summary="Visible Only For Tests"
-        explanation="With the `@VisibleForTesting` annotation you can specify an `otherwise=` attribute which specifies the intended visibility if the method had not been made more widely visible for the tests.&#xA;&#xA;This check looks for accesses from production code (e.g. not tests) where the access would not have been allowed with the intended production visibility."
-        errorLine1="                            &quot;Error processing ${entry.path()}: broken class file? (${t.message})&quot;"
-        errorLine2="                                                      ~~~~">
+        message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="1404"
-            column="55"/>
+            line="1407"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="            if (file != project.dir) {"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="793"
-            column="17"/>
+            line="796"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="                        if (dir == project.dir) {"
-        errorLine2="                            ~~~~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="797"
-            column="29"/>
+            line="800"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="        if (parent == cachedFolder) {"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="2851"
-            column="13"/>
+            line="2874"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="        file1 == file2 -> return file1"
-        errorLine2="        ~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="642"
-            column="9"/>
+            line="642"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="                    if (first == second) {"
-        errorLine2="                        ~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/LintUtils.kt"
-            line="651"
-            column="25"/>
+            line="651"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="        return dir.equals(other.dir);"
-        errorLine2="               ~~~~~~~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="462"
-            column="16"/>
+            line="462"/>
     </issue>
 
     <issue
         id="FileComparisons"
-        severity="Error"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`."
-        category="Cross Platform"
-        priority="3"
-        summary="Invalid File Comparisons"
-        explanation="Never call `equals` (or worse, `==`) on a `java.io.File`:&#xA;this will not do the right thing on case insensitive file systems.&#xA;&#xA;Always call `equals` instead of identity equals on VirtualFiles.&#xA;&#xA;For more info, see `go/files-howto`."
-        errorLine1="                return dir.getCanonicalFile().equals(toCompare) &amp;&amp; dir.exists();"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
-            line="1320"
-            column="24"/>
+            line="1320"/>
     </issue>
 
 </issues>

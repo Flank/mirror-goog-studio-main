@@ -18,6 +18,7 @@ package com.android.tools.binaries;
 
 import static com.google.common.io.Files.getNameWithoutExtension;
 
+import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Main;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -32,6 +33,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +57,20 @@ import org.xml.sax.SAXException;
  * appropriate exit code.
  */
 public class BazelLintWrapper {
+
+    private final Path outputXml;
+    private final Path newBaseline;
+    private final Path testXml;
+    private final Path sandboxBase;
+    private final Path outputDir;
+
     public static void main(String[] args) throws IOException {
-        new BazelLintWrapper().run(Paths.get(args[0]));
+        Path projectXml = Paths.get(args[0]);
+        Path baseline = null;
+        if (args.length > 1) {
+            baseline = Paths.get(args[1]);
+        }
+        new BazelLintWrapper().run(projectXml, baseline);
     }
 
     private final DocumentBuilder documentBuilder;
@@ -64,6 +78,22 @@ public class BazelLintWrapper {
     private final Field statusField;
 
     public BazelLintWrapper() {
+        testXml = Paths.get(System.getenv("XML_OUTPUT_FILE"));
+        outputDir = Paths.get(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
+        outputXml = outputDir.resolve("lint_output.xml");
+        newBaseline = outputDir.resolve("lint_baseline.xml");
+
+        // Find sandboxBase, so we can print out readable paths.
+        if (outputXml.toString().contains("bazel-out")) {
+            File base = outputXml.toFile();
+            while (base != null && !base.getName().equals("bazel-out")) {
+                base = base.getParentFile();
+            }
+            sandboxBase = base == null ? null : base.toPath().getParent();
+        } else {
+            sandboxBase = null;
+        }
+
         try {
             documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             exitException = Class.forName("com.android.tools.lint.Main$ExitException");
@@ -74,14 +104,23 @@ public class BazelLintWrapper {
         }
     }
 
-    private void run(Path projectXml) throws IOException {
+    private Path relativize(Path path) {
+        return sandboxBase != null ? sandboxBase.relativize(path) : path;
+    }
+
+    private void run(Path projectXml, Path originalBaseline) throws IOException {
         if (!Files.exists(projectXml)) {
             System.err.println("Cannot find project XML: " + projectXml);
             System.exit(1);
         }
 
-        Path outputDir = Paths.get(System.getenv("TEST_UNDECLARED_OUTPUTS_DIR"));
-        Path outputXml = outputDir.resolve("lint_output.xml");
+        // Lint will update the baseline file, and putting it in undeclared outputs means we can
+        // download it from the CI server.
+        if (originalBaseline != null) {
+            Files.copy(originalBaseline, newBaseline);
+        } else {
+            Files.createFile(newBaseline);
+        }
 
         // We want to reuse code for configuring lint from the project descriptor XML, which is
         // private to the custom client used by Main. So instead of creating a LintCliClient, for
@@ -89,13 +128,20 @@ public class BazelLintWrapper {
         Main lintMain = new Main();
 
         PrintStream stdOut = System.out;
+
+        @SuppressWarnings("resource") // Closing a ByteArrayOutputStream has no effect.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        boolean baselineUpdated = false;
+
         try {
             System.setOut(new PrintStream(baos));
             lintMain.run(
                     new String[] {
                         "--project", projectXml.toString(),
                         "--xml", outputXml.toString(),
+                        "--baseline", newBaseline.toString(),
+                        "--remove-fixed",
                     });
         } catch (Exception e) {
             if (exitException.isInstance(e)) {
@@ -106,8 +152,15 @@ public class BazelLintWrapper {
                     ex.printStackTrace();
                     System.exit(1);
                 }
-                if (status != 0) {
-                    System.exit(status);
+
+                switch (status) {
+                    case 0:
+                        break;
+                    case LintCliFlags.ERRNO_CREATED_BASELINE:
+                        baselineUpdated = true;
+                        break;
+                    default:
+                        System.exit(status);
                 }
             } else {
                 throw e;
@@ -116,25 +169,28 @@ public class BazelLintWrapper {
             System.setOut(stdOut);
         }
 
-        boolean targetShouldPass = checkOutput(outputXml);
+        boolean targetShouldPass = checkOutput(outputXml, newBaseline, baselineUpdated);
         if (!targetShouldPass) {
             System.out.println(
                     "Lint found new issues or the baseline was out of date. "
-                            + "See the test.xml file (next to test.log, this file) for details.");
+                            + "See "
+                            + relativize(testXml));
+            System.out.print("\n==================== ");
             System.out.println(
-                    "\nOriginal lint output (note that paths in the sandbox may no longer exist):");
+                    "Original lint output (note that paths in the sandbox may no longer exist):");
             System.out.println(baos.toString(StandardCharsets.UTF_8.name()));
             System.exit(1);
         }
     }
 
-    private boolean checkOutput(Path outputXml) {
+    private boolean checkOutput(Path outputXml, Path newBaseline, boolean baselineUpdated) {
         try {
             Document lintXmlReport = documentBuilder.parse(outputXml.toFile());
             Document junitXml = documentBuilder.newDocument();
-            boolean targetShouldPass = createJUnitXml(junitXml, lintXmlReport);
+            boolean targetShouldPass =
+                    createJUnitXml(junitXml, lintXmlReport, newBaseline, baselineUpdated);
 
-            try (FileWriter fileWriter = new FileWriter(System.getenv("XML_OUTPUT_FILE"))) {
+            try (FileWriter fileWriter = new FileWriter(testXml.toFile())) {
                 Transformer transformer = TransformerFactory.newInstance().newTransformer();
                 transformer.setOutputProperty(OutputKeys.INDENT, "yes");
                 transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -155,12 +211,27 @@ public class BazelLintWrapper {
      *
      * @return true if the target should pass, false otherwise
      */
-    private static boolean createJUnitXml(Document junitXml, Document lintXmlReport) {
+    private boolean createJUnitXml(
+            Document junitXml, Document lintXmlReport, Path newBaseline, boolean updatedBaseline) {
         boolean targetShouldPass = true;
 
         Table<File, String, List<String>> messagesByFileAndSummary = HashBasedTable.create();
         NodeList issues = lintXmlReport.getElementsByTagName("issue");
         Map<String, String> explanations = new HashMap<>();
+
+        if (updatedBaseline) {
+            targetShouldPass = false;
+            String summary = "Baseline out of date";
+            messagesByFileAndSummary.put(newBaseline.toFile(), summary, Collections.emptyList());
+            explanations.put(
+                    summary,
+                    "The baseline file contains issues which have been fixed in the project, "
+                            + "please remove them or use the regenerated baseline. When running "
+                            + "locally you can find in "
+                            + relativize(outputDir.resolve("outputs.zip"))
+                            + ", on CI you can download it from the Artifacts tab, under "
+                            + "Archives/undeclared_outputs.zip.");
+        }
 
         for (int i = 0; i < issues.getLength(); i++) {
             Element issue = (Element) issues.item(i);
