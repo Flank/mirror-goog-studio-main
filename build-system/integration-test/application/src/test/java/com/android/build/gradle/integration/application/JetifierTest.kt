@@ -147,7 +147,7 @@ class JetifierTest(private val withKotlin: Boolean) {
         TestFileUtils.appendToFile(
             project.getSubproject(":app").buildFile,
             "dependencies{\n" +
-                    "implementation 'android.arch.navigation:navigation-fragment:1.0.0-alpha01'\n" +
+                    "implementation 'android.arch.navigation:navigation-fragment:1.0.0-rc01'\n" +
                     "}\n"
         )
 
