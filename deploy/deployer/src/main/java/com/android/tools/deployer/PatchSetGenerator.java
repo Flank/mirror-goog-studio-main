@@ -74,16 +74,29 @@ public class PatchSetGenerator {
             throws IOException {
         ArrayList<Deploy.PatchInstruction> patches = new ArrayList<>();
 
+        boolean noChanges = true;
+        for (Pair<Apk, Apk> pair : pairs) {
+            Apk localApk = pair.getFirst();
+            Apk remoteApk = pair.getSecond();
+            if (!remoteApk.checksum.equals(localApk.checksum)) {
+                noChanges = false;
+                break;
+            }
+        }
+
+        // If nothing has changed, return an empty list of patches.
+        if (noChanges) {
+            return patches;
+        }
+
         // Generate delta for each pairs.
         for (Pair<Apk, Apk> pair : pairs) {
             Apk localApk = pair.getFirst();
             Apk remoteApk = pair.getSecond();
-            if (remoteApk.checksum.equals(localApk.checksum)) {
-                continue;
-            }
             Deploy.PatchInstruction instruction = generateDelta(remoteApk, localApk);
             patches.add(instruction);
         }
+        assert pairs.size() == patches.size();
         return patches;
     }
 
