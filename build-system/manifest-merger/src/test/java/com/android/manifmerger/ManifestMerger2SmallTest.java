@@ -418,11 +418,12 @@ public class ManifestMerger2SmallTest {
 
     @Test
     public void testPlaceholderSubstitution() throws Exception {
-        String xml = ""
-                + "<manifest package=\"foo\" versionCode=\"34\" versionName=\"3.4\"\n"
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                + "    <activity android:name=\".activityOne\" android:label=\"${labelName}\"/>\n"
-                + "</manifest>";
+        String xml =
+                ""
+                        + "<manifest package=\"foo.bar\" versionCode=\"34\" versionName=\"3.4\"\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity android:name=\".activityOne\" android:label=\"${labelName}\"/>\n"
+                        + "</manifest>";
 
         Map<String, String> placeholders = ImmutableMap.of("labelName", "injectedLabelName");
         MockLog mockLog = new MockLog();
@@ -436,8 +437,8 @@ public class ManifestMerger2SmallTest {
             assertTrue(mergingReport.getResult().isSuccess());
             Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             assertNotNull(document);
-            Optional<Element> activityOne = getElementByTypeAndKey(
-                    document, "activity", "foo.activityOne");
+            Optional<Element> activityOne =
+                    getElementByTypeAndKey(document, "activity", "foo.bar.activityOne");
             assertTrue(activityOne.isPresent());
             Attr label = activityOne.get().getAttributeNodeNS(SdkConstants.ANDROID_URI, "label");
             assertNotNull(label);
@@ -459,20 +460,26 @@ public class ManifestMerger2SmallTest {
         MockLog mockLog = new MockLog();
         File inputFile = TestUtils.inputAsFile("testPlaceholderSubstitution", xml);
         try {
-            MergingReport mergingReport = ManifestMerger2
-                    .newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
-                    .setOverride(ManifestSystemProperty.PACKAGE, "bar")
-                    .merge();
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .setOverride(ManifestSystemProperty.PACKAGE, "foo.bar")
+                            .merge();
 
             assertTrue(mergingReport.getResult().isSuccess());
             Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertEquals("bar", document.getElementsByTagName("manifest")
-                    .item(0).getAttributes().getNamedItem("package").getNodeValue());
-            Optional<Element> activityOne = getElementByTypeAndKey(document, "activity",
-                    "bar.activityOne");
+            assertEquals(
+                    "foo.bar",
+                    document.getElementsByTagName("manifest")
+                            .item(0)
+                            .getAttributes()
+                            .getNamedItem("package")
+                            .getNodeValue());
+            Optional<Element> activityOne =
+                    getElementByTypeAndKey(document, "activity", "foo.bar.activityOne");
             assertTrue(activityOne.isPresent());
             assertArrayEquals(
-                    new Object[] {"activity#bar.activityOne", "manifest"},
+                    new Object[] {"activity#foo.bar.activityOne", "manifest"},
                     mergingReport
                             .getActions()
                             .getNodeKeys()
@@ -488,11 +495,12 @@ public class ManifestMerger2SmallTest {
 
     @Test
     public void testNoApplicationIdValueProvided() throws Exception {
-        String xml = ""
-                + "<manifest package=\"foo\" versionCode=\"34\" versionName=\"3.4\"\n"
-                + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                + "    <activity android:name=\"${applicationId}.activityOne\"/>\n"
-                + "</manifest>";
+        String xml =
+                ""
+                        + "<manifest package=\"foo.bar\" versionCode=\"34\" versionName=\"3.4\"\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity android:name=\"${applicationId}.activityOne\"/>\n"
+                        + "</manifest>";
 
         MockLog mockLog = new MockLog();
         File inputFile = TestUtils.inputAsFile("testPlaceholderSubstitution", xml);
@@ -504,13 +512,18 @@ public class ManifestMerger2SmallTest {
             assertTrue(mergingReport.getResult().isSuccess());
             assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
             Document document = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
-            assertEquals("foo", document.getElementsByTagName("manifest")
-                    .item(0).getAttributes().getNamedItem("package").getNodeValue());
-            Optional<Element> activityOne = getElementByTypeAndKey(document, "activity",
-                    "foo.activityOne");
+            assertEquals(
+                    "foo.bar",
+                    document.getElementsByTagName("manifest")
+                            .item(0)
+                            .getAttributes()
+                            .getNamedItem("package")
+                            .getNodeValue());
+            Optional<Element> activityOne =
+                    getElementByTypeAndKey(document, "activity", "foo.bar.activityOne");
             assertTrue(activityOne.isPresent());
             assertArrayEquals(
-                    new Object[] {"activity#foo.activityOne", "manifest"},
+                    new Object[] {"activity#foo.bar.activityOne", "manifest"},
                     mergingReport
                             .getActions()
                             .getNodeKeys()
@@ -773,7 +786,7 @@ public class ManifestMerger2SmallTest {
         String xmlInput =
                 ""
                         + "<manifest\n"
-                        + "    package=\"main\""
+                        + "    package=\"foo.main\""
                         + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <uses-sdk android:minSdkVersion=\"foo\"\n"
                         + "        android:targetSdkVersion=\"24\"/>\n"
@@ -1195,7 +1208,7 @@ public class ManifestMerger2SmallTest {
         String xml =
                 ""
                         + "<manifest\n"
-                        + "    package=\"${applicationId}\""
+                        + "    package=\"foo.bar\""
                         + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <activity t:name=\"activityOne\"/>\n"
                         + "    <uses-permission t:name=\"android.permission.RECEIVE_SMS\"/>\n"
@@ -1228,7 +1241,7 @@ public class ManifestMerger2SmallTest {
         String xml =
                 ""
                         + "<manifest\n"
-                        + "    package=\"${applicationId}\""
+                        + "    package=\"foo.bar\""
                         + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
                         + "    <uses-permission t:name=\"android.permission.INTERNET\"/>\n"
                         + "    <uses-permission t:name=\"android.permission.RECEIVE_SMS\"/>\n"
@@ -2025,6 +2038,66 @@ public class ManifestMerger2SmallTest {
         } finally {
             assertThat(overlayFile.delete()).named("Overlay was deleted").isTrue();
             assertThat(libFile.delete()).named("Lib file was deleted").isTrue();
+        }
+    }
+
+    @Test
+    public void testFailIfPackageNamehasNoDot_application() throws Exception {
+
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"example\">\n"
+                        + "    <uses-sdk\n"
+                        + "            android:minSdkVersion=\"21\"\n"
+                        + "            android:targetSdkVersion=\"24\" />\n"
+                        + "    <activity android:name=\"com.example.ActivityOne\" />\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_failBecauseOfNoDot", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .merge();
+            assertEquals(MergingReport.Result.ERROR, mergingReport.getResult());
+            assertStringPresenceInLogRecords(mergingReport, "Package name 'example' at position ");
+            assertStringPresenceInLogRecords(
+                    mergingReport, " should contain at least one '.' (dot) character");
+            assertNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        } finally {
+            assertTrue(tmpFile.delete());
+        }
+    }
+
+    @Test
+    public void testSuccessIfPackageNamehasNoDot_library() throws Exception {
+
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "        xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"example\">\n"
+                        + "    <uses-sdk\n"
+                        + "            android:minSdkVersion=\"21\"\n"
+                        + "            android:targetSdkVersion=\"24\" />\n"
+                        + "    <activity android:name=\"com.example.ActivityOne\" />\n"
+                        + "</manifest>";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_failBecauseOfNoDot", input);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(tmpFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        } finally {
+            assertTrue(tmpFile.delete());
         }
     }
 

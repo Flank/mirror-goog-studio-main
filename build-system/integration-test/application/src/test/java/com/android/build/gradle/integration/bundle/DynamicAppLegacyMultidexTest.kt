@@ -105,7 +105,7 @@ class DynamicAppLegacyMultidexTest {
                 """
                 |<manifest xmlns:android="http://schemas.android.com/apk/res/android"
                 |         xmlns:dist="http://schemas.android.com/apk/distribution"
-                |    package="feature">
+                |    package="foo.feature">
                 |    <dist:module dist:onDemand="true" dist:title="@string/app_name">
                 |        <dist:fusing dist:include="false" />
                 |    </dist:module>

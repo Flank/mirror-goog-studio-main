@@ -348,6 +348,27 @@ public class ManifestMerger2 {
 
         XmlDocument finalMergedDocument = xmlDocumentOptional.get();
 
+        Optional<XmlAttribute> packageAttr = finalMergedDocument.getPackage();
+        // We allow single word package name for library... so far...
+        if (mMergeType != MergeType.LIBRARY && packageAttr.isPresent()) {
+            XmlAttribute packageNameAttribute = packageAttr.get();
+            String packageName = packageNameAttribute.getValue();
+            // We accept absence of dot only if NO_PLACEHOLDER_REPLACEMENT is true and packageName
+            // is a placeholder
+            if (!(mOptionalFeatures.contains(Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT)
+                            && PlaceholderHandler.isPlaceHolder(packageName))
+                    && !packageName.contains(".")) {
+                mergingReportBuilder.addMessage(
+                        loadedMainManifestInfo.getXmlDocument().getSourceFile(),
+                        MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "Package name '%1$s' at position %2$s should contain at "
+                                        + "least one '.' (dot) character",
+                                packageName, packageNameAttribute.printPosition()));
+                return mergingReportBuilder.build();
+            }
+        }
+
         if (!mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
             PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
         }

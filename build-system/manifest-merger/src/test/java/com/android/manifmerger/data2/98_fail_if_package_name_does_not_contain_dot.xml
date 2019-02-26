@@ -1,0 +1,22 @@
+# Tests that if a package name is just a single word (no dots) then it is not a valid java name and
+# build should fail during manifest merging
+
+@fails
+
+@main
+
+<manifest
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        package="example">
+
+    <uses-sdk
+            android:minSdkVersion="21"
+            android:targetSdkVersion="24" />
+
+    <activity
+            android:name="com.example.ActivityOne" />
+
+</manifest>
+
+@errors
+ERROR:Package name 'example' at position ManifestMerger2Test0_main.xml:3:9-26 should contain at least one '.' \(dot\) character
