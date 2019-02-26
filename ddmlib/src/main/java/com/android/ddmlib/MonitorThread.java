@@ -294,7 +294,8 @@ final class MonitorThread extends Thread {
 
         try {
             if (!key.isReadable() || !key.isValid()) {
-                Log.w("ddms", "Invalid key from " + client + ".");
+                Log.d("ddms", "Invalid key from " + client + ". Dropping client.");
+                dropClient(client, true /* notify */);
                 return;
             }
 
@@ -315,12 +316,16 @@ final class MonitorThread extends Thread {
             }
         } catch (CancelledKeyException e) {
             // key was canceled probably due to a disconnected client before we could
-            // read stuff coming from the client.
+            // read stuff coming from the client, so we drop it.
+            dropClient(client, true /* notify */);
         } catch (IOException ex) {
-            // client.read() throws an IOException whenever the debugger disconnects. This is normal
-            // and expected.
+            // something closed down, no need to print anything. The client is simply dropped.
+            dropClient(client, true /* notify */);
         } catch (Exception ex) {
             Log.e("ddms", ex);
+
+            /* close the client; automatically un-registers from selector */
+            dropClient(client, true /* notify */);
 
             if (ex instanceof BufferOverflowException) {
                 Log.w("ddms",
