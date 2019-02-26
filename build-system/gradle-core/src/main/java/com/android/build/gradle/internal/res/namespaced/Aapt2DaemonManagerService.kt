@@ -109,12 +109,21 @@ fun registerAaptService(
 
 /**
  * Responsible for scheduling maintenance on the Aapt2Service.
+ *
+ * There are three ways the daemons can all be shut down.
+ * 1. An explicit call of [Aapt2DaemonManager.shutdown]. (e.g. at the end of each build invocation.)
+ * 2. All the daemons being timed out by the logic in [Aapt2DaemonManager.maintain].
+ *    Calls to maintain are scheduled below, and only while there are daemons running to avoid
+ *    leaking a thread.
+ * 3. The JVM shutdown hook, which like (2) is only kept registered while daemons are running.
  */
 private class Aapt2DaemonManagerMaintainer : Aapt2DaemonManager.Listener {
     @GuardedBy("this")
     private var maintainExecutor: ScheduledExecutorService? = null
     @GuardedBy("this")
     private var maintainAction: ScheduledFuture<*>? = null
+    @GuardedBy("this")
+    private var shutdownHook: Thread? = null
 
     @Synchronized
     override fun firstDaemonStarted(manager: Aapt2DaemonManager) {
@@ -125,6 +134,8 @@ private class Aapt2DaemonManagerMaintainer : Aapt2DaemonManager.Listener {
                         daemonExpiryTimeSeconds + maintenanceIntervalSeconds,
                         maintenanceIntervalSeconds,
                         TimeUnit.SECONDS)
+        shutdownHook = Thread { shutdown(manager) }
+        Runtime.getRuntime().addShutdownHook(shutdownHook)
     }
 
     @Synchronized
@@ -133,6 +144,19 @@ private class Aapt2DaemonManagerMaintainer : Aapt2DaemonManager.Listener {
         maintainExecutor!!.shutdown()
         maintainAction = null
         maintainExecutor = null
+        if (shutdownHook != null) {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook!!)
+            shutdownHook = null
+        }
+    }
+
+    private fun shutdown(manager: Aapt2DaemonManager) {
+        // Unregister the hook, as shutting down the daemon manager will trigger lastDaemonStopped()
+        // and removeShutdownHook throws if called during shutdown.
+        synchronized(this) {
+            this.shutdownHook = null
+        }
+        manager.shutdown()
     }
 }
 
