@@ -16,9 +16,11 @@
 
 package com.android.builder.internal.aapt.v2
 
+import com.android.SdkConstants
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.ILogger
+import java.lang.IllegalStateException
 import java.util.concurrent.TimeoutException
 import javax.annotation.concurrent.NotThreadSafe
 
@@ -48,6 +50,16 @@ abstract class Aapt2Daemon(
     private fun checkStarted() {
         when (state) {
             State.NEW -> {
+                // AAPT2 is supported on Windows 32-bit and 64-bit, Linux 64-bit and MacOS 64-bit.
+                if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS
+                    && !System.getProperty("os.arch").contains("64")) {
+
+                    handleError(
+                        "AAPT2 is not supported on 32-bit ${SdkConstants.currentPlatformName()}," +
+                                " see supported systems on https://developer.android.com/studio#system-requirements-a-namerequirementsa",
+                        IllegalStateException("Unsupported operating system."),
+                        false)
+                }
                 logger.verbose("%1\$s: starting", displayName)
                 try {
                     startProcess()
@@ -144,12 +156,20 @@ abstract class Aapt2Daemon(
     protected abstract fun stopProcess()
 
     /** Wrap and propagate the original exception, but also try to shut down the daemon. */
-    private fun handleError(action: String, exception: Exception): Nothing {
+    private fun handleError(
+        action: String, exception: Exception, unexpected: Boolean = true
+    ): Nothing {
         throw Aapt2InternalException(
                     "$displayName: $action" +
-                            (if (state == State.RUNNING) ", attempting to stop daemon.\n" else "\n") +
-                            "This should not happen under normal circumstances, " +
-                            "please file an issue if it does.",
+                            (if (state == State.RUNNING)
+                                ", attempting to stop daemon.\n"
+                            else
+                                "\n") +
+                            (if (unexpected)
+                                "This should not happen under normal circumstances, " +
+                                        "please file an issue if it does."
+                            else
+                                ""),
                     exception).apply {
             try {
                 shutDown()
