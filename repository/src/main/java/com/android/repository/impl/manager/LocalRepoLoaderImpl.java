@@ -33,6 +33,8 @@ import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
@@ -128,6 +130,23 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
             }
         }
         return Collections.unmodifiableMap(mPackages);
+    }
+
+    @Override
+    @Nullable
+    public LocalPackage getPackage(@NonNull String pathId, @NonNull ProgressIndicator progress) {
+        // If this is already cached, we just use it.
+        if (mPackages != null && mPackages.containsKey(pathId)) {
+            return mPackages.get(pathId);
+        }
+
+        File targetFile = FileOpUtils.append(mRoot, pathId.replace(';', File.separatorChar));
+        Map<String, LocalPackage> loadedPackages =
+                parsePackages(ImmutableSet.of(targetFile), progress);
+        Preconditions.checkState(
+                loadedPackages.isEmpty() || loadedPackages.size() == 1,
+                "Invalid loaded packages for a single target.");
+        return loadedPackages.get(pathId);
     }
 
     /**
