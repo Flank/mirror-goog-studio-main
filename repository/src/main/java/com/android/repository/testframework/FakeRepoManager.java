@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.Downloader;
 import com.android.repository.api.FallbackLocalRepoLoader;
 import com.android.repository.api.FallbackRemoteRepoLoader;
+import com.android.repository.api.LocalPackage;
 import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressRunner;
@@ -104,6 +105,13 @@ public class FakeRepoManager extends RepoManager {
     @Override
     public void setFallbackRemoteRepoLoader(@Nullable FallbackRemoteRepoLoader remote) {
 
+    }
+
+    @Override
+    @Nullable
+    public LocalPackage getLocalSynchronously(
+            @NonNull String pathId, @NonNull final ProgressIndicator progress) {
+        return mPackages.getLocalPackages().get(pathId);
     }
 
     @Override
