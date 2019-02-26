@@ -142,6 +142,7 @@ public class KotlinCompiler extends JarOutputCompiler {
             if (noJdk) {
                 args.add("-no-jdk");
             }
+            args.add("-Xjvm-default=enable");
 
             ExitCode exit =
                     CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[] {}));
