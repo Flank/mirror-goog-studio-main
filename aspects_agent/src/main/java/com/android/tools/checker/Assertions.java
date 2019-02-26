@@ -14,12 +14,24 @@ public class Assertions {
 
     public static void assertIsNotEdt() {
         if (SwingUtilities.isEventDispatchThread()) {
+            StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
+            LOGGER.severe(
+                    String.format(
+                            "%s.%s method called from EDT",
+                            currentMethod.getClassName(), currentMethod.getMethodName()));
             throw new RuntimeException("This method should not be called on the EDT thread");
         }
     }
 
     public static void assertIsEdt() {
         if (!SwingUtilities.isEventDispatchThread()) {
+            StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
+            LOGGER.severe(
+                    String.format(
+                            "%s.%s method called from [%s] instead of EDT",
+                            currentMethod.getClassName(),
+                            currentMethod.getMethodName(),
+                            currentMethod.getThreadName()));
             throw new RuntimeException("This method should be called on the EDT thread");
         }
     }
@@ -37,15 +49,13 @@ public class Assertions {
     }
 
     public static void warn() {
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        // We show the third element in the stack ignoring the two firsts which are:
-        // Thread.currentThread().getStackTrace() and Assertions.warn()
+        StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
         LOGGER.warning(
                 String.format(
                         "[%s] %s.%s method called",
-                        Thread.currentThread().getName(),
-                        stackTrace[2].getClassName(),
-                        stackTrace[2].getMethodName()));
+                        currentMethod.getThreadName(),
+                        currentMethod.getClassName(),
+                        currentMethod.getMethodName()));
     }
 
     public static void dumpStackTrace() {
@@ -54,6 +64,44 @@ public class Assertions {
             LOGGER.warning(baos.toString());
         } catch (IOException e) {
             LOGGER.throwing(Assertions.class.getSimpleName(), "dumpStackTrace", e);
+        }
+    }
+
+    private static class StackTraceMethod {
+
+        private final String className;
+        private final String methodName;
+        private final String threadName;
+
+        private StackTraceMethod(String className, String methodName, String threadName) {
+            this.className = className;
+            this.methodName = methodName;
+            this.threadName = threadName;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public String getMethodName() {
+            return methodName;
+        }
+
+        public String getThreadName() {
+            return threadName;
+        }
+
+        /**
+         * Returns the fourth method in the top of the current stacktrace, therefore ignoring
+         * Thread.currentThread().getStackTrace(), this helper method and its caller. Also returns
+         * the method's class and the current thread name.
+         */
+        public static StackTraceMethod getCurrentStackTraceMethod() {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            return new StackTraceMethod(
+                    stackTrace[3].getClassName(),
+                    stackTrace[3].getMethodName(),
+                    Thread.currentThread().getName());
         }
     }
 }
