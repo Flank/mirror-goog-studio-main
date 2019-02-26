@@ -68,7 +68,7 @@ void StatsdSubscriber::Run() {
   subscription_.SerializeToArray(buffer.data() + sizeof(size), size);
 
   if (!runner_->Run(kStatsdArgs, string(buffer.begin(), buffer.end()),
-                    &callback_)) {
+                    &callback_, nullptr)) {
     Log::E("Failed to run statsd command.");
     return;
   }

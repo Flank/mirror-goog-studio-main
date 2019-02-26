@@ -55,7 +55,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
             std::unique_ptr<AtraceManager>(new AtraceManager(
                 std::unique_ptr<FileSystem>(new DiskFileSystem()), clock,
                 1000 * 30)),
-            std::unique_ptr<PerfettoManager>(new PerfettoManager())) {}
+            std::unique_ptr<PerfettoManager>(new PerfettoManager(clock))) {}
 
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,

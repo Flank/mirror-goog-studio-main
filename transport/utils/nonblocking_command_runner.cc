@@ -40,21 +40,26 @@ const uint kPipeRead = 0;
 // read from stdout_pipe[kPipeRead]
 const uint kPipeWrite = 1;
 
-const size_t kReadBufferSize = 1024;
-
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
                                    StdoutCallback* callback) {
-  return Run(arguments, std::string(), callback);
+  return Run(arguments, std::string(), callback, nullptr);
 }
 
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
                                    const string& input) {
-  return Run(arguments, input, nullptr);
+  return Run(arguments, input, nullptr, nullptr);
 }
 
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
                                    const string& input,
-                                   StdoutCallback* callback) {
+                                   const char* const env_args[]) {
+  return Run(arguments, input, nullptr, env_args);
+}
+
+bool NonBlockingCommandRunner::Run(const char* const arguments[],
+                                   const string& input,
+                                   StdoutCallback* callback,
+                                   const char* const env_args[]) {
   // stdin_pipe referrs to the stdin of the child.
   int stdin_pipe[2];
   // stdout_pipe referrs to the stdout of the child.
@@ -93,7 +98,8 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
     }
 
     // run child process image
-    execv(executable_path_.c_str(), (char* const*)arguments);
+    execve(executable_path_.c_str(), (char* const*)arguments,
+           (char* const*)env_args);
     // if we get here at all, an error occurred, but we are in the child
     // process, so just exit
     Log::W("Child process exited with code %d", errno);

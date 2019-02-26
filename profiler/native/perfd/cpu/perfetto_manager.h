@@ -24,12 +24,16 @@
 
 namespace profiler {
 
+// Class to manage running perfetto and defining the output path for traces.
+// This Perfetto class passed in is an abstraction of the perfetto process
+// that gets run when a recording is started. This abstraction is setup to
+// allow independent testing of starting perfetto recordings without needing
+// a device, or the fake android framework.
 class PerfettoManager {
  public:
-  static const char *kPerfettoTraceFile;
-  explicit PerfettoManager()
-      : PerfettoManager(std::shared_ptr<Perfetto>(new Perfetto())) {}
-  explicit PerfettoManager(std::shared_ptr<Perfetto> perfetto);
+  explicit PerfettoManager(Clock *clock)
+      : PerfettoManager(clock, std::shared_ptr<Perfetto>(new Perfetto())) {}
+  explicit PerfettoManager(Clock *clock, std::shared_ptr<Perfetto> perfetto);
   virtual ~PerfettoManager() = default;
 
   // Buids a default perfetto config. The default config creates a memory buffer
@@ -41,12 +45,15 @@ class PerfettoManager {
   static perfetto::protos::TraceConfig BuildConfig(std::string app_pkg_name,
                                                    int acquired_buffer_size_kb);
 
+  std::string GetFileBaseName(const std::string &app_name) const;
+
   // Returns true if profiling was started successfully.
   // |trace_path| is also set to where the trace file will be made available
   // once profiling of this app is stopped. To call this method on an already
   // profiled app is a noop and returns false.
   // Only one instance of Perfetto should be running at a time.
-  bool StartProfiling(const perfetto::protos::TraceConfig &config,
+  bool StartProfiling(const std::string &app_name, const std::string &abi_arch,
+                      const perfetto::protos::TraceConfig &config,
                       std::string *trace_path, std::string *error);
 
   // Stops profiling returns true if perfetto is no longer running.
@@ -59,6 +66,7 @@ class PerfettoManager {
 
  private:
   std::shared_ptr<Perfetto> perfetto_;
+  Clock *clock_;
   bool is_profiling_;
 };
 }  // namespace profiler

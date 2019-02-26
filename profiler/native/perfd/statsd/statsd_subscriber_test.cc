@@ -31,8 +31,9 @@ class MockNonBlockingCommandRunner : public NonBlockingCommandRunner {
  public:
   explicit MockNonBlockingCommandRunner()
       : NonBlockingCommandRunner("foo", true) {}
-  MOCK_METHOD3(Run, bool(const char* const arguments[],
-                         const std::string& input, StdoutCallback* callback));
+  MOCK_METHOD4(Run,
+               bool(const char* const arguments[], const std::string& input,
+                    StdoutCallback* callback, const char* const env_args[]));
   MOCK_METHOD0(Kill, void());
   MOCK_METHOD0(IsRunning, bool());
 };
@@ -55,8 +56,8 @@ TEST_F(StatsdSubscriberTest, RunsAndStopsCommand) {
   NiceMock<MockNonBlockingCommandRunner> mock_runner;
   StatsdSubscriber statsd(&mock_runner);
   ON_CALL(mock_runner, IsRunning).WillByDefault(Return(false));
-  ON_CALL(mock_runner, Run(_, _, _)).WillByDefault(Return(true));
-  EXPECT_CALL(mock_runner, Run(_, _, _)).Times(1);
+  ON_CALL(mock_runner, Run(_, _, _, _)).WillByDefault(Return(true));
+  EXPECT_CALL(mock_runner, Run(_, _, _, _)).Times(1);
   EXPECT_CALL(mock_runner, Kill).Times(AtLeast(1));
   statsd.SubscribeToPulledAtom(
       std::unique_ptr<WifiBytesTransfer>(new WifiBytesTransfer(1)));

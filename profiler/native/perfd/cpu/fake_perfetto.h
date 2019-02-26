@@ -25,15 +25,30 @@ namespace profiler {
 // state of if perfetto is assumed to be running or not.
 class FakePerfetto : public Perfetto {
  public:
-  explicit FakePerfetto() : running_state_(false) {}
+  explicit FakePerfetto() : running_state_(false), shutdown_(false) {}
   ~FakePerfetto() override {}
 
-  void Run(const PerfettoArgs& run_args) override { running_state_ = true; }
+  void Run(const PerfettoArgs& run_args) override {
+    running_state_ = true;
+    abi_arch_ = run_args.abi_arch;
+    output_file_path_ = run_args.output_file_path;
+    config_ = run_args.config;
+  }
   bool IsPerfettoRunning() override { return running_state_; }
   void Stop() override { running_state_ = false; }
+  void Shutdown() override { Stop(); shutdown_ = true; }
+  bool IsShutdown() { return shutdown_; }
+
+  const std::string& OutputFilePath() { return output_file_path_; }
+  const std::string& AbiArch() { return abi_arch_; }
+  const perfetto::protos::TraceConfig& Config() { return config_; }
 
  private:
   bool running_state_;
+  bool shutdown_;
+  perfetto::protos::TraceConfig config_;
+  std::string output_file_path_;
+  std::string abi_arch_;
 };
 
 }  // namespace profiler

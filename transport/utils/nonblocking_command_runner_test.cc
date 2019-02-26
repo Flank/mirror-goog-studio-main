@@ -69,7 +69,7 @@ TEST(NonBlockingCommandRunnerTest, TestInputAndOutput) {
   OutputValidator handler(input);
   NonBlockingCommandRunner::StdoutCallback output_handler =
       std::bind(&OutputValidator::Validate, &handler, std::placeholders::_1);
-  EXPECT_TRUE(cat.Run(kArguments, input, &output_handler));
+  EXPECT_TRUE(cat.Run(kArguments, input, &output_handler, nullptr));
   // Wait until we validate our expected output.
   handler.Wait();
   // Kill the process

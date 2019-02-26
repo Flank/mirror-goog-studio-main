@@ -228,7 +228,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
       // config.
       perfetto::protos::TraceConfig config =
           PerfettoManager::BuildConfig(app_pkg_name, acquired_buffer_size_kb);
-      success = perfetto_manager_->StartProfiling(config, &trace_path, &error);
+      success = perfetto_manager_->StartProfiling(
+          app_pkg_name, request->abi_cpu_arch(), config, &trace_path, &error);
     } else {
       success = atrace_manager_->StartProfiling(
           app_pkg_name, configuration.sampling_interval_us(),
@@ -393,8 +394,9 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
       // config.
       perfetto::protos::TraceConfig config = PerfettoManager::BuildConfig(
           app.app_pkg_name, acquired_buffer_size_kb);
-      success =
-          perfetto_manager_->StartProfiling(config, &app.trace_path, &error);
+      success = perfetto_manager_->StartProfiling(
+          app.app_pkg_name, request->abi_cpu_arch(), config, &app.trace_path,
+          &error);
     } else {
       success = atrace_manager_->StartProfiling(
           app.app_pkg_name, app.configuration.sampling_interval_us(),

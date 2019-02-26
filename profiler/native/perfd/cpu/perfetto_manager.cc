@@ -18,6 +18,7 @@
 #include "perfetto.h"
 
 #include "proto/profiler.grpc.pb.h"
+#include "utils/current_process.h"
 #include "utils/log.h"
 #include "utils/trace.h"
 
@@ -26,24 +27,24 @@ using std::string;
 
 namespace profiler {
 
-// TODO (b/126401684): Change the trace file location when sideloading perfetto.
-const char* PerfettoManager::kPerfettoTraceFile =
-    "/data/misc/perfetto-traces/trace";
-
-PerfettoManager::PerfettoManager(std::shared_ptr<Perfetto> perfetto)
-    : perfetto_(std::move(perfetto)), is_profiling_(false) {}
+PerfettoManager::PerfettoManager(Clock* clock,
+                                 std::shared_ptr<Perfetto> perfetto)
+    : perfetto_(std::move(perfetto)), clock_(clock), is_profiling_(false) {}
 
 bool PerfettoManager::StartProfiling(
-    const perfetto::protos::TraceConfig& config,
-    std::string* trace_path,
+    const std::string& app_name, const std::string& abi_arch,
+    const perfetto::protos::TraceConfig& config, std::string* trace_path,
     std::string* error) {
-  if (is_profiling_) {
+  // TODO: Add check if atrace is running, if so perfetto with our current
+  // config will fail.
+  if (IsProfiling()) {
     return false;
   }
   Trace trace("CPU: StartProfiling perfetto");
   // Point trace path to entry's trace path so the trace can be pulled later.
-  *trace_path = kPerfettoTraceFile;
-  perfetto_->Run({config, kPerfettoTraceFile});
+  *trace_path =
+      CurrentProcess::dir() + GetFileBaseName(app_name) + ".perfetto.trace";
+  perfetto_->Run({config, abi_arch, *trace_path});
   is_profiling_ = perfetto_->IsPerfettoRunning();
   return is_profiling_;
 }
@@ -57,9 +58,18 @@ bool PerfettoManager::StopProfiling(std::string* error) {
 void PerfettoManager::Shutdown() {
   Trace trace("CPU:Shutdown perfetto");
   if (is_profiling_) {
-    perfetto_->Stop();
+    perfetto_->Shutdown();
     is_profiling_ = perfetto_->IsPerfettoRunning();
   }
+}
+
+string PerfettoManager::GetFileBaseName(const string& app_name) const {
+  std::ostringstream trace_filebase;
+  trace_filebase << "perfetto-";
+  trace_filebase << app_name;
+  trace_filebase << "-";
+  trace_filebase << clock_->GetCurrentTime();
+  return trace_filebase.str();
 }
 
 perfetto::protos::TraceConfig PerfettoManager::BuildConfig(
@@ -89,13 +99,15 @@ perfetto::protos::TraceConfig PerfettoManager::BuildConfig(
   ftrace_config->add_atrace_categories("pm");
   ftrace_config->add_atrace_categories("sched");
   ftrace_config->add_atrace_categories("freq");
+  // In P and above "*" is supported, if we move to support O we will want to
+  // pass in the |app_pkg_name|
   ftrace_config->add_atrace_apps("*");
 
   // TODO: Enable this in the future when we want to capture logcat output.
-  //source = config.add_data_sources();
-  //data_config = source->mutable_config();
-  //data_config->set_name("android.log");
-  //auto* log = data_config->mutable_android_log_config();
+  // source = config.add_data_sources();
+  // data_config = source->mutable_config();
+  // data_config->set_name("android.log");
+  // auto* log = data_config->mutable_android_log_config();
 
   // Add config to get process and thread names.
   // This is required to properly parse perfetto captures with trebuchet.
