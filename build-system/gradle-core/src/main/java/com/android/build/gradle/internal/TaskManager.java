@@ -1317,7 +1317,7 @@ public abstract class TaskManager {
      */
     protected void addJavacClassesStream(VariantScope scope) {
         BuildArtifactsHolder artifacts = scope.getArtifacts();
-        FileCollection javaOutputs = artifacts.getFinalArtifactFiles(JAVAC).get();
+        Provider<Directory> javaOutputs = artifacts.getFinalProduct(JAVAC);
         Preconditions.checkNotNull(javaOutputs);
         // create separate streams for the output of JAVAC and for the pre/post javac
         // bytecode hooks
@@ -1331,7 +1331,7 @@ public abstract class TaskManager {
                                                 ? TransformManager.CONTENT_JARS
                                                 : ImmutableSet.of(DefaultContentType.CLASSES))
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(javaOutputs)
+                                .setFileCollection(project.getLayout().files(javaOutputs))
                                 .build());
 
         scope.getTransformManager()

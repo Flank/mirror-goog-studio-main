@@ -110,7 +110,7 @@ public class MultiTypeTaskManager extends TaskManager {
                 scope.getGlobalScope()
                         .getProject()
                         .files(
-                                scope.getArtifacts().getArtifactFiles(JAVAC),
+                                scope.getArtifacts().getFinalProduct(JAVAC),
                                 scope.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 scope.getVariantData().getAllPostJavacGeneratedBytecode());
         scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
