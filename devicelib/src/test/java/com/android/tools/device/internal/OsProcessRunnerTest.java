@@ -15,6 +15,7 @@
  */
 package com.android.tools.device.internal;
 
+import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.TruthJUnit.assume;
 
@@ -90,6 +91,7 @@ public class OsProcessRunnerTest {
 
     @Test
     public void waitFor_neverEndingProcess() throws IOException, InterruptedException {
+        assumeNotWindows();
         File script = TestResources.getFile(OsProcessRunnerTest.class, "/process/yes.py");
 
         // first, lets make sure we can exec the script properly

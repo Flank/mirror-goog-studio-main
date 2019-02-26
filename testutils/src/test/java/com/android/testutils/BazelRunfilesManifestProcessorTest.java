@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -171,6 +172,7 @@ public class BazelRunfilesManifestProcessorTest {
 
     @Test
     public void creatingFileSystemShouldWork() throws Exception {
+        assumeNotWindows();
         List<SymbolicLinkDefinition> links =
                 runProcessor(mSourceFileSystem, mDestinationFileSystem);
         assertSameFileSystems(mDestinationFileSystem, links);

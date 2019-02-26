@@ -26,7 +26,6 @@ iml_module(
 iml_module(
     name = "studio.testutils-tests",
     iml_files = ["testutils-tests.iml"],
-    tags = ["no_test_windows"],  # b/116613514
     test_data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -77,7 +76,6 @@ kotlin_test(
     srcs = ["src/test/java"],
     data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
-    tags = ["no_test_windows"],  # b/115982625
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.testutils",

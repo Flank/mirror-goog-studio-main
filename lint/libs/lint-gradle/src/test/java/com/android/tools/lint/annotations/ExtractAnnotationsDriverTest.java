@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.annotations;
 
+import static com.android.testutils.AssumeUtil.assumeNotWindows;
 import static com.android.testutils.TestUtils.deleteFile;
 import static com.android.tools.lint.checks.infrastructure.LintDetectorTest.base64gzip;
 import static com.android.utils.SdkUtils.fileToUrlString;
@@ -275,6 +276,7 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testKotlin() throws Exception {
+        assumeNotWindows();
         File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project =
