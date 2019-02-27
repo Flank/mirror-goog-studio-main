@@ -62,11 +62,6 @@ enum class IntegerOption(
      * Maximum number of dynamic features that can be allocated before Oreo platforms.
      */
     PRE_O_MAX_NUMBER_OF_FEATURES("android.maxNumberOfFeaturesBeforeOreo"),
-
-    /**
-     * Override the thread pool size dedicated to AAPT2 work units when not running with WorkerAPI.
-     */
-    AAPT2_THREAD_POOL_SIZE("android.aapt2ThreadPoolSize")
     ;
 
     override fun parse(value: Any): Int {
