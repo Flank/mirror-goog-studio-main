@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -200,8 +201,14 @@ class ClassPageRenderer extends PageRenderer<ClassTestResults> {
             } else if (percent.isFullFailure()) {
                 name = testName + " [all devices]";
             } else {
-                name = String.format("%s [%s] (on %d/%d devices)", testName, test.getDevice(),
-                        percent.failed, percent.total);
+                name =
+                        String.format(
+                                Locale.US,
+                                "%s [%s] (on %d/%d devices)",
+                                testName,
+                                test.getDevice(),
+                                percent.failed,
+                                percent.total);
             }
 
             htmlWriter.startElement("div").attribute("class", "test")

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.cmake
 
+import java.util.Locale
+
 /**
  * This file holds functions for interpreting things as the CMake language interprets them.
  */
@@ -32,7 +34,7 @@ package com.android.build.gradle.internal.cxx.cmake
  *
  */
 fun isCmakeConstantTruthy(value : String) : Boolean {
-    val upper = value.toUpperCase()
+    val upper = value.toUpperCase(Locale.US)
     return when(upper) {
         "1", "ON", "YES", "TRUE", "Y" -> true
         "0", "OFF", "NO", "FALSE", "N", "IGNORE", "NOTFOUND", "" -> false

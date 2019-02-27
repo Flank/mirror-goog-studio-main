@@ -106,6 +106,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -1337,6 +1338,7 @@ public class VariantManager implements VariantModel {
                             .reportWarning(
                                     EvalIssueReporter.Type.GENERIC,
                                     String.format(
+                                            Locale.US,
                                             "minSdkVersion (%d) is greater than targetSdkVersion (%d) for variant \"%s\". Please change the values such that minSdkVersion is less than or equal to targetSdkVersion.",
                                             minSdkVersion,
                                             targetSdkVersion,
