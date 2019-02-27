@@ -22,6 +22,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ClassField;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
 import com.squareup.javawriter.JavaWriter;
@@ -66,6 +67,17 @@ public class BuildConfigGenerator {
     public BuildConfigGenerator addField(
             @NonNull String type, @NonNull String name, @NonNull String value) {
         mFields.add(new ClassFieldImpl(type, name, value));
+        return this;
+    }
+
+    public BuildConfigGenerator addDeprecatedField(
+            @NonNull String type,
+            @NonNull String name,
+            @NonNull String value,
+            @NonNull String documentation) {
+        mFields.add(
+                new ClassFieldImpl(
+                        type, name, value, documentation, ImmutableSet.of("Deprecated")));
         return this;
     }
 

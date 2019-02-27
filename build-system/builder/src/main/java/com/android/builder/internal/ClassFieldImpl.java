@@ -21,6 +21,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.ClassField;
 import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -29,7 +30,7 @@ import java.util.Set;
 @Immutable
 public final class ClassFieldImpl implements ClassField, Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 3645139904046297388L;
 
     @NonNull
     private final String type;
@@ -37,19 +38,32 @@ public final class ClassFieldImpl implements ClassField, Serializable {
     private final String name;
     @NonNull
     private final String value;
+    @NonNull private final String documentation;
+    @NonNull private final ImmutableSet<String> annotations;
 
     public ClassFieldImpl(@NonNull String type, @NonNull String name, @NonNull String value) {
+        this(type, name, value, "", ImmutableSet.of());
+    }
+
+    public ClassFieldImpl(
+            @NonNull String type,
+            @NonNull String name,
+            @NonNull String value,
+            @NonNull String documentation,
+            @NonNull ImmutableSet<String> annotations) {
         //noinspection ConstantConditions
-        if (type == null || name == null || value == null) {
+        if (type == null
+                || name == null
+                || value == null
+                || documentation == null
+                || annotations == null) {
             throw new NullPointerException("Build Config field cannot have a null parameter");
         }
         this.type = type;
         this.name = name;
         this.value = value;
-    }
-
-    public ClassFieldImpl(@NonNull ClassField classField) {
-        this(classField.getType(), classField.getName(), classField.getValue());
+        this.documentation = documentation;
+        this.annotations = annotations;
     }
 
     @Override
@@ -73,13 +87,13 @@ public final class ClassFieldImpl implements ClassField, Serializable {
     @NonNull
     @Override
     public String getDocumentation() {
-        return "";
+        return documentation;
     }
 
     @NonNull
     @Override
     public Set<String> getAnnotations() {
-        return ImmutableSet.of();
+        return annotations;
     }
 
     @Override
@@ -89,18 +103,15 @@ public final class ClassFieldImpl implements ClassField, Serializable {
 
         ClassFieldImpl that = (ClassFieldImpl) o;
 
-        if (!name.equals(that.name)) return false;
-        if (!type.equals(that.type)) return false;
-        if (!value.equals(that.value)) return false;
-
-        return true;
+        return type.equals(that.type)
+                && name.equals(that.name)
+                && value.equals(that.value)
+                && documentation.equals(that.documentation)
+                && annotations.equals(that.annotations);
     }
 
     @Override
     public int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + name.hashCode();
-        result = 31 * result + value.hashCode();
-        return result;
+        return Objects.hash(type, name, value, documentation, annotations);
     }
 }

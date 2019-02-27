@@ -82,13 +82,19 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
 
     private BuildableArtifact checkManifestResult;
 
+    private boolean isLibrary;
+
     @Input
     public String getBuildConfigPackageName() {
         return buildConfigPackageName.get();
     }
 
     @Input
+    @Optional
     public String getAppPackageName() {
+        if (isLibrary()) {
+            return null;
+        }
         return appPackageName.get();
     }
 
@@ -151,6 +157,11 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
         return list;
     }
 
+    @Input
+    public boolean isLibrary() {
+        return isLibrary;
+    }
+
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     @Optional
@@ -175,13 +186,27 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
         // be completely removed by the compiler), so as a hack we do it only for the case
         // where debug is true, which is the most likely scenario while the user is looking
         // at source code.
-        //map.put(PH_DEBUG, Boolean.toString(mDebug));
+        // map.put(PH_DEBUG, Boolean.toString(mDebug));
+
+        generator.addField(
+                "boolean", "DEBUG", isDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false");
+
+        if (isLibrary) {
+            generator
+                    .addField(
+                            "String",
+                            "LIBRARY_PACKAGE_NAME",
+                            '"' + getBuildConfigPackageName() + '"')
+                    .addDeprecatedField(
+                            "String",
+                            "APPLICATION_ID",
+                            '"' + getBuildConfigPackageName() + '"',
+                            "@deprecated APPLICATION_ID is misleading in libraries. For the library package name use LIBRARY_PACKAGE_NAME");
+        } else {
+            generator.addField("String", "APPLICATION_ID", '"' + getAppPackageName() + '"');
+        }
+
         generator
-                .addField(
-                        "boolean",
-                        "DEBUG",
-                        isDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false")
-                .addField("String", "APPLICATION_ID", '"' + appPackageName.get() + '"')
                 .addField("String", "BUILD_TYPE", '"' + getBuildTypeName() + '"')
                 .addField("String", "FLAVOR", '"' + getFlavorName() + '"')
                 .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
@@ -272,6 +297,8 @@ public class GenerateBuildConfig extends AndroidBuilderTask {
                 // on its creation.
                 task.dependsOn(scope.getTaskContainer().getProcessManifestTask());
             }
+
+            task.isLibrary = variantConfiguration.getType().isAar();
         }
     }
 }
