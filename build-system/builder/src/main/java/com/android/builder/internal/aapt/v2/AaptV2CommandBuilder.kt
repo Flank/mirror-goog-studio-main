@@ -22,7 +22,6 @@ import com.android.SdkConstants
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.AaptUtils
-import com.android.builder.internal.aapt.BlockingResourceLinker
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
@@ -41,8 +40,7 @@ import java.util.Locale
 import java.util.Objects
 
 /**
- * Creates the command line used to compile a resource. See
- * [com.android.builder.internal.aapt.Aapt.compile].
+ * Creates the command line used to compile a resource. See [Aapt2DaemonImpl]
  *
  * @return the command line arguments
  */
@@ -77,7 +75,7 @@ fun makeCompileCommand(request: CompileResourceRequest): ImmutableList<String> {
  * Creates the command line used to link the package.
  *
  *
- * See [BlockingResourceLinker.link].
+ * See [Aapt2.link].
  *
  * @param config see above
  * @return the command line arguments

@@ -21,7 +21,7 @@ import com.android.ide.common.blame.SourcePosition
 import java.io.File
 import java.io.Serializable
 
-/** A request for the [ResourceCompiler].  */
+/** A request for Aapt2.  */
 class CompileResourceRequest @JvmOverloads constructor(
         val inputFile: File,
         val outputDirectory: File,

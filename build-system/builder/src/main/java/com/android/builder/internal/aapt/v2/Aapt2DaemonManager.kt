@@ -18,7 +18,6 @@
 package com.android.builder.internal.aapt.v2
 
 import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.builder.internal.aapt.CloseableBlockingResourceLinker
 import com.android.builder.internal.aapt.v2.Aapt2DaemonManager.LeasedAaptDaemon
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.ILogger
@@ -160,7 +159,7 @@ class Aapt2DaemonManager(
     @NotThreadSafe
     class LeasedAaptDaemon internal constructor(
             private val leasableDaemon: LeasableAaptDaemon,
-            private val closeAction: (LeasableAaptDaemon) -> Unit) : Aapt2, Closeable, CloseableBlockingResourceLinker {
+            private val closeAction: (LeasableAaptDaemon) -> Unit) : Aapt2, Closeable {
 
         private var leaseValid = true
 

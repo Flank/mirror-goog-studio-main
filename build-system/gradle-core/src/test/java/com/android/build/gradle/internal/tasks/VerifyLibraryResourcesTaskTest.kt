@@ -16,20 +16,23 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.resources.QueueableResourceCompiler
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.io.Files
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito.mock
 import java.io.File
+import java.io.Serializable
 import java.util.HashMap
 
 /*
@@ -38,19 +41,22 @@ import java.util.HashMap
 class VerifyLibraryResourcesTaskTest {
 
     @get: Rule
-    var temporaryFolder = TemporaryFolder()
+    val temporaryFolder = TemporaryFolder()
 
-    private class FakeAapt : QueueableResourceCompiler {
-
-        override fun compile(request: CompileResourceRequest): ListenableFuture<File> {
-            val outputPath = compileOutputFor(request)
-            Files.copy(request.inputFile, outputPath)
-            return Futures.immediateFuture(outputPath)
+    object Facade : WorkerExecutorFacade {
+        override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
+            assertThat(actionClass).isEqualTo(Aapt2CompileRunnable::class.java)
+            parameter as Aapt2CompileRunnable.Params
+            for (request in parameter.requests) {
+                Files.copy(request.inputFile, compileOutputFor(request))
+            }
         }
+
+        override fun await() {}
 
         override fun close() {}
 
-        override fun compileOutputFor(request: CompileResourceRequest): File {
+        fun compileOutputFor(request: CompileResourceRequest): File {
             return File(request.outputDirectory, request.inputFile.name + "-c")
         }
     }
@@ -72,14 +78,19 @@ class VerifyLibraryResourcesTaskTest {
         inputs.put(directory, FileStatus.NEW)
 
         val outputDir = temporaryFolder.newFolder("output")
-        val aapt = FakeAapt()
 
-        VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, null, null, mergedDir)
+        VerifyLibraryResourcesTask.compileResources(
+            inputs,
+            outputDir,
+            Facade,
+            mock(Aapt2ServiceKey::class.java),
+            mergedDir
+        )
 
-        val fileOut = aapt.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
+        val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
         assertTrue(fileOut.exists())
 
-        val dirOut = aapt.compileOutputFor(
+        val dirOut = Facade.compileOutputFor(
                 CompileResourceRequest(directory, outputDir, mergedDir.name))
         assertFalse(dirOut.exists())
     }
@@ -101,16 +112,21 @@ class VerifyLibraryResourcesTaskTest {
         inputs.put(manifest, FileStatus.NEW)
 
         val outputDir = temporaryFolder.newFolder("output")
-        val aapt = FakeAapt()
 
-        VerifyLibraryResourcesTask.compileResources(inputs, outputDir, aapt, null, null, mergedDir)
+        VerifyLibraryResourcesTask.compileResources(
+            inputs,
+            outputDir,
+            Facade,
+            mock(Aapt2ServiceKey::class.java),
+            mergedDir
+        )
 
-        val fileOut = aapt.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
+        val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
         assertTrue(fileOut.exists())
 
         // Real AAPT would fail trying to compile the manifest, but the fake one would just copy it
         // so we need to check that it wasn't copied into the output directory.
-        val manifestOut = aapt.compileOutputFor(
+        val manifestOut = Facade.compileOutputFor(
                 CompileResourceRequest(manifest, outputDir, "merged_manifest"))
         assertFalse(manifestOut.exists())
     }

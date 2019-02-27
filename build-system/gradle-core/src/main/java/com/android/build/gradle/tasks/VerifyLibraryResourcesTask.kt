@@ -37,10 +37,8 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.resources.QueueableResourceCompiler
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
-import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.file.Directory
@@ -137,7 +135,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         workers.use { facade ->
             compileResources(
                     inputs,
-                    compiledDirectory, null,
+                    compiledDirectory,
                     facade,
                     aapt2ServiceKey,
                     inputDirectory.singleFile())
@@ -216,14 +214,9 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         fun compileResources(
                 inputs: Map<File, FileStatus>,
                 outDirectory: File,
-                aapt: QueueableResourceCompiler?,
-                workerExecutor: WorkerExecutorFacade?,
-                aapt2ServiceKey: Aapt2ServiceKey?,
+                workerExecutor: WorkerExecutorFacade,
+                aapt2ServiceKey: Aapt2ServiceKey,
                 mergedResDirectory: File) {
-
-            Preconditions.checkState(
-                    aapt != null || (workerExecutor != null && aapt2ServiceKey != null),
-                    "Either local AAPT or AAPT from Maven needs to be used, neither was set")
 
             val compiling = ArrayList<Future<File>>()
 
@@ -243,15 +236,9 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                                     key.parent,
                                     false /* pseudo-localize */,
                                     false /* crunch PNGs */)
-                            if (aapt != null) {
-                                val result = aapt.compile(request)
-                                compiling.add(result)
-                            } else {
-                                workerExecutor!!.submit(
-                                        Aapt2CompileRunnable::class.java,
-                                        Aapt2CompileRunnable.Params(
-                                                aapt2ServiceKey!!, listOf(request)))
-                            }
+                            workerExecutor.submit(
+                                    Aapt2CompileRunnable::class.java,
+                                    Aapt2CompileRunnable.Params(aapt2ServiceKey, listOf(request)))
                         } catch (e: Exception) {
                             throw AaptException("Failed to compile file ${key.absolutePath}", e)
                         }
@@ -264,7 +251,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 }
             }
             // We need to wait for the files to finish compiling before we do the link.
-            workerExecutor?.await() ?: compiling.forEach { it.get() }
+            workerExecutor.await()
         }
     }
 }

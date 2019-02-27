@@ -19,7 +19,7 @@
  * organized with a top-level package (the {@code aapt} package) that contains the common interface
  * for {@code aapt} as well as common implementation parts.
  *
- * <p>Using the package requires instantiating an {@link com.android.builder.internal.aapt.Aapt}
- * using one of the implementations that exist in the sub-packages.
+ * <p>Using the package requires instantiating an {@link com.android.builder.internal.aapt.v2.Aapt2}
+ * using the {@link com.android.builder.internal.aapt.v2.Aapt2DaemonManager}
  */
 package com.android.builder.internal.aapt;
