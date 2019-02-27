@@ -29,14 +29,9 @@ class WorkerExecutorResourceCompilationService(
         private val workerExecutor: WorkerExecutorFacade,
         private val aapt2ServiceKey: Aapt2ServiceKey) : ResourceCompilationService {
 
-    /** Temporary workaround for b/73804575 / https://github.com/gradle/gradle/issues/4502
-     *  Only submit a small number of worker actions */
-    private val requests: MutableList<CompileResourceRequest> = ArrayList()
-
     override fun submitCompile(request: CompileResourceRequest) {
-        // b/73804575
-        requests.add(request)
-
+        workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java,
+            Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, request))
     }
 
     override fun compileOutputFor(request: CompileResourceRequest): File {
@@ -46,21 +41,6 @@ class WorkerExecutorResourceCompilationService(
     }
 
     override fun close() {
-        if (requests.isEmpty()) {
-            return
-        }
-        val buckets = minOf(requests.size, 8) // Max 8 buckets
-
-        for (bucket in 0 until buckets) {
-            val bucketRequests = requests.filterIndexed { i, _ ->
-                i.rem(buckets) == bucket
-            }
-            // b/73804575
-            workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java,
-                Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, bucketRequests))
-        }
-        requests.clear()
-
         // No need for workerExecutor.await() here as resource compilation is the last part of the
         // merge task. This means the MergeResources task action can return, allowing other tasks
         // in the same subproject to run while resources are still being compiled.

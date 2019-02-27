@@ -32,18 +32,16 @@ class Aapt2CompileWithBlameRunnable @Inject constructor(
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
         useAaptDaemon(params.aapt2ServiceKey) { daemon ->
-            params.requests.forEach { request ->
-                try {
-                    daemon.compile(request, logger)
-                } catch (e: Aapt2Exception) {
-                    throw rewriteCompileException(e, request)
-                }
+            try {
+                daemon.compile(params.request, logger)
+            } catch (e: Aapt2Exception) {
+                throw rewriteCompileException(e, params.request)
             }
         }
     }
 
     class Params(
         val aapt2ServiceKey: Aapt2ServiceKey,
-        val requests: List<CompileResourceRequest>
+        val request: CompileResourceRequest
     ) : Serializable
 }
