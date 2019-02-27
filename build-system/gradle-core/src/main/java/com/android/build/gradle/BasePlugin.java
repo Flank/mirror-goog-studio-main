@@ -248,7 +248,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 
-        // initialize our workers using the project's options.
         Workers.INSTANCE.initFromProject(
                 projectOptions,
                 // possibly, in the future, consider using a pool with a dedicated size
@@ -422,6 +421,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             return;
                         }
                         ModelBuilder.clearCaches();
+                        Workers.INSTANCE.shutdown();
                         sdkComponents.unload();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,

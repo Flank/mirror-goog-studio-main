@@ -609,4 +609,20 @@
             column="64"/>
     </issue>
 
+    <issue
+        id="ForkJoinPool"
+        severity="Error"
+        message="Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        category="UI Responsiveness"
+        priority="6"
+        summary="Using Fork Join Pool"
+        explanation="Using the ForkJoinPool can lead to freezes because in many cases&#xA;the set of threads is very low.&#xA;&#xA;Instead, use the IntelliJ application pool:&#xA;`com.intellij.openapi.application.Application#executeOnPooledThread`.&#xA;&#xA;For long running operations, prefer the&#xA;`AppExecutorUtil.getAppExecutorService()` executor.&#xA;&#xA;For more, see `go/do-not-freeze`."
+        errorLine1="            aapt2ThreadPool = ForkJoinPool(aapt2ThreadPoolSize)"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
+            line="119"
+            column="31"/>
+    </issue>
+
 </issues>

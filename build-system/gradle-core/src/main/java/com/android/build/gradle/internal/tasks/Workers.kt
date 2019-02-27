@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.build.gradle.internal.profile.TaskProfilingRecord
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorException
@@ -76,6 +78,22 @@ object Workers {
         } else factory(owner, worker, executor)
     }
 
+    private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
+
+    @GuardedBy("this")
+    private var aapt2ThreadPool: ForkJoinPool? = null
+
+    /**
+     * See {@link getWorker}. The only difference is a default {@code executor} that uses a
+     * specific thread pool for AAPT2 daemons.
+     */
+    @JvmOverloads
+    @Synchronized
+    fun getWorkerForAapt2(owner: String, worker: WorkerExecutor, executor: ExecutorService? = aapt2ThreadPool)
+            : WorkerExecutorFacade {
+        return getWorker(owner, worker, executor)
+    }
+
     /**
      * factory function initializer that uses the project's [ProjectOptions] to decide which
      * instance of [WorkerExecutorFacade] should be used. This function should be registered as the
@@ -89,7 +107,18 @@ object Workers {
      * @param defaultExecutor default [ExecutorService] to use when none is explicitly provided when
      * invoking [getWorker] API.
      */
+    @Synchronized
     fun initFromProject(options: ProjectOptions, defaultExecutor: ExecutorService) {
+        // Multi-module projects calls initFromProject for each android module, so we check to
+        // avoid resetting the thread pool all the time.
+        if (aapt2ThreadPool == null) {
+            val aapt2ThreadPoolSize = options.get(IntegerOption.AAPT2_THREAD_POOL_SIZE) ?:
+            Integer.min(
+                MAX_AAPT2_THREAD_POOL_SIZE,
+                ForkJoinPool.getCommonPoolParallelism())
+            aapt2ThreadPool = ForkJoinPool(aapt2ThreadPoolSize)
+        }
+
         factory = when {
             options.get(BooleanOption.ENABLE_GRADLE_WORKERS) -> {
                 { owner, worker, _ -> WorkerExecutorAdapter(owner, worker) }
@@ -98,6 +127,15 @@ object Workers {
                 { _, _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor) }
             }
         }
+    }
+
+    /**
+     * Clean-up any thread pool that was set up during {@code initFromProject}.
+     */
+    @Synchronized
+    fun shutdown() {
+        aapt2ThreadPool?.shutdown()
+        aapt2ThreadPool = null
     }
 
     /** An implementation of [WorkerExecutorFacade] that executes runnables directly */
