@@ -153,7 +153,7 @@ public class Project {
     protected List<Project> directLibraries;
     protected List<Project> allLibraries;
     protected boolean reportIssues = true;
-    protected Boolean gradleProject;
+    public Boolean gradleProject;
     protected Boolean supportLib;
     protected Boolean appCompat;
     protected Boolean leanback;

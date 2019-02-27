@@ -102,7 +102,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
     public static final Issue MISSING_LEANBACK_LAUNCHER =
             Issue.create(
                             "MissingLeanbackLauncher",
-                            "Missing Leanback Launcher Intent Filter.",
+                            "Missing Leanback Launcher Intent Filter",
                             "An application intended to run on TV devices must declare a launcher activity "
                                     + "for TV in its manifest using a `android.intent.category.LEANBACK_LAUNCHER` "
                                     + "intent filter.",
@@ -117,7 +117,7 @@ public class AndroidTvDetector extends Detector implements XmlScanner {
     public static final Issue MISSING_LEANBACK_SUPPORT =
             Issue.create(
                             "MissingLeanbackSupport",
-                            "Missing Leanback Support.",
+                            "Missing Leanback Support",
                             "The manifest should declare the use of the Leanback user interface required "
                                     + "by Android TV.\n"
                                     + "To fix this, add\n"

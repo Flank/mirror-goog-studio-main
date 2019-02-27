@@ -304,9 +304,10 @@ open class DefaultJavaEvaluator(
     @Suppress("OverridingDeprecatedMember", "DEPRECATION")
     override fun getInternalName(psiClassType: PsiClassType): String? {
         val erased = erasure(psiClassType)
-        return if (erased is PsiClassType) {
-            super.getInternalName((erased as PsiClassType?)!!)
-        } else super.getInternalName(psiClassType)
+        return if (erased is PsiClassType)
+            super.getInternalName(erased)
+        else
+            super.getInternalName(psiClassType)
     }
 
     @Suppress("OverridingDeprecatedMember")

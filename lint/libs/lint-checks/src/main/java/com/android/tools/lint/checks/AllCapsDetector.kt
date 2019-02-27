@@ -87,8 +87,7 @@ class AllCapsDetector : LayoutDetector() {
             return
         }
         val resourceValue = items[0].resourceValue ?: return
-
-        val rawXmlValue = resourceValue.rawXmlValue
+        val rawXmlValue = resourceValue.rawXmlValue ?: return
         if (rawXmlValue.contains("<")) {
             val message = "Using `textAllCaps` with a string (`${url.name}`) that " +
                     "contains markup; the markup will be dropped by the caps " +

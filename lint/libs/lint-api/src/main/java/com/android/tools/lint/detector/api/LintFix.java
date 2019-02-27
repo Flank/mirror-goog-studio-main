@@ -1306,7 +1306,9 @@ public class LintFix {
          * The regex to replace. Will always have at least one group, which should be the
          * replacement range.
          */
-        @Nullable public final String oldPattern;
+        @Nullable
+        @Language("RegExp")
+        public final String oldPattern;
 
         /** Pattern to select; if it contains parentheses, group(1) will be selected */
         @Nullable public final String selectPattern;

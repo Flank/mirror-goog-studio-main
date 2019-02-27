@@ -100,7 +100,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     public void testInsecureBaseConfiguration() {
         String expected =
                 ""
-                        + "res/xml/network_config.xml:3: Warning: Setting cleartextTrafficPermitted to \"true\" by default is not recommended [InsecureBaseConfiguration]\n"
+                        + "res/xml/network_config.xml:3: Warning: Insecure Base Configuration [InsecureBaseConfiguration]\n"
                         + "    <base-config cleartextTrafficPermitted=\"true\">\n"
                         + "                                            ~~~~\n"
                         + "0 errors, 1 warnings\n";

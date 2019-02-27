@@ -73,7 +73,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     public static final Issue INVALID_USES_TAG_ISSUE =
             Issue.create(
                             "InvalidUsesTagAttribute",
-                            "Invalid `name` attribute for `uses` element.",
+                            "Invalid `name` attribute for `uses` element",
                             "The <uses> element in `<automotiveApp>` should contain a "
                                     + "valid value for the `name` attribute.\n"
                                     + "Valid values are `media`, `notification`, or `sms`.",
@@ -88,7 +88,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     public static final Issue MISSING_MEDIA_BROWSER_SERVICE_ACTION_ISSUE =
             Issue.create(
                             "MissingMediaBrowserServiceIntentFilter",
-                            "Missing intent-filter with action `android.media.browse.MediaBrowserService`.",
+                            "Missing MediaBrowserService intent-filter",
                             "An Automotive Media App requires an exported service that extends "
                                     + "`android.service.media.MediaBrowserService` with an "
                                     + "`intent-filter` for the action `android.media.browse.MediaBrowserService` "
@@ -112,7 +112,7 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
     public static final Issue MISSING_INTENT_FILTER_FOR_MEDIA_SEARCH =
             Issue.create(
                             "MissingIntentFilterForMediaSearch",
-                            "Missing intent-filter with action `android.media.action.MEDIA_PLAY_FROM_SEARCH`",
+                            "Missing MEDIA_PLAY_FROM_SEARCH intent-filter",
                             "To support voice searches on Android Auto, you should also register an "
                                     + "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`"
                                     + ".\nTo do this, add\n"

@@ -46,7 +46,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/** Looks for issues in Java comments */
+/** Looks for issues in Java or Kotlin comments */
 public class CommentDetector extends ResourceXmlDetector implements SourceCodeScanner {
     private static final String STOPSHIP_COMMENT = "STOPSHIP";
 
@@ -69,6 +69,8 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                             6,
                             Severity.WARNING,
                             IMPLEMENTATION)
+                    // necessary because the scope (resource file) implies Android
+                    .setAndroidSpecific(false)
                     .setEnabledByDefault(false);
 
     /** Looks for special comment markers intended to stop shipping the code */
@@ -84,6 +86,8 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                             10,
                             Severity.FATAL,
                             IMPLEMENTATION)
+                    // necessary because the scope (resource file) implies Android
+                    .setAndroidSpecific(false)
                     .setEnabledByDefault(false);
 
     private static final String ESCAPE_STRING = "\\u002a\\u002f";

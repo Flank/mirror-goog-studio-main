@@ -106,7 +106,7 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     public static final Issue INSECURE_CONFIGURATION =
             Issue.create(
                             "InsecureBaseConfiguration",
-                            "Setting `cleartextTrafficPermitted` to `\"true\"` by default is not recommended",
+                            "Insecure Base Configuration",
                             "Permitting cleartext traffic could allow eavesdroppers to intercept data sent "
                                     + "by your app, which impacts the privacy of your users. Consider only allowing "
                                     + "encrypted traffic by setting the `cleartextTrafficPermitted` tag to `\"false\"`.",
