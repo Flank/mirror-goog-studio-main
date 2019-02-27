@@ -25,6 +25,7 @@ cc_library(
         "procfs_files.cc",
         "socket_utils.cc",
         "stopwatch.cc",
+        "termination_service.cc",
         "tokenizer.cc",
         "trace.cc",
     ] + select({
@@ -86,6 +87,7 @@ cc_library(
         "shared_mutex.h",
         "socket_utils.h",
         "stopwatch.h",
+        "termination_service.h",
         "thread_name.h",
         "time_value_buffer.h",
         "tokenizer.h",
@@ -119,6 +121,7 @@ cc_test(
         "producer_consumer_queue_test.cc",
         "shared_mutex_test.cc",
         "stopwatch_test.cc",
+        "termination_service_test.cc",
         "time_value_buffer_test.cc",
         "tokenizer_test.cc",
         "trie_test.cc",

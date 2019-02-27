@@ -23,8 +23,8 @@
 #include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/internal_cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "perfd/termination_service.h"
 #include "proto/agent_service.grpc.pb.h"
+#include "utils/termination_service.h"
 
 namespace profiler {
 

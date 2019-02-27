@@ -26,13 +26,13 @@
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "perfd/termination_service.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/cpu.grpc.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
 #include "utils/fs/disk_file_system.h"
+#include "utils/termination_service.h"
 
 namespace profiler {
 

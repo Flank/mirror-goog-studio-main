@@ -28,6 +28,7 @@
 #include "utils/fs/path.h"
 #include "utils/log.h"
 #include "utils/socket_utils.h"
+#include "utils/termination_service.h"
 #include "utils/trace.h"
 
 DEFINE_bool(experimental_pipeline, false, "Use unified pipeline");
@@ -48,7 +49,7 @@ void RegisterTransports(profiler::Daemon* daemon) {
 }
 int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
-
+  profiler::TerminationService::Instance();
   // If directed by command line argument, establish a communication channel
   // with the agent which is running a Unix socket server and send the arguments
   // over.  When this argument is used, the program is usually invoked by from

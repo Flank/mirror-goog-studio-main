@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/termination_service.h"
+#include "utils/termination_service.h"
 
+#include <sys/types.h>
+#include <unistd.h>
 #include <sstream>
 #include "utils/log.h"
 #include "utils/native_backtrace.h"
@@ -33,6 +35,9 @@ void SignalHandlerSigSegv(int signal) {
   printf("%s\n", stringify.str().c_str());
   // Force flush output.
   fflush(stdout);
+
+  // Set the signal back to the default signal hanlder.
+  std::signal(signal, SIG_DFL);
   std::raise(signal);
 }
 

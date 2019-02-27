@@ -26,9 +26,9 @@
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
-#include "perfd/termination_service.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
+#include "utils/termination_service.h"
 #include "utils/trace.h"
 
 namespace profiler {

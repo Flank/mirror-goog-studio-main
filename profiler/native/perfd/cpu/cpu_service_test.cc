@@ -19,9 +19,9 @@
 #include <gtest/gtest.h>
 #include "perfd/cpu/fake_atrace.h"
 #include "perfd/cpu/fake_simpleperf.h"
-#include "perfd/termination_service.h"
 #include "utils/fake_clock.h"
 #include "utils/fs/memory_file_system.h"
+#include "utils/termination_service.h"
 
 using grpc::ServerContext;
 using grpc::Status;

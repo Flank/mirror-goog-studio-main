@@ -28,7 +28,6 @@ cc_library(
         "profiler_service.h",
         "sessions/session.h",
         "sessions/sessions_manager.h",
-        "termination_service.h",
         ":samplers_h",
     ],
     copts = [
@@ -63,8 +62,6 @@ cc_library(
         "sessions/session.h",
         "sessions/sessions_manager.cc",
         "sessions/sessions_manager.h",
-        "termination_service.cc",
-        "termination_service.h",
         ":samplers_cc",
         ":samplers_h",
     ],
@@ -94,7 +91,6 @@ cc_test(
         "samplers/cpu_usage_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
-        "termination_service_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

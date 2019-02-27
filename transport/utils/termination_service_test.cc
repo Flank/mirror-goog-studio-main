@@ -20,7 +20,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "perfd/termination_service.h"
+#include "utils/termination_service.h"
 
 #define READ 0
 #define WRITE 1
