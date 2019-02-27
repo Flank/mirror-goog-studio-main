@@ -25,6 +25,7 @@ import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
+import static com.android.SdkConstants.REQUEST_FOCUS;
 import static com.android.SdkConstants.TAG_INCLUDE;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
@@ -150,6 +151,11 @@ public class ConstraintLayoutDetector extends LayoutDetector {
 
             if (TAG_INCLUDE.equals(elementTagName)) {
                 // Don't flag includes; they might have the right constraints inside.
+                continue;
+            }
+
+            if (REQUEST_FOCUS.equals(elementTagName)) {
+                // <requestFocus/> is just a marker tag and should not have attributes
                 continue;
             }
 

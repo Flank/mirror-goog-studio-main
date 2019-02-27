@@ -122,6 +122,10 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                                                 + "        tools:layout_editor_absoluteY=\"0dp\"\n"
                                                 + "        app:relativeBegin=\"20dp\" />\n"
                                                 + "\n"
+                                                // Regression test for
+                                                //  125432826: ConstraintLayout complains about <requestFocus/> missing constraints
+                                                + "    <requestFocus/>\n"
+                                                + "\n"
                                                 + "</android.support.constraint.ConstraintLayout>\n"),
                                 gradle(
                                         ""
