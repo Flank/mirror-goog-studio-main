@@ -82,8 +82,10 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -256,6 +258,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return !getProject().files(testData.getTestDirectories()).getAsFileTree().isEmpty();
     }
 
+    @OutputDirectory
     public File getReportsDir() {
         return reportsDir;
     }
@@ -265,6 +268,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @Override
+    @OutputDirectory
     public File getResultsDir() {
         return resultsDir;
     }
@@ -285,6 +289,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                         "DeviceProviderInstrumentTestTask.setCoverageDir is deprecated and has no effect.");
     }
 
+    @Internal
     public String getFlavorName() {
         return flavorName;
     }
@@ -293,6 +298,8 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         this.flavorName = flavorName;
     }
 
+    @Optional
+    @Input
     public Collection<String> getInstallOptions() {
         return installOptions;
     }
@@ -323,6 +330,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
         return splitSelectExecProvider;
     }
 
+    @Internal
     public ProcessExecutor getProcessExecutor() {
         return processExecutor;
     }
@@ -342,6 +350,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
     }
 
     @Override
+    @Internal // This is the result after running this task
     public boolean getTestFailed() {
         return testFailed;
     }
@@ -564,9 +573,6 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
             task.setEnabled(deviceProvider.isConfigured());
 
-            // outputs are never up-to-date
-            task.getOutputs().upToDateWhen(t -> false);
-
             // FIXME these should be task inputs!
             // depends on the test APK
             task.dependsOn(scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
@@ -584,6 +590,9 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                 // FIXME handle separate test project BA
 
             }
+
+            // This task should not be UP-TO-DATE as we don't model the device state as input yet.
+            task.getOutputs().upToDateWhen(it -> false);
         }
     }
 }
