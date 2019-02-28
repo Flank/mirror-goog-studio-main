@@ -224,6 +224,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     lateinit var androidJar: Provider<File>
         private set
 
+    @get:Input
+    var useFinalIds: Boolean = true
+        private set
+
     private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     // FIXME : make me incremental !
@@ -532,6 +536,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.supportDirectory = File(variantScope.splitApkOutputFolder, "resources")
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+
+            if (variantScope.type.isForTesting) {
+                task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS_IN_TESTS)
+            }
         }
     }
 
@@ -737,6 +745,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                 densityFilterData?.identifier
                     ?: if (params.resourceConfigs.isEmpty()) params.buildTargetDensity else null
 
+
             try {
 
                 // If the new resources flag is enabled and if we are dealing with a library process
@@ -765,6 +774,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                         .setIntermediateDir(params.incrementalFolder)
                         .setAndroidJarPath(params.androidJarPath)
                         .setUseConditionalKeepRules(params.useConditionalKeepRules)
+                        .setUseFinalIds(params.useFinalIds)
 
                     if (params.isNamespaced) {
                         val packagedDependencies = ImmutableList.builder<File>()
@@ -877,6 +887,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val isLibrary: Boolean = task.isLibrary
         val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
+        val useFinalIds: Boolean = task.useFinalIds
     }
 
     @Input

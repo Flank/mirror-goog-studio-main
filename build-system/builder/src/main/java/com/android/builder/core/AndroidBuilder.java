@@ -72,8 +72,8 @@ import java.util.function.Supplier;
  * DefaultProductFlavor}s, {@link DefaultBuildType} and dependencies) and use them when doing
  * specific build steps.
  *
- * <p>To use: create a builder with {@link #AndroidBuilder(ProcessExecutor, JavaProcessExecutor,
- * EvalIssueReporter, MessageReceiver, ILogger)}
+ * <p>To use: create a builder with {@link #AndroidBuilder(String, ProcessExecutor,
+ * JavaProcessExecutor, EvalIssueReporter, MessageReceiver, ILogger)}
  *
  * <p>then build steps can be done with:
  *
@@ -572,10 +572,7 @@ public class AndroidBuilder {
                     SymbolUtils.loadDependenciesSymbolTables(
                             aaptConfig.getLibrarySymbolTableFiles());
 
-            boolean finalIds = true;
-            if (aaptConfig.getVariantType().isAar()) {
-                finalIds = false;
-            }
+            boolean finalIds = aaptConfig.getUseFinalIds();
 
             RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
         }
@@ -622,9 +619,8 @@ public class AndroidBuilder {
                 .write(content);
     }
 
-    public void generateUnbundledWearApkData(
-            @NonNull File outResFolder,
-            @NonNull String mainPkgName) throws IOException {
+    public static void generateUnbundledWearApkData(
+            @NonNull File outResFolder, @NonNull String mainPkgName) throws IOException {
 
         String content = String.format(
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
