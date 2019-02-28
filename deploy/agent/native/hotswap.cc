@@ -154,7 +154,12 @@ bool HotSwap::DoHotSwap(const proto::SwapRequest& swap_request,
     def[i].class_bytes = (unsigned char*)dex;
   }
 
+  // We make the verifier verbose. If verification fails, at least
+  // we can ask the user for logcats.
+  jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER,
+                         true);  // Best Effort, ignore erros.
   jvmtiError error_num = jvmti_->RedefineClasses(total_classes, def);
+  jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   for (size_t i = 0; i < total_classes; i++) {
     delete[] def[i].class_bytes;
