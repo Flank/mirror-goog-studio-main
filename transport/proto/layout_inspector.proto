@@ -23,16 +23,69 @@ message LayoutInspectorEvent {
   oneof union {
     string error_message = 1;
     int32 payload_id = 2;
+    PropertyEvent properties = 3;
   }
+}
+
+message PropertyEvent {
+  int64 view_id = 1;
+  Resource layout = 2;
+  repeated StringEntry string = 3;
+  repeated Property property = 4;
+}
+
+message Property {
+  // Note: these constants must be kept in sync with the enum class: ValueType
+  enum Type {
+    STRING = 0;
+    BOOLEAN = 1;
+    BYTE = 2;
+    CHAR = 3;
+    DOUBLE = 4;
+    FLOAT = 5;
+    INT16 = 8;
+    INT32 = 6;
+    INT64 = 7;
+    OBJECT = 9;
+    COLOR = 10;
+    GRAVITY = 11;
+    INT_ENUM = 12;
+    INT_FLAG = 13;
+    RESOURCE = 14;
+  }
+
+  int32 namespace = 1;
+  int32 name = 2;
+  Type type = 3;
+  Resource source = 4;
+
+  oneof union {
+    int32 int32_value = 5;
+    int64 int64_value = 6;
+    double double_value = 7;
+    float float_value = 8;
+    Resource resource_value = 9;
+  }
+}
+
+message StringEntry {
+  int32 id = 1;
+  string str = 2;
+}
+
+message Resource {
+  int32 type = 1;
+  int32 namespace = 2;
+  int32 name = 3;
 }
 
 message LayoutInspectorCommand {
   enum Type {
     UNKNOWN = 0;
     START = 1;
+    GET_PROPERTIES = 2;
   }
 
   Type type = 1;
+  int64 view_id = 2;
 }
-
-

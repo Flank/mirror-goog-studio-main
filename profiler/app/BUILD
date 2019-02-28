@@ -21,6 +21,7 @@ java_library(
         "//conditions:default": ["//tools/base/profiler/native/agent:supportjni"],
     }),
     deps = [
+        ":temporary_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
     ],
 )
@@ -35,9 +36,20 @@ java_library(
         "dynamic-layout-inspector/src/main/**/*.java",
     ]),
     deps = [
+        ":temporary_java",
         "//prebuilts/studio/sdk:platforms/latest_jar",
         # TODO(b/77923456): Track version changes and revisit.
         "//prebuilts/tools/common/m2/repository/com/google/android/gms/play-services-location/11.8.0:jar",
+    ],
+)
+
+java_library(
+    name = "temporary_java",
+    srcs = glob([
+        "temporary/src/main/**/*.java",
+    ]),
+    deps = [
+        "//prebuilts/studio/sdk:platforms/latest_jar",
     ],
 )
 
