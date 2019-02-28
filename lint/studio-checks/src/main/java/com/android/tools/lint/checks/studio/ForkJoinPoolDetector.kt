@@ -38,14 +38,35 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         )
 
         @JvmField
-        val ISSUE = Issue.create(
-            id = "ForkJoinPool",
-            briefDescription = "Using Fork Join Pool",
+        val COMMON_FJ_POOL = Issue.create(
+            id = "CommonForkJoinPool",
+            briefDescription = "Using common Fork Join Pool",
             explanation = """
-                Using the ForkJoinPool can lead to freezes because in many cases
+                Using the common ForkJoinPool can lead to freezes because in many cases
                 the set of threads is very low.
 
                 Instead, use the IntelliJ application pool:
+                `com.intellij.openapi.application.Application#executeOnPooledThread`.
+
+                For long running operations, prefer the
+                `AppExecutorUtil.getAppExecutorService()` executor.
+
+                For more, see `go/do-not-freeze`.
+            """,
+            category = UI_RESPONSIVENESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            platforms = STUDIO_PLATFORMS,
+            implementation = IMPLEMENTATION
+        )
+
+        @JvmField
+        val NEW_FJ_POOL = Issue.create(
+            id = "NewForkJoinPool",
+            briefDescription = "Using Fork Join Pool",
+            explanation = """
+                Using new Fork Join Pools should be limited to very specific use cases. When
+                possible, prefer using the IntelliJ application pool:
                 `com.intellij.openapi.application.Application#executeOnPooledThread`.
 
                 For long running operations, prefer the
@@ -77,7 +98,9 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
     ) {
         // Called constructor directly
         // TODO: ForkJoinTask
-        report(context, node)
+        context.report(
+            NEW_FJ_POOL, node, context.getLocation(node),
+            "Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.")
     }
 
     override fun visitMethodCall(
@@ -109,16 +132,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
             }
         }
 
-        report(context, node)
-    }
-
-    private fun report(
-        context: JavaContext,
-        node: UCallExpression
-    ) {
         context.report(
-            ISSUE, node, context.getLocation(node),
-            "Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
-        )
-    }
+            COMMON_FJ_POOL, node, context.getLocation(node),
+            "Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
+        )    }
 }

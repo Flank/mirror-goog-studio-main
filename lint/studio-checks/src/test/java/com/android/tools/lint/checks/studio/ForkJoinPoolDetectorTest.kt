@@ -43,19 +43,19 @@ class ForkJoinPoolDetectorTest {
                 """
                 ).indented()
             )
-            .issues(ForkJoinPoolDetector.ISSUE)
+            .issues(ForkJoinPoolDetector.COMMON_FJ_POOL, ForkJoinPoolDetector.NEW_FJ_POOL)
             .run()
             .expect(
                 """
-                src/test/pkg/Test.java:8: Error: Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [ForkJoinPool]
-                        new ForkJoinPool(); // WARN
-                        ~~~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:9: Error: Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [ForkJoinPool]
+                src/test/pkg/Test.java:9: Error: Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [CommonForkJoinPool]
                         ForkJoinPool.commonPool(); // WARN
                         ~~~~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:10: Error: Avoid using ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [ForkJoinPool]
+                src/test/pkg/Test.java:10: Error: Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [CommonForkJoinPool]
                         future.whenCompleteAsync(null); // WARN
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                src/test/pkg/Test.java:8: Error: Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via com.intellij.openapi.application.Application#executeOnPooledThread. See go/do-not-freeze. [NewForkJoinPool]
+                        new ForkJoinPool(); // WARN
+                        ~~~~~~~~~~~~~~~~~~
                 3 errors, 0 warnings
                 """
             )
