@@ -17,6 +17,7 @@
 #ifndef FORK_COMMAND_H_
 #define FORK_COMMAND_H_
 
+#include <functional>
 #include <string>
 #include <thread>
 
