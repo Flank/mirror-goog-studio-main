@@ -16,17 +16,22 @@
 
 package com.android.tools.checker.agent;
 
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.checker.util.ClassAnnotationFinder;
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+
 
 /**
  * A {@link ClassFileTransformer} that overrides methods so the call is redirected to a different
@@ -61,6 +66,24 @@ class Transform implements ClassFileTransformer {
         }
     }
 
+    @NonNull
+    static Collection<String> annotationFromByteBuffer(byte[] classFileBuffer) {
+        HashSet<String> classAnnotation = new HashSet<>();
+        // This is a new class, look if it has any annotations
+        ClassReader classReader = new ClassReader(classFileBuffer);
+        ClassAnnotationFinder annotationFinder =
+                new ClassAnnotationFinder(
+                        null,
+                        (type) -> {
+                            classAnnotation.add(type.getClassName());
+                        });
+        classReader.accept(
+                annotationFinder,
+                ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+
+        return classAnnotation;
+    }
+
     @Override
     public byte[] transform(
             ClassLoader loader,
@@ -73,18 +96,26 @@ class Transform implements ClassFileTransformer {
         }
 
         if (!aspects.hasClass(className)) {
-            // The class has no method aspects defined in the configuration, however, we can still
-            // define aspects via annotations. Check if the class has any annotations and if the
-            // annotations has an aspect defined in the configuration file.
-            boolean hasAnnotations =
-                    Arrays.stream(classBeingRedefined.getDeclaredMethods())
-                            .flatMap(method -> Arrays.stream(method.getDeclaredAnnotations()))
-                            .anyMatch(
-                                    annotation ->
-                                            aspects.hasAnnotation(
-                                                    annotation
-                                                            .annotationType()
-                                                            .getCanonicalName()));
+            boolean hasAnnotations;
+            if (classBeingRedefined != null) {
+                // The class has no method aspects defined in the configuration, however, we can still
+                // define aspects via annotations. Check if the class has any annotations and if the
+                // annotations has an aspect defined in the configuration file.
+                hasAnnotations =
+                        Arrays.stream(classBeingRedefined.getDeclaredMethods())
+                                .flatMap(method -> Arrays.stream(method.getDeclaredAnnotations()))
+                                .anyMatch(
+                                        annotation ->
+                                                aspects.hasAnnotation(
+                                                        annotation
+                                                                .annotationType()
+                                                                .getCanonicalName()));
+            } else {
+                hasAnnotations =
+                        annotationFromByteBuffer(classFileBuffer)
+                                .stream()
+                                .anyMatch(aspects::hasAnnotation);
+            }
 
             if (!hasAnnotations) {
                 return classFileBuffer;
