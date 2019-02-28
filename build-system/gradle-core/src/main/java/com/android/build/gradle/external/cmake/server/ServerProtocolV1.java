@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.FormatFlagsConversionMismatchException;
 import java.util.List;
 
 /**
@@ -356,7 +357,23 @@ public class ServerProtocolV1 implements Server {
      */
     private void diagnostic(String format, Object... args) {
         if (serverReceiver.getDiagnosticReceiver() != null) {
-            serverReceiver.getDiagnosticReceiver().receive(String.format(format, args));
+            try {
+                serverReceiver.getDiagnosticReceiver().receive(String.format(format, args));
+            } catch (FormatFlagsConversionMismatchException e) {
+                // There was a formatting problem, just output the format string
+                serverReceiver.getDiagnosticReceiver().receive(format);
+            }
+        }
+    }
+
+    /**
+     * Prints diagnostic messages without formatting.
+     *
+     * @param message - diagnostic message format
+     */
+    private void diagnostic(String message) {
+        if (serverReceiver.getDiagnosticReceiver() != null) {
+            serverReceiver.getDiagnosticReceiver().receive(message);
         }
     }
 
