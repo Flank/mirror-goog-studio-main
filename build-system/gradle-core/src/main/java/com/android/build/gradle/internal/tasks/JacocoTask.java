@@ -22,8 +22,8 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dexing.DexerTool;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
@@ -37,17 +37,15 @@ import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
 public class JacocoTask extends AndroidVariantTask {
-    @NonNull private final WorkerExecutor executor;
+    @NonNull private final WorkerExecutorFacade workers;
     private FileCollection jacocoAntTaskConfiguration;
     private BuildableArtifact inputClasses;
     private File output;
     private JacocoTaskDelegate delegate;
 
-    private boolean areGradleWorkersEnabled;
-
     @Inject
-    public JacocoTask(@NonNull WorkerExecutor executor) {
-        this.executor = executor;
+    public JacocoTask(@NonNull WorkerExecutor workers) {
+        this.workers = Workers.INSTANCE.getWorker(getPath(), workers);
     }
 
     @InputFiles
@@ -77,15 +75,10 @@ public class JacocoTask extends AndroidVariantTask {
 
     @TaskAction
     public void run(@NonNull IncrementalTaskInputs inputs) throws IOException {
-        delegate.run(executor, inputs);
-
-        // We are here using a gradle worker directly even if Gradle workers are not enabled by
-        // default due to the classloader isolation mode existing in Gradle workers.
-        //
-        // In the case that gradle workers are not enabled by default we need to await on close, to
-        // have the same behaviour as a ForkJoinPool implementation.
-        if (!areGradleWorkersEnabled) {
-            executor.await();
+        try {
+            delegate.run(workers, inputs);
+        } finally {
+            workers.close();
         }
     }
 
@@ -135,11 +128,6 @@ public class JacocoTask extends AndroidVariantTask {
             task.delegate =
                     new JacocoTaskDelegate(
                             task.jacocoAntTaskConfiguration, task.output, task.inputClasses);
-            task.areGradleWorkersEnabled =
-                    getVariantScope()
-                            .getGlobalScope()
-                            .getProjectOptions()
-                            .get(BooleanOption.ENABLE_GRADLE_WORKERS);
         }
     }
 }

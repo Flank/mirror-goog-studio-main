@@ -60,7 +60,9 @@ import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
+import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.profile.RecordingBuildListener;
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -245,7 +247,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
         checkModulesForErrors();
 
         PluginInitializer.initialize(project);
-        ProfilerInitializer.init(project, projectOptions);
+        RecordingBuildListener buildListener = ProfilerInitializer.init(project, projectOptions);
+        ProfileAgent.INSTANCE.register(buildListener);
         threadRecorder = ThreadRecorder.get();
 
         Workers.INSTANCE.initFromProject(

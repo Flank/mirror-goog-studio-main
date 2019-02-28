@@ -113,4 +113,9 @@ public class RecordingBuildListener implements TaskExecutionListener {
     public void closeTaskRecord(@NonNull String taskPath) {
         taskRecords.remove(taskPath);
     }
+
+    @NonNull
+    public WorkerProfilingRecord getWorkerRecord(@NonNull String taskPath, @NonNull String worker) {
+        return getTaskRecord(taskPath).get(worker);
+    }
 }

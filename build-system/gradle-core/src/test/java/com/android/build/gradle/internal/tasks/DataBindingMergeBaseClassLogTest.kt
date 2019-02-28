@@ -22,7 +22,6 @@ import android.databinding.tool.DataBindingBuilder.INCREMENTAL_BIN_AAR_DIR
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
-import com.android.build.gradle.internal.fixtures.FakeIncrementalTaskInputs
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogDelegate
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.ExecutorServiceAdapter

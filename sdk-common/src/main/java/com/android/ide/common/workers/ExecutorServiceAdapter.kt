@@ -17,9 +17,11 @@
 package com.android.ide.common.workers
 
 import java.io.Serializable
+import java.lang.IllegalArgumentException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Implementation of [WorkerExecutorFacade] using a plain JDK [ExecutorService]
@@ -28,9 +30,18 @@ open class ExecutorServiceAdapter(
     /**
      * Instantiate an adapter using the passed [ExecutorService]
      */
-    val executor: ExecutorService) : WorkerExecutorFacade {
+    val executor: ExecutorService,
+    /**
+     * [WorkerExecutorFacade] to delegate submissions that cannot be handled by this adapter or
+     * null if no delegation expected.
+     */
+    private val delegate: WorkerExecutorFacade?= null
+) : WorkerExecutorFacade {
+
+    constructor(executor: ExecutorService): this(executor, null)
 
     private val futures = mutableListOf<Future<*>>()
+    private val delegateUsed= AtomicBoolean(false)
 
     override fun submit(
         actionClass: Class<out Runnable>,
@@ -44,6 +55,23 @@ open class ExecutorServiceAdapter(
         }
         synchronized(this) {
             futures.add(submission)
+        }
+    }
+
+    override fun submit(
+        actionClass: Class<out Runnable>,
+        configuration: WorkerExecutorFacade.Configuration
+    ) {
+        if (configuration.isolationMode != WorkerExecutorFacade.IsolationMode.NONE) {
+            if (delegate == null) {
+                throw IllegalArgumentException(
+                    "Adapter does not support ${configuration.isolationMode} " +
+                            "and no delegate provided")
+            }
+            delegateUsed.set(true)
+            delegate.submit(actionClass, configuration)
+        } else {
+            submit(actionClass, configuration.parameter)
         }
     }
 
@@ -63,6 +91,9 @@ open class ExecutorServiceAdapter(
         }
         if (!exceptions.isEmpty()) {
             throw WorkerExecutorException(exceptions)
+        }
+        if (delegateUsed.get()) {
+            delegate?.await()
         }
     }
 

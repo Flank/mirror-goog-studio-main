@@ -189,10 +189,21 @@ public class MergedResourceWriter
         }
     }
 
-    /*
-     * Used in tests.
-     */
+    /** Used in tools/idea. */
+    @SuppressWarnings("unused")
     public static MergedResourceWriter createWriterWithoutPngCruncher(
+            @NonNull File rootFolder,
+            @Nullable File publicFile,
+            @Nullable File blameLogFolder,
+            @NonNull ResourcePreprocessor preprocessor,
+            @NonNull File temporaryDirectory) {
+        return createWriterWithoutPngCruncher(
+                null, rootFolder, publicFile, blameLogFolder, preprocessor, temporaryDirectory);
+    }
+
+    /** Used in tests */
+    public static MergedResourceWriter createWriterWithoutPngCruncher(
+            @Nullable ExecutorServiceAdapter executorServiceAdapter,
             @NonNull File rootFolder,
             @Nullable File publicFile,
             @Nullable File blameLogFolder,
@@ -200,7 +211,8 @@ public class MergedResourceWriter
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
                 // no need for multi-threading in tests.
-                new ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService()),
+                new ExecutorServiceAdapter(
+                        MoreExecutors.newDirectExecutorService(), executorServiceAdapter),
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,

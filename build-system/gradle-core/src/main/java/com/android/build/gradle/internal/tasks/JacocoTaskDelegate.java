@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
@@ -29,6 +30,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -43,8 +45,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.workers.IsolationMode;
-import org.gradle.workers.WorkerExecutor;
 import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
 
@@ -70,7 +70,20 @@ public class JacocoTaskDelegate {
         this.inputClasses = inputClasses;
     }
 
-    public void run(@NonNull WorkerExecutor executor, @NonNull IncrementalTaskInputs inputs)
+    public static class WorkerItemParameter implements Serializable {
+        final Map<Action, List<File>> nonIncToProcess;
+        final File root;
+        final File output;
+
+        public WorkerItemParameter(
+                Map<Action, List<File>> nonIncToProcess, File root, File output) {
+            this.nonIncToProcess = nonIncToProcess;
+            this.root = root;
+            this.output = output;
+        }
+    }
+
+    public void run(@NonNull WorkerExecutorFacade executor, @NonNull IncrementalTaskInputs inputs)
             throws IOException {
         for (File file : inputClasses.getFiles()) {
             if (file.exists()) {
@@ -87,19 +100,21 @@ public class JacocoTaskDelegate {
             for (File file : inputClasses.getFiles()) {
                 Map<Action, List<File>> nonIncToProcess =
                         getFilesForInstrumentationNonIncrementally(file, output);
+                WorkerItemParameter parameter =
+                        new WorkerItemParameter(nonIncToProcess, file, output);
+
                 executor.submit(
                         JacocoWorkerAction.class,
-                        workerConfiguration -> {
-                            workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
-                            workerConfiguration.classpath(jacocoAntTaskConfiguration.getFiles());
-                            workerConfiguration.setParams(nonIncToProcess, file, output);
-                        });
+                        new WorkerExecutorFacade.Configuration(
+                                parameter,
+                                WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                                jacocoAntTaskConfiguration.getFiles()));
             }
         }
     }
 
     private void processIncrementally(
-            @NonNull WorkerExecutor executor, @NonNull IncrementalTaskInputs inputs)
+            @NonNull WorkerExecutorFacade executor, @NonNull IncrementalTaskInputs inputs)
             throws IOException {
         Multimap<Path, Path> basePathToRemove =
                 Multimaps.newSetMultimap(new HashMap<>(), HashSet::new);
@@ -160,11 +175,10 @@ public class JacocoTaskDelegate {
 
             executor.submit(
                     JacocoWorkerAction.class,
-                    workerConfiguration -> {
-                        workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
-                        workerConfiguration.classpath(jacocoAntTaskConfiguration.getFiles());
-                        workerConfiguration.setParams(toProcess, basePath.toFile(), output);
-                    });
+                    new WorkerExecutorFacade.Configuration(
+                            new WorkerItemParameter(toProcess, basePath.toFile(), output),
+                            WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                            jacocoAntTaskConfiguration.getFiles()));
         }
     }
 
@@ -272,13 +286,10 @@ public class JacocoTaskDelegate {
         @NonNull private File outputDir;
 
         @Inject
-        public JacocoWorkerAction(
-                @NonNull Map<Action, List<File>> inputs,
-                @NonNull File inputDir,
-                @NonNull File outputDir) {
-            this.inputs = inputs;
-            this.inputDir = inputDir;
-            this.outputDir = outputDir;
+        public JacocoWorkerAction(@NonNull WorkerItemParameter workerItemParameter) {
+            this.inputs = workerItemParameter.nonIncToProcess;
+            this.inputDir = workerItemParameter.root;
+            this.outputDir = workerItemParameter.output;
         }
 
         @Override

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.annotations.concurrency.GuardedBy
+import com.android.build.gradle.internal.profile.ProfileAgent
 import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.build.gradle.internal.profile.TaskProfilingRecord
 import com.android.build.gradle.options.BooleanOption
@@ -57,7 +58,9 @@ object Workers {
      * Initialized with a default version using the the [ForkJoinPool.commonPool]
      */
     private var factory: (owner: String, worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
-        { _, _, executor -> ExecutorServiceAdapter(executor ?: ForkJoinPool.commonPool()) }
+        { owner, worker, executor -> ExecutorServiceAdapter(
+            executor ?: ForkJoinPool.commonPool(), WorkerExecutorAdapter(owner, worker)
+        ) }
 
     /**
      * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor], delegating
@@ -121,10 +124,18 @@ object Workers {
 
         factory = when {
             options.get(BooleanOption.ENABLE_GRADLE_WORKERS) -> {
-                { owner, worker, _ -> WorkerExecutorAdapter(owner, worker) }
+                { owner, worker, _ ->
+                    WorkerExecutorAdapter(
+                        owner,
+                        worker
+                    )
+                }
             }
             else -> {
-                { _, _, executor -> ExecutorServiceAdapter(executor ?: defaultExecutor) }
+                { owner, worker, executor -> ExecutorServiceAdapter(
+                    executor ?: defaultExecutor,
+                    WorkerExecutorAdapter(owner, worker)
+                ) }
             }
         }
     }
@@ -182,19 +193,37 @@ object Workers {
             actionClass: Class<out Runnable>,
             parameter: Serializable
         ) {
+            submit(
+                actionClass,
+                WorkerExecutorFacade.Configuration(
+                    parameter,
+                    WorkerExecutorFacade.IsolationMode.NONE,
+                    listOf()
+                )
+            )
+        }
 
-            val workerKey = "$owner${actionClass.name}${parameter.hashCode()}"
+        override fun submit(
+            actionClass: Class<out Runnable>,
+            configuration: WorkerExecutorFacade.Configuration
+        ) {
+            val workerKey = "$owner${actionClass.name}${configuration.parameter.hashCode()}"
             val submissionParameters = ActionParameters(
                 actionClass,
-                parameter,
+                configuration.parameter,
                 owner,
                 workerKey
             )
 
             taskRecord.addWorker(workerKey)
 
+            val classpath = configuration.classPath.toList()
+
             workerExecutor.submit(ActionFacade::class.java) {
-                it.isolationMode = IsolationMode.NONE
+                it.isolationMode = configuration.isolationMode.toGradleIsolationMode()
+                if (!classpath.isEmpty()) {
+                    it.classpath = classpath
+                }
                 it.params(submissionParameters)
             }
         }
@@ -228,19 +257,23 @@ object Workers {
         }
     }
 
+    /**
+     * Translates sdk common [WorkerExecutorFacade.IsolationMode] into Gradle's [IsolationMode]
+     */
+    fun WorkerExecutorFacade.IsolationMode.toGradleIsolationMode() =
+        when(this) {
+            WorkerExecutorFacade.IsolationMode.NONE -> IsolationMode.NONE
+            WorkerExecutorFacade.IsolationMode.CLASSLOADER -> IsolationMode.CLASSLOADER
+            else -> throw IllegalArgumentException("$this is not a handled isolation mode")
+        }
+
+
     class ActionParameters(
         val delegateAction: Class<out Runnable>,
         val delegateParameters: Serializable,
         val taskOwner: String,
-        private val workerKey: String
-    ) : Serializable {
-
-        private fun taskRecord() =
-            (ProfilerInitializer.getListener()?.getTaskRecord(taskOwner)
-                ?: TaskProfilingRecord.dummyTaskRecord)
-
-        fun getWorker() = taskRecord().get(workerKey)
-    }
+        val workerKey: String
+    ) : Serializable
 
     class ActionFacade @Inject constructor(val params: ActionParameters) : Runnable {
 
@@ -249,9 +282,9 @@ object Workers {
                 ?: throw RuntimeException("Cannot find constructor with @Inject in ${params.delegateAction.name}")
 
             val delegate = constructor.newInstance(params.delegateParameters) as Runnable
-            params.getWorker().executionStarted()
+            ProfileAgent.getProfileMBean.workerStarted(params.taskOwner, params.workerKey)
             delegate.run()
-            params.getWorker().executionFinished()
+            ProfileAgent.getProfileMBean.workerFinished(params.taskOwner, params.workerKey)
         }
 
         private fun findAppropriateConstructor(): Constructor<*>? {

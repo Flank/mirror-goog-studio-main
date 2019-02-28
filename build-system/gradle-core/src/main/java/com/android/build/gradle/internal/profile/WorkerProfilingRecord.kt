@@ -21,6 +21,7 @@ import java.io.Serializable
 import java.lang.IllegalStateException
 import java.time.Duration
 import java.time.Instant
+import java.util.Objects
 
 /**
  * Gradle [org.gradle.workers.WorkerExecutor] Worker item book keeping record.
@@ -61,7 +62,6 @@ class WorkerProfilingRecord(
             throw IllegalStateException("Worker finished without being first started")
         }
         endTime = TaskProfilingRecord.clock.instant()
-        ProfilerInitializer.getListener()?.getTaskRecord(taskName)?.workerFinished(this)
     }
 
     fun fillSpanRecord(span: GradleBuildProfileSpan.Builder) {
@@ -71,5 +71,9 @@ class WorkerProfilingRecord(
             .setStartTimeInMs(startTime.toEpochMilli())
             .setDurationInMs(duration().toMillis())
             .setType(GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
+    }
+
+    override fun toString(): String {
+        return "Worker for $taskName"
     }
 }

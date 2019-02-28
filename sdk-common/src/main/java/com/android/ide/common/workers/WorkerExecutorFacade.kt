@@ -17,6 +17,7 @@
 package com.android.ide.common.workers
 
 import java.io.Closeable
+import java.io.File
 import java.io.Serializable
 
 /**
@@ -44,6 +45,23 @@ import java.io.Serializable
 interface WorkerExecutorFacade : AutoCloseable, Closeable {
 
     /**
+     * Supported isolation modes.
+     */
+    enum class IsolationMode {
+        NONE,
+        CLASSLOADER
+    }
+
+    /**
+     * Configuration for action submission.
+     */
+    data class Configuration(
+        val parameter: Serializable,
+        val isolationMode: IsolationMode = IsolationMode.NONE,
+        val classPath: Iterable<File> = listOf()
+    )
+
+    /**
      * Submit a new work action to be performed.
      *
      * @param actionClass the [Runnable] implementing  the action and taking the passed parameter
@@ -51,6 +69,14 @@ interface WorkerExecutorFacade : AutoCloseable, Closeable {
      * @param parameter the parameter instance to pass to the action.
      */
     fun submit(actionClass: Class<out Runnable>, parameter: Serializable)
+
+    /**
+     * Submit a new work action with submission parameters.
+     *
+     */
+    fun submit(actionClass: Class<out Runnable>, configuration: Configuration) {
+        submit(actionClass, configuration.parameter)
+    }
 
     /**
      * Wait for all submitted work actions completion.

@@ -38,9 +38,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
+import org.junit.AfterClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 public class AssetMergerTest extends BaseTestCase {
 
@@ -50,7 +52,13 @@ public class AssetMergerTest extends BaseTestCase {
     private static AssetMerger sAssetMerger = null;
 
     private static WorkerExecutorFacade facade =
-            new ExecutorServiceAdapter(Executors.newSingleThreadExecutor());
+            new ExecutorServiceAdapter(
+                    Executors.newSingleThreadExecutor(), Mockito.mock(WorkerExecutorFacade.class));
+
+    @AfterClass
+    public static void shutdown() {
+        facade.close();
+    }
 
     @Test
     public void testMergeByCount() throws Exception {

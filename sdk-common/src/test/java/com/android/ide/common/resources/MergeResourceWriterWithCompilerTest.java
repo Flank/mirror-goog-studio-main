@@ -23,6 +23,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -133,12 +134,21 @@ public class MergeResourceWriterWithCompilerTest {
 
                 @Override
                 public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
+                    submit(
+                            actionClass,
+                            new Configuration(parameter, IsolationMode.NONE, ImmutableList.of()));
+                }
+
+                @Override
+                public void submit(
+                        @NonNull Class<? extends Runnable> actionClass,
+                        @NonNull Configuration configuration) {
                     Runnable action;
                     try {
                         action =
                                 actionClass
-                                        .getConstructor(parameter.getClass())
-                                        .newInstance(parameter);
+                                        .getConstructor(configuration.getParameter().getClass())
+                                        .newInstance(configuration.getParameter());
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
