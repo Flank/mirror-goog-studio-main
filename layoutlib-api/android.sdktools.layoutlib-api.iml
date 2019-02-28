@@ -12,8 +12,8 @@
     <orderEntry type="library" exported="" name="kxml2" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" exported="" />
-    <orderEntry type="library" name="jetbrains-annotations-java5" level="project" />
     <orderEntry type="module" module-name="android.sdktools.common" />
     <orderEntry type="library" name="Guava" level="project" />
+    <orderEntry type="library" name="jetbrains-annotations" level="project" />
   </component>
 </module>
