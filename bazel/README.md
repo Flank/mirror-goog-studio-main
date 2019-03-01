@@ -3,6 +3,14 @@
 This directory contains the core files to run studio-master-dev tests using
 bazel.
 
+*** note
+**Warning**: This does not currently work for AOSP
+[Issue 126764883](https://issuetracker.google.com/126764883).
+The required binaries are checked in as prebuilts, so you can run tests using
+Intellij (tools/base and tools/idea projects), Ant (Studio only) and Gradle
+(Build system and command line tools).
+***
+
 ## Running bazel
 
 Bazel has the concept of a _workspace_: the root of all your source files. For

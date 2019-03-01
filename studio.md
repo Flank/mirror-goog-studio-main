@@ -11,6 +11,14 @@ To learn how to build the Android plugin for Gradle from source, read
 [The Android Gradle plugin](/build-system/README.md).
 
 ## Run Bazel
+
+*** note
+Note that this does not apply to AOSP currently
+[Issue 126764883](https://issuetracker.google.com/126764883).
+The required binaries are checked in as prebuilts. You should ignore this
+section if building from AOSP.
+***
+
 In order to successfully build Android Studio from source, you’ll need to make sure that you’re able
 to run the revision-controlled executable of Bazel that's located in the
 `<studio-master-dev>/tools/base/bazel/` directory:
