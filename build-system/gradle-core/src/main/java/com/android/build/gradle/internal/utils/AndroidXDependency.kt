@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.gradle.internal.dependency.JetifyTransform
+import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitution
 
 /**
  * An AndroidX dependency with group and module name (without a version). It also contains
@@ -38,7 +38,7 @@ data class AndroidXDependency(
         @JvmStatic
         fun fromPreAndroidXDependency(oldGroup: String, oldModule: String): AndroidXDependency {
             val androidXDependencyString =
-                JetifyTransform.androidXMappings["$oldGroup:$oldModule"]!!
+                AndroidXDepedencySubstitution.androidXMappings["$oldGroup:$oldModule"]!!
             val groupModuleVersion = androidXDependencyString.split(':')
             return AndroidXDependency(
                 group = groupModuleVersion[0],
