@@ -238,8 +238,8 @@ public class BasicTest2 {
 
         Collection<File> generatedResFolders = debugTestInfo.getGeneratedResourceFolders();
         assertThat(generatedResFolders).named("test generated res folders").isNotNull();
-        // size 2 = rs output + resValue output
-        assertThat(generatedResFolders).named("test generated res folders").hasSize(2);
+        // size 1 = rs output (resValue output is not included as, like the R classes, studio generates an in-memory representation)
+        assertThat(generatedResFolders).named("test generated res folders").hasSize(1);
 
         Collection<TestVariantBuildOutput> testVariantBuildOutputs =
                 debugVariantOutput.getTestingVariants();

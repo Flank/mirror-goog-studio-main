@@ -1218,7 +1218,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         VariantScope scope = variantData.getScope();
 
         result.add(scope.getRenderscriptResOutputDir());
-        result.add(scope.getGeneratedResOutputDir());
 
         return result;
     }

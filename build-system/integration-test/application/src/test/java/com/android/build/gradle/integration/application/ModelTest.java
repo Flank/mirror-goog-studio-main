@@ -98,10 +98,9 @@ public class ModelTest {
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
 
+        // Res values are not included as Studio models them directly
         assertThat(debugArtifact.getGeneratedResourceFolders())
-                .containsExactly(
-                        project.file("build/generated/res/resValues/debug"),
-                        project.file("build/generated/res/rs/debug"));
+                .containsExactly(project.file("build/generated/res/rs/debug"));
 
         AndroidArtifact androidTestArtifact = VariantUtils.getAndroidTestArtifact(debugVariant);
 
@@ -119,7 +118,6 @@ public class ModelTest {
 
         assertThat(androidTestArtifact.getGeneratedResourceFolders())
                 .containsExactly(
-                        project.file("build/generated/res/resValues/androidTest/debug"),
                         project.file("build/generated/res/rs/androidTest/debug"));
 
         JavaArtifact unitTestArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
