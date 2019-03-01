@@ -51,6 +51,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
@@ -204,7 +205,7 @@ public class JarTestSuiteRunner extends Suite {
                     if (ze.getName().endsWith(".class")) {
                         String className = ze.getName().replaceAll("/", ".").replaceAll(".class$", "");
                         Class<?> aClass = loader.loadClass(className);
-                        if (seemsLikeJUnit3(aClass) || seemsLikeJUnit4(aClass)) {
+                        if (seemsLikeJUnit4(aClass) || seemsLikeJUnit3(aClass)) {
                             testClasses.add(aClass);
                         }
                     }
@@ -217,8 +218,27 @@ public class JarTestSuiteRunner extends Suite {
     }
 
     private static boolean seemsLikeJUnit3(Class<?> aClass) {
-        return (TestCase.class.isAssignableFrom(aClass) || TestSuite.class.isAssignableFrom(aClass))
-               && !Modifier.isAbstract(aClass.getModifiers());
+        boolean junit3 =
+                (TestCase.class.isAssignableFrom(aClass)
+                                || TestSuite.class.isAssignableFrom(aClass))
+                        && !Modifier.isAbstract(aClass.getModifiers());
+        if (!junit3) {
+            return false;
+        }
+        StringBuilder failures = new StringBuilder();
+        // Assert no @Ignore annotations used.
+        for (Method method : aClass.getMethods()) {
+            if (method.getAnnotation(Ignore.class) != null) {
+                failures.append(
+                        String.format(
+                                "@Ignore is used on method '%s$2' on JUnit3 test class '%s$1'\n",
+                                aClass.getName(), method.getName()));
+            }
+        }
+        if (failures.length() > 0) {
+            throw new RuntimeException(failures.toString());
+        }
+        return true;
     }
 
     private static boolean seemsLikeJUnit4(Class<?> aClass) {
