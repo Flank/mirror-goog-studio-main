@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
+import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitution;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.DexingTransform;
 import com.android.build.gradle.internal.dependency.DexingTransformKt;
@@ -99,6 +100,7 @@ import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -151,9 +153,10 @@ public class VariantManager implements VariantModel {
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
-            JetifyTransform.androidXMappings.get("com.android.support:multidex");
+            AndroidXDepedencySubstitution.getAndroidXMappings().get("com.android.support:multidex");
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
-            JetifyTransform.androidXMappings.get("com.android.support:multidex-instrumentation");
+            AndroidXDepedencySubstitution.getAndroidXMappings()
+                    .get("com.android.support:multidex-instrumentation");
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
@@ -587,11 +590,7 @@ public class VariantManager implements VariantModel {
 
         // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            JetifyTransform.replaceOldSupportLibraries(project);
-
-            // Do not jetify libraries that have been blacklisted
-            JetifyTransform.setJetifierBlackList(
-                    globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
+            AndroidXDepedencySubstitution.replaceOldSupportLibraries(project);
         }
 
         /*
@@ -599,23 +598,31 @@ public class VariantManager implements VariantModel {
          */
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
+        // Arguments passed to an ArtifactTransform must not be null
+        final String jetifierBlackList =
+                Strings.nullToEmpty(
+                        globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
         dependencies.registerTransform(
                 transform -> {
                     transform.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
                     transform.getTo().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
-                    transform.artifactTransform(
-                            globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)
-                                    ? JetifyTransform.class
-                                    : IdentityTransform.class);
+                    if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+                        transform.artifactTransform(
+                                JetifyTransform.class, config -> config.params(jetifierBlackList));
+                    } else {
+                        transform.artifactTransform(IdentityTransform.class);
+                    }
                 });
         dependencies.registerTransform(
                 transform -> {
                     transform.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                     transform.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                    transform.artifactTransform(
-                            globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)
-                                    ? JetifyTransform.class
-                                    : IdentityTransform.class);
+                    if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
+                        transform.artifactTransform(
+                                JetifyTransform.class, config -> config.params(jetifierBlackList));
+                    } else {
+                        transform.artifactTransform(IdentityTransform.class);
+                    }
                 });
 
         dependencies.registerTransform(
