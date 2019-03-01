@@ -18,9 +18,9 @@ package com.android.build.gradle.integration.resources
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
@@ -35,19 +35,41 @@ class MergeJavaResourceTaskTest {
     val project = GradleTestProject.builder().fromTestApp(
         MinimalSubProject.app("com.example.test")).create()
 
-    @Before
-    fun setUp() {
-        project.execute("assembleDebug")
+    @Test
+    fun ensureNoJavacDependencyIfNoAnnotationProcessor() {
+        val build = project.executor().run("clean", ":mergeDebugJavaResource")
+        assertThat(build.didWorkTasks).doesNotContain(":compileDebugJavaWithJavac")
     }
 
     @Test
-    fun `test javac dependency`() {
+    fun ensureJavacDependencyIfAnnotationProcessor() {
+        val emptyJar = project.file("empty.jar")
+        assertThat(emptyJar.createNewFile()).isTrue()
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            "dependencies { annotationProcessor files('empty.jar') }"
+        )
+        val build = project.executor().run("clean", ":mergeDebugJavaResource")
+        assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
+    }
+
+    @Test
+    fun ensureJavacDependencyIfAnnotationProcessorAddedViaDefaultDependencies() {
+        val emptyJar = project.file("empty.jar")
+        assertThat(emptyJar.createNewFile()).isTrue()
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """configurations['annotationProcessor'].defaultDependencies { dependencies ->
+                |    dependencies.add(owner.project.dependencies.create(files('empty.jar')))
+                |}""".trimMargin()
+        )
         val build = project.executor().run("clean", ":mergeDebugJavaResource")
         assertThat(build.didWorkTasks).contains(":compileDebugJavaWithJavac")
     }
 
     @Test
     fun ensureJavaResIsNotRunningWhenOnlyClassesChange() {
+        project.execute("assembleDebug")
         val newSourceFile = File(project.mainSrcDir, "com/android/tests/basic/NewSourceFile.java")
         assertThat(newSourceFile.exists()).isFalse()
         FileUtils.writeToFile(newSourceFile, """
@@ -66,6 +88,7 @@ class MergeJavaResourceTaskTest {
 
     @Test
     fun ensureJavaResIsNotRunningWhenOnlyNativeLibsChange() {
+        project.execute("assembleDebug")
         val newSourceFile = File(project.mainJavaResDir, "com/android/tests/basic/library.so")
         assertThat(newSourceFile.exists()).isFalse()
         FileUtils.writeToFile(newSourceFile, "some_native_lib".trimIndent())
@@ -76,6 +99,7 @@ class MergeJavaResourceTaskTest {
 
     @Test
     fun ensureJavaResIsRunningWhenResourcesIsAdded() {
+        project.execute("assembleDebug")
         val newSourceFile = File(project.mainJavaResDir, "com/android/tests/app.txt")
         assertThat(newSourceFile.exists()).isFalse()
         FileUtils.writeToFile(newSourceFile, """does_not_matter""".trimIndent())
@@ -86,6 +110,7 @@ class MergeJavaResourceTaskTest {
 
     @Test
     fun ensureJavaResIsRunningWhenResourcesIsChanged() {
+        project.execute("assembleDebug")
         val newSourceFile = File(project.mainJavaResDir, "com/android/tests/app.txt")
         assertThat(newSourceFile.exists()).isFalse()
         FileUtils.writeToFile(newSourceFile, """does_not_matter""".trimIndent())
@@ -98,6 +123,7 @@ class MergeJavaResourceTaskTest {
 
     @Test
     fun ensureJavaResIsRunningWhenResourcesIsRemoved() {
+        project.execute("assembleDebug")
         val newSourceFile = File(project.mainJavaResDir, "com/android/tests/app.txt")
         assertThat(newSourceFile.exists()).isFalse()
         FileUtils.writeToFile(newSourceFile, """does_not_matter""".trimIndent())
