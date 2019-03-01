@@ -234,6 +234,12 @@ public class JarTestSuiteRunner extends Suite {
                                 "@Ignore is used on method '%s$2' on JUnit3 test class '%s$1'\n",
                                 aClass.getName(), method.getName()));
             }
+            if (method.getAnnotation(Test.class) != null) {
+                failures.append(
+                        String.format(
+                                "@Test is used on method '%s$2' on JUnit3 test class '%s$1'\n",
+                                aClass.getName(), method.getName()));
+            }
         }
         if (failures.length() > 0) {
             throw new RuntimeException(failures.toString());
