@@ -16,7 +16,7 @@
 
 package com.android.ide.common.rendering.api;
 
-
+import com.android.annotations.NonNull;
 import java.awt.image.BufferedImage;
 
 /**
@@ -33,10 +33,12 @@ import java.awt.image.BufferedImage;
 public interface IImageFactory {
 
     /**
-     * Creates a buffered image with the given size
+     * Creates a buffered image with the given size.
+     *
      * @param width the width of the image
      * @param height the height of the image
      * @return a new (or reused) BufferedImage of the given size.
      */
+    @NonNull
     BufferedImage getImage(int width, int height);
 }
