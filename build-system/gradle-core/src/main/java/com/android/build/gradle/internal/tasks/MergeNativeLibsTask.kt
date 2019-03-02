@@ -50,7 +50,6 @@ import javax.inject.Inject
 /**
  * Task to merge native libs from multiple modules
  */
-@CacheableTask
 open class MergeNativeLibsTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
