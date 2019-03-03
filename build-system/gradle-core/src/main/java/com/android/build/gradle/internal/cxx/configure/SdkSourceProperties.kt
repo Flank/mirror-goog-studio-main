@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.SdkConstants.FN_SOURCE_PROP
+import com.android.repository.Revision
 import java.io.File
 
 /**
@@ -37,6 +39,12 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
         return map[key.key]
     }
 
+    /**
+     * Return the Pkg.Revision value.
+     */
+    val revision : Revision
+        get() = Revision.parseRevision(getValue(SdkSourceProperty.SDK_PKG_REVISION)!!)
+
     companion object {
         private const val SOURCE_PROPERTIES = "source.properties"
 
@@ -52,10 +60,12 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
 
         /**
          * Read a source properties file.
+         *
+         * Throws FileNotFoundException if the source.properties file didn't exist.
          */
         fun fromInstallFolder(folder : File) : SdkSourceProperties {
             val map = mutableMapOf<String, String>()
-            val sourceProperties = sourcePropertiesFile(folder)
+            val sourceProperties = pathFromInstallFolder(folder)
             for (line in sourceProperties.readLines()) {
                 val key = line.substringBefore("=").trim()
                 val value = line.substringAfter("=").trim()
@@ -76,6 +86,13 @@ data class SdkSourceProperties(private val map : Map<String, String>) {
             val properties = SdkSourceProperties.fromInstallFolder(folder)
             return properties.getValue(SdkSourceProperty.SDK_PKG_REVISION)
         }
+
+        /**
+         * Return the path to source.properties inside a given SDK component.
+         */
+        private fun pathFromInstallFolder(folder : File) : File {
+            return File(folder, FN_SOURCE_PROP)
+
+        }
     }
 }
-
