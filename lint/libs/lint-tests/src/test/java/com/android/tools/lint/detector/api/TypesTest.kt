@@ -381,11 +381,11 @@ class TypesTest : TestCase() {
 }
 
 // From Kotlin's UAST unit test support, TypesTestBase
-fun UFile.asLogTypes() = TypesLogger().apply {
+fun UFile.asLogTypes(indent: String = "    ") = TypesLogger(indent).apply {
     this@asLogTypes.accept(this)
 }.toString()
 
-class TypesLogger : AbstractUastVisitor() {
+class TypesLogger(private val indent: String) : AbstractUastVisitor() {
 
     val builder = StringBuilder()
 
@@ -401,7 +401,7 @@ class TypesLogger : AbstractUastVisitor() {
             }
         } + "]"
 
-        (1..level).forEach { builder.append("    ") }
+        (1..level).forEach { builder.append(indent) }
         builder.append(initialLine)
         if (node is UExpression) {
             val value = node.getExpressionType()

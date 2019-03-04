@@ -2564,7 +2564,7 @@ public class VersionChecksTest extends AbstractCheckTest {
     }
 
     public void testNotEquals() {
-        // Regression lifted from issue 117793069
+        // Regression test lifted from issue 117793069
         lint().files(
                         manifest().minSdk(1),
                         kotlin(
@@ -2588,6 +2588,58 @@ public class VersionChecksTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "}\n"),
+                        mSupportJar)
+                .run()
+                .expectInlinedMessages(false);
+    }
+
+    public void test143324759() {
+        // Regression test for issue 143324759: NewApi false positive on inline kotlin lambda
+        lint().files(
+                        manifest().minSdk(1),
+                        kotlin(
+                                "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.content.pm.PackageManager\n"
+                                        + "\n"
+                                        + "data class VersionInfo(\n"
+                                        + "    val code: Long,\n"
+                                        + "    val name: String,\n"
+                                        + "    val timestamp: String\n"
+                                        + ")\n"
+                                        + "\n"
+                                        + "val Context.versionInfo: VersionInfo\n"
+                                        + "    get() {\n"
+                                        + "        val metadataBundle = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)\n"
+                                        + "            .metaData\n"
+                                        + "        val timestamp = metadataBundle.getString(\"buildTimestamp\") ?: \"Missing timestamp!\"\n"
+                                        + "        return with(packageManager.getPackageInfo(packageName, 0)) {\n"
+                                        + "            VersionInfo(\n"
+                                        + "                code = sdk(28) { longVersionCode } ?: versionCode.toLong(),\n"
+                                        + "                name = versionName,\n"
+                                        + "                timestamp = timestamp\n"
+                                        + "            )\n"
+                                        + "        }\n"
+                                        + "    }"
+                                        + "\n"),
+                        // TODO: This currently passes. I need to port this to bytecode to have it simulate
+                        // what's happening in a running app.
+                        // OR maybe allow a form of @RequiresApi where you indicate that one of the
+                        // params supplies the  level
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.os.Build\n"
+                                        + "\n"
+                                        + "inline fun <T> sdk(level: Int, func: () -> T): T? {\n"
+                                        + "    return if (Build.VERSION.SDK_INT >= level) {\n"
+                                        + "        func()\n"
+                                        + "    } else {\n"
+                                        + "        null\n"
+                                        + "    }\n"
+                                        + "}"),
                         mSupportJar)
                 .run()
                 .expectInlinedMessages(false);

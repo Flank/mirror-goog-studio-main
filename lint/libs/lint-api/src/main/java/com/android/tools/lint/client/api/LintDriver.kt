@@ -98,8 +98,11 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
+import org.jetbrains.kotlin.psi.KtLiteralStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UCatchClause
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
@@ -107,6 +110,7 @@ import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUFile
 import org.jetbrains.uast.java.JavaUImportStatement
+import org.jetbrains.uast.kotlin.KotlinUCatchClause
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -2711,6 +2715,42 @@ class LintDriver
                 }
             }
             currentScope = currentScope.uastParent
+        }
+
+        return false
+    }
+
+    fun isSuppressed(
+        context: JavaContext?,
+        issue: Issue,
+        clause: UCatchClause
+    ): Boolean {
+        for (parameter in clause.parameters) {
+            if (isSuppressed(context, issue, parameter as UElement)) {
+                return true
+            }
+        }
+
+        // Workaround: Kotlin AST is missing these annotations
+        if (clause is KotlinUCatchClause) {
+            clause.sourcePsi.catchParameter?.annotationEntries?.forEach { annotation ->
+                val argList = annotation.valueArgumentList
+                if (annotation.shortName?.asString() == SUPPRESS_LINT) {
+                    for (arg in annotation.valueArguments) {
+                        val expression = arg.getArgumentExpression()
+                        if (expression is KtStringTemplateExpression) {
+                            for (entry in expression.entries) {
+                                if (entry is KtLiteralStringTemplateEntry) {
+                                    val text = entry.text
+                                    if (issue.id == text) {
+                                        return true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return false

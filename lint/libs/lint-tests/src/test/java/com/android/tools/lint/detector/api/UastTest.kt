@@ -21,7 +21,10 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.intellij.openapi.util.Disposer
 import junit.framework.TestCase
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UFile
+import org.jetbrains.uast.visitor.AbstractUastVisitor
+import java.lang.IllegalStateException
 
 // Misc tests to verify type handling in the Kotlin UAST initialization.
 class UastTest : TestCase() {
@@ -31,6 +34,38 @@ class UastTest : TestCase() {
         assertNotNull(uastFile)
         check(uastFile!!)
         Disposer.dispose(pair.second)
+    }
+
+    fun test126439418() {
+        // Regression test for https://issuetracker.google.com/126439418 /
+        //  https://youtrack.jetbrains.com/issue/KT-35801
+        val source = kotlin(
+            """
+                private val variable: Any = Object()
+
+                fun foo1() {
+
+                    @Suppress("MoveLambdaOutsideParentheses")
+                    foo2({ variable.hashCode() })
+                }
+
+                fun foo2(function: () -> Int) {}
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals(
+                """
+                public final class TestKt {
+                    @org.jetbrains.annotations.NotNull private static final var variable: java.lang.Object = <init>()
+                    public static final fun foo1() : void {
+                        [!] UnknownKotlinExpression (ANNOTATED_EXPRESSION)
+                    }
+                    public static final fun foo2(@org.jetbrains.annotations.NotNull function: kotlin.jvm.functions.Function0<java.lang.Integer>) : void {
+                    }
+                }
+                """.trimIndent().trim(), file.asSourceString().trim())
+        })
     }
 
     fun testKt25298() {
@@ -435,6 +470,210 @@ class UastTest : TestCase() {
                 """.trimIndent(),
                 file.asLogTypes()
             )
+        })
+    }
+
+    fun testKtParameters() {
+        // Regression test for
+        // https://issuetracker.google.com/134093981
+        val source = kotlin(
+            """
+            package test.pkg
+            inline class GraphVariables(val set: MutableSet<GraphVariable<*>>) {
+                fun <T> variable(name: String, graphType: String, value: T) {
+                    this.set.add(GraphVariable(name, graphType, value))
+                }
+            }
+            class GraphVariable<T>(name: String, graphType: String, value: T) {
+            }
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals(
+                """
+                package test.pkg
+
+                public final class GraphVariables {
+                    @org.jetbrains.annotations.NotNull private final var set: java.util.Set<test.pkg.GraphVariable<?>>
+                    public final fun getSet() : java.util.Set<test.pkg.GraphVariable<?>> = UastEmptyExpression
+                    public static final fun variable-impl(@org.jetbrains.annotations.NotNull ${"$"}this: java.util.Set<test.pkg.GraphVariable<?>>, @org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.Nullable graphType: java.lang.String, @null value: T) : void {
+                        this.set.add(<init>(name, graphType, value))
+                    }
+                    public static fun constructor-impl(@org.jetbrains.annotations.NotNull set: java.util.Set<test.pkg.GraphVariable<?>>) : java.util.Set = UastEmptyExpression
+                    public static fun toString-impl(@null p: java.util.Set) : java.lang.String = UastEmptyExpression
+                    public static fun hashCode-impl(@null p: java.util.Set) : int = UastEmptyExpression
+                    public static fun equals-impl(@null p: java.util.Set, @org.jetbrains.annotations.Nullable p1: java.lang.Object) : boolean = UastEmptyExpression
+                    public static final fun equals-impl0(@org.jetbrains.annotations.NotNull p1: java.util.Set, @org.jetbrains.annotations.NotNull p2: java.util.Set) : boolean = UastEmptyExpression
+                    public fun toString() : java.lang.String = UastEmptyExpression
+                    public fun hashCode() : int = UastEmptyExpression
+                    public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression
+                }
+
+                public final class GraphVariable {
+                    public fun GraphVariable(@org.jetbrains.annotations.NotNull name: java.lang.String, @org.jetbrains.annotations.NotNull graphType: java.lang.String, @org.jetbrains.annotations.Nullable value: T) = UastEmptyExpression
+                }
+
+                """.trimIndent(), file.asSourceString())
+        })
+    }
+
+    fun testCatchClausesKotlin() {
+        // Regression test for
+        // https://issuetracker.google.com/140154274
+        // and https://youtrack.jetbrains.com/issue/KT-35804
+        val source = kotlin(
+            """
+            package test.pkg
+
+            class TryCatchKotlin {
+                @java.lang.SuppressWarnings("Something")
+                fun catches() {
+                    try {
+                        catches()
+                    } catch (@java.lang.SuppressWarnings("Something") e: Throwable) {
+                    }
+                }
+
+                fun throws() {
+                }
+            }
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals(
+                """
+                package test.pkg
+
+                public final class TryCatchKotlin {
+                    @java.lang.SuppressWarnings(value = "Something")
+                    public final fun catches() : void {
+                        try {
+                            catches()
+                        }
+                        catch (e) {
+                        }
+                    }
+                    public final fun throws() : void {
+                    }
+                    public fun TryCatchKotlin() = UastEmptyExpression
+                }
+                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n"))
+        })
+
+        // Java is OK:
+        val javaSource = java(
+            """
+            public class TryCatchJava {
+                @SuppressWarnings("Something")
+                public void test() {
+                    try {
+                        canThrow();
+                    } catch(@SuppressWarnings("Something") Throwable t) {
+                    }
+                }
+                public void canThrow() {
+                }
+            }
+            """
+        ).indented()
+
+        check(javaSource, { file ->
+            assertEquals(
+                // The annotations work in Java, as checked by
+                // ApiDetectorTest#testConditionalAroundExceptionSuppress
+                // However, in pretty printing catch clause parameters are not
+                // visited, as described in https://youtrack.jetbrains.com/issue/KT-35803
+                """
+                public class TryCatchJava {
+                    @java.lang.SuppressWarnings(null = "Something")
+                    public fun test() : void {
+                        try {
+                            canThrow()
+                        }
+                        catch (e) {
+                        }
+                    }
+                    public fun canThrow() : void {
+                    }
+                }
+                """.trimIndent().trim(), file.asSourceString().trim().replace("\n        \n", "\n"))
+        })
+    }
+
+    fun testSamAst() { // See KT-28272
+        val source = kotlin(
+            """
+            //@file:Suppress("RedundantSamConstructor", "MoveLambdaOutsideParentheses", "unused", "UNUSED_VARIABLE")
+
+            package test.pkg
+
+            fun test1() {
+                val thread1 = Thread({ println("hello") })
+            }
+
+            fun test2() {
+                val thread2 = Thread(Runnable { println("hello") })
+            }
+            """
+        ).indented()
+
+        check(source, { file ->
+            assertEquals(
+                """
+                UFile (package = test.pkg) [package test.pkg...]
+                  UClass (name = TestKt) [public final class TestKt {...}]
+                    UMethod (name = test1) [public static final fun test1() : void {...}]
+                      UBlockExpression [{...}] : PsiType:void
+                        UDeclarationsExpression [var thread1: java.lang.Thread = <init>({ ...})]
+                          ULocalVariable (name = thread1) [var thread1: java.lang.Thread = <init>({ ...})]
+                            UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>({ ...})] : PsiType:Thread
+                              UIdentifier (Identifier (Thread)) [UIdentifier (Identifier (Thread))]
+                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Thread) [<init>] : PsiType:Thread
+                              ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
+                                UBlockExpression [{...}]
+                                  UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void
+                                    UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                    ULiteralExpression (value = "hello") ["hello"] : PsiType:String
+                    UMethod (name = test2) [public static final fun test2() : void {...}]
+                      UBlockExpression [{...}] : PsiType:void
+                        UDeclarationsExpression [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
+                          ULocalVariable (name = thread2) [var thread2: java.lang.Thread = <init>(Runnable({ ...}))]
+                            UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(Runnable({ ...}))] : PsiType:Thread
+                              UIdentifier (Identifier (Thread)) [UIdentifier (Identifier (Thread))]
+                              USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Thread) [<init>] : PsiType:Thread
+                              UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [Runnable({ ...})] : PsiType:Runnable
+                                UIdentifier (Identifier (Runnable)) [UIdentifier (Identifier (Runnable))]
+                                USimpleNameReferenceExpression (identifier = Runnable, resolvesTo = Runnable) [Runnable] : PsiType:Runnable
+                                ULambdaExpression [{ ...}] : PsiType:Function0<? extends Unit>
+                                  UBlockExpression [{...}]
+                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("hello")] : PsiType:void
+                                      UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                      USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                      ULiteralExpression (value = "hello") ["hello"] : PsiType:String
+                """.trimIndent(),
+                file.asLogTypes(indent = "  ").trim()
+            )
+
+            try {
+                file.accept(object : AbstractUastVisitor() {
+                    override fun visitCallExpression(node: UCallExpression): Boolean {
+                        val resolved = node.resolve()
+                        if (resolved == null) {
+                            throw IllegalStateException("Could not resolve this call: ${node.asSourceString()}")
+                        }
+                        return super.visitCallExpression(node)
+                    }
+                })
+                fail("Expected unresolved error: see KT-28272")
+            } catch (failure: IllegalStateException) {
+                assertEquals(
+                    "Could not resolve this call: Runnable({ \n    println(\"hello\")\n})",
+                    failure.message
+                )
+            }
         })
     }
 }

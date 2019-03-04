@@ -1317,6 +1317,47 @@ class RestrictToDetectorTest : AbstractCheckTest() {
         ).run().expectClean()
     }
 
+    fun test123545341() {
+        // Regression test for
+        // 123545341: RestrictTo(TESTS) doesn't allow same class to use methods
+        // (Note that that test asks for the following not to be an error, but this is
+        // deliberate and we're testing the enforcement here)
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import android.support.annotation.RestrictTo;
+                import static android.support.annotation.RestrictTo.Scope.TESTS;
+
+                class Outer {
+                    private Inner innerInstance;
+
+                    @RestrictTo(TESTS)
+                    class Inner {
+                        public void method() {
+                        }
+                    }
+
+                    private void outerMethod() {
+                        // This is marked as invalid
+                        innerInstance.method();
+                    }
+                }
+                """
+            ),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expect(
+            """
+            src/test/pkg/Outer.java:18: Error: Inner.method can only be called from tests [RestrictedApi]
+                                    innerInstance.method();
+                                                  ~~~~~~
+            1 errors, 0 warnings
+            """
+        )
+    }
+
     companion object {
         /*
                 Compiled version of these 5 files (and the RestrictTo annotation);

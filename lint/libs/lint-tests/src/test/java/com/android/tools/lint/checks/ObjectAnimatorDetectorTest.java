@@ -19,6 +19,20 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
+
+    private TestFile keepAnnotation =
+            java(
+                    ""
+                            + "package android.support.annotation;\n"
+                            + "import java.lang.annotation.Retention;\n"
+                            + "import java.lang.annotation.Target;\n"
+                            + "import static java.lang.annotation.ElementType.*;\n"
+                            + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
+                            + "@Retention(CLASS)\n"
+                            + "@Target({PACKAGE,TYPE,ANNOTATION_TYPE,CONSTRUCTOR,METHOD,FIELD})\n"
+                            + "public @interface Keep {\n"
+                            + "}");;
+
     @Override
     protected Detector getDetector() {
         return new ObjectAnimatorDetector();
@@ -143,17 +157,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                                         + "    }\n"
                                         + "\n"
                                         + "}"),
-                        java(
-                                ""
-                                        + "package android.support.annotation;\n"
-                                        + "import java.lang.annotation.Retention;\n"
-                                        + "import java.lang.annotation.Target;\n"
-                                        + "import static java.lang.annotation.ElementType.*;\n"
-                                        + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
-                                        + "@Retention(CLASS)\n"
-                                        + "@Target({PACKAGE,TYPE,ANNOTATION_TYPE,CONSTRUCTOR,METHOD,FIELD})\n"
-                                        + "public @interface Keep {\n"
-                                        + "}"),
+                        keepAnnotation,
                         gradle(
                                 ""
                                         + "android {\n"
@@ -501,6 +505,46 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                                         + "        rotationAnim.setDuration(5000);\n"
                                         + "    }\n"
                                         + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void test137695423() {
+        // Regression test for 137695423
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.animation.ObjectAnimator;\n"
+                                        + "import android.support.annotation.Keep;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"unused\")\n"
+                                        + "public class ObjAnimatorTest {\n"
+                                        + "    @SuppressWarnings(\"WeakerAccess\")\n"
+                                        + "    private static class PlayheadPosition {\n"
+                                        + "        public float inPixel() {\n"
+                                        + "            return 0f;\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private PlayheadPosition playheadPosition;\n"
+                                        + "\n"
+                                        + "    public void test(float targetPositionInPixel) {\n"
+                                        + "        Object myObject = new ObjAnimatorTest();\n"
+                                        + "        ObjectAnimator animaator = ObjectAnimator.ofFloat(\n"
+                                        + "                myObject,\n"
+                                        + "                \"playheadPositionInPixelForAnimation\",\n"
+                                        + "                playheadPosition.inPixel(),\n"
+                                        + "                targetPositionInPixel);\n"
+                                        + "\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @Keep\n"
+                                        + "    public void setPlayheadPositionInPixelForAnimation(float arg) {\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        keepAnnotation)
                 .run()
                 .expectClean();
     }
