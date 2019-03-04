@@ -37,7 +37,6 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.sources.LocalSourceProvider;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.legacy.LegacyLocalRepoLoader;
@@ -49,7 +48,6 @@ import com.android.sdklib.repository.meta.SdkCommonFactory;
 import com.android.sdklib.repository.meta.SysImgFactory;
 import com.android.sdklib.repository.sources.RemoteSiteType;
 import com.android.sdklib.repository.targets.AndroidTargetManager;
-import com.android.sdklib.repository.targets.PlatformTarget;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.sdklib.repository.targets.SystemImageManager;
 import com.google.common.annotations.VisibleForTesting;
@@ -821,47 +819,14 @@ public final class AndroidSdkHandler {
     @Nullable
     public BuildToolInfo getBuildToolInfo(
             @NonNull Revision revision, @NonNull ProgressIndicator progress) {
-        String pathId = DetailsTypes.getBuildToolsPath(revision);
+        RepositoryPackages packages = getSdkManager(progress).getPackages();
+        LocalPackage p = packages.getLocalPackages()
+                .get(DetailsTypes.getBuildToolsPath(revision));
 
-        // Tries to load the build tool package directly.
-        LocalPackage localPackage = getSdkManager(progress).getLocalSynchronously(pathId, progress);
-        if (localPackage != null) {
-            return BuildToolInfo.fromLocalPackage(localPackage);
+        if (p == null) {
+            return null;
         }
-
-        // Fall back to the full discovery mechanism.
-        localPackage = getLocalPackage(pathId, progress);
-        if (localPackage != null) {
-            return BuildToolInfo.fromLocalPackage(localPackage);
-        }
-        return null;
-    }
-
-    /**
-     * Creates a the {@link IAndroidTarget} for the specified platform version, if available.
-     *
-     * @param androidVersion The platform hash requested
-     * @param progress {@link ProgressIndicator} for logging.
-     * @return The {@link IAndroidTarget} corresponding to the platform package, or {@code} null if
-     *     that version is not installed.
-     */
-    @Nullable
-    public IAndroidTarget getAndroidTarget(
-            @NonNull AndroidVersion androidVersion, @NonNull ProgressIndicator progress) {
-        String pathId = DetailsTypes.getPlatformPath(androidVersion);
-
-        // Tries to load the build tool package directly.
-        LocalPackage localPackage = getSdkManager(progress).getLocalSynchronously(pathId, progress);
-        if (localPackage != null) {
-            return new PlatformTarget(localPackage, this, mFop, progress);
-        }
-
-        // Fall back to the full discovery mechanism.
-        localPackage = getLocalPackage(pathId, progress);
-        if (localPackage != null) {
-            return new PlatformTarget(localPackage, this, mFop, progress);
-        }
-        return null;
+        return BuildToolInfo.fromLocalPackage(p);
     }
 
     /**

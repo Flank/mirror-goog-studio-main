@@ -116,11 +116,11 @@ public class DefaultSdkLoader implements SdkLoader {
         // the other is used for parsing the repository XMLs and other operations.
         ProgressIndicator progress = new LoggerProgressIndicatorWrapper(logger);
         ProgressIndicator stdOutputProgress = getNewDownloadProgress();
+        IAndroidTarget target = mSdkHandler.getAndroidTargetManager(progress)
+                .getTargetFromHashString(targetHash, progress);
 
-        AndroidVersion version = AndroidTargetHash.getVersionFromHash(targetHash);
-        IAndroidTarget target =
-                version != null ? mSdkHandler.getAndroidTarget(version, progress) : null;
-        BuildToolInfo buildToolInfo = mSdkHandler.getBuildToolInfo(buildToolRevision, progress);
+        BuildToolInfo buildToolInfo =
+                mSdkHandler.getBuildToolInfo(buildToolRevision, progress);
 
         if (sdkLibData.useSdkDownload()) {
             SettingsController settings = sdkLibData.getSettings();
