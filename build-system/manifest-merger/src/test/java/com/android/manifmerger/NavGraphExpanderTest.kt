@@ -224,7 +224,7 @@ class NavGraphExpanderTest {
                 Mockito.eq(MergingReport.Record.Severity.ERROR),
                 Mockito.eq(
                         "Illegal circular reference among navigation files when traversing " +
-                        "navigation file references starting with navigationXmlId: nav2"))
+                        "navigation file references starting with navigationXmlId: nav1"))
     }
 
     @Test

@@ -204,7 +204,7 @@ object NavGraphExpander {
             navigationXmlId: String,
             loadedNavigationMap: Map<String, NavigationXmlDocument>): List<DeepLink> {
         val deepLinkList: MutableList<DeepLink> = mutableListOf()
-        findDeepLinks(navigationXmlId, loadedNavigationMap, deepLinkList, mutableMapOf(), 0)
+        findDeepLinks(navigationXmlId, loadedNavigationMap, deepLinkList, mutableMapOf(), hashSetOf())
         return ImmutableList.copyOf(deepLinkList)
     }
 
@@ -220,11 +220,10 @@ object NavGraphExpander {
             loadedNavigationMap: Map<String, NavigationXmlDocument>,
             deepLinkList: MutableList<DeepLink>,
             deepLinkUriMap: MutableMap<String, DeepLink>,
-            numNavigationFilesVisited: Int) {
-        // This method tracks numNavigationFilesVisited to avoid an infinite loop caused by a
-        // circular reference among the navigation files. There's a circular reference if
-        // numNavigationFilesVisited > loadedNavigationMap.size
-        if (numNavigationFilesVisited > loadedNavigationMap.size) {
+            visitedNavigationFiles: MutableSet<String>) {
+        // This method tracks visitedNavigationFiles to avoid an infinite loop caused by a
+        // circular reference among the navigation files.
+        if (!visitedNavigationFiles.add(navigationXmlId)) {
             throw NavGraphException(
                     "Illegal circular reference among navigation files when traversing navigation" +
                             " file references starting with navigationXmlId: $navigationXmlId")
@@ -248,7 +247,7 @@ object NavGraphExpander {
                     loadedNavigationMap,
                     deepLinkList,
                     deepLinkUriMap,
-                    numNavigationFilesVisited + 1)
+                    visitedNavigationFiles)
         }
     }
 
