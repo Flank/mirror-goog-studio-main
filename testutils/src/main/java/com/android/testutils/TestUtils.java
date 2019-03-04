@@ -171,11 +171,12 @@ public class TestUtils {
             // root they provide us.
             String workspace = System.getenv("TEST_WORKSPACE");
             String workspaceParent = System.getenv("TEST_SRCDIR");
-            File currDir = new File("");
             if (workspace != null && workspaceParent != null) {
-                currDir = new File(workspaceParent, workspace);
-                workspaceRoot = currDir;
+                workspaceRoot = new File(workspaceParent, workspace);
+                return workspaceRoot;
             }
+
+            File currDir = new File("");
             File initialDir = currDir;
 
             // If we're using a non-Bazel build system. At this point, assume our working
