@@ -35,7 +35,6 @@ class DataBindingWithFeaturesTest(private val useAndroidX : Boolean) {
         .addGradleProperties(BooleanOption
             .ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.propertyName + "=true")
         .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=" + useAndroidX)
-        .addGradleProperties(BooleanOption.ENABLE_DATA_BINDING_V2.propertyName + "=true")
         .withDependencyChecker(false)
         .create()
 

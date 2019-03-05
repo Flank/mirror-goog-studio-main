@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -45,47 +44,28 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
 
     @Rule public Adb adb = new Adb();
 
-    private final boolean libEnableV2;
-    private final boolean appEnableV2;
-    private final boolean useAndroidX;
-
-    public DataBindingExternalArtifactDependencyConnectedTest(
-            boolean libEnableV2, boolean appEnableV2, boolean useAndroidX) {
-        this.libEnableV2 = libEnableV2;
-        this.appEnableV2 = appEnableV2;
-        this.useAndroidX = useAndroidX;
-        String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
-        String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
+    public DataBindingExternalArtifactDependencyConnectedTest(boolean useAndroidX) {
         String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         String enableJetifier = BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + useAndroidX;
 
         library =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
-                        .addGradleProperties(libV2)
                         .addGradleProperties(useX)
                         .create();
         app =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
-                        .addGradleProperties(appV2)
                         .addGradleProperties(useX)
                         .addGradleProperties(enableJetifier)
                         .create();
     }
 
-    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}_useAndroidX_{2}")
+    @Parameterized.Parameters(name = "useAndroidX_{0}")
     public static Iterable<Boolean[]> params() {
         ImmutableList.Builder<Boolean[]> builder = ImmutableList.builder();
-        for (boolean libV2 : new boolean[] {true, false}) {
-            for (boolean appV2 : new boolean[] {true, false}) {
-                for (boolean useAndroidX : new boolean[] {true, false}) {
-                    if (libV2 && !appV2) { // not supported
-                        continue;
-                    }
-                    builder.add(new Boolean[] {libV2, appV2, useAndroidX});
-                }
-            }
+        for (boolean useAndroidX : new boolean[] {true, false}) {
+            builder.add(new Boolean[] {useAndroidX});
         }
         return builder.build();
     }
@@ -94,13 +74,6 @@ public class DataBindingExternalArtifactDependencyConnectedTest {
     @Category(DeviceTests.class)
     public void buildLibraryThenBuildApp_connectedCheck() throws IOException, InterruptedException {
         List<String> args = createLibraryArtifact();
-        if (useAndroidX && (!appEnableV2 || !libEnableV2)) {
-            // implementation dependencies are only supported in V2 so update the test to use
-            // api instead of implementation;
-            // non-androidX tests are not updated anymore so they don't test that path
-            TestFileUtils.searchAndReplace(
-                    app.file("./testlibrary2/build.gradle"), "implementation ", "api ");
-        }
         app.executeConnectedCheck(args);
     }
 

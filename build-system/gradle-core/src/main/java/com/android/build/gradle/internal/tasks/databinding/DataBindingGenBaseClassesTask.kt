@@ -75,11 +75,6 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // where to keep the log of the task
     @get:OutputDirectory lateinit var logOutFolder: File
         private set
-    // should we generate sources? true if v2 is enabled. it is still a task input because if
-    // it changes, we need to clear the source gen folder
-    @get:Input
-    var generateSources: Boolean = false
-        private set
     // where to write the new files
     @get:OutputDirectory lateinit var sourceOutFolder: File
         private set
@@ -91,34 +86,12 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
-        if (generateSources) {
-            // TODO figure out why worker execution makes the task flake.
-            // Some files cannot be accessed even though they show up when directory listing is
-            // invoked.
-            // b/69652332
-            val args = buildInputArgs(inputs)
-            CodeGenerator(args, sourceOutFolder).run()
-        } else {
-            FileUtils.cleanOutputDir(sourceOutFolder)
-            FileUtils.cleanOutputDir(logOutFolder)
-            // check if there are any v2 if so, fail the build.
-            val v2Dependencies = mergedArtifactsFromDependencies
-                .get()
-                .asFileTree
-                .files
-                .filter {
-                    it.name.endsWith(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX) &&
-                            !BASE_ADAPTERS_ARTIFACTS.any {
-                                    artifact -> it.name.startsWith(artifact)
-                            } // ignore our libs
-                }
-                .map {
-                    it.name.substringBefore(DataBindingBuilder.BINDING_CLASS_LIST_SUFFIX)
-                }
-            if (v2Dependencies.isNotEmpty()) {
-                throw IncompatibleDependencyError(v2Dependencies)
-            }
-        }
+        // TODO figure out why worker execution makes the task flake.
+        // Some files cannot be accessed even though they show up when directory listing is
+        // invoked.
+        // b/69652332
+        val args = buildInputArgs(inputs)
+        CodeGenerator(args, sourceOutFolder).run()
     }
 
     private fun buildInputArgs(inputs: IncrementalTaskInputs): LayoutInfoInput.Args {
@@ -201,8 +174,6 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
             )
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
-            task.generateSources = variantScope.globalScope.projectOptions.get(
-                    BooleanOption.ENABLE_DATA_BINDING_V2)
             task.sourceOutFolder = sourceOutFolder
             task.classInfoBundleDir = classInfoBundleDir
             task.useAndroidX = variantScope.globalScope.projectOptions.get(

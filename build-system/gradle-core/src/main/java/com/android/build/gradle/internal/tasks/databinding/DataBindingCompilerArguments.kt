@@ -160,14 +160,6 @@ class DataBindingCompilerArguments constructor(
 
             var incremental =
                 globalScope.projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING)
-            val enableV2 = globalScope.projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)
-
-            // Check incremental annotation processing
-            if (incremental && !enableV2) {
-                globalScope.project.logger
-                    .warn("Incremental annotation processing is not supported by data binding V1")
-                incremental = false
-            }
 
             // Get artifactType
             val artifactVariantData = if (variantData.type.isTestComponent) {
@@ -214,7 +206,7 @@ class DataBindingCompilerArguments constructor(
                 printEncodedErrorLogs = printEncodedErrorLogs,
                 isTestVariant = variantData.type.isTestComponent,
                 isEnabledForTests = globalScope.extension.dataBinding.isEnabledForTests,
-                isEnableV2 = enableV2
+                isEnableV2 = true
             )
         }
     }

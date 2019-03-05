@@ -17,15 +17,12 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,45 +40,29 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
 
-    private final boolean incompatible;
-
-    private final boolean useAndroidX;
-
-    public DataBindingExternalArtifactDependencyTest(
-            boolean libEnableV2, boolean appEnableV2, boolean useAndroidX) {
-        this.useAndroidX = useAndroidX;
-
-        String libV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + libEnableV2;
-        String appV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + appEnableV2;
+    public DataBindingExternalArtifactDependencyTest(boolean useAndroidX) {
         String useX = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         String enableJetifier = BooleanOption.ENABLE_JETIFIER.getPropertyName() + "=" + useAndroidX;
 
         library =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("IndependentLibrary", useAndroidX)
-                        .addGradleProperties(libV2)
                         .addGradleProperties(useX)
                         .create();
         app =
                 GradleTestProject.builder()
                         .fromDataBindingIntegrationTest("MultiModuleTestApp", useAndroidX)
-                        .addGradleProperties(appV2)
                         .addGradleProperties(useX)
                         .addGradleProperties(enableJetifier)
                         .create();
 
-        incompatible = libEnableV2 && !appEnableV2;
     }
 
-    @Parameterized.Parameters(name = "use_lib_V2_{0}_use_app_V2_{1}_useAndroidX_{2}")
+    @Parameterized.Parameters(name = "useAndroidX_{0}")
     public static Iterable<Boolean[]> params() {
         ImmutableList.Builder<Boolean[]> builder = ImmutableList.builder();
-        for (boolean libV2 : new boolean[] {true, false}) {
-            for (boolean appV2 : new boolean[] {true, false}) {
-                for (boolean useAndroidX : new boolean[] {true, false}) {
-                    builder.add(new Boolean[] {libV2, appV2, useAndroidX});
-                }
-            }
+        for (boolean useAndroidX : new boolean[] {true, false}) {
+            builder.add(new Boolean[] {useAndroidX});
         }
         return builder.build();
     }
@@ -103,28 +84,8 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Test
     public void runTest() throws Exception {
-        if (incompatible) {
-            incompatibilityDetection();
-        } else {
-            compile();
-        }
-    }
-
-    private void compile() throws Exception {
         List<String> args = createLibraryArtifact();
         app.execute(args, "assembleDebug");
         app.execute(args, "assembleDebugAndroidTest");
-    }
-
-    private void incompatibilityDetection() throws IOException, InterruptedException {
-        List<String> args = createLibraryArtifact();
-        GradleBuildResult exception =
-                app.executor().withArguments(args).expectFailure().run("assembleDebug");
-        String prefix = useAndroidX ? "androidx" : "android";
-        String expectedMessage =
-                new IncompatibleClassChangeError(prefix + ".databinding.test.independentlibrary")
-                        .getMessage();
-        MatcherAssert.assertThat(
-                exception.getFailureMessage(), CoreMatchers.containsString(expectedMessage));
     }
 }

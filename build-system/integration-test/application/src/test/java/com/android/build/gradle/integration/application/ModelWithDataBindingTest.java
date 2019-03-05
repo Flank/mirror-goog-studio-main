@@ -22,7 +22,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import java.io.IOException;
@@ -42,24 +41,14 @@ public class ModelWithDataBindingTest {
 
     @Test
     public void enableV2() throws IOException {
-        AndroidArtifact debugArtifact = createArtifact(true);
-
+        AndroidArtifact debugArtifact = createArtifact();
         assertThat(debugArtifact.getGeneratedSourceFolders()).contains(project.file(DB_CLASS_PATH));
     }
 
-    @Test
-    public void disableV2() throws IOException {
-        AndroidArtifact debugArtifact = createArtifact(false);
-
-        assertThat(debugArtifact.getGeneratedSourceFolders())
-                .doesNotContain(project.file(DB_CLASS_PATH));
-    }
-
     @NonNull
-    private AndroidArtifact createArtifact(boolean enableV2) throws IOException {
+    private AndroidArtifact createArtifact() throws IOException {
         AndroidProject model =
                 project.model()
-                        .with(BooleanOption.ENABLE_DATA_BINDING_V2, enableV2)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
                         .getOnlyModel();

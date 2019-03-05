@@ -72,39 +72,29 @@ public class DataBindingIncrementalTest {
             = "src/main/java/android/databinding/testapp/MainActivity.java";
     private static final String USER_JAVA = "src/main/java/android/databinding/testapp/User.java";
 
-    private final boolean enableV2;
     private final boolean withKotlin;
 
     private final List<String> mainActivityBindingClasses;
 
-    @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}_withKotlin_{2}")
+    @Parameterized.Parameters(name = "useAndroidX_{0}_withKotlin_{1}")
     public static Iterable<Boolean[]> classNames() {
         return ImmutableList.of(
-                new Boolean[] {true, false, false},
-                new Boolean[] {false, false, false},
-                new Boolean[] {true, true, false},
-                new Boolean[] {false, true, false},
-                // Test one scenario with Kotlin is probably enough (instead of four)
-                new Boolean[] {true, true, true});
+                new Boolean[] {false, false},
+                new Boolean[] {true, false},
+                // Test one scenario with Kotlin is probably enough (instead of two)
+                new Boolean[] {true, true});
     }
 
-    public DataBindingIncrementalTest(boolean enableV2, boolean useAndroidX, boolean withKotlin) {
-        this.enableV2 = enableV2;
+    public DataBindingIncrementalTest(boolean useAndroidX, boolean withKotlin) {
         this.withKotlin = withKotlin;
-        if (enableV2) {
-            mainActivityBindingClasses =
-                    ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
-        } else {
-            mainActivityBindingClasses = ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS);
-        }
-        String v2Prop = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+        mainActivityBindingClasses =
+                ImmutableList.of(MAIN_ACTIVITY_BINDING_CLASS, MAIN_ACTIVITY_BINDING_CLASS_IMPL);
         String androidXProp = BooleanOption.USE_ANDROID_X.getPropertyName() + "=" + useAndroidX;
         String incrementalProp =
                 BooleanOption.ENABLE_INCREMENTAL_DATA_BINDING.getPropertyName() + "=true";
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
-                        .addGradleProperties(v2Prop)
                         .addGradleProperties(androidXProp)
                         .addGradleProperties(incrementalProp)
                         .withKotlinGradlePlugin(withKotlin)
@@ -144,7 +134,7 @@ public class DataBindingIncrementalTest {
                 "databinding",
                 "testapp",
                 "databinding",
-                enableV2 ? "ActivityMainBindingImpl.java" : "ActivityMainBinding.java");
+                "ActivityMainBindingImpl.java");
     }
 
     private File getInfoIntermediate(String fileName) {
@@ -340,14 +330,12 @@ public class DataBindingIncrementalTest {
                 .that()
                 .hasField("myTextView");
 
-        if (enableV2) {
-            assertThat(project.getApk(DEBUG))
-                    .hasMainDexFile()
-                    .that()
-                    .containsClass(MAIN_ACTIVITY_BINDING_CLASS_IMPL)
-                    .that()
-                    .doesNotHaveField("myTextView");
-        }
+        assertThat(project.getApk(DEBUG))
+                .hasMainDexFile()
+                .that()
+                .containsClass(MAIN_ACTIVITY_BINDING_CLASS_IMPL)
+                .that()
+                .doesNotHaveField("myTextView");
 
         TestFileUtils.searchAndReplace(
                 project.file(ACTIVITY_MAIN_XML), "android:id=\"@+id/myTextView\"", "");
@@ -381,10 +369,6 @@ public class DataBindingIncrementalTest {
         project.executor().run("assembleDebug");
         assertThat(project.getApk(DEBUG))
                 .doesNotContainClass(MAIN_ACTIVITY_BINDING_CLASS_LAND_IMPL);
-        if (!enableV2) {
-            assertThat(project.getApk(DEBUG))
-                    .doesNotContainClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
-        }
         for (String className : mainActivityBindingClasses) {
             assertThat(project.getApk(DEBUG)).containsClass(className);
         }
@@ -408,14 +392,12 @@ public class DataBindingIncrementalTest {
                 .containsClass(MAIN_ACTIVITY_2_BINDING_CLASS)
                 .that()
                 .hasMethod("setFoo");
-        if (enableV2) {
-            assertThat(project.getApk(DEBUG))
-                    .hasMainDexFile()
-                    .that()
-                    .containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL)
-                    .that()
-                    .hasMethod("setFoo");
-        }
+        assertThat(project.getApk(DEBUG))
+                .hasMainDexFile()
+                .that()
+                .containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL)
+                .that()
+                .hasMethod("setFoo");
     }
 
     @Test
@@ -425,9 +407,7 @@ public class DataBindingIncrementalTest {
         Files.copy(mainActivity, activity2);
         project.execute("assembleDebug");
         assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS);
-        if (enableV2) {
-            assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
-        }
+        assertThat(project.getApk(DEBUG)).containsClass(MAIN_ACTIVITY_2_BINDING_CLASS_IMPL);
 
         assertThat(getInfoIntermediate("activity2-layout.xml")).exists();
         assertThat(activity2.delete()).isTrue();
@@ -453,9 +433,7 @@ public class DataBindingIncrementalTest {
         TestUtils.waitForFileSystemTick();
 
         assertThat(project.getApk(DEBUG)).containsClass(activity3ClassName);
-        if (enableV2) {
-            assertThat(project.getApk(DEBUG)).containsClass(activity3ClassNameImpl);
-        }
+        assertThat(project.getApk(DEBUG)).containsClass(activity3ClassNameImpl);
 
         // Modify the file.
         long activity3LayoutLastModified = activity3.lastModified();
@@ -477,8 +455,6 @@ public class DataBindingIncrementalTest {
         String customName = "Landroid/databinding/testapp/databinding/MyCustomName;";
         String customNameImpl = "Landroid/databinding/testapp/databinding/MyCustomNameImpl;";
         assertThat(project.getApk(DEBUG)).containsClass(customName);
-        if (enableV2) {
-            assertThat(project.getApk(DEBUG)).containsClass(customNameImpl);
-        }
+        assertThat(project.getApk(DEBUG)).containsClass(customNameImpl);
     }
 }

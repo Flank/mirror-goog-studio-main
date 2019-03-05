@@ -78,31 +78,16 @@ public class FeatureTaskManager extends ApplicationTaskManager {
 
         // FIXME: This is currently disabled due to b/62301277.
         if (extension.getDataBinding().isEnabled() && !extension.getBaseFeature()) {
-            String bindingV2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName();
             String experimentalBinding =
                     BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.getPropertyName();
             if (projectOptions.get(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING)) {
-                if (projectOptions.get(BooleanOption.ENABLE_DATA_BINDING_V2)) {
-                    globalScope
-                            .getAndroidBuilder()
-                            .getIssueReporter()
-                            .reportWarning(
-                                    Type.GENERIC,
-                                    "Data binding support for non-base features is experimental "
-                                            + "and is not supported.");
-                } else {
-
-                    globalScope
-                            .getAndroidBuilder()
-                            .getIssueReporter()
-                            .reportError(
-                                    Type.GENERIC,
-                                    new EvalIssueException(
-                                            "To use data binding in non-base features, you must"
-                                                    + " enable data binding v2 by adding "
-                                                    + bindingV2
-                                                    + "=true to your gradle.properties file."));
-                }
+                globalScope
+                        .getAndroidBuilder()
+                        .getIssueReporter()
+                        .reportWarning(
+                                Type.GENERIC,
+                                "Data binding support for non-base features is experimental "
+                                        + "and is not supported.");
 
             } else {
                 globalScope
@@ -116,8 +101,6 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                                                 + "See https://issuetracker.google.com/63814741.\n"
                                                 + "To enable data binding with non-base features, set the "
                                                 + experimentalBinding
-                                                + " and "
-                                                + bindingV2
                                                 + " properties "
                                                 + "to true."));
             }

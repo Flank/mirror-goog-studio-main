@@ -89,7 +89,8 @@ enum class RemovedOptions(
     SERIAL_AAPT2(
         "android.injected.aapt2.serial",
         "Invoking AAPT2 serially is no longer supported."
-    )
+    ),
+    ENABLE_DATA_BINDING_V2("android.databinding.enableV2", "Databinding v1 is removed."),
     ;
 
     override val status: Option.Status

@@ -29,18 +29,13 @@ import org.junit.runners.Parameterized
 
 /** Assemble tests for kotlin. */
 @RunWith(FilterableParameterized::class)
-class DataBindingKotlinAppTest(private val useV2: Boolean, useAndroidX: Boolean) {
+class DataBindingKotlinAppTest(useAndroidX: Boolean) {
     @Rule
     @JvmField
     val project =
         GradleTestProject.builder()
             .fromTestProject("databindingAndKotlin")
             .withDependencyChecker(false) // breaks w/ kapt
-            .addGradleProperties(
-                BooleanOption.ENABLE_DATA_BINDING_V2.propertyName
-                        + "="
-                        + useV2
-            )
             .addGradleProperties(
                 BooleanOption.USE_ANDROID_X.propertyName
                         + "="
@@ -49,13 +44,11 @@ class DataBindingKotlinAppTest(private val useV2: Boolean, useAndroidX: Boolean)
             .create()
 
     companion object {
-        @Parameterized.Parameters(name = "useV2_{0}_useAndroidX_{1}")
+        @Parameterized.Parameters(name = "useAndroidX_{0}")
         @JvmStatic
         fun params() = listOf(
-            arrayOf(true, false),
-            arrayOf(true, true),
-            arrayOf(false, false),
-            arrayOf(false, true)
+            arrayOf(true),
+            arrayOf(false)
         )
     }
 
@@ -67,15 +60,13 @@ class DataBindingKotlinAppTest(private val useV2: Boolean, useAndroidX: Boolean)
         val apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG)
         assertThat(apk).containsClass(appBindingClass)
         assertThat(apk).containsClass(libBindingClass)
-        if (useV2) {
-            // implementations should be in as well.
-            assertThat(apk).containsClass(
-                appBindingClass.replace(";", "Impl;")
-            )
-            assertThat(apk).containsClass(
-                libBindingClass.replace(";", "Impl;")
-            )
-        }
+        // implementations should be in as well.
+        assertThat(apk).containsClass(
+            appBindingClass.replace(";", "Impl;")
+        )
+        assertThat(apk).containsClass(
+            libBindingClass.replace(";", "Impl;")
+        )
     }
 
     @Test
