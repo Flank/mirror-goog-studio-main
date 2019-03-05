@@ -22,7 +22,6 @@ import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.builder.sdk.SdkInfo
 import com.android.builder.sdk.TargetInfo
 import com.android.repository.Revision
-import com.android.sdklib.AndroidVersion
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.google.common.base.Suppliers
@@ -65,9 +64,6 @@ open class SdkComponents(
 
     private fun runFallbackSdkHandler(): Pair<SdkInfo, TargetInfo>? {
         fallbackSdkHandler.setSdkLibData(options.sdkLibDataFactory.getSdkLibData())
-        if (options.injectSdkMavenRepos) {
-            fallbackSdkHandler.addLocalRepositories(project)
-        }
 
         val result = fallbackSdkHandler.initTarget(
             checkNotNull(options.platformTargetHashSupplier.get()) {"Extension not initialized yet, couldn't access compileSdkVersion."},
@@ -192,5 +188,4 @@ class SdkComponentsOptions(
     val platformTargetHashSupplier: Supplier<String>,
     val buildToolRevisionSupplier: Supplier<Revision>,
     val sdkLibDataFactory: SdkLibDataFactory,
-    val injectSdkMavenRepos: Boolean,
     val useAndroidX: Boolean)

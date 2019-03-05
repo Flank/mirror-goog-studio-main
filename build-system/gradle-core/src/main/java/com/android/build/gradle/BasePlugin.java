@@ -461,7 +461,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         () -> getExtension().getCompileSdkVersion(),
                         () -> getExtension().getBuildToolsRevision(),
                         factory,
-                        projectOptions.get(BooleanOption.INJECT_SDK_MAVEN_REPOS),
                         projectOptions.get(BooleanOption.USE_ANDROID_X));
 
         return new SdkComponents(

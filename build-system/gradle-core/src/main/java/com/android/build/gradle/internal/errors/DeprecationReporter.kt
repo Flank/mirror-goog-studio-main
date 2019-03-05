@@ -43,8 +43,6 @@ interface DeprecationReporter {
         DESUGAR_TOOL("in AGP version 3.4"),
         // Deprecation of Task Access in the variant API
         TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
-        // Deprecation of the SDK maven repositories
-        SDK_MAVEN_REPOS("in AGP version 3.5")
     }
 
     /**
