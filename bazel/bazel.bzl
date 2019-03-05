@@ -477,6 +477,7 @@ def iml_module(
         test_timeout = "moderate",
         test_class = "com.android.testutils.JarTestSuite",
         test_shard_count = None,
+        test_coverage = False,
         tags = None,
         test_tags = None,
         back_target = 0,
@@ -571,6 +572,7 @@ def iml_module(
             test_class = test_class,
             visibility = visibility,
             main_class = test_main_class,
+            coverage = test_coverage,
         )
 
 def split_srcs(src_dirs, res_dirs, exclude):

@@ -175,7 +175,7 @@ def kotlin_library(
             tags = ["no_windows"],
         )
 
-def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibility = None, **kwargs):
+def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], coverage = False, visibility = None, **kwargs):
     kotlin_library(
         name = name + ".testlib",
         srcs = srcs,
@@ -191,6 +191,7 @@ def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], visibili
         runtime_deps = [
             ":" + name + ".testlib",
         ] + runtime_deps,
+        coverage = coverage,
         **kwargs
     )
 
