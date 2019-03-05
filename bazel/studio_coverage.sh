@@ -20,13 +20,10 @@ fi
   test \
   --config=remote \
   ${auth_options} \
-  --test_tag_filters=-no_linux,-no_test_linux \
+  --test_tag_filters=-no_linux,-no_test_linux,coverage-test \
   --define agent_coverage=true \
   -- \
-  //tools/... \
-  -//tools/adt/idea/android-uitests/... \
-  -//tools/adt/idea/uitest-framework:intellij.android.guiTestFramework_tests \
-  -//tools/base/perf-logger:studio.perf-logger_tests
+  //tools/...
 
 # We want to still attach the upsalite link if tests fail so we can't abort now
 readonly bazel_test_status=$?
