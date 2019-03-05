@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
+    <@kt.addKotlinToBaseProject />
+
     <dependency mavenUrl="com.android.support:leanback-v17:${buildApi}.+" />
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 

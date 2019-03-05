@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!-- TODO: check include Cpp support; add driver module template -->
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
+    <@kt.addKotlinToBaseProject />
+
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
     <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
 
