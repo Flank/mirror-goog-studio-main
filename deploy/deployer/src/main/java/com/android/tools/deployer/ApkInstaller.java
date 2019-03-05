@@ -75,7 +75,7 @@ public class ApkInstaller {
         try {
             deltaInstallResult = deltaInstall(apks, options, allowReinstall, installMode);
         } catch (DeployerException e) {
-            logger.error(e, "Unable to delta install");
+            logger.info("Unable to delta install: '%s'", e.getDetails());
         }
 
         AdbClient.InstallResult result = OK;
