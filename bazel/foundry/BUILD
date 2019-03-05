@@ -1,5 +1,3 @@
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
-
 package(default_visibility = ["//visibility:public"])
 
 platform(
@@ -33,7 +31,7 @@ platform(
 
 # This test is run explicitly on the foundry bot as will not pass on
 # a standard linux machine, because validates a very custom /dev/random condition.
-coverage_java_test(
+java_test(
     name = "test",
     srcs = ["FoundryTest.java"],
     data = [
@@ -53,7 +51,7 @@ coverage_java_test(
 
 # CPU, disk and memory benchmark baseline tests to measure go/adt-perfgate
 # foundry remote build execution pool.
-coverage_java_test(
+java_test(
     name = "perfgate-baseline-tests",
     srcs = ["FoundryPerfgateMetrics.java"],
     # The memory test stresses memory usage, thus the jvm memory arg.
