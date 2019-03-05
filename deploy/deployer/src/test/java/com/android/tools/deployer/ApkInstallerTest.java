@@ -65,16 +65,21 @@ public class ApkInstallerTest extends FakeAdbTestBase {
 
         device.getShell().addCommand(new SkipInstallCommand());
 
-        apkInstaller.install(
-                "com.android.test.uibench",
-                Lists.newArrayList(
-                        TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk").getAbsolutePath()),
-                InstallOptions.builder().build(),
-                Deployer.InstallMode.DELTA);
+        boolean installed =
+                apkInstaller.install(
+                        "com.android.test.uibench",
+                        Lists.newArrayList(
+                                TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk")
+                                        .getAbsolutePath()),
+                        InstallOptions.builder().build(),
+                        Deployer.InstallMode.DELTA,
+                        Lists.newArrayList());
+
 
         List<String> history = device.getShell().getHistory();
         String lastCmd = history.get(history.size() - 1);
         if (device.apiLevelAtLeast(24)) {
+            Assert.assertFalse(installed);
             Assert.assertEquals("am force-stop com.android.test.uibench", lastCmd);
         } else if (device.apiLevelAtLeast(20)) {
             Assert.assertTrue(lastCmd.startsWith("pm install-commit"));

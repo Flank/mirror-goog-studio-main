@@ -25,10 +25,10 @@ import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Deployer {
 
@@ -74,17 +74,28 @@ public class Deployer {
     }
 
     /**
+     * Information related to a swap or install.
+     *
+     * <p>Note that there is indication to success or failure of the operation. Failure is indicated
+     * by {@link DeployerException} thus this object is created only on successful deployments.
+     */
+    public class Result {
+        public Collection<DeployMetric> metrics = Lists.newArrayList();
+        public boolean skippedInstall = false;
+    }
+
+    /**
      * Installs the given apks. This method will register the APKs in the database for subsequent
      * swaps
      */
-    public List<DeployMetric> install(
+    public Result install(
             String packageName, List<String> apks, InstallOptions options, InstallMode installMode)
             throws DeployerException {
+        Result result = new Result();
         try (Trace ignored = Trace.begin("install")) {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
-            List<DeployMetric> metrics =
-                    apkInstaller.install(packageName, apks, options, installMode);
-
+            result.skippedInstall =
+                    !apkInstaller.install(packageName, apks, options, installMode, result.metrics);
 
             // Inputs
             Task<List<String>> paths = runner.create(apks);
@@ -98,24 +109,24 @@ public class Deployer {
             runner.create(Tasks.CACHE, splitter::cache, entries);
 
             runner.runAsync();
-            return metrics;
+            return result;
         }
     }
 
-    public Collection<DeployMetric> codeSwap(
-            List<String> apks, Map<Integer, ClassRedefiner> redefiners) throws DeployerException {
+    public Result codeSwap(List<String> apks, Map<Integer, ClassRedefiner> redefiners)
+            throws DeployerException {
         try (Trace ignored = Trace.begin("codeSwap")) {
             return swap(apks, false /* Restart Activity */, redefiners);
         }
     }
 
-    public Collection<DeployMetric> fullSwap(List<String> apks) throws DeployerException {
+    public Result fullSwap(List<String> apks) throws DeployerException {
         try (Trace ignored = Trace.begin("fullSwap")) {
             return swap(apks, true /* Restart Activity */, ImmutableMap.of());
         }
     }
 
-    private Collection<DeployMetric> swap(
+    private Result swap(
             List<String> argPaths, boolean argRestart, Map<Integer, ClassRedefiner> redefiners)
             throws DeployerException {
 
@@ -171,6 +182,9 @@ public class Deployer {
         // Wait only for swap to finish
         runner.runAsync();
 
-        return tasks.stream().map(task -> task.getMetric()).collect(Collectors.toList());
+        Result result = new Result();
+        tasks.stream().map(task -> task.getMetric()).forEach(metric -> result.metrics.add(metric));
+        result.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
+        return result;
     }
 }

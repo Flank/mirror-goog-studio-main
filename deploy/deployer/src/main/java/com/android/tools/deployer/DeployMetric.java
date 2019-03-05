@@ -15,7 +15,7 @@
  */
 package com.android.tools.deployer;
 
-import java.util.List;
+import java.util.Collection;
 
 public class DeployMetric {
 
@@ -41,7 +41,7 @@ public class DeployMetric {
         this.startMs = startMs;
     }
 
-    public void finish(String status, List<DeployMetric> metrics) {
+    public void finish(String status, Collection<DeployMetric> metrics) {
         this.finish(status);
         metrics.add(this);
     }

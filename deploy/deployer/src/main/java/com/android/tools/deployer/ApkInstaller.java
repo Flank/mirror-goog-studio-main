@@ -24,7 +24,7 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.utils.ILogger;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ApkInstaller {
@@ -59,15 +59,16 @@ public class ApkInstaller {
         this.logger = logger;
     }
 
-    public List<DeployMetric> install(
+    /** @return true if if installation happened. False if installation was skipped */
+    public boolean install(
             String packageName,
             List<String> apks,
             InstallOptions options,
-            Deployer.InstallMode installMode)
+            Deployer.InstallMode installMode,
+            Collection<DeployMetric> metrics)
             throws DeployerException {
         DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
         deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
-        List<DeployMetric> metrics = new ArrayList<>();
 
         // First attempt to delta install.
         boolean allowReinstall = true;
@@ -158,12 +159,13 @@ public class ApkInstaller {
                 // Fall through
         }
 
+        boolean installed = true;
         if (result == SKIPPED_INSTALL) {
-            // TODO: Show a message saying nothing is installed.
+            installed = false;
         } else if (result != OK) {
             throw DeployerException.installFailed(result.name(), message);
         }
-        return metrics;
+        return installed;
     }
 
     DeltaInstallResult deltaInstall(
