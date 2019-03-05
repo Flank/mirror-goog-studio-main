@@ -6,6 +6,7 @@ iml_module(
     name = "studio.android.sdktools.binary-resources",
     srcs = ["binary-resources/src/main/java"],
     iml_files = ["binary-resources/android.sdktools.binary-resources.iml"],
+    test_coverage = True,
     test_resources = ["binary-resources/src/test/resources"],
     test_srcs = ["binary-resources/src/test/java"],
     visibility = ["//visibility:public"],

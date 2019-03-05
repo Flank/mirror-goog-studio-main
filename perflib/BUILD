@@ -5,6 +5,7 @@ iml_module(
     name = "studio.android.sdktools.perflib",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.perflib.iml"],
+    test_coverage = True,
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

@@ -222,6 +222,7 @@ maven_pom(
 kotlin_test(
     name = "tests",
     srcs = ["libs/lint-gradle/src/test/java"],
+    coverage = True,
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -285,6 +286,7 @@ replace_manifest(
 kotlin_test(
     name = "studio-checks-tests",
     srcs = ["studio-checks/src/test/java"],
+    coverage = True,
     jvm_flags = [
         "-Dtest.suite.jar=studio-checks-tests.jar",
     ],

@@ -9,6 +9,7 @@ iml_module(
         "//tools/base/deploy/installer:android-installer",
     ],
     iml_files = ["android.sdktools.deployer.iml"],
+    test_coverage = True,
     test_data = glob(["src/test/resource/**"]),
     test_resources = ["src/test/resource"],
     test_srcs = ["src/test/java"],

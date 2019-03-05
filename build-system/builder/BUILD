@@ -76,6 +76,7 @@ maven_pom(
 kotlin_test(
     name = "tests",
     srcs = ["src/test/java"],
+    coverage = True,
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",

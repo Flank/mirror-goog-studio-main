@@ -108,6 +108,7 @@ kotlin_test(
     size = "large",
     timeout = "long",
     srcs = ["src/test/java"],
+    coverage = True,
     data = [
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/latest",

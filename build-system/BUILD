@@ -14,6 +14,7 @@ iml_module(
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/android.sdktools.manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
+    test_coverage = True,
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/sdklib:studio.android.sdktools.sdklib"],
@@ -61,6 +62,7 @@ kotlin_test(
     name = "tools.manifest-merger_tests",
     # TODO: Why are the xml files not under resources?
     srcs = ["manifest-merger/src/test/java"],
+    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tools.manifest-merger_tests.jar"],
     resources = glob(
         include = ["manifest-merger/src/test/java/**"],

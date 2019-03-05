@@ -7,6 +7,7 @@ iml_module(
     name = "studio.android.sdktools.layoutlib-api",
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.layoutlib-api.iml"],
+    test_coverage = True,
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

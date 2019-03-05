@@ -51,6 +51,7 @@ iml_module(
     name = "studio.android.sdktools.aspects-agent",
     srcs = ["src/main"],
     iml_files = ["android.sdktools.aspects_agent.iml"],
+    test_coverage = True,
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],
     deps = [

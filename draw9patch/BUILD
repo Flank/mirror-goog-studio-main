@@ -9,6 +9,7 @@ iml_module(
         "src/main/resources",
     ],
     iml_files = ["android.sdktools.draw9patch.iml"],
+    test_coverage = True,
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

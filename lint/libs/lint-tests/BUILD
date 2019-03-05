@@ -37,6 +37,7 @@ kotlin_test(
     name = "tests",
     timeout = "long",
     srcs = ["src/test/java"],
+    coverage = True,
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",

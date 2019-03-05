@@ -57,6 +57,7 @@ maven_pom(
 kotlin_test(
     name = "tools.tests",
     srcs = ["src/test/java"],
+    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
@@ -72,6 +73,7 @@ kotlin_test(
 iml_module(
     name = "studio.android.sdktools.common.tests",
     iml_files = ["android.sdktools.common.tests.iml"],
+    test_coverage = True,
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order

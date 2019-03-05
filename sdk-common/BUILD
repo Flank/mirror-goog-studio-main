@@ -9,6 +9,7 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.sdk-common.iml"],
     resources = ["src/main/resources"],
+    test_coverage = True,
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -109,6 +110,7 @@ maven_pom(
 kotlin_test(
     name = "tools.tests",
     srcs = ["src/test/java"],
+    coverage = True,
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),

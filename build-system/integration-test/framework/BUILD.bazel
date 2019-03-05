@@ -48,6 +48,7 @@ kotlin_library(
 kotlin_test(
     name = "framework_tests",
     srcs = ["src/test/java"],
+    coverage = True,
     jvm_flags = [
         "-Dtest.suite.jar=/framework_tests.jar",
     ],

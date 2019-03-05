@@ -55,6 +55,7 @@ maven_pom(
 kotlin_test(
     name = "builder_tests",
     srcs = ["src/test/java"],
+    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=builder_tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

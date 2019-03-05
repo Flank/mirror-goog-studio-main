@@ -8,6 +8,7 @@ iml_module(
     srcs = ["src/main/java"],
     iml_files = ["android.sdktools.ddmlib.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
+    test_coverage = True,
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

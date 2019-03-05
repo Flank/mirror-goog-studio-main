@@ -7,6 +7,7 @@ iml_module(
     name = "studio.devicelib",
     srcs = ["src/main/java"],
     iml_files = ["devicelib.iml"],
+    test_coverage = True,
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -49,6 +50,7 @@ maven_pom(
 kotlin_test(
     name = "tools.tests",
     srcs = ["src/test/java"],
+    coverage = True,
     data = ["//prebuilts/studio/sdk:platform-tools"],
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
     resources = glob(["src/test/resources/**"]),
