@@ -34,10 +34,6 @@ android {
 
     testOptions {
         unitTests.includeAndroidResources true
-
-        unitTests.all {
-            systemProperty 'robolectric.offline', 'true'
-        }
     }
 }
 
