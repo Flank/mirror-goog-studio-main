@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.Named
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.SourceDirectorySet
@@ -80,6 +81,10 @@ class FakeObjectFactory : ObjectFactory {
 
     override fun <T : Any?> setProperty(p0: Class<T>?): SetProperty<T> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun fileCollection(): ConfigurableFileCollection {
+        TODO("not implemented")
     }
 
     private fun getParamTypes(params: Array<out Any?>): Array<Class<*>?> {
