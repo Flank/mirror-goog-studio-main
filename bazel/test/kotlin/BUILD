@@ -110,7 +110,6 @@ maven_repo(
 kotlin_test(
     name = "only_java_tests",
     srcs = ["java0_test"],
-    coverage = True,
     test_class = "pkg.J0Test",
     deps = [
         ":test_only_java",
@@ -121,7 +120,6 @@ kotlin_test(
 kotlin_test(
     name = "only_kotlin_tests",
     srcs = ["kotlin0_test"],
-    coverage = True,
     test_class = "pkg.K0Test",
     deps = [
         ":test_only_kotlin",
@@ -132,7 +130,6 @@ kotlin_test(
 kotlin_test(
     name = "java_kotlin_tests",
     srcs = ["java1_kotlin1_test"],
-    coverage = True,
     test_class = "pkg.K1Test",
     deps = [
         ":test_kotlin_and_java",
