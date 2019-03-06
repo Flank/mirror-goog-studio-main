@@ -34,6 +34,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.testdata.Animal;
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
@@ -60,7 +61,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -335,10 +335,10 @@ public class DexArchiveBuilderTransformTest {
                 getTransform(userCache, 20, false);
         minAndDebuggableChangedTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
-
+        
         DexArchiveBuilderTransform useDifferentDexerTransform =
                 new DexArchiveBuilderTransformBuilder()
-                        .setAndroidJarClasspath(() -> Collections.emptyList())
+                        .setAndroidJarClasspath(new FakeFileCollection())
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
                         .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
@@ -696,7 +696,7 @@ public class DexArchiveBuilderTransformTest {
                         .build();
         DexArchiveBuilderTransform transform =
                 new DexArchiveBuilderTransformBuilder()
-                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setAndroidJarClasspath(new FakeFileCollection())
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
                         .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
@@ -756,7 +756,7 @@ public class DexArchiveBuilderTransformTest {
 
         DexArchiveBuilderTransform transform =
                 new DexArchiveBuilderTransformBuilder()
-                        .setAndroidJarClasspath(Collections::emptyList)
+                        .setAndroidJarClasspath(new FakeFileCollection())
                         .setDexOptions(new DefaultDexOptions())
                         .setMessageReceiver(new NoOpMessageReceiver())
                         .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
@@ -795,7 +795,7 @@ public class DexArchiveBuilderTransformTest {
             @NonNull VariantScope.Java8LangSupport java8Support) {
 
         return new DexArchiveBuilderTransformBuilder()
-                .setAndroidJarClasspath(Collections::emptyList)
+                .setAndroidJarClasspath(new FakeFileCollection())
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
                 .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)

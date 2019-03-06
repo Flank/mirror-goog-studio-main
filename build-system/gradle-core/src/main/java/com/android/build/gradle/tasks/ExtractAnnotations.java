@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.TypedefRemover;
 import com.android.tools.lint.gradle.api.ExtractAnnotationRequest;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
@@ -50,8 +49,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -96,7 +93,7 @@ public class ExtractAnnotations extends AndroidVariantTask {
             AndroidXDependency.fromPreAndroidXDependency(
                     "com.android.support", "support-annotations");
 
-    private Supplier<List<String>> bootClasspath;
+    private FileCollection bootClasspath;
 
     private File typedefFile;
 
@@ -141,11 +138,12 @@ public class ExtractAnnotations extends AndroidVariantTask {
 
     /** Boot classpath: typically android.jar */
     @CompileClasspath
-    public List<String> getBootClasspath() {
-        return bootClasspath.get();
+    @PathSensitive(PathSensitivity.NONE)
+    public FileCollection getBootClasspath() {
+        return bootClasspath;
     }
 
-    public void setBootClasspath(Supplier<List<String>> bootClasspath) {
+    public void setBootClasspath(FileCollection bootClasspath) {
         this.bootClasspath = bootClasspath;
     }
 
@@ -221,9 +219,7 @@ public class ExtractAnnotations extends AndroidVariantTask {
                 roots.add(jar);
             }
         }
-        for (String path : getBootClasspath()) {
-            roots.add(new File(path));
-        }
+        roots.addAll(getBootClasspath().getFiles());
 
         ExtractAnnotationRequest request =
                 new ExtractAnnotationRequest(
@@ -372,7 +368,6 @@ public class ExtractAnnotations extends AndroidVariantTask {
             VariantScope variantScope = getVariantScope();
 
             final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
-            final AndroidBuilder androidBuilder = variantScope.getGlobalScope().getAndroidBuilder();
 
             task.setDescription(
                     "Extracts Android annotations for the "
@@ -401,14 +396,7 @@ public class ExtractAnnotations extends AndroidVariantTask {
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)
-            task.setBootClasspath(
-                    () ->
-                            globalScope
-                                    .getFilteredBootClasspathProvider()
-                                    .get()
-                                    .stream()
-                                    .map(c -> c.getAbsolutePath())
-                                    .collect(Collectors.toList()));
+            task.setBootClasspath(globalScope.getFilteredBootClasspath());
 
             task.lintClassPath =
                     globalScope

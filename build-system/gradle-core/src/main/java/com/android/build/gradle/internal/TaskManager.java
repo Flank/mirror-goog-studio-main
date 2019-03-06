@@ -2260,8 +2260,7 @@ public abstract class TaskManager {
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
-                        .setAndroidJarClasspath(
-                                () -> globalScope.getFilteredBootClasspathProvider().get())
+                        .setAndroidJarClasspath(globalScope.getFilteredBootClasspath())
                         .setDexOptions(dexOptions)
                         .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
                         .setErrorFormatMode(

@@ -56,10 +56,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 public class DexArchiveBuilderTransformDesugaringTest {
 
@@ -503,12 +505,14 @@ public class DexArchiveBuilderTransformDesugaringTest {
             int minSdkVersion,
             boolean isDebuggable,
             boolean includeAndroidJar) {
-        List<File> androidJasClasspath =
-                includeAndroidJar
-                        ? ImmutableList.of(TestUtils.getPlatformFile("android.jar"))
-                        : ImmutableList.of();
+        FileCollection classpath = Mockito.mock(FileCollection.class);
+        Mockito.when(classpath.getFiles())
+                .thenReturn(
+                        includeAndroidJar
+                                ? ImmutableSet.of(TestUtils.getPlatformFile("android.jar"))
+                                : ImmutableSet.of());
         return new DexArchiveBuilderTransformBuilder()
-                .setAndroidJarClasspath(() -> androidJasClasspath)
+                .setAndroidJarClasspath(classpath)
                 .setDexOptions(new DefaultDexOptions())
                 .setMessageReceiver(new NoOpMessageReceiver())
                 .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)

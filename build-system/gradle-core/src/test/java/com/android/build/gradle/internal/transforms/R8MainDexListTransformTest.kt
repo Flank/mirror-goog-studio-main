@@ -152,8 +152,9 @@ class R8MainDexListTransformTest {
         minSdkVersion: Int = 21,
         dexingType: DexingType = DexingType.LEGACY_MULTIDEX
     ): R8Transform {
+        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
         return R8Transform(
-            bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
+            bootClasspath = classpath,
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
             java8Support = VariantScope.Java8LangSupport.UNUSED,

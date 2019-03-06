@@ -19,19 +19,20 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
+import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.builder.dexing.ERROR_DUPLICATE
 import com.android.builder.dexing.ERROR_DUPLICATE_HELP_PAGE
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.google.common.collect.Iterators
 import com.google.common.truth.Truth
+import org.gradle.api.file.FileCollection
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Supplier
 import kotlin.test.assertFailsWith
 
 /**
@@ -61,7 +62,7 @@ class D8MainDexListTransformTest {
         val transform =
                 D8MainDexListTransform(
                         manifestProguardRules = proguardRules.stubBuildableArtifact(),
-                        bootClasspath = Supplier { getBootClasspath() },
+                        bootClasspath = getBootClasspath(),
                         messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
@@ -88,7 +89,7 @@ class D8MainDexListTransformTest {
                 D8MainDexListTransform(
                         manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
                         userProguardRules = userProguardRules,
-                        bootClasspath = Supplier { getBootClasspath() },
+                        bootClasspath = getBootClasspath(),
                         messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
@@ -118,7 +119,7 @@ class D8MainDexListTransformTest {
                 D8MainDexListTransform(
                         manifestProguardRules = proguardRules.stubBuildableArtifact(),
                         userProguardRules = userProguardRules,
-                        bootClasspath = Supplier { getBootClasspath() },
+                        bootClasspath = getBootClasspath(),
                         messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
@@ -144,7 +145,7 @@ class D8MainDexListTransformTest {
                 D8MainDexListTransform(
                         manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
                         userClasses = userClasses,
-                        bootClasspath = Supplier { getBootClasspath() },
+                        bootClasspath = getBootClasspath(),
                         messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
@@ -166,7 +167,7 @@ class D8MainDexListTransformTest {
         val transform =
                 D8MainDexListTransform(
                         manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
-                        bootClasspath = Supplier { getBootClasspath() },
+                        bootClasspath = getBootClasspath(),
                         messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
         transform.transform(invocation)
@@ -201,7 +202,7 @@ class D8MainDexListTransformTest {
         val transform =
             D8MainDexListTransform(
                 manifestProguardRules = tmpDir.newFile().toPath().stubBuildableArtifact(),
-                bootClasspath = Supplier { getBootClasspath() },
+                bootClasspath = getBootClasspath(),
                 messageReceiver = NoOpMessageReceiver())
         transform.setMainDexListOutputFile(output.toFile())
 
@@ -220,6 +221,7 @@ class D8MainDexListTransformTest {
         }
     }
 
-    private fun getBootClasspath():
-            List<Path> = listOf(TestUtils.getPlatformFile("android.jar").toPath())
+    private fun getBootClasspath(): FileCollection {
+        return FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
+    }
 }

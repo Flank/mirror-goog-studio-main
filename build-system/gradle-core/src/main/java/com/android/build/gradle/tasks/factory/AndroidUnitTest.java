@@ -24,7 +24,9 @@ import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASS
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.BootClasspathBuilder;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.VariantAwareTask;
@@ -34,6 +36,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.builder.core.VariantType;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -204,18 +207,39 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 5. Any additional or requested optional libraries
-            collection.from(
-                    scope.getGlobalScope()
-                            .getProject()
-                            .files(
-                                    scope.getGlobalScope()
-                                            .getAdditionalAndRequestedOptionalLibrariesProvider()));
+            collection.from(getAdditionalAndRequestedOptionalLibraries(scope.getGlobalScope()));
 
             // 6. Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
             collection.from(scope.getGlobalScope().getMockableJarArtifact());
 
             return collection;
+        }
+
+        /**
+         * Returns the list of additional and requested optional library jar files
+         *
+         * @return the list of files from the additional and optional libraries which appear in the
+         *     filtered boot classpath
+         */
+        @NonNull
+        private ConfigurableFileCollection getAdditionalAndRequestedOptionalLibraries(
+                GlobalScope globalScope) {
+            return globalScope
+                    .getProject()
+                    .files(
+                            BootClasspathBuilder.INSTANCE
+                                    .computeAdditionalAndRequestedOptionalLibraries(
+                                            globalScope
+                                                    .getSdkComponents()
+                                                    .getTargetProvider()
+                                                    .get(),
+                                            false,
+                                            ImmutableList.copyOf(
+                                                    globalScope
+                                                            .getExtension()
+                                                            .getLibraryRequests()),
+                                            globalScope.getDslScope().getIssueReporter()));
         }
     }
 }

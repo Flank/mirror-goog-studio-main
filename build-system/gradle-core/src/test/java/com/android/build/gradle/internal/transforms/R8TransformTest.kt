@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOU
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -605,8 +604,10 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             else
                 VariantTypeImpl.LIBRARY
 
+
+        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
         return R8Transform(
-            bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
+            bootClasspath = classpath,
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
             java8Support = java8Support,

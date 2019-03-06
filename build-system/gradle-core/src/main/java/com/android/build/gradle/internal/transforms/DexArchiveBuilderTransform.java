@@ -92,11 +92,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.IsolationMode;
@@ -180,7 +180,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private static final int DEFAULT_NUM_BUCKETS =
             Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
 
-    @NonNull private final Supplier<List<File>> androidJarClasspath;
+    @NonNull private final FileCollection androidJarClasspath;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final SyncOptions.ErrorFormatMode errorFormatMode;
@@ -200,7 +200,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private boolean enableDexingArtifactTransform;
 
     DexArchiveBuilderTransform(
-            @NonNull Supplier<List<File>> androidJarClasspath,
+            @NonNull FileCollection androidJarClasspath,
             @NonNull DexOptions dexOptions,
             @NonNull MessageReceiver messageReceiver,
             @NonNull SyncOptions.ErrorFormatMode errorFormatMode,
@@ -934,14 +934,15 @@ public class DexArchiveBuilderTransform extends Transform {
 
     @NonNull
     private static List<String> getBootClasspath(
-            @NonNull Supplier<List<File>> androidJarClasspath,
+            @NonNull FileCollection androidJarClasspath,
             @NonNull VariantScope.Java8LangSupport java8LangSupportType) {
 
         if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
             return Collections.emptyList();
         }
         ImmutableList.Builder<String> classpathEntries = ImmutableList.builder();
-        classpathEntries.addAll(androidJarClasspath.get().stream().map(File::getPath).iterator());
+        classpathEntries.addAll(
+                androidJarClasspath.getFiles().stream().map(File::getPath).iterator());
 
         return classpathEntries.build();
     }

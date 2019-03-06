@@ -44,6 +44,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import java.io.File
 import java.nio.file.Files
@@ -236,8 +237,9 @@ class DexSplitterTransformTest {
         disableMinification: Boolean = true,
         minSdkVersion: Int = 21
     ): R8Transform {
+        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
         return R8Transform(
-                bootClasspath = lazy { listOf(TestUtils.getPlatformFile("android.jar")) },
+                bootClasspath = classpath,
                 minSdkVersion = minSdkVersion,
                 isDebuggable = true,
                 java8Support = java8Support,

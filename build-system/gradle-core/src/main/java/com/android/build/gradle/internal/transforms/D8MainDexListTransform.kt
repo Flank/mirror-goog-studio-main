@@ -35,10 +35,10 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Sets
+import org.gradle.api.file.FileCollection
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.function.Supplier
 
 /**
  * Calculate the main dex list using D8.
@@ -48,7 +48,7 @@ class D8MainDexListTransform(
         private val userProguardRules: Path? = null,
         private val userClasses: Path? = null,
         private val includeDynamicFeatures: Boolean = false,
-        private val bootClasspath: Supplier<List<Path>>,
+        private val bootClasspath: FileCollection,
         private val messageReceiver: MessageReceiver) : Transform(), MainDexListWriter {
 
     private val logger = LoggerWrapper.getLogger(D8MainDexListTransform::class.java)
@@ -60,8 +60,7 @@ class D8MainDexListTransform(
                     variantScope.variantConfiguration.multiDexKeepProguard?.toPath(),
                     variantScope.variantConfiguration.multiDexKeepFile?.toPath(),
                     includeDynamicFeatures,
-                    Supplier {
-                        variantScope.globalScope.fullBootClasspathProvider.get().map { it.toPath() }},
+                    variantScope.globalScope.fullBootClasspath,
                     variantScope.globalScope.messageReceiver)
 
     override fun setMainDexListOutputFile(mainDexListFile: File) {
@@ -112,7 +111,7 @@ class D8MainDexListTransform(
         try {
             val inputs = getByInputType(invocation)
             val programFiles = inputs[ProguardInput.INPUT_JAR]!!
-            val libraryFiles = inputs[ProguardInput.LIBRARY_JAR]!! + bootClasspath.get()
+            val libraryFiles = inputs[ProguardInput.LIBRARY_JAR]!! + bootClasspath.map { it.toPath()}
             logger.verbose("Program files: %s", programFiles.joinToString())
             logger.verbose("Library files: %s", libraryFiles.joinToString())
             logger.verbose(

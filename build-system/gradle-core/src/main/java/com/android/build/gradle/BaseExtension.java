@@ -58,6 +58,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -898,15 +899,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     @Override
     public List<File> getBootClasspath() {
-        boolean usingJava8 = compileOptions.getTargetCompatibility().isJava8Compatible();
-        List<File> bootClasspath = Lists.newArrayListWithExpectedSize(usingJava8 ? 2 : 1);
-        bootClasspath.addAll(globalScope.getFilteredBootClasspathProvider().get());
-
-        if (usingJava8) {
-            bootClasspath.add(globalScope.getSdkComponents().getCoreLambdaStubsProvider().get());
-        }
-
-        return bootClasspath;
+        // do not call this method from within the plugin code as it forces SDK initialization.
+        return new ArrayList<>(globalScope.getBootClasspath().getFiles());
     }
 
     /**

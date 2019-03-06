@@ -25,12 +25,10 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.Preconditions;
-import java.io.File;
-import java.util.List;
-import java.util.function.Supplier;
+import org.gradle.api.file.FileCollection;
 
 public class DexArchiveBuilderTransformBuilder {
-    private Supplier<List<File>> androidJarClasspath;
+    private FileCollection androidJarClasspath;
     private DexOptions dexOptions;
     private MessageReceiver messageReceiver;
     private SyncOptions.ErrorFormatMode errorFormatMode;
@@ -49,7 +47,7 @@ public class DexArchiveBuilderTransformBuilder {
 
     @NonNull
     public DexArchiveBuilderTransformBuilder setAndroidJarClasspath(
-            @NonNull Supplier<List<File>> androidJarClasspath) {
+            @NonNull FileCollection androidJarClasspath) {
         this.androidJarClasspath = androidJarClasspath;
         return this;
     }

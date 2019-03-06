@@ -324,10 +324,10 @@ public class ModelBuilder<Extension extends AndroidConfig>
         if (globalScope.getSdkComponents().getSdkSetupCorrectly().get()) {
             bootClasspath =
                     globalScope
-                            .getFilteredBootClasspathProvider()
-                            .get()
+                            .getFilteredBootClasspath()
+                            .getFiles()
                             .stream()
-                            .map(c -> c.getAbsolutePath())
+                            .map(File::getAbsolutePath)
                             .collect(Collectors.toList());
         } else {
             // SDK not set up, error will be reported as a sync issue.
