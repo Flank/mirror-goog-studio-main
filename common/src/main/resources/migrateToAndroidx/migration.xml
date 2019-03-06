@@ -250,6 +250,10 @@
   <migrate old-name="android.support.v4.app.Fragment" new-name="androidx.fragment.app.Fragment" type="CLASS"/>
   <migrate old-name="android.support.v4.content.Loader" new-name="androidx.loader.content.Loader" type="CLASS"/>
   <migrate old-name="android.support.v4.view.ViewPager" new-name="androidx.viewpager.widget.ViewPager" type="CLASS"/>
+  <migrate old-name="android.support.v7.content.res.GrowingArrayUtils" new-name="androidx.core.content.res.GrowingArrayUtils" type="CLASS"/>
+  <migrate old-name="android.support.v4.content.res.GrowingArrayUtils" new-name="androidx.core.content.res.GrowingArrayUtils" type="CLASS"/>
+  <migrate old-name="android.support.v7.content.res.AppCompatColorStateListInflater" new-name="androidx.core.content.res.ColorStateListInflaterCompat" type="CLASS"/>
+  <migrate old-name="android.support.v4.content.res.ColorStateListInflaterCompat" new-name="androidx.core.content.res.ColorStateListInflaterCompat" type="CLASS"/>
   <migrate old-name="android.support.v4.view.animation" new-name="androidx.interpolator.view.animation" type="PACKAGE"/>
   <migrate old-name="android.support.v7.gridlayout.R" new-name="androidx.gridlayout.R" type="CLASS"/>
   <migrate old-name="android.support.v7.widget.helper" new-name="androidx.recyclerview.widget" type="PACKAGE"/>
