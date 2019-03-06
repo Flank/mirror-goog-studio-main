@@ -20,9 +20,9 @@ iml_module(
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/annotations:studio.android.sdktools.android-annotations[module]",
-        "//tools/idea/.idea/libraries:jetbrains-annotations-java5",
         "//tools/base/common:studio.android.sdktools.common[module]",
         "//tools/idea/.idea/libraries:Guava",
+        "//tools/idea/.idea/libraries:jetbrains-annotations",
     ],
 )
 
