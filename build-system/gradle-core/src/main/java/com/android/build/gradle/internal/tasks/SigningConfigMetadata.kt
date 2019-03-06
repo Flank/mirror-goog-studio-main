@@ -25,6 +25,7 @@ import java.io.FileReader
 import java.io.IOException
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.attribute.AclEntry
 import java.nio.file.attribute.AclEntryPermission
@@ -85,7 +86,7 @@ class SigningConfigMetadata {
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
             val gson = gsonBuilder.create()
-            FileUtils.write(outputFile, gson.toJson(signingConfig))
+            FileUtils.write(outputFile, gson.toJson(signingConfig), StandardCharsets.UTF_8)
         }
 
         @Throws(IOException::class)
@@ -94,7 +95,7 @@ class SigningConfigMetadata {
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
             val gson = gsonBuilder.create()
-            FileReader(input).use { fileReader ->
+            input.bufferedReader(StandardCharsets.UTF_8).use { fileReader ->
                 return gson.fromJson(
                     fileReader,
                     SigningConfig::class.java
