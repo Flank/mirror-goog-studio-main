@@ -40,19 +40,6 @@ public interface LocalRepoLoader {
     Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress);
 
     /**
-     * Gets a single package, specified by {@code String pathId}, loading them if necessary.
-     *
-     * <p>This doesn't affect the overall caching mechanism of this instance.
-     *
-     * @param pathId The path id that specifies this package. See {@link DetailsTypes}.
-     * @param progress A {@link ProgressIndicator} used to show progress (unimplemented) and
-     *     logging.
-     * @return A the {@link LocalPackage} for {@code pathId} or null if the package was not found.
-     */
-    @NonNull
-    LocalPackage getPackage(@NonNull String pathId, @NonNull ProgressIndicator progress);
-
-    /**
      * Checks whether it looks like we need to be reloaded.
      *
      * @param lastLocalRefreshMs The last time a load was done

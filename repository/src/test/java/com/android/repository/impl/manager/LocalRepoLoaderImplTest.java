@@ -26,7 +26,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import java.io.File;
 import java.util.Map;
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -59,19 +58,6 @@ public class LocalRepoLoaderImplTest {
             + "        <display-name>Test package 2</display-name>\n"
             + "    </localPackage>\n"
             + "</repo:repository>";
-
-    static final String LOCAL_PACKAGE_3 =
-            "<repo:repository\n"
-                    + "        xmlns:repo=\"http://schemas.android.com/repository/android/generic/01\"\n"
-                    + "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n"
-                    + "    <localPackage path=\"foo;bar\" obsolete=\"true\">\n"
-                    + "        <type-details xsi:type=\"repo:genericDetailsType\"/>\n"
-                    + "        <revision>\n"
-                    + "            <major>1</major>\n"
-                    + "        </revision>\n"
-                    + "        <display-name>Test package</display-name>\n"
-                    + "    </localPackage>\n"
-                    + "</repo:repository>";
 
 
     // check that we update and read the hash file correctly
@@ -140,7 +126,7 @@ public class LocalRepoLoaderImplTest {
     }
 
     @Test
-    public void testNoScanningForMetadataFolders() {
+    public void testNoScanningForMetadataFolders() throws Exception {
         FakeProgressIndicator progress = new FakeProgressIndicator();
         MockFileOp fop = new MockFileOp();
         // Allow the repo root name to start with metadata prefix. Although it wouldn't normally
@@ -163,79 +149,4 @@ public class LocalRepoLoaderImplTest {
         assertEquals(package1.getParent(), localPackages.values().iterator().next().getLocation().getPath());
     }
 
-    @Test
-    public void testGetPackage_findPackage() {
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo");
-        fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
-
-        File package1 = new File(repoRoot, "foo/bar/package.xml");
-        fop.recordExistingFile(package1.getPath(), LOCAL_PACKAGE_3.getBytes());
-
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
-        LocalPackage localPackage = loader.getPackage("foo;bar", progress);
-        assertTrue(localPackage != null);
-        Assert.assertEquals("Test package", localPackage.getDisplayName());
-    }
-
-    @Test
-    public void testGetPackage_missingPackage() {
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo");
-        fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
-
-        File package1 = new File(repoRoot, "foo/bar/package.xml");
-        fop.recordExistingFile(package1.getPath(), LOCAL_PACKAGE_3.getBytes());
-
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
-        LocalPackage localPackageFoo = loader.getPackage("foo", progress);
-        assertTrue(localPackageFoo == null);
-        LocalPackage localPackageBar = loader.getPackage("bar", progress);
-        assertTrue(localPackageBar == null);
-    }
-
-    @Test
-    public void testGetPackage_cachedPackage() {
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo");
-        fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
-
-        File package1 = new File(repoRoot, "foo/bar/package.xml");
-        fop.recordExistingFile(package1.getPath(), LOCAL_PACKAGE_3.getBytes());
-
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
-        loader.getPackages(progress);
-
-        // Now foo;bar should be cached, so we can remove the file and still load it correctly.
-        fop.delete(package1);
-
-        LocalPackage localPackage = loader.getPackage("foo;bar", progress);
-        assertTrue(localPackage != null);
-        Assert.assertEquals("Test package", localPackage.getDisplayName());
-    }
-
-    @Test
-    public void testGetPackage_mismatchingId() {
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        MockFileOp fop = new MockFileOp();
-        File repoRoot = new File("/repo");
-        fop.mkdirs(repoRoot);
-        RepoManager mgr = new RepoManagerImpl(fop);
-
-        // This writes the package "foo" in what would be the "foo;bar" place.
-        File package1 = new File(repoRoot, "foo/bar/package.xml");
-        fop.recordExistingFile(package1.getPath(), LOCAL_PACKAGE.getBytes());
-
-        LocalRepoLoaderImpl loader = new LocalRepoLoaderImpl(repoRoot, mgr, null, fop);
-
-        // Even if the "foo/bar/package.xml" is there, the id didn't matched so it returns null.
-        LocalPackage localPackageFoo = loader.getPackage("foo;bar", progress);
-        assertTrue(localPackageFoo == null);
-    }
 }

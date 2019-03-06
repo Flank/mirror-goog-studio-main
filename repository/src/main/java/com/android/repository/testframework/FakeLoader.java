@@ -26,6 +26,7 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.api.SettingsController;
 import com.android.repository.impl.manager.LocalRepoLoader;
 import com.android.repository.impl.manager.RemoteRepoLoader;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,12 +53,6 @@ public class FakeLoader<T extends RepoPackage> implements LocalRepoLoader, Remot
     public Map<String, LocalPackage> getPackages(@NonNull ProgressIndicator progress) {
         //noinspection unchecked
         return (Map<String, LocalPackage>) run();
-    }
-
-    @NonNull
-    @Override
-    public LocalPackage getPackage(@NonNull String pathId, @NonNull ProgressIndicator progress) {
-        return getPackages(progress).get(pathId);
     }
 
     @Override
