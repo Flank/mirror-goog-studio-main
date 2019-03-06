@@ -164,6 +164,9 @@ message DeltaPreinstallRequest {
   }
   Status status = 1;
   repeated PatchInstruction patchInstructions = 2;
+
+  // Having the package_name is useful to perform inheritance install (-p)
+  string package_name = 3;
 }
 
 message DeltaPreinstallResponse{
@@ -184,6 +187,9 @@ message DeltaInstallRequest {
   }
   repeated string options = 2;
   repeated PatchInstruction patchInstructions = 3;
+
+  // Having the package_name is useful to perform inheritance install (-p)
+  string package_name = 4;
 }
 
 message DeltaInstallResponse{

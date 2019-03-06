@@ -93,7 +93,15 @@ public class PatchSetGenerator {
         for (Pair<Apk, Apk> pair : pairs) {
             Apk localApk = pair.getFirst();
             Apk remoteApk = pair.getSecond();
-            Deploy.PatchInstruction instruction = generateDelta(remoteApk, localApk);
+            Deploy.PatchInstruction instruction = null;
+            if (localApk.checksum.equals(remoteApk.checksum)) {
+                // If the APKs are equal, generate a full clean patch instead of a delta which
+                // will have holes due to "extra" fields and gaps between ZIP entries. This allows
+                // to skip feeding the APK altogether on the device by using install-create -p.
+                instruction = generateCleanPatch(remoteApk, localApk);
+            } else {
+                instruction = generateDelta(remoteApk, localApk);
+            }
             patches.add(instruction);
         }
         assert pairs.size() == patches.size();
@@ -117,5 +125,16 @@ public class PatchSetGenerator {
 
         Deploy.PatchInstruction patch = patchInstructionBuidler.build();
         return patch;
+    }
+
+    private Deploy.PatchInstruction generateCleanPatch(Apk remoteApk, Apk localApk)
+            throws IOException {
+        Deploy.PatchInstruction.Builder patchInstructionBuidler =
+                Deploy.PatchInstruction.newBuilder();
+
+        PatchGenerator.Patch patch = new PatchGenerator().generateCleanPatch(remoteApk, localApk);
+        patchInstructionBuidler.setSrcAbsolutePath(patch.sourcePath);
+        patchInstructionBuidler.setDstFilesize(patch.destinationSize);
+        return patchInstructionBuidler.build();
     }
 }

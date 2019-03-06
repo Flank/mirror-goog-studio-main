@@ -61,6 +61,13 @@ bool DeltaPreinstallCommand::SendApkToPackageManager(
     const proto::PatchInstruction& patch, const std::string& session_id) {
   Phase p("Write to PM");
 
+  // Special case where there is no patch, the apk has not changed, we can skip
+  // it altogether since the session was created with inheritance (-p).
+  if (patch.patches().size() == 0) {
+    LogEvent("Skipping!");
+    return true;
+  }
+
   // Open a stream to the package manager to write to.
   std::string output;
   std::string error;
@@ -101,7 +108,18 @@ void DeltaPreinstallCommand::Run() {
   CmdCommand cmd(workspace_);
   std::string output;
   std::string session_id;
-  if (!cmd.CreateInstallSession(&output)) {
+
+  std::vector<std::string> options;
+  options.emplace_back("-t");
+  options.emplace_back("-r");
+  options.emplace_back("--dont-kill");
+
+  // Use inheritance so we can skip unchanged APKs in cases where
+  // the application uses splits.
+  options.emplace_back("-p");
+  options.emplace_back(request_.package_name());
+
+  if (!cmd.CreateInstallSession(&output, options)) {
     ErrEvent(output);
     response->set_status(proto::DeltaPreinstallResponse::ERROR);
     return;

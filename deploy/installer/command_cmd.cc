@@ -97,15 +97,7 @@ int get_file_size(std::string path) {
   return statbuf.st_size;
 }
 
-bool CmdCommand::CreateInstallSession(std::string* output) const noexcept {
-  std::vector<std::string> options;
-  options.emplace_back("-t");
-  options.emplace_back("-r");
-  options.emplace_back("--dont-kill");
-  return CreateInstallSessionWithOptions(output, options);
-}
-
-bool CmdCommand::CreateInstallSessionWithOptions(
+bool CmdCommand::CreateInstallSession(
     std::string* output, const std::vector<std::string> options) const
     noexcept {
   Phase p("Create Install Session");
@@ -135,7 +127,8 @@ int CmdCommand::PreInstall(const std::vector<std::string>& apks,
   output->clear();
 
   std::string session;
-  if (!CreateInstallSession(output)) {
+  std::vector<std::string> options;
+  if (!CreateInstallSession(output, options)) {
     return -1;
   } else {
     session = *output;

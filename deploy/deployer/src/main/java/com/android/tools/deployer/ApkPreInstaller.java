@@ -83,9 +83,24 @@ public class ApkPreInstaller {
             remoteApks.put(file.apk.name, file.apk);
         }
 
+        // Make sure all apks have the same package name and extract it.
+        String packageName = null;
+        for (Apk apk : localApks.values()) {
+            if (packageName == null) {
+                packageName = apk.packageName;
+            }
+            if (!packageName.equals(apk.packageName)) {
+                String errorMessage =
+                        String.format(
+                                "Cannot preinstall: apks have different package name (%s and %s)",
+                                packageName, apk.packageName);
+                throw DeployerException.swapFailed(errorMessage);
+            }
+        }
+
         // Attempt a DeltaPreinstall first and fallback on a FullPreinstall if it fails.
         try {
-            return deltaPreinstall(localApks, remoteApks);
+            return deltaPreinstall(localApks, remoteApks, packageName);
         } catch (DeltaPreInstallException e) {
             return fullPreinstall(localApks);
         }
@@ -93,7 +108,8 @@ public class ApkPreInstaller {
 
     @Trace
     /** @return Session ID. Empty if all APKs are unchanged from the device. */
-    private String deltaPreinstall(HashMap<String, Apk> localApks, HashMap<String, Apk> remoteApks)
+    private String deltaPreinstall(
+            HashMap<String, Apk> localApks, HashMap<String, Apk> remoteApks, String packageName)
             throws DeltaPreInstallException {
         try {
             // Pair remote and local apks. Attempt to build an app delta.
@@ -113,6 +129,7 @@ public class ApkPreInstaller {
                 return "<SKIPPED-INSTALLATION>";
             }
             pushRequestBuilder.addAllPatchInstructions(patches);
+            pushRequestBuilder.setPackageName(packageName);
 
             Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();
             // Don't push more than 40 MiB delta since it has to fit in RAM on the device.

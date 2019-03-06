@@ -88,6 +88,14 @@ public class PatchGenerator {
         return new Patch(data, instructions, sourcePath, destinationSize);
     }
 
+    // Generate a patch for an apk which will result in a no-op when the patch is applied to it
+    // (a patch with no data and no instruction but correct path and dst filesize).
+    public Patch generateCleanPatch(Apk remoteApk, Apk localApk) throws IOException {
+        String sourcePath = remoteApk.path;
+        long destinationSize = Files.size(Paths.get(localApk.path));
+        return new Patch(null, null, sourcePath, destinationSize);
+    }
+
     private List<ApkMap.Area> generateDirtyMap(Apk remoteApk, Apk localApk) throws IOException {
         Trace.begin("marking dirty");
         HashMap<String, ZipUtils.ZipEntry> remoteApkEntries = remoteApk.zipEntries;

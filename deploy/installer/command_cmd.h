@@ -40,9 +40,8 @@ class CmdCommand {
                      const std::string& package_name,
                      std::string* error_string) const noexcept;
 
-  bool CreateInstallSession(std::string* session) const noexcept;
-  bool CreateInstallSessionWithOptions(
-      std::string* session, const std::vector<std::string> options) const
+  bool CreateInstallSession(std::string* session,
+                            const std::vector<std::string> options) const
       noexcept;
 
   // Prepares an installation and returns an id that can be used

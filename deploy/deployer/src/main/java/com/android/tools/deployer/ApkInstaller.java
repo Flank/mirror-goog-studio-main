@@ -74,7 +74,8 @@ public class ApkInstaller {
         boolean allowReinstall = true;
         long deltaInstallStart = System.currentTimeMillis();
         try {
-            deltaInstallResult = deltaInstall(apks, options, allowReinstall, installMode);
+            deltaInstallResult =
+                    deltaInstall(apks, options, allowReinstall, installMode, packageName);
         } catch (DeployerException e) {
             logger.info("Unable to delta install: '%s'", e.getDetails());
         }
@@ -172,7 +173,8 @@ public class ApkInstaller {
             List<String> apks,
             InstallOptions options,
             boolean allowReinstall,
-            Deployer.InstallMode installMode)
+            Deployer.InstallMode installMode,
+            String packageName)
             throws DeployerException {
         DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
 
@@ -216,6 +218,7 @@ public class ApkInstaller {
             return deltaInstallResult;
         }
         builder.addAllPatchInstructions(patches);
+        builder.setPackageName(packageName);
 
         Deploy.DeltaInstallRequest request = builder.build();
         // Check that size if not beyond the limit.
