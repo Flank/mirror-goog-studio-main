@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.dependencies
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.testutils.AssumeUtil
 import com.android.utils.toSystemLineSeparator
 import org.junit.Rule
 import org.junit.Test
@@ -32,6 +33,7 @@ class CompileAndRuntimeClasspathTest {
 
     @Test
     fun `Higher Compile than Runtime causes failure`() {
+        AssumeUtil.assumeNotWindows() // b/73306170
         project.buildFile.appendText(
             """
             |dependencies {
@@ -56,6 +58,7 @@ class CompileAndRuntimeClasspathTest {
 
     @Test
     fun `Lower Compile than Runtime leads to promoted version`() {
+        AssumeUtil.assumeNotWindows() // b/73306170
         project.buildFile.appendText(
             """
             |dependencies {

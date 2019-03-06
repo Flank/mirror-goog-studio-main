@@ -20,6 +20,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.testutils.AssumeUtil;
 import com.android.utils.FileUtils;
 import java.util.Scanner;
 import org.junit.Rule;
@@ -36,6 +37,7 @@ public class SourceSetsTaskTest {
 
     @Test
     public void runsSuccessfully() throws Exception {
+        AssumeUtil.assumeNotWindows(); // b/73306170
         project.execute("sourceSets");
 
         String expected =

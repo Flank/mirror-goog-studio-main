@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.testutils.AssumeUtil;
 import com.android.testutils.apk.Aar;
 import java.io.File;
 import org.junit.Rule;
@@ -38,6 +39,7 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkCustomLint() throws Exception {
+        AssumeUtil.assumeNotWindows(); // b/73306170
         project.executor().run("clean");
         project.executor().run(":library-remote:uploadArchives");
         project.executor().expectFailure().run(":library:lintDebug");

@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.testutils.AssumeUtil;
 import com.android.utils.StringHelper;
 import java.util.Scanner;
 import org.junit.Before;
@@ -65,6 +66,7 @@ public class TestWithMismatchDep {
                     + "           Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava:{strictly 18.0}' because of the following reason: debugRuntimeClasspath uses version 18.0";
     @Test
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
+        AssumeUtil.assumeNotWindows(); // b/73306170
         // want to check the log, so can't use Junit's expected exception mechanism.
 
         GradleBuildResult result =

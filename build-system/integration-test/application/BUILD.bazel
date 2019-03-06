@@ -90,7 +90,6 @@ gradle_integration_test(
     #keep sorted
     tags = [
         "no_test_mac_psq",  # b/113099009
-        "no_test_windows",  # b/73306170
     ],
     deps = TEST_DEPS,
 )
@@ -112,7 +111,6 @@ gradle_integration_test(
     #keep sorted
     tags = [
         "no_test_mac",  # b/69151132
-        "no_test_windows",  # b/73306170
     ],
     deps = TEST_DEPS,
 )

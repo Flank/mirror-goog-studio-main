@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.testutils.AssumeUtil;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -84,6 +85,7 @@ public class CheckAll {
 
     @Test
     public void assembleAndLint() throws Exception {
+        AssumeUtil.assumeNotWindows(); // b/73306170
         Assume.assumeTrue(canAssemble(project));
         project
                 .executor()
