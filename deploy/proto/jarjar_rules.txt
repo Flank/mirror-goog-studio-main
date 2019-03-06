@@ -1,0 +1,1 @@
+rule com.google.protobuf.** com.android.tools.deploy.protobuf.@1

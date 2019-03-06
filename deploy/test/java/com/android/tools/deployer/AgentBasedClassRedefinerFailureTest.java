@@ -16,7 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.google.protobuf.ByteString;
+import com.android.tools.deploy.protobuf.ByteString;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;

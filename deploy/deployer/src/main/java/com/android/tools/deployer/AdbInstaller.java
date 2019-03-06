@@ -16,13 +16,13 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deploy.protobuf.CodedInputStream;
+import com.android.tools.deploy.protobuf.CodedOutputStream;
+import com.android.tools.deploy.protobuf.MessageLite;
+import com.android.tools.deploy.protobuf.Parser;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ObjectArrays;
-import com.google.protobuf.CodedInputStream;
-import com.google.protobuf.CodedOutputStream;
-import com.google.protobuf.MessageLite;
-import com.google.protobuf.Parser;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,6 +86,7 @@ public class AdbInstaller implements Installer {
         logger.verbose("installer dump: " + response.getStatus().toString());
         return response;
     }
+
 
     @Override
     public Deploy.SwapResponse swap(Deploy.SwapRequest request) throws IOException {

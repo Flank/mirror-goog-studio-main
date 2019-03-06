@@ -16,7 +16,7 @@
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../../bazel-bin/tools/base/deploy/proto/libdeploy_java_proto.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../bazel-genfiles/tools/base/deploy/proto/deploy_java_proto.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

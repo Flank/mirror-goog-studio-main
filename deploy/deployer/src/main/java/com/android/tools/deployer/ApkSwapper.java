@@ -16,9 +16,9 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.android.tools.deploy.protobuf.ByteString;
 import com.android.tools.deployer.model.DexClass;
 import com.google.common.collect.Iterables;
-import com.google.protobuf.ByteString;
 import java.util.List;
 import java.util.Map;
 
