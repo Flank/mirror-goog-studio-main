@@ -302,14 +302,6 @@ public class RepoManagerImpl extends RepoManager {
         return mPackages;
     }
 
-    @Override
-    @Nullable
-    public LocalPackage getLocalSynchronously(
-            @NonNull String pathId, @NonNull final ProgressIndicator progress) {
-        LocalRepoLoader local = mLocalRepoLoaderFactory.createLocalRepoLoader();
-        return local.getPackage(pathId, progress);
-    }
-
     // TODO: fix up invalidation. It's annoying that you have to manually reload.
     // TODO: Maybe: when you load, instead of load as now, you get back a loader, which knows how
     // TODO: to reload with same settings,

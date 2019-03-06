@@ -295,19 +295,6 @@ public abstract class RepoManager {
     }
 
     /**
-     * Try to load a single local package specified by {@code pathId}.
-     *
-     * <p>This doesn't affect the overall caching mechanism of this instance.
-     *
-     * @param pathId The path id that specifies this package. See {@link DetailsTypes}.
-     * @param progress The {@link ProgressIndicator} to use for showing progress and logging.
-     * @return The {@link LocalPackage} if the load was successful, null otherwise.
-     */
-    @Nullable
-    public abstract LocalPackage getLocalSynchronously(
-            @NonNull String pathId, @NonNull final ProgressIndicator progress);
-
-    /**
      * Causes cached results to be considered expired. The next time {@link #load(long, List, List,
      * List, ProgressRunner, Downloader, SettingsController, boolean)} is called, a complete load
      * will be done.
