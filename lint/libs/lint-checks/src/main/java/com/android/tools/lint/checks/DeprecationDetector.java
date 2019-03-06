@@ -33,20 +33,22 @@ import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import java.util.Arrays;
 import java.util.Collection;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /** Check which looks for usage of deprecated tags, attributes, etc. */
-public class DeprecationDetector extends LayoutDetector {
+public class DeprecationDetector extends ResourceXmlDetector {
     /** Usage of deprecated views or attributes */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE =
@@ -66,6 +68,34 @@ public class DeprecationDetector extends LayoutDetector {
 
     /** Constructs a new {@link DeprecationDetector} */
     public DeprecationDetector() {}
+
+    @Override
+    public boolean appliesTo(@NonNull ResourceFolderType folderType) {
+        return folderType == ResourceFolderType.LAYOUT || folderType == ResourceFolderType.XML;
+    }
+
+    @Override
+    public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
+        if (context.getResourceFolderType() == ResourceFolderType.XML) {
+            Element rootElement = document.getDocumentElement();
+            if (rootElement.getTagName().startsWith("android.preference.")) {
+                int api = context.getMainProject().getTargetSdk();
+                if (api < 30) {
+                    context.report(
+                            ISSUE,
+                            rootElement,
+                            context.getNameLocation(rootElement),
+                            "`androidx.preference` is recommended instead of `android.preference`");
+                } else {
+                    context.report(
+                            ISSUE,
+                            rootElement,
+                            context.getNameLocation(rootElement),
+                            "`android.preference` is deprecated; use `androidx.preference` instead");
+                }
+            }
+        }
+    }
 
     @Override
     public Collection<String> getApplicableElements() {
