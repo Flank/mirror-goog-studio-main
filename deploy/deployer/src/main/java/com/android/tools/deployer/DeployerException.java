@@ -143,6 +143,18 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
+        VERIFICATION_ERROR(
+                "New code fails verification",
+                "",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
+        UNKNOWN_JVMTI_ERROR(
+                "Unknown JVMTI error code",
+                "",
+                "Reinstall and restart app",
+                ResolutionAction.RUN_APP),
+
         // Catch-all errors for when an arbitrary failure may occur.
 
         DUMP_FAILED(
@@ -278,11 +290,12 @@ public class DeployerException extends Exception {
                     .put(
                             "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED",
                             Error.CANNOT_CHANGE_METHOD_MODIFIERS)
+                    .put("JVMTI_ERROR_FAILS_VERIFICATION", Error.VERIFICATION_ERROR)
                     .build();
 
     public static DeployerException jvmtiError(String jvmtiErrorCode) {
         return new DeployerException(
-                ERROR_CODE_TO_ERROR.getOrDefault(jvmtiErrorCode, Error.OPERATION_NOT_SUPPORTED));
+                ERROR_CODE_TO_ERROR.getOrDefault(jvmtiErrorCode, Error.UNKNOWN_JVMTI_ERROR));
     }
 
     public static DeployerException dumpFailed(String reason) {
