@@ -60,11 +60,11 @@ class DataBindingDetector : LayoutDetector() {
                     .with("&lt;")
                     .build()
                 context.report(
-                  ESCAPE_XML,
-                  attribute,
-                  context.getValueLocation(attribute),
-                  "`<` must be escaped (as `&lt;`) in attribute values",
-                  fix
+                    ESCAPE_XML,
+                    attribute,
+                    context.getValueLocation(attribute),
+                    "`<` must be escaped (as `&lt;`) in attribute values",
+                    fix
                 )
             }
         }
