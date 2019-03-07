@@ -174,3 +174,12 @@ tasks.compileJava {
     options.compilerArgs += ['-s', generatedSources]
     outputs.dir(generatedSources)
 }
+
+// Configure validateTaskProperties task
+tasks.validateTaskProperties.configure {
+    // Always run this task so we can see the report in the console with every run
+    outputs.upToDateWhen { false }
+
+    // Enable strict mode so we can see more warnings
+    enableStricterValidation = true
+}
