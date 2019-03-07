@@ -22,8 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.testutils.AssumeUtil;
 import com.android.testutils.apk.Aar;
+import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +39,6 @@ public class LintCustomLocalAndPublishTest {
 
     @Test
     public void checkCustomLint() throws Exception {
-        AssumeUtil.assumeNotWindows(); // b/73306170
         project.executor().run("clean");
         project.executor().run(":library-remote:uploadArchives");
         project.executor().expectFailure().run(":library:lintDebug");
@@ -59,7 +58,8 @@ public class LintCustomLocalAndPublishTest {
                         + "   Explanation for issues of type \"UnitTestLintCheck\":\n"
                         + "   This app should not have any activities.\n"
                         + "\n"
-                        + "src/main/java/com/example/app/Util.java:5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3]\n"
+                        + FileUtils.toSystemDependentPath("src/main/java/com/example/app/Util.java")
+                        + ":5: Error: Do not implement java.util.Set directly [UnitTestLintCheck3]\n"
                         + "public abstract class Util implements Set {}\n"
                         + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "\n"
