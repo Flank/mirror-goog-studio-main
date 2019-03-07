@@ -74,7 +74,8 @@ import javax.xml.parsers.ParserConfigurationException
 fun parseResourceSourceSetDirectory(
         directory: File,
         idProvider: IdProvider,
-        platformAttrSymbols: SymbolTable?
+        platformAttrSymbols: SymbolTable?,
+        tablePackage: String? = null
 ): SymbolTable {
     Preconditions.checkArgument(directory.isDirectory, "!directory.isDirectory()")
 
@@ -96,6 +97,10 @@ fun parseResourceSourceSetDirectory(
 
         parseResourceDirectory(
                 resourceDirectory, builder, idProvider, documentBuilder, platformAttrSymbols)
+    }
+
+    if (tablePackage != null) {
+        builder.tablePackage(tablePackage)
     }
 
     return builder.build()

@@ -21,7 +21,6 @@ import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.android.ide.common.symbols.generateMinifyKeepRules
 import com.android.ide.common.symbols.getPackageNameFromManifest
 import com.android.ide.common.symbols.loadDependenciesSymbolTables
 import com.android.ide.common.symbols.mergeAndRenumberSymbols
@@ -33,9 +32,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
- * (`aapt_rules.txt`). Afterwards generates `R.java` for all libraries the main
- * library depends on.
+ * Processes the symbol table and generates necessary files: R.txt, R.java. Afterwards generates
+ * `R.java` or `R.jar` for all libraries the main library depends on.
  *
  * @param librarySymbols table with symbols of resources for the library.
  * @param libraries libraries which this library depends on
@@ -44,8 +42,6 @@ import java.nio.file.Path
  * @param sourceOut directory to contain R.java
  * @param rClassOutputJar file to output R.jar.
  * @param symbolFileOut R.txt file location
- * @param proguardOut directory to contain proguard rules
- * @param mergedResources directory containing merged resources
  * @param namespacedRClass if true, the generated R class for this library and the  R.txt will
  *                         contain only the resources defined in this library, otherwise they will
  *                         contain all the resources merged from the transitive dependencies.
@@ -59,24 +55,11 @@ fun processLibraryMainSymbolTable(
         sourceOut: File?,
         rClassOutputJar: File?,
         symbolFileOut: File,
-        proguardOut: File?,
-        mergedResources: File?,
         platformSymbols: SymbolTable,
         namespacedRClass: Boolean) {
 
     // Parse the manifest only when necessary.
-    val finalPackageName = if (mainPackageName == null || proguardOut != null) {
-        val manifestData = parseManifest(manifestFile)
-        // Generate aapt_rules.txt containing keep rules if minify is enabled.
-        if (proguardOut != null) {
-            Files.write(
-                    proguardOut.toPath(),
-                    generateMinifyKeepRules(manifestData, mergedResources))
-        }
-        mainPackageName ?: getPackageNameFromManifest(manifestData)
-    } else {
-        mainPackageName
-    }
+    val finalPackageName = mainPackageName ?: getPackageNameFromManifest(parseManifest(manifestFile))
 
     // Get symbol tables of the libraries we depend on.
     val depSymbolTables = loadDependenciesSymbolTables(libraries)

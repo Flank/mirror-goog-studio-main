@@ -90,6 +90,7 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
 import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
+import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -111,6 +112,7 @@ import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
+import com.android.build.gradle.internal.tasks.GenerateLibraryProguardRulesTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
@@ -1028,12 +1030,28 @@ public abstract class TaskManager {
         File symbolFile = new File(symbolDirectory, FN_RESOURCE_TEXT);
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         if (mergeType == MergeType.PACKAGE) {
-            // Simply generate the R class for a library
+            // MergeType.PACKAGE means we will only merged the resources from our current module
+            // (little merge). This is used for finding what goes into the AAR (packaging), and also
+            // for parsing the local resources and merging them with the R.txt files from its
+            // dependencies to write the R.txt for this module and R.jar for this module and its
+            // dependencies.
+
+            // First collect symbols from this module.
+            taskFactory.register(new ParseLibraryResourcesTask.CreateAction(scope));
+
+            // Only generate the keep rules when we need them.
+            if (generatesProguardOutputFile(scope)) {
+                taskFactory.register(new GenerateLibraryProguardRulesTask.CreationAction(scope));
+            }
+
+            // Generate the R class for a library using both local symbols and symbols
+            // from dependencies.
             task =
                     taskFactory.register(
                             new GenerateLibraryRFileTask.CreationAction(
                                     scope, symbolFile, symbolTableWithPackageName));
         } else {
+            // MergeType.MERGE means we merged the whole universe.
             task =
                     taskFactory.register(
                             createProcessAndroidResourcesConfigAction(
@@ -1068,6 +1086,10 @@ public abstract class TaskManager {
                 InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
                 ImmutableList.of(symbolTableWithPackageName),
                 task.getName());
+    }
+
+    private static boolean generatesProguardOutputFile(VariantScope variantScope) {
+        return variantScope.getCodeShrinker() != null || variantScope.getType().isFeatureSplit();
     }
 
     protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>

@@ -2141,6 +2141,8 @@ public final class SdkConstants {
     public static final String FN_RESOURCE_SHARED_STATIC_LIBRARY = "shared.apk";
     /** R class jar, used for resource static library */
     public static final String FN_R_CLASS_JAR = "R.jar";
+    /** R file containing only the local resources. */
+    public static final String FN_R_DEF_TXT = "R-def.txt";
     /** Generated manifest class name */
     public static final String FN_MANIFEST_BASE = "Manifest"; //$NON-NLS-1$
     /** Generated BuildConfig class name */

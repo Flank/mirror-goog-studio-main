@@ -96,6 +96,8 @@ public enum InternalArtifactType implements ArtifactType {
     SYMBOL_LIST_WITH_PACKAGE_NAME,
     // Resources defined within the AAR.
     DEFINED_ONLY_SYMBOL_LIST,
+    //Resources defined within the current module.
+    LOCAL_ONLY_SYMBOL_LIST,
     // public.txt output
     PUBLIC_RES,
     SHRUNK_PROCESSED_RES,

@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -28,10 +29,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
-import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
@@ -71,15 +70,6 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
     @get:OutputFile lateinit var symbolsWithPackageNameOutputFile: File
         private set
 
-    @get:OutputFile
-    @get:Optional
-    var proguardOutputFile: File? = null
-        private set
-
-    @Suppress("unused")
-    // Needed to trigger rebuild if proguard file is requested (https://issuetracker.google.com/67418335)
-    @Input fun hasProguardOutputFile() = proguardOutputFile != null
-
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection
         private set
@@ -94,7 +84,7 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var inputResourcesDir: BuildableArtifact
+    lateinit var localResourcesFile: BuildableArtifact
         private set
 
     @get:Input
@@ -111,15 +101,14 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
             it.submit(
                 GenerateLibRFileRunnable::class.java,
                 GenerateLibRFileParams(
+                    localResourcesFile.singleFile(),
                     manifest,
                     platformAttrRTxt.singleFile,
-                    inputResourcesDir.single(),
                     dependencies.files,
                     packageForR.get(),
                     sourceOutputDirectory,
                     rClassOutputJar,
                     textSymbolOutputFile,
-                    proguardOutputFile,
                     namespacedRClass,
                     symbolsWithPackageNameOutputFile
                 )
@@ -128,15 +117,14 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
     }
 
     data class GenerateLibRFileParams(
+        val localResourcesFile: File,
         val manifest: File,
         val androidJar: File,
-        val inputResourcesDir: File,
         val dependencies: Set<File>,
         val packageForR: String,
         val sourceOutputDirectory: File?,
         val rClassOutputJar: File?,
         val textSymbolOutputFile: File,
-        val proguardOutputFile: File?,
         val namespacedRClass: Boolean,
         val symbolsWithPackageNameOutputFile: File
     ) : Serializable
@@ -145,10 +133,7 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
         override fun run() {
             val androidAttrSymbol = getAndroidAttrSymbols()
 
-            val symbolTable = parseResourceSourceSetDirectory(
-                params.inputResourcesDir,
-                IdProvider.sequential(),
-                androidAttrSymbol)
+            val symbolTable = SymbolIo.readRDef(params.localResourcesFile.toPath())
 
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
@@ -158,8 +143,6 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
                 sourceOut = params.sourceOutputDirectory,
                 rClassOutputJar = params.rClassOutputJar,
                 symbolFileOut = params.textSymbolOutputFile,
-                proguardOut = params.proguardOutputFile,
-                mergedResources = params.inputResourcesDir,
                 platformSymbols = androidAttrSymbol,
                 namespacedRClass = params.namespacedRClass)
 
@@ -203,16 +186,6 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
                 sourceOutputDirectory = variantScope.artifacts
                     .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, taskName)
             }
-
-            if (generatesProguardOutputFile(variantScope)) {
-                variantScope
-                    .artifacts
-                    .appendArtifact(
-                        InternalArtifactType.AAPT_PROGUARD_FILE,
-                        listOf(variantScope.processAndroidResourcesProguardOutputFile),
-                        taskName)
-            }
-
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
@@ -241,10 +214,6 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
-            if (generatesProguardOutputFile(variantScope)) {
-                task.proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
-            }
-
             task.packageForR = TaskInputHelper.memoizeToProvider(task.project) {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
             }
@@ -252,12 +221,12 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
             task.manifestFiles = variantScope.artifacts.getFinalProduct(
                 InternalArtifactType.MERGED_MANIFESTS)
 
-            task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.PACKAGED_RES)
-
             task.namespacedRClass = variantScope.globalScope.projectOptions[BooleanOption.NAMESPACED_R_CLASS]
 
             task.outputScope = variantScope.outputScope
+
+            task.localResourcesFile = variantScope.artifacts.getFinalArtifactFiles(
+                InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST)
         }
     }
 }
