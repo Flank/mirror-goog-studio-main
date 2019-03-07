@@ -41,18 +41,28 @@ struct FakeAtraceParams {
 // RunAtrace calls.
 class FakeAtrace final : public Atrace {
  public:
-  FakeAtrace(Clock* clock)
-      : Atrace(clock), is_running_(false), buffer_size_kb_(8192) {}
+  FakeAtrace(Clock* clock) : FakeAtrace(clock, true) {}
+  // We dont want to validate args if we are testing Atrace
+  // via CpuService.
+  FakeAtrace(Clock* clock, bool validate_args)
+      : Atrace(clock),
+        is_running_(false),
+        buffer_size_kb_(8192),
+        validate_args_(validate_args) {}
 
   void Run(const AtraceArgs& run_args) override {
     std::unique_lock<std::mutex> lock(mu_);
-    FakeAtraceParams& params = params_.front();
-    EXPECT_EQ(params.args.app_pkg_name, run_args.app_pkg_name);
-    EXPECT_EQ(params.args.path, run_args.path);
-    EXPECT_EQ(params.args.command, run_args.command);
-    EXPECT_EQ(params.args.additional_args, run_args.additional_args);
-    is_running_ = params.is_running;
-    params_.pop();
+    if (validate_args_) {
+      FakeAtraceParams& params = params_.front();
+      EXPECT_EQ(params.args.app_pkg_name, run_args.app_pkg_name);
+      EXPECT_EQ(params.args.path, run_args.path);
+      EXPECT_EQ(params.args.command, run_args.command);
+      EXPECT_EQ(params.args.additional_args, run_args.additional_args);
+      is_running_ = params.is_running;
+      params_.pop();
+    } else {
+      is_running_ = !is_running_;
+    }
     cv_.notify_all();
   }
 
@@ -104,6 +114,7 @@ class FakeAtrace final : public Atrace {
   std::queue<FakeAtraceParams> params_;
   bool is_running_;
   int buffer_size_kb_;
+  bool validate_args_;
 };
 
 }  // namespace profiler

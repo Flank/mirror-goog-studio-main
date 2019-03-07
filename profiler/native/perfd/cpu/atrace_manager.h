@@ -50,7 +50,7 @@ class AtraceManager {
   explicit AtraceManager(std::unique_ptr<FileSystem> file_system, Clock *clock,
                          int dump_data_interval_ms,
                          std::unique_ptr<Atrace> atrace);
-  virtual ~AtraceManager() = default;
+  virtual ~AtraceManager() { Shutdown(); };
 
   // Returns true if profiling of app |app_name| was started successfully.
   // |trace_path| is also set to where the trace file will be made available

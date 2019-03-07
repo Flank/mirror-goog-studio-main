@@ -224,6 +224,11 @@ void AtraceManager::Shutdown() {
     is_profiling_ = false;
     atrace_->Stop();
   }
+  // Ensure atrace dump thread exits when shutdown primarily for test.
+  if (atrace_thread_.joinable()) {
+    dump_data_condition_.notify_all();
+    atrace_thread_.join();
+  }
 }
 
 bool AtraceManager::CombineFiles(const std::string &combine_file_prefix,

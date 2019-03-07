@@ -67,6 +67,7 @@ cc_library(
         "count_down_latch.h",
         "current_process.h",
         "device_info.h",
+        "device_info_helper.h",
         "fake_clock.h",
         "file_cache.h",
         "file_reader.h",

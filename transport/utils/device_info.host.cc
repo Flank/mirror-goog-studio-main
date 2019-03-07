@@ -15,6 +15,7 @@
  */
 
 #include "utils/device_info.h"
+#include "utils/device_info_helper.h"
 
 #include <cstdlib>
 #include <sstream>
@@ -25,7 +26,7 @@ namespace {
 
 const char* const kGetpropCmd = "cat";
 // The properties file is generated on the fly at test time by
-// DeviceProperties.java
+// DeviceProperties.java, and cpu_service_test.cc
 const char* const kPropFile = "./device_info.prop";
 const char* const kSerial = "ro.serialno";
 const char* const kCodeName = "ro.build.version.codename";
@@ -80,6 +81,10 @@ string DeviceInfo::GetSystemProperty(const string& property_name) const {
     return value;
   }
   return "";
+}
+
+void DeviceInfoHelper::SetDeviceInfo(int feature_level) {
+  DeviceInfo::Instance()->feature_level_ = feature_level;
 }
 
 }  // namespace profiler

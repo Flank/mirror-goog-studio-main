@@ -55,7 +55,7 @@ class MockProcfsFiles final : public ProcfsFiles {
 
 namespace profiler {
 
-TEST(CpuServiceTest, CpuCoreConfig) {
+TEST(CpuConfigTest, CpuCoreConfig) {
   CpuCoreConfigResponse response;
   MockProcfsFiles mock_fs;
 

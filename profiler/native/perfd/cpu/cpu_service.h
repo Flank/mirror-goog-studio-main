@@ -136,6 +136,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // Visible for testing.
   SimpleperfManager* simpleperf_manager() { return simpleperf_manager_.get(); }
 
+  // Visible for testing.
+  AtraceManager* atrace_manager() { return atrace_manager_.get(); }
+
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);
