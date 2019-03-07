@@ -1,0 +1,16 @@
+buildscript {
+    repositories {
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.3.2'
+    }
+}
+repositories{
+}
+buildDir = new File(System.getenv("BUILD_DIR"))
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 28
+}
