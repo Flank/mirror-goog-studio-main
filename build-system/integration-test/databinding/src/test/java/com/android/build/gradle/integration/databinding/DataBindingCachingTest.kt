@@ -46,6 +46,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         )
 
         const val GRADLE_BUILD_CACHE = "gradle-build-cache"
+        const val DATA_BINDING_GEN_BASE_CLASSES_TASK = ":dataBindingGenBaseClassesDebug"
         const val JAVA_COMPILE_TASK = ":compileDebugJavaWithJavac"
     }
 
@@ -95,6 +96,7 @@ class DataBindingCachingTest(private val withKotlin: Boolean) {
         // from the build cache.
         val result = projectCopy.executor().withArgument("--build-cache")
             .run("clean", JAVA_COMPILE_TASK)
+        assertThat(result.getTask(DATA_BINDING_GEN_BASE_CLASSES_TASK)).wasFromCache()
         assertThat(result.getTask(JAVA_COMPILE_TASK)).wasFromCache()
 
         FileUtils.deleteRecursivelyIfExists(buildCacheDir)

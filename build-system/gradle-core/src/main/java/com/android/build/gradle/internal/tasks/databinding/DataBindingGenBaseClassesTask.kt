@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
@@ -53,6 +54,7 @@ import kotlin.reflect.KFunction
  * errors to the user if the compilation fails before annotation processor output classes are
  * compiled.
  */
+@CacheableTask
 open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // where xml info files are
     @get:InputFiles
@@ -60,16 +62,18 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     lateinit var layoutInfoDirectory: BuildableArtifact
         private set
     // the package name for the module / app
-    lateinit var packageNameSupplier: KFunction<String>
-        private set
+    private lateinit var packageNameSupplier: KFunction<String>
     @get:Input val packageName: String
         get() = packageNameSupplier.call()
     // list of artifacts from dependencies
-    @get:InputFiles lateinit var mergedArtifactsFromDependencies: BuildableArtifact
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var mergedArtifactsFromDependencies: BuildableArtifact
         private set
     // list of v1 artifacts from dependencies
     @get:Optional
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var v1Artifacts: BuildableArtifact
         private set
     // where to keep the log of the task
