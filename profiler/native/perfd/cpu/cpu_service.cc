@@ -221,10 +221,20 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
         configuration.sampling_interval_us(), &trace_path, &error);
   } else if (configuration.profiler_type() == CpuProfilerType::ATRACE) {
     int acquired_buffer_size_kb = 0;
-    success = atrace_manager_->StartProfiling(
-        app_pkg_name, configuration.sampling_interval_us(),
-        configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
-        &trace_path, &error);
+    if (usePerfetto()) {
+      // Perfetto always acquires the proper buffer size.
+      acquired_buffer_size_kb = configuration.buffer_size_in_mb() * 1024;
+      // TODO: We may want to pass this in from studio for a more flexible
+      // config.
+      perfetto::protos::TraceConfig config =
+          PerfettoManager::BuildConfig(app_pkg_name, acquired_buffer_size_kb);
+      success = perfetto_manager_->StartProfiling(config, &trace_path, &error);
+    } else {
+      success = atrace_manager_->StartProfiling(
+          app_pkg_name, configuration.sampling_interval_us(),
+          configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
+          &trace_path, &error);
+    }
     response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
   } else {
     auto mode = ActivityManager::SAMPLING;
@@ -279,8 +289,12 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
     success = simpleperf_manager_->StopProfiling(
         app->app_pkg_name, need_trace, cpu_config_.simpleperf_host(), &error);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
-    success =
-        atrace_manager_->StopProfiling(app->app_pkg_name, need_trace, &error);
+    if (usePerfetto()) {
+      success = perfetto_manager_->StopProfiling(&error);
+    } else {
+      success =
+          atrace_manager_->StopProfiling(app->app_pkg_name, need_trace, &error);
+    }
   } else {  // Profiler is ART
     success = activity_manager_->StopProfiling(
         app->app_pkg_name, need_trace, &error,
@@ -289,11 +303,15 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
 
   if (need_trace) {
     if (success) {
-      response->set_status(CpuProfilingAppStopResponse::SUCCESS);
       string trace_content;
-      FileReader::Read(app->trace_path, &trace_content);
-      response->set_trace(trace_content);
-      response->set_trace_id(app->trace_id);
+      if (FileReader::Read(app->trace_path, &trace_content)) {
+        response->set_status(CpuProfilingAppStopResponse::SUCCESS);
+        response->set_trace(trace_content);
+        response->set_trace_id(app->trace_id);
+      } else {
+        response->set_error_message("Failed to read trace from device");
+        response->set_status(CpuProfilingAppStopResponse::FAILURE);
+      }
     } else {
       response->set_status(CpuProfilingAppStopResponse::FAILURE);
       response->set_error_message(error);
@@ -327,6 +345,11 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   }
 
   return Status::OK;
+}
+
+bool CpuServiceImpl::usePerfetto() {
+  return DeviceInfo::feature_level() >= DeviceInfo::Q &&
+         cpu_config_.use_perfetto();
 }
 
 grpc::Status CpuServiceImpl::StartStartupProfiling(
@@ -363,10 +386,21 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
         true);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
     int acquired_buffer_size_kb = 0;
-    success = atrace_manager_->StartProfiling(
-        app.app_pkg_name, app.configuration.sampling_interval_us(),
-        app.configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
-        &app.trace_path, &error);
+    if (usePerfetto()) {
+      // Perfetto always acquires the proper buffer size.
+      acquired_buffer_size_kb = app.configuration.buffer_size_in_mb() * 1024;
+      // TODO: We may want to pass this in from studio for a more flexible
+      // config.
+      perfetto::protos::TraceConfig config = PerfettoManager::BuildConfig(
+          app.app_pkg_name, acquired_buffer_size_kb);
+      success =
+          perfetto_manager_->StartProfiling(config, &app.trace_path, &error);
+    } else {
+      success = atrace_manager_->StartProfiling(
+          app.app_pkg_name, app.configuration.sampling_interval_us(),
+          app.configuration.buffer_size_in_mb(), &acquired_buffer_size_kb,
+          &app.trace_path, &error);
+    }
     response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
   }
   if (success) {

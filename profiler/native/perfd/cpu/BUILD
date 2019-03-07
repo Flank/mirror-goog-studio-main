@@ -11,6 +11,8 @@ cc_library(
         "cpu_service.cc",
         "cpu_usage_sampler.cc",
         "internal_cpu_service.cc",
+        "perfetto.cc",
+        "perfetto_manager.cc",
         "simpleperf.cc",
         "simpleperf_manager.cc",
         "thread_monitor.cc",
@@ -26,6 +28,8 @@ cc_library(
         "cpu_service.h",
         "cpu_usage_sampler.h",
         "internal_cpu_service.h",
+        "perfetto.h",
+        "perfetto_manager.h",
         "profiling_app.h",
         "simpleperf.h",
         "simpleperf_manager.h",
@@ -37,6 +41,7 @@ cc_library(
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
+        "-I$(GENDIR)/external/perfetto_repo",
     ],
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
@@ -44,6 +49,7 @@ cc_library(
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
+        "@perfetto_repo//:cc_proto",
     ],
 )
 
@@ -55,7 +61,9 @@ cc_test(
         "cpu_service_test.cc",
         "cpu_usage_sampler_test.cc",
         "fake_atrace.h",
+        "fake_perfetto.h",
         "fake_simpleperf.h",
+        "perfetto_manager_test.cc",
         "simpleperf_manager_test.cc",
         "simpleperf_test.cc",
     ],
@@ -64,6 +72,7 @@ cc_test(
         "-Itools/base/profiler/native/tests",
         "-Itools/base/transport",
         "-I$(GENDIR)/tools/base/transport",
+        "-I$(GENDIR)/external/perfetto_repo",
     ],
     data = [
         "//tools/base/profiler/native/testdata:perfd/cpu",
@@ -76,5 +85,6 @@ cc_test(
         "//tools/base/profiler/native/perfd",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/daemon",
+        "@perfetto_repo//:cc_proto",
     ],
 )

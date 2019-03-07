@@ -23,6 +23,7 @@
 #include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
+#include "perfd/cpu/perfetto_manager.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
@@ -53,7 +54,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
             // hitch). This data dump enables us to have long captures.
             std::unique_ptr<AtraceManager>(new AtraceManager(
                 std::unique_ptr<FileSystem>(new DiskFileSystem()), clock,
-                1000 * 30))) {}
+                1000 * 30)),
+            std::unique_ptr<PerfettoManager>(new PerfettoManager())) {}
 
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
@@ -61,7 +63,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
                  TerminationService* termination_service,
                  ActivityManager* activity_manager,
                  std::unique_ptr<SimpleperfManager> simpleperf_manager,
-                 std::unique_ptr<AtraceManager> atrace_manager)
+                 std::unique_ptr<AtraceManager> atrace_manager,
+                 std::unique_ptr<PerfettoManager> perfetto_manager)
       : cache_(*cpu_cache),
         clock_(clock),
         usage_sampler_(*usage_sampler),
@@ -69,11 +72,13 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         cpu_config_(cpu_config),
         activity_manager_(activity_manager),
         simpleperf_manager_(std::move(simpleperf_manager)),
-        atrace_manager_(std::move(atrace_manager)) {
+        atrace_manager_(std::move(atrace_manager)),
+        perfetto_manager_(std::move(perfetto_manager)) {
     termination_service->RegisterShutdownCallback([this](int signal) {
       this->activity_manager_->Shutdown();
       this->simpleperf_manager_->Shutdown();
       this->atrace_manager_->Shutdown();
+      this->perfetto_manager_->Shutdown();
     });
   }
 
@@ -139,12 +144,19 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // Visible for testing.
   AtraceManager* atrace_manager() { return atrace_manager_.get(); }
 
+  // Visible for testing.
+  PerfettoManager* perfetto_manager() { return perfetto_manager_.get(); }
+
  private:
   // Stops profiling process of |pid|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);
   // otherwise, discard any capture result.
   void DoStopProfilingApp(
       int32_t pid, profiler::proto::CpuProfilingAppStopResponse* response);
+
+  // Helper function for testing the config and device level to determine
+  // if we should use perfetto when capturing an atrace.
+  bool usePerfetto();
 
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
@@ -159,6 +171,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   ActivityManager* activity_manager_;
   std::unique_ptr<SimpleperfManager> simpleperf_manager_;
   std::unique_ptr<AtraceManager> atrace_manager_;
+  std::unique_ptr<PerfettoManager> perfetto_manager_;
 };
 
 }  // namespace profiler

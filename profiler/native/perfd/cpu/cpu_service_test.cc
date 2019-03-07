@@ -18,6 +18,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "perfd/cpu/fake_atrace.h"
+#include "perfd/cpu/fake_perfetto.h"
 #include "perfd/cpu/fake_simpleperf.h"
 #include "utils/device_info_helper.h"
 #include "utils/fake_clock.h"
@@ -87,19 +88,23 @@ struct CpuServiceTest : testing::Test {
             &clock_, std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
         std::unique_ptr<AtraceManager>(new AtraceManager(
             std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock_, 50,
-            std::unique_ptr<Atrace>(new FakeAtrace(&clock_, false))))));
+            std::unique_ptr<Atrace>(new FakeAtrace(&clock_, false)))),
+        std::unique_ptr<PerfettoManager>(new PerfettoManager(
+            std::unique_ptr<Perfetto>(new FakePerfetto())))));
   }
 
   // Helper function to run atrace test.
   // TODO: Update function to validate perfetto is run on Q instead of atrace
   // with perfetto flag enabled.
-  void RunAtraceTest(int feature_level) {
+  void RunAtraceTest(int feature_level, bool enable_perfetto,
+                     bool expect_perfetto) {
     DeviceInfoHelper::SetDeviceInfo(feature_level);
     const int64_t kSessionId = 123;
     const int32_t kPid = 456;
     // Need to create an app cache for test to store profiling is running.
     cache_.AllocateAppCache(kPid);
     profiler::proto::AgentConfig::CpuConfig config;
+    config.set_use_perfetto(enable_perfetto);
     std::unique_ptr<CpuServiceImpl> cpu_service =
         ConfigureDefaultCpuServiceImpl(config);
     // Start an atrace recording.
@@ -121,8 +126,9 @@ struct CpuServiceTest : testing::Test {
             .ok());
     EXPECT_EQ(start_response.status(), CpuProfilingAppStartResponse::SUCCESS);
 
-    // Validate atrace state.
-    EXPECT_TRUE(cpu_service->atrace_manager()->IsProfiling());
+    // Validate state.
+    EXPECT_EQ(cpu_service->atrace_manager()->IsProfiling(), !expect_perfetto);
+    EXPECT_EQ(cpu_service->perfetto_manager()->IsProfiling(), expect_perfetto);
 
     CpuProfilingAppStopRequest stop_request;
     stop_request.mutable_session()->set_session_id(kSessionId);
@@ -135,8 +141,9 @@ struct CpuServiceTest : testing::Test {
     EXPECT_TRUE(
         cpu_service->StopProfilingApp(&context, &stop_request, nullptr).ok());
 
-    // Validate atrace state.
+    // Validate state.
     EXPECT_FALSE(cpu_service->atrace_manager()->IsProfiling());
+    EXPECT_FALSE(cpu_service->perfetto_manager()->IsProfiling());
 
     // This needs to happen otherwise the termination handler attempts to call
     // shutdown on the CpuService which causes a segfault.
@@ -216,7 +223,8 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
       std::unique_ptr<AtraceManager>(new AtraceManager(
           std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock_, 50,
           std::unique_ptr<Atrace>(new FakeAtrace(&clock_)))),
-  };
+      std::unique_ptr<PerfettoManager>(
+          new PerfettoManager(std::unique_ptr<Perfetto>(new FakePerfetto())))};
 
   // Start an ART recording.
   ServerContext context;
@@ -239,6 +247,24 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
   EXPECT_THAT(cmd_2, HasSubstr(kProfileStop));
 }
 
-TEST_F(CpuServiceTest, AtraceRunsOnO) { RunAtraceTest(DeviceInfo::O); }
+TEST_F(CpuServiceTest, AtraceRunsOnOWithPerfettoEnabled) {
+  RunAtraceTest(DeviceInfo::O, true, false);
+}
+
+TEST_F(CpuServiceTest, AtraceRunsOnOWithPerfettoDisabled) {
+  RunAtraceTest(DeviceInfo::O, false, false);
+}
+
+TEST_F(CpuServiceTest, AtraceRunsOnPWithPerfettoEnabled) {
+  RunAtraceTest(DeviceInfo::P, true, false);
+}
+
+TEST_F(CpuServiceTest, AtraceRunsOnQWithPerfettoDisabled) {
+  RunAtraceTest(DeviceInfo::Q, false, false);
+}
+
+TEST_F(CpuServiceTest, PerfettoRunsOnQWithPerfettoEnabled) {
+  RunAtraceTest(DeviceInfo::Q, true, true);
+}
 
 }  // namespace profiler
