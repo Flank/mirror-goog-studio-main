@@ -59,10 +59,10 @@ class CacheabilityTest {
                     ":app:generateDebugResources",
                     ":app:generateDebugAssets",
                     ":app:compileDebugSources",
+                    ":app:preDebugBuild",
                     ":app:preDebugUnitTestBuild"
                 ),
                 FROM_CACHE to setOf(
-                    ":app:preDebugBuild",
                     ":app:generateDebugBuildConfig",
                     ":app:compileDebugShaders",
                     ":app:javaPreCompileDebug",

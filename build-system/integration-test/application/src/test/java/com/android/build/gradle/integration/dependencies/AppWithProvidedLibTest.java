@@ -25,8 +25,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -40,16 +42,35 @@ import org.junit.Test;
 public class AppWithProvidedLibTest {
 
     @ClassRule
-    public static GradleTestProject project = builder()
-            .fromTestProject("projectWithModules")
-            .create();
+    public static GradleTestProject project = builder().fromTestProject("dynamicApp").create();
     static ModelContainer<AndroidProject> modelContainer;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
-                .write("include 'app', 'library'");
+        // create a library module.
+        File rootFolder = project.getSettingsFile().getParentFile();
+        File libFolder = new File(rootFolder, "library");
+        FileUtils.mkdirs(libFolder);
 
+        Files.asCharSink(new File(libFolder, "build.gradle"), Charsets.UTF_8)
+                .write(
+                        "apply plugin: 'com.android.library'\n"
+                                + "apply from: \"../../commonLocalRepo.gradle\"\n"
+                                + "\n"
+                                + "android {\n"
+                                + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                                + "\n"
+                                + "}\n");
+        final File mainFolder = new File(libFolder, "src/main");
+        FileUtils.mkdirs(mainFolder);
+        Files.asCharSink(new File(mainFolder, "AndroidManifest.xml"), Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "      package=\"com.example.android.multiproject.library.base\">\n"
+                                + "</manifest>\n");
+
+        TestFileUtils.appendToFile(project.getSettingsFile(), "\ninclude 'library'");
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n" +
                 "dependencies {\n" +

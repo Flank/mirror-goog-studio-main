@@ -282,7 +282,8 @@ public class ApplicationTaskManager extends TaskManager {
                     task.configure(t -> t.setEnabled(false));
                 }
             } else {
-                task = taskFactory.register(new AppPreBuildTask.CreationAction(scope));
+                //noinspection unchecked
+                task = taskFactory.register(AppPreBuildTask.getCreationAction(scope));
             }
 
             if (!useDependencyConstraints) {

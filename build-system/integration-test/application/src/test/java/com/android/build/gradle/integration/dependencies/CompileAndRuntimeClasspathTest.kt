@@ -42,7 +42,7 @@ class CompileAndRuntimeClasspathTest {
             |}""".trimMargin()
         )
 
-        val result = project.executor().expectFailure().run("preDebugBuild")
+        val result = project.executor().expectFailure().run("assembleDebug")
         result.stderr.use {
             ScannerSubject.assertThat(it).contains(
                 "> Could not resolve all files for configuration ':debugCompileClasspath'.\n".toSystemLineSeparator() +
