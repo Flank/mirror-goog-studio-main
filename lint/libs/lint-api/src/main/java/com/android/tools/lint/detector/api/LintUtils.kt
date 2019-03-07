@@ -1320,9 +1320,7 @@ fun getLanguageLevel(
     defaultLevel: LanguageLevel
 ): LanguageLevel {
     val p = project.ideaProject ?: return defaultLevel
-    val extension = p.getComponent<LanguageLevelProjectExtension>(
-        LanguageLevelProjectExtension::class.java
-    ) ?: return defaultLevel
+    val extension = LanguageLevelProjectExtension.getInstance(p) ?: return defaultLevel
     return extension.languageLevel
 }
 

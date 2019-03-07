@@ -40,6 +40,7 @@ import com.android.tools.lint.checks.GradleDetector.Companion.EXPIRING_TARGET_SD
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_GETTER
 import com.android.tools.lint.checks.GradleDetector.Companion.GRADLE_PLUGIN_COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.HIGH_APP_VERSION_CODE
+import com.android.tools.lint.checks.GradleDetector.Companion.LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8
 import com.android.tools.lint.checks.GradleDetector.Companion.MIN_SDK_TOO_LOW
 import com.android.tools.lint.checks.GradleDetector.Companion.NOT_INTERPOLATED
 import com.android.tools.lint.checks.GradleDetector.Companion.PATH
@@ -2741,6 +2742,72 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "    ~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings"
             )
+    }
+
+    fun testJava8WithLifecycleAnnotationProcessor() {
+        lint().files(
+            gradle(
+                        "dependencies {\n" +
+                        "  implementation \"android.arch.lifecycle:runtime:1.1.1\"\n" +
+                        "  annotationProcessor \"android.arch.lifecycle:compiler:1.1.1\"\n" +
+                        "}" +
+                        "android {\n" +
+                        "    compileOptions {\n" +
+                        "        sourceCompatibility JavaVersion.VERSION_1_8\n" +
+                        "        targetCompatibility JavaVersion.VERSION_1_8\n" +
+                        "    }\n" +
+                        "}"
+            )
+        )
+            .issues(LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8)
+            .run()
+            .expect(
+                "" +
+                        "build.gradle:3: Warning: Use the Lifecycle Java 8 API provided by the lifecycle-common-java8 library instead of Lifecycle annotations for faster incremental build. [LifecycleAnnotationProcessorWithJava8]\n" +
+                        "  annotationProcessor \"android.arch.lifecycle:compiler:1.1.1\"\n" +
+                        "  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
+    }
+
+    fun testJava8WithoutLifecycleAnnotationProcessor() {
+        lint().files(
+            gradle(
+                        "dependencies {\n" +
+                        "  implementation \"android.arch.lifecycle:runtime:1.1.1\"\n" +
+                        "  implementation \"android.arch.lifecycle:common-java8:1.1.1\"\n" +
+                        "}" +
+                        "android {\n" +
+                        "    compileOptions {\n" +
+                        "        sourceCompatibility JavaVersion.VERSION_1_8\n" +
+                        "        targetCompatibility JavaVersion.VERSION_1_8\n" +
+                        "    }\n" +
+                        "}"
+            )
+        )
+            .issues(LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8)
+            .run()
+            .expectClean()
+    }
+
+    fun testJava7WithLifecycleAnnotationProcessor() {
+        lint().files(
+            gradle(
+                        "dependencies {\n" +
+                        "  implementation \"android.arch.lifecycle:runtime:1.1.1\"\n" +
+                        "  annotationProcessor \"android.arch.lifecycle:compiler:1.1.1\"\n" +
+                        "}" +
+                        "android {\n" +
+                        "    compileOptions {\n" +
+                        "        sourceCompatibility JavaVersion.VERSION_1_7\n" +
+                        "        targetCompatibility JavaVersion.VERSION_1_7\n" +
+                        "    }\n" +
+                        "}"
+            )
+        )
+            .issues(LIFECYCLE_ANNOTATION_PROCESSOR_WITH_JAVA8)
+            .run()
+            .expectClean()
     }
 
     fun testCompileDeprecationInConsumableModule() {
