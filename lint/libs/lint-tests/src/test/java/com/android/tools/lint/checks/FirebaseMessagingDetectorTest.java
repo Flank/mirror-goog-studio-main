@@ -16,160 +16,90 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.tools.lint.detector.api.Detector;
+import static com.android.tools.lint.checks.FirebaseMessagingDetector.MISSING_TOKEN_REFRESH;
+import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 
-public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
+import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.infrastructure.TestFile;
+import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import org.junit.Test;
+
+public class FirebaseMessagingDetectorTest {
+    @NonNull
+    protected TestLintTask lint() {
+        TestLintTask task = TestLintTask.lint();
+        task.sdkHome(AbstractCheckTest.getSdk());
+        return task;
+    }
 
     @SuppressWarnings("all") // Sample code
-    final TestFile mFirebaseInstanceIdService =
+    final TestFile mFirebaseMessageService =
             java(
-                    "src/com/google/firebase/iid/FirebaseInstanceIdService.java",
                     ""
-                            + "package com.google.firebase.iid;\n"
-                            + "public class FirebaseInstanceIdService {\n"
-                            + "    public void onTokenRefresh() {}\n"
+                            + "package com.google.firebase.messaging;\n"
+                            + "public class FirebaseMessagingService {\n"
+                            + "  public void onNewToken(String token) {\n"
+                            + "  }\n"
                             + "}");
 
-    @SuppressWarnings("all") // Sample code
-    final TestFile mFirebaseInstanceId =
-            java(
-                    "src/com/google/firebase/iid/FirebaseInstanceId.java",
-                    ""
-                            + "package com.google.firebase.iid;\n"
-                            + "public class FirebaseInstanceId {\n"
-                            + "    private String token;"
-                            + "    private FirebaseInstanceId () {\n"
-                            + "        token = \"foo\";\n"
-                            + "    }\n"
-                            + "    public static FirebaseInstanceId getInstance() {\n"
-                            + "        return new FirebaseInstanceId();\n"
-                            + "    }\n"
-                            + "    public String getToken() {\n"
-                            + "        return token;\n"
-                            + "    }\n"
-                            + "}");
-
-    public void testMissingRefreshCallback() throws Exception {
-        //noinspection all // Sample code
-        TestFile myInstanceIdService =
-                java(
-                        "src/test/pkg/MyFirebaseInstanceIdService.java",
-                        ""
-                                + "package test.pkg;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceId;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceIdService;\n"
-                                + "public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {\n"
-                                + "    public MyFirebaseInstanceIdService() {\n"
-                                + "        String token = FirebaseInstanceId.getInstance().getToken();\n"
-                                + "        sendTokenToServer(token);\n"
-                                + "    }\n"
-                                + "    private void sendTokenToServer(String token) {\n"
-                                + "        // update app server with token\n"
-                                + "    }\n"
-                                + "}\n");
-        String expected =
-                ""
-                        + "src/test/pkg/MyFirebaseInstanceIdService.java:6: Warning: getToken() called without defining onTokenRefresh callback. [MissingFirebaseInstanceTokenRefresh]\n"
-                        + "        String token = FirebaseInstanceId.getInstance().getToken();\n"
-                        + "                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n";
-        String result =
-                lintProject(mFirebaseInstanceIdService, mFirebaseInstanceId, myInstanceIdService);
-        assertEquals(expected, result);
-    }
-
-    public void testWithRefreshCallback() throws Exception {
-        //noinspection all // Sample code
-        TestFile myInstanceIdService =
-                java(
-                        "src/test/pkg/MyFirebaseInstanceIdService.java",
-                        ""
-                                + "package test.pkg;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceId;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceIdService;\n"
-                                + "public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {\n"
-                                + "    @Override\n"
-                                + "    public void onTokenRefresh() {\n"
-                                + "        sendTokenToServer(FirebaseInstanceId.getInstance().getToken());\n"
-                                + "    }\n"
-                                + "    private void sendTokenToServer(String token) {\n"
-                                + "        // update app server with token\n"
-                                + "    }\n"
-                                + "}\n");
-        String expected = "No warnings.";
-        String result =
-                lintProject(mFirebaseInstanceIdService, mFirebaseInstanceId, myInstanceIdService);
-        assertEquals(expected, result);
-    }
-
-    public void testGetTokenInDifferentFileThanCallback() throws Exception {
-        //noinspection all // Sample code
-        TestFile myInstanceIdService =
-                java(
-                        "src/test/pkg/MyFirebaseInstanceIdService.java",
-                        ""
-                                + "package test.pkg;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceId;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceIdService;\n"
-                                + "public class MyFirebaseInstanceIdService extends FirebaseInstanceIdService {\n"
-                                + "    @Override\n"
-                                + "    public void onTokenRefresh() {\n"
-                                + "        sendTokenToServer(\"\");\n"
-                                + "    }\n"
-                                + "    private void sendTokenToServer(String token) {\n"
-                                + "        // update app server with token\n"
-                                + "    }\n"
-                                + "}\n");
-        //noinspection all // Sample code
-        TestFile mainActivity =
-                java(
-                        "src/test/pkg/MainActivity.java",
-                        ""
-                                + "package test.pkg;\n"
-                                + "import com.google.firebase.iid.FirebaseInstanceId;\n"
-                                + "public class MainActivity {\n"
-                                + "    public MainActivity() {\n"
-                                + "        FirebaseInstanceId.getInstance().getToken();\n"
-                                + "    }\n"
-                                + "}");
-        String expected = "No warnings.";
-        String result =
-                lintProject(
-                        mFirebaseInstanceIdService,
-                        mFirebaseInstanceId,
-                        myInstanceIdService,
-                        mainActivity);
-        assertEquals(expected, result);
-    }
-
-    public void testSuppress() {
-        // Regression test for
-        // 67986477: It's not possible to suppress MissingFirebaseInstanceTokenRefresh warning
-        //noinspection all // Sample code
+    @Test
+    public void testMissing() {
         lint().files(
                         java(
-                                "package test.pkg;\n"
-                                        + "import com.google.firebase.iid.FirebaseInstanceId;\n"
-                                        + "import com.google.firebase.iid.FirebaseInstanceIdService;\n"
+                                ""
+                                        + "package com.google.firebase.samples.messaging.advanced.services;\n"
                                         + "\n"
-                                        + "public class SomeInteractor {\n"
+                                        + "import com.google.firebase.messaging.FirebaseMessagingService;\n"
                                         + "\n"
-                                        + "    private final FirebaseInstanceId firebaseInstanceId;\n"
-                                        + "\n"
-                                        + "    @SuppressWarnings(\"MissingFirebaseInstanceTokenRefresh\")\n"
-                                        + "    @Override\n"
-                                        + "    public void test() {\n"
-                                        + "        String token = firebaseInstanceId.getToken();\n"
-                                        + "    }\n"
+                                        + "public class MessagingService extends FirebaseMessagingService {\n"
                                         + "}"),
-                        mFirebaseInstanceIdService,
-                        mFirebaseInstanceId)
+                        mFirebaseMessageService)
+                .issues(MISSING_TOKEN_REFRESH)
+                .run()
+                .expect(
+                        ""
+                                + "src/com/google/firebase/samples/messaging/advanced/services/MessagingService.java:5: Warning: Apps that use Firebase Cloud Messaging should implement onNewToken() in order to observe token changes. [MissingFirebaseInstanceTokenRefresh]\n"
+                                + "public class MessagingService extends FirebaseMessagingService {\n"
+                                + "             ~~~~~~~~~~~~~~~~\n"
+                                + "0 errors, 1 warnings");
+    }
+
+    @Test
+    public void testOk() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package com.google.firebase.samples.messaging.advanced.services;\n"
+                                        + "\n"
+                                        + "import android.util.Log;\n"
+                                        + "import com.google.firebase.messaging.FirebaseMessagingService;\n"
+                                        + "\n"
+                                        + "public class MessagingService extends FirebaseMessagingService {\n"
+                                        + "  public void onNewToken(String token) {\n"
+                                        + "    Log.i(TAG, \"Received event: on-new-token: \" + token);\n"
+                                        + "  }\n"
+                                        + "}"),
+                        mFirebaseMessageService)
+                .issues(MISSING_TOKEN_REFRESH)
                 .run()
                 .expectClean();
     }
 
-    @Override
-    protected Detector getDetector() {
-        return new FirebaseMessagingDetector();
+    @Test
+    public void testSuppress() {
+        lint().files(
+                        java(
+                                ""
+                                        + "package com.google.firebase.samples.messaging.advanced.services;\n"
+                                        + "\n"
+                                        + "import com.google.firebase.messaging.FirebaseMessagingService;\n"
+                                        + "\n"
+                                        + "@SuppressWarnings(\"MissingFirebaseInstanceTokenRefresh\")\n"
+                                        + "public class MessagingService extends FirebaseMessagingService {\n"
+                                        + "}"),
+                        mFirebaseMessageService)
+                .issues(MISSING_TOKEN_REFRESH)
+                .run()
+                .expectClean();
     }
 }
