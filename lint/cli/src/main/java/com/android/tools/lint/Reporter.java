@@ -16,8 +16,6 @@
 
 package com.android.tools.lint;
 
-import static com.android.SdkConstants.CURRENT_PLATFORM;
-import static com.android.SdkConstants.PLATFORM_LINUX;
 import static com.android.SdkConstants.UTF_8;
 import static java.io.File.separatorChar;
 
@@ -95,7 +93,6 @@ import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -232,7 +229,7 @@ public abstract class Reporter {
         }
 
         if (file.isAbsolute()) {
-            String relativePath = getRelativePath(output.getParentFile(), file);
+            String relativePath = client.getRelativePath(output.getParentFile(), file);
             if (relativePath != null) {
                 relativePath = relativePath.replace(separatorChar, '/');
                 return encodeUrl(relativePath);
@@ -261,73 +258,6 @@ public abstract class Reporter {
     /** Set mapping of path prefixes to corresponding URLs in the HTML report */
     public void setUrlMap(@Nullable Map<String, String> urlMap) {
         this.urlMap = urlMap;
-    }
-
-    // Based on similar code in com.intellij.openapi.util.io.FileUtilRt
-    @Nullable
-    static String getRelativePath(File base, File file) {
-        if (base == null || file == null) {
-            return null;
-        }
-        if (!base.isDirectory()) {
-            base = base.getParentFile();
-            if (base == null) {
-                return null;
-            }
-        }
-        if (base.equals(file)) {
-            return ".";
-        }
-
-        final String filePath = file.getAbsolutePath();
-        String basePath = base.getAbsolutePath();
-
-        // TODO: Make this return null if we go all the way to the root!
-
-        basePath =
-                !basePath.isEmpty() && basePath.charAt(basePath.length() - 1) == separatorChar
-                        ? basePath
-                        : basePath + separatorChar;
-
-        // Whether filesystem is case sensitive. Technically on OSX you could create a
-        // sensitive one, but it's not the default.
-        boolean caseSensitive = CURRENT_PLATFORM == PLATFORM_LINUX;
-        Locale l = Locale.getDefault();
-        String basePathToCompare = caseSensitive ? basePath : basePath.toLowerCase(l);
-        String filePathToCompare = caseSensitive ? filePath : filePath.toLowerCase(l);
-        if (basePathToCompare.equals(
-                !filePathToCompare.isEmpty()
-                                && filePathToCompare.charAt(filePathToCompare.length() - 1)
-                                        == separatorChar
-                        ? filePathToCompare
-                        : filePathToCompare + separatorChar)) {
-            return ".";
-        }
-        int len = 0;
-        int lastSeparatorIndex = 0;
-        // bug in inspection; see http://youtrack.jetbrains.com/issue/IDEA-118971
-        //noinspection ConstantConditions
-        while (len < filePath.length()
-                && len < basePath.length()
-                && filePathToCompare.charAt(len) == basePathToCompare.charAt(len)) {
-            if (basePath.charAt(len) == separatorChar) {
-                lastSeparatorIndex = len;
-            }
-            len++;
-        }
-        if (len == 0) {
-            return null;
-        }
-
-        StringBuilder relativePath = new StringBuilder();
-        for (int i = len; i < basePath.length(); i++) {
-            if (basePath.charAt(i) == separatorChar) {
-                relativePath.append("..");
-                relativePath.append(separatorChar);
-            }
-        }
-        relativePath.append(filePath.substring(lastSeparatorIndex + 1));
-        return relativePath.toString();
     }
 
     /** Returns whether this report should display info if no issues were found */

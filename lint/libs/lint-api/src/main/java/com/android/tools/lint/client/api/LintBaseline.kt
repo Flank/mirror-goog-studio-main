@@ -94,7 +94,7 @@ class LintBaseline(
      */
     /** Returns whether this baseline is writing its result upon close  */
     /** Sets whether the baseline should write its matched entries on [.close]  */
-    var isWriteOnClose: Boolean = false
+    var writeOnClose: Boolean = false
         set(writeOnClose) {
             if (writeOnClose) {
                 val count = if (totalCount > 0) totalCount + 10 else 30
@@ -109,7 +109,7 @@ class LintBaseline(
      * here is whether we're initially creating the baseline (or resetting it), or
      * whether we're trying to only remove fixed issues.
      */
-    var isRemoveFixed: Boolean = false
+    var removeFixed: Boolean = false
 
     /**
      * If non-null, a list of issues to write back out to the baseline file when the
@@ -143,7 +143,7 @@ class LintBaseline(
             val baselineFile = file
             val message = describeBaselineFilter(
                 foundErrorCount,
-                foundWarningCount, getDisplayPath(project, baselineFile)
+                foundWarningCount, getDisplayPath(client, project, baselineFile)
             )
             LintClient.report(
                 client, IssueRegistry.BASELINE, message,
@@ -152,7 +152,7 @@ class LintBaseline(
         }
 
         val fixedCount = fixedCount
-        if (fixedCount > 0 && !(isWriteOnClose && isRemoveFixed)) {
+        if (fixedCount > 0 && !(writeOnClose && removeFixed)) {
             val client = driver.client
             val baselineFile = file
             val ids = Maps.newHashMap<String, Int>()
@@ -183,7 +183,7 @@ class LintBaseline(
             var message = String.format(
                 "%1\$d errors/warnings were listed in the " +
                         "baseline file (%2\$s) but not found in the project; perhaps they have " +
-                        "been fixed?", fixedCount, getDisplayPath(project, baselineFile)
+                        "been fixed?", fixedCount, getDisplayPath(client, project, baselineFile)
             )
             if (LintClient.isGradle && project.gradleProjectModel != null &&
                 !project.gradleProjectModel!!.lintOptions.isCheckDependencies
@@ -229,7 +229,7 @@ class LintBaseline(
         project: Project?
     ): Boolean {
         val found = findAndMark(issue, location, message, severity)
-        if (isWriteOnClose && (!isRemoveFixed || found)) {
+        if (writeOnClose && (!removeFixed || found)) {
 
             if (entriesToWrite != null) {
                 entriesToWrite!!.add(ReportedEntry(issue, project, location, message))
@@ -398,7 +398,7 @@ class LintBaseline(
 
     /** Finishes writing the baseline  */
     fun close() {
-        if (isWriteOnClose) {
+        if (writeOnClose) {
             val parentFile = file.parentFile
             if (parentFile != null && !parentFile.exists()) {
                 val mkdirs = parentFile.mkdirs()
@@ -419,8 +419,8 @@ class LintBaseline(
                     if (revision != null) {
                         writer.write(String.format(" by=\"lint %1\$s\"", revision))
                     }
-                    attributes?.let {
-                        it.asSequence().sortedBy { it.key }.forEach {
+                    attributes?.let { map ->
+                        map.asSequence().sortedBy { it.key }.forEach {
                             writer.write(" ${it.key}=\"${toXmlAttributeValue(it.value)}\"")
                         }
                     }
@@ -560,7 +560,7 @@ class LintBaseline(
                     indent(writer, 2)
                     writer.write("<")
                     writer.write(TAG_LOCATION)
-                    val path = getDisplayPath(project, currentLocation.file)
+                    val path = getDisplayPath(client, project, currentLocation.file)
                     writeAttribute(writer, 3, ATTR_FILE, path)
                     val start = currentLocation.start
                     if (start != null) {
@@ -637,7 +637,7 @@ class LintBaseline(
             warnings: Int,
             baselineDisplayPath: String
         ): String {
-            val counts = describeCounts(errors, warnings, false, true)
+            val counts = describeCounts(errors, warnings, comma = false, capitalize = true)
             // Keep in sync with isFilteredMessage() below
             return if (errors + warnings == 1) {
                 "$counts was filtered out because it is listed in the baseline file, $baselineDisplayPath\n"
@@ -685,9 +685,12 @@ class LintBaseline(
             return true
         }
 
-        private fun getDisplayPath(project: Project?, file: File): String {
+        private fun getDisplayPath(client: LintClient, project: Project?, file: File): String {
             var path = file.path
-            if (project != null && path.startsWith(project.referenceDir.path)) {
+            if (project == null) {
+                return path
+            }
+            if (path.startsWith(project.referenceDir.path)) {
                 var chop = project.referenceDir.path.length
                 if (path.length > chop && path[chop] == File.separatorChar) {
                     chop++
@@ -695,6 +698,11 @@ class LintBaseline(
                 path = path.substring(chop)
                 if (path.isEmpty()) {
                     path = file.name
+                }
+            } else if (file.isAbsolute && file.exists()) {
+                path = client.getRelativePath(project.referenceDir, file)
+                if (path == null) {
+                    path = file.path
                 }
             }
 

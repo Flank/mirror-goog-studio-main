@@ -289,6 +289,10 @@ public class LintCliClient extends LintClient {
                 System.err.println(getBaselineCreationMessage(baselineFile));
                 return ERRNO_CREATED_BASELINE;
             }
+        } else if (baseline != null && baseline.getWriteOnClose() && baseline.getFixedCount() > 0
+                && flags.isRemoveFixedBaselineIssues()) {
+            baseline.close();
+            return ERRNO_CREATED_BASELINE;
         }
 
         return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
@@ -1133,7 +1137,8 @@ public class LintCliClient extends LintClient {
         return getDisplayPath(project, file, flags.isFullPath());
     }
 
-    static String getDisplayPath(@NonNull Project project, @NonNull File file, boolean fullPath) {
+    @NonNull
+    String getDisplayPath(@NonNull Project project, @NonNull File file, boolean fullPath) {
         String path = file.getPath();
         if (!fullPath && path.startsWith(project.getReferenceDir().getPath())) {
             int chop = project.getReferenceDir().getPath().length();
@@ -1147,7 +1152,10 @@ public class LintCliClient extends LintClient {
         } else if (fullPath) {
             path = getCleanPath(file.getAbsoluteFile());
         } else if (file.isAbsolute() && file.exists()) {
-            path = Reporter.getRelativePath(project.getReferenceDir(), file);
+            path = getRelativePath(project.getReferenceDir(), file);
+            if (path == null) {
+                path = file.getPath();
+            }
         }
 
         return path;

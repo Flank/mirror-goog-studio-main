@@ -200,7 +200,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
             while (location != null) {
                 indent(2)
                 writer.write("<location")
-                val path = LintCliClient.getDisplayPath(
+                val path = client.getDisplayPath(
                     warning.project,
                     location.file,
                     // Don't use absolute paths in baseline files
@@ -272,7 +272,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
                     indent(3)
                     writer.write("<edit")
 
-                    val path = LintCliClient.getDisplayPath(
+                    val path = client.getDisplayPath(
                         warning.project,
                         file.file,
                         // Don't use absolute paths in baseline files

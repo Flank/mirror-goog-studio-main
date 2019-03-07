@@ -17,16 +17,10 @@
 package com.android.tools.lint;
 
 import static com.android.tools.lint.Reporter.encodeUrl;
-import static com.android.tools.lint.Reporter.getRelativePath;
 
-import java.io.File;
 import junit.framework.TestCase;
 
 public class ReporterTest extends TestCase {
-    private static File file(String path) {
-        return new File(path.replace('/', File.separatorChar));
-    }
-
     public void testEncodeUrl() {
         assertEquals("a/b/c", encodeUrl("a/b/c"));
         assertEquals("a/b/c", encodeUrl("a\\b\\c"));
@@ -35,18 +29,5 @@ public class ReporterTest extends TestCase {
                 encodeUrl("a/b/c/$&+,:;=?@/foo bar%/d"));
         assertEquals("a/%28b%29/d", encodeUrl("a/(b)/d"));
         assertEquals("a/b+c/d", encodeUrl("a/b c/d")); // + or %20
-    }
-
-    public void testRelative() {
-        assertEquals(file("../../d/e/f").getPath(), getRelativePath(file("a/b/c"), file("d/e/f")));
-        assertEquals(file("../d/e/f").getPath(), getRelativePath(file("a/b/c"), file("a/d/e/f")));
-        assertEquals(
-                file("../d/e/f").getPath(),
-                getRelativePath(file("1/2/3/a/b/c"), file("1/2/3/a/d/e/f")));
-        assertEquals(file("c").getPath(), getRelativePath(file("a/b/c"), file("a/b/c")));
-        assertEquals(
-                file("../../e").getPath(), getRelativePath(file("a/b/c/d/e/f"), file("a/b/c/e")));
-        assertEquals(
-                file("d/e/f").getPath(), getRelativePath(file("a/b/c/e"), file("a/b/c/d/e/f")));
     }
 }

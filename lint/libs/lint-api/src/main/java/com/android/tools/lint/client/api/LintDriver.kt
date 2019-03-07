@@ -37,6 +37,7 @@ import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.resources.ResourceItem
 import com.android.ide.common.resources.ResourceRepository
 import com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER
+import com.android.ide.common.util.PathString
 import com.android.repository.Revision
 import com.android.repository.api.ProgressIndicator
 import com.android.resources.ResourceFolderType
@@ -48,6 +49,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ClassScanner
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Desugaring
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.GradleContext
 import com.android.tools.lint.detector.api.GradleScanner
@@ -114,6 +116,7 @@ import org.objectweb.asm.tree.MethodNode
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+import org.xmlpull.v1.XmlPullParser
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -2328,6 +2331,26 @@ class LintDriver
             filter: Predicate<GradleVersion>?
         ): GradleVersion? {
             return delegate.getHighestKnownVersion(coordinate, filter)
+        }
+
+        override fun readBytes(resourcePath: PathString): ByteArray {
+            return delegate.readBytes(resourcePath)
+        }
+
+        override fun getDesugaring(project: Project): Set<Desugaring> {
+            return delegate.getDesugaring(project)
+        }
+
+        override fun createXmlPullParser(resourcePath: PathString): XmlPullParser? {
+            return delegate.createXmlPullParser(resourcePath)
+        }
+
+        override fun getExternalAnnotations(projects: Collection<Project>): List<File> {
+            return delegate.getExternalAnnotations(projects)
+        }
+
+        override fun getRelativePath(baseFile: File?, file: File?): String? {
+            return delegate.getRelativePath(baseFile, file)
         }
     }
 

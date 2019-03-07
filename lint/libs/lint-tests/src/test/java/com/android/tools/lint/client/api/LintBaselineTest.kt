@@ -16,23 +16,42 @@
 
 package com.android.tools.lint.client.api
 
-import com.android.tools.lint.checks.AbstractCheckTest
+import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.HardcodedValuesDetector
 import com.android.tools.lint.checks.ManifestDetector
 import com.android.tools.lint.checks.RangeDetector
+import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.detector.api.DefaultPosition
-import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.google.common.base.Charsets
 import com.google.common.io.Files
 import com.google.common.truth.Truth.assertThat
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.io.IOException
 
-class LintBaselineTest : AbstractCheckTest() {
-    @Throws(IOException::class)
+class LintBaselineTest {
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
+
+    /**
+     * Overrides TestLintClient to use the checked-in SDK that is available in the tools/base repo.
+     * The "real" TestLintClient is a public utility for writing lint tests, so it cannot make
+     * assumptions specific to tools/base.
+     */
+    protected inner class ToolsBaseTestLintClient : TestLintClient() {
+        override fun getSdkHome(): File? {
+            return TestUtils.getSdk()
+        }
+    }
+
+    @Test
     fun testBaseline() {
         val baselineFile = File.createTempFile("baseline", ".xml")
         baselineFile.deleteOnExit()
@@ -97,7 +116,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
 """
         Files.asCharSink(baselineFile, Charsets.UTF_8).write(baselineContents)
 
-        val baseline = LintBaseline(createClient(), baselineFile)
+        val baseline = LintBaseline(ToolsBaseTestLintClient(), baselineFile)
 
         var found: Boolean
         found = baseline.findAndMark(
@@ -186,19 +205,29 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertFalse(LintBaseline.isSamePathSuffix("foo", "bar"))
     }
 
-    @Throws(IOException::class)
+    @Test
     fun testFormat() {
         val baselineFile = File.createTempFile("lint-baseline", ".xml")
-        var baseline = LintBaseline(createClient(), baselineFile)
-        assertThat(baseline.isWriteOnClose).isFalse()
-        baseline.isWriteOnClose = true
-        assertThat(baseline.isWriteOnClose).isTrue()
+        val client = ToolsBaseTestLintClient()
+        var baseline = LintBaseline(client, baselineFile)
+        assertThat(baseline.writeOnClose).isFalse()
+        baseline.writeOnClose = true
+        assertThat(baseline.writeOnClose).isTrue()
+
+        val project1Folder = temporaryFolder.newFolder("project1")
+        val project2Folder = temporaryFolder.newFolder("project2")
+        val project2 = Project.create(client, project2Folder, project2Folder)
+
+        // Make sure file exists, since path computations depend on it
+        val sourceFile = File(project1Folder, "my/source/file.txt").absoluteFile
+        sourceFile.parentFile.mkdirs()
+        sourceFile.createNewFile()
 
         baseline.findAndMark(
             HardcodedValuesDetector.ISSUE,
-            Location.create(File("my/source/file.txt"), "", 0),
+            Location.create(sourceFile, "", 0),
             "Hardcoded string \"Fooo\", should use `@string` resource",
-            Severity.WARNING, null
+            Severity.WARNING, project2
         )
         baseline.findAndMark(
             ManifestDetector.USES_SDK,
@@ -232,7 +261,7 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         id="HardcodedText"
         message="Hardcoded string &quot;Fooo&quot;, should use `@string` resource">
         <location
-            file="my/source/file.txt"
+            file="../project1/my/source/file.txt"
             line="1"/>
     </issue>
 
@@ -241,16 +270,16 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(actual).isEqualTo(expected)
 
         // Now load the baseline back in and make sure we can match entries correctly
-        baseline = LintBaseline(createClient(), baselineFile)
-        baseline.isWriteOnClose = true
-        assertThat(baseline.isRemoveFixed).isFalse()
+        baseline = LintBaseline(client, baselineFile)
+        baseline.writeOnClose = true
+        assertThat(baseline.removeFixed).isFalse()
 
         var found: Boolean
         found = baseline.findAndMark(
             HardcodedValuesDetector.ISSUE,
-            Location.create(File("my/source/file.txt"), "", 0),
+            Location.create(sourceFile, "", 0),
             "Hardcoded string \"Fooo\", should use `@string` resource",
-            Severity.WARNING, null
+            Severity.WARNING, project2
         )
         assertThat(found).isTrue()
         found = baseline.findAndMark(
@@ -272,16 +301,16 @@ There are quickfixes to automatically extract this hardcoded string into a resou
         assertThat(actual).isEqualTo(expected)
 
         // Test the skip fix flag
-        baseline = LintBaseline(createClient(), baselineFile)
-        baseline.isWriteOnClose = true
-        baseline.isRemoveFixed = true
-        assertThat(baseline.isRemoveFixed).isTrue()
+        baseline = LintBaseline(client, baselineFile)
+        baseline.writeOnClose = true
+        baseline.removeFixed = true
+        assertThat(baseline.removeFixed).isTrue()
 
         found = baseline.findAndMark(
             HardcodedValuesDetector.ISSUE,
-            Location.create(File("my/source/file.txt"), "", 0),
+            Location.create(sourceFile, "", 0),
             "Hardcoded string \"Fooo\", should use `@string` resource",
-            Severity.WARNING, null
+            Severity.WARNING, project2
         )
         assertThat(found).isTrue()
 
@@ -313,16 +342,11 @@ There are quickfixes to automatically extract this hardcoded string into a resou
                     "        id=\"HardcodedText\"\n" +
                     "        message=\"Hardcoded string &quot;Fooo&quot;, should use `@string` resource\">\n" +
                     "        <location\n" +
-                    "            file=\"my/source/file.txt\"\n" +
+                    "            file=\"../project1/my/source/file.txt\"\n" +
                     "            line=\"1\"/>\n" +
                     "    </issue>\n" +
                     "\n" +
                     "</issues>\n"
         )
-    }
-
-    override fun getDetector(): Detector? {
-        fail("Not used by this test")
-        return null
     }
 }

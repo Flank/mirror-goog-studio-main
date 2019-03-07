@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.CLASS_FOLDER
+import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.DOT_AAR
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_SRCJAR
@@ -27,6 +28,7 @@ import com.android.SdkConstants.FN_ANNOTATIONS_ZIP
 import com.android.SdkConstants.FN_BUILD_GRADLE
 import com.android.SdkConstants.GEN_FOLDER
 import com.android.SdkConstants.LIBS_FOLDER
+import com.android.SdkConstants.PLATFORM_LINUX
 import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
 import com.android.builder.model.AndroidLibrary
@@ -77,6 +79,7 @@ import org.w3c.dom.Node
 import org.xmlpull.v1.XmlPullParser
 import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.File.separatorChar
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.HttpURLConnection
@@ -87,6 +90,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.util.ArrayList
 import java.util.HashMap
+import java.util.Locale
 import java.util.function.Predicate
 
 /**
@@ -1649,6 +1653,75 @@ abstract class LintClient {
         for (dependency in library.libraryDependencies) {
             addLibraries(result, dependency, seen)
         }
+    }
+
+    /** Returns the path to a given [file], given a [baseFile] to make it relative to. */
+    open fun getRelativePath(baseFile: File?, file: File?): String? {
+        // Based on similar code in com.intellij.openapi.util.io.FileUtilRt
+        var base = baseFile
+        if (base == null || file == null) {
+            return null
+        }
+        if (!base.isDirectory) {
+            base = base.parentFile
+            if (base == null) {
+                return null
+            }
+        }
+
+        if (base.path == file.path) {
+            return "."
+        }
+
+        val filePath = file.absolutePath
+        var basePath = base.absolutePath
+
+        // TODO: Make this return null if we go all the way to the root!
+
+        basePath = if (!basePath.isEmpty() && basePath[basePath.length - 1] == separatorChar)
+            basePath
+        else
+            basePath + separatorChar
+
+        // Whether filesystem is case sensitive. Technically on OSX you could create a
+        // sensitive one, but it's not the default.
+        val caseSensitive = CURRENT_PLATFORM == PLATFORM_LINUX
+        val l = Locale.getDefault()
+        val basePathToCompare = if (caseSensitive) basePath else basePath.toLowerCase(l)
+        val filePathToCompare = if (caseSensitive) filePath else filePath.toLowerCase(l)
+        if (basePathToCompare == (if (!filePathToCompare.isEmpty() &&
+                filePathToCompare[filePathToCompare.length - 1] == separatorChar)
+                filePathToCompare
+            else
+                filePathToCompare + separatorChar)
+        ) {
+            return "."
+        }
+        var len = 0
+        var lastSeparatorIndex = 0
+
+        while (len < filePath.length &&
+            len < basePath.length &&
+            filePathToCompare[len] == basePathToCompare[len]
+        ) {
+            if (basePath[len] == separatorChar) {
+                lastSeparatorIndex = len
+            }
+            len++
+        }
+        if (len == 0) {
+            return null
+        }
+
+        val relativePath = StringBuilder()
+        for (i in len until basePath.length) {
+            if (basePath[i] == separatorChar) {
+                relativePath.append("..")
+                relativePath.append(separatorChar)
+            }
+        }
+        relativePath.append(filePath.substring(lastSeparatorIndex + 1))
+        return relativePath.toString()
     }
 
     private class RepoLogger : ProgressIndicatorAdapter() {
