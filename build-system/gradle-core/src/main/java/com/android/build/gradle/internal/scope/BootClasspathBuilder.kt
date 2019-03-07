@@ -27,11 +27,12 @@ import java.util.Objects
 import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
+import java.util.concurrent.ConcurrentHashMap
 
 /** Utility methods for computing class paths to use for compilation.  */
 object BootClasspathBuilder {
 
-    private val classpathCache = mutableMapOf<Int, List<File>>()
+    private val classpathCache = ConcurrentHashMap<Int, List<File>>()
 
     /**
      * Computes the classpath for compilation.
@@ -86,9 +87,7 @@ object BootClasspathBuilder {
         androidTarget: IAndroidTarget,
         addAllOptionalLibraries: Boolean,
         libraryRequests: List<LibraryRequest>
-    ): Int {
-        return androidTarget.hashCode() + addAllOptionalLibraries.hashCode() + libraryRequests.map { it.hashCode() }.sum()
-    }
+    )= Objects.hash(androidTarget, addAllOptionalLibraries, libraryRequests)
 
     /**
      * Calculates the list of additional and requested optional library jar files
