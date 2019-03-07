@@ -677,6 +677,35 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
     }
 
     private inner class ApiVisitor(private val context: JavaContext) : UElementHandler() {
+
+        private fun report(
+            issue: Issue,
+            node: UElement,
+            location: Location,
+            type: String,
+            sig: String,
+            requires: Int,
+            minSdk: Int,
+            fix: LintFix? = null,
+            owner: String? = null,
+            name: String? = null,
+            @Suppress("UNUSED_PARAMETER")
+            desc: String? = null
+        ) {
+            val min = Math.max(minSdk, getTargetApi(node))
+
+            // For preview releases, don't show the API level as a number; show it using
+            // a version code
+            val apiLevel = if (requires <= SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+                requires.toString()
+            } else {
+                SdkVersionInfo.getCodeName(requires) ?: requires.toString()
+            }
+
+            val message = "${type.capitalize()} requires API level $apiLevel (current min is $min): `$sig`"
+            report(issue, node, location, message, fix, owner, name, desc)
+        }
+
         private fun report(
             issue: Issue,
             node: UElement,
@@ -748,10 +777,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
             val signature = expression.asSourceString()
             val location = context.getLocation(expression)
-            val min = Math.max(minSdk, getTargetApi(expression))
-            val message =
-                "Method reference requires API level $api (current min is $min): `$signature`"
-            report(UNSUPPORTED, expression, location, message, apiLevelFix(api), owner, name, desc)
+            report(UNSUPPORTED, expression, location, "Method reference", signature, api, minSdk, apiLevelFix(api), owner, name, desc)
         }
 
         override fun visitBinaryExpressionWithType(node: UBinaryExpressionWithType) {
@@ -810,12 +836,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 return true
             }
 
-            val min = Math.max(minSdk, getTargetApi(node))
-            val message =
-                "Class requires API level $api (current min is $min): `$expressionOwner`"
-
             val location = context.getLocation(node)
-            report(UNSUPPORTED, node, location, message, apiLevelFix(api), expressionOwner)
+            report(UNSUPPORTED, node, location, "Class", expressionOwner, api, minSdk, apiLevelFix(api), expressionOwner)
             return false
         }
 
@@ -887,17 +909,17 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     if (!isSuppressed(context, api, node, minSdk)) {
                         val location = context.getLocation(node)
                         val desc = if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT))
-                            "Default"
+                            "Default method"
                         else
-                            "Static interface"
-                        val min = Math.max(minSdk, getTargetApi(node))
-                        val message =
-                            "$desc method requires API level $api (current min is $min)"
+                            "Static interface method"
                         report(
                             UNSUPPORTED,
                             node,
                             location,
-                            message,
+                            desc,
+                            containingClass.name + "#" + node.name,
+                            api,
+                            minSdk,
                             apiLevelFix(api),
                             containingClass.qualifiedName
                         )
@@ -935,7 +957,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 if (fullClassName != null) {
                                     className = fullClassName
                                 }
-                                fqcn = className + '#'.toString() + name
+                                fqcn = "$className#$name"
                             } else {
                                 fqcn = name
                             }
@@ -1066,10 +1088,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             }
 
             val location = context.getNameLocation(element)
-            val min = Math.max(minSdk, getTargetApi(element))
-            val message =
-                "${descriptor ?: "Class"} requires API level $api (current min is $min): `$fqcn`"
-            report(UNSUPPORTED, element, location, message, apiLevelFix(api), owner)
+            val desc = descriptor ?: "Class"
+            report(UNSUPPORTED, element, location, desc, fqcn, api, minSdk, apiLevelFix(api), owner)
         }
 
         private fun checkAnnotationTarget(
@@ -1530,11 +1550,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             } else {
                 context.getLocation(reference)
             }
-            val min = Math.max(minSdk, getTargetApi(reference))
-            val message =
-                "Call requires API level $api (current min is $min): `$signature`"
-
-            report(UNSUPPORTED, reference, location, message, apiLevelFix(api), owner, name, desc)
+            report(UNSUPPORTED, reference, location, "Call", signature, api, minSdk, apiLevelFix(api), owner, name, desc)
         }
 
         private fun getRequiresApiFromAnnotations(modifierList: PsiModifierList): Int {
@@ -1624,10 +1640,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                             fqcn = member.name ?: ""
                         }
 
-                        val min = Math.max(minSdk, getTargetApi(expression))
-                        val message =
-                            "Call requires API level $api (current min is $min): `$fqcn`"
-                        report(UNSUPPORTED, expression, location, message, apiLevelFix(api))
+                        report(UNSUPPORTED, expression, location, "Call", fqcn, api, minSdk, apiLevelFix(api))
                     }
                 }
 
@@ -1767,9 +1780,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                 val location = context.getLocation(typeReference)
                 val fqcn = resolved.qualifiedName
-                val message =
-                    "Class requires API level $api (current min is $minSdk): `$fqcn`"
-                report(UNSUPPORTED, typeReference, location, message, apiLevelFix(api), signature)
+                report(UNSUPPORTED, typeReference, location, "Class", fqcn ?: "", api, minSdk, apiLevelFix(api), signature)
             }
         }
 
@@ -1852,10 +1863,6 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         return
                     }
 
-                    val min = Math.max(minSdk, getTargetApi(node))
-                    val message =
-                        "Field requires API level $api (current min is $min): `$fqcn`"
-
                     // If the reference is a qualified expression, don't just highlight the
                     // field name itself; include the qualifiers too
                     var locationNode = node
@@ -1872,7 +1879,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     }
 
                     val location = context.getLocation(locationNode)
-                    report(issue, node, location, message, apiLevelFix(api), owner, name)
+                    report(issue, node, location, "Field", fqcn, api, minSdk, apiLevelFix(api), owner, name)
                 }
             }
         }

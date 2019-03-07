@@ -2586,10 +2586,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
         // Default methods require minSdkVersion >= N
         String expected =
                 ""
-                        + "src/main/java/test/pkg/InterfaceMethodTest.java:6: Error: Default method requires API level 24 (current min is 15) [NewApi]\n"
+                        + "src/main/java/test/pkg/InterfaceMethodTest.java:6: Error: Default method requires API level 24 (current min is 15): InterfaceMethodTest#method2 [NewApi]\n"
                         + "    default void method2() {\n"
                         + "    ^\n"
-                        + "src/main/java/test/pkg/InterfaceMethodTest.java:9: Error: Static interface method requires API level 24 (current min is 15) [NewApi]\n"
+                        + "src/main/java/test/pkg/InterfaceMethodTest.java:9: Error: Static interface method requires API level 24 (current min is 15): InterfaceMethodTest#method3 [NewApi]\n"
                         + "    static void method3() {\n"
                         + "    ^\n"
                         + "2 errors, 0 warnings\n";
@@ -4387,14 +4387,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("all") // Sample code
     public void testConcurrentHashMapUsage() {
         ApiLookup lookup = ApiLookup.get(createClient());
-        int version =
-                lookup.getMethodVersion(
-                        "java/util/concurrent/ConcurrentHashMap", "keySet", "(Ljava/lang/Object;)");
-        if (version == -1) {
-            // This test machine doesn't have the right version of Nougat yet
-            return;
-        }
-
         String expected =
                 ""
                         + "src/test/pkg/MapUsage.java:7: Error: The type of the for loop iterated value is java.util.concurrent.ConcurrentHashMap.KeySetView<java.lang.String,java.lang.Object>, which requires API level 24 (current min is 1); to work around this, add an explicit cast to (Map) before the keySet call. [NewApi]\n"
@@ -6100,6 +6092,49 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "        Library().requiresKitKat() // ERROR - requires 19\n"
                                 + "                  ~~~~~~~~~~~~~~\n"
                                 + "1 errors, 0 warnings");
+    }
+
+    public void testFutureApi() {
+        // This test only works while there is a preview API
+        if (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API == SdkVersionInfo.HIGHEST_KNOWN_API) {
+            return;
+        }
+        String preview = SdkVersionInfo.getCodeName(SdkVersionInfo.HIGHEST_KNOWN_API);
+        String expected =
+                ""
+                        + "src/test/pkg/TestRequiresApi.java:8: Error: Call requires API level "
+                        + preview
+                        + " (current min is 15): requiresPreview [NewApi]\n"
+                        + "        requiresPreview();\n"
+                        + "        ~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings";
+        //noinspection all // Sample code
+        lint().files(
+                        manifest().minSdk(15),
+                        java(
+                                "src/test/pkg/TestRequiresApi.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.RequiresApi;\n"
+                                        + "import android.os.Build;\n"
+                                        + "@SuppressWarnings({\"WeakerAccess\", \"unused\"})\n"
+                                        + "public class TestRequiresApi {\n"
+                                        + "    public void caller() {\n"
+                                        + "        requiresPreview();\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi("
+                                        + (SdkVersionInfo.HIGHEST_KNOWN_STABLE_API + 1)
+                                        + ")\n"
+                                        + "    public void requiresPreview() {\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
     }
 
     @Override
