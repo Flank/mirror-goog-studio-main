@@ -29,7 +29,7 @@ public class SdkVersionInfo {
      * release. This number is used as a baseline and any more recent platforms
      * found can be used to increase the highest known number.
      */
-    public static final int HIGHEST_KNOWN_API = 28;
+    public static final int HIGHEST_KNOWN_API = 29;
 
     /**
      * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
@@ -136,6 +136,7 @@ public class SdkVersionInfo {
             case 26: return "8.0";
             case 27: return "8.1";
             case 28: return "9.0";
+            case 29: return "9.+";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
@@ -190,6 +191,8 @@ public class SdkVersionInfo {
                 return "Oreo";
             case 28:
                 return "Pie";
+            case 29:
+                return "Q";
 
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
@@ -211,34 +214,35 @@ public class SdkVersionInfo {
     public static String getBuildCode(int api) {
         // See http://developer.android.com/reference/android/os/Build.VERSION_CODES.html
         switch (api) {
-            case 1:  return "BASE"; //$NON-NLS-1$
-            case 2:  return "BASE_1_1"; //$NON-NLS-1$
-            case 3:  return "CUPCAKE"; //$NON-NLS-1$
-            case 4:  return "DONUT"; //$NON-NLS-1$
-            case 5:  return "ECLAIR"; //$NON-NLS-1$
-            case 6:  return "ECLAIR_0_1"; //$NON-NLS-1$
-            case 7:  return "ECLAIR_MR1"; //$NON-NLS-1$
-            case 8:  return "FROYO"; //$NON-NLS-1$
-            case 9:  return "GINGERBREAD"; //$NON-NLS-1$
-            case 10: return "GINGERBREAD_MR1"; //$NON-NLS-1$
-            case 11: return "HONEYCOMB"; //$NON-NLS-1$
-            case 12: return "HONEYCOMB_MR1"; //$NON-NLS-1$
-            case 13: return "HONEYCOMB_MR2"; //$NON-NLS-1$
-            case 14: return "ICE_CREAM_SANDWICH"; //$NON-NLS-1$
-            case 15: return "ICE_CREAM_SANDWICH_MR1"; //$NON-NLS-1$
-            case 16: return "JELLY_BEAN"; //$NON-NLS-1$
-            case 17: return "JELLY_BEAN_MR1"; //$NON-NLS-1$
-            case 18: return "JELLY_BEAN_MR2"; //$NON-NLS-1$
-            case 19: return "KITKAT"; //$NON-NLS-1$
-            case 20: return "KITKAT_WATCH"; //$NON-NLS-1$
-            case 21: return "LOLLIPOP"; //$NON-NLS-1$
-            case 22: return "LOLLIPOP_MR1"; //$NON-NLS-1$
-            case 23: return "M"; //$NON-NLS-1$
-            case 24: return "N"; //$NON-NLS-1$
-            case 25: return "N_MR1"; //$NON-NLS-1$
-            case 26: return "O"; //$NON-NLS-1$
-            case 27: return "O_MR1"; //$NON-NLS-1$
-            case 28: return "P"; //$NON-NLS-1$
+            case 1:  return "BASE";
+            case 2:  return "BASE_1_1";
+            case 3:  return "CUPCAKE";
+            case 4:  return "DONUT";
+            case 5:  return "ECLAIR";
+            case 6:  return "ECLAIR_0_1";
+            case 7:  return "ECLAIR_MR1";
+            case 8:  return "FROYO";
+            case 9:  return "GINGERBREAD";
+            case 10: return "GINGERBREAD_MR1";
+            case 11: return "HONEYCOMB";
+            case 12: return "HONEYCOMB_MR1";
+            case 13: return "HONEYCOMB_MR2";
+            case 14: return "ICE_CREAM_SANDWICH";
+            case 15: return "ICE_CREAM_SANDWICH_MR1";
+            case 16: return "JELLY_BEAN";
+            case 17: return "JELLY_BEAN_MR1";
+            case 18: return "JELLY_BEAN_MR2";
+            case 19: return "KITKAT";
+            case 20: return "KITKAT_WATCH";
+            case 21: return "LOLLIPOP";
+            case 22: return "LOLLIPOP_MR1";
+            case 23: return "M";
+            case 24: return "N";
+            case 25: return "N_MR1";
+            case 26: return "O";
+            case 27: return "O_MR1";
+            case 28: return "P";
+            case 29: return "Q";
             // If you add more versions here, also update #getAndroidName and
             // #HIGHEST_KNOWN_API
         }

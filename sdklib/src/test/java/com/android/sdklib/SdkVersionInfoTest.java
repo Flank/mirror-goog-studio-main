@@ -61,6 +61,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(26, getApiByPreviewName("Oreo", false));
         assertEquals(28, getApiByPreviewName("P", false));
         assertEquals(28, getApiByPreviewName("Pie", false));
+        assertEquals(29, getApiByPreviewName("Q", false));
 
         assertEquals(-1, getApiByPreviewName("UnknownName", false));
         assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("UnknownName", true));
@@ -73,6 +74,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(26, getApiByBuildCode("O", false));
         assertEquals(27, getApiByBuildCode("O_MR1", false));
         assertEquals(28, getApiByBuildCode("P", true));
+        assertEquals(29, getApiByBuildCode("Q", true));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));
