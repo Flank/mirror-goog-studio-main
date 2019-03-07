@@ -161,7 +161,7 @@ public class TaskRunner {
             this.inputs = inputs;
             this.callable =
                     () -> {
-                        String status = null;
+                        String status = "Not Started";
                         metric = new DeployMetric(name);
                         try (Trace ignored = Trace.begin(name)) {
                             T value = callable.call();
@@ -201,7 +201,6 @@ public class TaskRunner {
         }
 
         public DeployMetric getMetric() {
-            assert metric != null;
             return metric;
         }
     }

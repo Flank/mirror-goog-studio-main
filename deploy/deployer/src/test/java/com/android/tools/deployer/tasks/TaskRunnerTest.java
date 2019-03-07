@@ -104,7 +104,8 @@ public class TaskRunnerTest {
         service.shutdown();
 
         Assert.assertEquals("Failed", task1.getMetric().getStatus());
-        Assert.assertEquals("Success", task2.getMetric().getStatus());
+        // The status of task2 is not deterministic even if it is singled threaded. It depends how quickly task 1 fails.
+        // It can be not started yet (no metrics) or started but dropped.
         Assert.assertEquals("Dropped", add.getMetric().getStatus());
     }
 

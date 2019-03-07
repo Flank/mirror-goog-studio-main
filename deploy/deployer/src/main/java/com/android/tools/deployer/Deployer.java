@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Deployer {
 
@@ -183,7 +184,11 @@ public class Deployer {
         runner.runAsync();
 
         Result result = new Result();
-        tasks.stream().map(task -> task.getMetric()).forEach(metric -> result.metrics.add(metric));
+        // null metrics are from tasks that are not started.
+        tasks.stream()
+                .map(task -> task.getMetric())
+                .filter(Objects::nonNull)
+                .forEach(metric -> result.metrics.add(metric));
         result.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
         return result;
     }
