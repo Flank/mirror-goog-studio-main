@@ -4,9 +4,6 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.perf-logger",
     iml_files = ["perf-logger.iml"],
-    tags = [
-        "no_test_windows",  # b/77288863
-    ],
     test_srcs = [
         "src/main/java",
         "src/test/java",
