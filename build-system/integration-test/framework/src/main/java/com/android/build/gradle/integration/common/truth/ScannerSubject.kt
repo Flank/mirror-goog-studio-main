@@ -49,6 +49,9 @@ class ScannerSubject(failureMetadata: FailureMetadata,
         if (!requestedLines.hasNext()) {
             failWithActual(Fact.simpleFact("empty or null parameter"))
         }
+        if (string.contains("\r\n")) {
+            failWithActual(Fact.simpleFact("parameter contains windows-style line separator"))
+        }
         var nextString = requestedLines.next()
         while(subject.hasNextLine()) {
             val nextLine = subject.nextLine()
@@ -67,6 +70,9 @@ class ScannerSubject(failureMetadata: FailureMetadata,
         val requestedLines = string.split("\n").iterator()
         if (!requestedLines.hasNext()) {
             failWithActual(Fact.simpleFact("empty or null parameter"))
+        }
+        if (string.contains("\r\n")) {
+            failWithActual(Fact.simpleFact("parameter contains windows-style line separator"))
         }
         var nextString = requestedLines.next()
         while(subject.hasNextLine()) {
