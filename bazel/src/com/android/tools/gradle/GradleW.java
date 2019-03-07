@@ -1,6 +1,7 @@
 package com.android.tools.gradle;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -110,6 +111,8 @@ class GradleW {
 
             PathFinder pathFinder = new PathFinder(searchDir, pathMatcher);
             Files.walkFileTree(searchDir, pathFinder);
+            Preconditions.checkNotNull(
+                    pathFinder.result, "Output file %s not found in %s", from, searchDir);
             Files.copy(pathFinder.result, to);
         }
 
@@ -130,7 +133,14 @@ class GradleW {
                 if (search.matches(searchDir.relativize(file))) {
                     if (result != null) {
                         throw new IOException(
-                                "Multiple matches for " + from + " in dir " + searchDir);
+                                "Multiple matches for "
+                                        + from
+                                        + " in dir "
+                                        + searchDir
+                                        + "\n 1. "
+                                        + result
+                                        + "\n 2. "
+                                        + file);
                     }
                     result = file;
                 }
