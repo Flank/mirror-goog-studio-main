@@ -205,7 +205,7 @@ void Daemon::RunServer(const string& server_address) {
 
 bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
                                const string& agent_lib_file_name) {
-  assert(profiler::DeviceInfo::feature_level() >= proto::Device::O);
+  assert(profiler::DeviceInfo::feature_level() >= profiler::DeviceInfo::O);
 
   string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
   PackageManager package_manager;
@@ -315,7 +315,7 @@ AgentData::Status Daemon::GetAgentStatus(int32_t pid) {
     // we couldn't retrieve the process.
     return AgentData::UNATTACHABLE;
   }
-  if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
+  if (profiler::DeviceInfo::feature_level() < profiler::DeviceInfo::O) {
     // pre-O, since the agent is deployed with the app, we should receive a
     // heartbeat right away. We can simply use that as a signal to determine
     // whether an agent can be attached.
@@ -364,7 +364,7 @@ void Daemon::SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp) {
 Status Daemon::ConfigureStartupAgent(
     const profiler::proto::ConfigureStartupAgentRequest* request,
     profiler::proto::ConfigureStartupAgentResponse* response) {
-  if (profiler::DeviceInfo::feature_level() < proto::Device::O) {
+  if (profiler::DeviceInfo::feature_level() < profiler::DeviceInfo::O) {
     return Status(StatusCode::UNIMPLEMENTED,
                   "JVMTI agent cannot be attached on Nougat or older devices");
   }

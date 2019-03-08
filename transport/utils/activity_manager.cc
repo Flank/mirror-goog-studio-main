@@ -20,7 +20,6 @@
 #include <sstream>
 #include <thread>
 
-#include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -28,7 +27,6 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
-using profiler::proto::Device;
 using std::string;
 
 namespace {
@@ -65,7 +63,7 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
       // If there's no '--sampling X', instrumentation is used.
       parameters << "--sampling " << sampling_interval_us << " ";
     }
-    if (DeviceInfo::feature_level() >= 26) {
+    if (DeviceInfo::feature_level() >= DeviceInfo::O) {
       // Use streaming output mode on O or greater.
       parameters << "--streaming ";
     }
@@ -116,7 +114,7 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
     // monitor the file close event for a trace which started by "am start
     // --start-profiler" (http://b/73891014). So working around the issue by
     // just waiting for 5 Seconds.
-    if (is_startup_profiling && DeviceInfo::feature_level() < Device::P) {
+    if (is_startup_profiling && DeviceInfo::feature_level() < DeviceInfo::P) {
       std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
       return true;
     }

@@ -161,13 +161,6 @@ message Device {
     DISCONNECTED = 3; // e.g. unplugged
   }
 
-  // Special Android api levels that the profiler cares about.
-  enum AndroidVersion {
-    UNKNOWN = 0;
-    O = 26; // First API where JVMTI is supported.
-    P = 28;
-  }
-
   // Numeric representation of the device's |serial| and |boot_id| properties.
   // Used for quickly indexing the device instead of having to perform string
   // comparisons.
