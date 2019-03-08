@@ -19,9 +19,9 @@ package com.android.build.gradle.tasks
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
+import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
-import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -54,8 +54,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
-import java.util.ArrayList
-import java.util.concurrent.Future
 import javax.inject.Inject
 import java.util.function.Function as JavaFunction
 
@@ -218,8 +216,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 aapt2ServiceKey: Aapt2ServiceKey,
                 mergedResDirectory: File) {
 
-            val compiling = ArrayList<Future<File>>()
-
             for ((key, value) in inputs) {
                 // Accept only files in subdirectories of the merged resources directory.
                 // Ignore files and directories directly under the merged resources directory.
@@ -237,8 +233,13 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                                     false /* pseudo-localize */,
                                     false /* crunch PNGs */)
                             workerExecutor.submit(
-                                    Aapt2CompileRunnable::class.java,
-                                    Aapt2CompileRunnable.Params(aapt2ServiceKey, listOf(request)))
+                                Aapt2CompileRunnable::class.java,
+                                Aapt2CompileRunnable.Params(
+                                    aapt2ServiceKey,
+                                    listOf(request),
+                                    true
+                                )
+                            )
                         } catch (e: Exception) {
                             throw AaptException("Failed to compile file ${key.absolutePath}", e)
                         }

@@ -45,7 +45,7 @@ class Aapt2ErrorUtilsTest {
             command = "command inputFile=" + request.inputFile.absolutePath
         )
 
-        val rewritten = rewriteCompileException(aaptException, request)
+        val rewritten = rewriteCompileException(aaptException, request, true)
 
         assertThat(rewritten.description).contains(request.originalInputFile.absolutePath)
         assertThat(rewritten.output).contains(request.originalInputFile.absolutePath)

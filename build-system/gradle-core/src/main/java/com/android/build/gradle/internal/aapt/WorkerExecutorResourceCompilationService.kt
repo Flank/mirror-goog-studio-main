@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.aapt
 
-import com.android.build.gradle.internal.res.Aapt2CompileWithBlameRunnable
+import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
@@ -56,8 +56,10 @@ class WorkerExecutorResourceCompilationService(
                 i.rem(buckets) == bucket
             }
             // b/73804575
-            workerExecutor.submit(Aapt2CompileWithBlameRunnable::class.java,
-                Aapt2CompileWithBlameRunnable.Params(aapt2ServiceKey, bucketRequests))
+            workerExecutor.submit(
+                Aapt2CompileRunnable::class.java,
+                Aapt2CompileRunnable.Params(aapt2ServiceKey, bucketRequests, true)
+            )
         }
         requests.clear()
 

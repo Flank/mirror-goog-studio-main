@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.res.namespaced.Aapt2CompileRunnable
+import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.ide.common.resources.CompileResourceRequest

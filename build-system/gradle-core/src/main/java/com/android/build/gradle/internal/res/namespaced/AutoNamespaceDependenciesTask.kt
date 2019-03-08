@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
+import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -371,8 +372,10 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                         inputFile = resourceFile,
                         outputDirectory = nodeOutputDirectory
                     )
-                    val params =
-                        Aapt2CompileRunnable.Params(aapt2ServiceKey, listOf(request))
+                    val params = Aapt2CompileRunnable.Params(
+                        aapt2ServiceKey,
+                        listOf(request)
+                    )
                     tasks.add(forkJoinPool.submit(Aapt2CompileRunnable(params)))
                 }
             }
