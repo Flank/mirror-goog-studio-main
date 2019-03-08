@@ -165,16 +165,34 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "com.google.guava_failureaccess",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/failureaccess/1.0.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/26.0-jre:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
         ":com.google.errorprone_error_prone_annotations",
+        ":com.google.guava_failureaccess",
+        ":com.google.guava_listenablefuture",
         ":com.google.j2objc_j2objc-annotations",
         ":org.checkerframework_checker-qual",
         ":org.codehaus.mojo_animal-sniffer-annotations",
     ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.guava_listenablefuture",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -935,7 +953,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.codehaus.mojo_animal-sniffer-annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.14:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.17:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
