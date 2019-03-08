@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PUBLIC_USE
@@ -30,17 +29,14 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.sdklib.AndroidTargetHash
 import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
@@ -48,7 +44,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Task to perform compilation for Java source code, without or with annotation processing depending
@@ -75,7 +70,7 @@ import javax.inject.Inject
  *     annotation processing and compilation.
  */
 @CacheableTask
-open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
+open class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
 
     @get:Internal
     override lateinit var variantName: String
@@ -107,18 +102,6 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
     @SkipWhenEmpty
     fun getSources(): FileTree {
         return this.project.files(this.sourceFileTrees()).asFileTree
-    }
-
-    @get:OutputDirectory
-    val outputDirectory: DirectoryProperty = objects.directoryProperty()
-
-    /**
-     * Overrides the stock Gradle JavaCompile task output directory as we use instead the
-     * above outputDirectory. The [JavaCompile.destinationDir] is not declared as a Task output
-     * for this task.
-     */
-    override fun getDestinationDir(): File {
-        return outputDirectory.get().asFile
     }
 
     @get:Input
@@ -237,6 +220,8 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
     ) :
         VariantTaskCreationAction<AndroidJavaCompile>(variantScope) {
 
+        private lateinit var destinationDir: File
+
         override val name: String
             get() = variantScope.getTaskName("compile", "JavaWithJavac")
 
@@ -268,19 +253,16 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
                     taskName
                 )
             }
+
+            // Register compiled Java classes output
+            destinationDir =
+                    variantScope.artifacts.appendArtifact(JAVAC, taskName, "classes")
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out AndroidJavaCompile>) {
             super.handleProvider(taskProvider)
 
             variantScope.taskContainer.javacTask = taskProvider
-
-            variantScope.artifacts.producesDir(JAVAC,
-                BuildArtifactsHolder.OperationType.APPEND,
-                taskProvider,
-                taskProvider.map { it.outputDirectory },
-                "classes"
-                )
         }
 
         override fun configure(task: AndroidJavaCompile) {
@@ -332,6 +314,8 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
             } else {
                 task.sourceFileTrees = { variantScope.variantData.javaSources }
             }
+
+            task.destinationDir = destinationDir
         }
     }
 }

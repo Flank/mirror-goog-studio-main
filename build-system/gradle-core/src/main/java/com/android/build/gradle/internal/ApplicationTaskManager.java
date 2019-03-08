@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -72,9 +73,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResourceFactory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -248,7 +247,7 @@ public class ApplicationTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull VariantScope scope) {
-        final Provider<Directory> javacOutput = scope.getArtifacts().getFinalProduct(JAVAC);
+        final BuildableArtifact javacOutput = scope.getArtifacts().getArtifactFiles(JAVAC);
         final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
         final FileCollection postJavacGeneratedBytecode =

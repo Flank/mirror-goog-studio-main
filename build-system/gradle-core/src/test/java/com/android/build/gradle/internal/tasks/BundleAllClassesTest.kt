@@ -27,10 +27,8 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.testutils.truth.FileSubject
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
-import org.gradle.api.internal.provider.Providers
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.After
 import org.junit.Before
@@ -45,7 +43,7 @@ class BundleAllClassesTest {
 
     @Mock private lateinit var scope: VariantScope
     @Mock private lateinit var artifacts: BuildArtifactsHolder
-    @Mock private lateinit var javacClasses: Directory
+    @Mock private lateinit var javacClasses: BuildableArtifactImpl
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
@@ -91,8 +89,8 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APP_CLASSES,
             task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
-        Mockito.`when`(artifacts.getFinalProduct<Directory>(InternalArtifactType.JAVAC))
-            .thenReturn(Providers.of(javacClasses))
+        Mockito.`when`(artifacts.getArtifactFiles(InternalArtifactType.JAVAC))
+            .thenReturn(javacClasses)
 
         val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)
