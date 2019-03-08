@@ -171,49 +171,79 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         try (PrintWriter serverLogWriter =
                 getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abiConfig.getAbiName()))) {
             ILogger logger = LoggerWrapper.getLogger(CmakeServerExternalNativeJsonGenerator.class);
-            Server cmakeServer = createServerAndConnect(serverLogWriter, logger);
-
-            List<String> cacheArgumentsList = getCacheArguments(abiConfig);
-            cacheArgumentsList.addAll(getBuildArguments());
-            ConfigureCommandResult configureCommandResult;
-            File cmakeListsFolder = getMakefile().getParentFile();
-            if (config.enableCmakeCompilerSettingsCache) {
-                // Configure extensions
-                CmakeExecutionConfiguration executableConfiguration =
-                        wrapCmakeListsForCompilerSettingsCaching(
-                                config.compilerSettingsCacheFolder,
-                                abiConfig,
-                                getMakefile().getParentFile(),
-                                cacheArgumentsList);
-
-                cacheArgumentsList = executableConfiguration.getArgs();
-                cmakeListsFolder = executableConfiguration.getCmakeListsFolder();
+            // Create a new cmake server for the given Cmake and configure the given project.
+            ServerReceiver serverReceiver =
+                    new ServerReceiver()
+                            .setMessageReceiver(
+                                    message ->
+                                            receiveInteractiveMessage(
+                                                    serverLogWriter,
+                                                    logger,
+                                                    message,
+                                                    getMakefile().getParentFile()))
+                            .setDiagnosticReceiver(
+                                    message ->
+                                            receiveDiagnosticMessage(
+                                                    serverLogWriter, logger, message));
+            Server cmakeServer = ServerFactory.create(getCmakeBinFolder(), serverReceiver);
+            if (cmakeServer == null) {
+                throw new RuntimeException(
+                        "Unable to create a Cmake server located at: "
+                                + getCmakeBinFolder().getAbsolutePath());
             }
 
-            // Handshake
-            doHandshake(cmakeListsFolder, abiConfig.getExternalNativeBuildFolder(), cmakeServer);
-
-            // Configure
-            String argsArray[] = cacheArgumentsList.toArray(new String[cacheArgumentsList.size()]);
-            configureCommandResult = cmakeServer.configure(argsArray);
-
-            if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
-                throw new ProcessException(
-                        String.format(
-                                "Error configuring CMake server (%s).\r\n%s",
-                                cmakeServer.getCmakePath(),
-                                configureCommandResult.interactiveMessages));
+            if (!cmakeServer.connect()) {
+                throw new RuntimeException(
+                        "Unable to connect to Cmake server located at: "
+                                + getCmakeBinFolder().getAbsolutePath());
             }
 
-            ComputeResult computeResult = doCompute(cmakeServer);
-            if (!ServerUtils.isComputedResultValid(computeResult)) {
-                throw new ProcessException(
-                        "Error computing CMake server result.\r\n"
-                                + configureCommandResult.interactiveMessages);
-            }
+            try {
+                List<String> cacheArgumentsList = getCacheArguments(abiConfig);
+                cacheArgumentsList.addAll(getBuildArguments());
+                ConfigureCommandResult configureCommandResult;
+                File cmakeListsFolder = getMakefile().getParentFile();
+                if (config.enableCmakeCompilerSettingsCache) {
+                    // Configure extensions
+                    CmakeExecutionConfiguration executableConfiguration =
+                            wrapCmakeListsForCompilerSettingsCaching(
+                                    config.compilerSettingsCacheFolder,
+                                    abiConfig,
+                                    getMakefile().getParentFile(),
+                                    cacheArgumentsList);
 
-            generateAndroidGradleBuild(abiConfig, cmakeServer);
-            return configureCommandResult.interactiveMessages;
+                    cacheArgumentsList = executableConfiguration.getArgs();
+                    cmakeListsFolder = executableConfiguration.getCmakeListsFolder();
+                }
+
+                // Handshake
+                doHandshake(
+                        cmakeListsFolder, abiConfig.getExternalNativeBuildFolder(), cmakeServer);
+
+                // Configure
+                String[] argsArray = cacheArgumentsList.toArray(new String[0]);
+                configureCommandResult = cmakeServer.configure(argsArray);
+
+                if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
+                    throw new ProcessException(
+                            String.format(
+                                    "Error configuring CMake server (%s).\r\n%s",
+                                    cmakeServer.getCmakePath(),
+                                    configureCommandResult.interactiveMessages));
+                }
+
+                ComputeResult computeResult = doCompute(cmakeServer);
+                if (!ServerUtils.isComputedResultValid(computeResult)) {
+                    throw new ProcessException(
+                            "Error computing CMake server result.\r\n"
+                                    + configureCommandResult.interactiveMessages);
+                }
+
+                generateAndroidGradleBuild(abiConfig, cmakeServer);
+                return configureCommandResult.interactiveMessages;
+            } finally {
+                cmakeServer.disconnect();
+            }
         }
     }
 
@@ -228,45 +258,6 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     @NonNull
     private static File getCmakeServerLog(@NonNull File outputFolder) {
         return new File(outputFolder, "cmake_server_log.txt");
-    }
-
-    /**
-     * Creates a Cmake server and connects to it.
-     *
-     * @return a Cmake Server object that's successfully connected to the Cmake server
-     * @throws IOException I/O failure. Note: The function throws RuntimeException if we are unable
-     *     to create or connect to Cmake server.
-     */
-    @NonNull
-    private Server createServerAndConnect(
-            @NonNull PrintWriter serverLogWriter, @NonNull ILogger logger) throws IOException {
-        // Create a new cmake server for the given Cmake and configure the given project.
-        ServerReceiver serverReceiver =
-                new ServerReceiver()
-                        .setMessageReceiver(
-                                message ->
-                                        receiveInteractiveMessage(
-                                                serverLogWriter,
-                                                logger,
-                                                message,
-                                                getMakefile().getParentFile()))
-                        .setDiagnosticReceiver(
-                                message ->
-                                        receiveDiagnosticMessage(serverLogWriter, logger, message));
-        Server cmakeServer = ServerFactory.create(getCmakeBinFolder(), serverReceiver);
-        if (cmakeServer == null) {
-            throw new RuntimeException(
-                    "Unable to create a Cmake server located at: "
-                            + getCmakeBinFolder().getAbsolutePath());
-        }
-
-        if (!cmakeServer.connect()) {
-            throw new RuntimeException(
-                    "Unable to connect to Cmake server located at: "
-                            + getCmakeBinFolder().getAbsolutePath());
-        }
-
-        return cmakeServer;
     }
 
     /** Processes an interactive message received from the CMake server. */
@@ -403,7 +394,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             }
 
             int startIndex = argument.indexOf(generatorArgument) + generatorArgument.length();
-            return argument.substring(startIndex, argument.length());
+            return argument.substring(startIndex);
         }
         // Return the default generator, i.e., "Ninja"
         return "Ninja";

@@ -105,6 +105,33 @@ public class ServerProtocolV1Test {
         assertThat(handshakeResult.type).isEqualTo("reply");
     }
 
+    // See http://b/123895238 Execution failed for task ':app:generateJsonModelDebug' Format specifier '%s'
+    @Test
+    public void testValidHandshakeWithFormatSpecifierInMessage() throws IOException {
+        ServerProtocolV1 serverProtocolV1 = createConnectedServer();
+        HandshakeRequest handshakeRequest = new HandshakeRequest();
+        handshakeRequest.cookie = "zimtstern";
+        handshakeRequest.protocolVersion = new ProtocolVersion();
+        handshakeRequest.protocolVersion.major = 1;
+        handshakeRequest.sourceDirectory = "/home/code/cmake";
+        handshakeRequest.buildDirectory = "/tmp/testbuild";
+        handshakeRequest.generator = "Ninja";
+
+        final String expectedHandshakeMsg =
+                "{\"cookie\":\"zimtstern\",\"inReplyTo\":\"handshake\",\"type\":\"reply\"}\n";
+        Mockito.when(mockBufferedReader.readLine())
+                .thenReturn(
+                        ServerProtocolV1.CMAKE_SERVER_HEADER_MSG,
+                        expectedHandshakeMsg,
+                        "Progress 50%",
+                        ServerProtocolV1.CMAKE_SERVER_FOOTER_MSG);
+        final HandshakeResult handshakeResult = serverProtocolV1.handshake(handshakeRequest);
+
+        assertThat(handshakeResult.cookie).isEqualTo("zimtstern");
+        assertThat(handshakeResult.inReplyTo).isEqualTo("handshake");
+        assertThat(handshakeResult.type).isEqualTo("reply");
+    }
+
     @Test(expected = RuntimeException.class)
     public void testHandshakeWhenNotConnected() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createUnconnectedServer();
