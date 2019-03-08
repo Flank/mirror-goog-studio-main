@@ -19,9 +19,9 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Agent";
 
-import "memory.proto";
+import "commands.proto";
 import "common.proto";
-import "transport.proto"; // For Command.
+import "memory.proto";
 
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice

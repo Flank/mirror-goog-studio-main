@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Commands";
+
+import "common.proto";
+import "echo.proto";
+import "layout_inspector.proto";
+
+message Command {
+  enum CommandType {
+    UNSPECIFIED = 0;
+    BEGIN_SESSION = 1;
+    END_SESSION = 2;
+    ATTACH_AGENT = 3;
+
+    // Sample echo Command
+    ECHO = 1000;
+
+    // Layout inspector command.
+    LAYOUT_INSPECTOR = 1100;
+  }
+
+  // A stream is an entity that provides data, such as a device or an imported
+  // file.
+  int64 stream_id = 1;  // If ommited the command is applied to all streams
+  CommandType type = 2;
+  // The process if the command needs one, or if the command should be forwarded
+  // to an agent attached to the process. Empty otherwise.
+  int32 pid = 3;
+  oneof union {
+    BeginSession begin_session = 4;
+    EndSession end_session = 5;
+    AttachAgent attach_agent = 6;
+
+    // Sample Echo Command starts at 1000;
+    echo.EchoData echo_data = 1000;
+
+    // Layout editor starts at 1100;
+    layoutinspector.LayoutInspectorCommand layout_inspector = 1100;
+  }
+}
+
+message BeginSession {
+  message JvmtiConfig {
+    // True if an jvmti agent should be attached, false otherwise.
+    bool attach_agent = 1;
+    // TODO(b/65458869): Remove when moving process discovery to perfd.
+    string agent_lib_file_name = 2;
+    // True if live allocation is used, false otherwise.
+    bool live_allocation_enabled = 3;
+  }
+
+  JvmtiConfig jvmti_config = 1;
+  int64 request_time_epoch_ms = 2;
+  string session_name = 3;
+  // See SdkConstans.CPU_ARCH_*
+  string process_abi = 4;
+}
+
+message EndSession {
+  int64 session_id = 1;
+}
+
+message AttachAgent {
+  string agent_lib_file_name = 1;
+}

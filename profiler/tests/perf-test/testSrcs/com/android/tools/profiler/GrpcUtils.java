@@ -98,12 +98,12 @@ public class GrpcUtils {
         myTransportServiceStub.execute(
                 Transport.ExecuteRequest.newBuilder()
                         .setCommand(
-                                Transport.Command.newBuilder()
-                                        .setType(Transport.Command.CommandType.ATTACH_AGENT)
+                                Commands.Command.newBuilder()
+                                        .setType(Commands.Command.CommandType.ATTACH_AGENT)
                                         .setPid(agentAttachPort)
                                         .setStreamId(1234)
                                         .setAttachAgent(
-                                                Transport.AttachAgent.newBuilder()
+                                                Commands.AttachAgent.newBuilder()
                                                         .setAgentLibFileName("libjvmtiagent.so"))
                                         .build())
                         .build());
