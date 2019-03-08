@@ -1,0 +1,32 @@
+repositories{
+}
+
+configurations {
+    agp
+}
+dependencies {
+    agp 'com.android.tools.build:gradle:3.0.0'
+}
+
+
+buildDir = new File(System.getenv("BUILD_DIR"))
+
+class ListDependencies extends DefaultTask {
+
+    @InputFiles
+    def FileCollection agp
+
+    @OutputFile
+    def RegularFileProperty outputFile = project.objects.fileProperty()
+
+    @TaskAction
+    void writeDeps() {
+        outputFile.get().getAsFile().text = agp.asPath
+    }
+}
+
+
+task listDependencies(type: ListDependencies) {
+   agp = configurations.agp
+   outputFile = file("$buildDir/dependencies_list.txt")
+}
