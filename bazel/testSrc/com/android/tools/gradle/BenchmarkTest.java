@@ -273,9 +273,17 @@ public class BenchmarkTest {
                 perfData.addBenchmark(benchmark);
                 perfData.commit();
             } else {
-                System.out.println("Presubmit Run: Apply mutations once and quit.");
-                for (int j = 0; j < diffs.length; j++) {
-                    diffs[j].apply(src, 3);
+                System.out.println(
+                        "Presubmit Run: Clean up, apply mutations, and run tasks once if there are "
+                                + "mutations. Otherwise, do nothing after startup tasks.");
+                if (diffs.length > 0) {
+                    if (!cleanups.isEmpty()) {
+                        gradle.run(cleanups);
+                    }
+                    for (UnifiedDiff diff : diffs) {
+                        diff.apply(src, 3);
+                    }
+                    gradle.run(tasks);
                 }
             }
         }
