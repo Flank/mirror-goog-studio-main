@@ -8,8 +8,8 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
+build_tag_filters=-no_linux
 test_tag_filters=qa_sanity,-requires_emulator,-qa_unreliable,-no_linux,-no_test_linux
-build_tag_filters=$test_tag_filters
 
 config_options="--config=postsubmit"
 
@@ -21,22 +21,11 @@ fi
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
 
-# Build tests with Bazel
-"${script_dir}/bazel" \
-  --max_idle_secs=60 \
-  build \
-  ${config_options} \
-  --build_tag_filters=${build_tag_filters} \
-  --test_tag_filters=${test_tag_filters} \
-  -- \
-  //tools/adt/idea/android-uitests/...
-
-# Run tests with Bazel, sequentially. Avoid contending for I/O resources
+# Run Bazel
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
   ${config_options} \
-  --jobs=1
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
   --profile=${dist_dir}/prof \
