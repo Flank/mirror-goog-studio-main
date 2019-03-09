@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.ide.common.workers.ProfileMBean
+import com.android.ide.common.workers.ProfileMBeans
 import java.lang.management.ManagementFactory
 import java.util.logging.Logger
 import javax.management.MBeanServerInvocationHandler
@@ -29,13 +31,12 @@ import javax.management.StandardMBean
 object ProfileAgent {
 
     private val mbs = ManagementFactory.getPlatformMBeanServer()
-    private val rootObjectName = "domain:type=Gradle.agp,name=profiling"
     private val logger = Logger.getLogger(ProfileAgent::class.qualifiedName)
 
     @Synchronized
     fun register(projectName: String, buildListener: RecordingBuildListener) {
         try {
-            val objectNameForProject = composeObjectName(projectName)
+            val objectNameForProject = ProfileMBeans.composeObjectName(projectName)
             val mbeans = mbs.queryMBeans(objectNameForProject, null)
             if (mbeans.isEmpty()) {
                 val bean = ProfileMBeanImpl(buildListener)
@@ -47,21 +48,9 @@ object ProfileAgent {
         }
     }
 
-    fun getProfileMBean(projectName: String): ProfileMBean {
-        return MBeanServerInvocationHandler.newProxyInstance(
-            mbs,
-            composeObjectName(projectName),
-            ProfileMBean::class.java,
-            false
-        )
-    }
-
-    private fun composeObjectName(projectName: String) =
-        ObjectName("$rootObjectName,project=$projectName")
-
     @Synchronized
     fun unregister() {
-        for (queryMBean in mbs.queryMBeans(ObjectName("$rootObjectName,*"), null)) {
+        for (queryMBean in mbs.queryMBeans(ObjectName("${ProfileMBeans.rootObjectName},*"), null)) {
             mbs.unregisterMBean(queryMBean.objectName)
         }
     }

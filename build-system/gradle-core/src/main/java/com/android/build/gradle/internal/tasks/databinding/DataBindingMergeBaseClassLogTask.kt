@@ -52,9 +52,7 @@ constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): Incre
     lateinit var externalClassLog: FileCollection
         private set
 
-
-
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var delegate: DataBindingMergeBaseClassLogDelegate
 

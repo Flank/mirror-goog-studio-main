@@ -111,7 +111,7 @@ public class RecordingBuildListenerTest {
     @Test
     public void singleThreadInvocation() {
         TestProfileRecordWriter writer = new TestProfileRecordWriter();
-        RecordingBuildListener listener = new RecordingBuildListener(writer);
+        RecordingBuildListener listener = new RecordingBuildListener("test", writer);
 
         listener.beforeExecute(task);
         listener.afterExecute(task, taskState);
@@ -125,7 +125,8 @@ public class RecordingBuildListenerTest {
     @Test
     public void singleThreadWithMultipleSpansInvocation() throws Exception {
 
-        RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
+        RecordingBuildListener listener =
+                new RecordingBuildListener("test", ProcessProfileWriter.get());
 
         listener.beforeExecute(task);
         ThreadRecorder.get()
@@ -156,7 +157,8 @@ public class RecordingBuildListenerTest {
 
     @Test
     public void simulateTasksUnorderedLifecycleEventsDelivery() throws Exception {
-        RecordingBuildListener listener = new RecordingBuildListener(ProcessProfileWriter.get());
+        RecordingBuildListener listener =
+                new RecordingBuildListener("test", ProcessProfileWriter.get());
 
         listener.beforeExecute(task);
         listener.beforeExecute(secondTask);
@@ -193,7 +195,7 @@ public class RecordingBuildListenerTest {
     @Test
     public void multipleThreadsInvocation() {
         TestProfileRecordWriter writer = new TestProfileRecordWriter();
-        RecordingBuildListener listener = new RecordingBuildListener(writer);
+        RecordingBuildListener listener = new RecordingBuildListener("test", writer);
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(project);
@@ -226,7 +228,7 @@ public class RecordingBuildListenerTest {
     @Test
     public void multipleThreadsOrderInvocation() {
         TestProfileRecordWriter writer = new TestProfileRecordWriter();
-        RecordingBuildListener listener = new RecordingBuildListener(writer);
+        RecordingBuildListener listener = new RecordingBuildListener("test", writer);
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(project);
@@ -260,7 +262,7 @@ public class RecordingBuildListenerTest {
     @Test
     public void ensureTaskStateRecorded() {
         TestProfileRecordWriter writer = new TestProfileRecordWriter();
-        RecordingBuildListener listener = new RecordingBuildListener(writer);
+        RecordingBuildListener listener = new RecordingBuildListener("test", writer);
 
         when(taskState.getDidWork()).thenReturn(true);
         when(taskState.getExecuted()).thenReturn(true);

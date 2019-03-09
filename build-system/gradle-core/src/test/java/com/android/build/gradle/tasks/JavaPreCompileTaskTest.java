@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;
@@ -33,6 +34,7 @@ import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -86,12 +88,18 @@ public class JavaPreCompileTaskTest {
 
     @Before
     public void setUp() throws IOException {
+        Workers.INSTANCE.setUseDirectWorkerExecutor(true);
         File testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", JavaPreCompileTask.class);
         processorConfiguration = project.getConfigurations().create("annotationProcessor");
         compileConfiguration = project.getConfigurations().create("api");
         task.getProcessorListFile().set(temporaryFolder.newFile());
+    }
+
+    @After
+    public void shutdown() {
+        Workers.INSTANCE.setUseDirectWorkerExecutor(false);
     }
 
     @Test

@@ -231,7 +231,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     // FIXME : make me incremental !
     override fun doFullTaskAction() {

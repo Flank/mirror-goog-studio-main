@@ -82,7 +82,7 @@ public class FixStackFramesDelegateTest {
             ImmutableSet.of(TestUtils.getPlatformFile("android.jar"));
 
     private final WorkerExecutorFacade executor =
-            new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+            new ExecutorServiceAdapter("test", ":test", ForkJoinPool.commonPool());
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 

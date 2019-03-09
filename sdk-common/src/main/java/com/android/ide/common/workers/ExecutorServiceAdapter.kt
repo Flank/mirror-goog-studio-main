@@ -28,6 +28,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 open class ExecutorServiceAdapter(
     /**
+     * Project name owning this adapter.
+     */
+    val projectName: String,
+
+    /**
+     * Task name owning this adapter.
+     */
+    val owner: String,
+    /**
      * Instantiate an adapter using the passed [ExecutorService]
      */
     val executor: ExecutorService,
@@ -38,7 +47,8 @@ open class ExecutorServiceAdapter(
     private val delegate: WorkerExecutorFacade?= null
 ) : WorkerExecutorFacade {
 
-    constructor(executor: ExecutorService): this(executor, null)
+    constructor(projectName: String, owner: String, executor: ExecutorService):
+            this(projectName, owner, executor, null)
 
     private val futures = mutableListOf<Future<*>>()
     private val delegateUsed= AtomicBoolean(false)
@@ -47,11 +57,16 @@ open class ExecutorServiceAdapter(
         actionClass: Class<out Runnable>,
         parameter: Serializable
     ) {
+        val key= "$owner${actionClass.name}${parameter.hashCode()}"
+        workerSubmission(key)
+
         val submission = executor.submit {
             val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
             constructor.isAccessible = true
             val action = constructor.newInstance(parameter)
+            ProfileMBeans.getProfileMBean(projectName)?.workerStarted(owner, key)
             action.run()
+            ProfileMBeans.getProfileMBean(projectName)?.workerFinished(owner, key)
         }
         synchronized(this) {
             futures.add(submission)
@@ -101,5 +116,11 @@ open class ExecutorServiceAdapter(
     // a task, so we should wait till everything is finished.
     override fun close() {
         await()
+    }
+
+    /**
+     * Notification of a new worker submission.
+     */
+    protected open fun workerSubmission(workerKey: String) {
     }
 }

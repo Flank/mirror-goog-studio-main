@@ -202,6 +202,9 @@ public class ChromeTracingProfileConverter {
                     case WORKER_EXECUTION:
                         args.put("initiating task", taskList.get(span.getParentId()));
                         break;
+                    case THREAD_EXECUTION:
+                        args.put("initiating task", taskList.get(span.getParentId()));
+                        break;
                 }
 
                 writer.name("args").beginObject();
@@ -232,6 +235,8 @@ public class ChromeTracingProfileConverter {
                 return "Prep for " + transformName(span);
             case WORKER_EXECUTION:
                 return "Worker for " + span.getParentId();
+            case THREAD_EXECUTION:
+                return "Thread for " + span.getParentId();
             default:
                 return pretty(span.getType());
         }

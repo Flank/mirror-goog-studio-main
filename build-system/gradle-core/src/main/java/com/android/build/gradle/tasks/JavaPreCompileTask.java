@@ -75,7 +75,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
 
     @Inject
     public JavaPreCompileTask(WorkerExecutor workerExecutor, ObjectFactory objectFactory) {
-        workers = Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
+        workers = Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
         processorListFile = objectFactory.fileProperty();
     }
 

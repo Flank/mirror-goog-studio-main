@@ -212,7 +212,10 @@ public class MergedResourceWriter
         return new MergedResourceWriter(
                 // no need for multi-threading in tests.
                 new ExecutorServiceAdapter(
-                        MoreExecutors.newDirectExecutorService(), executorServiceAdapter),
+                        "tools_idea",
+                        ":test",
+                        MoreExecutors.newDirectExecutorService(),
+                        executorServiceAdapter),
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,

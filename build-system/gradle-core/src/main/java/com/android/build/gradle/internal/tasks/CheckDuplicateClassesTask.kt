@@ -33,6 +33,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
+import java.util.concurrent.ForkJoinPool
 import javax.inject.Inject
 
 /**
@@ -53,7 +54,7 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
     @Classpath
     fun getClassesFiles(): FileCollection = classesArtifacts.artifactFiles
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferThreads(project.name, path, workerExecutor)
 
     @TaskAction
     fun taskAction() {

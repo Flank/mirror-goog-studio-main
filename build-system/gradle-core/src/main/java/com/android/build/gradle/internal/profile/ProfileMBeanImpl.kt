@@ -16,11 +16,14 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.ide.common.workers.ProfileMBean
+
 /**
  * Implementation of [ProfileMBean] that will be registered in the MBean server and
  * be available as a singleton per jvm.
  */
-class ProfileMBeanImpl(private val buildListener: RecordingBuildListener): ProfileMBean {
+class ProfileMBeanImpl(private val buildListener: RecordingBuildListener):
+    ProfileMBean {
 
     override fun workerStarted(taskPath: String, workerKey: String) {
         val workerRecord = buildListener.getWorkerRecord(taskPath, workerKey)
@@ -31,7 +34,7 @@ class ProfileMBeanImpl(private val buildListener: RecordingBuildListener): Profi
         val workerRecord = buildListener.getWorkerRecord(taskPath, workerKey)
         if (workerRecord!=null) {
             workerRecord.executionFinished()
-            buildListener.getTaskRecord(taskPath).workerFinished(workerRecord)
+            buildListener.getTaskRecord(taskPath)?.workerFinished(workerRecord)
         }
     }
 }

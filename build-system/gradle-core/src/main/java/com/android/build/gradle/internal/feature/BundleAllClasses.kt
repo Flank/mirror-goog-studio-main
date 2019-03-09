@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.feature
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
@@ -53,7 +52,7 @@ import javax.inject.Inject
  */
 open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
     lateinit var outputJar: File

@@ -36,7 +36,7 @@ open class JarRClassTask @Inject constructor(workerExecutor: WorkerExecutor) : D
 
     @get:InputFiles lateinit var rClassClasses: FileCollection private set
     @get:OutputFile lateinit var rClassJar: File private set
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @TaskAction
     fun jar() {

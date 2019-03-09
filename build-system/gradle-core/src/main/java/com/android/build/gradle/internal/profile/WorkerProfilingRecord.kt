@@ -21,7 +21,6 @@ import java.io.Serializable
 import java.lang.IllegalStateException
 import java.time.Duration
 import java.time.Instant
-import java.util.Objects
 
 /**
  * Gradle [org.gradle.workers.WorkerExecutor] Worker item book keeping record.
@@ -31,6 +30,7 @@ import java.util.Objects
  */
 class WorkerProfilingRecord(
     private val taskName: String,
+    private val type: GradleBuildProfileSpan.ExecutionType,
     private val submissionTime: Instant
 ) : Serializable {
 
@@ -70,7 +70,7 @@ class WorkerProfilingRecord(
         span.setThreadId(Thread.currentThread().id)
             .setStartTimeInMs(startTime.toEpochMilli())
             .setDurationInMs(duration().toMillis())
-            .setType(GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION)
+            .setType(type)
     }
 
     override fun toString(): String {

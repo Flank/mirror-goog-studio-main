@@ -35,7 +35,7 @@ class BundleLibraryClassesRunnableTest {
 
     @Before
     fun setUp() {
-        workers = ExecutorServiceAdapter(MoreExecutors.newDirectExecutorService())
+        workers = ExecutorServiceAdapter("test", ":test", MoreExecutors.newDirectExecutorService())
     }
 
     @Test

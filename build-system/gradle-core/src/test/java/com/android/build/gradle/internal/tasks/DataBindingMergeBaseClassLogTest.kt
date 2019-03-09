@@ -50,7 +50,7 @@ class DataBindingMergeBaseClassLogTest {
     val temporaryFolder = TemporaryFolder()
 
     private lateinit var expectedOutFolder: File
-    private val executor = ExecutorServiceAdapter(ForkJoinPool.commonPool())
+    private val executor = ExecutorServiceAdapter("test", ":test", ForkJoinPool.commonPool())
     private lateinit var outputDir: Provider<Directory>
 
     @Before

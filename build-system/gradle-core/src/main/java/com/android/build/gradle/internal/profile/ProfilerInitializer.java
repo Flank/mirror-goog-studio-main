@@ -79,7 +79,8 @@ public final class ProfilerInitializer {
                     project.getGradle().getGradleVersion(),
                     new LoggerWrapper(project.getLogger()),
                     projectOptions.get(BooleanOption.ENABLE_PROFILE_JSON));
-            recordingBuildListener = new RecordingBuildListener(ProcessProfileWriter.get());
+            recordingBuildListener =
+                    new RecordingBuildListener(project.getName(), ProcessProfileWriter.get());
             project.getGradle().addListener(recordingBuildListener);
         }
 

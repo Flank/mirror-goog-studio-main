@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.profile
+package com.android.ide.common.workers
 
 /**
  * MBean for services related to profiling notifications.

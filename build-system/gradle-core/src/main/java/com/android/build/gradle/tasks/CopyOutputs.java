@@ -63,7 +63,7 @@ public class CopyOutputs extends AndroidVariantTask {
     @Inject
     public CopyOutputs(WorkerExecutor workerExecutor) {
         this.workers =
-                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
+                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
     }
 
     @OutputDirectory

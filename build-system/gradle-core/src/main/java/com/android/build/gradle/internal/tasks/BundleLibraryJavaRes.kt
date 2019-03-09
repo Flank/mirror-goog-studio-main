@@ -42,7 +42,7 @@ import javax.inject.Inject
 open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecutor) :
     AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
     var output: Provider<RegularFile>? = null

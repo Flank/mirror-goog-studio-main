@@ -46,7 +46,7 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun singleActionTest() {
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             it.submit(Action::class.java, Parameters("foo", "foo"))
         }
         assertThat(Action.invocationCount.get()).isEqualTo(1)
@@ -54,7 +54,7 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun multipleActionTest() {
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             for (i in 1..5) {
                 it.submit(Action::class.java, Parameters("foo", "foo"))
             }
@@ -64,7 +64,7 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun multipleInvocationTest() {
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             for (i in 1..5) {
                 for (j in 1..3) {
                     it.submit(Action::class.java, Parameters("foo", "foo"))
@@ -76,7 +76,7 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun awaitTest() {
-        with(ExecutorServiceAdapter(executorService, workerExecutorFacade)) {
+        with(ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade)) {
             for (i in 1..4) {
                 submit(Action::class.java, Parameters("foo", "foo"))
             }
@@ -88,7 +88,7 @@ class ExecutorServiceAdapterTest {
     @Test(expected = NoSuchMethodException::class)
     fun notSuitableConstructor() {
         try {
-            ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+            ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
                 it.submit(WrongAction::class.java, Parameters("foo", "foo"))
             }
         } catch (e: WorkerExecutorException) {
@@ -100,7 +100,7 @@ class ExecutorServiceAdapterTest {
     @Test(expected = InvocationTargetException::class)
     fun badConstructorException() {
         try {
-            ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+            ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
                 it.submit(BadConstructorAction::class.java, Parameters("foo", "foo"))
             }
         } catch (e: WorkerExecutorException) {
@@ -111,14 +111,14 @@ class ExecutorServiceAdapterTest {
 
     @Test
     fun notAccessibleConstructor() {
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             it.submit(PrivateConstructorClass::class.java, "Foo")
         }
     }
 
     @Test(expected = IllegalStateException::class)
     fun wrappingTasksExecutionExceptions() {
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             for (i in 1..4) {
                 it.submit(Action::class.java, Parameters("Foo", "Bar"))
             }
@@ -144,7 +144,7 @@ class ExecutorServiceAdapterTest {
             listOf()
         )
 
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             it.submit(Action::class.java, configuration)
         }
 
@@ -160,7 +160,7 @@ class ExecutorServiceAdapterTest {
             listOf()
         )
 
-        ExecutorServiceAdapter(executorService, workerExecutorFacade).use {
+        ExecutorServiceAdapter("test", ":test", executorService, workerExecutorFacade).use {
             it.submit(Action::class.java, configuration)
         }
 
@@ -176,7 +176,7 @@ class ExecutorServiceAdapterTest {
             listOf()
         )
 
-        ExecutorServiceAdapter(executorService, null).use {
+        ExecutorServiceAdapter("test", ":test", executorService, null).use {
             it.submit(Action::class.java, configuration)
         }
     }

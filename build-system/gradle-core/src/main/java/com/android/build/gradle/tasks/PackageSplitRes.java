@@ -83,7 +83,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     @Inject
     public PackageSplitRes(WorkerExecutor workerExecutor) {
         this.workers =
-                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
+                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
     }
 
     @TaskAction

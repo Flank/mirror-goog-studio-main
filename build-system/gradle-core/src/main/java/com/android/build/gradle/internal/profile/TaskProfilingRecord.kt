@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.profile
 
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.builder.profile.ProfileRecordWriter
+import com.android.ide.common.workers.ProfileMBean
 import com.google.common.annotations.VisibleForTesting
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import java.time.Clock
@@ -112,11 +113,16 @@ open class TaskProfilingRecord {
         }
     }
 
-    @Synchronized
     open fun addWorker(key: String) {
+        addWorker(key, GradleBuildProfileSpan.ExecutionType.THREAD_EXECUTION)
+    }
+
+    @Synchronized
+    open fun addWorker(key: String, type: GradleBuildProfileSpan.ExecutionType) {
         val workerRecord =
             WorkerProfilingRecord(
                 taskPath,
+                type,
                 clock.instant()
             )
         workerRecordList[key] = workerRecord
@@ -214,9 +220,15 @@ open class TaskProfilingRecord {
          * does not exist.
          */
         val dummyTaskRecord: TaskProfilingRecord = object : TaskProfilingRecord() {
-            override fun addWorker(key: String) {}
+            override fun addWorker(key: String, type: GradleBuildProfileSpan.ExecutionType) {}
             override fun get(key: String): WorkerProfilingRecord {
-                return WorkerProfilingRecord("dummy", clock.instant())
+                val workerProfilingRecord = WorkerProfilingRecord(
+                    "dummy",
+                    GradleBuildProfileSpan.ExecutionType.WORKER_EXECUTION,
+                    clock.instant()
+                )
+                workerProfilingRecord.executionStarted()
+                return workerProfilingRecord
             }
         }
     }

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
 import com.android.builder.internal.compiler.AidlProcessor;
@@ -35,7 +36,6 @@ import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.incremental.DependencyData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessExecutor;
-import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -45,7 +45,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -95,7 +94,7 @@ public class AidlCompile extends AndroidVariantTask {
      * compiling aidl files, which should not be serialized.
      */
     public AidlCompile() {
-        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+        this.workers = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
     }
 
     @InputFile

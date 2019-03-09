@@ -84,7 +84,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
     lateinit var androidJar: Provider<File>
         private set
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     @TaskAction

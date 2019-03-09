@@ -24,10 +24,10 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
@@ -37,7 +37,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -76,7 +75,7 @@ public class ShaderCompile extends AndroidBuilderTask {
      * compiling shader files, which should not be serialized.
      */
     public ShaderCompile() {
-        this.workers = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+        this.workers = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
     }
 
     private Provider<BuildToolInfo> buildToolInfoProvider;

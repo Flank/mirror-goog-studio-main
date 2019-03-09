@@ -52,7 +52,7 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     @get:InputFiles lateinit var featureDeclarations: FileCollection
         private set
 
-    val workers = Workers.getWorker(project.name, path, workerExecutor)
+    val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @TaskAction
     fun fullTaskAction() {

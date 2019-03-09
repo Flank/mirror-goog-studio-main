@@ -50,7 +50,7 @@ import javax.inject.Inject
 open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
     AndroidVariantTask() {
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)

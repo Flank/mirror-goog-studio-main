@@ -53,7 +53,10 @@ public class AssetMergerTest extends BaseTestCase {
 
     private static WorkerExecutorFacade facade =
             new ExecutorServiceAdapter(
-                    Executors.newSingleThreadExecutor(), Mockito.mock(WorkerExecutorFacade.class));
+                    "test",
+                    ":test",
+                    Executors.newSingleThreadExecutor(),
+                    Mockito.mock(WorkerExecutorFacade.class));
 
     @AfterClass
     public static void shutdown() {

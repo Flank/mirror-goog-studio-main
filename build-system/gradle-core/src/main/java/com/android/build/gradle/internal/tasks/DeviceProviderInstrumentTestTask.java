@@ -67,7 +67,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -136,7 +135,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
 
     @Inject
     public DeviceProviderInstrumentTestTask(ObjectFactory objectFactory) {
-        executor = new ExecutorServiceAdapter(ForkJoinPool.commonPool());
+        executor = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
         coverageDir = objectFactory.directoryProperty();
     }
 

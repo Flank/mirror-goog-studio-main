@@ -44,7 +44,6 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ForkJoinPool;
 import java.util.zip.Deflater;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
@@ -61,7 +60,7 @@ public class BundleInstantApp extends AndroidVariantTask {
     @Inject
     public BundleInstantApp(WorkerExecutor workerExecutor) {
         this.workers =
-                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
+                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
     }
 
     @TaskAction
@@ -71,6 +70,8 @@ public class BundleInstantApp extends AndroidVariantTask {
             workers.submit(
                     BundleInstantAppRunnable.class,
                     new BundleInstantAppParams(
+                            getProject().getName(),
+                            getPath(),
                             bundleDirectory,
                             bundleName,
                             ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
@@ -166,7 +167,7 @@ public class BundleInstantApp extends AndroidVariantTask {
         private final BundleInstantAppParams params;
 
         @Inject
-        BundleInstantAppRunnable(BundleInstantAppParams params) {
+        public BundleInstantAppRunnable(BundleInstantAppParams params) {
             this.params = params;
         }
 
@@ -181,7 +182,7 @@ public class BundleInstantApp extends AndroidVariantTask {
                 ZFileOptions zFileOptions = new ZFileOptions();
 
                 try (ExecutorServiceAdapter executor =
-                        new ExecutorServiceAdapter(ForkJoinPool.commonPool())) {
+                        Workers.INSTANCE.withThreads(params.projectName, params.taskOwnerName)) {
                     zFileOptions.setCompressor(
                             new DeflateExecutionCompressor(
                                     (compressJob) ->
@@ -240,16 +241,22 @@ public class BundleInstantApp extends AndroidVariantTask {
     }
 
     private static class BundleInstantAppParams implements Serializable {
+        @NonNull private final String projectName;
+        @NonNull private final String taskOwnerName;
         @NonNull private final File bundleDirectory;
         @NonNull private final String bundleName;
         @NonNull private final String applicationId;
         @NonNull private final Set<File> apkDirectories;
 
         BundleInstantAppParams(
+                @NonNull String projectName,
+                @NonNull String taskOwnerName,
                 @NonNull File bundleDirectory,
                 @NonNull String bundleName,
                 @NonNull String applicationId,
                 @NonNull Set<File> apkDirectories) {
+            this.projectName = projectName;
+            this.taskOwnerName = taskOwnerName;
             this.bundleDirectory = bundleDirectory;
             this.bundleName = bundleName;
             this.applicationId = applicationId;

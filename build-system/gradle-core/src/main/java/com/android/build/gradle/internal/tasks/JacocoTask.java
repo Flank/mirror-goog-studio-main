@@ -45,7 +45,7 @@ public class JacocoTask extends AndroidVariantTask {
 
     @Inject
     public JacocoTask(@NonNull WorkerExecutor workers) {
-        this.workers = Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workers);
+        this.workers = Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workers);
     }
 
     @InputFiles

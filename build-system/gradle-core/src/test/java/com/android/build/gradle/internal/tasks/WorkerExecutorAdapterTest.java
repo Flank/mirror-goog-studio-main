@@ -72,7 +72,8 @@ public class WorkerExecutorAdapterTest {
 
     @Test
     public void testSingleDelegation() {
-        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker("test", ":test", workerExecutor);
+        WorkerExecutorFacade adapter =
+                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor);
         Parameter params = new Parameter("one", "two");
         adapter.submit(WorkAction.class, params);
         adapter.await();
@@ -101,7 +102,8 @@ public class WorkerExecutorAdapterTest {
     @Test
     public void testMultipleDelegation() {
 
-        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker("test", ":test", workerExecutor);
+        WorkerExecutorFacade adapter =
+                Workers.INSTANCE.preferWorkers("test", ":test", workerExecutor);
         List<Parameter> parametersList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Parameter params = new Parameter("+" + i, "-" + i);

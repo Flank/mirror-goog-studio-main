@@ -62,7 +62,7 @@ import javax.inject.Inject
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 

@@ -70,7 +70,7 @@ class MergeClassesTransform(
         val classFilter: (className: String) -> Boolean =
             { it -> CLASS_PATTERN.matcher(it).matches() || KOTLIN_MODULE_PATTERN.matcher(it).matches() }
 
-        val workers = Workers.getWorker(
+        val workers = Workers.preferWorkers(
             invocation.context.projectName,
             invocation.context.path,
             invocation.context.workerExecutor)

@@ -66,7 +66,7 @@ import javax.inject.Inject
 open class LinkAndroidResForBundleTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:Input
     var debuggable: Boolean = false

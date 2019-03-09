@@ -14,7 +14,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="699"/>
+            line="695"/>
     </issue>
 
     <issue
@@ -102,7 +102,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
-            line="770"/>
+            line="776"/>
     </issue>
 
     <issue
@@ -190,7 +190,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
-            line="48"/>
+            line="58"/>
     </issue>
 
     <issue
@@ -198,15 +198,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
-            line="63"/>
-    </issue>
-
-    <issue
-        id="CommonForkJoinPool"
-        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/AidlCompile.java"
-            line="98"/>
+            line="79"/>
     </issue>
 
     <issue
@@ -214,7 +206,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="258"/>
+            line="255"/>
     </issue>
 
     <issue
@@ -222,15 +214,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="438"/>
-    </issue>
-
-    <issue
-        id="CommonForkJoinPool"
-        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/BundleInstantApp.java"
-            line="183"/>
+            line="435"/>
     </issue>
 
     <issue
@@ -253,24 +237,8 @@
         id="CommonForkJoinPool"
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/tasks/DeviceProviderInstrumentTestTask.java"
-            line="139"/>
-    </issue>
-
-    <issue
-        id="CommonForkJoinPool"
-        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/ShaderCompile.java"
-            line="79"/>
-    </issue>
-
-    <issue
-        id="CommonForkJoinPool"
-        message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
-        <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
-            line="62"/>
+            line="58"/>
     </issue>
 
     <issue
@@ -278,7 +246,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/namespaced/AutoNamespaceDependenciesTask.kt"
-            line="498"/>
+            line="507"/>
     </issue>
 
     <issue
@@ -310,7 +278,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
-            line="122"/>
+            line="155"/>
     </issue>
 
 </issues>

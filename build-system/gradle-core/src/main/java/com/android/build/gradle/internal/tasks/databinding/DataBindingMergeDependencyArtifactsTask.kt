@@ -68,7 +68,7 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
     lateinit var outFolder: File
         private set
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @TaskAction
     fun fullTaskAction() {

@@ -64,7 +64,7 @@ class JacocoTest {
             FakeFileCollection(), outputDir, createBuildArtifact(inputDir)
         )
         jacocoDelegate.run(
-            Workers.getWorker("test", "test", workerExecutor),
+            Workers.preferWorkers("test", "test", workerExecutor),
             FakeIncrementalTaskInputs())
 
         assertThat(File(outputDir, "META-INF/copiedFile.kotlin_module")).exists();

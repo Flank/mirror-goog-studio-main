@@ -64,7 +64,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
     val resOffset: Int
         get() = resOffsetSupplier.get()
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     /**
      * In a feature, we only need to generate code for its Runtime dependencies as compile

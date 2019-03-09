@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.tasks.Workers.getWorker
+import com.android.build.gradle.internal.tasks.Workers.preferWorkers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
@@ -56,7 +56,7 @@ open class LibraryDexingTask @Inject constructor(
     executor: WorkerExecutor) : AndroidVariantTask() {
 
     private val workers: WorkerExecutorFacade =
-        getWorker(project.name, path, executor, MoreExecutors.newDirectExecutorService())
+        preferWorkers(project.name, path, executor, MoreExecutors.newDirectExecutorService())
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)

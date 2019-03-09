@@ -98,7 +98,7 @@ open class MergeJavaResourceTask
     @get:OutputFile
     val outputFile: RegularFileProperty = objects.fileProperty()
 
-    private val workers = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     override fun isIncremental() = true
 

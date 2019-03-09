@@ -233,7 +233,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     public PackageAndroidArtifact(WorkerExecutor workerExecutor) {
         this.workers =
-                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
+                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
     }
 
     @Input

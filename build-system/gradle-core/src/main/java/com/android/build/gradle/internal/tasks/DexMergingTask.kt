@@ -88,7 +88,7 @@ import javax.inject.Inject
 open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
     AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:Input
     lateinit var dexingType: DexingType
