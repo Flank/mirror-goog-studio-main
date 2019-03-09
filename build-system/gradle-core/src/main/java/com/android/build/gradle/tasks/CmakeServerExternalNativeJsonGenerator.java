@@ -539,20 +539,42 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         nativeLibraryValue.files = new ArrayList<>();
         nativeLibraryValue.headers = new ArrayList<>();
+
+        // Maps each source file to the index of the corresponding strings table entry, which
+        // contains the build flags for that source file.
+        // It is important to not use a File or Path as the key to the dictionary, but instead
+        // use the corresponding normalized path. Two File/Path objects with the same normalized
+        // string representation may not be equivalent due to "../" or "./" substrings in them
+        // (b/123123307).
         Map<String, Integer> compilationDatabaseFlags = Maps.newHashMap();
 
         int workingDirectoryOrdinal = strings.intern(normalizeFilePath(workingDirectory));
         for (FileGroup fileGroup : target.fileGroups) {
             for (String source : fileGroup.sources) {
-                Path sourceFilePath = Paths.get(target.sourceDirectory, source).normalize();
-                // It is important to not use sourceFile as the key to any dictionary, but instead
-                // use its normalized path, because the the File object may contain "../" or "./" in
-                // it (b/123123307).
-                if (sourceFilePath.toString().isEmpty()) {
-                    // If the normalized path is empty, use the non-normalized path to protect the
-                    // rest of the code and also make it more debuggable.
+                // CMake returns an absolute path or a path relative to the source directory,
+                // whichever one is shorter.
+                Path sourceFilePath = Paths.get(source);
+                if (!sourceFilePath.isAbsolute()) {
                     sourceFilePath = Paths.get(target.sourceDirectory, source);
                 }
+
+                // Even if CMake returns an absolute path, we still call normalize() to be symmetric
+                // with indexCompilationDatabase() which always uses normalized paths.
+                Path normalizedSourceFilePath = sourceFilePath.normalize();
+                if (!normalizedSourceFilePath.toString().isEmpty()) {
+                    sourceFilePath = normalizedSourceFilePath;
+                } else {
+                    // Normalized path should not be empty, unless CMake sends us really bogus data
+                    // such as such as sourceDirectory="a/b", source="../../". This is not supposed
+                    // to happen because (1) sourceDirectory should not be relative, and (2) source
+                    // should contain at least a file name.
+                    //
+                    // Although it is very unlikely, this branch protects against that case by using
+                    // the non-normalized path, which also makes the case more debuggable.
+                    //
+                    // Fall through intended.
+                }
+
                 File sourceFile = sourceFilePath.toFile();
 
                 if (hasCmakeHeaderFileExtensions(sourceFile)) {
