@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -108,6 +109,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     private File mergeBlameFolder;
 
     private Provider<File> androidJarProvider;
+
+    private SyncOptions.ErrorFormatMode errorFormatMode;
 
     @Input
     public String getApplicationId() {
@@ -196,7 +199,10 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                                 aapt2FromMaven, builder.getLogger());
                 Aapt2ProcessResourcesRunnable.Params params =
                         new Aapt2ProcessResourcesRunnable.Params(
-                                aapt2ServiceKey, aaptConfig, mergeBlameFolder);
+                                aapt2ServiceKey,
+                                aaptConfig,
+                                errorFormatMode,
+                                mergeBlameFolder);
                 workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
 
                 buildOutputs.add(
@@ -364,6 +370,9 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                     scope.getGlobalScope().getSdkComponents().getAndroidJarProvider();
 
             task.mergeBlameFolder = scope.getResourceBlameLogDir();
+
+            task.errorFormatMode =
+                    SyncOptions.getErrorFormatMode(scope.getGlobalScope().getProjectOptions());
 
             // if BASE_FEATURE get the app ID from the app module
             if (variantType.isBaseModule() && variantType.isHybrid()) {

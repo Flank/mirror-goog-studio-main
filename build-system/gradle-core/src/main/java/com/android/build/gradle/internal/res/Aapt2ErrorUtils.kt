@@ -17,16 +17,20 @@
 
 package com.android.build.gradle.internal.res
 
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.errors.humanReadableMessage
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.blame.Message
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
+import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.StdLogger
 import com.google.common.collect.ImmutableList
+import org.gradle.api.logging.Logger
 import java.io.File
 
 /**
@@ -40,27 +44,38 @@ import java.io.File
 fun rewriteCompileException(
     e: Aapt2Exception,
     request: CompileResourceRequest,
-    enableBlame: Boolean
+    errorFormatMode: SyncOptions.ErrorFormatMode,
+    enableBlame: Boolean,
+    logger: Logger
 ): Aapt2Exception {
     if (!enableBlame) {
-        return e
-    }
-    if (request.blameMap.isEmpty()) {
-        return if (request.inputFile == request.originalInputFile) {
-            e // Nothing to rewrite.
-        } else {
-            Aapt2Exception.create(
-                description = "Failed to compile android resource " +
-                        "'${request.originalInputFile.absolutePath}'.",
-                cause = e,
-                output = e.output?.replace(request.inputFile.absolutePath, request.originalInputFile.absolutePath),
-                processName = e.processName,
-                command = e.command
-
-            )
+        return rewriteException(e, errorFormatMode, false, logger) {
+            it
         }
     }
-    return rewriteException(e) {
+    if (request.blameMap.isEmpty()) {
+        val originalException =
+            if (request.inputFile == request.originalInputFile) {
+                e
+            } else {
+                Aapt2Exception.create(
+                    description = "Failed to compile android resource " +
+                            "'${request.originalInputFile.absolutePath}'.",
+                    cause = e,
+                    output = e.output?.replace(
+                        request.inputFile.absolutePath,
+                        request.originalInputFile.absolutePath
+                    ),
+                    processName = e.processName,
+                    command = e.command
+                )
+            }
+
+        return rewriteException(originalException, errorFormatMode, false, logger) {
+            it
+        }
+    }
+    return rewriteException(e, errorFormatMode, true, logger) {
         if (it.file.sourceFile == request.originalInputFile) {
             MergingLog.find(it.position, request.blameMap) ?: it
         } else {
@@ -79,50 +94,86 @@ fun rewriteCompileException(
  */
 fun rewriteLinkException(
     e: Aapt2Exception,
-    mergeBlameFolder: File?
+    errorFormatMode: SyncOptions.ErrorFormatMode,
+    mergeBlameFolder: File?,
+    logger: Logger
 ): Aapt2Exception {
     if (mergeBlameFolder == null) {
-        return e
+        return rewriteException(e, errorFormatMode, false, logger) {
+            it
+        }
     }
     val mergingLog = MergingLog(mergeBlameFolder)
-    return rewriteException(e) { mergingLog.find(it) }
+    return rewriteException(e, errorFormatMode, true, logger) {
+        mergingLog.find(it)
+    }
 }
 
 /** Attempt to rewrite the given exception using the lookup function. */
 private fun rewriteException(
     e: Aapt2Exception,
+    errorFormatMode: SyncOptions.ErrorFormatMode,
+    rewriteFilePositions: Boolean,
+    logger: Logger,
     blameLookup: (SourceFilePosition) -> SourceFilePosition
 ): Aapt2Exception {
-    if (e.output == null) {
-        // No AAPT2 output to rewrite.
-        return e
-    }
-
     try {
-        val messages =
+        var messages =
                 ToolOutputParser(
                         Aapt2OutputParser(),
                         Message.Kind.SIMPLE,
                         StdLogger(StdLogger.Level.INFO)
-                ).parseToolOutput(e.output!!)
-        if (!messages.any { it.kind != Message.Kind.SIMPLE }) {
-            // No messages were parsed, so nothing to rewrite.
-            return e
+                ).parseToolOutput(e.output ?: "", true)
+        if (messages.isEmpty()) {
+            // No messages were parsed, create a dummy message.
+            messages = listOf(
+                Message(
+                    Message.Kind.ERROR,
+                    e.output ?: "",
+                    "",
+                    AbstractAaptOutputParser.AAPT_TOOL_NAME,
+                    SourceFilePosition.UNKNOWN
+                )
+            )
         }
+
+        if (rewriteFilePositions) {
+            messages = messages.map { message ->
+                message.copy(
+                    sourceFilePositions = rewritePositions(
+                        message.sourceFilePositions,
+                        blameLookup
+                    )
+                )
+            }
+        }
+
+        val detailedMessage = messages.joinToString("\n") {
+            humanReadableMessage(it)
+        }
+
+        // Log messages in a json format so parsers can parse and show them in the build output
+        // window.
+        if (errorFormatMode == SyncOptions.ErrorFormatMode.MACHINE_PARSABLE) {
+            MessageReceiverImpl(errorFormatMode, logger).run {
+                messages.map { message ->
+                    message.copy(
+                        text = e.description,
+                        rawMessage = humanReadableMessage(message)
+                    )
+                }.forEach(this::receiveMessage)
+            }
+        }
+
         return Aapt2Exception.create(
             description = e.description,
-            cause = e,
-            output = messages.map { message ->
-                message.copy(
-                    sourceFilePositions =
-                    rewritePositions(message.sourceFilePositions, blameLookup)
-                )
-            }.joinToString("\n") { humanReadableMessage(it) },
+            cause = e.cause,
+            output = detailedMessage,
             processName = e.processName,
             command = e.command
         )
     } catch (e2: Exception) {
-        // Something went wrong, report the original error with the error reporting error supressed.
+        // Something went wrong, report the original error with the error reporting error suppressed
         return e.apply { addSuppressed(e2) }
     }
 }

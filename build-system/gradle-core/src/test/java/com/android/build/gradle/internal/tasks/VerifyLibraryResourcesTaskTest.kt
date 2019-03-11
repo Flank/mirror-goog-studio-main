@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -84,7 +85,8 @@ class VerifyLibraryResourcesTaskTest {
             outputDir,
             Facade,
             mock(Aapt2ServiceKey::class.java),
-            mergedDir
+            mergedDir,
+            SyncOptions.ErrorFormatMode.HUMAN_READABLE
         )
 
         val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
@@ -118,7 +120,8 @@ class VerifyLibraryResourcesTaskTest {
             outputDir,
             Facade,
             mock(Aapt2ServiceKey::class.java),
-            mergedDir
+            mergedDir,
+            SyncOptions.ErrorFormatMode.HUMAN_READABLE
         )
 
         val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))

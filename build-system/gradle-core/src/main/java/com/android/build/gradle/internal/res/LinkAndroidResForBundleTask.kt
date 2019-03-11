@@ -34,6 +34,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.options.SyncOptions
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -71,6 +72,8 @@ open class LinkAndroidResForBundleTask
         private set
 
     private lateinit var aaptOptions: com.android.build.gradle.internal.dsl.AaptOptions
+
+    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     private var mergeBlameLogFolder: File? = null
 
@@ -167,6 +170,7 @@ open class LinkAndroidResForBundleTask
                 Aapt2ProcessResourcesRunnable.Params(
                     aapt2ServiceKey,
                     config,
+                    errorFormatMode,
                     mergeBlameLogFolder
                 )
             )
@@ -269,6 +273,10 @@ open class LinkAndroidResForBundleTask
                     variantScope.variantConfiguration.mergedFlavor.resourceConfigurations
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                variantScope.globalScope.projectOptions
+            )
         }
     }
 }

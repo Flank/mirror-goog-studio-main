@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.res
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
@@ -31,14 +32,16 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
         private val params: Params) : Runnable {
 
     override fun run() {
-        val logger = LoggerWrapper(Logging.getLogger(this::class.java))
+        val logger = Logging.getLogger(this::class.java)
         useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             try {
-                AndroidBuilder.processResources(daemon, params.request, logger)
-            } catch (e: Aapt2Exception) {
+                AndroidBuilder.processResources(daemon, params.request, LoggerWrapper(logger))
+            } catch (exception: Aapt2Exception) {
                 throw rewriteLinkException(
-                    e,
-                    params.mergeBlameFolder
+                    exception,
+                    params.errorFormatMode,
+                    params.mergeBlameFolder,
+                    logger
                 )
             }
         }
@@ -47,6 +50,7 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
     class Params(
         val aapt2ServiceKey: Aapt2ServiceKey,
         val request: AaptPackageConfig,
+        val errorFormatMode: SyncOptions.ErrorFormatMode,
         val mergeBlameFolder: File?
     ) : Serializable
 }

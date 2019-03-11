@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.aapt
 
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.ResourceCompilationService
@@ -26,8 +27,10 @@ import java.io.File
 
 /** Resource compilation service built on top of a Aapt2Daemon and Gradle Worker Executors. */
 class WorkerExecutorResourceCompilationService(
-        private val workerExecutor: WorkerExecutorFacade,
-        private val aapt2ServiceKey: Aapt2ServiceKey) : ResourceCompilationService {
+    private val workerExecutor: WorkerExecutorFacade,
+    private val aapt2ServiceKey: Aapt2ServiceKey,
+    private val errorFormatMode: SyncOptions.ErrorFormatMode
+) : ResourceCompilationService {
 
     /** Temporary workaround for b/73804575 / https://github.com/gradle/gradle/issues/4502
      *  Only submit a small number of worker actions */
@@ -58,7 +61,7 @@ class WorkerExecutorResourceCompilationService(
             // b/73804575
             workerExecutor.submit(
                 Aapt2CompileRunnable::class.java,
-                Aapt2CompileRunnable.Params(aapt2ServiceKey, bucketRequests, true)
+                Aapt2CompileRunnable.Params(aapt2ServiceKey, bucketRequests, errorFormatMode, true)
             )
         }
         requests.clear()

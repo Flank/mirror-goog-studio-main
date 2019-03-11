@@ -19,6 +19,7 @@ import com.android.annotations.concurrency.GuardedBy
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.namespaced.DependenciesGraph.Node
 import com.android.build.gradle.internal.utils.toImmutableList
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -51,7 +52,8 @@ class NonNamespacedDependenciesLinker(
     private val pool: ForkJoinPool,
     private val aapt2ServiceKey: Aapt2ServiceKey,
     private val aaptOptions: AaptOptions = AaptOptions(),
-    val androidJarPath: String
+    private val errorFormatMode: SyncOptions.ErrorFormatMode,
+    private val androidJarPath: String
 ) {
 
     /**
@@ -181,7 +183,13 @@ class NonNamespacedDependenciesLinker(
             imports = staticLibraryDependencies.toImmutableList(),
             resourceOutputApk = resourceOutputApk
         )
-        Aapt2LinkRunnable(Aapt2LinkRunnable.Params(aapt2ServiceKey, request)).run()
+        Aapt2LinkRunnable(
+            Aapt2LinkRunnable.Params(
+                aapt2ServiceKey,
+                request,
+                errorFormatMode
+            )
+        ).run()
     }
 
     private fun getStaticLibLocation(node: Node): File =

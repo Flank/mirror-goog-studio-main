@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
@@ -70,6 +71,8 @@ open class CompileSourceSetResources
         private set
 
     private val workers = Workers.getWorker(project.name, path, workerExecutor)
+
+    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override fun isIncremental() = true
 
@@ -169,7 +172,8 @@ open class CompileSourceSetResources
                 Aapt2CompileRunnable::class.java,
                 Aapt2CompileRunnable.Params(
                     aapt2ServiceKey,
-                    listOf(request)
+                    listOf(request),
+                    errorFormatMode
                 )
             )
         }
@@ -211,6 +215,10 @@ open class CompileSourceSetResources
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
 
             task.dependsOn(variantScope.taskContainer.resourceGenTask)
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                variantScope.globalScope.projectOptions
+            )
         }
     }
 }

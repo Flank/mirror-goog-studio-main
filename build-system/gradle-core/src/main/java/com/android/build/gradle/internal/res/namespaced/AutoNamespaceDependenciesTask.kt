@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
+import com.android.build.gradle.options.SyncOptions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
@@ -145,6 +146,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
     @get:OutputDirectory lateinit var outputRewrittenManifests: File private set
     @get:OutputDirectory lateinit var intermediateDirectory: File private set
 
+    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
+
     @TaskAction
     fun taskAction() = autoNamespaceDependencies()
 
@@ -218,6 +221,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                 intermediateDirectory = intermediateDirectory,
                 pool = forkJoinPool,
                 aapt2ServiceKey = aapt2ServiceKey,
+                errorFormatMode = errorFormatMode,
                 androidJarPath = androidJar.get().absolutePath
             )
             nonNamespacedDependenciesLinker.link()
@@ -374,7 +378,8 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
                     )
                     val params = Aapt2CompileRunnable.Params(
                         aapt2ServiceKey,
-                        listOf(request)
+                        listOf(request),
+                        errorFormatMode
                     )
                     tasks.add(forkJoinPool.submit(Aapt2CompileRunnable(params)))
                 }
@@ -490,6 +495,10 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                variantScope.globalScope.projectOptions
+            )
         }
     }
 

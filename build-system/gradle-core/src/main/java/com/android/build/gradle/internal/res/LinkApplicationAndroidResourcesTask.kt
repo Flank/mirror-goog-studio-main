@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
@@ -226,6 +227,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     @get:Input
     var useFinalIds: Boolean = true
         private set
+
+    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
@@ -539,6 +542,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             if (variantScope.type.isForTesting) {
                 task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS_IN_TESTS)
             }
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                variantScope.globalScope.projectOptions
+            )
         }
     }
 
@@ -794,21 +801,20 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                     Preconditions.checkNotNull<Aapt2ServiceKey>(
                         params.aapt2ServiceKey, "AAPT2 daemon manager service not initialized"
                     )
+                    val logger = Logging.getLogger(LinkApplicationAndroidResourcesTask::class.java)
                     try {
                         getAaptDaemon(params.aapt2ServiceKey!!).use { aaptDaemon ->
 
                             AndroidBuilder.processResources(
                                 aaptDaemon,
                                 configBuilder.build(),
-                                LoggerWrapper(
-                                    Logging.getLogger(
-                                        LinkApplicationAndroidResourcesTask::class.java
-                                    )
-                                )
+                                LoggerWrapper(logger)
                             )
                         }
                     } catch (e: Aapt2Exception) {
-                        throw rewriteLinkException(e, params.mergeBlameFolder)
+                        throw rewriteLinkException(
+                            e, params.errorFormatMode, params.mergeBlameFolder, logger
+                        )
                     }
 
                     if (LOG.isInfoEnabled) {
@@ -885,6 +891,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
+        val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
     }
 
     @Input

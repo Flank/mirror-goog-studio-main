@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
 import com.android.builder.internal.aapt.AaptOptions
@@ -93,6 +94,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     private lateinit var mergeBlameFolder: File
 
+    private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
+
     private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     override fun isIncremental(): Boolean {
@@ -134,15 +137,18 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         // first as we need the .flat files for linking.
         workers.use { facade ->
             compileResources(
-                    inputs,
-                    compiledDirectory,
-                    facade,
-                    aapt2ServiceKey,
-                    inputDirectory.singleFile())
+                inputs,
+                compiledDirectory,
+                facade,
+                aapt2ServiceKey,
+                inputDirectory.singleFile(),
+                errorFormatMode
+            )
             val config = getAaptPackageConfig(compiledDirectory, manifestFile)
             val params = Aapt2ProcessResourcesRunnable.Params(
                 aapt2ServiceKey,
                 config,
+                errorFormatMode,
                 mergeBlameFolder
             )
             facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
@@ -197,6 +203,10 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
             task.mergeBlameFolder = variantScope.resourceBlameLogDir
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(
+                variantScope.globalScope.projectOptions
+            )
         }
     }
 
@@ -218,11 +228,13 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         @JvmStatic
         @VisibleForTesting
         fun compileResources(
-                inputs: Map<File, FileStatus>,
-                outDirectory: File,
-                workerExecutor: WorkerExecutorFacade,
-                aapt2ServiceKey: Aapt2ServiceKey,
-                mergedResDirectory: File) {
+            inputs: Map<File, FileStatus>,
+            outDirectory: File,
+            workerExecutor: WorkerExecutorFacade,
+            aapt2ServiceKey: Aapt2ServiceKey,
+            mergedResDirectory: File,
+            errorFormatMode: SyncOptions.ErrorFormatMode
+        ) {
 
             for ((key, value) in inputs) {
                 // Accept only files in subdirectories of the merged resources directory.
@@ -245,6 +257,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                                 Aapt2CompileRunnable.Params(
                                     aapt2ServiceKey,
                                     listOf(request),
+                                    errorFormatMode,
                                     true
                                 )
                             )

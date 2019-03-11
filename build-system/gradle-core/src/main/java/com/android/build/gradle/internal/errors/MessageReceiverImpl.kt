@@ -46,16 +46,8 @@ class MessageReceiverImpl constructor(
 
     override fun receiveMessage(message: Message) {
         when (message.kind) {
-            Message.Kind.ERROR -> if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
-                logger.error(machineReadableMessage(message))
-            } else {
-                logger.error(humanReadableMessage(message))
-            }
-            Message.Kind.WARNING -> if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
-                logger.warn(machineReadableMessage(message))
-            } else {
-                logger.warn(humanReadableMessage(message))
-            }
+            Message.Kind.ERROR -> logger.error(messageToString(message, errorFormatMode))
+            Message.Kind.WARNING -> logger.warn(messageToString(message, errorFormatMode))
             Message.Kind.INFO -> logger.info(humanReadableMessage(message))
             Message.Kind.STATISTICS -> logger.trace(humanReadableMessage(message))
             Message.Kind.UNKNOWN -> logger.warn(humanReadableMessage(message))
@@ -63,12 +55,20 @@ class MessageReceiverImpl constructor(
         }
     }
 
+    private fun messageToString(message: Message, errorFormatMode: ErrorFormatMode): String =
+        if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
+            machineReadableMessage(message)
+        } else {
+            humanReadableMessage(message)
+        }
+
     /**
      * Only call if errorFormatMode == [ErrorFormatMode.MACHINE_PARSABLE]
      */
     private fun machineReadableMessage(message: Message): String {
         return STDOUT_ERROR_TAG + mGson!!.toJson(message)
     }
+
 }
 
 fun humanReadableMessage(message: Message): String {

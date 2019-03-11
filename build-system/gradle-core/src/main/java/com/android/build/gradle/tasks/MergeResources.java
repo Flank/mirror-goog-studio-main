@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
@@ -140,6 +141,7 @@ public class MergeResources extends ResourceAwareTask {
             @NonNull AndroidBuilder builder,
             @Nullable FileCollection aapt2FromMaven,
             @NonNull WorkerExecutorFacade workerExecutor,
+            SyncOptions.ErrorFormatMode errorFormatMode,
             ImmutableSet<Flag> flags,
             boolean processResources) {
         // If we received the flag for removing namespaces we need to use the namespace remover to
@@ -157,7 +159,8 @@ public class MergeResources extends ResourceAwareTask {
         Aapt2ServiceKey aapt2ServiceKey =
                 Aapt2DaemonManagerService.registerAaptService(aapt2FromMaven, builder.getLogger());
 
-        return new WorkerExecutorResourceCompilationService(workerExecutor, aapt2ServiceKey);
+        return new WorkerExecutorResourceCompilationService(
+                workerExecutor, aapt2ServiceKey, errorFormatMode);
     }
 
     @Override
@@ -173,6 +176,8 @@ public class MergeResources extends ResourceAwareTask {
     }
 
     private final WorkerExecutorFacade workerExecutorFacade;
+
+    private SyncOptions.ErrorFormatMode errorFormatMode;
 
     @Inject
     public MergeResources(WorkerExecutor workerExecutor) {
@@ -207,6 +212,7 @@ public class MergeResources extends ResourceAwareTask {
                         getBuilder(),
                         aapt2FromMaven,
                         workerExecutorFacade,
+                        errorFormatMode,
                         flags,
                         processResources)) {
 
@@ -305,6 +311,7 @@ public class MergeResources extends ResourceAwareTask {
                             getBuilder(),
                             aapt2FromMaven,
                             workerExecutorFacade,
+                            errorFormatMode,
                             flags,
                             processResources)) {
 
@@ -713,6 +720,8 @@ public class MergeResources extends ResourceAwareTask {
                             .getBuildType()
                             .isPseudoLocalesEnabled();
             task.flags = flags;
+
+            task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 
