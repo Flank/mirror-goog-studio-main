@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.w3c.dom.Element;
@@ -139,7 +140,6 @@ public enum ResourceType {
 
         ImmutableMap.Builder<String, ResourceType> classNames = ImmutableMap.builder();
         classNames.put(STYLEABLE.mName, STYLEABLE);
-        classNames.put(AAPT.mName, AAPT);
 
         for (ResourceType type : ResourceType.values()) {
             if (type.mKind != Kind.REAL || type == STYLEABLE) {
@@ -223,6 +223,10 @@ public enum ResourceType {
             return SAMPLE_DATA;
         }
 
+        if (xmlValue.equals(AAPT.mName)) {
+            return AAPT;
+        }
+
         return CLASS_NAMES.get(xmlValue);
     }
 
@@ -230,7 +234,7 @@ public enum ResourceType {
     public static <T> ResourceType fromXmlTag(
             @NonNull T tag,
             @NonNull Function<T, String> nameFunction,
-            @NonNull BiFunction<T, String, String> attributeFunction) {
+            @NonNull BiFunction<? super T, ? super String, String> attributeFunction) {
         String tagName = nameFunction.apply(tag);
         switch (tagName) {
             case SdkConstants.TAG_EAT_COMMENT:
@@ -258,6 +262,10 @@ public enum ResourceType {
                 tag,
                 element -> firstNonNull(element.getLocalName(), element.getTagName()),
                 Element::getAttribute);
+    }
+
+    public static Collection<String> getClassNames() {
+        return CLASS_NAMES.keySet();
     }
 
     /**
