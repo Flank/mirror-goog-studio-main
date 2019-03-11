@@ -87,7 +87,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     List<String> buildArguments;
     List<String> cFlags;
     List<String> cppFlags;
-    List<File> nativeBuildConfigurationsJsons;
+    List nativeBuildConfigurationsJsons;
     GradleBuildVariant.Builder stats;
 
     @Rule
@@ -402,7 +402,9 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         + "           \"isGenerated\":false,\n"
                         + "           \"language\":\"CXX\",\n"
                         + "           \"sources\":[  \n"
-                        + "              \"Test1.cpp\"\n"
+                        + "              \"Test1a.cpp\",\n"
+                        + "              \"../common/Test1b.cpp\",\n"
+                        + "              \"/tmp/Test1c.cpp\"\n"
                         + "           ]\n"
                         + "        }\n"
                         + "     ],\n"
@@ -423,15 +425,42 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 cmakeServerStrategy.getNativeLibraryValue(
                         "x86", workingDirectory, getTestTarget(targetStr), new StringTable(table));
 
-        assertThat(nativeLibraryValue.files).hasSize(1);
-        NativeSourceFileValue nativeSourceFileValue = Iterables.get(nativeLibraryValue.files, 0);
-        assertThat(nativeSourceFileValue.src.getAbsolutePath())
+        assertThat(nativeLibraryValue.files).isNotNull();
+        assertThat(nativeLibraryValue.files).hasSize(3);
+
+        NativeSourceFileValue file0 = Iterables.get(nativeLibraryValue.files, 0);
+        NativeSourceFileValue file1 = Iterables.get(nativeLibraryValue.files, 1);
+        NativeSourceFileValue file2 = Iterables.get(nativeLibraryValue.files, 2);
+
+        // Verify source paths.
+        assertThat(file0.src).isNotNull();
+        assertThat(file0.src.getAbsolutePath())
                 .isEqualTo(
-                        "/usr/local/google/home/jomof/AndroidStudioProjects/BugTest/app/src/main/test/Test1.cpp");
-        assertThat(table.get(0)).isEqualTo(workingDirectory.toString());
-        assertThat(table.get(1))
+                        "/usr/local/google/home/jomof/AndroidStudioProjects/BugTest/app/src/main/test/Test1a.cpp");
+        assertThat(file1.src).isNotNull();
+        assertThat(file1.src.getAbsolutePath())
                 .isEqualTo(
-                        "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64 -DTest_EXPORTS -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info -fPIC");
+                        "/usr/local/google/home/jomof/AndroidStudioProjects/BugTest/app/src/main/common/Test1b.cpp");
+        assertThat(file2.src).isNotNull();
+        assertThat(file2.src.getAbsolutePath()).isEqualTo("/tmp/Test1c.cpp");
+
+        // Verify working directories.
+        assertThat(file0.workingDirectoryOrdinal).isLessThan(table.size());
+        assertThat(table.get(file0.workingDirectoryOrdinal)).isEqualTo(workingDirectory.toString());
+        assertThat(file1.workingDirectoryOrdinal).isLessThan(table.size());
+        assertThat(table.get(file1.workingDirectoryOrdinal)).isEqualTo(workingDirectory.toString());
+        assertThat(file2.workingDirectoryOrdinal).isLessThan(table.size());
+        assertThat(table.get(file2.workingDirectoryOrdinal)).isEqualTo(workingDirectory.toString());
+
+        // Verify flags.
+        String expectedFlags =
+                "--target=x86_64-none-linux-android --gcc-toolchain=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/toolchains/x86_64-4.9/prebuilt/linux-x86_64 --sysroot=/usr/local/google/home/jomof/Android/Sdk/ndk-bundle/platforms/android-21/arch-x86_64 -DTest1_EXPORTS -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/libs/x86_64/include -isystem /usr/local/google/home/jomof/Android/Sdk/ndk-bundle/sources/cxx-stl/gnu-libstdc++/4.9/include/backward -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info -fPIC";
+        assertThat(file0.flagsOrdinal).isLessThan(table.size());
+        assertThat(table.get(file0.flagsOrdinal)).isEqualTo(expectedFlags);
+        assertThat(file1.flagsOrdinal).isLessThan(table.size());
+        assertThat(table.get(file1.flagsOrdinal)).isEqualTo(expectedFlags);
+        assertThat(file2.flagsOrdinal).isLessThan(table.size());
+        assertThat(table.get(file2.flagsOrdinal)).isEqualTo(expectedFlags);
     }
 
     // Reference http://b/72065334
