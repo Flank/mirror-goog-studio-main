@@ -235,12 +235,12 @@ open class MergeJavaResourceTask
 
 fun getProjectJavaRes(scope: VariantScope): FileCollection {
     val javaRes = scope.globalScope.project.files()
-    javaRes.from(scope.artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES).get())
+    javaRes.from(scope.artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES))
     javaRes.from(scope.artifacts.getFinalProduct<Directory>(InternalArtifactType.JAVAC))
     javaRes.from(scope.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(scope.variantData.allPostJavacGeneratedBytecode)
     javaRes.from(
-        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_CLASSES).get()
+        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)
     )
     return javaRes
 }
