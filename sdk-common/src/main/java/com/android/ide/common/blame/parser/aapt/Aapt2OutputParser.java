@@ -28,7 +28,7 @@ import java.util.List;
 public class Aapt2OutputParser implements PatternAwareOutputParser {
 
     private static final AbstractAaptOutputParser[] PARSERS = {
-        new Aapt2ErrorParser(), new Aapt2ErrorNoPathParser(), new Aapt2DaemonErrorParser()
+        new Aapt2ErrorParser(), new Aapt2ErrorNoPathParser()
     };
 
     @Override
@@ -37,9 +37,10 @@ public class Aapt2OutputParser implements PatternAwareOutputParser {
             @NonNull OutputLineReader reader,
             @NonNull List<Message> messages,
             @NonNull ILogger logger) {
+        String trimmedLine = line.trim();
         for (AbstractAaptOutputParser parser : PARSERS) {
             try {
-                if (parser.parse(line, reader, messages, logger)) {
+                if (parser.parse(trimmedLine, reader, messages, logger)) {
                     return true;
                 }
             } catch (ParsingFailedException e) {

@@ -31,7 +31,7 @@ public class Aapt2ErrorNoPathParser extends AbstractAaptOutputParser {
      * Single-line aapt error containing a path without a file path.
      *
      * <pre>
-     * ERROR: &lt;error&gt;
+     * ERROR: <error>
      * </pre>
      */
     private static final Pattern MSG_PATTERN = Pattern.compile("^ERROR: (.+)$");

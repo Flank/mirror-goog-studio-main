@@ -97,7 +97,7 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             .newBuilder()
             .weakValues().build();
 
-    private static final String AAPT_TOOL_NAME = "AAPT";
+    public static final String AAPT_TOOL_NAME = "AAPT";
 
     @VisibleForTesting
     public static File ourRootDir;
@@ -464,6 +464,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             @NonNull String text,
             @Nullable String sourcePath,
             @Nullable String lineNumberAsText,
+            @Nullable String startColumnAsText,
+            @Nullable String endColumnAsText,
             @NonNull String original,
             ILogger logger)
             throws ParsingFailedException {
@@ -475,8 +477,9 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             }
         }
 
-        SourcePosition errorPosition = parseLineNumber(lineNumberAsText);
-        if (sourcePath != null) {
+        SourcePosition errorPosition =
+                parseErrorPosition(lineNumberAsText, startColumnAsText, endColumnAsText);
+        if (file != null) {
             SourceFilePosition source =
                     findSourcePosition(file, errorPosition.getStartLine(), text, logger);
             if (source != null) {
@@ -490,7 +493,9 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         // Attempt to determine the exact range of characters affected by this error.
         // This will look up the actual text of the file, go to the particular error line and
         // findText for the specific string mentioned in the error.
-        if (file != null && errorPosition.getStartLine() != -1) {
+        if (file != null
+                && errorPosition.getStartLine() != -1
+                && errorPosition.getStartColumn() == -1) {
             errorPosition =
                     findMessagePositionInFile(file, text, errorPosition.getStartLine(), logger);
         }
@@ -504,9 +509,25 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
                         : new SourceFilePosition(file, errorPosition));
     }
 
-    private static SourcePosition parseLineNumber(String lineNumberAsText)
+    @NonNull
+    static Message createMessage(
+            @NonNull Message.Kind kind,
+            @NonNull String text,
+            @Nullable String sourcePath,
+            @Nullable String lineNumberAsText,
+            @NonNull String original,
+            ILogger logger)
             throws ParsingFailedException {
-        int lineNumber = -1;
+        return createMessage(
+                kind, text, sourcePath, lineNumberAsText, null, null, original, logger);
+    }
+
+    private static SourcePosition parseErrorPosition(
+            @Nullable String lineNumberAsText,
+            @Nullable String startColumnAsText,
+            @Nullable String endColumnAsText)
+            throws ParsingFailedException {
+        int lineNumber = 0, startColumn = 0, endColumn;
         if (lineNumberAsText != null) {
             try {
                 lineNumber = Integer.parseInt(lineNumberAsText);
@@ -514,7 +535,24 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
                 throw new ParsingFailedException();
             }
         }
-        return new SourcePosition(lineNumber - 1, -1, -1);
+        if (startColumnAsText != null) {
+            try {
+                startColumn = Integer.parseInt(startColumnAsText);
+            } catch (NumberFormatException e) {
+                throw new ParsingFailedException();
+            }
+        }
+        if (endColumnAsText != null) {
+            try {
+                endColumn = Integer.parseInt(endColumnAsText);
+            } catch (NumberFormatException e) {
+                throw new ParsingFailedException();
+            }
+        } else {
+            endColumn = startColumn;
+        }
+        return new SourcePosition(
+                lineNumber - 1, startColumn - 1, -1, lineNumber - 1, endColumn - 1, -1);
     }
 
     /** @return null if could not be found, new SourceFilePosition(new SourceFile file, */
