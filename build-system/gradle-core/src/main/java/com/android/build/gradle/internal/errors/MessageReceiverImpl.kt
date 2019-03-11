@@ -36,7 +36,7 @@ class MessageReceiverImpl constructor(
 
     init {
         mGson = if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
-            val gsonBuilder = GsonBuilder()
+            val gsonBuilder = GsonBuilder().disableHtmlEscaping()
             MessageJsonSerializer.registerTypeAdapters(gsonBuilder)
             gsonBuilder.create()
         } else {
