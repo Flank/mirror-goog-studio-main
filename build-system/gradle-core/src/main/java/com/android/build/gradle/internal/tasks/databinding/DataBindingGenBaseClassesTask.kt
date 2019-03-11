@@ -192,10 +192,4 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                     .generateAll(DataBindingBuilder.GradleFileWriter(sourceOutFolder.absolutePath))
         }
     }
-
-    companion object {
-        private val BASE_ADAPTERS_ARTIFACTS = listOf(
-            "com.android.databinding.library.baseAdapters",
-            "androidx.databinding.library.baseAdapters")
-    }
 }
