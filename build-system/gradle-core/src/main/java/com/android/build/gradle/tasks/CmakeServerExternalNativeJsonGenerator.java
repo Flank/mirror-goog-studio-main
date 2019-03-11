@@ -553,6 +553,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                             new NativeHeaderFileValue(sourceFile, workingDirectoryOrdinal));
                 } else {
                     NativeSourceFileValue nativeSourceFileValue = new NativeSourceFileValue();
+                    nativeSourceFileValue.workingDirectoryOrdinal = workingDirectoryOrdinal;
                     nativeSourceFileValue.src = sourceFile;
 
                     // We use flags from compile_commands.json if present. Otherwise, fall back
