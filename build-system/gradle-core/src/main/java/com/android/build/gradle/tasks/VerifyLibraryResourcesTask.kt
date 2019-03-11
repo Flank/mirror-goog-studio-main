@@ -93,7 +93,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     private lateinit var mergeBlameFolder: File
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     override fun isIncremental(): Boolean {
         return true

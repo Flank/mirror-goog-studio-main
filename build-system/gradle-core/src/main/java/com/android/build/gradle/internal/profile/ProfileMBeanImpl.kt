@@ -24,12 +24,14 @@ class ProfileMBeanImpl(private val buildListener: RecordingBuildListener): Profi
 
     override fun workerStarted(taskPath: String, workerKey: String) {
         val workerRecord = buildListener.getWorkerRecord(taskPath, workerKey)
-        workerRecord.executionStarted()
+        workerRecord?.executionStarted()
     }
 
     override fun workerFinished(taskPath: String, workerKey: String) {
         val workerRecord = buildListener.getWorkerRecord(taskPath, workerKey)
-        workerRecord.executionFinished()
-        buildListener.getTaskRecord(taskPath).workerFinished(workerRecord)
+        if (workerRecord!=null) {
+            workerRecord.executionFinished()
+            buildListener.getTaskRecord(taskPath).workerFinished(workerRecord)
+        }
     }
 }

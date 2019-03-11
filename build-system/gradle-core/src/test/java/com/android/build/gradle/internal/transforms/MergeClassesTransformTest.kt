@@ -25,11 +25,9 @@ import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.transforms.TransformTestHelper.invocationBuilder
 import com.android.build.gradle.internal.transforms.TransformTestHelper.singleJarBuilder
-import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.testutils.truth.MoreTruth
 import com.android.testutils.apk.Zip
 import com.android.utils.FileUtils
-import com.google.common.truth.Truth
 import org.gradle.api.Action
 import org.gradle.workers.WorkerConfiguration
 import org.gradle.workers.WorkerExecutor
@@ -42,7 +40,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
-import java.util.jar.JarFile
 
 class MergeClassesTransformTest {
 
@@ -77,6 +74,7 @@ class MergeClassesTransformTest {
 
         context = Mockito.mock(Context::class.java)
         Mockito.`when`(context.workerExecutor).thenReturn(workerExecutor)
+        Mockito.`when`(context.projectName).thenReturn("test")
         Mockito.`when`(context.path).thenReturn(":test")
     }
 

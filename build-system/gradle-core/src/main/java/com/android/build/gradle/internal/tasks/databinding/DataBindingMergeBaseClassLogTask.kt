@@ -54,7 +54,7 @@ constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): Incre
 
 
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     private lateinit var delegate: DataBindingMergeBaseClassLogDelegate
 

@@ -55,7 +55,7 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
 open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
     AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
     private lateinit var toIgnoreRegExps: Supplier<List<String>>
 
     @get:OutputFile

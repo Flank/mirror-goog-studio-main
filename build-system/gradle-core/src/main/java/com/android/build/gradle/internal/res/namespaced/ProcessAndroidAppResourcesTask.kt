@@ -61,7 +61,7 @@ import javax.inject.Inject
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
 @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set

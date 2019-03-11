@@ -53,7 +53,7 @@ import javax.inject.Inject
  */
 open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
 
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
 
     private lateinit var projectName: String

@@ -64,7 +64,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
     lateinit var outputFile: File
         private set
 
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
     @TaskAction
     fun generateApk() {

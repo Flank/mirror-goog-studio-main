@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-a368f5086e7e086f47b4424467f5bf26ebec74fb28c7b1157442008937f4ff20
+34b579eb31fef787565fa00af8c21522036eca043dc97569a6834dd4b9d4c5d7
 -------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr
 com.android.build.api.attributes.ProductFlavorAttr
@@ -12,6 +12,7 @@ com.android.build.api.attributes.VariantAttr
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
+com.android.build.api.transform.Context.getProjectName: java.lang.String ()
 com.android.build.api.transform.Context.getTemporaryDir: java.io.File ()
 com.android.build.api.transform.Context.getVariantName: java.lang.String ()
 com.android.build.api.transform.Context.getWorkerExecutor: org.gradle.workers.WorkerExecutor ()

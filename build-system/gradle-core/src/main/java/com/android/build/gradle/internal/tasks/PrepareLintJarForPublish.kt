@@ -42,7 +42,7 @@ open class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerEx
         private set
     @get:OutputFile lateinit var outputLintJar: File
         private set
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
     companion object {
         const val NAME = "prepareLintJarForPublish"

@@ -227,7 +227,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     var useFinalIds: Boolean = true
         private set
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     // FIXME : make me incremental !
     override fun doFullTaskAction() {

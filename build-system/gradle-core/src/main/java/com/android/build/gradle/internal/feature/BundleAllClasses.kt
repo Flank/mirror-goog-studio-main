@@ -53,7 +53,7 @@ import javax.inject.Inject
  */
 open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     @get:OutputFile
     lateinit var outputJar: File

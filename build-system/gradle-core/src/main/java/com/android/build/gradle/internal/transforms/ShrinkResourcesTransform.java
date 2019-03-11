@@ -260,6 +260,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         try (WorkerExecutorFacade workers =
                 Workers.INSTANCE.getWorker(
+                        invocation.getContext().getProjectName(),
                         invocation.getContext().getPath(),
                         invocation.getContext().getWorkerExecutor())) {
             ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)

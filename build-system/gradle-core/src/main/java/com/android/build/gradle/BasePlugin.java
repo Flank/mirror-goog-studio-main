@@ -248,7 +248,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         PluginInitializer.initialize(project);
         RecordingBuildListener buildListener = ProfilerInitializer.init(project, projectOptions);
-        ProfileAgent.INSTANCE.register(buildListener);
+        ProfileAgent.INSTANCE.register(project.getName(), buildListener);
         threadRecorder = ThreadRecorder.get();
 
         Workers.INSTANCE.initFromProject(

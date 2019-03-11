@@ -54,7 +54,7 @@ import javax.inject.Inject
 @CacheableTask
 open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerExecutor) : ProcessAndroidResources() {
 
-    private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
+    private val workers: WorkerExecutorFacade = Workers.getWorker(project.name, path, workerExecutor)
 
     @get:OutputDirectory @get:Optional var sourceOutputDirectory: File? = null; private set
     @Input fun outputSources() = sourceOutputDirectory != null

@@ -86,7 +86,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
 
     @Inject
     public PackageSplitAbi(WorkerExecutor workerExecutor) {
-        workers = Workers.INSTANCE.getWorker(getPath(), workerExecutor);
+        workers = Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
     }
 
     @InputFiles

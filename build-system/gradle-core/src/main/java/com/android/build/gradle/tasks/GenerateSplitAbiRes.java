@@ -81,7 +81,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     @Inject
     public GenerateSplitAbiRes(@NonNull WorkerExecutor workerExecutor) {
-        this.workers = Workers.INSTANCE.getWorker(getPath(), workerExecutor);
+        this.workers =
+                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor);
     }
 
     private Supplier<String> applicationId;

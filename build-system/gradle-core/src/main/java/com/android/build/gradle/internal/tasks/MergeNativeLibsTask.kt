@@ -98,7 +98,7 @@ open class MergeNativeLibsTask
     private var containsExternalLibraries = false
 
 
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
 
 

@@ -176,7 +176,9 @@ public class MergeResources extends ResourceAwareTask {
 
     @Inject
     public MergeResources(WorkerExecutor workerExecutor) {
-        this.workerExecutorFacade = Workers.INSTANCE.getWorkerForAapt2(getPath(), workerExecutor);
+        this.workerExecutorFacade =
+                Workers.INSTANCE.getWorkerForAapt2(
+                        getProject().getName(), getPath(), workerExecutor);
     }
 
     @Override

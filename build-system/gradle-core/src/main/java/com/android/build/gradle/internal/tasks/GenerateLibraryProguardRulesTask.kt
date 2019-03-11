@@ -50,7 +50,7 @@ import javax.inject.Inject
 @CacheableTask
 open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: WorkerExecutor)
     : AndroidVariantTask() {
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
     @get:OutputFile
     lateinit var proguardOutputFile: File

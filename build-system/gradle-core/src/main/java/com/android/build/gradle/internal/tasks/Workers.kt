@@ -57,15 +57,16 @@ object Workers {
      * Factory function for creating instances of [WorkerExecutorFacade].
      * Initialized with a default version using the the [ForkJoinPool.commonPool]
      */
-    private var factory: (owner: String, worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
-        { owner, worker, executor -> ExecutorServiceAdapter(
-            executor ?: ForkJoinPool.commonPool(), WorkerExecutorAdapter(owner, worker)
+    private var factory: (projectName: String, owner: String, worker: WorkerExecutor, executor: ExecutorService?) -> WorkerExecutorFacade =
+        { projectName, owner, worker, executor -> ExecutorServiceAdapter(
+            executor ?: ForkJoinPool.commonPool(), WorkerExecutorAdapter(projectName, owner, worker)
         ) }
 
     /**
      * Creates a [WorkerExecutorFacade] using the passed [WorkerExecutor], delegating
      * to the [factory] method for the actual instantiation of the interface.
      *
+     * @param projectName name of the project owning the task
      * @param owner the task path issuing the request and owning the [WorkerExecutor] instance.
      * @param worker [WorkerExecutor] to use if Gradle's worker executor are enabled.
      * @param executor [ExecutorService] to use if the Gradle's worker are not enabled or null
@@ -74,11 +75,11 @@ object Workers {
      * [ExecutorService] depending on the project options.
      */
     @JvmOverloads
-    fun getWorker(owner: String, worker: WorkerExecutor, executor: ExecutorService? = null)
+    fun getWorker(projectName: String, owner: String, worker: WorkerExecutor, executor: ExecutorService? = null)
             : WorkerExecutorFacade {
         return if (useDirectWorkerExecutor) {
             DirectWorkerExecutor()
-        } else factory(owner, worker, executor)
+        } else factory(projectName, owner, worker, executor)
     }
 
     private const val MAX_AAPT2_THREAD_POOL_SIZE = 8
@@ -92,9 +93,9 @@ object Workers {
      */
     @JvmOverloads
     @Synchronized
-    fun getWorkerForAapt2(owner: String, worker: WorkerExecutor, executor: ExecutorService? = aapt2ThreadPool)
+    fun getWorkerForAapt2(projectName: String, owner: String, worker: WorkerExecutor, executor: ExecutorService? = aapt2ThreadPool)
             : WorkerExecutorFacade {
-        return getWorker(owner, worker, executor)
+        return getWorker(projectName, owner, worker, executor)
     }
 
     /**
@@ -124,17 +125,18 @@ object Workers {
 
         factory = when {
             options.get(BooleanOption.ENABLE_GRADLE_WORKERS) -> {
-                { owner, worker, _ ->
+                { projectName, owner, worker, _ ->
                     WorkerExecutorAdapter(
+                        projectName,
                         owner,
                         worker
                     )
                 }
             }
             else -> {
-                { owner, worker, executor -> ExecutorServiceAdapter(
+                { projectName, owner, worker, executor -> ExecutorServiceAdapter(
                     executor ?: defaultExecutor,
-                    WorkerExecutorAdapter(owner, worker)
+                    WorkerExecutorAdapter(projectName, owner, worker)
                 ) }
             }
         }
@@ -179,6 +181,7 @@ object Workers {
      *
      */
     private class WorkerExecutorAdapter(
+        private val projectName: String,
         private val owner: String,
         private val workerExecutor: WorkerExecutor
     ) :
@@ -211,6 +214,7 @@ object Workers {
             val submissionParameters = ActionParameters(
                 actionClass,
                 configuration.parameter,
+                projectName,
                 owner,
                 workerKey
             )
@@ -271,6 +275,7 @@ object Workers {
     class ActionParameters(
         val delegateAction: Class<out Runnable>,
         val delegateParameters: Serializable,
+        val projectName: String,
         val taskOwner: String,
         val workerKey: String
     ) : Serializable
@@ -282,9 +287,10 @@ object Workers {
                 ?: throw RuntimeException("Cannot find constructor with @Inject in ${params.delegateAction.name}")
 
             val delegate = constructor.newInstance(params.delegateParameters) as Runnable
-            ProfileAgent.getProfileMBean.workerStarted(params.taskOwner, params.workerKey)
+            val profileMBean = ProfileAgent.getProfileMBean(params.projectName )
+            profileMBean.workerStarted(params.taskOwner, params.workerKey)
             delegate.run()
-            ProfileAgent.getProfileMBean.workerFinished(params.taskOwner, params.workerKey)
+            profileMBean.workerFinished(params.taskOwner, params.workerKey)
         }
 
         private fun findAppropriateConstructor(): Constructor<*>? {

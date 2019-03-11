@@ -72,7 +72,7 @@ public class WorkerExecutorAdapterTest {
 
     @Test
     public void testSingleDelegation() {
-        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker(":test", workerExecutor);
+        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker("test", ":test", workerExecutor);
         Parameter params = new Parameter("one", "two");
         adapter.submit(WorkAction.class, params);
         adapter.await();
@@ -93,6 +93,7 @@ public class WorkerExecutorAdapterTest {
         Workers.ActionParameters actionParameters = actionParametersArgumentCaptor.getValue();
         Truth.assertThat(actionParameters.getDelegateParameters()).isEqualTo(params);
         Truth.assertThat(actionParameters.getDelegateAction()).isEqualTo(WorkAction.class);
+        Truth.assertThat(actionParameters.getProjectName()).isEqualTo("test");
         Truth.assertThat(actionParameters.getTaskOwner()).isEqualTo(":test");
         Mockito.verifyNoMoreInteractions(workerConfiguration);
     }
@@ -100,7 +101,7 @@ public class WorkerExecutorAdapterTest {
     @Test
     public void testMultipleDelegation() {
 
-        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker(":test", workerExecutor);
+        WorkerExecutorFacade adapter = Workers.INSTANCE.getWorker("test", ":test", workerExecutor);
         List<Parameter> parametersList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Parameter params = new Parameter("+" + i, "-" + i);
@@ -128,6 +129,7 @@ public class WorkerExecutorAdapterTest {
             Truth.assertThat(actionParameters.getDelegateParameters())
                     .isEqualTo(parametersList.get(index++));
             Truth.assertThat(actionParameters.getDelegateAction()).isEqualTo(WorkAction.class);
+            Truth.assertThat(actionParameters.getProjectName()).isEqualTo("test");
             Truth.assertThat(actionParameters.getTaskOwner()).isEqualTo(":test");
             Mockito.verifyNoMoreInteractions(workerConfiguration);
         }

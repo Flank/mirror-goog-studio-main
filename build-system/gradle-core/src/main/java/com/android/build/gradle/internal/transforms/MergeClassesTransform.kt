@@ -71,6 +71,7 @@ class MergeClassesTransform(
             { it -> CLASS_PATTERN.matcher(it).matches() || KOTLIN_MODULE_PATTERN.matcher(it).matches() }
 
         val workers = Workers.getWorker(
+            invocation.context.projectName,
             invocation.context.path,
             invocation.context.workerExecutor)
 

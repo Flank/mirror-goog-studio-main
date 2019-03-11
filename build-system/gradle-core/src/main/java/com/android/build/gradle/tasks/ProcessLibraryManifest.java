@@ -99,7 +99,8 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        try (WorkerExecutorFacade workers = Workers.INSTANCE.getWorker(getPath(), workerExecutor)) {
+        try (WorkerExecutorFacade workers =
+                Workers.INSTANCE.getWorker(getProject().getName(), getPath(), workerExecutor)) {
             DirectoryProperty manifestOutputDirectory = getManifestOutputDirectory();
             DirectoryProperty aaptFriendlyManifestOutputDirectory =
                     getAaptFriendlyManifestOutputDirectory();

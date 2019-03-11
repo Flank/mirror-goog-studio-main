@@ -52,7 +52,7 @@ import javax.inject.Inject
 @CacheableTask
 open class ParseLibraryResourcesTask @Inject constructor(workerExecutor: WorkerExecutor)
     : AndroidVariantTask() {
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)

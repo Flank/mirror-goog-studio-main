@@ -69,7 +69,7 @@ open class CompileSourceSetResources
     lateinit var partialRDirectory: File
         private set
 
-    private val workers = Workers.getWorker(path, workerExecutor)
+    private val workers = Workers.getWorker(project.name, path, workerExecutor)
 
     override fun isIncremental() = true
 

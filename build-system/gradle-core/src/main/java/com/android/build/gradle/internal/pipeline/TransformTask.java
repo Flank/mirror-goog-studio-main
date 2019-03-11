@@ -286,6 +286,10 @@ public class TransformTask extends StreamBasedTask implements Context {
         return builder.build();
     }
 
+    public String getProjectName() {
+        return getProject().getName();
+    }
+
     /**
      * Returns a list of non incremental TransformInput.
      * @param streams the streams.

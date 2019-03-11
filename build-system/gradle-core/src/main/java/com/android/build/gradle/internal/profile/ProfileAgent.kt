@@ -29,36 +29,40 @@ import javax.management.StandardMBean
 object ProfileAgent {
 
     private val mbs = ManagementFactory.getPlatformMBeanServer()
-    private val objectName = ObjectName("domain:type=Gradle.agp,name=profiling")
+    private val rootObjectName = "domain:type=Gradle.agp,name=profiling"
     private val logger = Logger.getLogger(ProfileAgent::class.qualifiedName)
 
     @Synchronized
-    fun register(buildListener: RecordingBuildListener) {
+    fun register(projectName: String, buildListener: RecordingBuildListener) {
         try {
-            val mbeans = mbs.queryMBeans(objectName, null)
+            val objectNameForProject = composeObjectName(projectName)
+            val mbeans = mbs.queryMBeans(objectNameForProject, null)
             if (mbeans.isEmpty()) {
                 val bean = ProfileMBeanImpl(buildListener)
                 val mbean = StandardMBean(bean, ProfileMBean::class.java, false)
-                mbs.registerMBean(mbean, objectName)
+                mbs.registerMBean(mbean, objectNameForProject)
             }
         } catch (t: Throwable) {
             logger.warning("Profiling not available : $t")
         }
     }
 
-    val getProfileMBean: ProfileMBean by lazy {
-        MBeanServerInvocationHandler.newProxyInstance(
+    fun getProfileMBean(projectName: String): ProfileMBean {
+        return MBeanServerInvocationHandler.newProxyInstance(
             mbs,
-            objectName,
+            composeObjectName(projectName),
             ProfileMBean::class.java,
             false
         )
     }
 
+    private fun composeObjectName(projectName: String) =
+        ObjectName("$rootObjectName,project=$projectName")
+
     @Synchronized
     fun unregister() {
-        if (mbs.isRegistered(objectName)) {
-            mbs.unregisterMBean(objectName)
+        for (queryMBean in mbs.queryMBeans(ObjectName("$rootObjectName,*"), null)) {
+            mbs.unregisterMBean(queryMBean.objectName)
         }
     }
 }
