@@ -130,7 +130,9 @@ public class NativeBuildConfigValueBuilder {
             @NonNull String cleanCommand,
             @NonNull String variantName,
             @NonNull String commands) {
-        this.outputs.clear();
+        if (!this.outputs.isEmpty()) {
+            throw new RuntimeException("setCommands should be called once");
+        }
         ListMultimap<String, List<BuildStepInfo>> outputs =
                 FlowAnalyzer.analyze(commands, fileConventions);
         for (Map.Entry<String, List<BuildStepInfo>> entry : outputs.entries()) {

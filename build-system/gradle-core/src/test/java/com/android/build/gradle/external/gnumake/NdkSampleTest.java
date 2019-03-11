@@ -38,11 +38,8 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -73,14 +70,11 @@ public class NdkSampleTest {
         this.forceSyntheticFileFunctions = forceSyntheticFileFunctions;
     }
 
-    // Turn this flag to true to regenerate test baselines in the case that output has intentionally
-    // changed. Should never be checked in as 'true'.
-    @SuppressWarnings("FieldCanBeLocal")
-    private static final boolean REGENERATE_TEST_BASELINES = false;
     // Turn this flag to true to regenerate test JSON from preexisting baselines in the case that
     // output has intentionally changed.
     @SuppressWarnings("FieldCanBeLocal")
     private static final boolean REGENERATE_TEST_JSON_FROM_TEXT = false;
+
     @NonNull
     private static final String THIS_TEST_FOLDER =
             "src/test/java/com/android/build/gradle/external/gnumake/";
@@ -144,100 +138,6 @@ public class NdkSampleTest {
         }
     }
 
-
-    private static class Spawner {
-        private static final int THREAD_JOIN_TIMEOUT_MILLIS = 2000;
-
-        private static Process platformExec(String command) throws IOException {
-            if (System.getProperty("os.name").contains("Windows")) {
-                return Runtime.getRuntime().exec(new String[]{"cmd", "/C", command});
-            } else {
-                return Runtime.getRuntime().exec(new String[]{"bash", "-c", command});
-            }
-        }
-
-        @NonNull
-        private static String spawn(String command) throws IOException, InterruptedException {
-            Process proc = platformExec(command);
-
-            // any error message?
-            StreamReaderThread errorThread = new
-                    StreamReaderThread(proc.getErrorStream());
-
-            // any output?
-            StreamReaderThread outputThread = new
-                    StreamReaderThread(proc.getInputStream());
-
-            // kick them off
-            errorThread.start();
-            outputThread.start();
-
-            // Wait for process to finish
-            proc.waitFor();
-
-            // Wait for output capture threads to finish
-            errorThread.join(THREAD_JOIN_TIMEOUT_MILLIS);
-            outputThread.join(THREAD_JOIN_TIMEOUT_MILLIS);
-
-            if (proc.exitValue() != 0) {
-                System.err.println(errorThread.result());
-                throw new RuntimeException(
-                        String.format("Spawned process failed with code %s", proc.exitValue()));
-            }
-
-            if (errorThread.ioe != null) {
-                throw new RuntimeException(
-                        String.format("Problem reading stderr: %s", errorThread.ioe));
-            }
-
-            if (outputThread.ioe != null) {
-                throw new RuntimeException(
-                        String.format("Problem reading stdout: %s", outputThread.ioe));
-            }
-
-            return outputThread.result();
-        }
-
-        /**
-         * Read an input stream off of the main thread
-         */
-        private static class StreamReaderThread extends Thread {
-            private final InputStream is;
-            @SuppressWarnings("StringBufferField")
-            @NonNull
-            private final StringBuilder output = new StringBuilder();
-            @Nullable
-            IOException ioe = null;
-
-            public StreamReaderThread(InputStream is) {
-                this.is = is;
-            }
-
-            @NonNull
-            public String result() {
-                return output.toString();
-            }
-
-            @Override
-            public void run() {
-                try {
-                    InputStreamReader streamReader = new InputStreamReader(is);
-                    try (BufferedReader bufferedReader = new BufferedReader(streamReader)) {
-                        String line;
-                        while ((line = bufferedReader.readLine()) != null) {
-                            output.append(line);
-                            output.append("\n");
-                        }
-                    }
-                    //noinspection ThrowFromFinallyBlock
-
-                } catch (IOException ioe) {
-                    this.ioe = ioe;
-                }
-            }
-        }
-    }
-
     private static Map<String, String> getVariantConfigs() {
         return ImmutableMap.<String, String>builder()
                 .put("debug", "NDK_DEBUG=1")
@@ -278,24 +178,15 @@ public class NdkSampleTest {
                         + testPath.getName() + "." + getOsName(operatingSystem) + ".json");
     }
 
-    @NonNull
-    private static String getNdkResult(
-            @NonNull File projectPath, String flags) throws IOException, InterruptedException {
-
-        String command =
-                String.format(
-                        TestUtils.getNdk() + "/ndk-build -B -n NDK_PROJECT_PATH=%s %s",
-                        projectPath.getAbsolutePath(),
-                        flags);
-        return Spawner.spawn(command);
-    }
-
-    private NativeBuildConfigValue checkJson(String path) throws IOException, InterruptedException {
+    private NativeBuildConfigValues checkJson(String path) throws IOException {
         return checkJson(path, SdkConstants.PLATFORM_LINUX);
     }
 
-    private NativeBuildConfigValue checkJson(String path, int operatingSystem)
-            throws IOException, InterruptedException {
+    private static class NativeBuildConfigValues {
+        List<NativeBuildConfigValue> configs = new ArrayList<>();
+    }
+
+    private NativeBuildConfigValues checkJson(String path, int operatingSystem) throws IOException {
 
         File ndkPath = TestUtils.getNdk();
         File androidMkPath = new File(ndkPath, path);
@@ -304,38 +195,14 @@ public class NdkSampleTest {
         // Get the baseline config
         File baselineJsonFile = getJsonFile(androidMkPath, operatingSystem);
 
-        if (REGENERATE_TEST_BASELINES) {
-            File directory = new File(THIS_TEST_FOLDER + "support-files/ndk-sample-baselines");
-            if (!directory.exists()) {
-                //noinspection ResultOfMethodCallIgnored
-                directory.mkdir();
-            }
-
-            // Create the output .txt for each variant by running ndk-build
-            for (String variantName : variantConfigs.keySet()) {
-                String variantBuildOutputText =
-                        getNdkResult(androidMkPath, variantConfigs.get(variantName));
-                variantBuildOutputText =
-                        variantBuildOutputText
-                                //   .replace("//", "/")
-                                .replace("windows", "{platform}")
-                                .replace("linux", "{platform}")
-                                .replace("darwin", "{platform}")
-                                .replace(THIS_TEST_FOLDER, "{test}");
-                File variantBuildOutputFile =
-                        getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
-
-                Files.asCharSink(variantBuildOutputFile, Charsets.UTF_8)
-                        .write(variantBuildOutputText);
-            }
-        }
-
         // Build the expected result
         OsFileConventions fileConventions = getPathHandlingPolicy(operatingSystem);
-        NativeBuildConfigValueBuilder builder =
-                new NativeBuildConfigValueBuilder(
-                        androidMkPath, new File("{executeFromHere}"), fileConventions);
+
+        NativeBuildConfigValues actualConfig = new NativeBuildConfigValues();
         for (String variantName : variantConfigs.keySet()) {
+            NativeBuildConfigValueBuilder builder =
+                    new NativeBuildConfigValueBuilder(
+                            androidMkPath, new File("{executeFromHere}"), fileConventions);
             File variantBuildOutputFile =
                     getVariantBuildOutputFile(androidMkPath, variantName, operatingSystem);
             String variantBuildOutputText = Joiner.on('\n')
@@ -361,9 +228,11 @@ public class NdkSampleTest {
                             variantBuildOutputText, fileConventions, testClassifiers);
             checkAllCommandsRecognized(commandLines, recognized);
             checkExpectedCompilerParserBehavior(commandLines);
+
+            actualConfig.configs.add(builder.build());
         }
 
-        NativeBuildConfigValue actualConfig = builder.build();
+
         String actualResult = new GsonBuilder()
                 .setPrettyPrinting()
                 .create()
@@ -376,11 +245,9 @@ public class NdkSampleTest {
         // {testPath} we must follow the JSon escaping rule.
         testPathString = testPathString.replace("\\", "\\\\");
         actualResult = actualResult.replace(testPathString, "{testPath}");
-        actualConfig = new Gson().fromJson(actualResult, NativeBuildConfigValue.class);
+        actualConfig = new Gson().fromJson(actualResult, NativeBuildConfigValues.class);
 
-        if (REGENERATE_TEST_BASELINES
-                || !baselineJsonFile.exists()
-                || REGENERATE_TEST_JSON_FROM_TEXT) {
+        if (!baselineJsonFile.exists() || REGENERATE_TEST_JSON_FROM_TEXT) {
             Files.asCharSink(baselineJsonFile, Charsets.UTF_8).write(actualResult);
         }
 
@@ -388,10 +255,14 @@ public class NdkSampleTest {
         String baselineResult = Joiner.on('\n')
                 .join(Files.readLines(baselineJsonFile, Charsets.UTF_8));
 
-        NativeBuildConfigValue baselineConfig = new Gson()
-                .fromJson(baselineResult, NativeBuildConfigValue.class);
-        assertConfig(actualConfig).isEqualTo(baselineConfig);
-        assertConfig(actualConfig).hasUniqueLibraryNames();
+        NativeBuildConfigValues baselineConfig =
+                new Gson().fromJson(baselineResult, NativeBuildConfigValues.class);
+        assertThat(actualConfig.configs.size()).isEqualTo(baselineConfig.configs.size());
+        for (int i = 0; i < actualConfig.configs.size(); ++i) {
+            NativeBuildConfigValue config = actualConfig.configs.get(i);
+            assertConfig(config).isEqualTo(baselineConfig.configs.get(i));
+            assertConfig(config).hasUniqueLibraryNames();
+        }
         return actualConfig;
     }
 
@@ -493,22 +364,25 @@ public class NdkSampleTest {
     }
 
     private static void checkOutputsHaveWhitelistedExtensions(
-            @NonNull NativeBuildConfigValue config) {
-        checkNotNull(config.libraries);
-        for (NativeLibraryValue library : config.libraries.values()) {
-            // These are the three extensions that should occur. These align with what CMake does.
-            checkNotNull(library.output);
-            if (library.output.toString().endsWith(".so")) {
-                continue;
+            @NonNull NativeBuildConfigValues configs) {
+        for (NativeBuildConfigValue config : configs.configs) {
+            checkNotNull(config.libraries);
+            for (NativeLibraryValue library : config.libraries.values()) {
+                // These are the three extensions that should occur. These align with what CMake does.
+                checkNotNull(library.output);
+                if (library.output.toString().endsWith(".so")) {
+                    continue;
+                }
+                if (library.output.toString().endsWith(".a")) {
+                    continue;
+                }
+                if (!library.output.toString().contains(".")) {
+                    continue;
+                }
+                throw new RuntimeException(
+                        String.format(
+                                "Library output %s had an unexpected extension", library.output));
             }
-            if (library.output.toString().endsWith(".a")) {
-                continue;
-            }
-            if (!library.output.toString().contains(".")) {
-                continue;
-            }
-            throw new RuntimeException(
-                    String.format("Library output %s had an unexpected extension", library.output));
         }
     }
 
@@ -600,7 +474,6 @@ public class NdkSampleTest {
 
     @Test
     public void dontCheckInBaselineUpdaterFlags() {
-        assertThat(REGENERATE_TEST_BASELINES).isFalse();
         assertThat(REGENERATE_TEST_JSON_FROM_TEXT).isFalse();
     }
 
@@ -621,8 +494,8 @@ public class NdkSampleTest {
     // relative to folder containing build.gradle. Fix was to make the path absolute by explicitly
     // rooting it under execute path.
     @Test
-    public void cocos2d() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/cocos2d");
+    public void cocos2d() throws IOException {
+        NativeBuildConfigValue config = checkJson("samples/cocos2d").configs.get(0);
         // Expect relative paths to be rooted at execute path
         assertConfig(config)
                 .hasSourceFileNames(
@@ -634,8 +507,8 @@ public class NdkSampleTest {
     // Related to issuetracker.google.com/69110338. Covers case where there is a compiler flag
     // with spaces like -DMY_FLAG='my value'
     @Test
-    public void singleQuotedDefine() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/tick-in-define-repro");
+    public void singleQuotedDefine() throws IOException {
+        NativeBuildConfigValue config = checkJson("samples/tick-in-define-repro").configs.get(0);
         assertConfig(config).hasExactLibrariesNamed("example-debug-armeabi-v7a");
         NativeSourceFileValue file =
                 config.libraries.get("example-debug-armeabi-v7a").files.iterator().next();
@@ -646,92 +519,96 @@ public class NdkSampleTest {
 
     // Related to b.android.com/216676. Same source file name produces same target name.
     @Test
-    public void duplicateSourceNames() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/duplicate-source-names");
-        assertConfig(config)
+    public void duplicateSourceNames() throws IOException {
+        NativeBuildConfigValues config = checkJson("samples/duplicate-source-names");
+        assertConfig(config.configs.get(0))
                 .hasExactLibrariesNamed(
-                        "apple-release-mips64",
+                        "hello-jni-debug-mips",
                         "apple-debug-mips",
-                        "apple-release-armeabi",
-                        "banana-release-arm64-v8a",
+                        "hello-jni-debug-armeabi-v7a",
+                        "banana-debug-x86_64",
                         "hello-jni-debug-armeabi",
                         "hello-jni-debug-x86_64",
                         "banana-debug-armeabi",
-                        "hello-jni-release-arm64-v8a",
-                        "banana-release-x86",
-                        "banana-debug-mips64",
-                        "banana-release-armeabi-v7a",
-                        "hello-jni-debug-x86",
-                        "apple-release-armeabi-v7a",
-                        "hello-jni-release-mips",
-                        "banana-release-armeabi",
-                        "hello-jni-debug-mips",
-                        "apple-release-mips",
-                        "hello-jni-release-mips64",
-                        "hello-jni-debug-armeabi-v7a",
-                        "banana-debug-x86_64",
                         "apple-debug-arm64-v8a",
-                        "apple-release-x86_64",
                         "apple-debug-armeabi",
-                        "hello-jni-release-armeabi",
-                        "apple-release-x86",
-                        "hello-jni-release-x86",
+                        "banana-debug-mips64",
                         "banana-debug-arm64-v8a",
                         "hello-jni-debug-mips64",
-                        "hello-jni-release-x86_64",
                         "banana-debug-mips",
                         "apple-debug-mips64",
                         "apple-debug-x86",
-                        "apple-release-arm64-v8a",
                         "banana-debug-x86",
-                        "banana-release-mips64",
                         "hello-jni-debug-arm64-v8a",
+                        "hello-jni-debug-x86",
                         "banana-debug-armeabi-v7a",
-                        "hello-jni-release-armeabi-v7a",
-                        "banana-release-x86_64",
                         "apple-debug-armeabi-v7a",
-                        "apple-debug-x86_64",
+                        "apple-debug-x86_64");
+        assertConfig(config.configs.get(1))
+                .hasExactLibrariesNamed(
+                        "apple-release-mips64",
+                        "banana-release-armeabi",
+                        "apple-release-mips",
+                        "apple-release-armeabi",
+                        "banana-release-arm64-v8a",
+                        "hello-jni-release-mips64",
+                        "apple-release-x86_64",
+                        "hello-jni-release-arm64-v8a",
+                        "banana-release-x86",
+                        "hello-jni-release-armeabi",
+                        "apple-release-x86",
+                        "hello-jni-release-x86",
+                        "hello-jni-release-x86_64",
+                        "banana-release-armeabi-v7a",
+                        "apple-release-arm64-v8a",
+                        "banana-release-mips64",
+                        "hello-jni-release-armeabi-v7a",
+                        "apple-release-armeabi-v7a",
+                        "banana-release-x86_64",
+                        "hello-jni-release-mips",
                         "banana-release-mips");
     }
 
     // Related to b.android.com/218397. On Windows, the wrong target name was used because it
     // was passed through File class which caused slashes to be normalized to back slash.
     @Test
-    public void windowsTargetName() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/windows-target-name",
-                SdkConstants.PLATFORM_WINDOWS);
-        assertConfig(config)
+    public void windowsTargetName() throws IOException {
+        NativeBuildConfigValues config =
+                checkJson("samples/windows-target-name", SdkConstants.PLATFORM_WINDOWS);
+        assertConfig(config.configs.get(0))
                 .hasExactLibrariesNamed(
                         "hello-jni-debug-mips",
-                        "hello-jni-release-mips64",
-                        "hello-jni-debug-armeabi-v7a",
-                        "hello-jni-debug-armeabi",
-                        "hello-jni-debug-x86_64",
-                        "hello-jni-release-arm64-v8a",
-                        "hello-jni-release-armeabi",
-                        "hello-jni-release-x86",
                         "hello-jni-debug-mips64",
-                        "hello-jni-release-x86_64",
+                        "hello-jni-debug-armeabi-v7a",
                         "hello-jni-debug-arm64-v8a",
                         "hello-jni-debug-x86",
+                        "hello-jni-debug-armeabi",
+                        "hello-jni-debug-x86_64");
+        assertConfig(config.configs.get(1))
+                .hasExactLibrariesNamed(
+                        "hello-jni-release-armeabi",
+                        "hello-jni-release-x86",
+                        "hello-jni-release-x86_64",
+                        "hello-jni-release-mips64",
                         "hello-jni-release-armeabi-v7a",
-                        "hello-jni-release-mips");
+                        "hello-jni-release-mips",
+                        "hello-jni-release-arm64-v8a");
     }
 
     // Related to b.android.com/214626
     @Test
-    public void localModuleFilename() throws IOException, InterruptedException {
+    public void localModuleFilename() throws IOException {
         checkJson("samples/LOCAL_MODULE_FILENAME");
     }
 
     @Test
-    public void includeFlag() throws IOException, InterruptedException {
+    public void includeFlag() throws IOException {
         checkJson("samples/include-flag");
     }
 
     @Test
-    public void clangExample() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/clang");
+    public void clangExample() throws IOException {
+        NativeBuildConfigValue config = checkJson("samples/clang").configs.get(0);
         // Assert that full paths coming from the ndk-build output aren't further qualified with
         // executution path.
         assertConfig(config)
@@ -745,20 +622,20 @@ public class NdkSampleTest {
     }
 
     @Test
-    public void neonExample() throws IOException, InterruptedException {
+    public void neonExample() throws IOException {
         checkJson("samples/neon");
     }
 
     @Test
-    public void ccacheExample() throws IOException, InterruptedException {
+    public void ccacheExample() throws IOException {
         // CCache is turned on in ndk build by setting NDK_CCACHE to a path to ccache
         // executable.
         checkJson("samples/ccache");
     }
 
     @Test
-    public void googleTestExample() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/google-test-example");
+    public void googleTestExample() throws IOException {
+        NativeBuildConfigValue config = checkJson("samples/google-test-example").configs.get(0);
         assertConfig(config)
                 .hasExactLibraryOutputs(
                         FileUtils.toSystemDependentPath(
@@ -772,66 +649,66 @@ public class NdkSampleTest {
     }
 
     @Test
-    public void missingIncludeExample() throws IOException, InterruptedException {
+    public void missingIncludeExample() throws IOException {
         checkJson("samples/missing-include");
     }
 
     @Test
-    public void sanAngelesExample() throws IOException, InterruptedException {
+    public void sanAngelesExample() throws IOException {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_LINUX);
     }
 
     @Test
-    public void sanAngelesWindows() throws IOException, InterruptedException {
+    public void sanAngelesWindows() throws IOException {
         checkJson("samples/san-angeles", SdkConstants.PLATFORM_WINDOWS);
     }
 
     // input: support-files/ndk-sample-baselines/Teapot.json
     @Test
-    public void teapot() throws IOException, InterruptedException {
+    public void teapot() throws IOException {
         checkJson("samples/Teapot");
     }
 
     // input: support-files/ndk-sample-baselines/native-audio.json
     @Test
-    public void nativeAudio() throws IOException, InterruptedException {
+    public void nativeAudio() throws IOException {
         checkJson("samples/native-audio");
     }
 
     // input: support-files/ndk-sample-baselines/native-codec.json
     @Test
-    public void nativeCodec() throws IOException, InterruptedException {
+    public void nativeCodec() throws IOException {
         checkJson("samples/native-codec");
     }
 
     // input: support-files/ndk-sample-baselines/native-media.json
     @Test
-    public void nativeMedia() throws IOException, InterruptedException {
+    public void nativeMedia() throws IOException {
         checkJson("samples/native-media");
     }
 
     // input: support-files/ndk-sample-baselines/native-plasma.json
     @Test
-    public void nativePlasma() throws IOException, InterruptedException {
+    public void nativePlasma() throws IOException {
         checkJson("samples/native-plasma");
     }
 
     // input: support-files/ndk-sample-baselines/bitmap-plasma.json
     @Test
-    public void bitmapPlasm() throws IOException, InterruptedException {
+    public void bitmapPlasm() throws IOException {
         checkJson("samples/bitmap-plasma");
     }
 
     // input: support-files/ndk-sample-baselines/native-activity.json
     @Test
-    public void nativeActivity() throws IOException, InterruptedException {
+    public void nativeActivity() throws IOException {
         checkJson("samples/native-activity");
     }
 
     // input: support-files/ndk-sample-baselines/HelloComputeNDK.json
     @Test
-    public void helloComputeNDK() throws IOException, InterruptedException {
-        NativeBuildConfigValue config = checkJson("samples/HelloComputeNDK");
+    public void helloComputeNDK() throws IOException {
+        NativeBuildConfigValue config = checkJson("samples/HelloComputeNDK").configs.get(0);
         assertConfig(config)
                 .hasExactLibraryOutputs(
                         FileUtils.toSystemDependentPath(
@@ -850,25 +727,25 @@ public class NdkSampleTest {
 
     // input: support-files/ndk-sample-baselines/test-libstdc++.json
     @Test
-    public void testLibstdcpp() throws IOException, InterruptedException {
+    public void testLibstdcpp() throws IOException {
         checkJson("samples/test-libstdc++");
     }
 
     // input: support-files/ndk-sample-baselines/hello-gl2.json
     @Test
-    public void helloGl2() throws IOException, InterruptedException {
+    public void helloGl2() throws IOException {
         checkJson("samples/hello-gl2");
     }
 
     // input: support-files/ndk-sample-baselines/two-libs.json
     @Test
-    public void twoLibs() throws IOException, InterruptedException {
+    public void twoLibs() throws IOException {
         checkJson("samples/two-libs");
     }
 
     // input: support-files/ndk-sample-baselines/module-exports.json
     @Test
-    public void moduleExports() throws IOException, InterruptedException {
+    public void moduleExports() throws IOException {
         checkJson("samples/module-exports");
     }
 }
