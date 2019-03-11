@@ -65,6 +65,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -114,6 +115,7 @@ public class Main {
     private static final String ARG_BUILD_API = "--compile-sdk-version";
     private static final String ARG_BASELINE = "--baseline";
     private static final String ARG_REMOVE_FIXED = "--remove-fixed";
+    private static final String ARG_UPDATE_BASELINE = "--update-baseline";
     private static final String ARG_ALLOW_SUPPRESS = "--allow-suppress";
     private static final String ARG_RESTRICT_SUPPRESS = "--restrict-suppress";
 
@@ -908,7 +910,23 @@ public class Main {
                 File input = getInArgumentPath(path);
                 flags.setBaselineFile(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
+                if (flags.isUpdateBaseline()) {
+                    System.err.printf(
+                            Locale.US,
+                            "Cannot use both %s and %s.%n",
+                            ARG_REMOVE_FIXED,
+                            ARG_UPDATE_BASELINE);
+                }
                 flags.setRemovedFixedBaselineIssues(true);
+            } else if (arg.equals(ARG_UPDATE_BASELINE)) {
+                if (flags.isRemoveFixedBaselineIssues()) {
+                    System.err.printf(
+                            Locale.US,
+                            "Cannot use both %s and %s.%n",
+                            ARG_UPDATE_BASELINE,
+                            ARG_REMOVE_FIXED);
+                }
+                flags.setUpdateBaseline(true);
             } else if (arg.equals(ARG_ALLOW_SUPPRESS)) {
                 flags.setAllowSuppress(true);
             } else if (arg.equals(ARG_RESTRICT_SUPPRESS)) {

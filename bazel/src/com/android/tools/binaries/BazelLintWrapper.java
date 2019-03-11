@@ -132,8 +132,6 @@ public class BazelLintWrapper {
         @SuppressWarnings("resource") // Closing a ByteArrayOutputStream has no effect.
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        boolean baselineUpdated = false;
-
         try {
             System.setOut(new PrintStream(baos));
             lintMain.run(
@@ -141,7 +139,7 @@ public class BazelLintWrapper {
                         "--project", projectXml.toString(),
                         "--xml", outputXml.toString(),
                         "--baseline", newBaseline.toString(),
-                        "--remove-fixed",
+                        "--update-baseline",
                     });
         } catch (Exception e) {
             if (exitException.isInstance(e)) {
@@ -155,9 +153,7 @@ public class BazelLintWrapper {
 
                 switch (status) {
                     case 0:
-                        break;
                     case LintCliFlags.ERRNO_CREATED_BASELINE:
-                        baselineUpdated = true;
                         break;
                     default:
                         System.exit(status);
@@ -169,7 +165,7 @@ public class BazelLintWrapper {
             System.setOut(stdOut);
         }
 
-        boolean targetShouldPass = checkOutput(outputXml, newBaseline, baselineUpdated);
+        boolean targetShouldPass = checkOutput(outputXml, newBaseline);
         if (!targetShouldPass) {
             System.out.println(
                     "Lint found new issues or the baseline was out of date. "
@@ -183,12 +179,11 @@ public class BazelLintWrapper {
         }
     }
 
-    private boolean checkOutput(Path outputXml, Path newBaseline, boolean baselineUpdated) {
+    private boolean checkOutput(Path outputXml, Path newBaseline) {
         try {
             Document lintXmlReport = documentBuilder.parse(outputXml.toFile());
             Document junitXml = documentBuilder.newDocument();
-            boolean targetShouldPass =
-                    createJUnitXml(junitXml, lintXmlReport, newBaseline, baselineUpdated);
+            boolean targetShouldPass = createJUnitXml(junitXml, lintXmlReport, newBaseline);
 
             try (FileWriter fileWriter = new FileWriter(testXml.toFile())) {
                 Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -211,27 +206,12 @@ public class BazelLintWrapper {
      *
      * @return true if the target should pass, false otherwise
      */
-    private boolean createJUnitXml(
-            Document junitXml, Document lintXmlReport, Path newBaseline, boolean updatedBaseline) {
+    private boolean createJUnitXml(Document junitXml, Document lintXmlReport, Path newBaseline) {
         boolean targetShouldPass = true;
 
         Table<File, String, List<String>> messagesByFileAndSummary = HashBasedTable.create();
         NodeList issues = lintXmlReport.getElementsByTagName("issue");
         Map<String, String> explanations = new HashMap<>();
-
-        if (updatedBaseline) {
-            targetShouldPass = false;
-            String summary = "Baseline out of date";
-            messagesByFileAndSummary.put(newBaseline.toFile(), summary, Collections.emptyList());
-            explanations.put(
-                    summary,
-                    "The baseline file contains issues which have been fixed in the project, "
-                            + "please remove them or use the regenerated baseline. When running "
-                            + "locally you can find in "
-                            + relativize(outputDir.resolve("outputs.zip"))
-                            + ", on CI you can download it from the Artifacts tab, under "
-                            + "Archives/undeclared_outputs.zip.");
-        }
 
         for (int i = 0; i < issues.getLength(); i++) {
             Element issue = (Element) issues.item(i);
@@ -242,11 +222,27 @@ public class BazelLintWrapper {
             // any issue which is not just information about the baseline being applied. We cannot
             // just disable the LintBaseline check, since we do want to fail if the baseline gets
             // out of date and contains issues which are no longer in the project.
-            if ("LintBaseline".equals(id)
-                    && message != null
-                    && message.contains("were filtered out")) {
-                // Ignore these.
-                continue;
+            if ("LintBaseline".equals(id) && message != null) {
+                if (message.contains("were filtered out")) {
+                    // Ignore these.
+                    continue;
+                }
+                if (message.contains("perhaps they have been fixed")) {
+                    // Custom message.
+                    targetShouldPass = false;
+                    String summary = "Baseline out of date";
+                    messagesByFileAndSummary.put(
+                            newBaseline.toFile(), summary, Collections.emptyList());
+                    explanations.put(
+                            summary,
+                            "The baseline file contains issues which have been fixed in the project, "
+                                    + "please remove them or use the regenerated baseline. When running "
+                                    + "locally you can find in "
+                                    + relativize(outputDir.resolve("outputs.zip"))
+                                    + ", on CI you can download it from the Artifacts tab, under "
+                                    + "Archives/undeclared_outputs.zip.");
+                    continue;
+                }
             }
 
             Element location = (Element) issue.getElementsByTagName("location").item(0);

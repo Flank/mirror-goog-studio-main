@@ -293,6 +293,9 @@ public class LintCliClient extends LintClient {
                 && flags.isRemoveFixedBaselineIssues()) {
             baseline.close();
             return ERRNO_CREATED_BASELINE;
+        } else if (baseline != null && flags.isUpdateBaseline()) {
+            baseline.close();
+            return ERRNO_CREATED_BASELINE;
         }
 
         return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
@@ -467,6 +470,8 @@ public class LintCliClient extends LintClient {
             if (flags.isRemoveFixedBaselineIssues()) {
                 baseline.setWriteOnClose(true);
                 baseline.setRemoveFixed(true);
+            } else if (flags.isUpdateBaseline()) {
+                baseline.setWriteOnClose(true);
             }
         }
 

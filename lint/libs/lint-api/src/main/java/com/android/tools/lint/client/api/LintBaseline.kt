@@ -231,7 +231,7 @@ class LintBaseline(
         val found = findAndMark(issue, location, message, severity)
         if (writeOnClose && (!removeFixed || found)) {
 
-            if (entriesToWrite != null) {
+            if (entriesToWrite != null && issue.id != IssueRegistry.BASELINE.id) {
                 entriesToWrite!!.add(ReportedEntry(issue, project, location, message))
             }
         }

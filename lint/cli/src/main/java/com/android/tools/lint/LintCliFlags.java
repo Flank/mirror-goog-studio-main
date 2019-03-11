@@ -74,6 +74,7 @@ public class LintCliFlags {
     private boolean showAll;
     private boolean removedFixedBaselineIssues;
     private boolean writeBaselineIfMissing = true;
+    private boolean updateBaseline;
     private boolean autoFix = VALUE_TRUE.equals(System.getProperty("lint.autofix"));
     private boolean includeXmlFixes;
     private boolean allowSuppress;
@@ -633,6 +634,16 @@ public class LintCliFlags {
     /** If true, write the baseline file if missing. (This is the default.) */
     public void setWriteBaselineIfMissing(boolean writeBaselineIfMissing) {
         this.writeBaselineIfMissing = writeBaselineIfMissing;
+    }
+
+    /** If true, rewrite the baseline file on exit. */
+    public boolean isUpdateBaseline() {
+        return updateBaseline;
+    }
+
+    /** If true, rewrite the baseline file on exit. */
+    public void setUpdateBaseline(boolean updateBaseline) {
+        this.updateBaseline = updateBaseline;
     }
 
     /** Whether to apply safe suggestions */
