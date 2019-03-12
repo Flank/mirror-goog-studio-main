@@ -360,12 +360,7 @@ abstract class Detector {
 
     // ---- Dummy implementations to make implementing XmlScanner easier: ----
 
-    open fun visitDocument(context: XmlContext, document: Document) {
-        // This method must be overridden if your detector does
-        // not return something from getApplicableElements or
-        // getApplicableAttributes
-        assert(false)
-    }
+    open fun visitDocument(context: XmlContext, document: Document) {}
 
     open fun visitElement(context: XmlContext, element: Element) {
         // This method must be overridden if your detector returns

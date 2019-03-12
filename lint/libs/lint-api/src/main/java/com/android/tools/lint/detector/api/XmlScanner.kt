@@ -28,10 +28,6 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
      * null, this detector will be called (specifically, the
      * [.visitElement] method) for each matching element in the document.
      *
-     *
-     * If this method returns null, and [.getApplicableAttributes] also returns
-     * null, then the [.visitDocument] method will be called instead.
-     *
      * @return a collection of elements, or null, or the special
      * [XmlScannerConstants.ALL] marker to indicate that every single
      * element should be analyzed.
@@ -56,9 +52,6 @@ interface XmlScanner : FileScanner, XmlScannerConstants {
      * Returns the list of attributes that this detector wants to analyze. If non
      * null, this detector will be called (specifically, the
      * [.visitAttribute] method) for each matching attribute in the document.
-     *
-     * If this method returns null, and [.getApplicableElements] also returns
-     * null, then the [.visitDocument] method will be called instead.
      *
      * @return a collection of attributes, or null, or the special
      * [XmlScannerConstants.ALL] marker to indicate that every single

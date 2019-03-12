@@ -60,7 +60,6 @@ import org.w3c.dom.NodeList;
 class ResourceVisitor {
     private final Map<String, List<XmlScanner>> elementToCheck = new HashMap<>();
     private final Map<String, List<XmlScanner>> attributeToCheck = new HashMap<>();
-    private final List<XmlScanner> documentDetectors = new ArrayList<>();
     private final List<XmlScanner> allElementDetectors = new ArrayList<>();
     private final List<XmlScanner> allAttributeDetectors = new ArrayList<>();
     private final List<XmlScanner> allDetectors;
@@ -109,11 +108,6 @@ class ResourceVisitor {
                     list.add(xmlDetector);
                 }
             }
-
-            if ((attributes == null || (attributes.isEmpty() && attributes != XmlScanner.ALL))
-                    && (elements == null || (elements.isEmpty() && elements != XmlScanner.ALL))) {
-                documentDetectors.add(xmlDetector);
-            }
         }
     }
 
@@ -121,9 +115,6 @@ class ResourceVisitor {
         try {
             for (XmlScanner check : allDetectors) {
                 check.beforeCheckFile(context);
-            }
-
-            for (XmlScanner check : documentDetectors) {
                 check.visitDocument(context, context.document);
             }
 
