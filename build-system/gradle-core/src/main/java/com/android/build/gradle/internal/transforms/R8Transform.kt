@@ -122,7 +122,8 @@ class R8Transform(
         mutableListOf(
                 SecondaryFile.nonIncremental(allConfigurationFiles),
                 SecondaryFile.nonIncremental(mainDexListFiles),
-                SecondaryFile.nonIncremental(mainDexRulesFiles)
+                SecondaryFile.nonIncremental(mainDexRulesFiles),
+                SecondaryFile.nonIncremental(inputProguardMapping)
         )
 
     override fun getParameterInputs(): MutableMap<String, Any> =

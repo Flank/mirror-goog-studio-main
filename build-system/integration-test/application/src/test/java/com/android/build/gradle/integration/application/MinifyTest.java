@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
+import com.android.build.gradle.integration.common.truth.TaskStateList;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
@@ -206,5 +207,26 @@ public class MinifyTest {
                 .run("assembleMinified");
         assertThat(project.getApk(GradleTestProject.ApkType.of("minified", true)))
                 .contains("my_res.txt");
+    }
+
+    @Test
+    public void testAndroidTestIsNotUpToDate() throws IOException, InterruptedException {
+        project.executor()
+                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified", "assembleMinifiedAndroidTest");
+
+        TestFileUtils.appendToFile(project.file("proguard-rules.pro"), "\n-keep class **");
+        GradleBuildResult minifiedAndroidTest =
+                project.executor()
+                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .run("assembleMinifiedAndroidTest");
+
+        TaskStateList.TaskInfo taskInfo =
+                minifiedAndroidTest.findTask(
+                        codeShrinker == CodeShrinker.R8
+                                ? ":transformClassesAndResourcesWithR8ForMinifiedAndroidTest"
+                                : ":transformClassesAndResourcesWithProguardForMinifiedAndroidTest");
+
+        assertThat(taskInfo).didWork();
     }
 }
