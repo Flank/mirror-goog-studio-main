@@ -23,25 +23,43 @@ import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.utils.FileUtils.mkdirs
-import org.gradle.api.artifacts.transform.ArtifactTransform
+import com.google.common.io.Files
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.attributes.Attribute
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.slf4j.LoggerFactory
 import java.io.File
-import javax.inject.Inject
 
-class DexingTransform
-@Inject constructor(val minSdkVersion: Int, val isDebuggable: Boolean) : ArtifactTransform() {
+abstract class DexingTransform : TransformAction<DexingTransform.Parameters> {
+
+    interface Parameters: TransformParameters {
+        @get:Input
+        val minSdkVersion: Property<Int>
+        @get:Input
+        val debuggable: Property<Boolean>
+    }
 
     // Desugaring is not supported until artifact transforms start passing dependencies
     private val enableDesugaring = false
 
-    override fun transform(input: File): List<File> {
-        val outputDir = outputDirectory
+    @get:Classpath
+    @get:InputArtifact
+    abstract val primaryInput: File
+
+    override fun transform(outputs: TransformOutputs) {
+
+        val name = Files.getNameWithoutExtension(primaryInput.name)
+        val outputDir = outputs.dir(name)
         mkdirs(outputDir)
 
         val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-            minSdkVersion,
-            isDebuggable,
+            parameters.minSdkVersion.get(),
+            parameters.debuggable.get(),
             ClassFileProviderFactory(listOf()),
             ClassFileProviderFactory(listOf()),
             enableDesugaring,
@@ -51,7 +69,7 @@ class DexingTransform
             )
         )
 
-        ClassFileInputs.fromPath(input.toPath()).use {
+        ClassFileInputs.fromPath(primaryInput.toPath()).use {
                 classFileInput -> classFileInput .entries { _ -> true }.use { classesInput ->
                     d8DexBuilder.convert(
                         classesInput,
@@ -60,8 +78,6 @@ class DexingTransform
                     )
                 }
         }
-
-        return listOf(outputDir)
     }
 }
 

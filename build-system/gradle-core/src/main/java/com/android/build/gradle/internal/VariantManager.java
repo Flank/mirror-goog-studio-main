@@ -796,6 +796,7 @@ public class VariantManager implements VariantModel {
             for (DexingArtifactConfiguration artifactConfiguration :
                     getDexingArtifactConfigurations(variantScopes)) {
                 dependencies.registerTransform(
+                        DexingTransform.class,
                         reg -> {
                             reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
                             reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.DEX.getType());
@@ -816,12 +817,12 @@ public class VariantManager implements VariantModel {
                                     .attribute(
                                             DexingTransformKt.ATTR_MIN_SDK,
                                             Integer.toString(artifactConfiguration.getMinSdk()));
-                            reg.artifactTransform(
-                                    DexingTransform.class,
-                                    config -> {
-                                        config.params(
-                                                artifactConfiguration.getMinSdk(),
-                                                artifactConfiguration.isDebuggable());
+                            reg.parameters(
+                                    params -> {
+                                        params.getDebuggable()
+                                                .set(artifactConfiguration.isDebuggable());
+                                        params.getMinSdkVersion()
+                                                .set(artifactConfiguration.getMinSdk());
                                     });
                         });
             }

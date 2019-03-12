@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.dex.Dex
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -24,6 +26,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.math.pow
@@ -37,33 +40,29 @@ class DexingTransformTest {
 
     @Test
     fun testDexingJar() {
-        val dexingTransform = DexingTransform(12, true)
-        dexingTransform.outputDirectory = tmp.newFolder()
-
         val input = tmp.newFile("classes.jar")
+        val dexingTransform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val outputs = FakeTransformOutputs(tmp)
         TestInputsGenerator.jarWithEmptyClasses(input.toPath(), listOf("test/A"))
-        dexingTransform.transform(input)
-        assertThatDex(dexingTransform.outputDirectory.resolve("classes.dex"))
+        dexingTransform.transform(outputs)
+        assertThatDex(outputs.outputDirectory.resolve("classes.dex"))
             .containsExactlyClassesIn(listOf("Ltest/A;"))
     }
 
     @Test
     fun testDexingDir() {
-        val dexingTransform = DexingTransform(12, true)
-        dexingTransform.outputDirectory = tmp.newFolder()
-
         val input = tmp.newFolder("classes")
+        val dexingTransform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val outputs = FakeTransformOutputs(tmp)
+
         TestInputsGenerator.dirWithEmptyClasses(input.toPath(), listOf("test/A"))
-        dexingTransform.transform(input)
-        assertThatDex(dexingTransform.outputDirectory.resolve("classes.dex"))
+        dexingTransform.transform(outputs)
+        assertThatDex(outputs.outputDirectory.resolve("classes.dex"))
             .containsExactlyClassesIn(listOf("Ltest/A;"))
     }
 
     @Test
     fun testDexingBigJar() {
-        val transform = DexingTransform(12, true)
-        transform.outputDirectory = tmp.newFolder()
-
         val methodsPerClass = 200
         // more than 64K methods
         val totalMethods = (2.0.pow(16) + methodsPerClass).toInt()
@@ -82,11 +81,31 @@ class DexingTransformTest {
                 it.closeEntry()
             }
         }
-        transform.transform(input)
+        val transform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val outputs = FakeTransformOutputs(tmp)
+        transform.transform(outputs)
 
         assertThat(
-            Dex(transform.outputDirectory.resolve("classes.dex")).classDefs().count() +
-                    Dex(transform.outputDirectory.resolve("classes2.dex")).classDefs().count()
+            Dex(outputs.outputDirectory.resolve("classes.dex")).classDefs().count() +
+                    Dex(outputs.outputDirectory.resolve("classes2.dex")).classDefs().count()
         ).isEqualTo(totalMethods / methodsPerClass)
+    }
+
+
+    private class TestDexingTransform(override val primaryInput: File, private val parameters: TestParameters) : DexingTransform() {
+
+        class TestParameters(
+            minSdkVersion: Int,
+            debuggable: Boolean
+        ) : DexingTransform.Parameters {
+            override var debuggable = FakeGradleProperty(debuggable)
+            override val minSdkVersion = FakeGradleProperty(minSdkVersion)
+
+        }
+
+        override fun getParameters(): Parameters {
+            return parameters
+        }
+
     }
 }
