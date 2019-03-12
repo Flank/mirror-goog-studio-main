@@ -27,6 +27,7 @@ import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.StdLogger
 import com.google.common.collect.ImmutableList
+import java.io.File
 
 /**
  * Rewrite exceptions to point to their original files.
@@ -76,7 +77,14 @@ fun rewriteCompileException(
  * This is expensive, so should only be used if the build is going to fail anyway.
  * The merging log is loaded from files lazily.
  */
-fun rewriteLinkException(e: Aapt2Exception, mergingLog: MergingLog): Aapt2Exception {
+fun rewriteLinkException(
+    e: Aapt2Exception,
+    mergeBlameFolder: File?
+): Aapt2Exception {
+    if (mergeBlameFolder == null) {
+        return e
+    }
+    val mergingLog = MergingLog(mergeBlameFolder)
     return rewriteException(e) { mergingLog.find(it) }
 }
 

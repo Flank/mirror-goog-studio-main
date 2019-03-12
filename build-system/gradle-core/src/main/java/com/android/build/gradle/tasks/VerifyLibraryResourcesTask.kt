@@ -91,6 +91,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     lateinit var androidJar: Provider<File>
         private set
 
+    private lateinit var mergeBlameFolder: File
+
     private val workers: WorkerExecutorFacade = Workers.getWorker(path, workerExecutor)
 
     override fun isIncremental(): Boolean {
@@ -138,7 +140,11 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                     aapt2ServiceKey,
                     inputDirectory.singleFile())
             val config = getAaptPackageConfig(compiledDirectory, manifestFile)
-            val params = Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config)
+            val params = Aapt2ProcessResourcesRunnable.Params(
+                aapt2ServiceKey,
+                config,
+                mergeBlameFolder
+            )
             facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
         }
 
@@ -189,6 +195,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                     .getFinalProduct(task.taskInputType)
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
+
+            task.mergeBlameFolder = variantScope.resourceBlameLogDir
         }
     }
 

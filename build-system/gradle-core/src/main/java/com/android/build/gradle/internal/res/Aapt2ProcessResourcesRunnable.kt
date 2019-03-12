@@ -21,7 +21,9 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.internal.aapt.AaptPackageConfig
+import com.android.builder.internal.aapt.v2.Aapt2Exception
 import org.gradle.api.logging.Logging
+import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -31,11 +33,20 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
     override fun run() {
         val logger = LoggerWrapper(Logging.getLogger(this::class.java))
         useAaptDaemon(params.aapt2ServiceKey) { daemon ->
-            AndroidBuilder.processResources(daemon, params.request, logger)
+            try {
+                AndroidBuilder.processResources(daemon, params.request, logger)
+            } catch (e: Aapt2Exception) {
+                throw rewriteLinkException(
+                    e,
+                    params.mergeBlameFolder
+                )
+            }
         }
     }
 
     class Params(
-            val aapt2ServiceKey: Aapt2ServiceKey,
-            val request: AaptPackageConfig) : Serializable
+        val aapt2ServiceKey: Aapt2ServiceKey,
+        val request: AaptPackageConfig,
+        val mergeBlameFolder: File?
+    ) : Serializable
 }

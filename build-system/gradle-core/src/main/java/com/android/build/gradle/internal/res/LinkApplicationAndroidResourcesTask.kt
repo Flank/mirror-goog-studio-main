@@ -56,7 +56,6 @@ import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
-import com.android.ide.common.blame.MergingLog
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -809,9 +808,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                             )
                         }
                     } catch (e: Aapt2Exception) {
-                        throw rewriteLinkException(
-                            e, MergingLog(params.mergeBlameFolder)
-                        )
+                        throw rewriteLinkException(e, params.mergeBlameFolder)
                     }
 
                     if (LOG.isInfoEnabled) {

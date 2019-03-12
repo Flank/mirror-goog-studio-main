@@ -140,18 +140,19 @@ open class LinkAndroidResForBundleTask
         }
 
         val config = AaptPackageConfig(
-                androidJarPath = androidJar.get()!!.absolutePath,
-                generateProtos = true,
-                manifestFile = manifestFile,
-                options = aaptOptions.convert(),
-                resourceOutputApk = bundledResFile,
-                variantType = VariantTypeImpl.BASE_APK,
-                debuggable = debuggable,
-                packageId =  resOffset,
-                allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
-                dependentFeatures = featurePackagesBuilder.build(),
-                resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).single()),
-                resourceConfigs = ImmutableSet.copyOf(resConfig))
+            androidJarPath = androidJar.get().absolutePath,
+            generateProtos = true,
+            manifestFile = manifestFile,
+            options = aaptOptions.convert(),
+            resourceOutputApk = bundledResFile,
+            variantType = VariantTypeImpl.BASE_APK,
+            debuggable = debuggable,
+            packageId = resOffset,
+            allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
+            dependentFeatures = featurePackagesBuilder.build(),
+            resourceDirs = ImmutableList.of(checkNotNull(getInputResourcesDir()).single()),
+            resourceConfigs = ImmutableSet.copyOf(resConfig)
+        )
         if (logger.isInfoEnabled) {
             logger.info("Aapt output file {}", bundledResFile.absolutePath)
         }
@@ -160,11 +161,14 @@ open class LinkAndroidResForBundleTask
             aapt2FromMaven = aapt2FromMaven,
             logger = builder.logger
         )
-        //TODO: message rewriting.
         workers.use {
             it.submit(
                 Aapt2ProcessResourcesRunnable::class.java,
-                Aapt2ProcessResourcesRunnable.Params(aapt2ServiceKey, config)
+                Aapt2ProcessResourcesRunnable.Params(
+                    aapt2ServiceKey,
+                    config,
+                    mergeBlameLogFolder
+                )
             )
         }
     }
