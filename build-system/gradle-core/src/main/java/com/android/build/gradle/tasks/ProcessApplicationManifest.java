@@ -160,7 +160,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
         ImmutableList.Builder<BuildOutput> mergedManifestOutputs = ImmutableList.builder();
-        ImmutableList.Builder<BuildOutput> irMergedManifestOutputs = ImmutableList.builder();
         ImmutableList.Builder<BuildOutput> metadataFeatureMergedManifestOutputs =
                 ImmutableList.builder();
         ImmutableList.Builder<BuildOutput> bundleManifestOutputs = ImmutableList.builder();
@@ -176,14 +175,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             getManifestOutputDirectory().get().getAsFile(),
                             FileUtils.join(
                                     apkData.getDirName(), SdkConstants.ANDROID_MANIFEST_XML));
-
-            File instantRunManifestOutputFile =
-                    getInstantRunManifestOutputDirectory().isPresent()
-                            ? FileUtils.join(
-                                    getInstantRunManifestOutputDirectory().get().getAsFile(),
-                                    apkData.getDirName(),
-                                    SdkConstants.ANDROID_MANIFEST_XML)
-                            : null;
 
             File metadataFeatureManifestOutputFile =
                     FileUtils.join(
@@ -227,9 +218,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             manifestOutputFile.getAbsolutePath(),
                             // no aapt friendly merged manifest file necessary for applications.
                             null /* aaptFriendlyManifestOutputFile */,
-                            instantRunManifestOutputFile != null
-                                    ? instantRunManifestOutputFile.getAbsolutePath()
-                                    : null,
                             metadataFeatureManifestOutputFile.getAbsolutePath(),
                             bundleManifestOutputFile.getAbsolutePath(),
                             instantAppManifestOutputFile != null
@@ -261,14 +249,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             apkData,
                             manifestOutputFile,
                             properties));
-            if (instantRunManifestOutputFile != null) {
-                irMergedManifestOutputs.add(
-                        new BuildOutput(
-                                InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                                apkData,
-                                instantRunManifestOutputFile,
-                                properties));
-            }
 
             metadataFeatureMergedManifestOutputs.add(
                     new BuildOutput(
@@ -292,10 +272,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         }
         new BuildElements(mergedManifestOutputs.build())
                 .save(getManifestOutputDirectory().get().getAsFile());
-        if (getInstantRunManifestOutputDirectory().isPresent()) {
-            new BuildElements(irMergedManifestOutputs.build())
-                    .save(getInstantRunManifestOutputDirectory().get().getAsFile());
-        }
         new BuildElements(metadataFeatureMergedManifestOutputs.build())
                 .save(getMetadataFeatureManifestOutputDirectory());
         new BuildElements(bundleManifestOutputs.build()).save(getBundleManifestOutputDirectory());
@@ -364,12 +340,13 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
     }
 
     private List<ManifestProvider> computeProviders(
-            @NonNull Set<ResolvedArtifactResult> artifacts,
-            @NonNull InternalArtifactType artifactType) {
+            @NonNull Set<ResolvedArtifactResult> artifacts) {
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
         for (ResolvedArtifactResult artifact : artifacts) {
             File directory = artifact.getFile();
-            BuildElements splitOutputs = ExistingBuildElements.from(artifactType, directory);
+            BuildElements splitOutputs =
+                    ExistingBuildElements.from(
+                            InternalArtifactType.METADATA_FEATURE_MANIFEST, directory);
             if (splitOutputs.isEmpty()) {
                 throw new GradleException("Could not load manifest from " + directory);
             }
@@ -436,10 +413,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         }
 
         if (featureManifests != null) {
-            providers.addAll(
-                    computeProviders(
-                            featureManifests.getArtifacts(),
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST));
+            providers.addAll(computeProviders(featureManifests.getArtifacts()));
         }
 
         return providers;
@@ -650,16 +624,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
-                            "");
-
-            variantScope
-                    .getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.INSTANT_RUN_MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            taskProvider.map(
-                                    ManifestProcessorTask::getInstantRunManifestOutputDirectory),
                             "");
 
             variantScope

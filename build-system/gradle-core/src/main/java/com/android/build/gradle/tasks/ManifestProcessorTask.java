@@ -43,7 +43,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     public ManifestProcessorTask(@NonNull ObjectFactory objectFactory) {
         manifestOutputDirectory = objectFactory.directoryProperty();
         instantAppManifestOutputDirectory = objectFactory.directoryProperty();
-        instantRunManifestOutputDirectory = objectFactory.directoryProperty();
         aaptFriendlyManifestOutputDirectory = objectFactory.directoryProperty();
     }
 
@@ -52,8 +51,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private final DirectoryProperty manifestOutputDirectory;
 
     @Nonnull private final DirectoryProperty aaptFriendlyManifestOutputDirectory;
-
-    @Nonnull private final DirectoryProperty instantRunManifestOutputDirectory;
 
     private File metadataFeatureManifestOutputDirectory;
 
@@ -88,13 +85,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     @OutputDirectory
     public DirectoryProperty getManifestOutputDirectory() {
         return manifestOutputDirectory;
-    }
-
-    @OutputDirectory
-    @Optional
-    @NonNull
-    public DirectoryProperty getInstantRunManifestOutputDirectory() {
-        return instantRunManifestOutputDirectory;
     }
 
     /**

@@ -188,11 +188,10 @@ public class AndroidBuilder {
             @Nullable Integer maxSdkVersion,
             @NonNull String outManifestLocation,
             @Nullable String outAaptSafeManifestLocation,
-            @Nullable String outInstantRunManifestLocation,
             @Nullable String outMetadataFeatureManifestLocation,
             @Nullable String outBundleManifestLocation,
             @Nullable String outInstantAppManifestLocation,
-            ManifestMerger2.MergeType mergeType,
+            @NonNull ManifestMerger2.MergeType mergeType,
             Map<String, Object> placeHolders,
             @NonNull Collection<Invoker.Feature> optionalFeatures,
             @Nullable File reportFile,
@@ -246,15 +245,6 @@ public class AndroidBuilder {
                                 mergingReport.getMergedDocument(
                                         MergingReport.MergedManifestKind.AAPT_SAFE),
                                 new File(outAaptSafeManifestLocation));
-                    }
-
-                    if (outInstantRunManifestLocation != null) {
-                        String instantRunMergedManifest =
-                                mergingReport.getMergedDocument(
-                                        MergingReport.MergedManifestKind.INSTANT_RUN);
-                        if (instantRunMergedManifest != null) {
-                            save(instantRunMergedManifest, new File(outInstantRunManifestLocation));
-                        }
                     }
 
                     if (outMetadataFeatureManifestLocation != null) {
