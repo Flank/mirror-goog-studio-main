@@ -18,6 +18,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.ddmlib.log.LogReceiver;
 import java.io.IOException;
 import java.io.InputStream;
@@ -75,6 +76,7 @@ final class AdbHelper {
      * @throws IOException in case of I/O error on the connection.
      * @throws AdbCommandRejectedException if adb rejects the command
      */
+    @Slow
     public static SocketChannel open(InetSocketAddress adbSockAddr,
             Device device, int devicePort) throws IOException, TimeoutException, AdbCommandRejectedException {
 
@@ -124,6 +126,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static SocketChannel createPassThroughConnection(InetSocketAddress adbSockAddr,
             Device device, int pid) throws TimeoutException, AdbCommandRejectedException, IOException {
 
@@ -268,6 +271,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     static RawImage getFrameBuffer(InetSocketAddress adbSockAddr, Device device, long timeout, TimeUnit unit)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
@@ -465,6 +469,7 @@ final class AdbHelper {
      * @throws IOException in case of I/O error on the connection.
      * @see DdmPreferences#getTimeOut()
      */
+    @Slow
     static void executeRemoteCommand(
             InetSocketAddress adbSockAddr,
             AdbService adbService,
@@ -477,7 +482,7 @@ final class AdbHelper {
             @Nullable InputStream is)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
-        if (SwingUtilities.isEventDispatchThread()) {
+        if (SwingUtilities.isEventDispatchThread()) { // TODO: Remove when runtime checks for @Slow annotations is completely operational
             Log.e("ddms", "execute: called '" + command + "' from the Event Dispatch Thread!");
         }
         long maxTimeToOutputMs = 0;
@@ -667,6 +672,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static void runLogService(InetSocketAddress adbSockAddr, Device device, String logName,
             LogReceiver rcvr) throws TimeoutException, AdbCommandRejectedException, IOException {
         SocketChannel adbChan = null;
@@ -739,6 +745,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static void createForward(InetSocketAddress adbSockAddr, Device device,
             String localPortSpec, String remotePortSpec)
             throws TimeoutException, AdbCommandRejectedException, IOException {
@@ -775,6 +782,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     static String queryFeatures(InetSocketAddress adbSockAddr, Device device, String adbCommand)
             throws TimeoutException, AdbCommandRejectedException, IOException {
 
@@ -851,6 +859,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static void removeForward(InetSocketAddress adbSockAddr, Device device,
             String localPortSpec, String remotePortSpec)
             throws TimeoutException, AdbCommandRejectedException, IOException {
@@ -921,6 +930,7 @@ final class AdbHelper {
      * @param length the length to read or -1 to fill the data buffer completely
      * @param timeout The timeout value in ms. A timeout of zero means "wait forever".
      */
+    @Slow
     static void read(SocketChannel chan, byte[] data, int length, long timeout) throws TimeoutException, IOException {
         ByteBuffer buf = ByteBuffer.wrap(data, 0, length != -1 ? length : data.length);
         int numWaits = 0;
@@ -977,6 +987,7 @@ final class AdbHelper {
      * @throws TimeoutException in case of timeout on the connection.
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     static void write(SocketChannel chan, byte[] data, int length, int timeout) throws TimeoutException, IOException {
         ByteBuffer buf = ByteBuffer.wrap(data, 0, length != -1 ? length : data.length);
         int numWaits = 0;
@@ -1045,6 +1056,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static void reboot(String into, InetSocketAddress adbSockAddr, Device device)
             throws TimeoutException, AdbCommandRejectedException, IOException {
         byte[] request;
@@ -1083,6 +1095,7 @@ final class AdbHelper {
      * @throws AdbCommandRejectedException if adb rejects the command
      * @throws IOException in case of I/O error on the connection.
      */
+    @Slow
     public static void root(@NonNull InetSocketAddress adbSockAddr, @NonNull Device device)
       throws TimeoutException, AdbCommandRejectedException, IOException {
         byte[] request = formAdbRequest("root:"); //$NON-NLS-1$
