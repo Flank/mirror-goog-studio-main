@@ -19,12 +19,37 @@ Annotation: org.gradle.api.tasks.TaskAction
 # Apk step
 Trace: com.android.build.gradle.tasks.PackageAndroidArtifact::doIncrementalTaskAction
 Trace: com.android.build.gradle.tasks.PackageAndroidArtifact::doFullTaskAction
+Trace: com.android.tools.build.apkzlib.zip.ZFile::<init>
+Trace: com.android.tools.build.apkzlib.zip.ZFile::openReadOnly
+Trace: com.android.tools.build.apkzlib.zip.ZFile::openReadWrite
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::readData
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::readCentralDirectory
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::mergeFrom
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::add
 Trace: com.android.tools.build.apkzlib.zip.ZFile::update
+Trace: com.android.tools.build.apkzlib.zip.ZFile::close
+Trace: com.android.tools.build.apkzlib.zip.ZFile::writeAllFilesToZip
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::recomputeAndWriteCentralDirectoryAndEocd
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::directFullyRead
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::notify
+#Trace: com.android.tools.build.apkzlib.zip.ZFile::processAllReadyEntriesWithWait
 Trace: com.android.tools.build.apkzlib.zfile.ApkZFileCreator
 Trace: com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory
 Trace: com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder
+#Trace: com.android.builder.internal.packaging.IncrementalPackager
+#Trace: com.android.build.gradle.tasks.PackageAndroidArtifact.IncrementalSplitterRunnable
+#Trace: com.android.build.gradle.internal.tasks.KnownFilesSaveData
+#Trace: com.android.builder.files.RelativeFiles::fromZip
+Trace: com.android.builder.files.ZipCentralDirectory
+#Trace: com.android.tools.build.apkzlib.bytestorage.ByteStorage
+#Trace: com.android.tools.build.apkzlib.bytestorage.ChunkBasedByteStorage
+#Trace: com.android.tools.build.apkzlib.bytestorage.InMemoryByteStorage
+#Trace: com.android.tools.build.apkzlib.bytestorage.OverflowToDiskByteStorage
+#Trace: com.android.tools.build.apkzlib.bytestorage.TemporaryDirectoryStorage
+#Trace: com.android.tools.build.apkzlib.zip.StoredEntry
 
 # Signing
+Trace: com.android.tools.build.apkzlib.sign.SigningExtension
 Trace: com.android.tools.build.apkzlib.sign.SigningExtension::isCurrentSignatureAsRequested 
 Trace: com.android.tools.build.apkzlib.sign.SigningExtension::onOutputZipReadyForUpdate
 Trace: com.android.tools.build.apkzlib.sign.SigningExtension::onOutputZipEntriesWritten
@@ -36,6 +61,7 @@ Flush: org.gradle.internal.buildevents.BuildResultLogger::buildFinished
 # All: Trace: org.gradle.api.internal.tasks.execution.*
 Trace: org.gradle.api.internal.tasks.execution.SkipUpToDateTaskExecuter::execute
 Trace: org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter::execute
+
 
 # Snapshot/checksumming:
 # Trace: org.gradle.api.internal.changedetection.state.AbstractFileCollectionSnapshotter::snapshot

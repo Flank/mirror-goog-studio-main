@@ -60,7 +60,7 @@ public class RelativeFilesTest {
             zf.add("dir/file2", new ByteArrayInputStream(new byte[0]));
         }
 
-        Set<RelativeFile> relativeFiles = RelativeFiles.fromZip(zfile);
+        Set<RelativeFile> relativeFiles = RelativeFiles.fromZip(new ZipCentralDirectory(zfile));
         assertEquals(2, relativeFiles.size());
         assertThat(relativeFiles).contains(new RelativeFile(zfile, "file1"));
         assertThat(relativeFiles).contains(new RelativeFile(zfile, "dir/file2"));

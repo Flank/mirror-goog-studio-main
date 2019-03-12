@@ -28,9 +28,9 @@ import java.io.IOException;
 import org.apache.commons.codec.binary.Base64;
 
 /**
- * File cache that stored files based on their origin path. The general contract of the
- * {@code FileCacheByPath} is that files are stored and can be later retrieved from their
- * original path. For example:
+ * File cache that stored files based on their origin path. The general contract of the {@code
+ * FileCacheByPath} is that files are stored and can be later retrieved from their original path.
+ * For example:
  *
  * <pre>
  * File cacheDir = ... // some directory.
@@ -44,6 +44,9 @@ import org.apache.commons.codec.binary.Base64;
  *                        // contents are those of "a" before
  *                        // being modified.
  * </pre>
+ *
+ * A custom API for zip files ({@link #add(ZipCentralDirectory)} allows to only store a zip file's
+ * Central Directory Record as this is generally only what is needed from the cache.
  */
 public class FileCacheByPath {
 
@@ -59,8 +62,7 @@ public class FileCacheByPath {
      * @param directory the directory where the cache is stored
      */
     public FileCacheByPath(@NonNull File directory) {
-        Preconditions.checkArgument(
-                directory.isDirectory(), directory.getAbsolutePath() + "!.isDirectory()");
+        Preconditions.checkArgument(directory.isDirectory(), "!File.isDirectory(): %s", directory);
 
         this.directory = directory;
     }
@@ -72,7 +74,7 @@ public class FileCacheByPath {
      * @throws IOException failed to copy the file into the cache
      */
     public void add(@NonNull File f) throws IOException {
-        Preconditions.checkArgument(f.isFile(), "!f.isFile()");
+        Preconditions.checkArgument(f.isFile(), "!File.isFile(): %s", f);
 
         if (!directory.isDirectory()) {
             FileUtils.mkdirs(directory);
@@ -80,6 +82,23 @@ public class FileCacheByPath {
 
         String k = key(f);
         Files.copy(f, new File(directory, k));
+    }
+
+    /**
+     * Adds a file to the cache, replacing any file that had the exact same absolute path.
+     *
+     * @param centralDirectory the file to add
+     * @throws IOException failed to copy the file into the cache
+     */
+    public void add(@NonNull ZipCentralDirectory centralDirectory) throws IOException {
+        final File file = centralDirectory.getFile();
+        Preconditions.checkArgument(file.isFile(), "!File.isFile(): %s", file);
+
+        if (!directory.isDirectory()) {
+            FileUtils.mkdirs(directory);
+        }
+
+        centralDirectory.writeTo(new File(directory, key(file)));
     }
 
     /**

@@ -52,12 +52,8 @@ public class LazyIncrementalFileMergerInput implements IncrementalFileMergerInpu
     @NonNull
     private final String name;
 
-    /**
-     * Inputs and how they changed for the merge.
-     */
-    @VisibleForTesting
-    @NonNull
-    final CachedSupplier<ImmutableMap<RelativeFile, FileStatus>> updates;
+    /** Inputs and how they changed for the merge. */
+    @VisibleForTesting @NonNull final CachedSupplier<Map<RelativeFile, FileStatus>> updates;
 
     /**
      * Map between OS-independent paths and the relative files they come from. This applies to
@@ -100,8 +96,8 @@ public class LazyIncrementalFileMergerInput implements IncrementalFileMergerInpu
      */
     public LazyIncrementalFileMergerInput(
             @NonNull String name,
-            @NonNull CachedSupplier<ImmutableMap<RelativeFile, FileStatus>> updates,
-            @NonNull CachedSupplier<ImmutableSet<RelativeFile>> files) {
+            @NonNull CachedSupplier<Map<RelativeFile, FileStatus>> updates,
+            @NonNull CachedSupplier<Set<RelativeFile>> files) {
         this.name = name;
         this.updates = updates;
         this.updatePaths =

@@ -21,6 +21,7 @@ import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.files.RelativeFiles;
+import com.android.builder.files.ZipCentralDirectory;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.CachedSupplier;
 import com.google.common.collect.ImmutableMap;
@@ -56,13 +57,16 @@ public final class LazyIncrementalFileMergerInputs {
 
         ImmutableSet<File> baseI = ImmutableSet.copyOf(base);
 
-        CachedSupplier<ImmutableSet<RelativeFile>> all = new CachedSupplier<>(() -> load(baseI));
+        CachedSupplier<Set<RelativeFile>> all = new CachedSupplier<>(() -> load(baseI));
 
-        CachedSupplier<ImmutableMap<RelativeFile, FileStatus>> upd = new CachedSupplier<>(() -> {
-            ImmutableMap.Builder<RelativeFile, FileStatus> builder = ImmutableMap.builder();
-            all.get().forEach(rf -> builder.put(rf, FileStatus.NEW));
-            return builder.build();
-        });
+        CachedSupplier<Map<RelativeFile, FileStatus>> upd =
+                new CachedSupplier<>(
+                        () -> {
+                            ImmutableMap.Builder<RelativeFile, FileStatus> builder =
+                                    ImmutableMap.builder();
+                            all.get().forEach(rf -> builder.put(rf, FileStatus.NEW));
+                            return builder.build();
+                        });
 
         return new LazyIncrementalFileMergerInput(name, upd, all);
     }
@@ -80,10 +84,10 @@ public final class LazyIncrementalFileMergerInputs {
         Set<String> paths = new HashSet<>();
         ImmutableSet.Builder<RelativeFile> builder = ImmutableSet.builder();
         for (File b : base) {
-            ImmutableSet<RelativeFile> files;
+            Set<RelativeFile> files;
             if (b.isFile()) {
                 try {
-                    files = RelativeFiles.fromZip(b);
+                    files = RelativeFiles.fromZip(new ZipCentralDirectory(b));
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -130,9 +134,9 @@ public final class LazyIncrementalFileMergerInputs {
             @NonNull FileCacheByPath cache,
             @NonNull IncrementalRelativeFileSets.FileDeletionPolicy fileDeletionPolicy) {
 
-        CachedSupplier<ImmutableSet<RelativeFile>> all = new CachedSupplier<>(() -> load(base));
+        CachedSupplier<Set<RelativeFile>> all = new CachedSupplier<>(() -> load(base));
 
-        CachedSupplier<ImmutableMap<RelativeFile, FileStatus>> upd =
+        CachedSupplier<Map<RelativeFile, FileStatus>> upd =
                 new CachedSupplier<>(
                         () -> {
                             try {

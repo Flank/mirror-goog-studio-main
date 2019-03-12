@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
+import com.android.builder.files.ZipCentralDirectory;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.utils.CachedFileContents;
 import com.google.common.annotations.VisibleForTesting;
@@ -477,6 +478,70 @@ public class KnownFilesSaveData {
                 .build();
     }
 
+    /**
+     * Obtains all changed inputs of a given input set. Given a set of files mapped to their changed
+     * status, this method returns a list of changes computed as follows:
+     *
+     * <ol>
+     *   <li>Changed inputs are split into deleted and non-deleted inputs. This separation is needed
+     *       because deleted inputs may no longer be mappable to any {@link InputSet} just by
+     *       looking at the file path, without using {@link KnownFilesSaveData}.
+     *   <li>Deleted inputs are filtered through {@link KnownFilesSaveData} to get only those whose
+     *       input set matches {@code inputSet}.
+     *   <li>Non-deleted inputs are processed through {@link
+     *       IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath, Set,
+     *       IncrementalRelativeFileSets.FileDeletionPolicy)} boolean)} to obtain the incremental
+     *       file changes.
+     *   <li>The results of processed deleted and non-deleted are merged and returned.
+     * </ol>
+     *
+     * @param changedInputs all changed inputs
+     * @param saveData the save data with all input sets from last run
+     * @param inputSet the input set to filter
+     * @param zip the zip file of the input set
+     * @param cacheByPath where to cache files
+     * @param cacheUpdates receives the runnables that will update the cache
+     * @return the status of all relative files in the input set
+     */
+    @NonNull
+    public static ImmutableMap<RelativeFile, FileStatus> getChangedInputs(
+            @NonNull Map<File, FileStatus> changedInputs,
+            @NonNull KnownFilesSaveData saveData,
+            @NonNull InputSet inputSet,
+            @NonNull ZipCentralDirectory zip,
+            @NonNull FileCacheByPath cacheByPath,
+            @NonNull Set<Runnable> cacheUpdates)
+            throws IOException {
+
+        /*
+         * Figure out changes to deleted files.
+         */
+        Set<File> deletedFiles =
+                Maps.filterValues(changedInputs, Predicates.equalTo(FileStatus.REMOVED)).keySet();
+        Set<RelativeFile> deletedRelativeFiles = saveData.find(deletedFiles, inputSet);
+
+        /*
+         * Figure out changes to non-deleted files.
+         */
+        Map<File, FileStatus> nonDeletedFiles =
+                Maps.filterValues(
+                        changedInputs, Predicates.not(Predicates.equalTo(FileStatus.REMOVED)));
+        Map<RelativeFile, FileStatus> nonDeletedRelativeFiles =
+                IncrementalRelativeFileSets.makeFromZipFile(
+                        zip,
+                        nonDeletedFiles,
+                        cacheByPath,
+                        cacheUpdates,
+                        IncrementalRelativeFileSets.FileDeletionPolicy.DISALLOW_FILE_DELETIONS);
+
+        /*
+         * Merge everything.
+         */
+        return new ImmutableMap.Builder<RelativeFile, FileStatus>()
+                .putAll(Maps.asMap(deletedRelativeFiles, Functions.constant(FileStatus.REMOVED)))
+                .putAll(nonDeletedRelativeFiles)
+                .build();
+    }
     /** Input sets for files for save data (see {@link KnownFilesSaveData}). */
     public enum InputSet {
         /** File belongs to the dex file set. */

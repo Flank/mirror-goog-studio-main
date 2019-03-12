@@ -17,15 +17,13 @@
 package com.android.builder.files;
 
 import com.android.annotations.NonNull;
-import com.android.tools.build.apkzlib.zip.StoredEntry;
-import com.android.tools.build.apkzlib.zip.StoredEntryType;
-import com.android.tools.build.apkzlib.zip.ZFile;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -43,25 +41,25 @@ public final class RelativeFiles {
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    public static ImmutableSet<RelativeFile> fromDirectory(@NonNull File directory) {
-        return fromDirectory(directory, directory);
+    public static Set<RelativeFile> fromDirectory(@NonNull File directory) {
+        return Collections.unmodifiableSet(fromDirectory(directory, directory));
     }
 
     /**
-     * Loads all files in a directory recursively, filtering the results with a predicate.
-     * Filtering is only done at the end so, even if a directory is excluded from the filter,
-     * its files will be included if they are accepted by the filter.
+     * Loads all files in a directory recursively, filtering the results with a predicate. Filtering
+     * is only done at the end so, even if a directory is excluded from the filter, its files will
+     * be included if they are accepted by the filter.
      *
      * @param directory the directory, must exist and be a readable directory
-     * @param filter a predicate to filter which files should be included in the result; only
-     * files to whom the filter application results in {@code true} are included in the result
+     * @param filter a predicate to filter which files should be included in the result; only files
+     *     to whom the filter application results in {@code true} are included in the result
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    public static ImmutableSet<RelativeFile> fromDirectory(
-            @NonNull File directory,
-            @NonNull final Predicate<RelativeFile> filter) {
-        return ImmutableSet.copyOf(Sets.filter(fromDirectory(directory, directory), filter::test));
+    public static Set<RelativeFile> fromDirectory(
+            @NonNull File directory, @NonNull final Predicate<RelativeFile> filter) {
+        return Collections.unmodifiableSet(
+                Sets.filter(fromDirectory(directory, directory), filter::test));
     }
 
     /**
@@ -72,10 +70,9 @@ public final class RelativeFiles {
      * @return all files in the directory, sub-directories included
      */
     @NonNull
-    private static ImmutableSet<RelativeFile> fromDirectory(
-            @NonNull File base, @NonNull File directory) {
-        Preconditions.checkArgument(base.isDirectory(), "!base.isDirectory()");
-        Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
+    private static Set<RelativeFile> fromDirectory(@NonNull File base, @NonNull File directory) {
+        Preconditions.checkArgument(base.isDirectory(), "!File.isDirectory(): %s", base);
+        Preconditions.checkArgument(directory.isDirectory(), "!File.isDirectory(): %s", directory);
 
         Set<RelativeFile> files = Sets.newHashSet();
         File[] directoryFiles =
@@ -88,7 +85,7 @@ public final class RelativeFiles {
             }
         }
 
-        return ImmutableSet.copyOf(files);
+        return files;
     }
 
     /**
@@ -111,19 +108,17 @@ public final class RelativeFiles {
      * @throws IOException failed to read the zip file
      */
     @NonNull
-    public static ImmutableSet<RelativeFile> fromZip(@NonNull File zip) throws IOException {
-        Preconditions.checkArgument(zip.isFile(), "!zip.isFile(): %s", zip);
+    public static Set<RelativeFile> fromZip(@NonNull ZipCentralDirectory zip) throws IOException {
+        File zipFile = zip.getFile();
+        Preconditions.checkArgument(zipFile.isFile(), "!File.isFile(): %s", zipFile);
 
-        Set<RelativeFile> files = Sets.newHashSet();
+        Collection<DirectoryEntry> values = zip.getEntries().values();
+        Set<RelativeFile> files = Sets.newHashSetWithExpectedSize(values.size());
 
-        try (ZFile zipReader = ZFile.openReadOnly(zip)) {
-            for (StoredEntry entry : zipReader.entries()) {
-                if (entry.getType() == StoredEntryType.FILE) {
-                    files.add(new RelativeFile(zip, entry.getCentralDirectoryHeader().getName()));
-                }
-            }
+        for (DirectoryEntry entry : values) {
+            files.add(new RelativeFile(zipFile, entry.getName()));
         }
 
-        return ImmutableSet.copyOf(files);
+        return Collections.unmodifiableSet(files);
     }
 }

@@ -26,6 +26,7 @@ import com.android.builder.files.FileCacheByPath
 import com.android.builder.files.IncrementalRelativeFileSets
 import com.android.builder.files.RelativeFile
 import com.android.builder.files.RelativeFiles
+import com.android.builder.files.ZipCentralDirectory
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.builder.merge.LazyIncrementalFileMergerInput
 import com.android.builder.merge.LazyIncrementalFileMergerInputs
@@ -60,10 +61,11 @@ fun toIncrementalInput(
     cacheUpdates: MutableList<Runnable>
 ): IncrementalFileMergerInput {
     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
+        val jarCDR = ZipCentralDirectory(input)
         if (changedInputs.containsKey(input)) {
             cacheUpdates.add(IOExceptionRunnable.asRunnable {
                 if (input.isFile) {
-                    zipCache.add(input)
+                    zipCache.add(jarCDR)
                 } else {
                     zipCache.remove(input)
                 }
@@ -71,8 +73,8 @@ fun toIncrementalInput(
         }
         return LazyIncrementalFileMergerInput(
             input.absolutePath,
-            CachedSupplier { computeUpdatesFromJar(input, changedInputs, zipCache) },
-            CachedSupplier { computeFilesFromJar(input) }
+            CachedSupplier { computeUpdatesFromJar(jarCDR, changedInputs, zipCache) },
+            CachedSupplier { computeFilesFromJar(jarCDR) }
         )
     }
 
@@ -119,17 +121,17 @@ fun toNonIncrementalInput(
  * @return a mapping from all files that have changed to the type of change
  */
 private fun computeUpdatesFromJar(
-    jar: File,
+    jar: ZipCentralDirectory,
     changedInputs: Map<File, FileStatus>,
     zipCache: FileCacheByPath
-): ImmutableMap<RelativeFile, FileStatus> {
-    if (jar in changedInputs) {
-        val fileStatus = changedInputs[jar]
+): Map<RelativeFile, FileStatus> {
+    if (jar.file in changedInputs) {
+        val fileStatus = changedInputs[jar.file]
         try {
             return when (fileStatus) {
                 FileStatus.NEW -> IncrementalRelativeFileSets.fromZip(jar, FileStatus.NEW)
                 FileStatus.REMOVED -> {
-                    val cached = zipCache.get(jar) ?: throw RuntimeException(
+                    val cached = zipCache.get(jar.file) ?: throw RuntimeException(
                         "File '$jar' was deleted, but previous version not found in cache"
                     )
 
@@ -152,8 +154,8 @@ private fun computeUpdatesFromJar(
  * @param jar the jar input
  * @return all files in the jar file
  */
-private fun computeFilesFromJar(jar: File): ImmutableSet<RelativeFile> {
-    if (!jar.isFile) {
+private fun computeFilesFromJar(jar: ZipCentralDirectory): Set<RelativeFile> {
+    if (!jar.file.isFile) {
         return ImmutableSet.of()
     }
     try {
@@ -194,7 +196,7 @@ private fun computeUpdatesFromDir(
  * @param dir the directory
  * @return all files in the directory
  */
-private fun computeFilesFromDir(dir: File): ImmutableSet<RelativeFile> {
+private fun computeFilesFromDir(dir: File): Set<RelativeFile> {
     if (!dir.isDirectory) {
         return ImmutableSet.of()
     }
@@ -231,13 +233,6 @@ fun toInputs(
 
     val builder = ImmutableList.builder<IncrementalFileMergerInput>()
     for ((input, scope) in inputMap.entries) {
-        val qualifiedContent =
-            object: QualifiedContent {
-                override fun getName() = "file-merger-qualified-content"
-                override fun getFile() = input
-                override fun getContentTypes() = mutableSetOf(contentType)
-                override fun getScopes() = mutableSetOf(scope)
-            }
         val fileMergerInput: IncrementalFileMergerInput? = if (full) {
             toNonIncrementalInput(input, zipCache, cacheUpdates)
         } else {
@@ -250,7 +245,17 @@ fun toInputs(
         fileMergerInput?.let {
             builder.add(it)
             // Add mapping of fileMergerInput to qualifiedContent if contentMap != null
-            contentMap?.let { contentMap -> contentMap[it] = qualifiedContent}
+            contentMap?.let { contentMap ->
+                val qualifiedContent =
+                    object: QualifiedContent {
+                        override fun getName() = "file-merger-qualified-content"
+                        override fun getFile() = input
+                        override fun getContentTypes() = mutableSetOf(contentType)
+                        override fun getScopes() = mutableSetOf(scope)
+                    }
+
+                contentMap[it] = qualifiedContent
+            }
         }
     }
 

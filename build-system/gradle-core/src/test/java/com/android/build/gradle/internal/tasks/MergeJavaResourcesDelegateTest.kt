@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIB
 import com.android.builder.files.IncrementalRelativeFileSets
 import com.android.builder.files.RelativeFile
 import com.android.builder.files.RelativeFiles
+import com.android.builder.files.ZipCentralDirectory
 import com.android.builder.merge.DuplicateRelativeFileException
 import com.android.builder.merge.IncrementalFileMergerInput
 import com.android.builder.merge.LazyIncrementalFileMergerInput
@@ -201,7 +202,7 @@ class MergeJavaResourcesDelegateTest {
             CachedSupplier {
                 ImmutableMap.of(RelativeFile(jarFile, "javaRes2"), FileStatus.NEW)
             },
-            CachedSupplier { RelativeFiles.fromZip(jarFile) }
+            CachedSupplier { RelativeFiles.fromZip(ZipCentralDirectory(jarFile)) }
         )
 
         val incrementalContentMap = mutableMapOf(
@@ -331,7 +332,7 @@ class MergeJavaResourcesDelegateTest {
         return LazyIncrementalFileMergerInput(
             jar.absolutePath,
             CachedSupplier { IncrementalRelativeFileSets.fromZip(jar) },
-            CachedSupplier { RelativeFiles.fromZip(jar) }
+            CachedSupplier { RelativeFiles.fromZip(ZipCentralDirectory(jar)) }
         )
     }
 

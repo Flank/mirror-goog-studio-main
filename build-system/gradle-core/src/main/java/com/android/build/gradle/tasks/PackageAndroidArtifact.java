@@ -60,6 +60,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
+import com.android.builder.files.ZipCentralDirectory;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
@@ -409,12 +410,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected abstract InternalArtifactType getInternalArtifactType();
 
-    @NonNull
-    static Set<File> getAndroidResources(@Nullable File processedResources) {
-
-        return processedResources != null ? ImmutableSet.of(processedResources) : ImmutableSet.of();
-    }
-
     @Override
     protected void doFullTaskAction() {
 
@@ -523,8 +518,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                  */
                 cacheByPath.clear();
 
-                Set<File> androidResources = getAndroidResources(params.processedResources);
-
                 /*
                  * Additionally, make sure we have no previous package, if it exists.
                  */
@@ -551,10 +544,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 }
                 ImmutableMap<RelativeFile, FileStatus> updatedAssets =
                         IncrementalRelativeFileSets.fromZipsAndDirectories(params.assetsFiles);
-                ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
-                        IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
                 ImmutableMap<RelativeFile, FileStatus> updatedJniResources =
                         IncrementalRelativeFileSets.fromZipsAndDirectories(params.jniFiles);
+
+
+                ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
+                        IncrementalRelativeFileSets.fromZip(
+                                new ZipCentralDirectory(params.processedResources));
 
                 BuildElements manifestOutputs =
                         ExistingBuildElements.from(params.manifestType, params.manifestDirectory);
@@ -866,8 +862,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         public void run() {
             IncrementalSplitterParams params = (IncrementalSplitterParams) getParams();
             try {
-                Set<File> androidResources = getAndroidResources(params.processedResources);
-
                 File incrementalDirForSplit =
                         new File(params.incrementalFolder, params.apkInfo.getFullName());
 
@@ -944,12 +938,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                                 cacheByPath,
                                 cacheUpdates);
 
+                ZipCentralDirectory androidResCentralDirectory =
+                        new ZipCentralDirectory(params.processedResources);
+
                 ImmutableMap<RelativeFile, FileStatus> changedAndroidResources =
                         KnownFilesSaveData.getChangedInputs(
                                 params.changedInputs,
                                 saveData,
                                 InputSet.ANDROID_RESOURCE,
-                                androidResources,
+                                androidResCentralDirectory,
                                 cacheByPath,
                                 cacheUpdates);
 
@@ -994,7 +991,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 ImmutableMap<RelativeFile, FileStatus> allAssets =
                         IncrementalRelativeFileSets.fromZipsAndDirectories(params.assetsFiles);
                 ImmutableMap<RelativeFile, FileStatus> allAndroidResources =
-                        IncrementalRelativeFileSets.fromZipsAndDirectories(androidResources);
+                        IncrementalRelativeFileSets.fromZip(androidResCentralDirectory);
                 ImmutableMap<RelativeFile, FileStatus> allJniResources =
                         IncrementalRelativeFileSets.fromZipsAndDirectories(params.jniFiles);
 
