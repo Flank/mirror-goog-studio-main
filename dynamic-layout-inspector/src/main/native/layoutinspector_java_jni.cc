@@ -28,11 +28,10 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendErrorMes
     JNIEnv *env, jclass clazz, jstring jmessage) {
   profiler::JStringWrapper message(env, jmessage);
   profiler::Agent::Instance().SubmitAgentTasks(
-      {[message, env](profiler::proto::AgentService::Stub &stub,
-                      grpc::ClientContext &ctx) mutable {
+      {[message](profiler::proto::AgentService::Stub &stub,
+                 grpc::ClientContext &ctx) mutable {
         profiler::proto::SendEventRequest request;
         auto *event = request.mutable_event();
-        event->set_is_ended(true);
         event->set_kind(profiler::proto::Event::LAYOUT_INSPECTOR);
         event->set_group_id(profiler::proto::Event::LAYOUT_INSPECTOR_ERROR);
         auto *inspector_event = event->mutable_layout_inspector_event();
@@ -58,14 +57,12 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendSkiaPict
          profiler::proto::SendPayloadRequest payload;
          payload.set_name(payload_name);
          payload.set_payload(message.get().data(), message.length());
-         payload.set_is_partial(false);
          return stub.SendPayload(&ctx, payload, &response);
        },
        [id](profiler::proto::AgentService::Stub &stub,
             grpc::ClientContext &ctx) mutable {
          profiler::proto::SendEventRequest request;
          auto *event = request.mutable_event();
-         event->set_is_ended(true);
          event->set_kind(profiler::proto::Event::LAYOUT_INSPECTOR);
          event->set_group_id(profiler::proto::Event::SKIA_PICTURE);
          auto *inspector_event = event->mutable_layout_inspector_event();
