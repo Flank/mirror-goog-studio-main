@@ -75,7 +75,6 @@ public class SdkHandler {
 
     private SdkLoader sdkLoader;
     private File sdkFolder;
-    private File ndkFolder;
     private File cmakePathInLocalProp = null;
     private File ndkSymlinkDirInLocalProp = null;
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
@@ -280,11 +279,6 @@ public class SdkHandler {
         }
     }
 
-    @Nullable
-    public File getNdkFolder() {
-        return ndkFolder;
-    }
-
     /**
      * Find the location of the SDK.
      *
@@ -390,9 +384,6 @@ public class SdkHandler {
                     Type.SDK_NOT_SET, new EvalIssueException(message, filePath, null));
         }
 
-
-        ndkFolder = NdkHandler.findNdkDirectory(properties, rootDir);
-
         // Check if the user has specified a cmake directory in local properties and assign the
         // cmake folder.
         String cmakeProperty = properties.getProperty("cmake.dir");
@@ -424,7 +415,7 @@ public class SdkHandler {
             return;
         }
         try {
-            ndkFolder = sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
+            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
         } catch (LicenceNotAcceptedException | InstallFailedException e) {
             throw new RuntimeException(e);
         }

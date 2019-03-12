@@ -1496,11 +1496,6 @@ public abstract class TaskManager {
     /** Create transform for stripping debug symbols from native libraries before deploying. */
     public static void createStripNativeLibraryTask(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
-        if (!scope.getGlobalScope().getNdkHandler().isConfigured()) {
-            // We don't know where the NDK is, so we won't be stripping the debug symbols from
-            // native libraries.
-            return;
-        }
         TransformManager transformManager = scope.getTransformManager();
         GlobalScope globalScope = scope.getGlobalScope();
         transformManager.addTransform(
@@ -1508,7 +1503,7 @@ public abstract class TaskManager {
                 scope,
                 new StripDebugSymbolTransform(
                         globalScope.getProject(),
-                        globalScope.getNdkHandler(),
+                        globalScope.getSdkComponents().getNdkHandlerSupplier(),
                         globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
                         scope.getVariantConfiguration().getType().isAar(),
                         scope.consumesFeatureJars()));

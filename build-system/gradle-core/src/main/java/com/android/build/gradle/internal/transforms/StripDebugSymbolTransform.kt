@@ -42,25 +42,23 @@ import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
 import org.gradle.api.Project
+import java.util.function.Supplier
 
 /**
  * Transform to remove debug symbols from native libraries.
  */
 class StripDebugSymbolTransform(
     private val project: Project,
-    ndkHandler: NdkHandler,
+    ndkHandler: Supplier<NdkHandler>,
     excludePattern: Set<String>,
     private val isLibrary: Boolean,
     private val includeFeaturesInScopes: Boolean
 ) : Transform() {
 
-    private val stripToolFinder: SymbolStripExecutableFinder
-    private val excludeMatchers = excludePattern.map { compileGlob(it) }
-
-    init {
-        checkArgument(ndkHandler.isConfigured)
-        stripToolFinder = createSymbolStripExecutableFinder(ndkHandler)
+    private val stripToolFinder: SymbolStripExecutableFinder by lazy {
+        createSymbolStripExecutableFinder(ndkHandler.get())
     }
+    private val excludeMatchers = excludePattern.map { compileGlob(it) }
 
     override fun getName() = "stripDebugSymbol"
 
@@ -76,11 +74,6 @@ class StripDebugSymbolTransform(
     override fun isIncremental() = true
 
     override fun isCacheable() = true
-
-
-
-    override fun getSecondaryFiles(): MutableCollection<SecondaryFile> =
-        stripToolFinder.executables().map { SecondaryFile.nonIncremental(it) }.toMutableList()
 
     override fun transform(transformInvocation: TransformInvocation) {
         val outputProvider =

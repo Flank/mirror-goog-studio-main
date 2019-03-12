@@ -59,8 +59,15 @@ open class SdkComponents(
     val renderScriptSupportJarProvider: Provider<File> = project.providers.provider { getRenderScriptSupportJar() }
     val supportNativeLibFolderProvider: Provider<File> = project.providers.provider { getSupportNativeLibFolder() }
     val supportBlasLibFolderProvider: Provider<File> = project.providers.provider { getSupportBlasLibFolder() }
+    val ndkFolderProvider: Provider<File> = project.providers.provider { getNdkFolder() }
 
     private var fallbackResultsSupplier: Supplier<Pair<SdkInfo, TargetInfo>?> = Suppliers.memoize { runFallbackSdkHandler() }
+    val ndkHandlerSupplier : Supplier<NdkHandler> = Suppliers.memoize {
+        NdkHandler(
+            options.ndkVersionSupplier.get(),
+            options.platformTargetHashSupplier.get(),
+            project.rootDir)
+    }
 
     private fun runFallbackSdkHandler(): Pair<SdkInfo, TargetInfo>? {
         fallbackSdkHandler.setSdkLibData(options.sdkLibDataFactory.getSdkLibData())
@@ -172,7 +179,7 @@ open class SdkComponents(
     }
 
     fun getNdkFolder(): File? {
-        return fallbackSdkHandler.ndkFolder
+        return ndkHandlerSupplier.get().ndkDirectory
     }
 
     fun getCMakeExecutable(): File? {
@@ -187,5 +194,6 @@ open class SdkComponents(
 class SdkComponentsOptions(
     val platformTargetHashSupplier: Supplier<String>,
     val buildToolRevisionSupplier: Supplier<Revision>,
+    val ndkVersionSupplier: Supplier<String>,
     val sdkLibDataFactory: SdkLibDataFactory,
     val useAndroidX: Boolean)

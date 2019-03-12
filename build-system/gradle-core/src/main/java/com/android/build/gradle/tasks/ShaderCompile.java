@@ -86,6 +86,7 @@ public class ShaderCompile extends AndroidBuilderTask {
         return buildToolInfoProvider.get().getRevision().toString();
     }
 
+    private Provider<File> ndkLocation;
     private Provider<Directory> sourceDir;
 
     @InputFiles
@@ -98,7 +99,6 @@ public class ShaderCompile extends AndroidBuilderTask {
     private List<String> defaultArgs = ImmutableList.of();
     private Map<String, List<String>> scopedArgs = ImmutableMap.of();
 
-    private File ndkLocation;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -124,7 +124,7 @@ public class ShaderCompile extends AndroidBuilderTask {
                             getOutputDir(),
                             defaultArgs,
                             scopedArgs,
-                            ndkLocation,
+                            () -> ndkLocation.get(),
                             new LoggedProcessOutputHandler(getILogger()),
                             workers);
         }
@@ -195,7 +195,7 @@ public class ShaderCompile extends AndroidBuilderTask {
 
             final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
-            task.ndkLocation = scope.getGlobalScope().getNdkHandler().getNdkDirectory();
+            task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
 
             task.sourceDir = scope.getArtifacts().getFinalProduct(MERGED_SHADERS);
             task.setOutputDir(outputDir);

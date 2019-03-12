@@ -503,7 +503,7 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull VariantScope scope) {
         GlobalScope globalScope = scope.getGlobalScope();
         checkNotNull(globalScope.getSdkComponents().getSdkFolder(), "No Android SDK folder found");
-        NdkHandler ndkHandler = globalScope.getNdkHandler();
+        NdkHandler ndkHandler = globalScope.getSdkComponents().getNdkHandlerSupplier().get();
         File ndkFolder = ndkHandler.getNdkDirectory();
         if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
             globalScope.getSdkComponents().installNdk(ndkHandler);

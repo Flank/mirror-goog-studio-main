@@ -44,15 +44,18 @@ import org.gradle.api.logging.Logging;
  */
 public class NdkHandler {
     @NonNull private final File projectDir;
-    @Nullable
-    private String compileSdkVersion;
+    @NonNull private final String compileSdkVersion;
     private File ndkDirectory;
     @Nullable private NdkInfo ndkInfo;
     @Nullable private Revision revision;
 
-    public NdkHandler(@Nullable String ndkVersionFromDsl, @NonNull File projectDir) {
+    public NdkHandler(
+            @Nullable String ndkVersionFromDsl,
+            @NonNull String compileSdkVersion,
+            @NonNull File projectDir) {
         // TODO: Consume ndkVersionFromDsl here
         this.projectDir = projectDir;
+        this.compileSdkVersion = compileSdkVersion;
         relocateNdkFolder();
     }
 
@@ -126,10 +129,6 @@ public class NdkHandler {
         return ndkInfo.findLatestPlatformVersion(compileSdkVersion);
     }
 
-    public void setCompileSdkVersion(@NonNull String compileSdkVersion) {
-        this.compileSdkVersion = compileSdkVersion;
-    }
-
     @Nullable
     private static File findNdkDirectory(@NonNull File projectDir) {
         File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
@@ -174,13 +173,13 @@ public class NdkHandler {
     /**
      * Determine the location of the NDK directory.
      *
-     * The NDK directory can be set in the local.properties file, using the ANDROID_NDK_HOME
+     * <p>The NDK directory can be set in the local.properties file, using the ANDROID_NDK_HOME
      * environment variable or come bundled with the SDK.
      *
-     * Return null if NDK directory is not found.
+     * <p>Return null if NDK directory is not found.
      */
     @Nullable
-    public static File findNdkDirectory(@NonNull Properties properties, @NonNull File projectDir) {
+    private static File findNdkDirectory(@NonNull Properties properties, @NonNull File projectDir) {
         String ndkDirProp = properties.getProperty("ndk.dir");
         if (ndkDirProp != null) {
             return new File(ndkDirProp);

@@ -104,7 +104,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
@@ -158,8 +157,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     private Recorder threadRecorder;
 
     private boolean hasCreatedTasks = false;
-
-    private ExecutorService nativeJsonGenExecutor = null;
 
     BasePlugin(@NonNull ToolingModelBuilderRegistry registry) {
         ClasspathVerifier.checkClasspathSanity();
@@ -463,6 +460,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 new SdkComponentsOptions(
                         () -> getExtension().getCompileSdkVersion(),
                         () -> getExtension().getBuildToolsRevision(),
+                        () -> getExtension().getNdkVersion(),
                         factory,
                         projectOptions.get(BooleanOption.USE_ANDROID_X));
 
@@ -691,8 +689,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         checkState(extension.getBuildToolsRevision() != null,
                 "buildToolsVersion is not specified.");
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
-
-        globalScope.getNdkHandler().setCompileSdkVersion(extension.getCompileSdkVersion());
         extension
                 .getCompileOptions()
                 .setDefaultJavaVersion(

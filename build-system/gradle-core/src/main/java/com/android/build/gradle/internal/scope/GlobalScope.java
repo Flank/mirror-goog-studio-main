@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -62,7 +61,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private AndroidConfig extension;
     @NonNull private final SdkComponents sdkComponents;
-    @NonNull private NdkHandler ndkHandler;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final ProjectOptions projectOptions;
@@ -107,7 +105,6 @@ public class GlobalScope implements TransformGlobalScope {
 
     public void setExtension(@NonNull AndroidConfig extension) {
         this.extension = checkNotNull(extension);
-        ndkHandler = new NdkHandler(extension.getNdkVersion(), project.getRootDir());
     }
 
     @NonNull
@@ -146,11 +143,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public SdkComponents getSdkComponents() {
         return sdkComponents;
-    }
-
-    @NonNull
-    public NdkHandler getNdkHandler() {
-        return ndkHandler;
     }
 
     @NonNull

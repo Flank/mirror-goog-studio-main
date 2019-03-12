@@ -664,7 +664,7 @@ public class AndroidBuilder {
             @NonNull File outputDir,
             @NonNull List<String> defaultArgs,
             @NonNull Map<String, List<String>> scopedArgs,
-            @Nullable File nkdLocation,
+            @Nullable Supplier<File> ndkLocation,
             @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull WorkerExecutorFacade workers)
             throws IOException {
@@ -674,7 +674,7 @@ public class AndroidBuilder {
         Supplier<ShaderProcessor> processor =
                 () ->
                         new ShaderProcessor(
-                                nkdLocation,
+                                ndkLocation,
                                 sourceFolder,
                                 outputDir,
                                 defaultArgs,
