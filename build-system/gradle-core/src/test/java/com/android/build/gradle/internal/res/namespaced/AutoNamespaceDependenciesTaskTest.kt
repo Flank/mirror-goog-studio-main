@@ -133,6 +133,7 @@ class AutoNamespaceDependenciesTaskTest {
             outputResourcesDir = tempFolder.newFolder("outResources"))
 
         Truth.assertThat(log.warnings).isEmpty()
+        Truth.assertThat(log.infos).isEmpty()
 
         val namespacedJar = File(outputRewrittenClasses, "namespaced-libA-classes.jar")
         assertThat(namespacedJar).exists()
@@ -354,8 +355,9 @@ class AutoNamespaceDependenciesTaskTest {
             outputManifests = outputRewrittenManifests,
             outputResourcesDir = tempFolder.newFolder("outResources"))
 
-        // Verify warnings about overrides were printed.
-        Truth.assertThat(log.warnings).isNotEmpty()
+        // Verify warnings about overrides were printed, but only to info level.
+        Truth.assertThat(log.infos).isNotEmpty()
+        Truth.assertThat(log.warnings).isEmpty()
 
         // Verify that the namespaced classes.jar were generated for each package and collect them.
         val urls = ArrayList<URL>()

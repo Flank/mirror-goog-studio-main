@@ -74,7 +74,7 @@ fun symbol(type: String, name: String, maybeDefinition: Boolean = false): Symbol
 
 class MockLogger : FakeLogger() {
     val warnings = ArrayList<String>()
-    private val infos = ArrayList<String>()
+    val infos = ArrayList<String>()
 
     override fun warn(p0: String?) {
         warnings.add(p0!!)

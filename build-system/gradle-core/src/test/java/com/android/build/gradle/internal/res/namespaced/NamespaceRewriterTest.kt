@@ -158,13 +158,14 @@ class NamespaceRewriterTest {
         )
             .rewriteClass(testClass.toPath(), testClass.toPath())
 
-        assertThat(logger.warnings).hasSize(2)
-        assertThat(logger.warnings[0]).contains(
+        assertThat(logger.warnings).hasSize(0)
+        assertThat(logger.infos).hasSize(2)
+        assertThat(logger.infos[0]).contains(
             "In package com.example.mymodule multiple options found in its dependencies for " +
                     "resource string s1. Using com.example.mymodule, other available: " +
                     "com.example.libB"
         )
-        assertThat(logger.warnings[1]).contains(
+        assertThat(logger.infos[1]).contains(
             "In package com.example.mymodule multiple options found in its dependencies for " +
                     "resource string s2. Using com.example.dependency, other available: " +
                     "com.example.libA, com.example.libB"

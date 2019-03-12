@@ -791,7 +791,7 @@ class NamespaceRewriter(
         if (packages != null && !packages.isEmpty()) {
             // If we have found more than one fitting package, log a warning about which one we
             // chose (the closest one in the dependencies graph).
-            logger.warn(
+            logger.info(
                 "In package $localPackage multiple options found " +
                         "in its dependencies for resource $type $name. " +
                         "Using $result, other available: ${Joiner.on(", ").join(packages)}"
