@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.cxx.configure.GradleBuildLoggingEnviron
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -165,7 +164,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             // This covers cases where user has changed abiFilters or platform. We don't want
             // to leave stale results hanging around.
             List<String> abiNames = Lists.newArrayList();
-            for(Abi abi : NdkHandler.getAbiList()) {
+            for (Abi abi : Abi.values()) {
                 abiNames.add(abi.getName());
             }
             task.abiNames = abiNames;

@@ -17,25 +17,20 @@
 package com.android.build.gradle.internal.ndk;
 
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.core.Abi;
 import com.android.repository.Revision;
-import com.android.sdklib.AndroidVersion;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Properties;
 import org.gradle.api.logging.Logging;
 
@@ -45,9 +40,7 @@ import org.gradle.api.logging.Logging;
 public class NdkHandler {
     @NonNull private final File projectDir;
     @NonNull private final String compileSdkVersion;
-    private File ndkDirectory;
-    @Nullable private NdkInfo ndkInfo;
-    @Nullable private Revision revision;
+    @Nullable private NdkPlatform ndkPlatform;
 
     public NdkHandler(
             @Nullable String ndkVersionFromDsl,
@@ -56,12 +49,17 @@ public class NdkHandler {
         // TODO: Consume ndkVersionFromDsl here
         this.projectDir = projectDir;
         this.compileSdkVersion = compileSdkVersion;
-        relocateNdkFolder();
+        this.ndkPlatform = null;
     }
 
-    /** Attempts to search again for the Ndk directory. */
-    public void relocateNdkFolder() {
-        ndkDirectory = findNdkDirectory(projectDir);
+    @NonNull
+    public NdkPlatform getNdkPlatform() {
+        if (ndkPlatform != null) {
+            return ndkPlatform;
+        }
+        File ndkDirectory = findNdkDirectory(projectDir);
+        NdkInfo ndkInfo;
+        Revision revision;
 
         if (ndkDirectory == null || !ndkDirectory.exists()) {
             ndkInfo = null;
@@ -74,6 +72,13 @@ public class NdkHandler {
                 ndkInfo = new NdkR14Info(ndkDirectory);
             }
         }
+        ndkPlatform = new NdkPlatform(ndkDirectory, ndkInfo, revision, compileSdkVersion);
+        return ndkPlatform;
+    }
+
+    /** Schedule the NDK to be rediscovered the next time it's needed */
+    public void invalidateNdk() {
+        this.ndkPlatform = null;
     }
 
     private static Properties readProperties(File file) {
@@ -111,24 +116,6 @@ public class NdkHandler {
         }
     }
 
-
-    @Nullable
-    public Revision getRevision() {
-        return revision;
-    }
-
-    @Nullable
-    public String getPlatformVersion() {
-        assert compileSdkVersion != null;
-        if (ndkInfo == null) {
-            throw new RuntimeException(
-                    String.format(
-                            "No NDK available to locate compile SDK version %s",
-                            compileSdkVersion));
-        }
-        return ndkInfo.findLatestPlatformVersion(compileSdkVersion);
-    }
-
     @Nullable
     private static File findNdkDirectory(@NonNull File projectDir) {
         File localProperties = new File(projectDir, FN_LOCAL_PROPERTIES);
@@ -160,14 +147,15 @@ public class NdkHandler {
     }
 
     private static void invalidNdkWarning(String message, File ndkDir) {
-        Logging.getLogger(NdkHandler.class).warn(
-                "{}\n"
-                        + "If you are using NDK, verify the ndk.dir is set to a valid NDK "
-                        + "directory.  It is currently set to {}.\n"
-                        + "If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME "
-                        + "or local.properties to remove this warning.\n",
-                message,
-                ndkDir.getAbsolutePath());
+        Logging.getLogger(NdkHandler.class)
+                .warn(
+                        "{}\n"
+                                + "If you are using NDK, verify the ndkPlatform.dir is set to a valid NDK "
+                                + "directory.  It is currently set to {}.\n"
+                                + "If you are not using NDK, unset the NDK variable from ANDROID_NDK_HOME "
+                                + "or local.properties to remove this warning.\n",
+                        message,
+                        ndkDir.getAbsolutePath());
     }
 
     /**
@@ -199,103 +187,6 @@ public class NdkHandler {
                 return ndkBundle;
             }
         }
-
         return null;
-    }
-
-    /**
-     * Returns the directory of the NDK.
-     */
-    @Nullable
-    public File getNdkDirectory() {
-        return ndkDirectory;
-    }
-
-    /**
-     * Return true if NDK directory is configured.
-     */
-    public boolean isConfigured() {
-        return ndkDirectory != null && ndkDirectory.isDirectory();
-    }
-
-    /**
-     * Return true if compiledSdkVersion supports 64 bits ABI.
-     */
-    private boolean supports64Bits() {
-        if (getPlatformVersion() == null) {
-            return false;
-        }
-        String targetString = getPlatformVersion().replace("android-", "");
-        try {
-            return Integer.parseInt(targetString) >= 20;
-        } catch (NumberFormatException ignored) {
-            // "android-L" supports 64-bits.
-            return true;
-        }
-    }
-
-    /**
-     * Returns a list of all ABI.
-     */
-    @NonNull
-    public static Collection<Abi> getAbiList() {
-        return ImmutableList.copyOf(Abi.values());
-    }
-
-    /** Returns a list of default ABIs. */
-    @NonNull
-    public static Collection<Abi> getDefaultAbiList() {
-        return Abi.getDefaultValues();
-    }
-
-    /**
-     * Returns a list of 32-bits ABI.
-     */
-    @NonNull
-    private static Collection<Abi> getAbiList32() {
-        ImmutableList.Builder<Abi> builder = ImmutableList.builder();
-        for (Abi abi : Abi.values()) {
-            if (!abi.supports64Bits()) {
-                builder.add(abi);
-            }
-        }
-        return builder.build();
-    }
-
-    /**
-     * Returns a list of supported ABI.
-     */
-    @NonNull
-    public Collection<Abi> getSupportedAbis() {
-        if (ndkInfo != null) {
-            return supports64Bits() ? ndkInfo.getSupportedAbis() : ndkInfo.getSupported32BitsAbis();
-        }
-        return supports64Bits() ? getAbiList() : getAbiList32();
-    }
-
-    /** Returns a list of supported ABI. */
-    @NonNull
-    public Collection<Abi> getDefaultAbis() {
-        if (ndkInfo != null) {
-            return supports64Bits() ? ndkInfo.getDefaultAbis() : ndkInfo.getDefault32BitsAbis();
-        }
-        return supports64Bits() ? getAbiList() : getAbiList32();
-    }
-
-    /**
-     * Return the executable for removing debug symbols from a shared object.
-     */
-    @NonNull
-    public File getStripExecutable(Abi abi) {
-        checkNotNull(ndkInfo);
-        return ndkInfo.getStripExecutable(abi);
-    }
-
-    public int findSuitablePlatformVersion(
-            @NonNull String abi,
-            @NonNull String variantName,
-            @Nullable AndroidVersion androidVersion) {
-        checkNotNull(ndkInfo);
-        return ndkInfo.findSuitablePlatformVersion(abi, androidVersion);
     }
 }

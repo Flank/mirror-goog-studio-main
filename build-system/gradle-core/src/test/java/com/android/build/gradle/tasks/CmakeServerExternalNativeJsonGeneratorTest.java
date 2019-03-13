@@ -522,9 +522,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
     /** Returns a default CmakeServerExternalNativeJsonGenerator. */
     private CmakeServerExternalNativeJsonGenerator getCMakeServerGenerator() {
-        Mockito.when(ndkHandler.getRevision()).thenReturn(new Revision(15));
         Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
-        assert ndkHandler.getRevision() != null;
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
                         new File("."),
@@ -539,7 +537,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         jsonFolder,
                         debuggable,
                         abis,
-                        ndkHandler.getRevision(),
+                        new Revision(25),
                         nativeBuildConfigurationsJsons,
                         new File("./compiler-settings-cache"),
                         true);

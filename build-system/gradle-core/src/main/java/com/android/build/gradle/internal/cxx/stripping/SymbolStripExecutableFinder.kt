@@ -57,12 +57,12 @@ class SymbolStripExecutableFinder(private val stripExecutables: Map<Abi, File>) 
  * Construct a @SymbolStripExecutableFinder from and NdkHandler
  */
 fun createSymbolStripExecutableFinder(ndkHandler: NdkHandler): SymbolStripExecutableFinder {
-    if (!ndkHandler.isConfigured) {
+    if (!ndkHandler.ndkPlatform.isConfigured) {
         return SymbolStripExecutableFinder(mapOf())
     }
     val stripExecutables = mutableMapOf<Abi, File>()
-    for (abi in ndkHandler.supportedAbis) {
-        stripExecutables[abi] = ndkHandler.getStripExecutable(abi)
+    for (abi in ndkHandler.ndkPlatform.supportedAbis) {
+        stripExecutables[abi] = ndkHandler.ndkPlatform.ndkInfo!!.getStripExecutable(abi)
     }
     return SymbolStripExecutableFinder(stripExecutables)
 }

@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.util.Set;
@@ -38,7 +37,7 @@ public class AbiSplitOptions extends SplitOptions {
     @Override
     protected Set<String> getDefaultValues() {
         Set<String> values = Sets.newHashSet();
-        for (Abi abi : NdkHandler.getDefaultAbiList()) {
+        for (Abi abi : Abi.getDefaultValues()) {
             values.add(abi.getName());
         }
         return values;
@@ -47,7 +46,7 @@ public class AbiSplitOptions extends SplitOptions {
     @Override
     protected ImmutableSet<String> getAllowedValues() {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-        for (Abi abi : NdkHandler.getAbiList()) {
+        for (Abi abi : Abi.values()) {
             builder.add(abi.getName());
         }
         return builder.build();

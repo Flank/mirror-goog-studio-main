@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.ndk.NdkHandler
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -37,8 +36,7 @@ class AbiConfiguratorTest {
         ndkHandlerDefaultAbis: Collection<Abi> = ALL_ABI,
         externalNativeBuildAbiFilters: Set<String> = setOf(),
         ndkConfigAbiFilters: Set<String> = setOf(),
-        splitsFilterAbis: Set<String> = NdkHandler
-            .getDefaultAbiList()
+        splitsFilterAbis: Set<String> = Abi.getDefaultValues()
             .map { abi: Abi -> abi.getName() }
             .toSet(),
         ideBuildOnlyTargetAbi: Boolean = false,

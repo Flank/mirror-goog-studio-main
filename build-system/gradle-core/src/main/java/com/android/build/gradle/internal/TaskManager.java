@@ -80,7 +80,6 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -362,7 +361,7 @@ public abstract class TaskManager {
         final BaseVariantData variantData = scope.getVariantData();
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
-        for (Abi abi : NdkHandler.getAbiList()) {
+        for (Abi abi : Abi.values()) {
             scope.addNdkDebuggableLibraryFolders(abi,
                     new File(objFolder, "local/" + abi.getName()));
         }

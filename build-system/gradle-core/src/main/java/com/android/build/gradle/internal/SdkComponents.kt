@@ -179,7 +179,7 @@ open class SdkComponents(
     }
 
     fun getNdkFolder(): File? {
-        return ndkHandlerSupplier.get().ndkDirectory
+        return ndkHandlerSupplier.get().ndkPlatform.ndkDirectory
     }
 
     fun getCMakeExecutable(): File? {

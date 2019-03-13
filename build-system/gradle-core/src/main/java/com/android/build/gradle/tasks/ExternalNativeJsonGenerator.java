@@ -47,6 +47,8 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.ndk.NdkInfo;
+import com.android.build.gradle.internal.ndk.NdkPlatform;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -418,8 +420,8 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     /**
-     * Derived class implements this method to post-process build output. Ndk-build uses this to
-     * capture and analyze the compile and link commands that were written to stdout.
+     * Derived class implements this method to post-process build output. NdkPlatform-build uses
+     * this to capture and analyze the compile and link commands that were written to stdout.
      */
     abstract void processBuildOutput(
             @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig)
@@ -504,17 +506,19 @@ public abstract class ExternalNativeJsonGenerator {
         GlobalScope globalScope = scope.getGlobalScope();
         checkNotNull(globalScope.getSdkComponents().getSdkFolder(), "No Android SDK folder found");
         NdkHandler ndkHandler = globalScope.getSdkComponents().getNdkHandlerSupplier().get();
-        File ndkFolder = ndkHandler.getNdkDirectory();
-        if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
+
+        if (!ndkHandler.getNdkPlatform().isConfigured()) {
             globalScope.getSdkComponents().installNdk(ndkHandler);
-            ndkFolder = globalScope.getSdkComponents().getNdkFolder();
-            if (ndkFolder == null || !ndkFolder.exists() || !ndkFolder.isDirectory()) {
+            if (!ndkHandler.getNdkPlatform().isConfigured()) {
                 throw new InvalidUserDataException(
-                        String.format(
-                                "NDK not configured. %s\n" + "Download it with SDK manager.",
-                                ndkFolder == null ? "" : ndkFolder));
+                        "NDK not configured. Download it with SDK manager.");
             }
+
         }
+        NdkPlatform ndkPlatform = ndkHandler.getNdkPlatform();
+        Revision ndkRevision = ndkPlatform.getRevision();
+        File ndkFolder = ndkPlatform.getNdkDirectory();
+        NdkInfo ndkInfo = ndkPlatform.getNdkInfo();
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         GradleBuildVariant.Builder stats =
@@ -556,8 +560,8 @@ public abstract class ExternalNativeJsonGenerator {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         AbiConfigurator abiConfigurator =
                 new AbiConfigurator(
-                        ndkHandler.getSupportedAbis(),
-                        ndkHandler.getDefaultAbis(),
+                        ndkPlatform.getSupportedAbis(),
+                        ndkPlatform.getDefaultAbis(),
                         nativeBuildVariantConfig.externalNativeBuildAbiFilters,
                         nativeBuildVariantConfig.ndkAbiFilters,
                         splits.getAbiFilters(),
@@ -575,7 +579,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         // Set up per-abi configuration constants
         if (buildSystem == NativeBuildSystem.NDK_BUILD) {
-            // ndk-build create libraries in a "local" subfolder.
+            // ndkPlatform-build create libraries in a "local" subfolder.
             objFolder = new File(objFolder, "local");
         }
         List<JsonGenerationAbiConfiguration> abiConfigurations = Lists.newArrayList();
@@ -593,11 +597,8 @@ public abstract class ExternalNativeJsonGenerator {
                             externalNativeBuildFolder.getParentFile().getParentFile(),
                             objFolder,
                             buildSystem,
-                            ndkHandler.findSuitablePlatformVersion(
-                                    abi.getName(), variantData.getName(), version)));
+                            ndkInfo.findSuitablePlatformVersion(abi.getName(), version)));
         }
-
-        assert ndkHandler.getRevision() != null;
 
         // defaultProjectCacheFolder is the $PROJECT/.cxx before any remapping requested by the user
         File defaultProjectCacheFolder =
@@ -620,7 +621,7 @@ public abstract class ExternalNativeJsonGenerator {
                         makefile,
                         globalScope.getSdkComponents().getSdkFolder(),
                         trySymlinkNdk(
-                                globalScope.getSdkComponents().getNdkFolder(),
+                                ndkFolder,
                                 externalNativeBuildFolder,
                                 globalScope.getSdkComponents().getNdkSymlinkDirInLocalProp()),
                         soFolder,
@@ -628,7 +629,7 @@ public abstract class ExternalNativeJsonGenerator {
                         externalNativeBuildFolder,
                         variantConfig.getBuildType().isDebuggable(),
                         abiConfigurations,
-                        ndkHandler.getRevision(),
+                        ndkRevision,
                         expectedJsons,
                         cacheFolder,
                         globalScope

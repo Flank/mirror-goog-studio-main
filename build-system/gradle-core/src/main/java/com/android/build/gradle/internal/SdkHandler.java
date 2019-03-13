@@ -419,7 +419,7 @@ public class SdkHandler {
         } catch (LicenceNotAcceptedException | InstallFailedException e) {
             throw new RuntimeException(e);
         }
-        ndkHandler.relocateNdkFolder();
+        ndkHandler.invalidateNdk();
     }
 
     /** Installs CMake. */
