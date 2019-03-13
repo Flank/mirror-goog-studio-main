@@ -38,6 +38,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODU
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -1080,6 +1081,13 @@ public abstract class TaskManager {
 
             // create the task that creates the aapt output for the bundle.
             taskFactory.register(new LinkAndroidResForBundleTask.CreationAction(scope));
+
+            scope.getArtifacts()
+                    .appendArtifact(
+                            AnchorOutputType.ALL_CLASSES,
+                            project.files(
+                                    artifacts.getFinalProduct(
+                                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
         }
         artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
@@ -1632,6 +1640,29 @@ public abstract class TaskManager {
         variantScope.getTaskContainer().getAssembleTask().configure(task -> task.setGroup(null));
     }
 
+    protected void registerRClassTransformStream(@NonNull VariantScope variantScope) {
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
+            return;
+        }
+
+        FileCollection rClassJar =
+                project.files(
+                        variantScope
+                                .getArtifacts()
+                                .getFinalProduct(
+                                        InternalArtifactType
+                                                .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
+
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "compile-and-runtime-light-r-classes")
+                                .addContentTypes(TransformManager.CONTENT_CLASS)
+                                .addScope(QualifiedContent.Scope.PROJECT)
+                                .setFileCollection(rClassJar)
+                                .build());
+    }
+
     /** Creates the tasks to build android tests. */
     public void createAndroidTestVariantTasks(@NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
@@ -1668,6 +1699,8 @@ public abstract class TaskManager {
 
         // Add a task to generate resource source files
         createApkProcessResTask(variantScope);
+
+        registerRClassTransformStream(variantScope);
 
         // process java resources
         createProcessJavaResTask(variantScope);

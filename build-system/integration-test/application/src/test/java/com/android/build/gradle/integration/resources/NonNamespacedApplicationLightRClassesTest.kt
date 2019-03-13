@@ -21,12 +21,28 @@ import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
+@RunWith(Parameterized::class)
 class NonNamespacedApplicationLightRClassesTest {
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters(name = "generate_r_classes{0}")
+        fun data(): Iterable<Any> {
+            return listOf(true, false)
+        }
+    }
+
+    @JvmField
+    @Parameterized.Parameter
+    var generateSources: Boolean = false
+
     private val lib = MinimalSubProject.lib("com.example.lib")
         .appendToBuild(
             """
@@ -117,7 +133,8 @@ class NonNamespacedApplicationLightRClassesTest {
 
     @Test
     fun testResourcesCompiled() {
-        project.executor().run(":app:assembleDebug")
+        project.executor()
+            .with(BooleanOption.GENERATE_R_JAVA, generateSources).run(":app:assembleDebug")
 
         // Check library resources
         val libFiles = project.getSubproject("lib")
@@ -158,8 +175,33 @@ class NonNamespacedApplicationLightRClassesTest {
         // Application resources
         val appFiles = project.getSubproject("app")
 
-        // TODO: check that it does not exist when b/127956669 is fixed
         assertThat(
+            appFiles.getIntermediateFile(
+                    "res",
+                    "symbol-table-with-package",
+                    "debug",
+                    "package-aware-r.txt")).exists()
+
+        assertThat(
+            appFiles.getIntermediateFile(
+                    "res",
+                    "symbol-table-with-package",
+                    "debug",
+                    "package-aware-r.txt")).containsAllOf("lib_string", "app_string")
+
+        assertThat(
+            FileUtils.join(
+                appFiles.generatedDir,
+                "not_namespaced_r_class_sources",
+                "debug",
+                "processDebugResources",
+                "r",
+                "com",
+                "example",
+                "app",
+                "R.java")).doesNotExist()
+
+        val rJava =
             FileUtils.join(
                 appFiles.generatedDir,
                 "not_namespaced_r_class_sources",
@@ -168,19 +210,31 @@ class NonNamespacedApplicationLightRClassesTest {
                 "com",
                 "example",
                 "app",
-                "R.java")).exists()
+                "R.java")
+        if (generateSources) {
+            assertThat(rJava).exists()
+        } else {
+            assertThat(rJava).doesNotExist()
+        }
+
+        assertThat(
+            appFiles.getIntermediateFile(
+                "compile_and_runtime_not_namespaced_r_class_jar",
+                "debug",
+                "R.jar")).exists()
     }
 
     @Test
     fun testAndroidTestResourcesCompiled() {
-        project.executor().run(":app:assembleDebugAndroidTest")
+        project.executor()
+            .with(BooleanOption.GENERATE_R_JAVA, generateSources)
+            .run(":app:assembleDebugAndroidTest")
 
         // Application resources
         val appFiles = project.getSubproject("app")
 
-        // TODO: check that it does not exist when b/127956669 is fixed
         // app resources java
-        assertThat(
+        val appRJava =
             FileUtils.join(
                 appFiles.generatedDir,
                 "not_namespaced_r_class_sources",
@@ -189,11 +243,15 @@ class NonNamespacedApplicationLightRClassesTest {
                 "com",
                 "example",
                 "app",
-                "R.java")).exists()
+                "R.java")
+        if (generateSources) {
+            assertThat(appRJava).exists()
+        } else {
+            assertThat(appRJava).doesNotExist()
+        }
 
-        // TODO: check that it does not exist when b/127956669 is fixed
         // app androidTest resources java
-        assertThat(
+        val testRJava =
             FileUtils.join(
                 appFiles.generatedDir,
                 "not_namespaced_r_class_sources",
@@ -203,6 +261,17 @@ class NonNamespacedApplicationLightRClassesTest {
                 "example",
                 "app",
                 "test",
-                "R.java")).exists()
+                "R.java")
+        if (generateSources) {
+            assertThat(testRJava).exists()
+        } else {
+            assertThat(testRJava).doesNotExist()
+        }
+
+        assertThat(
+            appFiles.getIntermediateFile(
+                "compile_and_runtime_not_namespaced_r_class_jar",
+                "debugAndroidTest",
+                "R.jar")).exists()
     }
 }

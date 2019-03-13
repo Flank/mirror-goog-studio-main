@@ -121,6 +121,9 @@ public enum InternalArtifactType implements ArtifactType {
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
     LEGACY_MULTIDEX_MAIN_DEX_LIST(Kind.FILE),
 
+    // The R class jar generated from R.txt for application and tests
+    COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR(Kind.FILE),
+
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
     RES_COMPILED_FLAT_FILES,

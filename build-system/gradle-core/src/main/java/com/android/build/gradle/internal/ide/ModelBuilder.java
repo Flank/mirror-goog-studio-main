@@ -736,15 +736,24 @@ public class ModelBuilder<Extension extends AndroidConfig>
                             .getAsFile());
         }
         // The separately compile R class, if applicable.
-        VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-        if (testedScope
-                .getArtifacts()
-                .hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+        BuildArtifactsHolder testedArtifacts =
+                Objects.requireNonNull(scope.getTestedVariantData()).getScope().getArtifacts();
+        if (testedArtifacts.hasFinalProduct(
+                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
             additionalTestClasses.add(
-                    testedScope
-                            .getArtifacts()
+                    testedArtifacts
                             .getFinalProduct(
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
+                            .get()
+                            .getAsFile());
+        }
+        if (testedArtifacts.hasFinalProduct(
+                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)) {
+            additionalTestClasses.add(
+                    testedArtifacts
+                            .getFinalProduct(
+                                    InternalArtifactType
+                                            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
                             .get()
                             .getAsFile());
         }

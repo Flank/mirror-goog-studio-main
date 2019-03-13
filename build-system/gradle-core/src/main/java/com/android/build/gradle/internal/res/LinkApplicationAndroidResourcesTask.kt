@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_RES_BASE
+import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.BuildableArtifact
@@ -80,6 +81,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
@@ -124,6 +126,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     @get:org.gradle.api.tasks.OutputFile
     @get:Optional
     var proguardOutputFile: File? = null
+
+    @get:Optional
+    @get:OutputFile
+    abstract val rClassOutputJar: RegularFileProperty
 
     @get:org.gradle.api.tasks.OutputFile
     @get:Optional
@@ -291,7 +297,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     true,
                     aapt2ServiceKey,
                     compiledRemoteResourcesDirs,
-                    this
+                    this,
+                    rClassOutputJar.orNull?.asFile
                 )
             )
 
@@ -589,11 +596,22 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                taskProvider,
-                taskProvider.map { it.sourceOutputDir },
-                SdkConstants.FD_RES_CLASS)
+            variantScope
+                .artifacts
+                .producesFile(
+                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    taskProvider.map { it.rClassOutputJar },
+                    FN_R_CLASS_JAR)
+
+            if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
+                variantScope.artifacts.producesDir(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    taskProvider.map { it.sourceOutputDir },
+                    SdkConstants.FD_RES_CLASS)
+            }
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
@@ -825,7 +843,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                             processResources(
                                 aaptDaemon,
                                 configBuilder.build(),
-                                null,
+                                params.rClassOutputJar,
                                 LoggerWrapper(logger)
                             )
                         }
@@ -880,7 +898,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2ServiceKey?,
         val compiledRemoteResourcesDirs: List<File>,
-        task: LinkApplicationAndroidResourcesTask
+        task: LinkApplicationAndroidResourcesTask,
+        val rClassOutputJar: File? = null
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val multiOutputPolicySplitList: Set<String> = splitList.getSplits(task.multiOutputPolicy)
@@ -935,7 +954,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     }
 
     override fun getSourceOutputDir(): File? {
-        return sourceOutputDir.get().asFile
+        return sourceOutputDir.orNull?.asFile
     }
 
     @org.gradle.api.tasks.OutputFile

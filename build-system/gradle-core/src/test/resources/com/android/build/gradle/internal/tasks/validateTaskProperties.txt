@@ -83,8 +83,6 @@ Warning: Task type 'com.android.build.gradle.internal.tasks.structureplugin.Gath
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'dex' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'mappingFileSrc' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'mergedManifests' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'resourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'sourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'uncompressedResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.BinaryFileProviderTask': property 'artifact' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.BundleInstantApp': property 'apkDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

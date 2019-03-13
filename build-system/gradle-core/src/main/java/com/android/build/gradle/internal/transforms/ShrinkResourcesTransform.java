@@ -65,6 +65,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -99,7 +100,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull private final Logger logger;
 
-    @NonNull private final Provider<Directory> sourceDir;
+    @NonNull private final Provider<RegularFile> lightRClasses;
     @NonNull private final BuildableArtifact resourceDir;
     @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final Provider<Directory> mergedManifests;
@@ -125,8 +126,11 @@ public class ShrinkResourcesTransform extends Transform {
         this.logger = logger;
 
         BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-        this.sourceDir =
-                artifacts.getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+
+        this.lightRClasses =
+                artifacts.getFinalProduct(
+                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+
         this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
@@ -184,7 +188,7 @@ public class ShrinkResourcesTransform extends Transform {
         Collection<SecondaryFile> secondaryFiles = Lists.newLinkedList();
 
         // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-        secondaryFiles.add(SecondaryFile.nonIncremental(sourceDir.get().getAsFile()));
+        secondaryFiles.add(SecondaryFile.nonIncremental(lightRClasses.get().getAsFile()));
         secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir));
 
         if (mappingFileSrc != null) {
@@ -312,7 +316,7 @@ public class ShrinkResourcesTransform extends Transform {
             // Analyze resources and usages and strip out unused
             ResourceUsageAnalyzer analyzer =
                     new ResourceUsageAnalyzer(
-                            params.sourceDir,
+                            params.lightRClasses,
                             params.classes,
                             params.mergedManifest.getOutputFile(),
                             params.mappingFile,
@@ -387,7 +391,7 @@ public class ShrinkResourcesTransform extends Transform {
         @NonNull private final List<File> classes;
         @Nullable private final File mappingFile;
         private final String buildTypeName;
-        private final File sourceDir;
+        private final File lightRClasses;
         private final File resourceDir;
         private final boolean isInfoLoggingEnabled;
         private final boolean isDebugLoggingEnabled;
@@ -411,7 +415,8 @@ public class ShrinkResourcesTransform extends Transform {
                             : null;
             buildTypeName =
                     transform.variantData.getVariantConfiguration().getBuildType().getName();
-            sourceDir = transform.sourceDir.get().getAsFile();
+
+            lightRClasses = transform.lightRClasses.get().getAsFile();
             resourceDir = BuildableArtifactUtil.singleFile(transform.resourceDir);
             isInfoLoggingEnabled = transform.logger.isEnabled(LogLevel.INFO);
             isDebugLoggingEnabled = transform.logger.isEnabled(LogLevel.DEBUG);

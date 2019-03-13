@@ -196,16 +196,16 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             // 4. The separately compile R class, if applicable.
             VariantScope testedScope =
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
-            if (testedScope
-                    .getArtifacts()
-                    .hasFinalProduct(
-                            InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
+            if (testedScope.getType().isAar()) {
                 collection.from(
-                        testedScope
-                                .getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType
-                                                .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
+                        testedArtifacts.getFinalProduct(
+                                InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
+            } else if (testedScope.getType().isApk()) {
+                collection.from(
+                        testedArtifacts.getFinalProduct(
+                                InternalArtifactType
+                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
             }
 
             // 5. Any additional or requested optional libraries

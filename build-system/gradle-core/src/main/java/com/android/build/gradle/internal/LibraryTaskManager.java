@@ -151,7 +151,7 @@ public class LibraryTaskManager extends TaskManager {
                 && !variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
             createVerifyLibraryResTask(variantScope);
         }
-        registerRClassTransformStream(variantScope);
+        registerLibraryRClassTransformStream(variantScope);
 
         // process java resources only, the merge is setup after
         // the task to generate intermediate jars for project to project publishing.
@@ -362,7 +362,7 @@ public class LibraryTaskManager extends TaskManager {
         createBundleTask(variantScope);
     }
 
-    private void registerRClassTransformStream(@NonNull VariantScope variantScope) {
+    private void registerLibraryRClassTransformStream(@NonNull VariantScope variantScope) {
         InternalArtifactType rClassJar;
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {

@@ -29,7 +29,9 @@ import com.android.testutils.truth.FileSubject
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFile
 import org.gradle.api.internal.provider.Providers
+import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.After
 import org.junit.Before
@@ -52,6 +54,7 @@ class BundleAllClassesTest {
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer
+    @Mock private lateinit var rClasses: Provider<RegularFile>
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -88,6 +91,8 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APP_CLASSES,
             task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
+        Mockito.`when`(artifacts.getFinalProduct<RegularFile>(InternalArtifactType
+            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(rClasses)
 
         val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)

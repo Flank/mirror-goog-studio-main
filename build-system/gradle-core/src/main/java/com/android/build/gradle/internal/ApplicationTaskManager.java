@@ -149,6 +149,8 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a task to process the Android Resources and generate source files
         createApkProcessResTask(variantScope);
 
+        registerRClassTransformStream(variantScope);
+
         // Add a task to process the java resources
         createProcessJavaResTask(variantScope);
 

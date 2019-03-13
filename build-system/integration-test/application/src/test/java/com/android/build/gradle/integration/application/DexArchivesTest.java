@@ -17,12 +17,10 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.GradleTaskSubject.assertThat;
-import static com.android.build.gradle.integration.common.truth.SubStreamSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.Format;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -35,6 +33,7 @@ import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
+import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
@@ -42,9 +41,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -77,14 +81,14 @@ public class DexArchivesTest {
     public void testInitialBuild() throws Exception {
         runTask("assembleDebug");
 
-        checkIntermediaryDexArchives(getInitialDexEntries());
+        checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
 
         File merged = project.getIntermediateFile("dex/debug/mergeDexDebug/out/");
         assertThat(merged).isDirectory();
         assertThat(merged.list()).hasLength(1);
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
-        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getInitialDexClasses());
+        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
     }
 
     @Test
@@ -103,7 +107,7 @@ public class DexArchivesTest {
                 .isGreaterThan(created);
 
         Dex mainDex = project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get();
-        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getInitialDexClasses());
+        MoreTruth.assertThat(mainDex).containsExactlyClassesIn(getApkDexClasses());
         MoreTruth.assertThat(mainDex)
                 .containsClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
@@ -111,7 +115,7 @@ public class DexArchivesTest {
     }
 
     @Test
-    public void testAddingFile() throws IOException, InterruptedException {
+    public void testAddingFile() throws Exception {
         runTask("assembleDebug");
         long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
@@ -125,17 +129,17 @@ public class DexArchivesTest {
         assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
 
         List<String> dexEntries = Lists.newArrayList("NewClass.dex");
-        dexEntries.addAll(getInitialDexEntries());
-        checkIntermediaryDexArchives(dexEntries);
+        dexEntries.addAll(getInitialFolderDexEntries());
+        checkIntermediaryDexArchives(dexEntries, getInitialJarDexClasses());
 
         List<String> dexClasses = Lists.newArrayList("Lcom/example/helloworld/NewClass;");
-        dexClasses.addAll(getInitialDexClasses());
+        dexClasses.addAll(getApkDexClasses());
         MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
                 .containsExactlyClassesIn(dexClasses);
     }
 
     @Test
-    public void testRemovingFile() throws IOException, InterruptedException {
+    public void testRemovingFile() throws Exception {
         String newClass = "package com.example.helloworld;\n" + "public class ToRemove {}";
         File srcToRemove =
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/ToRemove.java");
@@ -147,9 +151,9 @@ public class DexArchivesTest {
         srcToRemove.delete();
         runTask("assembleDebug");
 
-        checkIntermediaryDexArchives(getInitialDexEntries());
+        checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
         MoreTruth.assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getMainDexFile().get())
-                .containsExactlyClassesIn(getInitialDexClasses());
+                .containsExactlyClassesIn(getApkDexClasses());
     }
 
     @Test
@@ -180,35 +184,60 @@ public class DexArchivesTest {
         project.executor().run("assembleDebug");
     }
 
-    private void checkIntermediaryDexArchives(@NonNull Collection<String> dexEntryNames) {
+    private static Stream<String> getDexClasses(Path path) {
+        try {
+            return new Dex(path).getClasses().keySet().stream();
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    private void checkIntermediaryDexArchives(
+            @NonNull Collection<String> folderDexEntryNames,
+            @NonNull Collection<String> jarsDexClasses)
+            throws Exception {
         TransformOutputContent content = new TransformOutputContent(builderDir());
-        assertThat(content).hasSize(1);
 
-        SubStream stream = content.getSingleStream();
-        assertThat(stream).hasFormat(Format.DIRECTORY);
-        // some checks on stream?
-
-        ImmutableList<String> produced =
-                FileUtils.getAllFiles(content.getLocation(stream))
-                        .transform(File::getName)
-                        .toList();
-
-        assertThat(produced).containsExactlyElementsIn(dexEntryNames);
+        ArrayList<String> producedJarsDexClasses = new ArrayList<>(4);
+        for (SubStream stream : content) {
+            switch (stream.getFormat()) {
+                case DIRECTORY:
+                    ImmutableList<String> produced =
+                            FileUtils.getAllFiles(content.getLocation(stream))
+                                    .transform(File::getName)
+                                    .toList();
+                    assertThat(produced).containsExactlyElementsIn(folderDexEntryNames);
+                    break;
+                case JAR:
+                    try (Zip zip = new Zip(content.getLocation(stream))) {
+                        producedJarsDexClasses.addAll(
+                                zip.getEntries()
+                                        .stream()
+                                        .flatMap(DexArchivesTest::getDexClasses)
+                                        .collect(Collectors.toList()));
+                    }
+                    break;
+            }
+        }
+        assertThat(producedJarsDexClasses).containsExactlyElementsIn(jarsDexClasses);
     }
 
     @NonNull
-    private List<String> getInitialDexEntries() {
+    private List<String> getInitialFolderDexEntries() {
+        return Lists.newArrayList("BuildConfig.dex", "HelloWorld.dex");
+    }
+
+    @NonNull
+    private List<String> getInitialJarDexClasses() {
         return Lists.newArrayList(
-                "BuildConfig.dex",
-                "HelloWorld.dex",
-                "R.dex",
-                "R$id.dex",
-                "R$layout.dex",
-                "R$string.dex");
+                "Lcom/example/helloworld/R;",
+                "Lcom/example/helloworld/R$id;",
+                "Lcom/example/helloworld/R$layout;",
+                "Lcom/example/helloworld/R$string;");
     }
 
     @NonNull
-    private List<String> getInitialDexClasses() {
+    private List<String> getApkDexClasses() {
         return Lists.newArrayList(
                 "Lcom/example/helloworld/BuildConfig;",
                 "Lcom/example/helloworld/HelloWorld;",

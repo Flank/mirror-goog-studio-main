@@ -108,7 +108,11 @@ public class UnitTestingModelTest {
                             project.file(
                                     "app/build/tmp/kotlin-classes/"
                                             + variant.getName()
-                                            + "UnitTest"));
+                                            + "UnitTest"),
+                            project.file(
+                                    "app/build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/"
+                                            + variant.getName()
+                                            + "/R.jar"));
         }
 
         SourceProvider sourceProvider =

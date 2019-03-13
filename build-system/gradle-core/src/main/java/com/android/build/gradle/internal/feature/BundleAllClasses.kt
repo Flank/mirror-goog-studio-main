@@ -144,6 +144,18 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
                         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+            } else {
+                // This is actually thisRClassClasses and dependencyRClassClasses altogether. But
+                // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
+                // put it to dependencyRClassClasses and it will be processed properly.
+                task.dependencyRClassClasses =
+                    variantScope.globalScope.project.files(
+                        variantScope
+                            .artifacts
+                            .getFinalProduct<RegularFile>(
+                                InternalArtifactType
+                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR))
+
             }
         }
     }

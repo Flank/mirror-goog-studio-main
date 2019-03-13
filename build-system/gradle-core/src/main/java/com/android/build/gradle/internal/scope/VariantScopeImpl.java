@@ -625,6 +625,7 @@ public class VariantScopeImpl implements VariantScope {
         mainCollection =
                 mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
 
+        BaseVariantData tested = getTestedVariantData();
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
             Provider<FileSystemLocation> namespacedRClassJar =
                     artifacts.getFinalProduct(
@@ -658,7 +659,6 @@ public class VariantScopeImpl implements VariantScope {
                 mainCollection = mainCollection.plus(namespacedRClasses);
             }
 
-            BaseVariantData tested = getTestedVariantData();
             if (tested != null) {
                 mainCollection =
                         getProject()
@@ -672,26 +672,35 @@ public class VariantScopeImpl implements VariantScope {
                                                 .get());
             }
         } else {
-            if (artifacts.hasFinalProduct(
-                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            if (getType().isAar()) {
                 Provider<FileSystemLocation> rJar =
                         artifacts.getFinalProduct(
                                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = getProject().files(mainCollection, rJar);
-            }
-            BaseVariantData tested = getTestedVariantData();
-            if (tested != null
-                    && tested.getScope()
-                            .getArtifacts()
-                            .hasFinalProduct(
-                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            } else if (getType().isApk()) {
                 Provider<FileSystemLocation> rJar =
-                        tested.getScope()
-                                .getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType
-                                                .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                        artifacts.getFinalProduct(
+                                InternalArtifactType
+                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = getProject().files(mainCollection, rJar);
+            }
+
+            if (tested != null) {
+                VariantScope testedScope = tested.getScope();
+                BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
+
+                if (testedScope.getType().isAar()) {
+                    Provider<FileSystemLocation> rJar =
+                            testedArtifacts.getFinalProduct(
+                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                    mainCollection = getProject().files(mainCollection, rJar);
+                } else if (testedScope.getType().isApk()) {
+                    Provider<FileSystemLocation> rJar =
+                            testedArtifacts.getFinalProduct(
+                                    InternalArtifactType
+                                            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+                    mainCollection = getProject().files(mainCollection, rJar);
+                }
             }
         }
 

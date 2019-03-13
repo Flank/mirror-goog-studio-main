@@ -27,14 +27,14 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.utils.FileUtils
-import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -59,9 +59,11 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         private set
 
     @get:InputFiles
-    abstract val sourceDir: DirectoryProperty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val lightRClasses: RegularFileProperty
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var resourceDir: BuildableArtifact
         private set
 
@@ -97,10 +99,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
 
-
         // Analyze resources and usages and strip out unused
         val analyzer = ResourceUsageAnalyzer(
-            sourceDir.get().asFile,
+            lightRClasses.get().asFile,
             classes,
             manifestFile,
             mappingFile,
@@ -185,8 +186,8 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             task.dex = variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
 
             variantScope.artifacts.setTaskInputToFinalProduct(
-                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                task.sourceDir
+                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                task.lightRClasses
             )
             task.resourceDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES

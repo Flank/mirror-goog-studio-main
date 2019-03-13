@@ -580,16 +580,6 @@ public abstract class BaseVariantData {
                         ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
             }
 
-            // then all the generated src folders.
-            if (scope.getArtifacts()
-                    .hasFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
-                Provider<Directory> rClassSource =
-                        scope.getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
-                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
-            }
-
             // for the other, there's no duplicate so no issue.
             if (taskContainer.getGenerateBuildConfigTask() != null) {
                 sourceSets.add(
@@ -637,22 +627,6 @@ public abstract class BaseVariantData {
         }
 
         return defaultJavaSources;
-    }
-
-    @NonNull
-    public List<Provider<? extends FileSystemLocation>> getGeneratedSources() {
-        ImmutableList.Builder<Provider<? extends FileSystemLocation>> listBuilder =
-                ImmutableList.builder();
-
-        // then all the generated src folders.
-        if (scope.getArtifacts()
-                .hasFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
-            Provider<Directory> rClassSource =
-                    scope.getArtifacts()
-                            .getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
-            listBuilder.add(rClassSource);
-        }
-        return listBuilder.build();
     }
 
     /**

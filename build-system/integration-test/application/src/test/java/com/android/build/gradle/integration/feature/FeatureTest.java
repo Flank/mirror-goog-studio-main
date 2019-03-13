@@ -20,6 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
+import static java.nio.file.Files.readAllBytes;
+import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
+import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
 
 import com.android.SdkConstants;
 import com.android.build.OutputFile;
@@ -32,16 +35,20 @@ import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.VariantBuildOutput;
+import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Collection;
@@ -50,9 +57,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Opcodes;
 
 /** Test a simple project with features with a library dependency. */
+@RunWith(Parameterized.class)
 public class FeatureTest {
+    @Parameterized.Parameters
+    public static Iterable<? extends Object> data() {
+        return ImmutableList.of(true, false);
+    }
+
+    @Parameterized.Parameter public Boolean generateSources;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -135,7 +156,9 @@ public class FeatureTest {
 
 
         // Build all the things.
-        project.executor().run("clean", "assemble");
+        project.executor()
+                .with(BooleanOption.GENERATE_R_JAVA, generateSources)
+                .run("clean", "assemble");
 
         // check the base feature declared the list of features and their associated IDs.
         GradleTestProject baseProject = project.getSubproject(":baseFeature");
@@ -150,7 +173,6 @@ public class FeatureTest {
         assertThat(packageIds).isNotNull();
         assertThat(packageIds.getResOffsetFor(":feature")).isEqualTo(expectedFeatureId);
 
-        // Check the R.java file builds with the right IDs.
         File featureResFile =
                 FileUtils.join(
                         ArtifactTypeUtil.getOutputDir(
@@ -164,12 +186,45 @@ public class FeatureTest {
                         "multiproject",
                         "feature",
                         "R.java");
-        assertThat(featureResFile).isFile();
-        // check the feature ID in hexadecimal format.
-        assertThat(featureResFile)
-                .containsAllOf(
-                        "public static final int feature_value="
-                                + String.format("0x%02x", expectedFeatureId));
+        if (generateSources) {
+            assertThat(featureResFile).exists();
+        } else {
+            assertThat(featureResFile).doesNotExist();
+        }
+
+        File rJar =
+                featureProject.getIntermediateFile(
+                        "compile_and_runtime_not_namespaced_r_class_jar", "debugFeature", "R.jar");
+        assertThat(rJar).exists();
+
+        try (ZipFileSubject zipFile = assertThatZip(rJar)) {
+            zipFile.contains("com/example/android/multiproject/feature/R$string.class");
+        }
+        try (Zip zip = new Zip(rJar)) {
+            byte[] classBytes =
+                    readAllBytes(
+                            zip.getEntry(
+                                    "com/example/android/multiproject/feature/R$string.class"));
+            ClassReader classReader = new ClassReader(classBytes);
+            Map<String, Object> fieldsMap = Maps.newHashMap();
+            ClassVisitor fieldVisitor =
+                    new ClassVisitor(Opcodes.ASM5) {
+                        @Override
+                        public FieldVisitor visitField(
+                                int access,
+                                String name,
+                                String desc,
+                                String signature,
+                                Object value) {
+                            fieldsMap.put(name, value);
+                            return null;
+                        }
+                    };
+            classReader.accept(fieldVisitor, SKIP_DEBUG | SKIP_FRAMES);
+            assertThat(fieldsMap).containsKey("feature_value");
+            int actualId = (Integer) fieldsMap.get("feature_value");
+            assertThat(actualId & 0xFF000000).isEqualTo(expectedFeatureId << 24);
+        }
     }
 
     @Test

@@ -2,26 +2,30 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 
 /** Check resources in androidTest are available in the generated R.java. */
 public class AndroidTestResourcesTest {
@@ -137,24 +141,44 @@ public class AndroidTestResourcesTest {
 
     private static boolean checkLayoutInR(
             GradleTestProject fixture, final int layout, final int textView) throws IOException {
-        File rFile =
-                FileUtils.join(
-                        ArtifactTypeUtil.getOutputDir(
-                                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                                new File(fixture.getTestDir(), "build")),
-                        "debugAndroidTest",
-                        SdkConstants.FD_RES_CLASS,
-                        "com",
-                        "example",
-                        "helloworld",
-                        "test",
-                        "R.java");
-        Assert.assertTrue("Should have generated R file", rFile.exists());
-        List<String> lines = Files.readAllLines(rFile.toPath(), Charsets.UTF_8);
-        String rFileContents = lines.stream().collect(Collectors.joining(System.lineSeparator()));
 
-        return (rFileContents.contains("test_layout_" + String.valueOf(layout))
-                && rFileContents.contains("test_layout_" + String.valueOf(textView) + "_textview"));
+        File rJar =
+                fixture.getIntermediateFile(
+                        "compile_and_runtime_not_namespaced_r_class_jar",
+                        "debugAndroidTest",
+                        "R.jar");
+
+        Assert.assertTrue("Should have generated R.jar file", rJar.exists());
+
+        try (ZipFile zipFile = new ZipFile(rJar)) {
+            ZipEntry layoutEntry = zipFile.getEntry("com/example/helloworld/test/R$layout.class");
+            assertThat(layoutEntry).named("R$layout.class entry").isNotNull();
+            ClassReader layoutClassReader = new ClassReader(zipFile.getInputStream(layoutEntry));
+            ClassNode layoutClassNode = new ClassNode(Opcodes.ASM5);
+            layoutClassReader.accept(layoutClassNode, 0);
+
+            Set<String> layoutFieldNames =
+                    ((List<FieldNode>) layoutClassNode.fields)
+                            .stream()
+                            .map(f -> f.name)
+                            .collect(Collectors.toSet());
+
+            ZipEntry idEntry = zipFile.getEntry("com/example/helloworld/test/R$id.class");
+            assertThat(idEntry).named("R$id.class entry").isNotNull();
+            ClassReader idClassReader = new ClassReader(zipFile.getInputStream(idEntry));
+            ClassNode idClassNode = new ClassNode(Opcodes.ASM5);
+            idClassReader.accept(idClassNode, 0);
+
+            Set<String> idFieldNames =
+                    ((List<FieldNode>) idClassNode.fields)
+                            .stream()
+                            .map(f -> f.name)
+                            .collect(Collectors.toSet());
+
+            return layoutFieldNames.contains("test_layout_" + String.valueOf(layout))
+                    && idFieldNames.contains(
+                            "test_layout_" + String.valueOf(textView) + "_textview");
+        }
     }
 
     private static void setUpProject(GradleTestProject project) throws IOException {

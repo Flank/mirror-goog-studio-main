@@ -112,6 +112,7 @@ enum class BooleanOption(
     ENABLE_UNIT_TEST_BINARY_RESOURCES("android.enableUnitTestBinaryResources", true, Option.Status.STABLE),
     ENABLE_DUPLICATE_CLASSES_CHECK("android.enableDuplicateClassesCheck", true),
     ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM("android.enableDexingArtifactTransform.desugaring", true),
+    GENERATE_R_JAVA("android.generateRJava", false),
 
     // ---------------
     // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path

@@ -105,7 +105,7 @@ fun processResources(
         )
 
         val finalIds = aaptConfig.useFinalIds
-        if (rJar != null) { // not yet used, will be used in non-namespaced case
+        if (rJar != null) { // non-namespaced case
             // replace the default values from the dependency table with the allocated values
             // from the main table
             depSymbolTables = depSymbolTables.asSequence().map { t -> t.withValuesFrom(mainSymbols) }.toSet()
