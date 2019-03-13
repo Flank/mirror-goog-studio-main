@@ -142,7 +142,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 facade,
                 aapt2ServiceKey,
                 inputDirectory.singleFile(),
-                errorFormatMode
+                errorFormatMode,
+                mergeBlameFolder
             )
             val config = getAaptPackageConfig(compiledDirectory, manifestFile)
             val params = Aapt2ProcessResourcesRunnable.Params(
@@ -233,7 +234,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             workerExecutor: WorkerExecutorFacade,
             aapt2ServiceKey: Aapt2ServiceKey,
             mergedResDirectory: File,
-            errorFormatMode: SyncOptions.ErrorFormatMode
+            errorFormatMode: SyncOptions.ErrorFormatMode,
+            mergeBlameFolder: File
         ) {
 
             for ((key, value) in inputs) {
@@ -247,11 +249,13 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                         // remove the corresponding file.
                         try {
                             val request = CompileResourceRequest(
-                                    key,
-                                    outDirectory,
-                                    key.parent,
-                                    false /* pseudo-localize */,
-                                    false /* crunch PNGs */)
+                                key,
+                                outDirectory,
+                                key.parent,
+                                isPseudoLocalize = false,
+                                isPngCrunching = false,
+                                mergeBlameFolder = mergeBlameFolder
+                            )
                             workerExecutor.submit(
                                 Aapt2CompileRunnable::class.java,
                                 Aapt2CompileRunnable.Params(

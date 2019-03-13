@@ -23,14 +23,20 @@ import java.io.Serializable
 
 /** A request for Aapt2.  */
 class CompileResourceRequest @JvmOverloads constructor(
-        val inputFile: File,
-        val outputDirectory: File,
-        val inputDirectoryName: String = inputFile.parentFile.name,
-        val isPseudoLocalize: Boolean = false,
-        val isPngCrunching: Boolean = true,
-        /** The map of where values came from, so errors are reported correctly. */
-        val blameMap: Map<SourcePosition, SourceFilePosition> = mapOf(),
-        /** The original source file. For data binding, so errors are reported correctly */
-        val originalInputFile: File = inputFile,
-        val partialRFile: File? = null
+    val inputFile: File,
+    val outputDirectory: File,
+    val inputDirectoryName: String = inputFile.parentFile.name,
+    val isPseudoLocalize: Boolean = false,
+    val isPngCrunching: Boolean = true,
+    /** The map of where values came from, so errors are reported correctly. */
+    val blameMap: Map<SourcePosition, SourceFilePosition> = mapOf(),
+    /** The original source file. For data binding, so errors are reported correctly */
+    val originalInputFile: File = inputFile,
+    val partialRFile: File? = null,
+    /**
+     * The folder containing blame logs of where values came from, so errors are reported correctly
+     * This should be used in case the folder contents aren't already loaded in memory, otherwise
+     * use [blameMap]
+     */
+    val mergeBlameFolder: File? = null
 ) : Serializable

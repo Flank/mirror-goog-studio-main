@@ -86,7 +86,8 @@ class VerifyLibraryResourcesTaskTest {
             Facade,
             mock(Aapt2ServiceKey::class.java),
             mergedDir,
-            SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+            temporaryFolder.newFolder()
         )
 
         val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))
@@ -121,7 +122,8 @@ class VerifyLibraryResourcesTaskTest {
             Facade,
             mock(Aapt2ServiceKey::class.java),
             mergedDir,
-            SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+            temporaryFolder.newFolder()
         )
 
         val fileOut = Facade.compileOutputFor(CompileResourceRequest(file, outputDir, "values"))

@@ -54,6 +54,13 @@ fun rewriteCompileException(
         }
     }
     if (request.blameMap.isEmpty()) {
+        if (request.mergeBlameFolder != null) {
+            val mergingLog = MergingLog(request.mergeBlameFolder!!)
+            return rewriteException(e, errorFormatMode, true, logger) {
+                mergingLog.find(it)
+            }
+        }
+
         val originalException =
             if (request.inputFile == request.originalInputFile) {
                 e
