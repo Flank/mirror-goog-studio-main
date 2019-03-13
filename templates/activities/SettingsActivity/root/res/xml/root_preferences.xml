@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen
+<PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
@@ -51,4 +51,4 @@
 
     </PreferenceCategory>
 
-</androidx.preference.PreferenceScreen>
+</PreferenceScreen>

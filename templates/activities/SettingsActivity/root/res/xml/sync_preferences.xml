@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen
+<PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <SwitchPreferenceCompat
@@ -28,4 +28,4 @@
         app:summaryOff="@string/attachment_summary_off"
         app:dependency="sync"/>
 
-</androidx.preference.PreferenceScreen>
+</PreferenceScreen>

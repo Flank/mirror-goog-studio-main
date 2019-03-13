@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen
+<PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
@@ -29,4 +29,4 @@
         app:icon="@drawable/sync"
         app:fragment="${packageName}.${activityClass}$SyncFragment"/>
 
-</androidx.preference.PreferenceScreen>
+</PreferenceScreen>

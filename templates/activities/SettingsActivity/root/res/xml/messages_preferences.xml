@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.preference.PreferenceScreen
+<PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <EditTextPreference
@@ -30,4 +30,4 @@
         app:defaultValue="reply"
         app:useSimpleSummaryProvider="true"/>
 
-</androidx.preference.PreferenceScreen>
+</PreferenceScreen>
