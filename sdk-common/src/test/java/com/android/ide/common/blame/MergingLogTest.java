@@ -90,6 +90,21 @@ public class MergingLogTest {
                         new SourcePosition(4, 1, 35, 4, 2, 36))));
 
         /*
+         * Test
+         *
+         *   |search query|
+         * |---------target----------|
+         *                  |-wrong-|
+         */
+        Assert.assertEquals(
+                "",
+                position1,
+                mergingLog.find(
+                        new SourceFilePosition(
+                                new SourceFile(absoluteFile("merged/values/values.xml")),
+                                new SourcePosition(3, -1, -1, 3, -1, -1))));
+
+        /*
            Test
                       |---search query----|
            |------------target-------------|

@@ -213,14 +213,15 @@ public class MergingLog {
         // This is the product of the depth and breadth of nesting that can be handled.
         int patience = 20;
         // check if it encompasses the error position.
-        SourcePosition key;
-        while (candidate != null && position.compareEnd(key = candidate.getKey()) > 0) {
+        while (candidate != null
+                && (position.compareEnd(candidate.getKey()) > 0
+                        || position.compareStart(candidate.getKey()) < 0)) {
             patience--;
             if (patience == 0) {
                 candidate = null;
                 break;
             }
-            candidate = sortedMap.lowerEntry(key);
+            candidate = sortedMap.lowerEntry(candidate.getKey());
         }
 
         if (candidate == null) {
