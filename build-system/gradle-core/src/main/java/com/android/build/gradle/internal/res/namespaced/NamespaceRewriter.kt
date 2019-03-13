@@ -241,8 +241,9 @@ class NamespaceRewriter(
                     parent = "@*$possiblePackage:$type/$possibleParent"
                 }
             }
-        } else if (originalParent.isEmpty()) {
-            // leave it alone, there is explicitly no parent
+        } else if (originalParent.isEmpty() || (originalParent.contains(':'))) {
+            // leave it alone, there is explicitly no parent or we already have a namespace (most
+            // likely "android:").
         } else {
             // Rewrite explicitly included parents
             parent = originalParent

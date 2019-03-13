@@ -475,6 +475,8 @@ class NamespaceRewriterTest {
         </attr>
     </declare-styleable>
 
+    <style name="MyStyleFromAndroid" parent="android:Parent.Theme.Style"/>
+
 </resources>"""
         )
         val namespaced = File(temporaryFolder.newFolder("namespaced", "values"), "values.xml")
@@ -532,6 +534,9 @@ class NamespaceRewriterTest {
             <enum name="right" value="1" />
         </attr>
     </declare-styleable>
+
+    <style name="MyStyleFromAndroid" parent="android:Parent.Theme.Style" />
+
 </resources>""".xmlFormat()
         )
     }
