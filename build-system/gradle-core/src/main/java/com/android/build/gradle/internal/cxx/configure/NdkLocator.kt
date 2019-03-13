@@ -139,9 +139,9 @@ fun findNdkPathImpl(
         // The text of this message shouldn't change without also changing the corresponding
         // hotfix in Android Studio that recognizes this text
         if (ndkVersionFromDslRevision == null) {
-            error("Compatible side by side NDK version was not found.")
+            warn("Compatible side by side NDK version was not found.")
         } else {
-            error("Compatible side by side NDK version was not found for: " +
+            warn("Compatible side by side NDK version was not found for: " +
                     "$ndkVersionFromDslRevision")
         }
         return null

@@ -71,8 +71,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -87,8 +87,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location didn't exist")
     }
 
@@ -105,8 +105,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with no Pkg.Revision")
     }
 
@@ -123,8 +123,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
 
@@ -224,8 +224,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -240,8 +240,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location didn't exist")
     }
 
@@ -258,8 +258,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with no Pkg.Revision")
     }
 
@@ -276,8 +276,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
 
@@ -352,8 +352,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -368,8 +368,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location didn't exist")
     }
 
@@ -386,8 +386,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with no Pkg.Revision")
     }
 
@@ -404,8 +404,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found.")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found.")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
 
@@ -483,8 +483,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -499,8 +499,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location didn't exist")
     }
@@ -518,8 +518,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with no Pkg.Revision")
     }
@@ -538,8 +538,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
@@ -668,8 +668,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -684,8 +684,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location didn't exist")
     }
 
@@ -702,8 +702,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with no Pkg.Revision")
     }
 
@@ -720,8 +720,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
 
@@ -800,8 +800,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -816,8 +816,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version " +
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version " +
                 "was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location didn't exist")
@@ -836,8 +836,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with no Pkg.Revision")
     }
@@ -856,8 +856,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK " +
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK " +
                 "version was not found for: 17.1.23456")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
@@ -964,8 +964,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -980,8 +980,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by" +
                 " ndk.dir but that location didn't exist")
     }
@@ -999,8 +999,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by ndk.dir " +
                 "but that location had source.properties with no Pkg.Revision")
     }
@@ -1019,8 +1019,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
@@ -1096,8 +1096,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -1112,8 +1112,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location didn't exist")
     }
@@ -1131,8 +1131,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with no Pkg.Revision")
     }
@@ -1151,8 +1151,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18.1")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18.1")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} " +
                 "by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
@@ -1231,8 +1231,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -1247,8 +1247,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} " +
                 "by ndk.dir but that location didn't exist")
     }
@@ -1266,8 +1266,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with no Pkg.Revision")
     }
@@ -1286,8 +1286,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
@@ -1363,8 +1363,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).isEmpty()
     }
 
@@ -1379,8 +1379,8 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location didn't exist")
     }
@@ -1398,8 +1398,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} by " +
                 "ndk.dir but that location had source.properties with no Pkg.Revision")
     }
@@ -1418,8 +1418,8 @@ class NdkLocatorKtTest {
             else -> throw RuntimeException(path.path)
         } })
         assertThat(path).isNull()
-        assertThat(logger.warnings).isEmpty()
-        assertThat(logger.errors).containsExactly("Compatible side by side NDK version was not found for: 18")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).containsExactly("Compatible side by side NDK version was not found for: 18")
         assertThat(logger.infos).containsExactly("Considered ${slash(">my>ndk>folder")} " +
                 "by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob")
     }
