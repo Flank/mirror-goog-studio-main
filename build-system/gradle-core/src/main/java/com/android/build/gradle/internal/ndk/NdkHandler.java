@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ndk;
 
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
+import static com.android.build.gradle.internal.cxx.configure.NdkLocatorKt.findNdkPath;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -41,8 +42,6 @@ public class NdkHandler {
     @NonNull private final File projectDir;
     @NonNull private final String compileSdkVersion;
     @Nullable private NdkPlatform ndkPlatform;
-
-    // TODO(jomof): wire up to side-by-side NDK finder
     @Nullable private final String ndkVersionFromDsl;
     private final boolean enableSideBySideNdk;
 
@@ -63,7 +62,12 @@ public class NdkHandler {
         if (ndkPlatform != null) {
             return ndkPlatform;
         }
-        File ndkDirectory = findNdkDirectory(projectDir);
+        File ndkDirectory;
+        if (enableSideBySideNdk) {
+            ndkDirectory = findNdkPath(ndkVersionFromDsl, projectDir);
+        } else {
+            ndkDirectory = findNdkDirectory(projectDir);
+        }
         NdkInfo ndkInfo;
         Revision revision;
 

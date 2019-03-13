@@ -55,7 +55,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
             "Still waiting for package manifests to be fetched remotely.";
 
     /** Whether or not NDK side by side redirection is enabled. */
-    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = false;
+    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = true;
 
     /**
      * The name of NDK packages that should be redirected if ENABLE_SIDE_BY_SIDE_NDK is set to true.
