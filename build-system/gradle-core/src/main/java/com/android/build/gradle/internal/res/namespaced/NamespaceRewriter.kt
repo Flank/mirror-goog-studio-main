@@ -224,12 +224,11 @@ class NamespaceRewriter(
     }
 
     private fun rewriteParent(element: Element, type: String) {
-        val name: String = element.attributes.getNamedItem("name")!!.nodeValue
-
         val originalParent: String? = element.attributes.getNamedItem("parent")?.nodeValue
         var parent: String? = null
         if (originalParent == null) {
             // Guess, maybe we have an implicit parent?
+            val name: String = element.attributes.getNamedItem("name")!!.nodeValue
             val possibleParent = name.substringBeforeLast('.', "")
             if (!possibleParent.isEmpty()) {
                 val possiblePackage = maybeFindPackage(
@@ -260,9 +259,14 @@ class NamespaceRewriter(
         }
     }
 
+    private fun removeParent(element: Element) {
+        element.removeAttribute("parent")
+    }
+
     private fun rewriteStyleableElement(element: Element) {
-        // Rewrite the parent, if it exists.
-        rewriteParent(element, "styleable")
+        // Remove the parent, if it exists. The 'parent' tag in a declare-styleable doesn't actually
+        // do anything, so it's okay to just remove them.
+        removeParent(element)
 
         // Take care of the styleable children.
         element.childNodes.forEach { child ->

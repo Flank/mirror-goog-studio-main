@@ -475,6 +475,10 @@ class NamespaceRewriterTest {
         </attr>
     </declare-styleable>
 
+    <declare-styleable name="NoParent" />
+
+    <declare-styleable name="UnnecessaryParent" parent="invalidParentReference" />
+
     <style name="MyStyleFromAndroid" parent="android:Parent.Theme.Style"/>
 
 </resources>"""
@@ -527,13 +531,17 @@ class NamespaceRewriterTest {
         <item name="*com.example.module:showText">true</item>
     </style>
 
-    <declare-styleable name="PieChart" parent="@*com.example.dependency:styleable/StyleableParent">
+    <declare-styleable name="PieChart">
         <attr name="*com.example.module:showText" format="boolean" />
         <attr name="*com.example.module:labelPosition" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />
         </attr>
     </declare-styleable>
+
+    <declare-styleable name="NoParent" />
+
+    <declare-styleable name="UnnecessaryParent" />
 
     <style name="MyStyleFromAndroid" parent="android:Parent.Theme.Style" />
 
