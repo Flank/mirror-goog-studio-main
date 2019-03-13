@@ -156,10 +156,14 @@ public class AndroidArtifacts {
     public enum ArtifactScope {
         /** Include all artifacts */
         ALL,
-        /** Include all 'external' artifacts, i.e. everything but PROJECT */
+        /** Include all 'external' artifacts, i.e. everything but PROJECT, i.e. FILE + MODULE */
         EXTERNAL,
         /** Include all artifacts built by subprojects */
         PROJECT,
+        /** Include all file dependencies */
+        FILE,
+        /** Include all module (i.e. from a repository) dependencies */
+        REPOSITORY_MODULE,
     }
 
     /** Artifact published by modules for consumption by other modules. */

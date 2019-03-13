@@ -122,6 +122,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
@@ -904,6 +905,12 @@ public class VariantScopeImpl implements VariantScope {
                 return id -> !(id instanceof ProjectComponentIdentifier);
             case PROJECT:
                 return id -> id instanceof ProjectComponentIdentifier;
+            case REPOSITORY_MODULE:
+                return id -> id instanceof ModuleComponentIdentifier;
+            case FILE:
+                return id ->
+                        !(id instanceof ProjectComponentIdentifier
+                                || id instanceof ModuleComponentIdentifier);
         }
         throw new RuntimeException("unknown ArtifactScope value");
     }
