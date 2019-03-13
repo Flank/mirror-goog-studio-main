@@ -22,7 +22,7 @@ bool BashCommandRunner::Run(const string &parameters, string *output) const {
 bool BashCommandRunner::RunAndReadOutput(const string &cmd,
                                          string *output) const {
   Trace trace(executable_path_);
-  if (log_command_) Log::D("Running bash command: '%s'", cmd.c_str());
+  if (log_command_) Log::D("Running '%s'", cmd.c_str());
   char buffer[1024];
   FILE *pipe = popen(cmd.c_str(), "r");
   if (pipe == nullptr) {

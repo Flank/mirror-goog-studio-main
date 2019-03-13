@@ -74,7 +74,7 @@ class FakeAtrace final : public Atrace {
 
   void SetBufferSize(int buffer_size_kb) { buffer_size_kb_ = buffer_size_kb; }
 
-  virtual void Stop() override { is_running_ = false; }
+  virtual void HardStop() override { is_running_ = false; }
 
   virtual std::string BuildSupportedCategoriesString() override {
     std::string atrace_output(

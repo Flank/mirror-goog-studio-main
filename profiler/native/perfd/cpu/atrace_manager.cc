@@ -116,7 +116,7 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
         requested_buffer_size_kb /= 2;
       }
       if (isRunning) {
-        atrace_->Stop();
+        atrace_->HardStop();
         isRunning = false;
       }
     }
@@ -222,7 +222,7 @@ void AtraceManager::Shutdown() {
   if (is_profiling_) {
     Log::D("Profiler:Shutdown atrace");
     is_profiling_ = false;
-    atrace_->Stop();
+    atrace_->HardStop();
   }
   // Ensure atrace dump thread exits when shutdown primarily for test.
   if (atrace_thread_.joinable()) {

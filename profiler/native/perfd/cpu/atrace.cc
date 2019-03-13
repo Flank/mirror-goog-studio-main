@@ -63,15 +63,12 @@ void Atrace::Run(const AtraceArgs &run_args) {
   args << "-z " << run_args.additional_args << " -a " << run_args.app_pkg_name
        << " -o " << run_args.path << " " << run_args.command << " "
        << categories_;
-  profiler::BashCommandRunner atrace(kAtraceExecutable);
-  // Log when we run an atrace command, this will help in the future if we have
-  // any errors.
-  Log::D("Running Atrace with the following args: %s", args.str().c_str());
+  profiler::BashCommandRunner atrace(kAtraceExecutable, true);
   atrace.Run(args.str(), nullptr);
 }
 
-void Atrace::Stop() {
-  profiler::BashCommandRunner atrace(kAtraceExecutable);
+void Atrace::HardStop() {
+  profiler::BashCommandRunner atrace(kAtraceExecutable, true);
   atrace.Run("--async_stop", nullptr);
 }
 

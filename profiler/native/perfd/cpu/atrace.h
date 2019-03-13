@@ -56,8 +56,9 @@ class Atrace {
   // Atrace is running or not.
   virtual int GetBufferSizeKb();
 
-  // Stops atrace without capturing output.
-  virtual void Stop();
+  // Stops atrace without capturing output. This function should be called
+  // only in abnormal circumstances.
+  virtual void HardStop();
 
  private:
   Clock* clock_;

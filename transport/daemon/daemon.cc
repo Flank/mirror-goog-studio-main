@@ -148,7 +148,7 @@ bool RunAgent(const string& app_name, const string& package_name,
   if (success) {
     const std::string& attach_params = ProcessManager::GetAttachAgentParams(
         app_name, data_path, config_path, agent_lib_file_name);
-    BashCommandRunner attach(ProcessManager::GetAttachAgentCommand());
+    BashCommandRunner attach(ProcessManager::GetAttachAgentCommand(), true);
     success |= attach.Run(attach_params, &error);
   }
 

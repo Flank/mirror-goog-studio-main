@@ -59,7 +59,7 @@ bool Simpleperf::KillSimpleperf(int simpleperf_pid, const string& pkg_name) {
   }
   ostringstream string_pid;
   string_pid << simpleperf_pid;
-  BashCommandRunner kill_simpleperf(kill_cmd);
+  BashCommandRunner kill_simpleperf(kill_cmd, true);
   return kill_simpleperf.Run(string_pid.str(), nullptr);
 }
 
@@ -77,8 +77,6 @@ void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
   string record_command = GetRecordCommand(pid, pkg_name, abi_arch, trace_path,
                                            sampling_interval_us);
 
-  Log::D("Simpleperf record command: %s", record_command.c_str());
-
   // Converts the record command to a C string.
   char command_buffer[record_command.length() + 1];
   strcpy(command_buffer, record_command.c_str());
@@ -86,6 +84,7 @@ void Simpleperf::Record(int pid, const string& pkg_name, const string& abi_arch,
   SplitRecordCommand(command_buffer, argv);
 
   // Execute the simpleperf record command.
+  Log::D("Running Simpleperf: '%s'", record_command.c_str());
   execvp(*argv, argv);
 }
 
@@ -93,7 +92,7 @@ bool Simpleperf::ReportSample(const string& input_path,
                               const string& output_path, const string& abi_arch,
                               string* output) {
   string simpleperf_binary_abspath = GetSimpleperfPath(abi_arch);
-  BashCommandRunner simpleperf_report(simpleperf_binary_abspath);
+  BashCommandRunner simpleperf_report(simpleperf_binary_abspath, true);
   ostringstream parameters;
   parameters << "report-sample ";
   parameters << "--protobuf ";
