@@ -43,8 +43,8 @@ using profiler::proto::HttpRequestRequest;
 using profiler::proto::HttpResponseRequest;
 using profiler::proto::InternalNetworkService;
 using profiler::proto::JavaThreadRequest;
+using profiler::proto::SendBytesRequest;
 using profiler::proto::SendEventRequest;
-using profiler::proto::SendPayloadRequest;
 
 namespace {
 std::atomic_int id_generator_(1);
@@ -99,13 +99,13 @@ struct PayloadBuffer {
 
               std::stringstream payload_name;
               payload_name << juid << name_suffix;
-              SendPayloadRequest request;
+              SendBytesRequest request;
               request.set_name(payload_name.str());
-              request.set_payload(batched_bytes.str());
+              request.set_bytes(batched_bytes.str());
               request.set_is_partial(true);
 
               EmptyResponse response;
-              Status result = stub.SendPayload(&ctx, request, &response);
+              Status result = stub.SendBytes(&ctx, request, &response);
 
               // Send failed, push the chunks back into front of deque
               if (!result.ok()) {
@@ -255,11 +255,11 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
         {[payload_name](AgentService::Stub &stub, ClientContext &ctx) {
            // Sends an empty paylod with |is_partial| set to false to indicate
            // that the payload is complete.
-           SendPayloadRequest request;
+           SendBytesRequest request;
            request.set_name(payload_name);
            request.set_is_partial(false);
            EmptyResponse response;
-           return stub.SendPayload(&ctx, request, &response);
+           return stub.SendBytes(&ctx, request, &response);
          },
          [request, juid, payload_name](AgentService::Stub &stub,
                                        ClientContext &ctx) mutable {
@@ -317,11 +317,11 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
         {[payload_name](AgentService::Stub &stub, ClientContext &ctx) {
            // Sends an empty paylod with |is_partial| set to false to indicate
            // that the payload is complete.
-           SendPayloadRequest request;
+           SendBytesRequest request;
            request.set_name(payload_name);
            request.set_is_partial(false);
            EmptyResponse response;
-           return stub.SendPayload(&ctx, request, &response);
+           return stub.SendBytes(&ctx, request, &response);
          },
          [request, juid, payload_name](AgentService::Stub &stub,
                                        ClientContext &ctx) mutable {

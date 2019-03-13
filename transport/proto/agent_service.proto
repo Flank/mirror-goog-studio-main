@@ -30,7 +30,7 @@ service AgentService {
 
   rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
 
-  rpc SendPayload(SendPayloadRequest) returns (EmptyResponse) {}
+  rpc SendBytes(SendBytesRequest) returns (EmptyResponse) {}
 
   // Register an agent in the transport daemon and open a stream where daemon
   // can forward Commands to the agent.
@@ -51,11 +51,11 @@ message SendEventRequest {
   Event event = 1;
 }
 
-message SendPayloadRequest {
-  // string id of the payload (e.g. file name)
+message SendBytesRequest {
+  // string id presenting the bytes (e.g. file name)
   string name = 1;
-  // byte content of the payload.
-  bytes payload = 2;
+  // byte content
+  bytes bytes = 2;
   // whether the data is partial and more content should be expected
   bool is_partial = 3;
 }

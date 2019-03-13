@@ -41,9 +41,9 @@ class AgentServiceImpl : public proto::AgentService::Service {
                          const proto::SendEventRequest* request,
                          proto::EmptyResponse* response) override;
 
-  grpc::Status SendPayload(grpc::ServerContext* context,
-                           const proto::SendPayloadRequest* request,
-                           proto::EmptyResponse* response) override;
+  grpc::Status SendBytes(grpc::ServerContext* context,
+                         const proto::SendBytesRequest* request,
+                         proto::EmptyResponse* response) override;
 
   grpc::Status RegisterAgent(
       grpc::ServerContext* context, const proto::RegisterAgentRequest* request,

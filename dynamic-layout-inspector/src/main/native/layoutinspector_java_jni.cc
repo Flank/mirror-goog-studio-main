@@ -66,10 +66,10 @@ Java_com_android_tools_agent_layoutinspector_LayoutInspectorService_sendSkiaPict
       {[message, payload_name](profiler::proto::AgentService::Stub &stub,
                                grpc::ClientContext &ctx) mutable {
          profiler::proto::EmptyResponse response;
-         profiler::proto::SendPayloadRequest payload;
+         profiler::proto::SendBytesRequest payload;
          payload.set_name(payload_name);
-         payload.set_payload(message.get().data(), message.length());
-         return stub.SendPayload(&ctx, payload, &response);
+         payload.set_bytes(message.get().data(), message.length());
+         return stub.SendBytes(&ctx, payload, &response);
        },
        [id](profiler::proto::AgentService::Stub &stub,
             grpc::ClientContext &ctx) mutable {
