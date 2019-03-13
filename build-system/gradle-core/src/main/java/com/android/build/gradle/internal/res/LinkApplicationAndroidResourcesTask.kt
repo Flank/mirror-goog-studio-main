@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -526,7 +526,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                 null
             else
                 variantScope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG
+                    COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG
                 )
 
             if (variantType.isFeatureSplit) {

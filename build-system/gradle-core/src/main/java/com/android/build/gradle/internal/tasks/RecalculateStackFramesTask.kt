@@ -118,7 +118,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
             referencedClasses.from(variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.MODULE,
+                AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.CLASSES))
 
             if (isTestCoverageEnabled) {

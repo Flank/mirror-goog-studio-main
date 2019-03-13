@@ -16,7 +16,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
@@ -717,11 +717,11 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
             if (variantType.isBaseModule()) {
                 task.packageManifest =
                         variantScope.getArtifactFileCollection(
-                                METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION);
+                                METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION);
 
                 task.featureManifests =
                         variantScope.getArtifactCollection(
-                                METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
+                                METADATA_VALUES, PROJECT, METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isFeatureSplit()) {
                 task.featureNameSupplier =
@@ -730,7 +730,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
 
                 task.packageManifest =
                         variantScope.getArtifactFileCollection(
-                                COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
+                                COMPILE_CLASSPATH, PROJECT, FEATURE_APPLICATION_ID_DECLARATION);
             }
         }
 

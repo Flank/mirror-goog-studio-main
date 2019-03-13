@@ -1195,7 +1195,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             return getVariantScope()
                     .getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_DEX,
                             ImmutableMap.of(MODULE_PATH, project.getPath()));
         }

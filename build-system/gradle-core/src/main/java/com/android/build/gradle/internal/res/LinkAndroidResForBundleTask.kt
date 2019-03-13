@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.dsl.convert
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
@@ -251,7 +251,7 @@ open class LinkAndroidResForBundleTask
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
 
             task.featureResourcePackages = variantScope.getArtifactFileCollection(
-                COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG)
+                COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)
 
             if (variantScope.type.isFeatureSplit) {
                 // get the res offset supplier

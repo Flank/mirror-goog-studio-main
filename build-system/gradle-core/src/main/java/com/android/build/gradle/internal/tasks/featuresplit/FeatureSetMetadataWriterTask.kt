@@ -139,7 +139,7 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
             task.outputFile = outputFile
             task.inputFiles = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                AndroidArtifacts.ArtifactScope.MODULE,
+                AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.METADATA_FEATURE_DECLARATION
             )
             val maxNumberOfFeaturesBeforeOreo = variantScope.globalScope.projectOptions

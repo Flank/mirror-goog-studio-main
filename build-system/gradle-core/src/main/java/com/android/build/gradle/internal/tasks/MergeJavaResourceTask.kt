@@ -199,7 +199,7 @@ open class MergeJavaResourceTask
                 task.subProjectJavaRes =
                     variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.JAVA_RES
                     )
             }
@@ -213,7 +213,7 @@ open class MergeJavaResourceTask
                 task.featureJavaRes =
                         variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.METADATA_JAVA_RES
                         )
             }

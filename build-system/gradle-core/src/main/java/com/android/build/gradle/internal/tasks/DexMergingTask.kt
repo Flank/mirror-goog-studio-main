@@ -219,7 +219,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
                         return variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.DEX,
                             attributes
                         )

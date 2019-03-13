@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
@@ -611,7 +611,7 @@ public abstract class TaskManager {
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
                                 variantScope.getArtifactCollection(
-                                        RUNTIME_CLASSPATH, MODULE, CLASSES))
+                                        RUNTIME_CLASSPATH, PROJECT, CLASSES))
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
@@ -622,7 +622,7 @@ public abstract class TaskManager {
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
-                                            RUNTIME_CLASSPATH, MODULE, JAVA_RES))
+                                            RUNTIME_CLASSPATH, PROJECT, JAVA_RES))
                             .build());
         }
 
@@ -637,7 +637,7 @@ public abstract class TaskManager {
                             .addScope(InternalScope.FEATURES)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
-                                            METADATA_VALUES, MODULE, METADATA_CLASSES))
+                                            METADATA_VALUES, PROJECT, METADATA_CLASSES))
                             .build());
         }
 
@@ -1917,7 +1917,7 @@ public abstract class TaskManager {
                             baseVariantData
                                     .getScope()
                                     .getArtifactFileCollection(
-                                            RUNTIME_CLASSPATH, MODULE, APKS_FROM_BUNDLE));
+                                            RUNTIME_CLASSPATH, PROJECT, APKS_FROM_BUNDLE));
         } else {
             testData =
                     new TestDataImpl(
@@ -3279,7 +3279,7 @@ public abstract class TaskManager {
         if (variantScope.consumesFeatureJars()) {
             configurationFiles.from(
                     variantScope.getArtifactFileCollection(
-                            METADATA_VALUES, MODULE, CONSUMER_PROGUARD_RULES));
+                            METADATA_VALUES, PROJECT, CONSUMER_PROGUARD_RULES));
         }
     }
 
@@ -3348,7 +3348,7 @@ public abstract class TaskManager {
                         "dex-splitter",
                         variantScope.getVariantConfiguration().getDirName());
         FileCollection featureJars =
-                variantScope.getArtifactFileCollection(METADATA_VALUES, MODULE, METADATA_CLASSES);
+                variantScope.getArtifactFileCollection(METADATA_VALUES, PROJECT, METADATA_CLASSES);
         BuildableArtifact baseJars =
                 variantScope
                         .getArtifacts()

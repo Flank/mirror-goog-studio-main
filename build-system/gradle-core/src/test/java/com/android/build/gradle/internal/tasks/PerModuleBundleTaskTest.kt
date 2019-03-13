@@ -112,7 +112,7 @@ class PerModuleBundleTaskTest {
 
         Mockito.`when`(variantScope.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.MODULE,
+            AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA))
             .thenReturn(featureSetMetadata)
 
@@ -122,7 +122,7 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(project.path).thenReturn(":foo:bar")
         Mockito.`when`(variantScope.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.MODULE,
+            AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.FEATURE_DEX,
             mapOf(MODULE_PATH to ":foo:bar")))
             .thenReturn(dexFiles)

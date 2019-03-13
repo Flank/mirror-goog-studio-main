@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -93,7 +93,7 @@ constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): Incre
             // data binding related artifacts for external libs
             task.moduleClassLog = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH,
-                MODULE,
+                PROJECT,
                 ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
             )
 

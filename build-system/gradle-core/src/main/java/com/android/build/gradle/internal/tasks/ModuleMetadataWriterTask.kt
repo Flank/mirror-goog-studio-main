@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -139,7 +139,7 @@ open class ModuleMetadataWriterTask : AndroidVariantTask() {
             if (variantScope.type.isHybrid) {
                 //if this is a feature, get the Application ID from the metadata config
                 task.metadataFromInstalledModule = variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION
+                    METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION
                 )
             }
         }

@@ -93,7 +93,7 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
             task.packageListOutFolder = packageListOutFolder
             task.featureDeclarations = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                    AndroidArtifacts.ArtifactScope.MODULE,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.METADATA_FEATURE_DECLARATION
             )
         }

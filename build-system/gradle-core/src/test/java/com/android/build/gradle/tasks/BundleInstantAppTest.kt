@@ -125,7 +125,7 @@ class BundleInstantAppTest {
         `when`<FileCollection>(
             variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.MODULE,
+                AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
             )
         ).thenReturn(FakeFileCollection(ImmutableList.of(applicationFile)))
@@ -133,7 +133,7 @@ class BundleInstantAppTest {
         `when`<FileCollection>(
             variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                AndroidArtifacts.ArtifactScope.MODULE,
+                AndroidArtifacts.ArtifactScope.PROJECT,
                 AndroidArtifacts.ArtifactType.APK
             )
         ).thenReturn(FakeFileCollection(ImmutableList.of(apkDirectory1, apkDirectory2)))

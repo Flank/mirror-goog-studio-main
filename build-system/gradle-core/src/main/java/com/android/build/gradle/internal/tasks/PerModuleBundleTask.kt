@@ -214,7 +214,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
             task.featureDexFiles =
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.MODULE,
+                    AndroidArtifacts.ArtifactScope.PROJECT,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     mapOf(MODULE_PATH to variantScope.globalScope.project.path)
                 )

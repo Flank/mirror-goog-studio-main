@@ -20,7 +20,6 @@ import com.android.annotations.NonNull
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.io.Files
 import org.apache.commons.io.Charsets
@@ -110,7 +109,7 @@ open class CheckMultiApkLibrariesTask : AndroidVariantTask() {
             task.featureTransitiveDeps =
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.FEATURE_TRANSITIVE_DEPS
                     )
             task.fakeOutputDir =

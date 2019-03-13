@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SET_METADATA;
 
 import com.android.annotations.NonNull;
@@ -165,7 +165,7 @@ public class FeatureSetMetadata {
             final FileCollection fc =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            MODULE,
+                            PROJECT,
                             FEATURE_SET_METADATA);
 
             // make the task depends on the file collection so that it runs after the file we need
@@ -195,7 +195,7 @@ public class FeatureSetMetadata {
             final FileCollection fc =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            MODULE,
+                            PROJECT,
                             FEATURE_SET_METADATA);
 
             // make the task depends on the file collection so that it runs after the file we need

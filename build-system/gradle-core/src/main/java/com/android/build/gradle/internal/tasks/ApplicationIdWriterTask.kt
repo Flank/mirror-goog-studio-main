@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
@@ -28,7 +28,6 @@ import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
@@ -103,12 +102,12 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
             // if BASE_FEATURE get the app ID from the app module
             if (variantScope.type.isBaseModule && variantScope.type.isHybrid) {
                 task.appMetadata = variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, MODULE, METADATA_BASE_MODULE_DECLARATION
+                    METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION
                 )
             } else if (variantScope.type.isFeatureSplit) {
                 // if feature split, get it from the base module
                 task.appMetadata = variantScope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION
+                    COMPILE_CLASSPATH, PROJECT, FEATURE_APPLICATION_ID_DECLARATION
                 )
             } else {
                 task.applicationIdSupplier = { variantScope.variantConfiguration.applicationId }

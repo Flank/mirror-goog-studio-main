@@ -150,12 +150,12 @@ public class BundleInstantApp extends AndroidVariantTask {
             bundleInstantApp.applicationId =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION);
             bundleInstantApp.apkDirectories =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.APK);
         }
 

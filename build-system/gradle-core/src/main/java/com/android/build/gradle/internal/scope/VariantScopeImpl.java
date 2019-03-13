@@ -24,7 +24,7 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
@@ -738,7 +738,7 @@ public class VariantScopeImpl implements VariantScope {
             FileCollection excludedDirectories =
                     computeArtifactCollection(
                                     RUNTIME_CLASSPATH,
-                                    MODULE,
+                                    PROJECT,
                                     ArtifactType.FEATURE_TRANSITIVE_DEPS,
                                     attributeMap)
                             .getArtifactFiles();
@@ -785,7 +785,9 @@ public class VariantScopeImpl implements VariantScope {
 
             FileCollection excludedDirectories =
                     computeArtifactCollection(
-                                    RUNTIME_CLASSPATH, MODULE, ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                                    RUNTIME_CLASSPATH,
+                                    PROJECT,
+                                    ArtifactType.FEATURE_TRANSITIVE_DEPS)
                             .getArtifactFiles();
             artifacts =
                     new FilteredArtifactCollection(
@@ -900,11 +902,10 @@ public class VariantScopeImpl implements VariantScope {
                 // since we want both Module dependencies and file based dependencies in this case
                 // the best thing to do is search for non ProjectComponentIdentifier.
                 return id -> !(id instanceof ProjectComponentIdentifier);
-            case MODULE:
+            case PROJECT:
                 return id -> id instanceof ProjectComponentIdentifier;
-            default:
-                throw new RuntimeException("unknown ArtifactScope value");
         }
+        throw new RuntimeException("unknown ArtifactScope value");
     }
 
     /**
@@ -1259,7 +1260,7 @@ public class VariantScopeImpl implements VariantScope {
             final VariantScope testedScope = tested.getScope();
 
             // we only add the tested component to the MODULE | ALL scopes.
-            if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
+            if (artifactScope == ArtifactScope.PROJECT || artifactScope == ALL) {
                 VariantSpec testedSpec =
                         testedScope.getPublishingSpec().getTestingSpec(variantType);
 
@@ -1486,7 +1487,7 @@ public class VariantScopeImpl implements VariantScope {
                     .isDynamicFeature()) {
                 return getArtifactFileCollection(
                         ConsumedConfigType.COMPILE_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.MODULE,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
             } else {
                 return getArtifacts()
@@ -1500,7 +1501,7 @@ public class VariantScopeImpl implements VariantScope {
                             .get()
                     : getArtifactFileCollection(
                             ConsumedConfigType.COMPILE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactScope.PROJECT,
                             AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
         }
     }

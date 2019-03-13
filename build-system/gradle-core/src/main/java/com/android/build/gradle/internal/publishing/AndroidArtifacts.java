@@ -152,8 +152,14 @@ public class AndroidArtifacts {
         BUNDLE_ELEMENTS,
     }
 
+    /** The provenance of artifacts to include. */
     public enum ArtifactScope {
-        ALL, EXTERNAL, MODULE
+        /** Include all artifacts */
+        ALL,
+        /** Include all 'external' artifacts, i.e. everything but PROJECT */
+        EXTERNAL,
+        /** Include all artifacts built by subprojects */
+        PROJECT,
     }
 
     /** Artifact published by modules for consumption by other modules. */

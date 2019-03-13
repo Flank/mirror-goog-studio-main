@@ -235,14 +235,14 @@ fun getSubProjectNativeLibs(scope: VariantScope): FileCollection {
     nativeLibs.from(
         scope.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.MODULE,
+            AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JAVA_RES
         )
     )
     nativeLibs.from(
         scope.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-            AndroidArtifacts.ArtifactScope.MODULE,
+            AndroidArtifacts.ArtifactScope.PROJECT,
             AndroidArtifacts.ArtifactType.JNI
         )
     )
