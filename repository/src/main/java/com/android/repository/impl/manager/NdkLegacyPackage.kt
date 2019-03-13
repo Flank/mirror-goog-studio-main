@@ -17,6 +17,8 @@
 package com.android.repository.impl.manager
 
 import com.android.repository.api.RemotePackage
+import com.android.repository.api.RepoPackage
+import com.google.common.collect.ComparisonChain
 
 /**
  * Mark the contained package as obsolete. This has the effect of hidding the package in SDK
@@ -26,4 +28,15 @@ class NdkLegacyPackage(pkg: RemotePackage) : RemotePackage by pkg {
     override fun obsolete(): Boolean {
         return true
     }
+
+    /**
+     * Can't delegate to pkg because it uses javaClass.name. The delegatee version sees
+     * the delegatee's class name.
+     */
+    override fun compareTo(o: RepoPackage) =
+        ComparisonChain.start()
+            .compare(path, o.path)
+            .compare(version, o.version)
+            .compare(javaClass.name, o.javaClass.name)
+            .result()
 }

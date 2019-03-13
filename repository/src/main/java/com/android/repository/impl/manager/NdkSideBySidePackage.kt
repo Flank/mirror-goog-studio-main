@@ -19,6 +19,8 @@ package com.android.repository.impl.manager
 import com.android.repository.api.ProgressIndicator
 import com.android.repository.api.RemotePackage
 import com.android.repository.api.RepoManager
+import com.android.repository.api.RepoPackage
+import com.google.common.collect.ComparisonChain
 import java.io.File
 
 /**
@@ -39,6 +41,17 @@ internal class NdkSideBySidePackage(private val pkg: RemotePackage) : RemotePack
         val result = pkg.getInstallDir(manager, progress)
         return File(result.parent, "ndk/$ndkStyleVersion")
     }
+
+    /**
+     * Can't delegate to pkg because it uses javaClass.name. The delegatee version sees
+     * the delegatee's class name.
+     */
+    override fun compareTo(o: RepoPackage) =
+        ComparisonChain.start()
+            .compare(path, o.path)
+            .compare(version, o.version)
+            .compare(javaClass.name, o.javaClass.name)
+            .result()
 
     private val ndkStyleVersion: String
         get() = "${version.major}.${version.minor}.${version.micro}"
