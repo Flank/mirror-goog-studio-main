@@ -67,6 +67,8 @@ cd %BASEDIR%
 CALL %SCRIPTDIR%bazel.cmd analyze-profile --html %DISTDIR%\prof
 
 :ENDSCRIPT
+@rem We will explicitly clear the Bazel cache between runs to keep data hermetic.
+CALL %SCRIPTDIR%bazel.cmd clean --expunge
 @rem On windows we must explicitly shut down bazel.  Otherwise file handles remain open.
 CALL %SCRIPTDIR%bazel.cmd shutdown
 @rem We also must call the kill-processes.py python script and kill all processes still open
