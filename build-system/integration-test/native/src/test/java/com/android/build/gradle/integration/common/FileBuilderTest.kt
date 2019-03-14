@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.common.utils
+package com.android.build.gradle.integration.common
 
 import com.android.utils.PathUtils
 import com.google.common.io.Files
@@ -42,14 +42,14 @@ class FileBuilderTest {
 
     @Test
     fun withFiles() {
-        tempDir {
-            (File("dir1")) {
-                (File("dir2")) {
-                    File("file2") - "content 2"
+        dir(tempDir) {
+            dir(File("dir1")) {
+                dir(File("dir2")) {
+                    file(File("file2")) { writeText("content 2") }
                 }
-                File("file1") - "content 1"
+                file(File("file1")) { writeText("content 1") }
             }
-            (File("dir3/file3")) - "content 3"
+            file(File("dir3/file3")) { writeText("content 3") }
         }
         val (dir1, dir3) = tempDir.listFiles().sorted()
         val (dir2, file1) = dir1.listFiles().sorted()
@@ -63,14 +63,14 @@ class FileBuilderTest {
 
     @Test
     fun withStrings() {
-        tempDir.absolutePath {
-            "dir1" {
-                "dir2" {
-                    "file2" - "content 2"
+        dir(tempDir) {
+            dir("dir1") {
+                dir("dir2") {
+                    file("file2") { writeText("content 2") }
                 }
-                "file1" - "content 1"
+                file("file1") { writeText("content 1") }
             }
-            "dir3/file3" - "content 3"
+            file("dir3/file3") { writeText("content 3") }
         }
 
         val (dir1, dir3) = tempDir.listFiles().sorted()
@@ -87,11 +87,11 @@ class FileBuilderTest {
     fun links() {
         var link1: Path? = null
         var link2: Path? = null
-        tempDir {
-            "dir" {
-                val file1 = "file1" - "content 1"
-                link1 = "file1-link1" linkTo file1
-                link2 = "file1-link2" linkTo path("file1")
+        dir(tempDir) {
+            dir("dir") {
+                val file1 = file("file1") { writeText("content 1") }
+                link1 = file("file1-link1").linkTo(file1)
+                link2 = file("file1-link2").linkTo(file("file1"))
             }
         }
 
@@ -100,22 +100,21 @@ class FileBuilderTest {
     }
 
     @Test
-    fun resolveBySlash() {
-        tempDir {
-            "file1" - "content1"
-            "file2" - "content2"
+    fun concat() {
+        dir(tempDir) {
+            file("file1") { writeText("content1") }
+            file("file2") { writeText("content2") }
         }
-        Truth.assertThat((tempDir / "file1").readText()).isEqualTo("content1")
-        Truth.assertThat((tempDir.toPath() / "file1").toFile().readText()).isEqualTo("content1")
+        Truth.assertThat((tempDir.resolve("file1")).readText()).isEqualTo("content1")
+        Truth.assertThat((tempDir.toPath().resolve("file1")).toFile().readText())
+            .isEqualTo("content1")
     }
 
     @Test
     fun appendStrings() {
-        tempDir {
-            "file1" - "hello"
-        }
-        tempDir {
-            "file1" - +" world"
+        dir(tempDir) {
+            file("file1") { writeText("hello") }
+            file("file1") { appendText(" world") }
         }
 
         val (file1) = tempDir.listFiles()
@@ -147,33 +146,56 @@ class FileBuilderTest {
             """.trimIndent().replace("\n", "")
         )
 
-        tempDir {
-            val zipFile = "dir1.zip" - zipFileContent
-            ("unzipped" inflatedBy zipFile) {
-                Truth.assertThat(file("dir1/dir2/file2").readText()).isEqualTo("content 2\n")
-                Truth.assertThat(file("dir1/file1").readText()).isEqualTo("content 1\n")
+        dir(tempDir) {
+            val zipFile = file("dir1.zip") { writeBytes(zipFileContent) }
+            dir("unzipped").inflatedBy(zipFile)
+            Truth.assertThat(file("unzipped/dir1/dir2/file2").toFile().readText())
+                .isEqualTo("content 2\n")
+            Truth.assertThat(file("unzipped/dir1/file1").toFile().readText())
+                .isEqualTo("content 1\n")
+        }
+    }
+
+    @Test
+    fun copyFromDir() {
+        dir(tempDir) {
+            dir("dir1") {
+                file("file1") { writeText("content 1") }
+                file("file2") { writeText("content 2") }
             }
+            dir("dir2").copyFrom(dir("dir1"))
+            Truth.assertThat(file("dir2/file1").toFile().readText()).isEqualTo("content 1")
+            Truth.assertThat(file("dir2/file2").toFile().readText()).isEqualTo("content 2")
+        }
+    }
+
+    @Test
+    fun copyFromFile() {
+        dir(tempDir) {
+            file("file1") { writeText("content 1") }
+            file("file1_copy").copyFrom(file("file1"))
+            Truth.assertThat(file("file1_copy").toFile().readText()).isEqualTo("content 1")
         }
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `failure - start with a relative path is not allowed`() {
-        (File("relative/path")) {} // start file builder with relative path
+        dir(File("relative/path")) // start file builder with relative path
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `failure - cannot write to a directory`() {
-        tempDir {
-            "dir" {}
-            "dir" - "content" // write to directory here
+        dir(tempDir) {
+            dir("dir")
+            file("dir") { writeText("content") } // write to a directory
         }
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun `failure - cannot create files inside an existing file`() {
-        tempDir {
-            "file1" - "content"
-            "file1" {} // trying to use "file1" as a directory
+        dir(tempDir) {
+            file("file1") { writeText("content") }
+            dir("file1") // trying to use "file1" as a directory
         }
     }
 }
