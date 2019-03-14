@@ -141,67 +141,80 @@ private fun parseResourceDirectory(
     // Iterate all files in the resource directory and handle each one.
     val resourceFiles = resourceDirectory.listFiles()!!.sortedBy { it.name }
 
-    for (maybeResourceFile in resourceFiles) {
-        if (maybeResourceFile.isDirectory) {
-            continue
-        }
+    resourceFiles.forEach {
+        parseResourceFile(
+            it, folderResourceType!!, builder, documentBuilder, platformAttrSymbols, idProvider)
+    }
+}
 
-        if (!maybeResourceFile.isFile) {
+fun parseResourceFile(
+    maybeResourceFile: File,
+    folderResourceType : ResourceFolderType,
+    builder: SymbolTable.Builder,
+    documentBuilder: DocumentBuilder,
+    platformAttrSymbols: SymbolTable?,
+    idProvider: IdProvider = IdProvider.constant()) {
+
+    if (maybeResourceFile.isDirectory) {
+        return
+    }
+
+    if (!maybeResourceFile.isFile) {
+        throw ResourceDirectoryParseException(
+            "'${maybeResourceFile.absolutePath}' is not a file nor directory")
+    }
+
+    // Check if this is a resource values directory or not. If it is, then individual files are
+    // not treated as resources but rather resource value XML files.
+    if (folderResourceType == ResourceFolderType.VALUES) {
+        val domTree: Document
+        try {
+            domTree = documentBuilder.parse(maybeResourceFile)
+            val parsedXml = parseValuesResource(domTree, idProvider, platformAttrSymbols)
+            parsedXml.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
+        } catch (e: Exception) {
             throw ResourceDirectoryParseException(
-                    "'${maybeResourceFile.absolutePath}' is not a file nor directory")
+                "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
+                e)
         }
 
-        // Check if this is a resource values directory or not. If it is, then individual files are
-        // not treated as resources but rather resource value XML files.
-        if (folderResourceType == ResourceFolderType.VALUES) {
-            val domTree: Document
+    } else {
+        // We do not need to validate the filenames of files inside the `values` directory as
+        // they do not get parsed into Symbols; but we need to validate the filenames of files
+        // inside non-values directories.
+        try {
+            FileResourceNameValidator.validate(maybeResourceFile, folderResourceType!!)
+        } catch (e: MergingException) {
+            throw ResourceDirectoryParseException(
+                "Failed file name validation for file ${maybeResourceFile.absolutePath}", e)
+        }
+
+        val fileName = maybeResourceFile.name
+
+        // Get name without extension.
+        val symbolName = getNameWithoutExtensions(fileName)
+
+        val resourceType = FolderTypeRelationship
+            .getNonIdRelatedResourceType(folderResourceType)
+        addIfNotExisting(
+            builder,
+            Symbol.createAndValidateSymbol(resourceType, symbolName, idProvider))
+
+        if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
+            && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
+            // If we are parsing an XML file (but not in values directories), parse the file in
+            // search of lazy constructions like `@+id/name` that also declare resources.
             try {
-                domTree = documentBuilder.parse(maybeResourceFile)
-                val parsedXml = parseValuesResource(domTree, idProvider, platformAttrSymbols)
-                parsedXml.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
+                val domTree = documentBuilder.parse(maybeResourceFile)
+                val extraSymbols = parseResourceForInlineResources(domTree, idProvider)
+                extraSymbols.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
             } catch (e: Exception) {
                 throw ResourceDirectoryParseException(
-                        "Failed to parse XML resource file '${maybeResourceFile.absolutePath}'",
-                        e)
-            }
-
-        } else {
-            // We do not need to validate the filenames of files inside the `values` directory as
-            // they do not get parsed into Symbols; but we need to validate the filenames of files
-            // inside non-values directories.
-            try {
-                FileResourceNameValidator.validate(maybeResourceFile, folderResourceType!!)
-            } catch (e: MergingException) {
-                throw ResourceDirectoryParseException(
-                        "Failed file name validation for file ${maybeResourceFile.absolutePath}", e)
-            }
-
-            val fileName = maybeResourceFile.name
-
-            // Get name without extension.
-            val symbolName = getNameWithoutExtensions(fileName)
-
-            val resourceType = FolderTypeRelationship
-                    .getNonIdRelatedResourceType(folderResourceType)
-            addIfNotExisting(
-                    builder,
-                    Symbol.createAndValidateSymbol(resourceType, symbolName, idProvider))
-
-            if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
-                    && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
-                // If we are parsing an XML file (but not in values directories), parse the file in
-                // search of lazy constructions like `@+id/name` that also declare resources.
-                try {
-                    val domTree = documentBuilder.parse(maybeResourceFile)
-                    val extraSymbols = parseResourceForInlineResources(domTree, idProvider)
-                    extraSymbols.symbols.values().forEach { s -> addIfNotExisting(builder, s) }
-                } catch (e: Exception) {
-                    throw ResourceDirectoryParseException(
-                            "Failed to parse XML file '${maybeResourceFile.absolutePath}'", e)
-                }
+                    "Failed to parse XML file '${maybeResourceFile.absolutePath}'", e)
             }
         }
     }
+
 }
 
 /**
