@@ -462,7 +462,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         () -> getExtension().getBuildToolsRevision(),
                         () -> getExtension().getNdkVersion(),
                         factory,
-                        projectOptions.get(BooleanOption.USE_ANDROID_X));
+                        projectOptions.get(BooleanOption.USE_ANDROID_X),
+                        projectOptions.get(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK));
 
         return new SdkComponents(
                 options, sdkHandler, extraModelInfo.getSyncIssueHandler(), project);

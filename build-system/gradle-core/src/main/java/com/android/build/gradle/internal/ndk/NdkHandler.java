@@ -42,11 +42,17 @@ public class NdkHandler {
     @NonNull private final String compileSdkVersion;
     @Nullable private NdkPlatform ndkPlatform;
 
+    // TODO(jomof): wire up to side-by-side NDK finder
+    @Nullable private final String ndkVersionFromDsl;
+    private final boolean enableSideBySideNdk;
+
     public NdkHandler(
+            boolean enableSideBySideNdk,
             @Nullable String ndkVersionFromDsl,
             @NonNull String compileSdkVersion,
             @NonNull File projectDir) {
-        // TODO: Consume ndkVersionFromDsl here
+        this.enableSideBySideNdk = enableSideBySideNdk;
+        this.ndkVersionFromDsl = ndkVersionFromDsl;
         this.projectDir = projectDir;
         this.compileSdkVersion = compileSdkVersion;
         this.ndkPlatform = null;
