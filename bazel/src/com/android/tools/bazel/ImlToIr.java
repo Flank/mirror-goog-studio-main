@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -335,15 +336,22 @@ public class ImlToIr {
         return irModule;
     }
 
+    private List<File> excludedFiles(JpsCompilerExcludes excludes) {
+        List<File> excludedFiles = new ArrayList<File>();
+        excludedFiles.addAll(captureExcludedSet("myFiles", excludes));
+        excludedFiles.addAll(captureExcludedSet("myDirectories", excludes));
+        return excludedFiles;
+    }
+
     /**
      * Excludes are parsed and stored as a "filter" like object. This would require us going through
      * the whole tree to find which files are excluded. In this case JPS and IJ code differ and both
      * parse the xml differently. For now we use reflection assuming the implementation class.
      */
-    private List<File> excludedFiles(JpsCompilerExcludes excludes) {
+    private List<File> captureExcludedSet(String field, JpsCompilerExcludes excludes) {
         Field myFiles = null;
         try {
-            myFiles = excludes.getClass().getDeclaredField("myFiles");
+            myFiles = excludes.getClass().getDeclaredField(field);
             Type genericType = myFiles.getGenericType();
             if (genericType instanceof ParameterizedType) {
                 ParameterizedType type = (ParameterizedType) genericType;

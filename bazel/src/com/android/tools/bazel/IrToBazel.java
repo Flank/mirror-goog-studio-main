@@ -95,7 +95,10 @@ public class IrToBazel {
             }
 
             for (File file : bazelModule.getExcludes()) {
-                iml.addExclude(pkg.getRelativePath(file));
+                // A file can be a pointer to either a directory or a file.
+                // If the file is a pointer to a directory then we must include *
+                // to indicate all files in the directory.
+                iml.addExclude(pkg.getRelativePath(file) + (file.isDirectory() ? "/*" : ""));
             }
         }
 
