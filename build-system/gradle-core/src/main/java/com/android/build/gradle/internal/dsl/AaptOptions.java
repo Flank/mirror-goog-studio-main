@@ -25,9 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
 
 /** DSL object for configuring aapt options. */
 public class AaptOptions {
@@ -67,8 +64,6 @@ public class AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
-    @Optional
-    @Input
     public String getIgnoreAssets() {
         return ignoreAssetsPattern;
     }
@@ -79,7 +74,6 @@ public class AaptOptions {
      * <p>See <code>aapt --help</code>
      */
     @Nullable
-    @Internal
     public String getIgnoreAssetsPattern() {
         return ignoreAssetsPattern;
     }
@@ -111,8 +105,6 @@ public class AaptOptions {
      *
      * <p>Equivalent of the -0 flag. See <code>aapt --help</code>
      */
-    @Optional
-    @Input
     public Collection<String> getNoCompress() {
         return noCompressList;
     }
@@ -161,7 +153,6 @@ public class AaptOptions {
     /**
      * Whether to use the new cruncher.
      */
-    @Input
     public boolean getUseNewCruncher() {
         return true;
     }
@@ -179,7 +170,6 @@ public class AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
-    @Input
     public boolean getFailOnMissingConfigEntry() {
         return failOnMissingConfigEntry;
     }
@@ -224,8 +214,6 @@ public class AaptOptions {
 
     /** Returns the list of additional parameters to pass to {@code aapt}. */
     @Nullable
-    @Optional
-    @Input
     public List<String> getAdditionalParameters() {
         return additionalParameters;
     }
@@ -240,7 +228,6 @@ public class AaptOptions {
      *
      * @return the number of cruncher processes, {@code 0} to use the default
      */
-    @Internal
     public int getCruncherProcesses() {
         return cruncherProcesses;
     }
@@ -250,7 +237,6 @@ public class AaptOptions {
      *
      * <p>This property is incubating and may change in a future release.
      */
-    @Internal
     public boolean getNamespaced() {
         return namespaced;
     }

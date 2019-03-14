@@ -24,7 +24,6 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.api.artifact.singleFile
-import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -55,6 +54,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.process.ProcessException
@@ -148,8 +148,10 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     private var debuggable: Boolean = false
 
-    @get:Nested
-    lateinit var aaptOptions: AaptOptions
+    private lateinit var aaptOptions: AaptOptions
+
+    @Nested
+    fun getAaptOptionsInput() = LinkingTaskInputAaptOptions(aaptOptions)
 
     private lateinit var mergeBlameLogFolder: File
 
@@ -507,7 +509,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             task.setType(config.type)
             task.setDebuggable(config.buildType.isDebuggable)
-            task.aaptOptions = variantScope.globalScope.extension.aaptOptions
+            task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)
 
@@ -874,7 +876,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val proguardOutputFile: File? = task.proguardOutputFile
         val mainDexListProguardOutputFile: File? = task.mainDexListProguardOutputFile
         val buildTargetDensity: String? = task.buildTargetDensity
-        val aaptOptions: com.android.builder.internal.aapt.AaptOptions = task.aaptOptions.convert()
+        val aaptOptions: AaptOptions = task.aaptOptions
         val variantType: VariantType = task.type
         val debuggable: Boolean = task.getDebuggable()
         val packageId: Int? = task.getResOffset()

@@ -35,6 +35,7 @@ import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.internal.aapt.AaptOptions
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -71,7 +72,7 @@ open class LinkAndroidResForBundleTask
     var debuggable: Boolean = false
         private set
 
-    private lateinit var aaptOptions: com.android.build.gradle.internal.dsl.AaptOptions
+    private lateinit var aaptOptions: AaptOptions
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -146,7 +147,7 @@ open class LinkAndroidResForBundleTask
             androidJarPath = androidJar.get().absolutePath,
             generateProtos = true,
             manifestFile = manifestFile,
-            options = aaptOptions.convert(),
+            options = aaptOptions,
             resourceOutputApk = bundledResFile,
             variantType = VariantTypeImpl.BASE_APK,
             debuggable = debuggable,
@@ -195,8 +196,8 @@ open class LinkAndroidResForBundleTask
     lateinit var resConfig: Collection<String> private set
 
     @Nested
-    fun getAaptOptions(): com.android.build.gradle.internal.dsl.AaptOptions? {
-        return aaptOptions
+    fun getAaptOptionsInput(): LinkingTaskInputAaptOptions {
+        return LinkingTaskInputAaptOptions(aaptOptions)
     }
 
     @get:Input
@@ -260,7 +261,7 @@ open class LinkAndroidResForBundleTask
             }
 
             task.debuggable = config.buildType.isDebuggable
-            task.aaptOptions = variantScope.globalScope.extension.aaptOptions
+            task.aaptOptions = variantScope.globalScope.extension.aaptOptions.convert()
 
             task.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY)

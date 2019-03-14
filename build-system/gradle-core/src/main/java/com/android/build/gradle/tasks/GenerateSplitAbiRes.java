@@ -26,10 +26,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.VariantConfiguration;
-import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable;
+import com.android.build.gradle.internal.res.LinkingTaskInputAaptOptions;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
@@ -149,8 +150,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
     }
 
     @Nested
-    public AaptOptions getAaptOptions() {
-        return aaptOptions;
+    public LinkingTaskInputAaptOptions getAaptOptionsInput() {
+        return new LinkingTaskInputAaptOptions(aaptOptions);
     }
 
     @Input
@@ -187,7 +188,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 AaptPackageConfig aaptConfig =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(manifestFile)
-                                .setOptions(DslAdaptersKt.convert(aaptOptions))
+                                .setOptions(aaptOptions)
                                 .setDebuggable(debuggable)
                                 .setResourceOutputApk(resPackageFile)
                                 .setVariantType(variantType)
@@ -363,7 +364,8 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
             task.outputBaseName = config.getBaseName();
             task.applicationId = config::getApplicationId;
             task.debuggable = config.getBuildType().isDebuggable();
-            task.aaptOptions = scope.getGlobalScope().getExtension().getAaptOptions();
+            task.aaptOptions =
+                    DslAdaptersKt.convert(scope.getGlobalScope().getExtension().getAaptOptions());
             task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
 
             task.androidJarProvider =
