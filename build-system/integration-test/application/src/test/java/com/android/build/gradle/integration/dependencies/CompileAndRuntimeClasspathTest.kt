@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.dependencies
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.ScannerSubject
-import com.android.testutils.AssumeUtil
-import com.android.utils.toSystemLineSeparator
 import org.junit.Rule
 import org.junit.Test
 
@@ -33,7 +31,6 @@ class CompileAndRuntimeClasspathTest {
 
     @Test
     fun `Higher Compile than Runtime causes failure`() {
-        AssumeUtil.assumeNotWindows() // b/73306170
         project.buildFile.appendText(
             """
             |dependencies {
@@ -45,10 +42,10 @@ class CompileAndRuntimeClasspathTest {
         val result = project.executor().expectFailure().run("assembleDebug")
         result.stderr.use {
             ScannerSubject.assertThat(it).contains(
-                "> Could not resolve all files for configuration ':debugCompileClasspath'.\n".toSystemLineSeparator() +
-                        "   > Could not resolve com.google.guava:guava:20.0.\n".toSystemLineSeparator() +
-                        "     Required by:\n".toSystemLineSeparator() +
-                        "         project :\n".toSystemLineSeparator() +
+                "> Could not resolve all files for configuration ':debugCompileClasspath'.\n" +
+                        "   > Could not resolve com.google.guava:guava:20.0.\n" +
+                        "     Required by:\n" +
+                        "         project :\n" +
                         "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n" +
                         "           Dependency path ':project:unspecified' --> 'com.google.guava:guava:20.0'\n" +
                         "           Constraint path ':project:unspecified' --> 'com.google.guava:guava:{strictly 19.0}' because of the following reason: debugRuntimeClasspath uses version 19.0\n"
@@ -58,7 +55,6 @@ class CompileAndRuntimeClasspathTest {
 
     @Test
     fun `Lower Compile than Runtime leads to promoted version`() {
-        AssumeUtil.assumeNotWindows() // b/73306170
         project.buildFile.appendText(
             """
             |dependencies {
@@ -72,7 +68,7 @@ class CompileAndRuntimeClasspathTest {
             ScannerSubject.assertThat(it).contains(
                 """debugCompileClasspath - Resolved configuration for compilation for variant: debug
 +--- com.google.guava:guava:19.0 -> 20.0
-\--- com.google.guava:guava:{strictly 20.0}""".toSystemLineSeparator()
+\--- com.google.guava:guava:{strictly 20.0}"""
             )
         }
     }
