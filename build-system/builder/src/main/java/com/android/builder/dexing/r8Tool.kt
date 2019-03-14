@@ -83,7 +83,7 @@ fun runR8(
         logger.fine("Java resources: $inputJavaResources")
         logger.fine("Library classes: $libraries")
     }
-    val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver))
+    val r8CommandBuilder = CompatProguardCommandBuilder(!useFullR8, D8DiagnosticsHandler(messageReceiver, "R8"))
 
     if (toolConfig.r8OutputType == R8OutputType.DEX) {
         r8CommandBuilder.minApiLevel = toolConfig.minSdkVersion

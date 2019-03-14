@@ -293,6 +293,7 @@ class R8ToolTest {
         val output = tmp.newFolder().toPath()
         val javaRes = tmp.root.resolve("res.jar").toPath()
         val messages = mutableListOf<String>()
+        val toolNameTags = mutableListOf<String>()
 
         try {
             runR8(
@@ -304,13 +305,17 @@ class R8ToolTest {
                 toolConfig,
                 proguardConfig,
                 mainDexConfig,
-                MessageReceiver { message -> messages.add(message.text) }
+                MessageReceiver { message ->
+                    messages.add(message.text)
+                    toolNameTags.add(message.toolName!!)
+                }
             )
             fail("Parsing proguard configuration should fail.")
         } catch (e: Throwable){
             assertThat(messages.single()).contains("Expected char '-' at")
             assertThat(messages.single()).contains("1:1")
             assertThat(messages.single()).contains("wrongRuleExample")
+            assertThat(toolNameTags).containsExactly("R8")
         }
     }
 

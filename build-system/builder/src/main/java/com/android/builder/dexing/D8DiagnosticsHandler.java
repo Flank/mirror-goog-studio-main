@@ -36,10 +36,16 @@ import java.util.Set;
 
 public class D8DiagnosticsHandler implements DiagnosticsHandler {
     private final MessageReceiver messageReceiver;
+    private final String toolTag;
     private final Set<String> pendingHints = new HashSet<>();
 
     public D8DiagnosticsHandler(MessageReceiver messageReceiver) {
+        this(messageReceiver, "D8");
+    }
+
+    public D8DiagnosticsHandler(MessageReceiver messageReceiver, String toolTag) {
         this.messageReceiver = messageReceiver;
+        this.toolTag = toolTag;
     }
 
     public static Origin getOrigin(ClassFileEntry entry) {
@@ -148,7 +154,7 @@ public class D8DiagnosticsHandler implements DiagnosticsHandler {
             }
         }
 
-        return new Message(kind, textMessage, textMessage, "D8", position);
+        return new Message(kind, textMessage, textMessage, toolTag, position);
     }
 
     private static int toIntOffset(long offset) {
