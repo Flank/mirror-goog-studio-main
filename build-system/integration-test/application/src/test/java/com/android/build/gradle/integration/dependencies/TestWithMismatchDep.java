@@ -22,8 +22,6 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.testutils.AssumeUtil;
-import com.android.utils.StringHelper;
 import java.util.Scanner;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,19 +52,16 @@ public class TestWithMismatchDep {
                     + "   Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"
                     + "   Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava:{strictly 18.0}' because of the following reason: debugRuntimeClasspath uses version 18.0\n";
     private static final String ERROR_MSG =
-            StringHelper.toSystemLineSeparator(
-                            "Could not resolve all files for configuration ':debugAndroidTestRuntimeClasspath'.\n")
-                    + StringHelper.toSystemLineSeparator(
-                            "   > Could not resolve com.google.guava:guava:19.0.\n")
-                    + StringHelper.toSystemLineSeparator("     Required by:\n")
-                    + StringHelper.toSystemLineSeparator("         project :\n")
+            "Could not resolve all files for configuration ':debugAndroidTestRuntimeClasspath'.\n"
+                    + "   > Could not resolve com.google.guava:guava:19.0.\n"
+                    + "     Required by:\n"
+                    + "         project :\n"
                     + "      > Cannot find a version of 'com.google.guava:guava' that satisfies the version constraints: \n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:19.0'\n"
                     + "           Dependency path ':testDependency:unspecified' --> 'com.google.guava:guava:18.0'\n"
                     + "           Constraint path ':testDependency:unspecified' --> 'com.google.guava:guava:{strictly 18.0}' because of the following reason: debugRuntimeClasspath uses version 18.0";
     @Test
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
-        AssumeUtil.assumeNotWindows(); // b/73306170
         // want to check the log, so can't use Junit's expected exception mechanism.
 
         GradleBuildResult result =
