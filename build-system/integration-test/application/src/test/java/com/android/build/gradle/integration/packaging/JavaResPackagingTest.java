@@ -79,10 +79,12 @@ public class JavaResPackagingTest {
                 + "    compile project(':jar')\n"
                 + "}\n");
 
-        appendToFile(libProject.getBuildFile(),
+        appendToFile(
+                libProject.getBuildFile(),
                 "dependencies {\n"
-                + "    compile project(':library2')\n"
-                + "}\n");
+                        + "    api project(':library2')\n"
+                        + "    api files('libs/local.jar')\n"
+                        + "}\n");
 
         appendToFile(testProject.getBuildFile(),
                 "android {\n"
@@ -147,11 +149,13 @@ public class JavaResPackagingTest {
         checkTestApk(libProject2, "library2test.txt", "library2Test:abcd");
 
         checkAar(    libProject,  "library.txt",     "library:abcd");
+        checkAar(    libProject,  "localjar.txt",    "localjar:abcd");
         // aar does not contain dependency's assets
         checkAar(    libProject, "library2.txt",     null);
-        // test apk contains both test-ony assets, lib assets, and dependency assets.
+        // test apk contains both test-only assets, lib assets, and dependency assets.
         checkTestApk(libProject, "library.txt",      "library:abcd");
         checkTestApk(libProject, "library2.txt",     "library2:abcd");
+        checkTestApk(libProject, "localjar.txt",     "localjar:abcd");
         checkTestApk(libProject, "librarytest.txt",  "libraryTest:abcd");
         // but not the assets of the dependency's own test
         checkTestApk(libProject, "library2test.txt", null);
@@ -161,8 +165,13 @@ public class JavaResPackagingTest {
         checkApk(    appProject, "library.txt",      "library:abcd");
         checkApk(    appProject, "library2.txt",     "library2:abcd");
         checkApk(    appProject, "jar.txt",          "jar:abcd");
+        checkApk(    appProject, "localjar.txt",     "localjar:abcd");
+        // app test contains test-ony assets (not app, dependency, or dependency test assets).
         checkTestApk(appProject, "apptest.txt",      "appTest:abcd");
-        // app test does not contain dependencies' own test assets.
+        checkTestApk(appProject, "app.txt",          null);
+        checkTestApk(appProject, "library.txt",      null);
+        checkTestApk(appProject, "library2.txt",     null);
+        checkTestApk(appProject, "localjar.txt",     null);
         checkTestApk(appProject, "librarytest.txt",  null);
         checkTestApk(appProject, "library2test.txt", null);
     }
@@ -291,9 +300,11 @@ public class JavaResPackagingTest {
 
         doTest(libProject, project -> {
             project.removeFile("src/main/resources/com/foo/library.txt");
+            project.replaceInFile("build.gradle", "api files(.*)", "");
             execute("app:assembleDebug");
 
             checkApk(appProject, "library.txt", null);
+            checkApk(appProject, "localjar.txt", null);
         });
     }
 
@@ -355,9 +366,11 @@ public class JavaResPackagingTest {
 
         doTest(libProject, project -> {
             project.removeFile("src/main/resources/com/foo/library.txt");
+            project.replaceInFile("build.gradle", "api files(.*)", "");
             execute("library:assembleDebug");
 
             checkAar(libProject, "library.txt", null);
+            checkAar(libProject, "localjar.txt", null);
         });
     }
 
@@ -410,9 +423,11 @@ public class JavaResPackagingTest {
 
         doTest(libProject, project -> {
             project.removeFile("src/androidTest/resources/com/foo/librarytest.txt");
+            project.replaceInFile("build.gradle", "api files(.*)", "");
             execute("library:assembleAT");
 
             checkTestApk(libProject, "librarytest.txt", null);
+            checkTestApk(libProject, "localjar.txt", null);
         });
     }
 

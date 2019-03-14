@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -84,7 +85,8 @@ public class InstantAppTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<ScopeType> getJavaResMergingScopes(
+            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
         return TransformManager.EMPTY_SCOPES;
     }
 

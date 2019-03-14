@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -306,7 +307,8 @@ public class ApplicationTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<ScopeType> getJavaResMergingScopes(
+            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
         if (variantScope.consumesFeatureJars()) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }

@@ -104,8 +104,11 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ScopeType> SCOPE_FEATURES = ImmutableSet.of(InternalScope.FEATURES);
     public static final Set<ScopeType> SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS =
             ImmutableSet.of(Scope.PROJECT, InternalScope.LOCAL_DEPS);
-    public static final Set<ScopeType> SCOPE_IR_FOR_SLICING =
-            ImmutableSet.of(Scope.PROJECT, Scope.SUB_PROJECTS);
+    public static final Set<ScopeType> SCOPE_FULL_PROJECT_WITH_LOCAL_JARS =
+            new ImmutableSet.Builder<ScopeType>()
+                    .addAll(SCOPE_FULL_PROJECT)
+                    .add(InternalScope.LOCAL_DEPS)
+                    .build();
 
     @NonNull
     private final Project project;

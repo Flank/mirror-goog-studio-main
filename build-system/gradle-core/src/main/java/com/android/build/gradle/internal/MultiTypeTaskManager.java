@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
@@ -93,12 +94,13 @@ public class MultiTypeTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<ScopeType> getJavaResMergingScopes(
+            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
         VariantType variantType = variantScope.getType();
         if (variantType.isTestComponent()) {
             variantType = variantScope.getTestedVariantData().getType();
         }
-        return delegates.get(variantType).getResMergingScopes(variantScope);
+        return delegates.get(variantType).getJavaResMergingScopes(variantScope, contentType);
     }
 
     @Override

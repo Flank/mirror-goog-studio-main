@@ -20,7 +20,8 @@ import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.api.transform.QualifiedContent.ScopeType
-import com.android.build.gradle.internal.InternalScope
+import com.android.build.gradle.internal.InternalScope.FEATURES
+import com.android.build.gradle.internal.InternalScope.LOCAL_DEPS
 import com.android.build.gradle.internal.packaging.SerializablePackagingOptions
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -203,16 +204,12 @@ open class MergeJavaResourceTask
                     )
             }
 
-            if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
-                task.externalLibJavaRes =
-                        variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.EXTERNAL,
-                            AndroidArtifacts.ArtifactType.JAVA_RES
-                        )
+            if (mergeScopes.contains(EXTERNAL_LIBRARIES) || mergeScopes.contains(LOCAL_DEPS)) {
+                // Local jars are treated the same as external libraries
+                task.externalLibJavaRes = getExternalLibJavaRes(variantScope, mergeScopes)
             }
 
-            if (mergeScopes.contains(InternalScope.FEATURES)) {
+            if (mergeScopes.contains(FEATURES)) {
                 task.featureJavaRes =
                         variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
@@ -243,4 +240,21 @@ fun getProjectJavaRes(scope: VariantScope): FileCollection {
         scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)
     )
     return javaRes
+}
+
+private fun getExternalLibJavaRes(scope: VariantScope, mergeScopes: Collection<ScopeType>): FileCollection {
+    val externalLibJavaRes = scope.globalScope.project.files()
+    if (mergeScopes.contains(EXTERNAL_LIBRARIES)) {
+        externalLibJavaRes.from(
+            scope.getArtifactFileCollection(
+                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                AndroidArtifacts.ArtifactScope.EXTERNAL,
+                AndroidArtifacts.ArtifactType.JAVA_RES
+            )
+        )
+    }
+    if (mergeScopes.contains(LOCAL_DEPS)) {
+        externalLibJavaRes.from(scope.localPackagedJars)
+    }
+    return externalLibJavaRes
 }

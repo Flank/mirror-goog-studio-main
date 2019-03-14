@@ -22,6 +22,7 @@ import static com.android.build.api.transform.QualifiedContent.DefaultContentTyp
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
+import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
@@ -592,7 +593,7 @@ public abstract class TaskManager {
 
         // Add stream of external java resources if EXTERNAL_LIBRARIES isn't in the set of java res
         // merging scopes.
-        if (!getResMergingScopes(variantScope).contains(Scope.EXTERNAL_LIBRARIES)) {
+        if (!getJavaResMergingScopes(variantScope, RESOURCES).contains(Scope.EXTERNAL_LIBRARIES)) {
             transformManager.addStream(
                     OriginalStream.builder(project, "ext-libs-java-res")
                             .addContentTypes(RESOURCES)
@@ -614,7 +615,7 @@ public abstract class TaskManager {
                         .build());
 
         // same for the java resources, if SUB_PROJECTS isn't in the set of java res merging scopes.
-        if (!getResMergingScopes(variantScope).contains(Scope.SUB_PROJECTS)) {
+        if (!getJavaResMergingScopes(variantScope, RESOURCES).contains(Scope.SUB_PROJECTS)) {
             transformManager.addStream(
                     OriginalStream.builder(project, "sub-projects-java-res")
                             .addContentTypes(RESOURCES)
@@ -903,7 +904,7 @@ public abstract class TaskManager {
         final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
         // Compute the scopes that need to be merged.
-        Set<ScopeType> mergeScopes = getResMergingScopes(variantScope);
+        Set<ScopeType> mergeScopes = getJavaResMergingScopes(variantScope, NATIVE_LIBS);
 
         taskFactory.register(new MergeNativeLibsTask.CreationAction(mergeScopes, variantScope));
 
@@ -914,7 +915,7 @@ public abstract class TaskManager {
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "merged-native-libs")
-                                .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                .addContentType(NATIVE_LIBS)
                                 .addScopes(mergeScopes)
                                 .setFileCollection(project.getLayout().files(nativeLibsProvider))
                                 .build());
@@ -1171,10 +1172,12 @@ public abstract class TaskManager {
      * Returns the scopes for which the java resources should be merged.
      *
      * @param variantScope the scope of the variant being processed.
+     * @param contentType the contentType of java resources, must be RESOURCES or NATIVE_LIBS
      * @return the list of scopes for which to merge the java resources.
      */
     @NonNull
-    protected abstract Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope);
+    protected abstract Set<ScopeType> getJavaResMergingScopes(
+            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType);
 
     /**
      * Creates the java resources processing tasks.
@@ -1243,7 +1246,7 @@ public abstract class TaskManager {
         TransformManager transformManager = variantScope.getTransformManager();
 
         // Compute the scopes that need to be merged.
-        Set<ScopeType> mergeScopes = getResMergingScopes(variantScope);
+        Set<ScopeType> mergeScopes = getJavaResMergingScopes(variantScope, RESOURCES);
 
         taskFactory.register(new MergeJavaResourceTask.CreationAction(mergeScopes, variantScope));
 

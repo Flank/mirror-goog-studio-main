@@ -18,18 +18,18 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
+import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -63,6 +63,7 @@ import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -446,9 +447,7 @@ public class LibraryTaskManager extends TaskManager {
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "local-deps-native")
-                                .addContentTypes(
-                                        DefaultContentType.RESOURCES,
-                                        ExtendedContentType.NATIVE_LIBS)
+                                .addContentTypes(NATIVE_LIBS)
                                 .addScope(InternalScope.LOCAL_DEPS)
                                 .setFileCollection(variantScope.getLocalPackagedJars())
                                 .build());
@@ -562,10 +561,22 @@ public class LibraryTaskManager extends TaskManager {
 
     @NonNull
     @Override
-    protected Set<ScopeType> getResMergingScopes(@NonNull VariantScope variantScope) {
+    protected Set<ScopeType> getJavaResMergingScopes(
+            @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
+        Preconditions.checkArgument(
+                contentType == RESOURCES || contentType == NATIVE_LIBS,
+                "contentType must be RESOURCES or NATIVE_LIBS");
         if (variantScope.getTestedVariantData() != null) {
+            if (contentType == RESOURCES) {
+                return TransformManager.SCOPE_FULL_PROJECT_WITH_LOCAL_JARS;
+            }
+            // contentType is NATIVE_LIBS
             return TransformManager.SCOPE_FULL_PROJECT;
         }
+        if (contentType == RESOURCES) {
+            return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
+        }
+        // contentType is NATIVE_LIBS
         return TransformManager.PROJECT_ONLY;
     }
 
