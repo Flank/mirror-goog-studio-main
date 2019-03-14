@@ -15,8 +15,11 @@
  */
 
 #include <gtest/gtest.h>
+#include <unistd.h>
 #include <condition_variable>
 #include <mutex>
+#include <string>
+#include <vector>
 
 #include "nonblocking_command_runner.h"
 
@@ -30,9 +33,12 @@ class OutputValidator {
  public:
   OutputValidator(const std::string& expected) : expected_(expected) {}
 
-  void Validate(const std::string& output) {
+  void Validate(int stdout_fd) {
     std::unique_lock<std::mutex> lock(output_mutex_);
-    EXPECT_EQ(output, expected_);
+    size_t size = expected_.size();
+    std::vector<char> buffer(size);
+    EXPECT_EQ(size, read(stdout_fd, buffer.data(), size));
+    EXPECT_EQ(expected_, std::string(buffer.begin(), buffer.end()));
     output_cv_.notify_all();
   }
 

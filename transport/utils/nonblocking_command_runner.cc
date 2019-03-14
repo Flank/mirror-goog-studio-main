@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 #include "nonblocking_command_runner.h"
-#include "utils/log.h"
-#include "utils/thread_name.h"
 
+#include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sstream>
 
+#include "utils/log.h"
+#include "utils/thread_name.h"
+
 using profiler::Log;
 using std::string;
+
 namespace profiler {
 
 // Const for index in pipe to read from
@@ -39,8 +43,8 @@ const uint kPipeWrite = 1;
 const size_t kReadBufferSize = 1024;
 
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
-                                   const StdoutCallback& callback) {
-  return Run(arguments, std::string(), const_cast<StdoutCallback*>(&callback));
+                                   StdoutCallback* callback) {
+  return Run(arguments, std::string(), callback);
 }
 
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
@@ -60,8 +64,14 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
     Log::D("Forking Command: %s", executable_path_.c_str());
   }
 
-  pipe(stdin_pipe);
-  pipe(stdout_pipe);
+  if (pipe(stdin_pipe) == -1) {
+    Log::E("Failed to open stdin pipe: %s.", strerror(errno));
+    return false;
+  }
+  if (pipe(stdout_pipe) == -1) {
+    Log::E("Failed to open stdout pipe: %s.", strerror(errno));
+    return false;
+  }
   child_process_id_ = fork();
   if (child_process_id_ == 0) {
     // child continues here
@@ -101,22 +111,10 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
       // input).
       fclose(handle);
     }
-    close(stdin_pipe[kPipeWrite]);
-
     if (callback != nullptr) {
       read_data_thread_ = std::thread([this, callback, stdout_pipe]() -> void {
         SetThreadName("Studio::CommandRunner");
-        // open a handle to read output from.
-        FILE* handle = fdopen(stdout_pipe[kPipeRead], "r");
-        char buffer[kReadBufferSize];
-        size_t read_size = 0;
-        while (IsRunning() && read_size >= 0) {
-          read_size = fread(buffer, sizeof(char), kReadBufferSize, handle);
-          if (read_size > 0) {
-            string output(buffer, read_size);
-            (*callback)(output);
-          }
-        }
+        (*callback)(stdout_pipe[kPipeRead]);
         close(stdout_pipe[kPipeRead]);
       });
     } else {

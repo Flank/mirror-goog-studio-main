@@ -26,7 +26,7 @@ namespace profiler {
 // Runs commands via fork exec.
 class NonBlockingCommandRunner {
  public:
-  using StdoutCallback = std::function<void(const std::string& output)>;
+  using StdoutCallback = std::function<void(int stdout_fd)>;
 
   explicit NonBlockingCommandRunner(const std::string& executable_path)
       : NonBlockingCommandRunner(executable_path, false) {}
@@ -35,22 +35,22 @@ class NonBlockingCommandRunner {
       : executable_path_(executable_path),
         log_command_(log_command),
         child_process_id_(0) {}
-  ~NonBlockingCommandRunner() { Kill(); }
+  virtual ~NonBlockingCommandRunner() { Kill(); }
 
   // Fork and execs the executable. The |input| is piped to stdin. The input
   // pipe is closed before returning. If a |callback| is provided a blocking
   // call is made read the stdout from the child process. It is recommended that
   // if you pass a callback either the command runner is run in a new thread, or
   // there is a way to kill the command runner on a new thread.
-  bool Run(const char* const arguments[], const StdoutCallback& callback);
+  bool Run(const char* const arguments[], StdoutCallback* callback);
   bool Run(const char* const arguments[], const std::string& input);
-  bool Run(const char* const arguments[], const std::string& input,
-           StdoutCallback* callback);
+  virtual bool Run(const char* const arguments[], const std::string& input,
+                   StdoutCallback* callback);
 
   // Kills the running child process by sending SEGINT then blocks for the
   // process to complete.
-  void Kill();
-  bool IsRunning() { return child_process_id_ > 0; }
+  virtual void Kill();
+  virtual bool IsRunning() { return child_process_id_ > 0; }
 
  private:
   const std::string executable_path_;
