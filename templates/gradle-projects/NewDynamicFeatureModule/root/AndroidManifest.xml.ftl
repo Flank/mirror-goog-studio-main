@@ -12,6 +12,11 @@
             <#if dynamicFeatureInstallTimeWithConditionsDelivery>
             <dist:install-time>
                 <dist:conditions>
+                    <!-- To include or exclude this module by user countries, uncomment and update this section. -->
+                    <!-- Learn more @ [https://developer.android.com/studio/projects/dynamic-delivery] -->
+                    <!--   <dist:user-countries dist:exclude="false"> -->
+                    <!--     <dist:country dist:code="US" /> -->
+                    <!--   </dist:user-countries> -->
                     <#list dynamicFeatureDeviceFeatureList as deviceFeature>
                         <#if deviceFeature.deviceFeatureType().get().getDisplayName() == "Name">
                             <dist:device-feature dist:name="${deviceFeature.deviceFeatureValue()}" />
