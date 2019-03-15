@@ -13,7 +13,7 @@
             <dist:install-time>
                 <dist:conditions>
                     <!-- To include or exclude this module by user countries, uncomment and update this section. -->
-                    <!-- Learn more @ [https://developer.android.com/studio/projects/dynamic-delivery] -->
+                    <!-- Learn more @ [https://d.android.com/r/studio-ui/dynamic-delivery/conditional-delivery] -->
                     <!--   <dist:user-countries dist:exclude="false"> -->
                     <!--     <dist:country dist:code="US" /> -->
                     <!--   </dist:user-countries> -->
