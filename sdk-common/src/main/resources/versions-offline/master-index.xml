@@ -58,6 +58,7 @@
   <androidx.arch.core/>
   <android.arch.work/>
   <android.arch.navigation/>
+  <androidx.navigation/>
   <androidx.mediarouter/>
   <androidx.percentlayout/>
   <androidx.emoji/>
