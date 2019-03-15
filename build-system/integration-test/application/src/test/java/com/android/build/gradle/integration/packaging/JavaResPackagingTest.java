@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
@@ -69,14 +70,15 @@ public class JavaResPackagingTest {
                                 + "include 'jar'\n");
 
         // setup dependencies.
-        appendToFile(appProject.getBuildFile(),
+        appendToFile(
+                appProject.getBuildFile(),
                 "android {\n"
                 + "    publishNonDefault true\n"
                 + "}\n"
                 + "\n"
                 + "dependencies {\n"
-                + "    compile project(':library')\n"
-                + "    compile project(':jar')\n"
+                + "    api project(':library')\n"
+                + "    api project(':jar')\n"
                 + "}\n");
 
         appendToFile(
@@ -86,10 +88,7 @@ public class JavaResPackagingTest {
                         + "    api files('libs/local.jar')\n"
                         + "}\n");
 
-        appendToFile(testProject.getBuildFile(),
-                "android {\n"
-                + "    targetProjectPath ':app'\n"
-                + "}\n");
+        appendToFile(testProject.getBuildFile(), "android { targetProjectPath ':app' }\n");
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
@@ -268,6 +267,30 @@ public class JavaResPackagingTest {
         // file's been removed, checking in the other direction.
         execute("app:assembleDebug");
         checkApk(appProject, "app.txt", "app:abcd");
+    }
+
+    /**
+     * Check for correct behavior when the order of pre-merged java resource jar files changes. This
+     * must be supported in order to use @Classpath annotations on the MergeJavaResourceTask inputs.
+     */
+    @Test
+    public void testAppProjectWithReorderedDeps() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    // change order of dependencies in app from (library, jar) to (jar, library).
+                    searchAndReplace(appProject.getBuildFile(), ":library", ":tempLibrary");
+                    searchAndReplace(appProject.getBuildFile(), ":jar", ":tempJar");
+                    searchAndReplace(appProject.getBuildFile(), ":tempLibrary", ":jar");
+                    searchAndReplace(appProject.getBuildFile(), ":tempJar", ":library");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "library.txt", "library:abcd");
+                    checkApk(appProject, "library2.txt", "library2:abcd");
+                    checkApk(appProject, "jar.txt", "jar:abcd");
+                });
     }
 
     @Test

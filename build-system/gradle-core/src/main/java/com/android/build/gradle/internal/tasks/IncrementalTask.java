@@ -15,6 +15,10 @@
  */
 package com.android.build.gradle.internal.tasks;
 
+import static com.android.ide.common.resources.FileStatus.CHANGED;
+import static com.android.ide.common.resources.FileStatus.NEW;
+import static com.android.ide.common.resources.FileStatus.REMOVED;
+
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -115,11 +119,19 @@ public abstract class IncrementalTask extends AndroidBuilderTask {
 
         inputs.outOfDate(
                 change -> {
-                    FileStatus status = change.isAdded() ? FileStatus.NEW : FileStatus.CHANGED;
+                    FileStatus status = change.isAdded() ? NEW : CHANGED;
                     changedInputs.put(change.getFile(), status);
                 });
 
-        inputs.removed(change -> changedInputs.put(change.getFile(), FileStatus.REMOVED));
+        inputs.removed(
+                change -> {
+                    // If input is added *and* removed, that's Gradle's way of saying the input's
+                    // order has changed relative to other inputs, and it also *might* have changed,
+                    // so we mark it as changed.
+                    FileStatus status =
+                            changedInputs.get(change.getFile()) == NEW ? CHANGED : REMOVED;
+                    changedInputs.put(change.getFile(), status);
+                });
 
         return changedInputs;
     }
