@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.BaseDataBinder
 import android.databinding.tool.DataBindingBuilder
+import android.databinding.tool.processing.ScopedException
 import android.databinding.tool.store.LayoutInfoInput
+import android.databinding.tool.util.L
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
@@ -28,9 +30,12 @@ import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -41,6 +46,7 @@ import java.io.File
 import java.io.Serializable
 import java.util.ArrayList
 import javax.inject.Inject
+import javax.tools.Diagnostic
 import kotlin.reflect.KFunction
 
 /**
@@ -87,6 +93,9 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     @get:Input
     var useAndroidX: Boolean = false
         private set
+    @get:Internal
+    var encodeErrors: Boolean = false
+        private set
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
@@ -95,7 +104,7 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         // invoked.
         // b/69652332
         val args = buildInputArgs(inputs)
-        CodeGenerator(args, sourceOutFolder).run()
+        CodeGenerator(args, sourceOutFolder, project.logger, encodeErrors).run()
     }
 
     private fun buildInputArgs(inputs: IncrementalTaskInputs): LayoutInfoInput.Args {
@@ -180,16 +189,47 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
             task.sourceOutFolder = sourceOutFolder
             task.classInfoBundleDir = classInfoBundleDir
-            task.useAndroidX = variantScope.globalScope.projectOptions.get(
-                BooleanOption.USE_ANDROID_X)
+            task.useAndroidX = variantScope.globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
+            // needed to decide whether data binding should encode errors or not
+            task.encodeErrors = variantScope.globalScope
+                .projectOptions[BooleanOption.IDE_INVOKED_FROM_IDE]
         }
     }
 
-    class CodeGenerator @Inject constructor(val args: LayoutInfoInput.Args,
-            private val sourceOutFolder: File) : Runnable, Serializable {
+    class CodeGenerator @Inject constructor(
+        val args: LayoutInfoInput.Args,
+        private val sourceOutFolder: File,
+        private val logger: Logger,
+        private val encodeErrors: Boolean
+    ) : Runnable, Serializable {
         override fun run() {
-            BaseDataBinder(LayoutInfoInput(args))
+            try {
+                initLogger()
+                BaseDataBinder(LayoutInfoInput(args))
                     .generateAll(DataBindingBuilder.GradleFileWriter(sourceOutFolder.absolutePath))
+            } finally {
+                clearLogger()
+            }
+        }
+
+        private fun initLogger() {
+            ScopedException.encodeOutput(encodeErrors)
+            L.setClient { kind, message, _ ->
+                logger.log(
+                    kind.toLevel(),
+                    message
+                )
+            }
+        }
+
+        private fun Diagnostic.Kind.toLevel() = when (this) {
+            Diagnostic.Kind.ERROR -> LogLevel.ERROR
+            Diagnostic.Kind.WARNING -> LogLevel.WARN
+            else -> LogLevel.INFO
+        }
+
+        private fun clearLogger() {
+            L.setClient(null)
         }
     }
 }
