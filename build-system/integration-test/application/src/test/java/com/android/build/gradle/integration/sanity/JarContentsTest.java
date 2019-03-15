@@ -559,6 +559,8 @@ public class JarContentsTest {
                 "versions-offline/androidx/mediarouter/group-index.xml",
                 "versions-offline/androidx/multidex/",
                 "versions-offline/androidx/multidex/group-index.xml",
+                "versions-offline/androidx/navigation/",
+                "versions-offline/androidx/navigation/group-index.xml",
                 "versions-offline/androidx/paging/",
                 "versions-offline/androidx/paging/group-index.xml",
                 "versions-offline/androidx/palette/",
