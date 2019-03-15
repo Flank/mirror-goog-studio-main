@@ -59,19 +59,21 @@ class SwingWorkerDetector : Detector(), SourceCodeScanner {
     override fun applicableSuperClasses(): List<String>? = listOf("javax.swing.SwingWorker")
 
     override fun visitClass(context: JavaContext, declaration: UClass) {
-        report(context, declaration)
+        val locationNode = declaration.uastSuperTypes.firstOrNull() ?: declaration
+        report(context, declaration, locationNode)
     }
 
     override fun visitClass(context: JavaContext, lambda: ULambdaExpression) {
-        report(context, lambda)
+        report(context, lambda, lambda)
     }
 
     private fun report(
         context: JavaContext,
-        node: UElement
+        node: UElement,
+        locationNode: UElement
     ) {
         context.report(
-            ISSUE, node, context.getLocation(node),
+            ISSUE, node, context.getNameLocation(locationNode),
             "Do not use `javax.swing.SwingWorker`, use `com.intellij.util.concurrency.SwingWorker` instead. See `go/do-not-freeze`."
         )
     }

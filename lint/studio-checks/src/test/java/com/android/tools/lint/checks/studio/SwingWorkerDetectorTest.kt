@@ -68,7 +68,7 @@ class SwingWorkerDetectorTest {
                 """
                 src/test/pkg/Test.java:7: Error: Do not use javax.swing.SwingWorker, use com.intellij.util.concurrency.SwingWorker instead. See go/do-not-freeze. [SwingWorker]
                         SwingWorker worker = new SwingWorker<Boolean, Integer>() {
-                                                 ^
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )

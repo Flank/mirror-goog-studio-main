@@ -49,10 +49,10 @@ class ForkJoinPoolDetectorTest {
                 """
                 src/test/pkg/Test.java:9: Error: Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [CommonForkJoinPool]
                         ForkJoinPool.commonPool(); // WARN
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~
+                                     ~~~~~~~~~~
                 src/test/pkg/Test.java:10: Error: Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See go/do-not-freeze. [CommonForkJoinPool]
                         future.whenCompleteAsync(null); // WARN
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                               ~~~~~~~~~~~~~~~~~
                 src/test/pkg/Test.java:8: Error: Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via com.intellij.openapi.application.Application#executeOnPooledThread. See go/do-not-freeze. [NewForkJoinPool]
                         new ForkJoinPool(); // WARN
                         ~~~~~~~~~~~~~~~~~~

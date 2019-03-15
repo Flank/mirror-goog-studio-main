@@ -62,7 +62,7 @@ class SwingUtilitiesDetectorTest {
                 """
                 src/test/pkg/Test.java:10: Error: Do not use SwingUtilities.invokeLater; use Application.invokeLater instead. See go/do-not-freeze. [WrongInvokeLater]
                         SwingUtilities.invokeLater(runnable); // WARN
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~
                 1 errors, 0 warnings
                 """
             )

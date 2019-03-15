@@ -133,7 +133,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         }
 
         context.report(
-            COMMON_FJ_POOL, node, context.getLocation(node),
+            COMMON_FJ_POOL, node, context.getNameLocation(node),
             "Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`."
-        )    }
+        )
+    }
 }

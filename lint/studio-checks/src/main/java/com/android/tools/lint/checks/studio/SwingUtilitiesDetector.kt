@@ -65,7 +65,9 @@ class SwingUtilitiesDetector : Detector(), SourceCodeScanner {
         val evaluator = context.evaluator
         if (evaluator.isMemberInClass(method, "javax.swing.SwingUtilities")) {
             context.report(
-                ISSUE, node, context.getLocation(node),
+                ISSUE,
+                node,
+                context.getCallLocation(node, includeReceiver = true, includeArguments = false),
                 "Do not use `SwingUtilities.invokeLater`; use `Application.invokeLater` instead. See `go/do-not-freeze`."
             )
         }
