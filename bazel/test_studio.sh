@@ -38,6 +38,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   --test_tag_filters=${test_tag_filters} \
   --profile=${dist_dir}/prof \
   -- \
+  //tools/idea/updater:updater_deploy.jar \
   $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
