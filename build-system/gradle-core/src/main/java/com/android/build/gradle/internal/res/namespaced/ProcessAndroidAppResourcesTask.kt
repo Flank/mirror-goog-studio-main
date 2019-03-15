@@ -125,7 +125,7 @@ open class ProcessAndroidAppResourcesTask
         VariantTaskCreationAction<ProcessAndroidAppResourcesTask>(variantScope) {
 
         override val name: String
-            get() = variantScope.getTaskName("process", "Resources")
+            get() = variantScope.getTaskName("process", "NamespacedResources")
         override val type: Class<ProcessAndroidAppResourcesTask>
             get() = ProcessAndroidAppResourcesTask::class.java
 

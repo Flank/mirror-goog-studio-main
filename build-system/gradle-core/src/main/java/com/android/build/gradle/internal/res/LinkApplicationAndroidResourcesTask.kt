@@ -83,7 +83,6 @@ import java.io.File
 import java.io.IOException
 import java.io.Serializable
 import java.nio.file.Files
-import java.nio.file.Path
 import java.util.ArrayList
 import java.util.function.Supplier
 import java.util.regex.Pattern
@@ -785,8 +784,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                     if (params.isNamespaced) {
                         val packagedDependencies = ImmutableList.builder<File>()
                         packagedDependencies.addAll(params.dependencies)
-                        if (params.convertedLibraryDependenciesPath != null) {
-                            Files.list(params.convertedLibraryDependenciesPath).map { it.toFile() }
+                        if (params.convertedLibraryDependenciesFile != null) {
+                            Files.list(params.convertedLibraryDependenciesFile.toPath()).map { it.toFile() }
                                 .forEach { packagedDependencies.add(it) }
                         }
                         configBuilder.setStaticLibraryDependencies(packagedDependencies.build())
@@ -849,7 +848,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                     "Failed to process resources, see aapt output above for details.", e
                 )
             }
-
         }
     }
 
@@ -883,8 +881,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val incrementalFolder: File = task.incrementalFolder
         val androidJarPath: String =
             task.androidJar.get().absolutePath
-        val convertedLibraryDependenciesPath: Path? =
-            task.convertedLibraryDependencies?.singleFile()?.toPath()
+        val convertedLibraryDependenciesFile: File? =
+            task.convertedLibraryDependencies?.singleFile()
         val inputResourcesDir: File? = task.inputResourcesDir?.singleFile()
         val mergeBlameFolder: File = task.mergeBlameLogFolder
         val isLibrary: Boolean = task.isLibrary

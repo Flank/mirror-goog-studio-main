@@ -186,10 +186,51 @@ android.defaultConfig.minSdkVersion 21
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
     @Test
-    fun smokeTest() {
-        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
+    fun smokeTestWithWorkers() {
         project.executor()
-                .with(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES, true)
+            .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
+            .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
+            .run(
+                ":lib:assembleDebug",
+                ":lib:assembleDebugAndroidTest",
+                ":baseFeature:assembleDebug",
+                ":baseFeature:assembleDebugAndroidTest",
+                ":otherFeature:bundleDebugAar",
+                ":otherFeature:assembleDebugAndroidTest",
+                ":notNamespacedLib:assembleDebug",
+                ":notNamespacedLib:assembleDebugAndroidTest",
+                ":notNamespacedLib:verifyReleaseResources",
+                ":otherFeature:assembleDebug",
+                ":otherFeature:assembleDebugAndroidTest",
+                ":app:assembleDebug",
+                ":app:assembleDebugAndroidTest")
+
+        val dotDrawablePath = "res/drawable/com.example.lib\$dot.xml"
+
+        val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
+        assertThat(apk).exists()
+        assertThat(apk).contains(dotDrawablePath)
+        assertThat(apk).containsClass("Lcom/example/app/R;")
+        assertThat(apk).containsClass("Lcom/example/app/R\$string;")
+
+        assertThat(apk.getClass("Lcom/example/app/R\$string;")!!.printFields())
+            .containsExactly(
+                "public static final I appString",
+                "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
+                "public static final I libString_from_lib",
+                "public static final I otherFeatureString_from_otherFeature")
+        assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
+        assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
+        assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
+        val testApk = project.getSubproject(":app").testApk
+        assertThat(testApk).exists()
+        assertThat(testApk).doesNotContain(dotDrawablePath)
+        assertThat(testApk).contains("res/raw/text.txt")
+    }
+
+    @Test
+    fun smokeTest() {
+        project.executor()
                 .with(BooleanOption.ENABLE_RESOURCE_NAMESPACING_DEFAULT, true)
                 .run(
                     ":lib:assembleDebug",
