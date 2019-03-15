@@ -45,7 +45,6 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
-import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -673,7 +672,6 @@ public class NativeModelTest {
 
     @Test
     public void checkUpToDate() throws Exception {
-        AssumeUtil.assumeNotWindowsBot(); // https://issuetracker.google.com/70931936
         File jsonFile = getJsonFile("debug", "x86_64");
         File miniConfigFile = ExternalNativeBuildTaskUtils.getJsonMiniConfigFile(jsonFile);
 

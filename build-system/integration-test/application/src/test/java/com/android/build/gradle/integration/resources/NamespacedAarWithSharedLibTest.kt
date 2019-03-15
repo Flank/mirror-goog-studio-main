@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import com.android.testutils.AssumeUtil
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -154,7 +153,6 @@ class NamespacedAarWithSharedLibTest {
 
     @Before
     fun buildStaticLibAsApk() {
-        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().run(":publishedLib:assembleRelease")
 
         val progress = FakeProgressIndicator()

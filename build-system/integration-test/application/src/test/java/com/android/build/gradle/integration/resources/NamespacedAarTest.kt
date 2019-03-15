@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.utils.getDebugVariant
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth.assertThat
-import com.android.testutils.AssumeUtil
 import org.junit.Rule
 import org.junit.Test
 import java.nio.file.Files
@@ -118,7 +117,6 @@ class NamespacedAarTest {
 
     @Test
     fun checkBuilds() {
-        AssumeUtil.assumeNotWindowsBot() // https://issuetracker.google.com/70931936
         project.executor().run(":publishedLib:assembleRelease")
         project.executor().run(":lib:assembleDebug", ":app:assembleDebug")
 
