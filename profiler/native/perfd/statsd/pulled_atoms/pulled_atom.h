@@ -16,8 +16,8 @@
 #ifndef PERFD_STATSD_PULLED_ATOMS_PULLED_ATOM_H_
 #define PERFD_STATSD_PULLED_ATOMS_PULLED_ATOM_H_
 
-#include "proto/statsd/atoms.pb.h"
-#include "proto/statsd/shell_config.pb.h"
+#include "statsd/proto/atoms.pb.h"
+#include "statsd/proto/shell_config.pb.h"
 
 namespace profiler {
 

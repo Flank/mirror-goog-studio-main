@@ -11,11 +11,11 @@ cc_library(
     ] + glob(["*/*.h"]),
     copts = [
         "-Itools/base/transport",
-        "-I$(GENDIR)/tools/base/profiler",
+        "-I$(GENDIR)/tools/base/profiler/native/perfd",
     ],
     tags = ["no_windows"],
     deps = [
-        "//tools/base/profiler/proto/statsd:statsd_proto",
+        "//tools/base/profiler/native/perfd/statsd/proto:statsd_proto",
         "//tools/base/transport/utils",
     ],
 )
@@ -27,7 +27,7 @@ cc_test(
     ],
     copts = [
         "-Itools/base/transport",
-        "-I$(GENDIR)/tools/base/profiler",
+        "-I$(GENDIR)/tools/base/profiler/native/perfd",
     ],
     linkstatic = 1,
     tags = ["no_windows"],
