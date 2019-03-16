@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.error;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.info;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.warn;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.info;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warn;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;

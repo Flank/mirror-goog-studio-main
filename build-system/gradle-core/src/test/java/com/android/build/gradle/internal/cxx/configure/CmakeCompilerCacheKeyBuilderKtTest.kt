@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
+import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import com.android.builder.model.Version
 import com.google.common.truth.Truth.assertThat
 import org.junit.After

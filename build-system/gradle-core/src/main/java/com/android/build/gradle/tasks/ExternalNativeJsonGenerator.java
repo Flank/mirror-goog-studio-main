@@ -22,11 +22,11 @@ import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DE
 import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_LOCAL_PROPERTIES_CACHE_DIR;
 import static com.android.build.gradle.internal.cxx.configure.GradleLocalPropertiesKt.gradleLocalProperties;
 import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.error;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.info;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.warn;
 import static com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfigurationKt.createNativeBuildSystemVariantConfig;
 import static com.android.build.gradle.internal.cxx.configure.NdkSymlinkerKt.trySymlinkNdk;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.info;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warn;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
 import com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt;
-import com.android.build.gradle.internal.cxx.configure.GradleSyncLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
@@ -44,6 +43,7 @@ import com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantC
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
+import com.android.build.gradle.internal.cxx.logging.GradleSyncLoggingEnvironment;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;

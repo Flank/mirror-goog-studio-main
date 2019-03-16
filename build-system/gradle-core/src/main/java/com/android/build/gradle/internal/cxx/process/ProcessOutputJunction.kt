@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.process
 
-import com.android.build.gradle.internal.cxx.configure.info
+import com.android.build.gradle.internal.cxx.logging.info
 import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessException

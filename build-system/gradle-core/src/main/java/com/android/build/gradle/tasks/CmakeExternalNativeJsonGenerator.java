@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
-import static com.android.build.gradle.internal.cxx.configure.LoggingEnvironmentKt.error;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;

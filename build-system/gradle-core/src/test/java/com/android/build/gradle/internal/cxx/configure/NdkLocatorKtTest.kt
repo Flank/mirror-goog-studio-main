@@ -21,6 +21,7 @@ import org.junit.After
 import org.junit.Test
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
+import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import java.io.File

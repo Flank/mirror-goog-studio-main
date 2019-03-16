@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 

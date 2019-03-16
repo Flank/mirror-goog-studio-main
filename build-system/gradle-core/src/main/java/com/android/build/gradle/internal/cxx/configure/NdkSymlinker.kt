@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.error
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files

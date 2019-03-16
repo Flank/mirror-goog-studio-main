@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.configure.ThreadLoggingEnvironment
-
 /**
  * Logging environment that gathers all messages seen into a batch.
  *

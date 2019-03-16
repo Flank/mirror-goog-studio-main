@@ -27,13 +27,16 @@ import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_BUNDLE_F
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_DIR_LOCATION
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_VERSIONED_FOLDER_LOCATION
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
+
 import com.android.build.gradle.internal.cxx.logging.BatchLoggingEnvironment
+
+import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.warn
+import com.android.build.gradle.internal.cxx.logging.error
 import com.android.repository.Revision
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.RuntimeException
-
-
 
 private enum class LocationType(val tag: String) {
     // These are in order of preferred in the case when versions are identical.

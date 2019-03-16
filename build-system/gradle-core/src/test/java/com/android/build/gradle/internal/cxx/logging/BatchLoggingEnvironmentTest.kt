@@ -16,10 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.configure.RecordingLoggingEnvironment
-import com.android.build.gradle.internal.cxx.configure.info
-import com.android.build.gradle.internal.cxx.configure.warn
-import com.android.build.gradle.internal.cxx.configure.error
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test

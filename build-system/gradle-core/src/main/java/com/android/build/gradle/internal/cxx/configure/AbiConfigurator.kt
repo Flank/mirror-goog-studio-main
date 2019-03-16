@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.error
+import com.android.build.gradle.internal.cxx.logging.warn
 import com.android.build.gradle.options.StringOption
-import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
 
 /**
  * This class is responsible for determining which ABIs are needed for the build based on the

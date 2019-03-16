@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.warn
+import com.android.build.gradle.internal.cxx.logging.error
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import java.io.File

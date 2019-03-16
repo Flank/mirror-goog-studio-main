@@ -16,10 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.build.gradle.internal.cxx.configure.info
-import com.android.build.gradle.internal.cxx.configure.warn
-import com.android.build.gradle.internal.cxx.configure.error
-
 enum class LoggingLevel {
     INFO,
     WARN,
