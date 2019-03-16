@@ -194,6 +194,16 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     }
 
     /**
+     * Fetches the multi-project Android models via the tooling API. Allows sync issues to exist in
+     * the model.
+     */
+    @NonNull
+    public ModelContainer<AndroidProject> fetchAndroidProjectsAllowSyncIssues() throws IOException {
+        return doQueryMultiContainer(AndroidProject.class);
+    }
+
+
+    /**
      * Fetches the multi=project models via the tooling API and return them as a map of (path,
      * model).
      *

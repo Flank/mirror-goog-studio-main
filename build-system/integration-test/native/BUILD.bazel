@@ -84,6 +84,15 @@ MAC_DISABLED_TAG = [
 ]
 
 single_gradle_integration_test(
+    name = "UnresolveableNdkVersionTest",
+    srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
+    data = DATA + CMAKE + NDK,
+    maven_repos = MAVEN_REPOS,
+    tags = MAC_DISABLED_TAG,
+    deps = DEPS,
+)
+
+single_gradle_integration_test(
     name = "AbiPureSplits",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
     data = DATA + NDK,

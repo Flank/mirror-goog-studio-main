@@ -64,6 +64,7 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
@@ -130,6 +131,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -351,6 +353,24 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         extension.getLintOptions());
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
+        
+        // For modules that have C/C++, construct the JSON generators to get sync errors.
+        // This doesn't do the slow work of actually generating the JSON.
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            if (!variantScope.getVariantData().getType().isTestComponent()) {
+                if (shouldBuildVariant) {
+                    Provider<ExternalNativeJsonGenerator> provider =
+                            variantScope.getTaskContainer().getExternalNativeJsonGenerator();
+                    if (provider != null) {
+                        // This path will only execute if the module has native code.
+                        // It will cause ExternalNativeJsonGenerator#create to be invoked.
+                        // This function does work, like trying to located the NDK, that
+                        // can trigger sync messages.
+                        provider.get();
+                    }
+                }
+            }
+        }
 
         syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
