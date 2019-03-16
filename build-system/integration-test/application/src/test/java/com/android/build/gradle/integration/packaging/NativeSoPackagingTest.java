@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.packaging;
 
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -257,10 +256,10 @@ public class NativeSoPackagingTest {
                 appProject,
                 project -> {
                     // change order of dependencies in app from (jar, jar2) to (jar2, jar).
-                    searchAndReplace(appProject.getBuildFile(), ":jar2", ":tempJar2");
-                    searchAndReplace(appProject.getBuildFile(), ":jar", ":tempJar");
-                    searchAndReplace(appProject.getBuildFile(), ":tempJar2", ":jar");
-                    searchAndReplace(appProject.getBuildFile(), ":tempJar", ":jar2");
+                    project.replaceInFile("build.gradle", ":jar2", ":tempJar2");
+                    project.replaceInFile("build.gradle", ":jar", ":tempJar");
+                    project.replaceInFile("build.gradle", ":tempJar2", ":jar");
+                    project.replaceInFile("build.gradle", ":tempJar", ":jar2");
                     execute("app:assembleDebug");
 
                     checkApk(appProject, "liblibrary.so", "library:abcd");

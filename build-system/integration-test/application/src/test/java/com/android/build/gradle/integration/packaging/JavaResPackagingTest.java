@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
@@ -60,12 +59,15 @@ public class JavaResPackagingTest {
         testProject = project.getSubproject("test");
         jarProject = project.getSubproject("jar");
 
-        // rewrite settings.gradle to remove un-needed modules
+        // Rewrite settings.gradle to remove un-needed modules. We include library3 so that
+        // testAppProjectTestWithRemovedResFile() also serves as a regression test for
+        // https://issuetracker.google.com/128858509
         Files.asCharSink(project.getSettingsFile(), Charsets.UTF_8)
                 .write(
                         "include 'app'\n"
                                 + "include 'library'\n"
                                 + "include 'library2'\n"
+                                + "include 'library3'\n"
                                 + "include 'test'\n"
                                 + "include 'jar'\n");
 
@@ -73,13 +75,14 @@ public class JavaResPackagingTest {
         appendToFile(
                 appProject.getBuildFile(),
                 "android {\n"
-                + "    publishNonDefault true\n"
-                + "}\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    api project(':library')\n"
-                + "    api project(':jar')\n"
-                + "}\n");
+                        + "    publishNonDefault true\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    api project(':library')\n"
+                        + "    api project(':library3')\n"
+                        + "    api project(':jar')\n"
+                        + "}\n");
 
         appendToFile(
                 libProject.getBuildFile(),
@@ -280,11 +283,14 @@ public class JavaResPackagingTest {
         doTest(
                 appProject,
                 project -> {
-                    // change order of dependencies in app from (library, jar) to (jar, library).
-                    searchAndReplace(appProject.getBuildFile(), ":library", ":tempLibrary");
-                    searchAndReplace(appProject.getBuildFile(), ":jar", ":tempJar");
-                    searchAndReplace(appProject.getBuildFile(), ":tempLibrary", ":jar");
-                    searchAndReplace(appProject.getBuildFile(), ":tempJar", ":library");
+                    // change order of dependencies in app from (library, library3, jar) to
+                    // (library3, jar, library).
+                    project.replaceInFile("build.gradle", ":library3", ":tempLibrary3");
+                    project.replaceInFile("build.gradle", ":library", ":tempLibrary");
+                    project.replaceInFile("build.gradle", ":jar", ":tempJar");
+                    project.replaceInFile("build.gradle", ":tempLibrary3", ":jar");
+                    project.replaceInFile("build.gradle", ":tempLibrary", ":library3");
+                    project.replaceInFile("build.gradle", ":tempJar", ":library");
                     execute("app:assembleDebug");
 
                     checkApk(appProject, "library.txt", "library:abcd");
@@ -305,6 +311,12 @@ public class JavaResPackagingTest {
         });
     }
 
+    /**
+     * Check for correct behavior when a java res source file get removed.
+     *
+     * Also, with app's dependency on library3, this serves as a regression test for
+     * https://issuetracker.google.com/128858509
+     */
     @Test
     public void testAppProjectWithAddedResInDependency() throws Exception {
         execute("app:clean", "library:clean", "app:assembleDebug");
