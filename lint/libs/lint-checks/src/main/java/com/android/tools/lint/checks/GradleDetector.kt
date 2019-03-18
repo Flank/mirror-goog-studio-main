@@ -789,13 +789,13 @@ open class GradleDetector : Detector(), GradleScanner {
                 if ("robolectric" == artifactId &&
                     System.getProperty("os.name").toLowerCase(Locale.US).contains("windows")
                 ) {
-                    if (!version.isAtLeast(4, 1, 0)) {
-                        val fix = getUpdateDependencyFix(revision, "4.1")
+                    if (!version.isAtLeast(4, 2, 1)) {
+                        val fix = getUpdateDependencyFix(revision, "4.2.1")
                         report(
                             context,
                             cookie,
                             DEPENDENCY,
-                            "Use robolectric version 4.1 or later to " +
+                            "Use robolectric version 4.2.1 or later to " +
                                     "fix issues with parsing of Windows paths",
                             fix
                         )

@@ -1662,16 +1662,16 @@ class GradleDetectorTest : AbstractCheckTest() {
         val expected =
             if (isWindows())
                 """
-                    build.gradle:2: Warning: Use robolectric version 4.1 or later to fix issues with parsing of Windows paths [GradleDependency]
-                        testImplementation 'org.robolectric:robolectric:4.1-beta-2'
-                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:3: Warning: Use robolectric version 4.1 or later to fix issues with parsing of Windows paths [GradleDependency]
+                    build.gradle:2: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
+                        testImplementation 'org.robolectric:robolectric:4.1'
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    build.gradle:3: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:3.8'
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:4: Warning: Use robolectric version 4.1 or later to fix issues with parsing of Windows paths [GradleDependency]
+                    build.gradle:4: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:3.6'
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                    build.gradle:5: Warning: Use robolectric version 4.1 or later to fix issues with parsing of Windows paths [GradleDependency]
+                    build.gradle:5: Warning: Use robolectric version 4.2.1 or later to fix issues with parsing of Windows paths [GradleDependency]
                         testImplementation 'org.robolectric:robolectric:2.0'
                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     0 errors, 4 warnings
@@ -1683,11 +1683,11 @@ class GradleDetectorTest : AbstractCheckTest() {
             gradle(
                 """
                     dependencies {
-                        testImplementation 'org.robolectric:robolectric:4.1-beta-2'
+                        testImplementation 'org.robolectric:robolectric:4.1'
                         testImplementation 'org.robolectric:robolectric:3.8'
                         testImplementation 'org.robolectric:robolectric:3.6'
                         testImplementation 'org.robolectric:robolectric:2.0'
-                        testImplementation 'org.robolectric:robolectric:4.1'
+                        testImplementation 'org.robolectric:robolectric:4.2.1'
                     }
                 """.trimIndent()
             )
@@ -1698,23 +1698,23 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expectFixDiffs(
                 if (isWindows())
                     """
-                        Fix for build.gradle line 2: Change to 4.1:
+                        Fix for build.gradle line 2: Change to 4.2.1:
                         @@ -2 +2
-                        -     testImplementation 'org.robolectric:robolectric:4.1-beta-2'
-                        +     testImplementation 'org.robolectric:robolectric:4.1'
-                        Fix for build.gradle line 3: Change to 4.1:
+                        -     testImplementation 'org.robolectric:robolectric:4.1'
+                        +     testImplementation 'org.robolectric:robolectric:4.2.1'
+                        Fix for build.gradle line 3: Change to 4.2.1:
                         @@ -3 +3
                         -     testImplementation 'org.robolectric:robolectric:3.8'
-                        +     testImplementation 'org.robolectric:robolectric:4.1'
-                        Fix for build.gradle line 4: Change to 4.1:
+                        +     testImplementation 'org.robolectric:robolectric:4.2.1'
+                        Fix for build.gradle line 4: Change to 4.2.1:
                         @@ -4 +4
                         -     testImplementation 'org.robolectric:robolectric:3.6'
-                        +     testImplementation 'org.robolectric:robolectric:4.1'
-                        Fix for build.gradle line 5: Change to 4.1:
+                        +     testImplementation 'org.robolectric:robolectric:4.2.1'
+                        Fix for build.gradle line 5: Change to 4.2.1:
                         @@ -5 +5
                         -     testImplementation 'org.robolectric:robolectric:2.0'
                         @@ -7 +6
-                        +     testImplementation 'org.robolectric:robolectric:4.1'
+                        +     testImplementation 'org.robolectric:robolectric:4.2.1'
                     """.trimIndent()
                 else ""
             )
