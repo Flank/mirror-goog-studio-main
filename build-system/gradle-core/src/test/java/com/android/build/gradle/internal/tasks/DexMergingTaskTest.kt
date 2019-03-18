@@ -55,6 +55,7 @@ class DexMergingTaskTest {
                 0,
                 null,
                 ImmutableSet.of(dexFiles),
+                null,
                 output
             )
         ).run()
@@ -76,6 +77,7 @@ class DexMergingTaskTest {
                 0,
                 null,
                 ImmutableSet.of(dexFiles),
+                null,
                 output
             )
         ).run()
@@ -106,6 +108,7 @@ class DexMergingTaskTest {
                 0,
                 mainDexList,
                 ImmutableSet.of(dexFiles),
+                null,
                 output
             )
         ).run()
@@ -136,6 +139,7 @@ class DexMergingTaskTest {
                 numInputs + 1,
                 null,
                 inputFiles.toSet(),
+                null,
                 output
             )
         ).run()
@@ -163,6 +167,7 @@ class DexMergingTaskTest {
                 numInputs,
                 null,
                 inputFiles.toSet(),
+                null,
                 output
             )
         ).run()
@@ -202,6 +207,7 @@ class DexMergingTaskTest {
                 Int.MAX_VALUE,
                 null,
                 inputFiles.toSet(),
+                null,
                 output
             )
         ).run()

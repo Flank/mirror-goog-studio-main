@@ -79,20 +79,10 @@ class DesugarFileDependencyTest(var tool: Tool) {
     fun checkBuilds() {
         executor().run("assembleDebug")
         project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
-            val assertThatClass = assertThat(apk)
+            assertThat(apk)
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
                 .that()
-            if (tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS) {
-                //TODO(b/128599004): fix this case
-                // This class will not be correctly desugared in the D8_WITH_ARTIFACT_TRANSFORMS
-                // case with the current implementation, as ImplOfInterfaceWithDefaultMethod
-                // will be desugared in an artifact transform without reference to the library
-                // containing InterfaceWithDefaultMethod, and so will not be modified to have the
-                // default method implementation.
-                assertThatClass.doesNotHaveMethod("myDefaultMethod")
-            } else {
-                assertThatClass.hasMethod("myDefaultMethod")
-            }
+                .hasMethod("myDefaultMethod")
         }
     }
 

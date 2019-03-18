@@ -108,6 +108,7 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
 import com.android.build.gradle.internal.tasks.DexMergingAction;
 import com.android.build.gradle.internal.tasks.DexMergingTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
@@ -2390,10 +2391,25 @@ public abstract class TaskManager {
      */
     private void createDexMergingWithArtifactTransforms(
             @NonNull VariantScope variantScope, @NonNull DexingType dexingType) {
+
+        // When desugaring, The file dependencies are dexed in a task with the whole
+        // remote classpath present, as they lack dependency information to desugar
+        // them correctly in an artifact transform.
+        boolean separateFileDependenciesDexingTask =
+                variantScope.getJava8LangSupportType() == Java8LangSupport.D8;
+        if (separateFileDependenciesDexingTask) {
+            DexFileDependenciesTask.CreationAction desugarFileDeps =
+                    new DexFileDependenciesTask.CreationAction(variantScope);
+            taskFactory.register(desugarFileDeps);
+        }
+
         if (dexingType == DexingType.LEGACY_MULTIDEX) {
             DexMergingTask.CreationAction configAction =
                     new DexMergingTask.CreationAction(
-                            variantScope, DexMergingAction.MERGE_ALL, dexingType);
+                            variantScope,
+                            DexMergingAction.MERGE_ALL,
+                            dexingType,
+                            separateFileDependenciesDexingTask);
             taskFactory.register(configAction);
         } else {
             boolean produceSeparateOutputs =
@@ -2405,6 +2421,7 @@ public abstract class TaskManager {
                             variantScope,
                             DexMergingAction.MERGE_EXTERNAL_LIBS,
                             DexingType.NATIVE_MULTIDEX,
+                            separateFileDependenciesDexingTask,
                             produceSeparateOutputs
                                     ? InternalArtifactType.DEX
                                     : InternalArtifactType.EXTERNAL_LIBS_DEX));
@@ -2417,10 +2434,7 @@ public abstract class TaskManager {
 
                 DexMergingTask.CreationAction mergeLibraries =
                         new DexMergingTask.CreationAction(
-                                variantScope,
-                                DexMergingAction.MERGE_LIBRARY_PROJECTS,
-                                dexingType,
-                                InternalArtifactType.DEX);
+                                variantScope, DexMergingAction.MERGE_LIBRARY_PROJECTS, dexingType);
                 taskFactory.register(mergeLibraries);
             } else {
                 DexMergingTask.CreationAction configAction =

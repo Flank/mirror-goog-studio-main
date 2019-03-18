@@ -51,6 +51,8 @@ public enum InternalArtifactType implements ArtifactType {
 
     // External libraries' dex files only.
     EXTERNAL_LIBS_DEX,
+    // External file library dex archives (Desugared separately from module & project dependencies)
+    EXTERNAL_FILE_LIB_DEX_ARCHIVES,
     // The final dex files that will get packaged in the APK or bundle.
     DEX,
     // the packaged classes published by APK modules.
