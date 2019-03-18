@@ -60,7 +60,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
 /**
  * Handles the all things SDK for the Gradle plugin. There is one instance per project, around
@@ -73,6 +72,8 @@ public class SdkHandler {
 
     @NonNull
     private final ILogger logger;
+
+    @NonNull private final EvalIssueReporter evalIssueReporter;
 
     private SdkLoader sdkLoader;
     private File sdkFolder;
@@ -93,7 +94,8 @@ public class SdkHandler {
             @NonNull ILogger logger,
             @NonNull EvalIssueReporter evalIssueReporter) {
         this.logger = logger;
-        findLocation(project, evalIssueReporter);
+        this.evalIssueReporter = evalIssueReporter;
+        findLocation(project);
     }
 
     /**
@@ -102,10 +104,9 @@ public class SdkHandler {
      * @return true on success, false on failure after reporting errors via the issue reporter,
      *     which throws exceptions when not in sync mode.
      */
+    @Nullable
     public Pair<SdkInfo, TargetInfo> initTarget(
-            @NonNull String targetHash,
-            @NonNull Revision buildToolRevision,
-            @NonNull EvalIssueReporter evalIssueReporter) {
+            @NonNull String targetHash, @NonNull Revision buildToolRevision) {
         Preconditions.checkNotNull(targetHash, "android.compileSdkVersion is missing!");
         Preconditions.checkNotNull(buildToolRevision, "android.buildToolsVersion is missing!");
 
@@ -137,7 +138,6 @@ public class SdkHandler {
                             AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString());
             buildToolRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
         }
-
 
         Stopwatch stopwatch = Stopwatch.createStarted();
         SdkInfo sdkInfo = sdkLoader.getSdkInfo(logger);
@@ -186,8 +186,7 @@ public class SdkHandler {
      *
      * @return true if some download operation was attempted.
      */
-    public boolean ensurePlatformToolsIsInstalledWarnOnFailure(
-            @NonNull EvalIssueReporter issueReporter) {
+    public boolean ensurePlatformToolsIsInstalledWarnOnFailure() {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
         ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -201,20 +200,20 @@ public class SdkHandler {
                     sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
                     return true;
                 } catch (LicenceNotAcceptedException e) {
-                    issueReporter.reportWarning(
+                    evalIssueReporter.reportWarning(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
                             SdkConstants.FD_PLATFORM_TOOLS
                                     + " package is not installed. Please accept the installation licence to continue",
                             SdkConstants.FD_PLATFORM_TOOLS);
                 } catch (InstallFailedException e) {
-                    issueReporter.reportWarning(
+                    evalIssueReporter.reportWarning(
                             EvalIssueReporter.Type.MISSING_SDK_PACKAGE,
                             SdkConstants.FD_PLATFORM_TOOLS
                                     + " package is not installed, and automatic installation failed.",
                             SdkConstants.FD_PLATFORM_TOOLS);
                 }
             } else {
-                issueReporter.reportWarning(
+                evalIssueReporter.reportWarning(
                         Type.MISSING_SDK_PACKAGE,
                         SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.",
                         SdkConstants.FD_PLATFORM_TOOLS);
@@ -333,8 +332,7 @@ public class SdkHandler {
         return Pair.of(null, true);
     }
 
-    private void findLocation(
-            @NonNull Project project, @NonNull EvalIssueReporter evalIssueReporter) {
+    private void findLocation(@NonNull Project project) {
         if (sTestSdkFolder != null) {
             sdkFolder = sTestSdkFolder;
             return;
@@ -415,7 +413,14 @@ public class SdkHandler {
         if (!sdkLibData.useSdkDownload()) {
             return;
         }
-        ndkHandler.installFromSdk(sdkLoader, sdkLibData);
+        SdkLoader loader = getSdkLoader();
+        if (loader == null) {
+            // If the loader is null it means we couldn't set-up one based on a local SDK.
+            // So we can't even try to installPackage something. This set up error will be reported
+            // during SdkHandler set-up.
+            return;
+        }
+        ndkHandler.installFromSdk(loader, sdkLibData);
     }
 
     /** Installs CMake. */
@@ -424,32 +429,17 @@ public class SdkHandler {
             return;
         }
         try {
-            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE + ";" + version);
+            SdkLoader loader = getSdkLoader();
+            if (loader == null) {
+                // If the loader is null it means we couldn't set-up one based on a local SDK.
+                // So we can't even try to installPackage something. This set up error will be reported
+                // during SdkHandler set-up.
+                return;
+            }
+            loader.getSdkInfo(logger); // We need to make sure the loader was initialized.
+            loader.installSdkTool(sdkLibData, SdkConstants.FD_CMAKE + ";" + version);
         } catch (LicenceNotAcceptedException | InstallFailedException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public void addLocalRepositories(Project project) {
-        SdkLoader sdkLoader = getSdkLoader();
-        if (sdkLoader == null) {
-            // SdkLoader couldn't be constructed, probably because we're missing the sdk dir configuration.
-            // If so, getSdkLoader() already reported to the evalIssueReporter.
-            return;
-        }
-
-        for (final File repository : sdkLoader.getRepositories()) {
-            MavenArtifactRepository mavenRepository = project.getRepositories()
-                    .maven(newRepository -> {
-                        newRepository.setName(repository.getPath());
-                        newRepository.setUrl(repository);
-                    });
-
-            // move SDK repositories to top so they are looked up first before checking external
-            // repositories like jcenter or maven which are guaranteed to not have the android
-            // support libraries and associated.
-            project.getRepositories().remove(mavenRepository);
-            project.getRepositories().addFirst(mavenRepository);
         }
     }
 }

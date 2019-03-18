@@ -561,7 +561,6 @@ fun findCmakePath(
             cmakeVersionFromDsl,
             cmakeFile,
             downloader,
-            // { version -> sdkHandler.installCMake(version) },
             { getEnvironmentPaths() },
             { getCanarySdkPaths(sdkFolder) },
             { folder -> getCmakeRevisionFromExecutable(folder) },

@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.scope
 import com.android.builder.core.LibraryRequest
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
-import com.android.sdklib.IAndroidTarget
+import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidVersion
+import com.android.sdklib.OptionalLibrary
 import com.google.common.base.Verify
 import com.google.common.collect.ImmutableList
 import java.io.File
@@ -48,46 +50,46 @@ object BootClasspathBuilder {
     fun computeClasspath(
         project: Project,
         issueReporter: EvalIssueReporter,
-        target: Provider<IAndroidTarget>,
+        targetBootClasspath: Provider<List<File>>,
+        targetAndroidVersion: Provider<AndroidVersion>,
+        additionalLibraries: Provider<List<OptionalLibrary>>,
+        optionalLibraries: Provider<List<OptionalLibrary>>,
         annotationsJar: Provider<File>,
         addAllOptionalLibraries: Boolean,
         libraryRequests: List<LibraryRequest>
     ): FileCollection {
 
         return project.files(
-            target.map { androidTarget ->
-                val key = calculateKey(androidTarget, addAllOptionalLibraries, libraryRequests)
+            targetBootClasspath.map { bootClasspath ->
+                val apiLevel = targetAndroidVersion.get().apiLevel
+                val key = calculateKey(apiLevel, addAllOptionalLibraries, libraryRequests)
 
-                val files = ImmutableList.builder<File>()
-                if (!classpathCache.containsKey(key)) {
-                    androidTarget
-                        .bootClasspath
-                        .map { File(it) }
-                        .forEach { files.add(it) }
+                classpathCache.getOrPut(key) {
+                    val files = ImmutableList.builder<File>()
+                    files.addAll(bootClasspath)
 
                     // add additional and requested optional libraries if any
                     files.addAll(
                         computeAdditionalAndRequestedOptionalLibraries(
-                            androidTarget, addAllOptionalLibraries, libraryRequests, issueReporter
+                            additionalLibraries.get(), optionalLibraries.get(), addAllOptionalLibraries, libraryRequests, issueReporter
                         )
                     )
 
                     // add annotations.jar if needed.
-                    if (androidTarget.version.apiLevel <= 15) {
+                    if (apiLevel <= 15) {
                         files.add(annotationsJar.get())
                     }
 
-                    classpathCache[key] = files.build()
+                    files.build()
                 }
-                classpathCache[key]
             })
     }
 
     private fun calculateKey(
-        androidTarget: IAndroidTarget,
+        targetApiLevel: Int,
         addAllOptionalLibraries: Boolean,
         libraryRequests: List<LibraryRequest>
-    )= Objects.hash(androidTarget, addAllOptionalLibraries, libraryRequests)
+    )= Objects.hash(AndroidTargetHash.getPlatformHashString(AndroidVersion(targetApiLevel)), addAllOptionalLibraries, libraryRequests)
 
     /**
      * Calculates the list of additional and requested optional library jar files
@@ -101,7 +103,8 @@ object BootClasspathBuilder {
      * @return a list of File to add to the classpath.
      */
     fun computeAdditionalAndRequestedOptionalLibraries(
-        androidTarget: IAndroidTarget,
+        additionalLibraries: List<OptionalLibrary>,
+        optionalLibraries: List<OptionalLibrary>,
         addAllOptionalLibraries: Boolean,
         libraryRequestsArg: List<LibraryRequest>,
         issueReporter: EvalIssueReporter
@@ -111,7 +114,7 @@ object BootClasspathBuilder {
         // a requested library
         val libraryRequests = libraryRequestsArg.map { it.name }.toMutableSet()
         val files = ImmutableList.builder<File>()
-        androidTarget.additionalLibraries
+        additionalLibraries
             .stream()
             .map<File> { lib ->
                 val jar = lib.jar
@@ -130,7 +133,7 @@ object BootClasspathBuilder {
             .forEach { files.add(it) }
 
         // then iterate through optional libraries
-        androidTarget.optionalLibraries
+        optionalLibraries
             .stream()
             .map<File> { lib ->
                 // add to jar and remove from requests

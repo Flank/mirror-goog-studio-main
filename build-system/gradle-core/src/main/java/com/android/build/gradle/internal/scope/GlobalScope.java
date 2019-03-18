@@ -368,7 +368,10 @@ public class GlobalScope implements TransformGlobalScope {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
                 getDslScope().getIssueReporter(),
-                getSdkComponents().getTargetProvider(),
+                getSdkComponents().getTargetBootClasspathProvider(),
+                getSdkComponents().getTargetAndroidVersionProvider(),
+                getSdkComponents().getAdditionalLibrariesProvider(),
+                getSdkComponents().getOptionalLibrariesProvider(),
                 getSdkComponents().getAnnotationsJarProvider(),
                 false,
                 ImmutableList.copyOf(getExtension().getLibraryRequests()));
@@ -385,7 +388,10 @@ public class GlobalScope implements TransformGlobalScope {
         return BootClasspathBuilder.INSTANCE.computeClasspath(
                 project,
                 getDslScope().getIssueReporter(),
-                getSdkComponents().getTargetProvider(),
+                getSdkComponents().getTargetBootClasspathProvider(),
+                getSdkComponents().getTargetAndroidVersionProvider(),
+                getSdkComponents().getAdditionalLibrariesProvider(),
+                getSdkComponents().getOptionalLibrariesProvider(),
                 getSdkComponents().getAnnotationsJarProvider(),
                 true,
                 ImmutableList.of());

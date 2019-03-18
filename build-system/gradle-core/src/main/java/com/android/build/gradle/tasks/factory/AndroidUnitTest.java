@@ -39,6 +39,7 @@ import com.android.builder.core.VariantType;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.Callable;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
@@ -228,18 +229,26 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             return globalScope
                     .getProject()
                     .files(
-                            BootClasspathBuilder.INSTANCE
-                                    .computeAdditionalAndRequestedOptionalLibraries(
-                                            globalScope
-                                                    .getSdkComponents()
-                                                    .getTargetProvider()
-                                                    .get(),
-                                            false,
-                                            ImmutableList.copyOf(
-                                                    globalScope
-                                                            .getExtension()
-                                                            .getLibraryRequests()),
-                                            globalScope.getDslScope().getIssueReporter()));
+                            (Callable)
+                                    () ->
+                                            BootClasspathBuilder.INSTANCE
+                                                    .computeAdditionalAndRequestedOptionalLibraries(
+                                                            globalScope
+                                                                    .getSdkComponents()
+                                                                    .getAdditionalLibrariesProvider()
+                                                                    .get(),
+                                                            globalScope
+                                                                    .getSdkComponents()
+                                                                    .getOptionalLibrariesProvider()
+                                                                    .get(),
+                                                            false,
+                                                            ImmutableList.copyOf(
+                                                                    globalScope
+                                                                            .getExtension()
+                                                                            .getLibraryRequests()),
+                                                            globalScope
+                                                                    .getDslScope()
+                                                                    .getIssueReporter()));
         }
     }
 }

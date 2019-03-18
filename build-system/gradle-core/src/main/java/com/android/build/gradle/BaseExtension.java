@@ -894,7 +894,8 @@ public abstract class BaseExtension implements AndroidConfig {
      * the standalone NDK package</a>.
      */
     public File getNdkDirectory() {
-        return globalScope.getSdkComponents().getNdkFolder();
+        // do not call this method from within the plugin code as it forces part of SDK initialization.
+        return globalScope.getSdkComponents().getNdkFolderProvider().get();
     }
 
     @Override

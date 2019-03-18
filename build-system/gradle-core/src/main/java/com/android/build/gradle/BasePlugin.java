@@ -35,9 +35,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkComponents;
-import com.android.build.gradle.internal.SdkComponentsOptions;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.SdkLibDataFactory;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
@@ -73,7 +71,6 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant2.DslScopeImpl;
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
@@ -332,7 +329,14 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
 
-        SdkComponents sdkComponents = createSdkComponents(gradle);
+        SdkComponents sdkComponents =
+                SdkComponents.Companion.createSdkComponents(
+                        project,
+                        projectOptions,
+                        // We pass a supplier here because extension will only be set later.
+                        this::getExtension,
+                        getLogger(),
+                        extraModelInfo.getSyncIssueHandler());
 
         AndroidBuilder androidBuilder =
                 new AndroidBuilder(
@@ -443,32 +447,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 });
 
         createLintClasspathConfiguration(project);
-    }
-
-    private SdkComponents createSdkComponents(Gradle gradle) {
-        SdkHandler sdkHandler =
-                new SdkHandler(project, getLogger(), extraModelInfo.getSyncIssueHandler());
-
-        boolean enableDownload =
-                !gradle.getStartParameter().isOffline()
-                        && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD);
-        SdkLibDataFactory factory =
-                new SdkLibDataFactory(
-                        enableDownload,
-                        projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL),
-                        getLogger());
-
-        SdkComponentsOptions options =
-                new SdkComponentsOptions(
-                        () -> getExtension().getCompileSdkVersion(),
-                        () -> getExtension().getBuildToolsRevision(),
-                        () -> getExtension().getNdkVersion(),
-                        factory,
-                        projectOptions.get(BooleanOption.USE_ANDROID_X),
-                        projectOptions.get(BooleanOption.ENABLE_SIDE_BY_SIDE_NDK));
-
-        return new SdkComponents(
-                options, sdkHandler, extraModelInfo.getSyncIssueHandler(), project);
     }
 
     /** Creates a lint class path Configuration for the given project */
