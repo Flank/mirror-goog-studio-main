@@ -66,8 +66,8 @@ public class LintPlugin implements Plugin<Project> {
                                         customLintChecksConfig);
                         // Make the check task depend on the lint
                         project.getTasks()
-                                .findByName(JavaBasePlugin.CHECK_TASK_NAME)
-                                .dependsOn(task);
+                                .named(JavaBasePlugin.CHECK_TASK_NAME)
+                                .configure(t -> t.dependsOn(task));
 
                         LintStandaloneTask lintVital =
                                 createTask(

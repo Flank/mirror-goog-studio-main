@@ -392,9 +392,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         buildCache);
 
         project.getTasks()
-                .getByName("assemble")
-                .setDescription(
-                        "Assembles all variants of all applications and secondary packages.");
+                .named("assemble")
+                .configure(
+                        task ->
+                                task.setDescription(
+                                        "Assembles all variants of all applications and secondary packages."));
 
         // call back on execution. This is called after the whole build is done (not
         // after the current project is done).
