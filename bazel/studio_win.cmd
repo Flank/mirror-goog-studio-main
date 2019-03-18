@@ -59,6 +59,7 @@ cd %BASEDIR%\bazel-testlogs
 
 FOR /F "tokens=*" %%F IN ('C:\cygwin64\bin\find.exe . -type f -name "*outputs.zip"') DO (
   C:\cygwin64\bin\zip.exe -ur %DISTDIR%\perfgate_data.zip %%F
+  DEL %%F
 )
 
 @rem Create profile html in %DISTDIR% so it ends up in Artifacts.
