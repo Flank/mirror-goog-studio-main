@@ -52,7 +52,7 @@ public class ResourceValidationTest {
         //noinspection ThrowableResultOfMethodCallIgnored
         assertThat(result.getFailureMessage()).contains("file name must end with");
 
-        try (Scanner scanner = result.getStdout()) {
+        try (Scanner scanner = result.getStderr()) {
             ScannerSubject.assertThat(scanner)
                     .contains(
                             FileUtils.join("src", "main", "res", "drawable", "not_a_drawable.ext"));

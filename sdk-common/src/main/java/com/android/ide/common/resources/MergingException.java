@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.Message.Kind;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
@@ -55,6 +56,19 @@ public class MergingException extends Exception {
     protected MergingException(@Nullable Throwable cause, @NonNull Message... messages) {
         super(messages.length == 1 ? messages[0].getText() : MULTIPLE_ERRORS, cause);
         mMessages = ImmutableList.copyOf(messages);
+    }
+
+    /**
+     * Tries to find a merging exception in the whole exception trace, if found it's then reported
+     * using the message receiver object.
+     */
+    public static void findAndReportMergingException(
+            @NonNull Exception exception, @NonNull MessageReceiver messageReceiver) {
+        for (Throwable it = exception; it != null; it = it.getCause()) {
+            if (it instanceof MergingException) {
+                ((MergingException) it).getMessages().forEach(messageReceiver::receiveMessage);
+            }
+        }
     }
 
     public static class Builder {

@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
+import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
@@ -243,10 +244,15 @@ public class MergeResources extends ResourceAwareTask {
 
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
-        } catch (MergingException e) {
-            System.out.println(e.getMessage());
-            merger.cleanBlob(getIncrementalFolder());
-            throw new ResourceException(e.getMessage(), e);
+        } catch (Exception e) {
+            MergingException.findAndReportMergingException(
+                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+            try {
+                throw e;
+            } catch (MergingException mergingException) {
+                merger.cleanBlob(getIncrementalFolder());
+                throw new ResourceException(mergingException.getMessage(), mergingException);
+            }
         } finally {
             cleanup();
         }
@@ -338,9 +344,15 @@ public class MergeResources extends ResourceAwareTask {
                 // No exception? Write the known state.
                 merger.writeBlobTo(getIncrementalFolder(), writer, false);
             }
-        } catch (MergingException e) {
-            merger.cleanBlob(getIncrementalFolder());
-            throw new ResourceException(e.getMessage(), e);
+        } catch (Exception e) {
+            MergingException.findAndReportMergingException(
+                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+            try {
+                throw e;
+            } catch (MergingException mergingException) {
+                merger.cleanBlob(getIncrementalFolder());
+                throw new ResourceException(mergingException.getMessage(), mergingException);
+            }
         } finally {
             cleanup();
         }

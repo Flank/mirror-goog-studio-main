@@ -24,6 +24,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.errors.MessageReceiverImpl;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -31,6 +32,7 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.resources.AssetMerger;
@@ -95,6 +97,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
     private FileCollection copyApk = null;
     private String ignoreAssets = null;
 
+    private SyncOptions.ErrorFormatMode errorFormatMode;
+
     private final FileValidity<AssetSet> fileValidity = new FileValidity<>();
 
     private final WorkerExecutorFacade workerExecutor;
@@ -137,10 +141,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
-        } catch (MergingException e) {
-            getLogger().error("Could not merge source set folders: ", e);
-            merger.cleanBlob(getIncrementalFolder());
-            throw new ResourceException(e.getMessage(), e);
+        } catch (Exception e) {
+            MergingException.findAndReportMergingException(
+                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+            try {
+                throw e;
+            } catch (MergingException mergingException) {
+                merger.cleanBlob(getIncrementalFolder());
+                throw new ResourceException(mergingException.getMessage(), mergingException);
+            }
         }
     }
 
@@ -203,10 +212,15 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
-        } catch (MergingException e) {
-            getLogger().error("Could not merge source set folders: ", e);
-            merger.cleanBlob(getIncrementalFolder());
-            throw new ResourceException(e.getMessage(), e);
+        } catch (Exception e) {
+            MergingException.findAndReportMergingException(
+                    e, new MessageReceiverImpl(errorFormatMode, getLogger()));
+            try {
+                throw e;
+            } catch (MergingException mergingException) {
+                merger.cleanBlob(getIncrementalFolder());
+                throw new ResourceException(mergingException.getMessage(), mergingException);
+            }
         } finally {
             // some clean up after the task to help multi variant/module builds.
             fileValidity.clear();
@@ -356,6 +370,9 @@ public class MergeSourceSetFolders extends IncrementalTask {
             VariantScope scope = getVariantScope();
 
             task.setIncrementalFolder(scope.getIncrementalDir(getName()));
+
+            task.errorFormatMode =
+                    SyncOptions.getErrorFormatMode(scope.getGlobalScope().getProjectOptions());
         }
     }
 
