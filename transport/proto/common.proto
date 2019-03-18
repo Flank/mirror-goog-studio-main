@@ -116,10 +116,14 @@ message Event {
   // be recycled afterwards within the same |Event.Kind|.
   bool is_ended = 5;
 
+  // Id of the command that triggered the event.
+  int32 command_id = 6;
+
   oneof union {
-    StreamData stream = 6;
-    ProcessData process = 7;
-    AgentData agent_data = 8;
+    // General tranport event prefix = 10
+    StreamData stream = 10;
+    ProcessData process = 11;
+    AgentData agent_data = 12;
 
     // Profiler Prefix = 100
     SessionData session = 101;
