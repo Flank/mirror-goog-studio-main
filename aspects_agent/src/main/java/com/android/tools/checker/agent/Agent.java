@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -30,21 +32,33 @@ public class Agent {
 
     public static void agentmain(String agentArgs, Instrumentation inst) throws IOException {
         /*
-         * agentArgs should be the path to the rules file. The rules file is simply a list
-         * of key=value pairs defining the aspects.
-         * An aspect is defined by the method to intercept defined as a Type string and the
-         * method to call.
+         * agentArgs should be in one of the formats below:
+         *
+         * 1) Two strings separated by a semicolon character (;). In this case, the first string is
+         *    the rules file path, while the second one is the path to the baseline file.
+         * 2) A single string without a semicolon character representing the path to the rules file.
+         *
+         * The rules file is simply a list of key=value pairs defining the aspects. An aspect is
+         * defined by the method to intercept defined as a Type string and the method to call.
+         *
+         * The baseline file is a list of whitelisted callstacks that should be ignored when there
+         * is a matching aspect. The callstacks are represented by method names separated by a
+         * pipe (|) character. For instance "com.pkg.MyClass.method1|com.pkg.OtherClass.method2".
          */
+        String[] splitArgs = agentArgs.split(";");
+        String rulesFile = splitArgs[0];
+        String baselineFile = splitArgs.length == 2 ? splitArgs[1] : null;
 
         Map<String, String> aspectsMap =
                 RulesFile.parserRulesFile(agentArgs, Function.identity(), Agent::shortcutProcessor);
         LOGGER.info(String.format("Starting Aspect agent (%d rules)", aspectsMap.size()));
 
         Aspects aspects = new Aspects(aspectsMap);
-
         aspectsMap.forEach(
                 (key, value) -> LOGGER.info(String.format("Rule added %s=%s", key, value)));
         inst.addTransformer(new Transform(aspects), inst.isRetransformClassesSupported());
+
+        Baseline.parse(baselineFile == null ? null : Files.newInputStream(Paths.get(baselineFile)));
 
         if (inst.isRetransformClassesSupported()) {
             LOGGER.info("Re-transformation enabled");

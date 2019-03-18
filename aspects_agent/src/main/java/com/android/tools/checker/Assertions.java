@@ -1,5 +1,6 @@
 package com.android.tools.checker;
 
+import com.android.tools.checker.agent.Baseline;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -13,6 +14,11 @@ public class Assertions {
     private Assertions() {}
 
     public static void assertIsNotEdt() {
+        if (Baseline.isWhitelisted(Thread.currentThread().getStackTrace())) {
+            // Skip whitelisted methods
+            return;
+        }
+
         if (SwingUtilities.isEventDispatchThread()) {
             StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
             LOGGER.severe(
@@ -24,6 +30,11 @@ public class Assertions {
     }
 
     public static void assertIsEdt() {
+        if (Baseline.isWhitelisted(Thread.currentThread().getStackTrace())) {
+            // Skip whitelisted methods
+            return;
+        }
+
         if (!SwingUtilities.isEventDispatchThread()) {
             StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
             LOGGER.severe(
