@@ -21,8 +21,8 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.OptionalLibrary;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;

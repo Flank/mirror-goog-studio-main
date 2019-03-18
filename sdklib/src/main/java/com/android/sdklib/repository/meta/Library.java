@@ -18,18 +18,14 @@ package com.android.sdklib.repository.meta;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.google.common.base.Objects;
-
 import java.io.File;
-
 import javax.xml.bind.annotation.XmlTransient;
 
-/**
- * Information about a {@link IAndroidTarget.OptionalLibrary} provided by a package.
- */
+/** Information about a {@link OptionalLibrary} provided by a package. */
 @XmlTransient
-public abstract class Library implements IAndroidTarget.OptionalLibrary {
+public abstract class Library implements OptionalLibrary {
 
     /**
      * Reference to the path of the containing package.
@@ -87,10 +83,10 @@ public abstract class Library implements IAndroidTarget.OptionalLibrary {
     public abstract void setName(String name);
 
     public boolean equals(Object o) {
-        if (!(o instanceof IAndroidTarget.OptionalLibrary)) {
+        if (!(o instanceof OptionalLibrary)) {
             return false;
         }
-        IAndroidTarget.OptionalLibrary lib = (IAndroidTarget.OptionalLibrary)o;
+        OptionalLibrary lib = (OptionalLibrary) o;
         return Objects.equal(lib.getLocalJarPath(), getLocalJarPath()) && lib.getName()
                 .equals(getName());
     }

@@ -32,6 +32,7 @@ import com.android.resources.ScreenSize;
 import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
@@ -558,10 +559,10 @@ class AvdManagerCli extends CommandLineParser {
                 mSdkLog.info("     Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
                 // display the optional libraries.
-                List<IAndroidTarget.OptionalLibrary> libraries = target.getAdditionalLibraries();
+                List<OptionalLibrary> libraries = target.getAdditionalLibraries();
                 if (!libraries.isEmpty()) {
                     mSdkLog.info("     Libraries:\n");
-                    for (IAndroidTarget.OptionalLibrary library : libraries) {
+                    for (OptionalLibrary library : libraries) {
                         mSdkLog.info("      * %1$s (%2$s)\n",
                                 library.getName(), library.getJar().getName());
                         mSdkLog.info("          %1$s\n", library.getDescription());

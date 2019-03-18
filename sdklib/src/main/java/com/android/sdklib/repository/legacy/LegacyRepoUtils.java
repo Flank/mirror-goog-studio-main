@@ -28,7 +28,7 @@ import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget.OptionalLibrary;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;

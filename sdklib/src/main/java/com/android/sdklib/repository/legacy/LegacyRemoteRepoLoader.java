@@ -36,8 +36,8 @@ import com.android.repository.impl.meta.RemotePackageImpl;
 import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.LayoutlibVersion;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
 import com.android.sdklib.repository.legacy.remote.RemotePkgInfo;
@@ -141,7 +141,7 @@ public class LegacyRemoteRepoLoader implements FallbackRemoteRepoLoader {
                         layoutlibApi = layoutlibVersion.getApi();
                     }
                 }
-                List<IAndroidTarget.OptionalLibrary> libs = Lists.newArrayList();
+                List<OptionalLibrary> libs = Lists.newArrayList();
                 if (mWrapped instanceof RemoteAddonPkgInfo) {
                     for (RemoteAddonPkgInfo.Lib wrappedLib : ((RemoteAddonPkgInfo) mWrapped)
                             .getLibs()) {

@@ -26,12 +26,12 @@ import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.meta.DetailsTypes;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -79,9 +79,7 @@ public class PlatformTarget implements IAndroidTarget {
      */
     private DetailsTypes.PlatformDetailsType mDetails;
 
-    /**
-     * Additional {@link IAndroidTarget.OptionalLibrary}s provided by this target.
-     */
+    /** Additional {@link OptionalLibrary}s provided by this target. */
     private List<OptionalLibrary> mOptionalLibraries = ImmutableList.of();
 
     /**
@@ -161,12 +159,9 @@ public class PlatformTarget implements IAndroidTarget {
         boolean manifest;
     }
 
-    /**
-     * Parses {@link IAndroidTarget.OptionalLibrary}s from the given json file.
-     */
-    @VisibleForTesting
+    /** Parses {@link OptionalLibrary}s from the given json file. */
     @NonNull
-    static List<OptionalLibrary> getLibsFromJson(@NonNull File jsonFile) {
+    public static List<OptionalLibrary> getLibsFromJson(@NonNull File jsonFile) {
 
         Gson gson = new Gson();
 

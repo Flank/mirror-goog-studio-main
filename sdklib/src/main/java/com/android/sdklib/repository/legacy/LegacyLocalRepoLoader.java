@@ -33,7 +33,7 @@ import com.android.repository.impl.meta.RepoPackageImpl;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
-import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
 import com.android.sdklib.repository.legacy.local.LocalAddonPkgInfo;
@@ -143,7 +143,7 @@ public class LegacyLocalRepoLoader implements FallbackLocalRepoLoader {
             if (mWrapped instanceof LocalPlatformPkgInfo) {
                 layoutVersion = ((LocalPlatformPkgInfo) mWrapped).getLayoutlibApi();
             }
-            List<IAndroidTarget.OptionalLibrary> addonLibraries = Lists.newArrayList();
+            List<OptionalLibrary> addonLibraries = Lists.newArrayList();
             if (mWrapped instanceof LocalAddonPkgInfo) {
                 addonLibraries = LegacyRepoUtils
                         .parseLegacyAdditionalLibraries(mWrapped.getLocalDir(), mProgress, mFop);

@@ -30,7 +30,7 @@ import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
-import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.local.LocalSdk;
 import com.android.sdklib.repository.meta.DetailsTypes;
@@ -116,27 +116,28 @@ public class LegacyLocalRepoTest extends TestCase {
         TypeDetails typeDetails = local.getTypeDetails();
         assertTrue(typeDetails instanceof DetailsTypes.AddonDetailsType);
         DetailsTypes.AddonDetailsType details = (DetailsTypes.AddonDetailsType) typeDetails;
-        Set<IAndroidTarget.OptionalLibrary> desired
-                = Sets.<IAndroidTarget.OptionalLibrary>newHashSet(
-                factory.createLibraryType("com.google.android.maps",
-                        "maps.jar",
-                        "API for Google Maps",
-                        new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                        false),
-                factory.createLibraryType("com.android.future.usb.accessory",
-                        "usb.jar",
-                        "API for USB Accessories",
-                        new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                        false),
-                factory.createLibraryType("com.google.android.media.effects",
-                        "effects.jar",
-                        "Collection of video effects",
-                        new File("/sdk/add-ons/addon-google_apis-google-23/"),
-                        false));
+        Set<OptionalLibrary> desired =
+                Sets.newHashSet(
+                        factory.createLibraryType(
+                                "com.google.android.maps",
+                                "maps.jar",
+                                "API for Google Maps",
+                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
+                                false),
+                        factory.createLibraryType(
+                                "com.android.future.usb.accessory",
+                                "usb.jar",
+                                "API for USB Accessories",
+                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
+                                false),
+                        factory.createLibraryType(
+                                "com.google.android.media.effects",
+                                "effects.jar",
+                                "Collection of video effects",
+                                new File("/sdk/add-ons/addon-google_apis-google-23/"),
+                                false));
 
-        Set<IAndroidTarget.OptionalLibrary> libraries
-                = Sets.<IAndroidTarget.OptionalLibrary>newHashSet(
-                details.getLibraries().getLibrary());
+        Set<OptionalLibrary> libraries = Sets.newHashSet(details.getLibraries().getLibrary());
         assertEquals(desired, libraries);
 
     }

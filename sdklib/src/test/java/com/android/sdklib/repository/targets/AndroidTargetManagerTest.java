@@ -27,6 +27,7 @@ import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.ImmutableList;
@@ -210,20 +211,26 @@ public class AndroidTargetManagerTest extends TestCase {
         assertEquals(new File("/sdk/build-tools/23.0.2"), target.getBuildToolInfo().getLocation());
         assertEquals(new File("/sdk/platforms/android-23/skins/WVGA800"), target.getDefaultSkin());
 
-        Set<IAndroidTarget.OptionalLibrary> desired
-                = Sets.newHashSet(
-                new OptionalLibraryImpl("com.google.android.maps",
-                                        new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"), "",
-                                        false),
-                new OptionalLibraryImpl("com.android.future.usb.accessory",
-                        new File("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar"), "",
-                        false),
-                new OptionalLibraryImpl("com.google.android.media.effects",
-                        new File("/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar"), "",
-                        false));
+        Set<OptionalLibrary> desired =
+                Sets.newHashSet(
+                        new OptionalLibraryImpl(
+                                "com.google.android.maps",
+                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/maps.jar"),
+                                "",
+                                false),
+                        new OptionalLibraryImpl(
+                                "com.android.future.usb.accessory",
+                                new File("/sdk/add-ons/addon-google_apis-google-23/libs/usb.jar"),
+                                "",
+                                false),
+                        new OptionalLibraryImpl(
+                                "com.google.android.media.effects",
+                                new File(
+                                        "/sdk/add-ons/addon-google_apis-google-23/libs/effects.jar"),
+                                "",
+                                false));
 
-        Set<IAndroidTarget.OptionalLibrary> libraries = Sets
-                .newHashSet(target.getAdditionalLibraries());
+        Set<OptionalLibrary> libraries = Sets.newHashSet(target.getAdditionalLibraries());
         assertEquals(desired, libraries);
     }
 

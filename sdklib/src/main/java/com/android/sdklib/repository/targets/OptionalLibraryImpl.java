@@ -18,18 +18,18 @@ package com.android.sdklib.repository.targets;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.OptionalLibrary;
 import com.android.sdklib.repository.meta.Library;
 import com.google.common.base.Objects;
-
 import java.io.File;
 
 /**
  * Internal implementation of OptionalLibrary
+ *
  * @deprecated in favor of {@link Library}
  */
 @Deprecated
-public class OptionalLibraryImpl implements IAndroidTarget.OptionalLibrary {
+public class OptionalLibraryImpl implements OptionalLibrary {
 
     @NonNull
     private final String mLibraryName;
@@ -80,10 +80,10 @@ public class OptionalLibraryImpl implements IAndroidTarget.OptionalLibrary {
     }
 
     public boolean equals(Object o) {
-        if (!(o instanceof IAndroidTarget.OptionalLibrary)) {
+        if (!(o instanceof OptionalLibrary)) {
             return false;
         }
-        IAndroidTarget.OptionalLibrary lib = (IAndroidTarget.OptionalLibrary)o;
+        OptionalLibrary lib = (OptionalLibrary) o;
         return Objects.equal(lib.getLocalJarPath(), getLocalJarPath()) && lib.getName()
                 .equals(getName());
     }
