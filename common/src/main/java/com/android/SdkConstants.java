@@ -71,6 +71,9 @@ public final class SdkConstants {
     /** Property in local.properties file that specifies the path of the Android NDK. */
     public static final String NDK_DIR_PROPERTY = "ndk.dir";
 
+    /** Property in local.properties file that specifies the path of CMake. */
+    public static final String CMAKE_DIR_PROPERTY = "cmake.dir";
+
     /** Property in local.properties file that specifies the path to symlink the NDK under. */
     public static final String NDK_SYMLINK_DIR = "ndk.symlinkdir";
 
