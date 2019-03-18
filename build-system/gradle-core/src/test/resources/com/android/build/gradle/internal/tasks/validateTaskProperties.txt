@@ -1,0 +1,146 @@
+Warning: Task type 'com.android.build.gradle.internal.coverage.JacocoReportTask': property 'classFileCollection' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.coverage.JacocoReportTask': property 'coverageDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.coverage.JacocoReportTask': property 'jacocoClasspath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.coverage.JacocoReportTask': property 'reportName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.coverage.JacocoReportTask': property 'sourceFolders' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.feature.BundleAllClasses': property 'dependencyRClassClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.feature.BundleAllClasses': property 'javacClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.feature.BundleAllClasses': property 'postJavacClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.feature.BundleAllClasses': property 'preJavacClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.feature.BundleAllClasses': property 'thisRClassClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'allSecondaryInputs' is private and annotated with @Internal.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'logging' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'oldSecondaryInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'path' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'projectName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'temporaryDir' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'transform' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.pipeline.TransformTask': property 'workerExecutor' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTask': property 'manifestFile' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTask': property 'sourceOutputDir' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask': property 'manifestFile' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.res.namespaced.CompileSourceSetResources': property 'inputDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.res.namespaced.JarRClassTask': property 'RClassClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'reportType' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'resultsDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'testFailed' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.ApplicationIdWriterTask': property 'appMetadata' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.BundleLibraryClasses': property 'classes' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.BundleLibraryJavaRes': property 'resources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.CheckManifest': property 'manifest' has @Input annotation used on property of type java.io.File.
+Warning: Task type 'com.android.build.gradle.internal.tasks.CheckProguardFiles': property 'proguardFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'buddyApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'deviceProvider' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testApkDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testData' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testTargetManifests' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testedApksDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'testedApksFromBundle' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.GenerateApkDataTask': property 'apkFileCollection' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'apkDirectory' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'processExecutor' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'projectName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantTask': property 'variantData' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask': property 'apkBundle' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstantAppProvisionTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstantAppProvisionTask': property 'instantAppSdk' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.InstantAppSideLoadTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.JacocoTask': property 'inputClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.JacocoTask': property 'jacocoAntTaskConfiguration' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'autoFix' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'fatalOnly' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask': property 'inputFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.MergeFileTask': property 'inputFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask': property 'metadataFromInstalledModule' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.NdkTask': property 'ndkConfig' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask': property 'runtimeClasspathArtifacts' has @Input annotation used on property of type org.gradle.api.file.FileCollection.
+Warning: Task type 'com.android.build.gradle.internal.tasks.PrepareLintJarForPublish': property 'lintChecks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.ProcessJavaResTask': property 'variantName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'bootClasspath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'classesToFix' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'referencedClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.name' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.signingReady' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.storeFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.SourceSetsTask': property 'config' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testServer' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testedApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.UninstallTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.UninstallTask': property 'variant' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask': property 'featureDeclarations' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask': property 'workers' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask': property 'directDependencies' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask': property 'externalClassLog' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask': property 'moduleClassLog' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask': property 'inputFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask': property 'localModuleInfo' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask': property 'outputProvider' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.structureplugin.CombineModuleInfoTask': property 'subModules' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.structureplugin.GatherModuleInfoTask': property 'outputProvider' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'dex' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'mappingFileSrc' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'mergedManifests' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'resourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'sourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'uncompressedResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.AndroidJavaCompile': property 'objects' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.BinaryFileProviderTask': property 'artifact' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.BundleInstantApp': property 'apkDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.BundleInstantApp': property 'applicationId' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.CheckTestedAppObfuscation': property 'mappingFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.CompatibleScreensManifest': property 'outputScope' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'abiSplits' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'fullApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'resourcesSplits' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.config' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.jsonFolder' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.makefile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.nativeBuildSystem' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.ndkFolder' has @Input annotation used on property of type java.io.File.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.objFolder' has @Input annotation used on property of type java.io.File.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.sdkFolder' has @Input annotation used on property of type java.io.File.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.soFolder' has @Input annotation used on property of type java.io.File.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.stlSharedObjectFiles' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variantName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExtractAnnotations': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.GenerateSplitAbiRes': property 'applicationIdOverride' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.InvokeManifestMerger': property 'mainManifestFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.InvokeManifestMerger': property 'secondaryManifestFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintBaseTask': property 'buildToolsRevision' is private and annotated with @Internal.
+Warning: Task type 'com.android.build.gradle.tasks.LintBaseTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintBaseTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.LintFixTask': property 'allInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintFixTask': property 'buildToolsRevision' is private and annotated with @Internal.
+Warning: Task type 'com.android.build.gradle.tasks.LintFixTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintFixTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'allInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'buildToolsRevision' is private and annotated with @Internal.
+Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'buildToolsRevision' is private and annotated with @Internal.
+Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'variantInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.MergeResources': property 'resourcesComputer' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'apkList' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'internalArtifactType' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageApplication': property 'apkList' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageApplication': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageSplitRes': property 'processedResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.PackageSplitRes': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessAndroidResources': property 'manifestFile' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessAndroidResources': property 'sourceOutputDir' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'manifests' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'outputScope' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'testManifestFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'testTargetMetadata' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.tasks.ProcessTestManifest': property 'tmpDir' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.RenderscriptCompile': property 'ndkConfig' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ResourceAwareTask': property 'resourcesComputer' is not annotated with an input or output annotation.

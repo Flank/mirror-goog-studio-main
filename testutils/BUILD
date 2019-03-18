@@ -28,6 +28,7 @@ iml_module(
     iml_files = ["testutils-tests.iml"],
     test_coverage = True,
     test_data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
+    test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
@@ -78,6 +79,7 @@ kotlin_test(
     coverage = True,
     data = ["//prebuilts/studio/sdk:platforms/latest"] + glob(["src/test/data/**"]),
     jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.testutils",
