@@ -34,7 +34,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.Variant;
-import com.android.testutils.AssumeUtil;
 import com.android.tools.build.apkzlib.utils.IOExceptionFunction;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.ImmutableList;
@@ -140,9 +139,6 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
-        // Bug 120098460
-        AssumeUtil.assumeNotWindows();
-
         GradleTaskExecutor runGradleTasks =
                 project.executor()
                         .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
