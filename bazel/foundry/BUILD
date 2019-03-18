@@ -59,6 +59,9 @@ java_test(
         "-Xms10000M",
         "-Xmx10000M",
     ],
+    tags = [
+        "perfgate_test",
+    ],
     test_class = "FoundryPerfgateMetrics",
     deps = [
         "//tools/base/perf-logger:studio.perf-logger_testlib",
