@@ -60,13 +60,15 @@ fun toIncrementalInput(
     cacheUpdates: MutableList<Runnable>
 ): IncrementalFileMergerInput {
     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
-        cacheUpdates.add(IOExceptionRunnable.asRunnable {
-            if (input.isFile) {
-                zipCache.add(input)
-            } else {
-                zipCache.remove(input)
-            }
-        })
+        if (changedInputs.containsKey(input)) {
+            cacheUpdates.add(IOExceptionRunnable.asRunnable {
+                if (input.isFile) {
+                    zipCache.add(input)
+                } else {
+                    zipCache.remove(input)
+                }
+            })
+        }
         return LazyIncrementalFileMergerInput(
             input.absolutePath,
             CachedSupplier { computeUpdatesFromJar(input, changedInputs, zipCache) },
