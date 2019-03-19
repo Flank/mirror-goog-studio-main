@@ -16,6 +16,10 @@
 
 package com.android.ide.common.workers
 
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
+import java.time.Duration
+import java.time.Instant
+
 /**
  * MBean for services related to profiling notifications.
  *
@@ -34,4 +38,16 @@ interface ProfileMBean {
      * @param workerKey worker identification.
      */
     fun workerFinished(taskPath: String, workerKey: String)
+
+    /**
+     * Task/worker/thread span registration. Will use the current
+     * parent as the anchor.
+     *
+     * @param taskPath spawning task path identification.
+     * @param type the [GradleBuildProfileSpan.ExecutionType] identification
+     * @param threadId the thread identification the span is running on.
+     * @param startTime the span absolute start time
+     * @param duration the span duration.
+     */
+    fun registerSpan(taskPath: String, type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration)
 }

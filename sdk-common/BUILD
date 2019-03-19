@@ -51,6 +51,7 @@ iml_module(
         "//tools/idea/.idea/libraries:aapt-proto",
         "//tools/idea/.idea/libraries:protobuf",
         "//tools/idea/.idea/libraries:jetbrains-annotations",
+        "//tools/idea/.idea/libraries:studio-analytics-proto",
     ],
 )
 
@@ -73,6 +74,7 @@ kotlin_library(
     resources = [":tools.resources"],
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",

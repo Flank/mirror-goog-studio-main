@@ -19,6 +19,7 @@ import static com.android.ide.common.resources.FileStatus.CHANGED;
 import static com.android.ide.common.resources.FileStatus.NEW;
 import static com.android.ide.common.resources.FileStatus.REMOVED;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -62,8 +63,6 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
  */
 public abstract class IncrementalTask extends AndroidBuilderTask {
 
-    public static final String MARKER_NAME = "build_was_incremental";
-
     private File incrementalFolder;
 
     public void setIncrementalFolder(File incrementalFolder) {
@@ -104,7 +103,12 @@ public abstract class IncrementalTask extends AndroidBuilderTask {
      * and doFullTaskAction() if not.
      */
     @TaskAction
-    void taskAction(IncrementalTaskInputs inputs) throws Exception {
+    void taskAction(@NonNull IncrementalTaskInputs inputs) {
+        super.recordTaskAction(inputs);
+    }
+
+    @Override
+    protected void recordedTaskAction(@NonNull IncrementalTaskInputs inputs) throws Exception {
         if (!isIncremental() || !inputs.isIncremental()) {
             getProject().getLogger().info("Unable do incremental execution: full task run");
             doFullTaskAction();

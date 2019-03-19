@@ -160,6 +160,7 @@ public class ChromeTracingProfileConverter {
             Map<Long, String> taskList =
                     profile.getSpanList()
                             .stream()
+                            .filter(it -> it.getParentId() == 0)
                             .collect(
                                     Collectors.toMap(
                                             GradleBuildProfileSpan::getId,
@@ -188,7 +189,12 @@ public class ChromeTracingProfileConverter {
                         }
                     }
                 }
-                writer.name("name").value(getSpanName(span));
+                if (span.getParentId() != 0) {
+                    writer.name("name")
+                            .value(getChildSpanName(span, taskList.get(span.getParentId())));
+                } else {
+                    writer.name("name").value(getSpanName(span));
+                }
                 switch (span.getType()) {
                     case TASK_EXECUTION:
                         args.put("task", span.getTask());
@@ -200,10 +206,10 @@ public class ChromeTracingProfileConverter {
                         args.put("transform prep", span.getTransform());
                         break;
                     case WORKER_EXECUTION:
-                        args.put("initiating task", taskList.get(span.getParentId()));
+                        args.put("type", "worker");
                         break;
                     case THREAD_EXECUTION:
-                        args.put("initiating task", taskList.get(span.getParentId()));
+                        args.put("type", "thread");
                         break;
                 }
 
@@ -225,6 +231,16 @@ public class ChromeTracingProfileConverter {
         }
     }
 
+    static String getChildSpanName(GradleBuildProfileSpan span, String parentName) {
+        switch (span.getType()) {
+            case WORKER_EXECUTION:
+            case THREAD_EXECUTION:
+                return parentName;
+            default:
+                return pretty(span.getType());
+        }
+    }
+
     static String getSpanName(GradleBuildProfileSpan span) {
         switch (span.getType()) {
             case TASK_EXECUTION:
@@ -233,10 +249,6 @@ public class ChromeTracingProfileConverter {
                 return transformName(span);
             case TASK_TRANSFORM_PREPARATION:
                 return "Prep for " + transformName(span);
-            case WORKER_EXECUTION:
-                return "Worker for " + span.getParentId();
-            case THREAD_EXECUTION:
-                return "Thread for " + span.getParentId();
             default:
                 return pretty(span.getType());
         }

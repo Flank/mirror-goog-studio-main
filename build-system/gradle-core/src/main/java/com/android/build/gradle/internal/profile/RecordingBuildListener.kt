@@ -64,8 +64,7 @@ class RecordingBuildListener internal constructor(
             val taskRecord = taskRecords[task.path] ?: return
             val record = taskRecord.spanBuilder
 
-            record.setTask(
-                GradleTaskExecution.newBuilder()
+            record.taskBuilder
                     .setType(
                         AnalyticsUtil.getTaskExecutionType(task.javaClass).number
                     )
@@ -73,7 +72,6 @@ class RecordingBuildListener internal constructor(
                     .setSkipped(taskState.skipped)
                     .setUpToDate(taskState.upToDate)
                     .setFailed(taskState.failure != null)
-            )
 
             taskRecord.setTaskFinished()
             // check that all workers are done before closing this span.

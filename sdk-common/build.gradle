@@ -18,6 +18,7 @@ dependencies {
     compile project(':base:builder-test-api')
     compile project(':base:builder-model')
     compile project(':base:ddmlib')
+    compile project(':analytics-library:shared')
     compile libs.bouncycastle_pkix
     compile libs.bouncycastle_prov
     compile libs.kotlin_stdlib

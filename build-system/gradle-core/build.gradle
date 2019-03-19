@@ -42,7 +42,6 @@ sourceSets {
 
 dependencies {
     compile project(':base:builder')
-    compile project(':analytics-library:shared')
     compile project(':analytics-library:crash')
     compile project(':base:lint-gradle-api')
     compile project(':base:gradle-api')

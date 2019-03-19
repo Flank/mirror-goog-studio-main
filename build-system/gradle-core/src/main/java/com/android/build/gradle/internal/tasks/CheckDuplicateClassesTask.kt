@@ -33,6 +33,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
+import java.io.IOException
 import java.util.concurrent.ForkJoinPool
 import javax.inject.Inject
 
@@ -58,6 +59,10 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
 
     @TaskAction
     fun taskAction() {
+        super.recordTaskAction<RuntimeException>()
+    }
+
+    override fun recordedTaskAction() {
         CheckDuplicateClassesDelegate(classesArtifacts).run(workers)
     }
 

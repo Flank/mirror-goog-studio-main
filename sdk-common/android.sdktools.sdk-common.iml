@@ -49,5 +49,6 @@
     <orderEntry type="library" name="aapt-proto" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="jetbrains-annotations" level="project" />
+    <orderEntry type="library" name="studio-analytics-proto" level="project" />
   </component>
 </module>

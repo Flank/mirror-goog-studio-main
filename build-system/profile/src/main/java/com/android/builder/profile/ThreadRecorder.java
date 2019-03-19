@@ -18,6 +18,7 @@ package com.android.builder.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
@@ -159,6 +160,6 @@ public final class ThreadRecorder implements Recorder {
         }
         currentRecord.setDurationInMs(
                 System.currentTimeMillis() - currentRecord.getStartTimeInMs());
-        profileRecordWriter.writeRecord(projectPath, variant, currentRecord);
+        profileRecordWriter.writeRecord(projectPath, variant, currentRecord, ImmutableList.of());
     }
 }

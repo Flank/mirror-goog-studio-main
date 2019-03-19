@@ -14,7 +14,6 @@ dependencies {
     compile project(':base:ddmlib')
 
     compile project(':analytics-library:protos')
-    compile project(':analytics-library:shared')
     compile project(':analytics-library:tracker')
     compile project(':apksig')
     compile project(':apkzlib')

@@ -60,5 +60,6 @@ object ProfileMBeans {
         } catch (t: Throwable) {
             ObjectName(rootObjectName)
         }
+
     }
 }

@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.profile
 
 import com.android.ide.common.workers.ProfileMBean
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
+import java.time.Duration
+import java.time.Instant
 
 /**
  * Implementation of [ProfileMBean] that will be registered in the MBean server and
@@ -36,5 +39,10 @@ class ProfileMBeanImpl(private val buildListener: RecordingBuildListener):
             workerRecord.executionFinished()
             buildListener.getTaskRecord(taskPath)?.workerFinished(workerRecord)
         }
+    }
+
+    override fun registerSpan(taskPath:String, type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration) {
+        val taskRecord = buildListener.getTaskRecord(taskPath)
+        taskRecord?.addSpan(type, threadId, startTime, duration)
     }
 }

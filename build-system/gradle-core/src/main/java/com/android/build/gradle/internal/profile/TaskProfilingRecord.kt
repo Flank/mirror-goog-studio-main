@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.profile
 
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.builder.profile.ProfileRecordWriter
-import com.android.ide.common.workers.ProfileMBean
 import com.google.common.annotations.VisibleForTesting
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import java.time.Clock
@@ -44,6 +43,7 @@ open class TaskProfilingRecord {
     private var endTime = Instant.MIN
     private var closeTime = Instant.MIN
     internal val status = AtomicReference(Status.RUNNING)
+    val taskSpans = mutableListOf<GradleBuildProfileSpan>()
 
     /**
      * Possible run state of the Task we are book keeping for.
@@ -156,7 +156,7 @@ open class TaskProfilingRecord {
 
         workerRecord.fillSpanRecord(workerSpan)
 
-        recordWriter.writeRecord(projectPath, variant, workerSpan)
+        recordWriter.writeRecord(projectPath, variant, workerSpan, listOf())
 
         // if all of our workers are done, we should record that as our completion time.
         if (status.get() == Status.CLOSED && allWorkersFinished()) {
@@ -177,7 +177,8 @@ open class TaskProfilingRecord {
         recordWriter.writeRecord(
             projectPath,
             variant,
-            spanBuilder
+            spanBuilder,
+            taskSpans
         )
     }
 
@@ -199,6 +200,18 @@ open class TaskProfilingRecord {
             if (lastWorkerCompletionTime().isAfter(endTime)) lastWorkerCompletionTime()
             else endTime
         )
+
+    fun addSpan(type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration) {
+
+        val taskSpanBuilder = GradleBuildProfileSpan.newBuilder()
+        taskSpanBuilder.parentId = spanBuilder.id
+        taskSpanBuilder.type = type
+        taskSpanBuilder.startTimeInMs = startTime.toEpochMilli()
+        taskSpanBuilder.durationInMs = duration.toMillis()
+        taskSpanBuilder.threadId = threadId
+
+        taskSpans.add(taskSpanBuilder.build())
+    }
 
     private constructor() {
         this.recordWriter = ProcessProfileWriter.get()

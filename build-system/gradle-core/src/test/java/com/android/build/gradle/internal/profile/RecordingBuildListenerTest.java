@@ -312,7 +312,8 @@ public class RecordingBuildListenerTest {
         public void writeRecord(
                 @NonNull String project,
                 @Nullable String variant,
-                @NonNull GradleBuildProfileSpan.Builder executionRecord) {
+                @NonNull GradleBuildProfileSpan.Builder executionRecord,
+                @NonNull List<GradleBuildProfileSpan> taskExecutionPhases) {
             if (project.equals(":projectName")) {
                 executionRecord.setProject(1);
             }
@@ -321,6 +322,7 @@ public class RecordingBuildListenerTest {
             }
 
             records.add(executionRecord.build());
+            records.addAll(taskExecutionPhases);
         }
 
         public List<GradleBuildProfileSpan> getRecords() {

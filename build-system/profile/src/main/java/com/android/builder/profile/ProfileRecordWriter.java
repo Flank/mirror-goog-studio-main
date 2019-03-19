@@ -19,6 +19,7 @@ package com.android.builder.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import java.util.List;
 
 /**
  * Receiver for profile spans which record events asynchronously.
@@ -29,7 +30,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
  * <p>When an event starts the client should call {@link #allocateRecordId()} which allocates an
  * unique id for that event, which should be stored in {@link
  * GradleBuildProfileSpan.Builder#setId(long)}. After the event is finished it should be stored
- * using {@link #writeRecord(String, String, GradleBuildProfileSpan.Builder)}.
+ * using {@link #writeRecord(String, String, GradleBuildProfileSpan.Builder, List)}.
  *
  * <p>Uses:
  *
@@ -47,5 +48,6 @@ public interface ProfileRecordWriter {
     void writeRecord(
             @NonNull String project,
             @Nullable String variant,
-            @NonNull final GradleBuildProfileSpan.Builder executionRecord);
+            @NonNull final GradleBuildProfileSpan.Builder executionRecord,
+            @NonNull List<GradleBuildProfileSpan> taskExecutionPhases);
 }
