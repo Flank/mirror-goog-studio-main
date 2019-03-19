@@ -32,8 +32,8 @@ class EventCache {
  public:
   explicit EventCache(Clock* clock) : clock_(clock) {}
   // Adds data to the event cache, the data is copied.
-  void AddActivityData(const proto::ActivityData& data);
-  void AddSystemData(const proto::SystemData& data);
+  void AddActivityData(int32_t pid, const proto::ActivityData& data);
+  void AddSystemData(int32_t pid, const proto::SystemData& data);
 
   // Populates a Response with a copy of the proper protos that exist within a
   // given time range. The start time is exclusive, while the end time is

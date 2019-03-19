@@ -34,13 +34,14 @@ class EventManager {
   // connection to perfd. If we don't do this, the component manifest it self as
   // not starting when reconnecting to perfd with a cleared cache.
   void CacheAndEnqueueActivityEvent(
-      const profiler::proto::ActivityData& activity);
+      const profiler::proto::SendActivityDataRequest& activity);
 
  private:
   explicit EventManager();
 
   // Helper funciton to enque event without caching the values first.
-  void EnqueueActivityEvent(const profiler::proto::ActivityData& activity);
+  void EnqueueActivityEvent(
+      const profiler::proto::SendActivityDataRequest& activity);
 
   // Function callback to listen to perfd state chagnes, this happens on the
   // heartbeat thread. This thread is not the thread that
@@ -50,7 +51,7 @@ class EventManager {
   // Cached values of active activities. The key is the
   // unique hash of the component, the value being a copy of the
   // component data needed by perfd upon connection.
-  std::map<int, profiler::proto::ActivityData> hash_activity_cache_;
+  std::map<int, profiler::proto::SendActivityDataRequest> hash_activity_cache_;
 
   // Mutex guards us from attempting to send a state change, the exact same
   // moment we change the perfd state to online.

@@ -22,10 +22,20 @@ service InternalEventService {
   // Simple RPC service to send data to perfd. As events fire are triggered from
   // the application.
   // They will be sent to perfd and cached via this RPC.
-  rpc SendActivity(ActivityData) returns (EmptyEventResponse) {
+  rpc SendActivity(SendActivityDataRequest) returns (EmptyEventResponse) {
   }
-  rpc SendSystem(SystemData) returns (EmptyEventResponse) {
+  rpc SendSystem(SendSystemDataRequest) returns (EmptyEventResponse) {
   }
+}
+
+message SendActivityDataRequest {
+  int32 pid = 1;
+  ActivityData data = 2;
+}
+
+message SendSystemDataRequest {
+  int32 pid = 1;
+  SystemData data = 2;
 }
 
 message EmptyEventResponse {

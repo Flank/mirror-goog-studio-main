@@ -25,23 +25,23 @@
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityDataResponse;
 using profiler::proto::ActivityStateData;
-using profiler::proto::ActivityStateData_ActivityState;
+using profiler::proto::InteractionData;
 using profiler::proto::SystemData;
 using profiler::proto::SystemDataResponse;
+using profiler::proto::ViewData;
 using std::lock_guard;
 
 namespace profiler {
 
-void EventCache::AddSystemData(const SystemData& data) {
+void EventCache::AddSystemData(int32_t pid, const SystemData& data) {
   lock_guard<std::mutex> lock(cache_mutex_);
-  int32_t pid = data.pid();
   auto result = cache_.emplace(std::make_pair(pid, CacheMaps()));
   auto& system_cache = result.first->second.system_cache;
   if (system_cache.find(data.event_id()) == system_cache.end()) {
     system_cache[data.event_id()] = data;
     // If we are not a touch event ensure we have an end time set so we don't
     // forever return non-touch events.
-    if (data.type() != SystemData::TOUCH) {
+    if (data.type() != InteractionData::TOUCH) {
       system_cache[data.event_id()].set_end_timestamp(data.start_timestamp());
     }
   } else {
@@ -49,9 +49,8 @@ void EventCache::AddSystemData(const SystemData& data) {
   }
 }
 
-void EventCache::AddActivityData(const ActivityData& data) {
+void EventCache::AddActivityData(int32_t pid, const ActivityData& data) {
   lock_guard<std::mutex> lock(cache_mutex_);
-  int32_t pid = data.pid();
   auto result = cache_.emplace(std::make_pair(pid, CacheMaps()));
   auto& activity_cache = result.first->second.activity_cache;
   if (activity_cache.find(data.hash()) == activity_cache.end()) {
@@ -76,15 +75,13 @@ void EventCache::GetActivityData(int32_t app_id, int64_t start_time,
   auto& activity_cache = result->second.activity_cache;
   for (auto it : activity_cache) {
     ActivityData& data = it.second;
-    assert(data.pid() == app_id);
 
     // We don't do an explicit copy due to manually crafting the activity
     // states.
     ActivityData* out_data = response->add_data();
     out_data->set_name(data.name());
     out_data->set_hash(data.hash());
-    out_data->set_pid(data.pid());
-    out_data->mutable_fragment_data()->CopyFrom(data.fragment_data());
+    out_data->set_activity_context_hash(data.activity_context_hash());
 
     const auto& states = data.state_changes();
     for (int i = 0; i < states.size(); i++) {
@@ -132,15 +129,14 @@ void EventCache::MarkActivitiesAsTerminated(int32_t pid) {
   int64_t current_time = clock_->GetCurrentTime();
   for (auto activity : activity_cache) {
     ActivityData& data = activity.second;
-    assert(data.pid() == pid);
 
     const auto& states = data.state_changes();
     const int state_size = states.size();
     const auto& state = states.Get(state_size - 1);
-    if (state.state() != ActivityStateData::DESTROYED) {
+    if (state.state() != ViewData::DESTROYED) {
       ActivityStateData* state_data = data.add_state_changes();
       state_data->set_timestamp(current_time);
-      state_data->set_state(ActivityStateData::DESTROYED);
+      state_data->set_state(ViewData::DESTROYED);
       activity_cache[activity.first] = data;
     }
   }
@@ -156,7 +152,6 @@ void EventCache::GetSystemData(int32_t app_id, int64_t start_time,
   auto& system_cache = result->second.system_cache;
   for (auto it : system_cache) {
     auto& data = it.second;
-    assert(data.pid() == app_id);
     int64_t event_start_time = data.start_timestamp();
     int64_t event_end_time = data.end_timestamp();
     // TODO: Make 0 a const NO_END_TIME meaning the event has not completed.

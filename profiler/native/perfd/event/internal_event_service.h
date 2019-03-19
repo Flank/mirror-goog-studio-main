@@ -32,10 +32,11 @@ class InternalEventServiceImpl final
   // have their timestamp fields populated.
   grpc::Status SendActivity(
       grpc::ServerContext* context,
-      const profiler::proto::ActivityData* request,
+      const profiler::proto::SendActivityDataRequest* request,
       profiler::proto::EmptyEventResponse* response) override;
   grpc::Status SendSystem(
-      grpc::ServerContext* context, const profiler::proto::SystemData* request,
+      grpc::ServerContext* context,
+      const profiler::proto::SendSystemDataRequest* request,
       profiler::proto::EmptyEventResponse* response) override;
 
  private:

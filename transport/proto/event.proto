@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "EventProfiler";
 
 import "common.proto";
+import "interaction_data.proto";
 
 service EventService {
   // Requests profiler data associated with a session, in the time range
@@ -75,24 +76,16 @@ message SystemDataResponse {
 // TODO: Add support for KeyEvents, and ButtonEvents. The current setup allows
 // for only touch.
 message SystemData {
-  // Each system event message is associated with one event type.
-  enum SystemEventType {
-    UNSPECIFIED = 0;
-    TOUCH = 1;
-    KEY = 2;
-    ROTATION = 3;
-  }
-
-  SystemEventType type = 1;
+  // Each system event message is associated with one interaction type.
+  InteractionData.Type type = 1;
   // This field stores actions triggered by an event. Actions are
   // defined in MotionEvent.java.
   // https://developer.android.com/reference/android/view/MotionEvent.html
   int32 action_id = 2;
   int64 start_timestamp = 3;
   int64 end_timestamp = 4;
-  int32 pid = 5;
-  int64 event_id = 6;
-  string event_data = 7;
+  int64 event_id = 5;
+  string event_data = 6;
 }
 
 message ActivityData {
@@ -100,41 +93,19 @@ message ActivityData {
   string name = 1;
   // Unique hash identifying this activity from similarly named ones.
   int64 hash = 2;
-  // Application Id this activity is associated with.
-  int32 pid = 3;
   // State changes for activities and fragments.
-  repeated ActivityStateData state_changes = 4;
+  repeated ActivityStateData state_changes = 3;
 
   // TODO: Expand this to a oneof if more components need to add specific information.
   // Additional data needed by specific UI components
-  FragmentData fragment_data = 5;
+  // Set only if the data represents a fragment, in which case we want to associate it
+  // with its parent activity.
+  int64 activity_context_hash = 4;
 }
 
 message ActivityStateData {
-    enum ActivityState {
-      UNSPECIFIED = 0;
-      ADDED = 1;
-      ATTACHED = 2;
-      CREATED = 3;
-      CREATEDVIEW = 4;
-      ACTIVITYCREATED = 5;
-      STARTED = 6;
-      RESUMED = 7;
-      PAUSED = 8;
-      STOPPED = 9;
-      SAVED = 10;
-      DETACHED = 11;
-      REMOVED = 12;
-      DESTROYED = 13;
-      DESTROYEDVIEW = 14;
-      RESTARTED = 15;
-    }
   int64 timestamp = 1;
-  ActivityState state = 2;
-}
-
-message FragmentData {
-  int64 activity_context_hash = 1;
+  ViewData.State state = 2;
 }
 
 message EventDataRequest {

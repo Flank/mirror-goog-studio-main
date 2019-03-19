@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+
+package profiler.proto;
+option java_package = "com.android.tools.profiler.proto";
+option java_outer_classname = "Interaction";
+
+
+// TODO: Add support for KeyEvents, and ButtonEvents. The current setup allows
+// for only touch.
+message InteractionData {
+  enum Type {
+    UNSPECIFIED = 0;
+    TOUCH = 1;
+    KEY = 2;
+    ROTATION = 3;
+  }
+
+  Type type = 1;
+  // This field stores actions triggered by an event. Actions are
+  // defined in MotionEvent.java.
+  // https://developer.android.com/reference/android/view/MotionEvent.html
+  int32 action_id = 2;
+  string event_data = 3;
+}
+
+// Used to represent both Activities and Fragments
+message ViewData {
+  // lifecycle states
+  enum State {
+    UNSPECIFIED = 0;
+    ADDED = 1;
+    ATTACHED = 2;
+    CREATED = 3;
+    CREATEDVIEW = 4;
+    ACTIVITYCREATED = 5;
+    STARTED = 6;
+    RESUMED = 7;
+    PAUSED = 8;
+    STOPPED = 9;
+    SAVED = 10;
+    DETACHED = 11;
+    REMOVED = 12;
+    DESTROYED = 13;
+    DESTROYEDVIEW = 14;
+    RESTARTED = 15;
+  }
+
+  // Name of the activity/fragment
+  string name = 1;
+  // Current state of the activity / fragment.
+  State state = 2;
+
+  // TODO: Expand this to a oneof if more components need to add specific information.
+  // Additional data needed by specific UI components
+  // Set only if the data represents a fragment, in which case we want to associate it
+  // with its parent activity.
+  int64 parent_activity_id = 3;
+}
