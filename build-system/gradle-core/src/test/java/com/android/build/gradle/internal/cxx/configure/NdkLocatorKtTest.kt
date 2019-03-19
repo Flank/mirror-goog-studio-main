@@ -21,9 +21,15 @@ import org.junit.After
 import org.junit.Test
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class NdkLocatorKtTest {
+
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     private val logger = RecordingLoggingEnvironment()
 
     @After
@@ -39,10 +45,10 @@ class NdkLocatorKtTest {
 
     @Test
     fun getVersionedFolderNames() {
-        val versionRoot = "./versionedRoot".toSlashFile()
-        val v1 = "./versionedRoot/17.1.2".toSlashFile()
-        val v2 = "./versionedRoot/18.1.2".toSlashFile()
-        val f1 = "./versionedRoot/my-file".toSlashFile()
+        val versionRoot = temporaryFolder.newFolder("versionedRoot")
+        val v1 = versionRoot.resolve("17.1.2")
+        val v2 = versionRoot.resolve("18.1.2")
+        val f1 = versionRoot.resolve("my-file")
         v1.mkdirs()
         v2.mkdirs()
         f1.writeText("touch")
