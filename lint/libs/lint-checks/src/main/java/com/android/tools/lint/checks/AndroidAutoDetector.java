@@ -94,9 +94,12 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                                     + "`intent-filter` for the action `android.media.browse.MediaBrowserService` "
                                     + "to be able to browse and play media.\n"
                                     + "To do this, add\n"
+                                    + "```xml\n"
                                     + "`<intent-filter>`\n"
                                     + "    `<action android:name=\"android.media.browse.MediaBrowserService\" />`\n"
-                                    + "`</intent-filter>`\n to the service that extends "
+                                    + "`</intent-filter>`\n"
+                                    + "```\n"
+                                    + "to the service that extends "
                                     + "`android.service.media.MediaBrowserService`",
                             Category.CORRECTNESS,
                             6,
@@ -113,9 +116,11 @@ public class AndroidAutoDetector extends Detector implements XmlScanner, SourceC
                             "To support voice searches on Android Auto, you should also register an "
                                     + "`intent-filter` for the action `android.media.action.MEDIA_PLAY_FROM_SEARCH`"
                                     + ".\nTo do this, add\n"
+                                    + "```xml\n"
                                     + "`<intent-filter>`\n"
                                     + "    `<action android:name=\"android.media.action.MEDIA_PLAY_FROM_SEARCH\" />`\n"
                                     + "`</intent-filter>`\n"
+                                    + "```\n"
                                     + "to your `<activity>` or `<service>`.",
                             Category.CORRECTNESS,
                             6,

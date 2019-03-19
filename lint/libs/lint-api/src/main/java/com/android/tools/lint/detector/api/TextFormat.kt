@@ -38,19 +38,19 @@ enum class TextFormat {
      *  * Sentences immediately surrounded by ** will be shown as bold.
      *  * Sentences immediately surrounded by *** will be shown as bold italics.
      *  * Sentences immediately surrounded by ` will be shown using monospace
-     * fonts
+     *     fonts
      *  * You can escape the previous characters with a backslash, \. Backslash
-     * characters must themselves be escaped with a backslash, e.g. use \\.
+     *    characters must themselves be escaped with a backslash, e.g. use \\.
      *  * If you want to use bold or italics within a word, you can use the
-     * trick of putting a zero-width space between the characters by entering
-     * a \\u200b unicode character.
+     *    trick of putting a zero-width space between the characters by entering
+     *    a \\u200b unicode character.
+     *  * Blocks of lines surrounded with ``` will be formatted as code; you
+     *    can optionally add "xml", "java", "kotlin" etc immediately after ``` on
+     *    the opening line to get syntax highlighting when lint supports it
+     *    (such as in HTML reports.)
      *
      * Furthermore, newlines are converted to br's when converting newlines.
      * Note: It does not insert `<html>` tags around the fragment for HTML output.
-     *
-     *
-     * TODO: Consider switching to the restructured text format -
-     * http://docutils.sourceforge.net/docs/user/rst/quickstart.html
      */
     RAW,
 
@@ -80,19 +80,15 @@ enum class TextFormat {
      * @param text the text to format
      * @return the corresponding text formatted as HTML
      */
-    fun toHtml(text: String): String {
-        return convertTo(text, HTML)
-    }
+    fun toHtml(text: String): String = convertTo(text, HTML)
 
     /**
      * Converts the given text to plain text
      *
-     * @param text the tetx to format
+     * @param text the text to format
      * @return the corresponding text formatted as HTML
      */
-    fun toText(text: String): String {
-        return convertTo(text, TEXT)
-    }
+    fun toText(text: String): String = convertTo(text, TEXT)
 
     /**
      * Converts the given message to the given format. Note that some
@@ -285,6 +281,40 @@ enum class TextFormat {
             }
 
             if (!escaped && (c == '*' || c == '`') && i < n - 1) {
+                // Preformatted text?
+                if (i == 0 || i > 0 && text[i - 1] == '\n' && text.regionMatches(i, "```", 0, 3, false)) {
+                    // Yes. Find end
+                    val end = text.indexOf("\n```", i + 3)
+                    if (end != -1) {
+                        val nextLineStart = text.indexOf('\n', i) + 1
+                        if (i > flushIndex) {
+                            appendEscapedText(sb, text, html, flushIndex, i - 1, escapeUnicode)
+                        }
+
+                        // In the future, when we have syntax highlighting available outside
+                        // of the CLI, run the highlighter here if the language is recognized
+                        // (the language is text.substring(i + 3, nextLineStart - 1))
+                        sb.append("\n")
+                        if (html) {
+                            sb.append("<pre>\n")
+                        }
+                        appendEscapedText(sb, text, html, nextLineStart, end + 1,
+                            escapeUnicode, newlinesAsBr = false)
+                        if (html) {
+                            sb.append("</pre>\n")
+                        }
+
+                        // Skip past the final ``` (and possibly \n if end of line)
+                        i = if (end + 4 < n && text[end + 4] == '\n') {
+                            end + 5
+                        } else {
+                            end + 4
+                        }
+                        flushIndex = i
+                        continue
+                    }
+                }
+
                 // Scout ahead for range end
                 if (!Character.isLetterOrDigit(prev) && !Character.isWhitespace(text[i + 1])) {
                     // Found * or ` immediately before a letter, and not in the middle of a word
@@ -473,7 +503,8 @@ enum class TextFormat {
             html: Boolean,
             start: Int,
             end: Int,
-            escapeUnicode: Boolean
+            escapeUnicode: Boolean,
+            newlinesAsBr: Boolean = true
         ) {
             if (html) {
                 for (i in start until end) {
@@ -483,7 +514,11 @@ enum class TextFormat {
                     } else if (c == '&') {
                         sb.append("&amp;")
                     } else if (c == '\n') {
-                        sb.append("<br/>\n")
+                        if (newlinesAsBr) {
+                            sb.append("<br/>\n")
+                        } else {
+                            sb.append("\n")
+                        }
                     } else {
                         if (c.toInt() > 255 && escapeUnicode) {
                             if (c == '\u200b') {

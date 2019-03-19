@@ -336,9 +336,11 @@ public class ManifestDetector extends Detector implements XmlScanner {
                             + "device admin can be activated/deactivated.\n"
                             + "\n"
                             + "To do this, add\n"
+                            + "```xml\n"
                             + "`<intent-filter>`\n"
                             + "    `<action android:name=\"android.app.action.DEVICE_ADMIN_ENABLED\" />`\n"
                             + "`</intent-filter>`\n"
+                            + "```\n"
                             + "to your `<receiver>`.",
                     Category.CORRECTNESS,
                     7,

@@ -71,8 +71,10 @@ public class WearStandaloneAppDetector extends Detector implements XmlScanner {
                             "Wearable apps should specify whether they can work standalone, without a phone app."
                                     + "Add a valid meta-data entry for `com.google.android.wearable.standalone` to "
                                     + "your application element and set the value to `true` or `false`.\n"
+                                    + "```xml\n"
                                     + "`<meta-data android:name=\"com.google.android.wearable.standalone\"\n"
-                                    + "            android:value=\"true\"/>`\n",
+                                    + "            android:value=\"true\"/>`\n"
+                                    + "```\n",
                             Category.CORRECTNESS,
                             6,
                             Severity.WARNING,

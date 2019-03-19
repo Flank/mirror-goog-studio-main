@@ -2349,14 +2349,14 @@ open class GradleDetector : Detector(), GradleScanner {
                 For faster incremental build, switch to the Lifecycle Java 8 API with these steps:
 
                 First replace
-
-                `annotationProcessor "androidx.lifecycle:lifecycle-compiler:*version*"`
-                `kapt "androidx.lifecycle:lifecycle-compiler:*version*"`
-
+                ```gradle
+                annotationProcessor "androidx.lifecycle:lifecycle-compiler:*version*"
+                kapt "androidx.lifecycle:lifecycle-compiler:*version*"
+                ```
                 with
-
-                `implementation "androidx.lifecycle:lifecycle-common-java8:*version*"`
-
+                ```gradle
+                implementation "androidx.lifecycle:lifecycle-common-java8:*version*"
+                ```
                 Then remove any `OnLifecycleEvent` annotations from `Observer` classes \
                 and make them implement the `DefaultLifecycleObserver` interface.
                 """,

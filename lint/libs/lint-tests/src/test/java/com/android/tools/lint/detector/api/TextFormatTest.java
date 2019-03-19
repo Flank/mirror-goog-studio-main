@@ -277,6 +277,87 @@ public class TextFormatTest extends TestCase {
                 convertMarkup(explanation, HTML));
     }
 
+    public void testFencedBlockHtml() {
+        String html =
+                RAW.convertTo(
+                        ""
+                                + "This is plain text.\n"
+                                + "```\n"
+                                + "   This is preformatted   text!\n"
+                                + "\n"
+                                + "\n"
+                                + "Bye!\n"
+                                + "```\n"
+                                + "This is after.",
+                        HTML);
+        assertEquals(
+                ""
+                        + "This is plain text.\n"
+                        + "<pre>\n"
+                        + "   This is preformatted   text!\n"
+                        + "\n"
+                        + "\n"
+                        + "Bye!\n"
+                        + "</pre>\n"
+                        + "This is after.",
+                html);
+    }
+
+    public void testFencedBlockText() {
+        String html =
+                RAW.convertTo(
+                        ""
+                                + "This is plain text.\n"
+                                + "```\n"
+                                + "   This is preformatted   text!\n"
+                                + "\n"
+                                + "\n"
+                                + "Bye!\n"
+                                + "```\n"
+                                + "This is after.",
+                        TEXT);
+        assertEquals(
+                ""
+                        + "This is plain text.\n"
+                        + "   This is preformatted   text!\n"
+                        + "\n"
+                        + "\n"
+                        + "Bye!\n"
+                        + "This is after.",
+                html);
+    }
+
+    public void testFencedBlockBegeinning() {
+        String html =
+                RAW.convertTo(
+                        "" + "```\n" + "This is preformatted   text!\n" + "```\n" + "Bye.", HTML);
+        assertEquals(
+                "" + "\n" + "<pre>\n" + "This is preformatted   text!\n" + "</pre>\n" + "Bye.",
+                html);
+    }
+
+    public void testFencedCodeBlock() {
+        String html =
+                RAW.convertTo(
+                        ""
+                                + "This is plain text.\n"
+                                + "```unknown\n"
+                                + "   val foo = \"This is a string\"!\n"
+                                + "   /* this is a comment */\n"
+                                + "```\n"
+                                + "This is after.",
+                        HTML);
+        assertEquals(
+                ""
+                        + "This is plain text.\n"
+                        + "<pre>\n"
+                        + "   val foo = \"This is a string\"!\n"
+                        + "   /* this is a comment */\n"
+                        + "</pre>\n"
+                        + "This is after.",
+                html);
+    }
+
     public void testConvertSelf() {
         // No changes
         assertEquals("`foo`<b>", RAW.convertTo("`foo`<b>", RAW));

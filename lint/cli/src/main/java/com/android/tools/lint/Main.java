@@ -1109,9 +1109,6 @@ public class Main {
     }
 
     static String getSuppressHelp() {
-        // \\u00a0 is a non-breaking space
-        final String NBSP = "\u00a0\u00a0\u00a0\u00a0";
-
         return "Lint errors can be suppressed in a variety of ways:\n"
                 + "\n"
                 + "1. With a `@SuppressLint` annotation in the Java code\n"
@@ -1151,15 +1148,13 @@ public class Main {
                 + "To suppress a lint warning in a `build.gradle` file, add a "
                 + "section like this:\n"
                 + "\n"
+                + "```gradle\n"
                 + "android {\n"
-                + NBSP
-                + "lintOptions {\n"
-                + NBSP
-                + NBSP
-                + "disable 'TypographyFractions','TypographyQuotes'\n"
-                + NBSP
+                + "    lintOptions {\n"
+                + "        disable 'TypographyFractions','TypographyQuotes'\n"
+                + "    }\n"
                 + "}\n"
-                + "}\n"
+                + "```\n"
                 + "\n"
                 + "Here we specify a comma separated list of issue id's after the "
                 + "disable command. You can also use `warning` or `error` instead "
@@ -1172,54 +1167,33 @@ public class Main {
                 + "The format of the `lint.xml` file is something like the "
                 + "following:\n"
                 + "\n"
+                + "```xml\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<lint>\n"
-                + NBSP
-                + "<!-- Ignore everything in the test source set -->\n"
-                + NBSP
-                + "<issue id=\"all\">\n"
-                + NBSP
-                + NBSP
-                + "<ignore path=\"\\*/test/\\*\" />\n"
-                + NBSP
-                + "</issue>\n"
+                + "    <!-- Ignore everything in the test source set -->\n"
+                + "    <issue id=\"all\">\n"
+                + "        <ignore path=\"\\*/test/\\*\" />\n"
+                + "    </issue>\n"
                 + "\n"
-                + NBSP
-                + "<!-- Disable this given check in this project -->\n"
-                + NBSP
-                + "<issue id=\"IconMissingDensityFolder\" severity=\"ignore\" />\n"
+                + "    <!-- Disable this given check in this project -->\n"
+                + "    <issue id=\"IconMissingDensityFolder\" severity=\"ignore\" />\n"
                 + "\n"
-                + NBSP
-                + "<!-- Ignore the ObsoleteLayoutParam issue in the given files -->\n"
-                + NBSP
-                + "<issue id=\"ObsoleteLayoutParam\">\n"
-                + NBSP
-                + NBSP
-                + "<ignore path=\"res/layout/activation.xml\" />\n"
-                + NBSP
-                + NBSP
-                + "<ignore path=\"res/layout-xlarge/activation.xml\" />\n"
-                + NBSP
-                + NBSP
-                + "<ignore regexp=\"(foo|bar)\\.java\" />\n"
-                + NBSP
-                + "</issue>\n"
+                + "    <!-- Ignore the ObsoleteLayoutParam issue in the given files -->\n"
+                + "    <issue id=\"ObsoleteLayoutParam\">\n"
+                + "        <ignore path=\"res/layout/activation.xml\" />\n"
+                + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
+                + "        <ignore regexp=\"(foo|bar)\\.java\" />\n"
+                + "    </issue>\n"
                 + "\n"
-                + NBSP
-                + "<!-- Ignore the UselessLeaf issue in the given file -->\n"
-                + NBSP
-                + "<issue id=\"UselessLeaf\">\n"
-                + NBSP
-                + NBSP
-                + "<ignore path=\"res/layout/main.xml\" />\n"
-                + NBSP
-                + "</issue>\n"
+                + "    <!-- Ignore the UselessLeaf issue in the given file -->\n"
+                + "    <issue id=\"UselessLeaf\">\n"
+                + "        <ignore path=\"res/layout/main.xml\" />\n"
+                + "    </issue>\n"
                 + "\n"
-                + NBSP
-                + "<!-- Change the severity of hardcoded strings to \"error\" -->\n"
-                + NBSP
-                + "<issue id=\"HardcodedText\" severity=\"error\" />\n"
+                + "    <!-- Change the severity of hardcoded strings to \"error\" -->\n"
+                + "    <issue id=\"HardcodedText\" severity=\"error\" />\n"
                 + "</lint>\n"
+                + "```\n"
                 + "\n"
                 + "To suppress lint checks from the command line, pass the "
                 + ARG_IGNORE
