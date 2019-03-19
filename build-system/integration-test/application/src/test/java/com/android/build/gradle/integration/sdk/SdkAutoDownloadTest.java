@@ -367,13 +367,14 @@ public class SdkAutoDownloadTest {
                 project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
 
-        // TODO: This should be changed to assembleDebug once b/116539441 is fixed.
-        // Currently assembleDebug causes ninja to its path component limit.
-        // See https://github.com/ninja-build/ninja/issues/1161
-        getExecutor().run("clean");
+        getExecutor().run("assembleDebug");
 
-        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
-        assertThat(ndkDirectory).isDirectory();
+        // Hard to get the NDK SxS flag here. Just check whether either expected directory exists.
+        File legacyFolder = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        File sxsFolder = FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE);
+        if (!legacyFolder.isDirectory() && !sxsFolder.isDirectory()) {
+            assertThat(sxsFolder).isDirectory();
+        }
     }
 
     @Test
@@ -405,8 +406,7 @@ public class SdkAutoDownloadTest {
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains(
                         "Failed to install the following Android SDK packages as some licences have not been accepted");
-        assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("ndk-bundle");
+        assertThat(Throwables.getRootCause(result.getException()).getMessage()).contains("ndk");
     }
 
     @Test

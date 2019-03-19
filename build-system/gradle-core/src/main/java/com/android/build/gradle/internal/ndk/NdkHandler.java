@@ -23,6 +23,10 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.builder.sdk.InstallFailedException;
+import com.android.builder.sdk.LicenceNotAcceptedException;
+import com.android.builder.sdk.SdkLibData;
+import com.android.builder.sdk.SdkLoader;
 import com.android.repository.Revision;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -87,7 +91,7 @@ public class NdkHandler {
     }
 
     /** Schedule the NDK to be rediscovered the next time it's needed */
-    public void invalidateNdk() {
+    private void invalidateNdk() {
         this.ndkPlatform = null;
     }
 
@@ -198,5 +202,21 @@ public class NdkHandler {
             }
         }
         return null;
+    }
+
+    /**
+     * Install NDK from the SDK. When NDK SxS is enabled the latest available SxS version is used.
+     */
+    public void installFromSdk(SdkLoader sdkLoader, SdkLibData sdkLibData) {
+        try {
+            if (enableSideBySideNdk) {
+                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE);
+            } else {
+                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
+            }
+        } catch (LicenceNotAcceptedException | InstallFailedException e) {
+            throw new RuntimeException(e);
+        }
+        invalidateNdk();
     }
 }

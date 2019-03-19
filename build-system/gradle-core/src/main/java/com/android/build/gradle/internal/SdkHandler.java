@@ -415,12 +415,7 @@ public class SdkHandler {
         if (!sdkLibData.useSdkDownload()) {
             return;
         }
-        try {
-            sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK);
-        } catch (LicenceNotAcceptedException | InstallFailedException e) {
-            throw new RuntimeException(e);
-        }
-        ndkHandler.invalidateNdk();
+        ndkHandler.installFromSdk(sdkLoader, sdkLibData);
     }
 
     /** Installs CMake. */
