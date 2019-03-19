@@ -50,7 +50,7 @@ public class Agent {
         String baselineFile = splitArgs.length == 2 ? splitArgs[1] : null;
 
         Map<String, String> aspectsMap =
-                RulesFile.parserRulesFile(agentArgs, Function.identity(), Agent::shortcutProcessor);
+                RulesFile.parserRulesFile(rulesFile, Function.identity(), Agent::shortcutProcessor);
         LOGGER.info(String.format("Starting Aspect agent (%d rules)", aspectsMap.size()));
 
         Aspects aspects = new Aspects(aspectsMap);
