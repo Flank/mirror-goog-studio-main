@@ -27,5 +27,11 @@ public interface GradlePluginModel {
      * @return a list of applied plugins.
      */
     @NonNull
-    Collection<String> getGraldePluginList();
+    Collection<String> getGradlePluginList();
+
+    /**
+     * @return whether or not the Gradle project has variants. This is set to false for non-android
+     *     modules.
+     */
+    boolean areVariantsEmpty();
 }
