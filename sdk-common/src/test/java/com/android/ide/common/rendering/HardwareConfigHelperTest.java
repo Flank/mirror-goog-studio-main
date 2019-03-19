@@ -3,6 +3,7 @@ package com.android.ide.common.rendering;
 import static com.android.ide.common.rendering.HardwareConfigHelper.getGenericLabel;
 import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusLabel;
 import static com.android.ide.common.rendering.HardwareConfigHelper.getNexusMenuLabel;
+import static com.android.ide.common.rendering.HardwareConfigHelper.isAutomotive;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isGeneric;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isMobile;
 import static com.android.ide.common.rendering.HardwareConfigHelper.isNexus;
@@ -41,7 +42,6 @@ public class HardwareConfigHelperTest extends TestCase {
         assertEquals("Nexus One (3.7\", 480 \u00d7 800, hdpi)", getNexusLabel(n1));
         assertEquals("3.7, 480 \u00d7 800, hdpi (Nexus One)", getNexusMenuLabel(n1));
         assertFalse(isGeneric(n1));
-        assertFalse(isGeneric(n1));
     }
 
     public void testNexus7() {
@@ -62,7 +62,6 @@ public class HardwareConfigHelperTest extends TestCase {
 
         assertEquals("Nexus 7 (2012) (7.0\", 800 × 1280, tvdpi)", getNexusLabel(n7));
         assertEquals("Nexus 7 (7.0\", 1200 × 1920, xhdpi)", getNexusLabel(n7b));
-        assertFalse(isGeneric(n7));
         assertFalse(isGeneric(n7));
     }
 
@@ -85,6 +84,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isWear(qvga));
         assertFalse(isTv(qvga));
         assertTrue(isMobile(qvga));
+        assertFalse(isAutomotive(qvga));
         assertFalse(qvga.isScreenRound());
 
         Device nexus5 = deviceManager.getDevice("Nexus 5", "Google");
@@ -92,6 +92,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isWear(nexus5));
         assertFalse(isTv(nexus5));
         assertTrue(isMobile(nexus5));
+        assertFalse(isAutomotive(nexus5));
         assertFalse(nexus5.isScreenRound());
 
         Device square = deviceManager.getDevice("wear_square", "Google");
@@ -100,6 +101,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(square.isScreenRound());
         assertFalse(isTv(square));
         assertFalse(isMobile(square));
+        assertFalse(isAutomotive(square));
 
         Device round = deviceManager.getDevice("wear_round", "Google");
         assertNotNull(round);
@@ -107,6 +109,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertTrue(round.isScreenRound());
         assertFalse(isTv(round));
         assertFalse(isMobile(round));
+        assertFalse(isAutomotive(round));
         assertEquals("Android Wear Round (1.7\", 320 \u00d7 320, hdpi)", getNexusLabel(round));
         assertEquals("320 \u00d7 320, hdpi (Round)", getNexusMenuLabel(round));
 
@@ -116,6 +119,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertTrue(isTv(tv1080p));
         assertFalse(isWear(tv1080p));
         assertFalse(isMobile(tv1080p));
+        assertFalse(isAutomotive(tv1080p));
         assertFalse(tv1080p.isScreenRound());
         assertEquals("Android TV (1080p) (55.0\", 1920 \u00d7 1080, xhdpi)", getNexusLabel(tv1080p));
         assertEquals("1080p, 1920 \u00d7 1080, xhdpi (TV)", getNexusMenuLabel(tv1080p));
@@ -125,6 +129,7 @@ public class HardwareConfigHelperTest extends TestCase {
         assertFalse(isWear(tv720p));
         assertTrue(isTv(tv720p));
         assertFalse(isMobile(tv720p));
+        assertFalse(isAutomotive(tv720p));
         assertFalse(tv720p.isScreenRound());
     }
 
@@ -173,5 +178,33 @@ public class HardwareConfigHelperTest extends TestCase {
                 "Nexus 7 2013",
                 "Nexus 10"
         ), ids);
+    }
+
+    public void testAutomotiveGeneric() {
+        DeviceManager deviceManager = getDeviceManager();
+        Device automotive1024p = deviceManager.getDevice("automotive_1024p_landscape", "Generic");
+        assertNotNull(automotive1024p);
+        assertFalse(isWear(automotive1024p));
+        assertFalse(isTv(automotive1024p));
+        assertFalse(isMobile(automotive1024p));
+        assertTrue(isAutomotive(automotive1024p));
+        assertFalse(automotive1024p.isScreenRound());
+        assertTrue(isGeneric(automotive1024p));
+        assertEquals(
+                "Automotive (1024p landscape) (1024 × 768, mdpi)",
+                getGenericLabel(automotive1024p));
+    }
+
+    public void testAutomotiveNonGeneric() {
+        DeviceManager deviceManager = getDeviceManager();
+        Device polestar2 = deviceManager.getDevice("polestar_2", "Volvo");
+        assertNotNull(polestar2);
+        assertFalse(isWear(polestar2));
+        assertFalse(isTv(polestar2));
+        assertFalse(isMobile(polestar2));
+        assertTrue(isAutomotive(polestar2));
+        assertFalse(polestar2.isScreenRound());
+        assertFalse(isGeneric(polestar2));
+        assertEquals("Polestar 2 (1152 × 1536, mdpi)", getGenericLabel(polestar2));
     }
 }

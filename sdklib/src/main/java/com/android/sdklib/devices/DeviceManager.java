@@ -16,6 +16,8 @@
 
 package com.android.sdklib.devices;
 
+import static com.android.sdklib.internal.avd.AvdManager.AVD_INI_RAM_SIZE;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -37,9 +39,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Closeables;
-
-import org.xml.sax.SAXException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,12 +49,10 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-
-import static com.android.sdklib.internal.avd.AvdManager.AVD_INI_RAM_SIZE;
+import org.xml.sax.SAXException;
 
 /**
  * Manager class for interacting with {@link Device}s within the SDK
@@ -305,6 +302,12 @@ public class DeviceManager {
     }
 
     /**
+     * Vendor-provided device files to parse. See {@link #initVendorDevices()}. Each entry
+     * corresponds to an ".xml" file located in this same package.
+     */
+    private static final String[] DEVICE_FILES = {"nexus", "wear", "tv", "automotive"};
+
+    /**
      * Initializes all vendor-provided {@link Device}s: the bundled nexus.xml devices
      * as well as all those coming from extra packages.
      * @return True if the list has changed.
@@ -317,32 +320,15 @@ public class DeviceManager {
 
             mVendorDevices = HashBasedTable.create();
 
-            // Load builtin devices
-            InputStream stream = DeviceManager.class.getResourceAsStream("nexus.xml");
-            try {
-                mVendorDevices.putAll(DeviceParser.parse(stream));
-            } catch (Exception e) {
-                mLog.error(e, "Could not load nexus devices");
-            } finally {
-                Closeables.closeQuietly(stream);
-            }
-
-            stream = DeviceManager.class.getResourceAsStream("wear.xml");
-            try {
-                mVendorDevices.putAll(DeviceParser.parse(stream));
-            } catch (Exception e) {
-                mLog.error(e, "Could not load wear devices");
-            } finally {
-                Closeables.closeQuietly(stream);
-            }
-
-            stream = DeviceManager.class.getResourceAsStream("tv.xml");
-            try {
-                mVendorDevices.putAll(DeviceParser.parse(stream));
-            } catch (Exception e) {
-                mLog.error(e, "Could not load tv devices");
-            } finally {
-                Closeables.closeQuietly(stream);
+            for (String deviceFile : DEVICE_FILES) {
+                InputStream stream = DeviceManager.class.getResourceAsStream(deviceFile + ".xml");
+                try {
+                    mVendorDevices.putAll(DeviceParser.parse(stream));
+                } catch (Exception e) {
+                    mLog.error(e, "Could not load " + deviceFile + " devices");
+                } finally {
+                    Closeables.closeQuietly(stream);
+                }
             }
 
             if (mOsSdkPath != null) {

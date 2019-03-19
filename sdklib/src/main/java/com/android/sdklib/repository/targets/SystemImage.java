@@ -45,6 +45,10 @@ public class SystemImage implements ISystemImage {
      */
     public static final IdDisplay TV_TAG = IdDisplay.create("android-tv", "Android TV");
 
+    /** Tag to apply to system images for Android Automotive. */
+    public static final IdDisplay AUTOMOTIVE_TAG =
+            IdDisplay.create("android-automotive", "Android Automotive");
+
     /** Tag to apply to system images for Chrome OS device. */
     public static final IdDisplay CHROMEOS_TAG = IdDisplay.create("chromeos", "Chrome OS Device");
 

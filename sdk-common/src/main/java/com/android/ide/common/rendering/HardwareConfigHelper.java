@@ -16,6 +16,8 @@
 
 package com.android.ide.common.rendering;
 
+import static com.android.ide.common.rendering.api.HardwareConfig.*;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.HardwareConfig;
@@ -23,15 +25,11 @@ import com.android.resources.ScreenOrientation;
 import com.android.sdklib.devices.ButtonType;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.Screen;
-
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.android.ide.common.rendering.api.HardwareConfig.*;
 
 /**
  * Helper method to create a {@link HardwareConfig} object.
@@ -320,11 +318,16 @@ public class HardwareConfigHelper {
         return device != null && "android-tv".equals(device.getTagId());
     }
 
+    /** Whether the given device is an Automotive device */
+    public static boolean isAutomotive(@Nullable Device device) {
+        return device != null && "android-automotive".equals(device.getTagId());
+    }
+
     /**
      * Whether the given device appears to be a mobile device (e.g. not wear, tv, auto, etc)
      */
     public static boolean isMobile(@Nullable Device device) {
-        return !isTv(device) && !isWear(device) && !isThings(device);
+        return !isTv(device) && !isWear(device) && !isThings(device) && !isAutomotive(device);
     }
 
     /**
