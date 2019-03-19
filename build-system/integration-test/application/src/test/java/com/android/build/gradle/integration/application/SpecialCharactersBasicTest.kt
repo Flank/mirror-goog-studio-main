@@ -18,44 +18,45 @@ package com.android.build.gradle.integration.application
 
 import com.google.common.truth.Truth.assertThat
 
-import com.android.build.gradle.integration.common.category.SmokeTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TestProjectPaths
 import com.android.builder.model.SyncIssue
 import com.android.utils.FileUtils
-import org.junit.AfterClass
 import java.util.regex.Pattern
 import org.junit.ClassRule
 import org.junit.Rule
 import org.junit.Test
-import org.junit.experimental.categories.Category
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
 /**
  * A very simple test to compile a project with special characters in it
  */
-@Category(SmokeTests::class)
-class SpecialCharactersBasicTest {
+@RunWith(Parameterized::class)
+class SpecialCharactersBasicTest(projectName: String) {
 
     @get:Rule
-    val project: GradleTestProject = copyProjectWithName("basic", "1b@sic w%ith spécià`l charãct~ers=.;{}$#!&^()¡²³¤€¼½¾‘’¥×")
+    var project: GradleTestProject = copyProjectWithName("basic", projectName)
 
 
     private fun copyProjectWithName(originalProject: String, copyName: String): GradleTestProject {
         val originalProjectPath = TestProjectPaths.getTestProjectDir(originalProject)
 
-        val projectCopyPath = temporaryFolder.newFolder(copyName)
+        try {
+            val projectCopyPath = temporaryFolder.newFolder(copyName)
+            FileUtils.copyDirectory(originalProjectPath, projectCopyPath)
 
-        FileUtils.copyDirectory(originalProjectPath, projectCopyPath)
-
-        return GradleTestProject.builder()
-            .fromDir(projectCopyPath)
-            .create()
+            return GradleTestProject.builder()
+                .fromDir(projectCopyPath)
+                .create()
+        } catch(err: java.io.IOException) {
+            throw(java.io.IOException("Could not create project ${copyName}. This could be caused by an illegal file name.", err))
+        }
     }
 
     @Test
-    fun testProjectWithSpecialCharacters() {
-
+    fun testProjectsWithSpecialCharacters() {
         project.execute("clean", "assemble")
 
         // basic project overwrites buildConfigField which emits a sync warning
@@ -70,9 +71,40 @@ class SpecialCharactersBasicTest {
     }
 
     companion object {
+        // temporaryFolder is a shared root folder for the test projects.
         @ClassRule
         @JvmField
         val temporaryFolder = TemporaryFolder()
+
+        @JvmStatic
+        @Parameterized.Parameters
+        fun projectNames(): Collection<String> {
+            return listOf(
+                "1b@s %i péà`e eã~e=.;{}\$#!&^()¡²³¤€¼½¾‘’¥×βα基本осಮೂ基本どきコラપા기본आधមូលั้นਬੁਨਿਆძიমৌƏՀիመሠ",
+                "בסיסיالأساسيةיקערדיק"
+
+                /* Add these for individual language tests
+                "βασικός",
+                "基本",
+                "основной",
+                "ಮೂಲಭೂತ",
+                "基本的な",
+                "પાયાની",
+                "الأساسية",
+                "기본",
+                "आधारभूत",
+                "יקערדיק",
+                "មូលដ្ឋាន",
+                "ขั้นพื้นฐาน",
+                "ਬੁਨਿਆਦੀ",
+                "בסיסי",
+                "ძირითადი",
+                "মৌলিক",
+                "Əsas",
+                "Հիմնական",
+                "መሠረታዊ"*/
+            )
+        }
     }
 
 }
