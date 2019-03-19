@@ -1025,6 +1025,17 @@ open class GradleDetector : Detector(), GradleScanner {
                 dependency.majorVersion != GradleCoordinate.PLUS_REV_VALUE &&
                 context.isEnabled(COMPATIBILITY)
             ) {
+                if (compileSdkVersion >= 29 && dependency.majorVersion < 29) {
+                    reportNonFatalCompatibilityIssue(context, cookie,
+                        "Version 28 (intended for Android Pie and below) is the last " +
+                                "version of the legacy support library, so we recommend that " +
+                                "you migrate to AndroidX libraries when using Android Q and " +
+                                "moving forward. The IDE can help with this: " +
+                                "Refactor > Migrate to AndroidX..."
+                    )
+                    return
+                }
+
                 var fix: LintFix? = null
                 if (newerVersion != null) {
                     fix = fix().name("Replace with $newerVersion")

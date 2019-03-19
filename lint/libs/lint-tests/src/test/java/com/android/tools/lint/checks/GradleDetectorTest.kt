@@ -436,6 +436,35 @@ class GradleDetectorTest : AbstractCheckTest() {
         ).issues(DEPENDENCY).run().expect(expected)
     }
 
+    fun testQvsAndroidX() {
+        // Regression test for 128648458: Lint Warning to update appCompat in Q
+        val expected = "" +
+                "build.gradle:13: Error: Version 28 (intended for Android Pie and below) is the last version of the legacy support library, so we recommend that you migrate to AndroidX libraries when using Android Q and moving forward. The IDE can help with this: Refactor > Migrate to AndroidX... [GradleCompatible]\n" +
+                "    implementation 'com.android.support:appcompat-v7:28.0.0' \n" +
+                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 0 warnings"
+
+        lint().files(
+            gradle(
+                "" +
+                        "apply plugin: 'com.android.application'\n" +
+                        "\n" +
+                        "android {\n" +
+                        "     compileSdkVersion 'android-Q'\n" +
+                        "\n" +
+                        "    defaultConfig {\n" +
+                        "        minSdkVersion 19\n" +
+                        "        targetSdkVersion 'Q'\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "dependencies {\n" +
+                        "    implementation 'com.android.support:appcompat-v7:28.0.0' \n" +
+                        "}\n"
+            )
+        ).issues(COMPATIBILITY).run().expect(expected)
+    }
+
     fun testCompatibility() {
         val expected = "" +
                 "build.gradle:4: Error: The compileSdkVersion (18) should not be lower than the targetSdkVersion (19) [GradleCompatible]\n" +
