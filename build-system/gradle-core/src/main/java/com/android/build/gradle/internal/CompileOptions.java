@@ -129,14 +129,11 @@ public class CompileOptions {
     /**
      * Whether Java compilation should be incremental or not.
      *
+     * <p>The default value is {@code true}.
+     *
      * <p>Note that even if this option is set to {@code true}, Java compilation may still be
      * non-incremental (e.g., if incremental annotation processing is not yet possible in the
      * project).
-     *
-     * <p>If this option is not set (set to {@code null}), Java compilation may or may not be
-     * incremental, depending on the Android Gradle plugin's default behavior ({@link
-     * com.android.build.gradle.tasks.JavaCompileUtils#DEFAULT_INCREMENTAL_COMPILATION}) and
-     * Gradle's default behavior.
      */
     @Nullable
     public Boolean getIncremental() {
