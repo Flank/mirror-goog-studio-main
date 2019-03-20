@@ -201,68 +201,6 @@ public class IncrementalRelativeFileSetsTest {
     }
 
     @Test
-    public void baseDirectoryCountOnEmpty() {
-        ImmutableMap<RelativeFile, FileStatus> set = ImmutableMap.copyOf(
-                Maps.<RelativeFile, FileStatus>newHashMap());
-        assertEquals(0, IncrementalRelativeFileSets.getBaseDirectoryCount(set));
-    }
-
-    @Test
-    public void baseDirectoryCountOneDirectoryMultipleEntries() throws Exception {
-        File dir = temporaryFolder.newFolder("foo");
-        File f0 = new File(dir, "f0");
-        assertTrue(f0.createNewFile());
-        File f1 = new File(dir, "f1");
-        assertTrue(f1.createNewFile());
-
-        ImmutableMap<RelativeFile, FileStatus> set = IncrementalRelativeFileSets.fromDirectory(dir);
-        assertEquals(1, IncrementalRelativeFileSets.getBaseDirectoryCount(set));
-    }
-
-    @Test
-    public void baseDirectoryCountTwoDirectoriesTwoZipsMultipleEntries() throws Exception {
-        File foo = temporaryFolder.newFolder("foo");
-        File f0 = new File(foo, "f0");
-        assertTrue(f0.createNewFile());
-        File f1 = new File(foo, "f1");
-        assertTrue(f1.createNewFile());
-
-        File bar = temporaryFolder.newFolder("bar");
-        File b0 = new File(bar, "b0");
-        assertTrue(b0.createNewFile());
-        File b1 = new File(bar, "b1");
-        assertTrue(b1.createNewFile());
-
-        File fooz = new File(temporaryFolder.getRoot(), "fooz");
-        File barz = new File(temporaryFolder.getRoot(), "barz");
-
-        Closer closer = Closer.create();
-
-        try {
-            ZFile foozZip = closer.register(ZFile.openReadWrite(fooz));
-            foozZip.add("f0z", new ByteArrayInputStream(new byte[0]));
-            foozZip.close();
-
-            ZFile barzZip = closer.register(ZFile.openReadWrite(barz));
-            barzZip.add("f0z", new ByteArrayInputStream(new byte[0]));
-            barzZip.close();
-        } catch (Throwable t) {
-            throw closer.rethrow(t);
-        } finally {
-            closer.close();
-        }
-
-        ImmutableMap<RelativeFile, FileStatus> set1 = IncrementalRelativeFileSets.fromDirectory(bar);
-        ImmutableMap<RelativeFile, FileStatus> set2 = IncrementalRelativeFileSets.fromDirectory(foo);
-        ImmutableMap<RelativeFile, FileStatus> set3 = IncrementalRelativeFileSets.fromZip(fooz);
-        ImmutableMap<RelativeFile, FileStatus> set4 = IncrementalRelativeFileSets.fromZip(barz);
-        @SuppressWarnings("unchecked")
-        ImmutableMap<RelativeFile, FileStatus> set =
-                IncrementalRelativeFileSets.union(Sets.newHashSet(set1, set2, set3, set4));
-        assertEquals(2, IncrementalRelativeFileSets.getBaseDirectoryCount(set));
-    }
-
-    @Test
     public void makingFromBaseFilesIgnoresDirectories() throws Exception {
         File foo = temporaryFolder.newFolder("foo");
 

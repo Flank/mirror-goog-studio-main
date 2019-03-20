@@ -29,20 +29,19 @@ import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
 import org.gradle.api.file.Directory;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /** Task to package an Android application (APK). */
-public class PackageApplication extends PackageAndroidArtifact {
+public abstract class PackageApplication extends PackageAndroidArtifact {
 
     InternalArtifactType expectedOutputType;
 
     @Inject
-    public PackageApplication(ObjectFactory objectFactory, WorkerExecutor workerExecutor) {
-        super(objectFactory, workerExecutor);
+    public PackageApplication(WorkerExecutor workerExecutor) {
+        super(workerExecutor);
     }
 
     @Override
@@ -51,14 +50,7 @@ public class PackageApplication extends PackageAndroidArtifact {
         return expectedOutputType;
     }
 
-    @Override
-    @Internal
-    protected boolean isIncremental() {
-        return true;
-    }
-
-    @Override
-    void recordMetrics(File apkOutputFile, File resourcesApFile) {
+    public static void recordMetrics(String projectPath, File apkOutputFile, File resourcesApFile) {
         long metricsStartTime = System.nanoTime();
         GradleBuildProjectMetrics.Builder metrics = GradleBuildProjectMetrics.newBuilder();
 
@@ -74,7 +66,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
         metrics.setMetricsTimeNs(System.nanoTime() - metricsStartTime);
 
-        ProcessProfileWriter.getProject(getProject().getPath()).setMetrics(metrics);
+        ProcessProfileWriter.getProject(projectPath).setMetrics(metrics);
     }
 
     @Nullable

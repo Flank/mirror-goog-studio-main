@@ -26,7 +26,6 @@ import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zfile.ApkCreator;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -136,8 +135,7 @@ public class IncrementalPackager implements Closeable {
      * @param files the the dex files
      * @throws IOException failed to update the archive
      */
-    public void updateDex(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
-            throws IOException {
+    public void updateDex(@NonNull Map<RelativeFile, FileStatus> files) throws IOException {
         updateFiles(mDexRenamer.update(files));
     }
 
@@ -172,7 +170,7 @@ public class IncrementalPackager implements Closeable {
                         .collect(Collectors.toList());
 
         for (PackagedFileUpdate rf : newOrChangedNonArchiveFiles) {
-            File out = new File(rf.getSource().getBase(), rf.getSource().getRelativePath());
+            File out = rf.getSource().getFile();
             mApkCreator.writeFile(out, rf.getName());
         }
 
@@ -218,7 +216,7 @@ public class IncrementalPackager implements Closeable {
      * @param files the resources to update
      * @throws IOException failed to update the archive
      */
-    public void updateJavaResources(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
+    public void updateJavaResources(@NonNull Map<RelativeFile, FileStatus> files)
             throws IOException {
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
@@ -233,8 +231,7 @@ public class IncrementalPackager implements Closeable {
      * @param files the assets to update
      * @throws IOException failed to update the archive
      */
-    public void updateAssets(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
-            throws IOException {
+    public void updateAssets(@NonNull Map<RelativeFile, FileStatus> files) throws IOException {
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(files).stream()
                         .map(pfu -> new PackagedFileUpdate(
@@ -250,7 +247,7 @@ public class IncrementalPackager implements Closeable {
      * @param files the resources to update
      * @throws IOException failed to update the archive
      */
-    public void updateAndroidResources(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
+    public void updateAndroidResources(@NonNull Map<RelativeFile, FileStatus> files)
             throws IOException {
         updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(files));
     }
@@ -261,7 +258,7 @@ public class IncrementalPackager implements Closeable {
      * @param files the resources to update
      * @throws IOException failed to update the archive
      */
-    public void updateNativeLibraries(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
+    public void updateNativeLibraries(@NonNull Map<RelativeFile, FileStatus> files)
             throws IOException {
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(

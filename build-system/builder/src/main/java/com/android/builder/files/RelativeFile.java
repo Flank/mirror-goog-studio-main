@@ -39,8 +39,8 @@ public class RelativeFile {
         JAR,
     }
 
-    /** The base directory or jar. */
-    @NonNull private final File base;
+    /** For {@link Type#JAR}, the jar. For {@link Type#DIRECTORY} the file within the directory. */
+    @NonNull private final File file;
 
     /** The OS independent path from base to file, including the file name in the end. */
     @NonNull private final String relativePath;
@@ -56,7 +56,7 @@ public class RelativeFile {
      */
     public RelativeFile(@NonNull File base, @NonNull File file) {
         this(
-                base,
+                file,
                 FileUtils.toSystemIndependentPath(
                         FileUtils.relativePossiblyNonExistingPath(file, base)),
                 Type.DIRECTORY);
@@ -75,17 +75,20 @@ public class RelativeFile {
         this(base, relativePath, Type.JAR);
     }
 
+    public static RelativeFile fileInDirectory(@NonNull String relativePath, @NonNull File file) {
+        return new RelativeFile(file, relativePath, Type.DIRECTORY);
+    }
+
     /**
      * Creates a new relative file.
      *
-     * @param base the base jar or directory.
+     * @param file the base jar, or the file within the directory.
      * @param relativePath the relative path to the file.
      * @param type the type of the base.
      */
-    public RelativeFile(@NonNull File base, @NonNull String relativePath, @NonNull Type type) {
+    private RelativeFile(@NonNull File file, @NonNull String relativePath, @NonNull Type type) {
         Preconditions.checkArgument(!relativePath.isEmpty(), "Relative path cannot be empty");
-
-        this.base = base;
+        this.file = file;
         this.relativePath = relativePath;
         this.type = type;
     }
@@ -93,11 +96,14 @@ public class RelativeFile {
     /**
      * Obtains the base directory or jar.
      *
+     * <p>Only applicable when {@link #getType()} == {@link Type#JAR}
+     *
      * @return the base directory or jar as provided when created the object
      */
     @NonNull
     public File getBase() {
-        return base;
+        Preconditions.checkState(getType() == Type.JAR, "Only applicable for jars");
+        return file;
     }
 
     /**
@@ -117,9 +123,22 @@ public class RelativeFile {
         return type;
     }
 
+    /**
+     * Returns the actual file from the directory.
+     *
+     * <p>Only applicable when {@link #getType()} == {@link Type#DIRECTORY}
+     *
+     * @return
+     */
+    @NonNull
+    public File getFile() {
+        Preconditions.checkState(getType() == Type.DIRECTORY, "Only applicable for directories");
+        return file;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hashCode(base, relativePath);
+        return Objects.hashCode(file, relativePath);
     }
 
     @Override
@@ -129,7 +148,7 @@ public class RelativeFile {
         }
 
         RelativeFile other = (RelativeFile) obj;
-        return Objects.equal(base, other.base)
+        return Objects.equal(file, other.file)
                 && Objects.equal(relativePath, other.relativePath)
                 && Objects.equal(type, other.type);
     }
@@ -137,7 +156,7 @@ public class RelativeFile {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("base", base)
+                .add("base", file)
                 .add("path", relativePath)
                 .add("type", type)
                 .toString();

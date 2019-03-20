@@ -25,14 +25,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Utilities for incremental relative file sets, immutable maps of relative files to status.
@@ -46,13 +44,15 @@ public final class IncrementalRelativeFileSets {
     }
 
     /**
-     * Reads a directory and adds all files in the directory in a new incremental relative set.
-     * The status of each file is set to {@link FileStatus#NEW}. This method is used to construct
-     * an initial set of files and is, therefore, an incremental update from zero.
+     * Reads a directory and adds all files in the directory in a new incremental relative set. The
+     * status of each file is set to {@link FileStatus#NEW}. This method is used to construct an
+     * initial set of files and is, therefore, an incremental update from zero.
      *
      * @param directory the directory, must be an existing directory
      * @return the file set
+     * @deprecated Prefer the new Gradle InputChanges API.
      */
+    @Deprecated
     @NonNull
     public static ImmutableMap<RelativeFile, FileStatus> fromDirectory(@NonNull File directory) {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
@@ -259,28 +259,11 @@ public final class IncrementalRelativeFileSets {
     }
 
     /**
-     * Counts how many different base directories are there in a relative file set. This method will
-     * look at the base of every {@link RelativeFile} and count how many distinct bases are that
-     * that are directories.
-     *
-     * @param set the file set
-     * @return the number of distinct base directories
-     */
-    public static int getBaseDirectoryCount(@NonNull ImmutableMap<RelativeFile, FileStatus> set) {
-        return set.keySet()
-                .stream()
-                .map(RelativeFile::getBase)
-                .filter(Files.isDirectory())
-                .collect(Collectors.toSet())
-                .size();
-    }
-
-    /**
-     * Reads files and builds an incremental relative file set. Each individual file in
-     * {@code files} may be a file or directory. If it is a directory, then all files in the
-     * directory are added as if {@link #fromDirectory(File)} had been invoked; if it is a file,
-     * then it is assumed to be a zip file and all files in the zip are added as if
-     * {@link #fromZip(File)} had been invoked.
+     * Reads files and builds an incremental relative file set. Each individual file in {@code
+     * files} may be a file or directory. If it is a directory, then all files in the directory are
+     * added as if {@link #fromDirectory(File)} had been invoked; if it is a file, then it is
+     * assumed to be a zip file and all files in the zip are added as if {@link #fromZip(File)} had
+     * been invoked.
      *
      * <p>The status of each file is set to {@link FileStatus#NEW}. This method is used to construct
      * an initial set of files and is, therefore, an incremental update from zero.
@@ -288,7 +271,9 @@ public final class IncrementalRelativeFileSets {
      * @param files the files and directories
      * @return the file set
      * @throws IOException failed to read the files
+     * @deprecated Prefer the new Gradle InputChanges API.
      */
+    @Deprecated
     @NonNull
     public static ImmutableMap<RelativeFile, FileStatus> fromZipsAndDirectories(
             @NonNull Iterable<File> files) throws IOException {
@@ -325,7 +310,9 @@ public final class IncrementalRelativeFileSets {
      * @param fileDeletionPolicy the policy for file deletions
      * @return the data
      * @throws IOException failed to read a zip file
+     * @deprecated Prefer the new Gradle InputChanges API.
      */
+    @Deprecated
     @NonNull
     public static ImmutableMap<RelativeFile, FileStatus> makeFromBaseFiles(
             @NonNull Collection<File> baseFiles,
@@ -382,56 +369,18 @@ public final class IncrementalRelativeFileSets {
     }
 
     /**
-     * Builds an incremental relative file set for a given zip input.
-     *
-     * @param zipCentralDir the zip files.
-     * @param updates the files updated in the directories or base zip files updated
-     * @param cache the file cache where to find old versions of zip files
-     * @param cacheUpdates receives all runnables that will update the cache; running all runnables
-     *     placed in this set will ensure that a second invocation of this method reports no changes
-     *     for zip files; the updates are reported as deferrable runnables instead of immediately
-     *     run in this method to allow not changing the cache contents if something else fails and
-     *     we want to restore the previous state
-     * @param fileDeletionPolicy the policy for file deletions
-     * @return the data
-     * @throws IOException failed to read a zip file
-     */
-    @NonNull
-    public static Map<RelativeFile, FileStatus> makeFromZipFile(
-            @NonNull ZipCentralDirectory zipCentralDir,
-            @NonNull Map<File, FileStatus> updates,
-            @NonNull FileCacheByPath cache,
-            @NonNull Set<Runnable> cacheUpdates,
-            @NonNull FileDeletionPolicy fileDeletionPolicy)
-            throws IOException {
-        File zipFile = zipCentralDir.getFile();
-        Preconditions.checkArgument(zipFile.exists(), "!f.exists(): %s", zipFile);
-
-        FileStatus status = updates.get(zipFile);
-        if (status != null) {
-            if (fileDeletionPolicy == FileDeletionPolicy.DISALLOW_FILE_DELETIONS) {
-                Preconditions.checkState(
-                        status != FileStatus.REMOVED,
-                        String.format(
-                                "Changes include a deleted file ('%s'), which is not allowed.",
-                                zipFile.getAbsolutePath()));
-            }
-            return fromZip(zipCentralDir, cache, cacheUpdates);
-        }
-
-        return ImmutableMap.of();
-    }
-    /**
      * Policy for file deletions.
      *
-     * <p>For incremental tasks, currently Gradle does not provide information about whether a
-     * deletion is done on a normal file or a directory. Therefore, we use this class to either
+     * <p>For incremental tasks, the previous gradle API does not provide information about whether
+     * a deletion is done on a normal file or a directory. Therefore, we use this class to either
      * assume deletions to be done on normal files, or not allow deletions at all.
      *
-     * <p>TODO: Once Gradle provides this information, we should remove this class and its usages.
+     * <p>TODO: Remove this class and its usages in preference for the new InputChanges Gradle API.
+     *
+     * @deprecated Prefer the new Gradle InputChanges API.
      */
+    @Deprecated
     public enum FileDeletionPolicy {
-
         /** Deletions are assumed to be done on normal files, not directories. */
         ASSUME_NO_DELETED_DIRECTORIES,
 

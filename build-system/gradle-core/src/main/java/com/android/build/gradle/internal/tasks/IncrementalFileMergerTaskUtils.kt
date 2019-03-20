@@ -182,7 +182,7 @@ private fun computeUpdatesFromDir(
             continue
         }
         val rf = RelativeFile(dir, file)
-        if (!File(rf.base, rf.relativePath).isDirectory) {
+        if (!rf.file.isDirectory) {
             builder.put(rf, status)
         }
     }

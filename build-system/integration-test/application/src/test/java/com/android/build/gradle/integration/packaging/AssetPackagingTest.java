@@ -342,7 +342,6 @@ public class AssetPackagingTest {
     }
 
     @Test
-    @Ignore("http://b.android.com/238185")
     public void testAppProjectWithAddedAndRemovedAsset() throws Exception {
         execute("app:assembleDebug");
 

@@ -125,11 +125,6 @@ Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property
 Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintOptions' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'variantInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.MergeResources': property 'resourcesComputer' is not annotated with an input or output annotation.
-Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'apkList' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'internalArtifactType' is not annotated with an input or output annotation.
-Warning: Task type 'com.android.build.gradle.tasks.PackageAndroidArtifact': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.tasks.PackageApplication': property 'apkList' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.tasks.PackageApplication': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'signingConfig' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

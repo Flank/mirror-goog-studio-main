@@ -59,11 +59,6 @@ public class RelativeFileTest {
         return null;
     }
 
-    @NonNull
-    private static File getFile(@NonNull RelativeFile rf) {
-        return new File(rf.getBase(), rf.getRelativePath());
-    }
-
     @Test
     public void loadEmptyDirectory() {
         Set<RelativeFile> files = RelativeFiles.fromDirectory(temporaryFolder.getRoot());
@@ -82,21 +77,18 @@ public class RelativeFileTest {
 
         RelativeFile fooFile = findFile(files, "foo");
         assertNotNull(fooFile);
-        assertEquals(temporaryFolder.getRoot(), fooFile.getBase());
         assertEquals("foo", fooFile.getRelativePath());
-        assertTrue(getFile(fooFile).isFile());
+        assertTrue(fooFile.getFile().isFile());
 
         RelativeFile barFile = findFile(files, "bar");
         assertNotNull(barFile);
-        assertEquals(temporaryFolder.getRoot(), barFile.getBase());
         assertEquals("bar", barFile.getRelativePath());
-        assertTrue(getFile(barFile).isFile());
+        assertTrue(fooFile.getFile().isFile());
 
         RelativeFile fileInSubFile = findFile(files, "file-in-sub");
         assertNotNull(fileInSubFile);
-        assertEquals(temporaryFolder.getRoot(), fileInSubFile.getBase());
         assertEquals("sub/file-in-sub", fileInSubFile.getRelativePath());
-        assertTrue(getFile(fileInSubFile).isFile());
+        assertTrue(fooFile.getFile().isFile());
     }
 
     @Test
@@ -106,7 +98,7 @@ public class RelativeFileTest {
         temporaryFolder.newFile("dir" + File.separator + "bar");
 
         Set<RelativeFile> files =
-                RelativeFiles.fromDirectory(temporaryFolder.getRoot(), rf -> getFile(rf).isFile());
+                RelativeFiles.fromDirectory(temporaryFolder.getRoot(), rf -> rf.getFile().isFile());
         assertEquals(2, files.size());
 
         assertNotNull(findFile(files, "foo"));
@@ -122,7 +114,7 @@ public class RelativeFileTest {
         Set<RelativeFile> files =
                 RelativeFiles.fromDirectory(
                         temporaryFolder.getRoot(),
-                        relativeFile -> getFile(relativeFile).isDirectory());
+                        relativeFile -> relativeFile.getFile().isDirectory());
         assertEquals(0, files.size());
     }
 

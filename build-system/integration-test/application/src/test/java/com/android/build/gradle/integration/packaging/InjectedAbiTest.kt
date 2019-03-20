@@ -86,10 +86,6 @@ class InjectedAbiTest {
         assertThat(apk).doesNotContain("lib/" + Abi.X86_64.getTag() + "/libapp.so")
         assertThat(apk).doesNotContain("lib/" + Abi.ARMEABI_V7A.getTag() + "/libapp.so")
 
-        var x86LastModifiedTime = java.nio.file.Files.getLastModifiedTime(
-            project.getApk("x86", GradleTestProject.ApkType.DEBUG).file
-        )
-
         // Run the second build with another target ABI, check that another APK for that ABI is
         // generated (and generated correctly--regression test for
         // https://issuetracker.google.com/issues/38481325)
@@ -99,14 +95,12 @@ class InjectedAbiTest {
         assertThat(result.getTask(":packageDebug")).didWork()
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist()
-        assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG))
+        assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG)).doesNotExist()
         assertCorrectApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG))
         assertThat(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)).doesNotExist()
         assertThat(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG)).doesNotExist()
 
-        assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG).file)
-            .wasModifiedAt(x86LastModifiedTime)
-        var armeabiV7aLastModifiedTime = java.nio.file.Files.getLastModifiedTime(
+        val armeabiV7aLastModifiedTime = java.nio.file.Files.getLastModifiedTime(
             project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).file
         )
 
@@ -121,22 +115,11 @@ class InjectedAbiTest {
         assertCorrectApk(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG))
         assertCorrectApk(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG))
 
-        assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG).file)
-            .isNewerThan(x86LastModifiedTime)
         assertThat(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).file)
             .isNewerThan(armeabiV7aLastModifiedTime)
 
-        x86LastModifiedTime = java.nio.file.Files.getLastModifiedTime(
+        val x86LastModifiedTime = java.nio.file.Files.getLastModifiedTime(
             project.getApk("x86", GradleTestProject.ApkType.DEBUG).file
-        )
-        armeabiV7aLastModifiedTime = java.nio.file.Files.getLastModifiedTime(
-            project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).file
-        )
-        val x8664LastModifiedTime = java.nio.file.Files.getLastModifiedTime(
-            project.getApk("x86_64", GradleTestProject.ApkType.DEBUG).file
-        )
-        val armeabiV8aLastModifiedTime = java.nio.file.Files.getLastModifiedTime(
-            project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG).file
         )
 
         // Run the fourth build with a target ABI, check that the APK for that ABI is re-generated
@@ -147,18 +130,12 @@ class InjectedAbiTest {
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist()
         assertCorrectApk(project.getApk("x86", GradleTestProject.ApkType.DEBUG))
-        assertCorrectApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG))
-        assertCorrectApk(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG))
-        assertCorrectApk(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG))
+        assertThat(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG)).doesNotExist()
+        assertThat(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG)).doesNotExist()
 
         assertThat(project.getApk("x86", GradleTestProject.ApkType.DEBUG).file)
             .isNewerThan(x86LastModifiedTime)
-        assertThat(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG).file)
-            .wasModifiedAt(armeabiV7aLastModifiedTime)
-        assertThat(project.getApk("x86_64", GradleTestProject.ApkType.DEBUG).file)
-            .wasModifiedAt(x8664LastModifiedTime)
-        assertThat(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG).file)
-            .wasModifiedAt(armeabiV8aLastModifiedTime)
     }
 
     @Test
