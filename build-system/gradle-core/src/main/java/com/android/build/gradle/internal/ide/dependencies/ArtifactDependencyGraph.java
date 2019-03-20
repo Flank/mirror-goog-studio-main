@@ -59,9 +59,6 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.query.ArtifactResolutionQuery;
-import org.gradle.api.artifacts.result.ArtifactResolutionResult;
-import org.gradle.api.artifacts.result.ArtifactResult;
-import org.gradle.api.artifacts.result.ComponentArtifactsResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.jvm.JvmLibrary;
@@ -347,28 +344,10 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
 
             @SuppressWarnings("unchecked")
             Class<? extends Artifact>[] artifactTypesArray =
-                    (Class<? extends Artifact>[]) new Class<?>[] {SourcesArtifact.class};
+                    (Class<? extends Artifact>[])
+                            new Class<?>[] {SourcesArtifact.class, JavadocArtifact.class};
             query.withArtifacts(JvmLibrary.class, artifactTypesArray);
-            ArtifactResolutionResult queryResult = query.execute();
-            Set<ComponentArtifactsResult> resolvedComponents = queryResult.getResolvedComponents();
-
-            // Create and execute another query to attempt javadoc resolution
-            // where sources are not available
-            Set<ComponentIdentifier> remainingToResolve = Sets.newHashSet();
-            for (ComponentArtifactsResult componentResult : resolvedComponents) {
-                Set<ArtifactResult> sourcesArtifacts =
-                        componentResult.getArtifacts(SourcesArtifact.class);
-                if (sourcesArtifacts.isEmpty()) {
-                    remainingToResolve.add(componentResult.getId());
-                }
-            }
-            if (!remainingToResolve.isEmpty()) {
-                artifactTypesArray[0] = JavadocArtifact.class;
-                query = dependencies.createArtifactResolutionQuery();
-                query.forComponents(remainingToResolve);
-                query.withArtifacts(JvmLibrary.class, artifactTypesArray);
-                query.execute().getResolvedComponents();
-            }
+            query.execute().getResolvedComponents();
         } catch (Throwable t) {
             DependencyFailureHandlerKt.processDependencyThrowable(
                     t,
