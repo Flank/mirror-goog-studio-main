@@ -116,7 +116,7 @@ filegroup(
 java_library(
     name = "gradle-tooling-api",
     visibility = ["//tools/base/bazel:__subpackages__"],
-    exports = ["//prebuilts/tools/common/m2/repository/org/gradle/gradle-tooling-api/" + GRADLE_VERSION + ":jar"],
+    exports = ["//tools/base/third_party:org.gradle_gradle-tooling-api"],
     runtime_deps = ["//tools/base/third_party:org.slf4j_slf4j-api"],
 )
 
