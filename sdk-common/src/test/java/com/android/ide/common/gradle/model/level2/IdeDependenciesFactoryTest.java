@@ -83,8 +83,9 @@ public class IdeDependenciesFactoryTest {
         DependencyGraphsStub dependencyGraphsStub =
                 new DependencyGraphsStub(
                         Arrays.asList(javaGraphItem, androidGraphItem, moduleGraphItem),
-                                Collections.emptyList(),
-                        Collections.emptyList(), Collections.emptyList());
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
 
         myDependenciesFactory.setUpGlobalLibraryMap(
                 singletonList(
@@ -220,5 +221,60 @@ public class IdeDependenciesFactoryTest {
                                 .map(Library::getArtifactAddress)
                                 .collect(Collectors.toList()))
                 .containsExactly("/root/project1@@:", "/root/project2@@:");
+    }
+
+    @Test
+    public void createFromDependenciesKeepInsertionOrder() {
+        JavaLibrary javaLibraryA = createJavaLibrary("A");
+        JavaLibrary javaLibraryB = createJavaLibrary("B");
+        JavaLibrary javaLibraryC = createJavaLibrary("C");
+        JavaLibrary javaLibraryD = createJavaLibrary("D");
+
+        DependenciesStub dependenciesStub =
+                new DependenciesStub(
+                        Collections.emptyList(),
+                        Arrays.asList(javaLibraryD, javaLibraryB, javaLibraryC, javaLibraryA),
+                        Collections.emptyList(),
+                        Collections.emptyList(),
+                        Collections.emptyList());
+
+        BaseArtifactStub baseArtifactStub =
+                new BaseArtifactStub() {
+                    @Override
+                    @NonNull
+                    public Dependencies getDependencies() {
+                        return dependenciesStub;
+                    }
+                };
+
+        IdeDependencies level2Dependencies =
+                myDependenciesFactory.create(baseArtifactStub, GradleVersion.parse("2.3.0"));
+
+        assertThat(
+                        level2Dependencies
+                                .getJavaLibraries()
+                                .stream()
+                                .map(Library::getArtifactAddress)
+                                .collect(Collectors.toList()))
+                .containsExactly(
+                        "com:java:D@jar", "com:java:B@jar", "com:java:C@jar", "com:java:A@jar")
+                .inOrder();
+    }
+
+    @NonNull
+    private static JavaLibrary createJavaLibrary(@NonNull String version) {
+        return new com.android.ide.common.gradle.model.stubs.JavaLibraryStub() {
+            @Override
+            @Nullable
+            public String getProject() {
+                return null;
+            }
+
+            @Override
+            @NonNull
+            public MavenCoordinates getResolvedCoordinates() {
+                return new MavenCoordinatesStub("com", "java", version, "jar");
+            }
+        };
     }
 }

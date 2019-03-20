@@ -104,7 +104,7 @@ public class IdeDependenciesFactory {
     @NonNull
     private IdeDependencies createFromDependencies(
             @NonNull Dependencies dependencies, @NonNull ModelCache modelCache) {
-        Set<String> visited = new HashSet<>();
+        Set<String> visited = new LinkedHashSet<>();
         populateAndroidLibraries(dependencies.getLibraries(), visited, modelCache);
         populateJavaLibraries(dependencies.getJavaLibraries(), visited, modelCache);
         populateModuleDependencies(dependencies, visited, modelCache);
