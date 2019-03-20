@@ -102,9 +102,11 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -155,7 +157,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
-    @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getJavaResourceFiles() {
         return javaResourceFiles;
@@ -163,7 +164,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
-    @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getJniFolders() {
         return jniFolders;
@@ -173,13 +173,12 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileCollection dexFolders;
 
-    @Nullable protected FileCollection featureDexFolder;
+    protected final ConfigurableFileCollection featureDexFolder;
 
     protected ListProperty<Directory> assets;
 
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
-    @Optional
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getDexFolders() {
         return dexFolders;
@@ -187,8 +186,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     // Path sensitivity here is absolute due to http://b/72085541
     @InputFiles
-    @Optional
-    @Nullable
     @PathSensitive(PathSensitivity.ABSOLUTE)
     public FileCollection getFeatureDexFolder() {
         return featureDexFolder;
@@ -232,9 +229,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private final WorkerExecutorFacade workers;
 
-    public PackageAndroidArtifact(WorkerExecutor workerExecutor) {
+    @Inject
+    public PackageAndroidArtifact(ObjectFactory objectFactory, WorkerExecutor workerExecutor) {
         this.workers =
                 Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
+        featureDexFolder = objectFactory.fileCollection();
     }
 
     @Input
@@ -525,7 +524,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
                 final ImmutableMap<RelativeFile, FileStatus> updatedDex;
                 final ImmutableMap<RelativeFile, FileStatus> updatedJavaResources;
-                if (params.featureDexFiles == null || params.featureDexFiles.isEmpty()) {
+                if (params.featureDexFiles.isEmpty()) {
                     updatedDex =
                             IncrementalRelativeFileSets.fromZipsAndDirectories(params.dexFiles);
                     updatedJavaResources =
@@ -535,7 +534,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     // We reach this code if we're in a feature module and minification is enabled in the
                     // base module. In this case, we want to use the classes.dex file from the base
                     // module's DexSplitterTransform.
-                    checkNotNull(params.featureDexFiles);
                     updatedDex =
                             IncrementalRelativeFileSets.fromZipsAndDirectories(
                                     params.featureDexFiles);
@@ -589,7 +587,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @NonNull protected final File outputFile;
         @NonNull protected final File incrementalFolder;
         @NonNull protected final Set<File> dexFiles;
-        @Nullable protected final Set<File> featureDexFiles;
+        @NonNull protected final Set<File> featureDexFiles;
         @NonNull protected final Set<File> assetsFiles;
         @NonNull protected final Set<File> jniFiles;
         @NonNull protected final Set<File> javaResourceFiles;
@@ -623,10 +621,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             incrementalFolder = task.getIncrementalFolder();
             dexFiles = task.getDexFolders().getFiles();
-            featureDexFiles =
-                    task.getFeatureDexFolder() == null
-                            ? null
-                            : task.getFeatureDexFolder().getFiles();
+            featureDexFiles = task.getFeatureDexFolder().getFiles();
             assetsFiles =
                     task.getAssets()
                             .get()
@@ -877,14 +872,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
                 final Set<File> dexFiles;
                 final Set<File> javaResourceFiles;
-                if (params.featureDexFiles == null || params.featureDexFiles.isEmpty()) {
+                if (params.featureDexFiles.isEmpty()) {
                     dexFiles = params.dexFiles;
                     javaResourceFiles = params.javaResourceFiles;
                 } else {
                     // We reach this code if we're in a feature module and minification is enabled in the
                     // base module. In this case, we want to use the classes.dex file from the base
                     // module's DexSplitterTransform.
-                    checkNotNull(params.featureDexFiles);
                     dexFiles = params.featureDexFiles;
                     // For now, java resources are in the base apk, so we exclude them here (b/77546738)
                     javaResourceFiles = ImmutableSet.of();
@@ -1081,7 +1075,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.manifests = manifests;
 
             packageAndroidArtifact.dexFolders = getDexFolders();
-            packageAndroidArtifact.featureDexFolder = getFeatureDexFolder();
+            @Nullable FileCollection featureDexFolder = getFeatureDexFolder();
+            if (featureDexFolder != null) {
+                packageAndroidArtifact.featureDexFolder.from(featureDexFolder);
+            }
             packageAndroidArtifact.javaResourceFiles = getJavaResources();
 
             packageAndroidArtifact.assets =
@@ -1136,8 +1133,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             GlobalScope globalScope = variantScope.getGlobalScope();
             task.dexFolders = getDexFolders();
-            task.featureDexFolder = getFeatureDexFolder();
-            task.javaResourceFiles = getJavaResources();
 
             if (variantScope.getVariantData().getMultiOutputPolicy()
                     == MultiOutputPolicy.MULTI_APK) {

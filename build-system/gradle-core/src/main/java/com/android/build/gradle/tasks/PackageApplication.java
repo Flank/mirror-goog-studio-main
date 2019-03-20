@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import javax.inject.Inject;
 import org.gradle.api.file.Directory;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskProvider;
@@ -40,8 +41,8 @@ public class PackageApplication extends PackageAndroidArtifact {
     InternalArtifactType expectedOutputType;
 
     @Inject
-    public PackageApplication(WorkerExecutor workerExecutor) {
-        super(workerExecutor);
+    public PackageApplication(ObjectFactory objectFactory, WorkerExecutor workerExecutor) {
+        super(objectFactory, workerExecutor);
     }
 
     @Override
