@@ -112,7 +112,7 @@ bool NonBlockingCommandRunner::Run(const char* const arguments[],
       fclose(handle);
     }
     if (callback != nullptr) {
-      read_data_thread_ = std::thread([this, callback, stdout_pipe]() -> void {
+      read_data_thread_ = std::thread([callback, stdout_pipe]() -> void {
         SetThreadName("Studio::CommandRunner");
         (*callback)(stdout_pipe[kPipeRead]);
         close(stdout_pipe[kPipeRead]);

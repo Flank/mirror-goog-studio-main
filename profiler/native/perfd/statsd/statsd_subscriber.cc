@@ -67,10 +67,8 @@ void StatsdSubscriber::Run() {
   // Then we write the proto content.
   subscription_.SerializeToArray(buffer.data() + sizeof(size), size);
 
-  NonBlockingCommandRunner::StdoutCallback callback =
-      std::bind(&StatsdSubscriber::HandleOutput, this, std::placeholders::_1);
   if (!runner_->Run(kStatsdArgs, string(buffer.begin(), buffer.end()),
-                    &callback)) {
+                    &callback_)) {
     Log::E("Failed to run statsd command.");
     return;
   }

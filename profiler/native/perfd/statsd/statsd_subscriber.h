@@ -32,7 +32,10 @@ class StatsdSubscriber {
  public:
   // Visible for testing.
   // Production code should use StatsdSubscriber::Instance().
-  StatsdSubscriber(NonBlockingCommandRunner* runner) : runner_(runner) {}
+  StatsdSubscriber(NonBlockingCommandRunner* runner)
+      : runner_(runner),
+        callback_(std::bind(&StatsdSubscriber::HandleOutput, this,
+                            std::placeholders::_1)) {}
   ~StatsdSubscriber() { Stop(); }
 
   // Singleton class (except for test code).
@@ -76,6 +79,8 @@ class StatsdSubscriber {
   // Atom ID to PulledAtom mapping.
   std::unordered_map<int32_t, std::unique_ptr<profiler::PulledAtom>>
       pulled_atoms_;
+  // Callback to handle command output on the callback thread.
+  NonBlockingCommandRunner::StdoutCallback callback_;
 };
 
 }  // namespace profiler
