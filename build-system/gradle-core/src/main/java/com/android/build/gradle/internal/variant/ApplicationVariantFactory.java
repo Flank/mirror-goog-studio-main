@@ -140,8 +140,12 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         boolean universalApkForAbi =
                 extension.getSplits().getAbi().isEnable()
                         && extension.getSplits().getAbi().isUniversalApk();
-        if (abis.isEmpty() || universalApkForAbi) {
+        if (universalApkForAbi) {
             outputFactory.addUniversalApk();
+        } else {
+            if (abis.isEmpty() && includeMainApk) {
+                outputFactory.addUniversalApk();
+            }
         }
 
         if (!abis.isEmpty()) {
