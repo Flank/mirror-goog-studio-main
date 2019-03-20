@@ -29,7 +29,6 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Maps;
-
 import java.io.*;
 import java.util.*;
 import junit.framework.TestCase;
@@ -583,7 +582,7 @@ public class AvdManagerTest extends TestCase {
         MockLog log = new MockLog();
 
         DeviceManager devMan = DeviceManager.createInstance(mAndroidSdkHandler, log);
-        Device myDevice = devMan.getDevice("Foldable_A", "Generic");
+        Device myDevice = devMan.getDevice("7.3in Foldable", "Generic");
         Map<String, String> baseHardwareProperties = DeviceManager.getHardwareProperties(myDevice);
 
         // Modify hardware properties that should change

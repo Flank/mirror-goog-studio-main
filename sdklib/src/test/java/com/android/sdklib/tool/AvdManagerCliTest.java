@@ -289,7 +289,6 @@ public class AvdManagerCliTest {
                         "P wear_round\n",
                         "P wear_round_chin_320_290\n",
                         "P wear_square\n",
-                        "P Foldable_A\n",
                         "P Galaxy Nexus\n",
                         "P Nexus 10\n",
                         "P Nexus 4\n",
@@ -323,6 +322,8 @@ public class AvdManagerCliTest {
                         "P 5.1in WVGA\n",
                         "P 5.4in FWVGA\n",
                         "P 7in WSVGA (Tablet)\n",
+                        "P 7.3in Foldable\n",
+                        "P 8in Foldable\n",
                         "P 10.1in WXGA (Tablet)\n"),
                 mLogger.getMessages()
                         .stream()
@@ -339,11 +340,11 @@ public class AvdManagerCliTest {
                         .join(mLogger.getMessages())
                         .contains(
                                 "P ---------\n"
-                                        + "P id: 33 or \"4in WVGA (Nexus S)\"\n"
+                                        + "P id: 32 or \"4in WVGA (Nexus S)\"\n"
                                         + "P     Name: 4\" WVGA (Nexus S)\n"
                                         + "P     OEM : Generic\n"
                                         + "P ---------\n"
-                                        + "P id: 34 or \"4.65in 720p (Galaxy Nexus)\"\n"
+                                        + "P id: 33 or \"4.65in 720p (Galaxy Nexus)\"\n"
                                         + "P     Name: 4.65\" 720p (Galaxy Nexus)\n"
                                         + "P     OEM : Generic\n"
                                         + "P ---------"));

@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.sdklib.TempSdkManager;
 import com.android.sdklib.devices.Device.Builder;
@@ -31,13 +30,13 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
+import com.android.testutils.NoErrorsOrWarningsLogger;
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import com.android.testutils.NoErrorsOrWarningsLogger;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -89,12 +88,25 @@ public class DeviceManagerTest {
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
-        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.DEFAULT))).containsExactly(
-                "10.1\" WXGA (Tablet)", "2.7\" QVGA", "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
-                "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)", "Foldable A");
+        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.DEFAULT)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable");
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
 
@@ -128,47 +140,49 @@ public class DeviceManagerTest {
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
 
-        assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
-                "10.1\" WXGA (Tablet)",
-                "2.7\" QVGA",
-                "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)",
-                "3.2\" QVGA (ADP2)",
-                "3.3\" WQVGA",
-                "3.4\" WQVGA",
-                "3.7\" FWVGA slider",
-                "3.7\" WVGA (Nexus One)",
-                "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)",
-                "4.7\" WXGA",
-                "5.1\" WVGA",
-                "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)",
-                "Android TV (1080p)",
-                "Android TV (720p)",
-                "Android Wear Round",
-                "Android Wear Round Chin",
-                "Android Wear Square",
-                "Foldable A",
-                "Galaxy Nexus",
-                "Nexus 10",
-                "Nexus 4",
-                "Nexus 5",
-                "Nexus 5X",
-                "Nexus 6",
-                "Nexus 6P",
-                "Nexus 7",
-                "Nexus 7 (2012)",
-                "Nexus 9",
-                "Nexus One",
-                "Nexus S",
-                "Pixel C",
-                "Pixel",
-                "Pixel XL",
-                "Pixel 2",
-                "Pixel 2 XL",
-                "Pixel 3",
-                "Pixel 3 XL");
+        assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable",
+                        "Android TV (1080p)",
+                        "Android TV (720p)",
+                        "Android Wear Round",
+                        "Android Wear Round Chin",
+                        "Android Wear Square",
+                        "Galaxy Nexus",
+                        "Nexus 10",
+                        "Nexus 4",
+                        "Nexus 5",
+                        "Nexus 5X",
+                        "Nexus 6",
+                        "Nexus 6P",
+                        "Nexus 7",
+                        "Nexus 7 (2012)",
+                        "Nexus 9",
+                        "Nexus One",
+                        "Nexus S",
+                        "Pixel C",
+                        "Pixel",
+                        "Pixel XL",
+                        "Pixel 2",
+                        "Pixel 2 XL",
+                        "Pixel 3",
+                        "Pixel 3 XL");
     }
 
     @Test
@@ -215,82 +229,99 @@ public class DeviceManagerTest {
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
-        assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.DEFAULT))).containsExactly(
-                "10.1\" WXGA (Tablet)", "2.7\" QVGA", "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
-                "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)", "Foldable A");
+        assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.DEFAULT)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
-        assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.VENDOR))).containsExactly(
-                "Android TV (1080p)",
-                "Android TV (720p)",
-                "Android Wear Round",
-                "Android Wear Round Chin",
-                "Android Wear Square",
-                "Galaxy Nexus",
-                "Nexus 10",
-                "Nexus 4",
-                "Nexus 5",
-                "Nexus 5X",
-                "Nexus 6",
-                "Nexus 6P",
-                "Nexus 7",
-                "Nexus 7 (2012)",
-                "Nexus 9",
-                "Nexus One",
-                "Nexus S",
-                "Pixel C",
-                "Pixel",
-                "Pixel XL",
-                "Pixel 2",
-                "Pixel 2 XL",
-                "Pixel 3",
-                "Pixel 3 XL");
+        assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.VENDOR)))
+                .containsExactly(
+                        "Android TV (1080p)",
+                        "Android TV (720p)",
+                        "Android Wear Round",
+                        "Android Wear Round Chin",
+                        "Android Wear Square",
+                        "Galaxy Nexus",
+                        "Nexus 10",
+                        "Nexus 4",
+                        "Nexus 5",
+                        "Nexus 5X",
+                        "Nexus 6",
+                        "Nexus 6P",
+                        "Nexus 7",
+                        "Nexus 7 (2012)",
+                        "Nexus 9",
+                        "Nexus One",
+                        "Nexus S",
+                        "Pixel C",
+                        "Pixel",
+                        "Pixel XL",
+                        "Pixel 2",
+                        "Pixel 2 XL",
+                        "Pixel 3",
+                        "Pixel 3 XL");
 
-        assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
-                "10.1\" WXGA (Tablet)",
-                "2.7\" QVGA",
-                "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)",
-                "3.2\" QVGA (ADP2)",
-                "3.3\" WQVGA",
-                "3.4\" WQVGA",
-                "3.7\" FWVGA slider",
-                "3.7\" WVGA (Nexus One)",
-                "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)",
-                "4.7\" WXGA", "5.1\" WVGA",
-                "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)",
-                "Android TV (1080p)",
-                "Android TV (720p)",
-                "Android Wear Round",
-                "Android Wear Round Chin",
-                "Android Wear Square",
-                "Foldable A",
-                "Galaxy Nexus",
-                "My Custom Tablet",
-                "Nexus 10",
-                "Nexus 4",
-                "Nexus 5",
-                "Nexus 5X",
-                "Nexus 6",
-                "Nexus 6P",
-                "Nexus 7",
-                "Nexus 7 (2012)",
-                "Nexus 9",
-                "Nexus One",
-                "Nexus S",
-                "Pixel C",
-                "Pixel",
-                "Pixel XL",
-                "Pixel 2",
-                "Pixel 2 XL",
-                "Pixel 3",
-                "Pixel 3 XL");
+        assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable",
+                        "Android TV (1080p)",
+                        "Android TV (720p)",
+                        "Android Wear Round",
+                        "Android Wear Round Chin",
+                        "Android Wear Square",
+                        "Galaxy Nexus",
+                        "My Custom Tablet",
+                        "Nexus 10",
+                        "Nexus 4",
+                        "Nexus 5",
+                        "Nexus 5X",
+                        "Nexus 6",
+                        "Nexus 6P",
+                        "Nexus 7",
+                        "Nexus 7 (2012)",
+                        "Nexus 9",
+                        "Nexus One",
+                        "Nexus S",
+                        "Pixel C",
+                        "Pixel",
+                        "Pixel XL",
+                        "Pixel 2",
+                        "Pixel 2 XL",
+                        "Pixel 3",
+                        "Pixel 3 XL");
     }
 
     @Test
@@ -326,83 +357,99 @@ public class DeviceManagerTest {
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
-        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.DEFAULT))).containsExactly(
-                "10.1\" WXGA (Tablet)", "2.7\" QVGA", "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)", "3.2\" QVGA (ADP2)", "3.3\" WQVGA", "3.4\" WQVGA",
-                "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)", "Foldable A");
+        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.DEFAULT)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable");
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
-        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.VENDOR))).containsExactly(
-                "Android TV (1080p)",
-                "Android TV (720p)",
-                "Android Wear Round",
-                "Android Wear Round Chin",
-                "Android Wear Square",
-                "Galaxy Nexus",
-                "Nexus 10",
-                "Nexus 4",
-                "Nexus 5",
-                "Nexus 5X",
-                "Nexus 6",
-                "Nexus 6P",
-                "Nexus 7",
-                "Nexus 7 (2012)",
-                "Nexus 9",
-                "Nexus One",
-                "Nexus S",
-                "Pixel C",
-                "Pixel",
-                "Pixel XL",
-                "Pixel 2",
-                "Pixel 2 XL",
-                "Pixel 3",
-                "Pixel 3 XL");
+        assertThat(listDisplayNames(dm.getDevices(DeviceFilter.VENDOR)))
+                .containsExactly(
+                        "Android TV (1080p)",
+                        "Android TV (720p)",
+                        "Android Wear Round",
+                        "Android Wear Round Chin",
+                        "Android Wear Square",
+                        "Galaxy Nexus",
+                        "Nexus 10",
+                        "Nexus 4",
+                        "Nexus 5",
+                        "Nexus 5X",
+                        "Nexus 6",
+                        "Nexus 6P",
+                        "Nexus 7",
+                        "Nexus 7 (2012)",
+                        "Nexus 9",
+                        "Nexus One",
+                        "Nexus S",
+                        "Pixel C",
+                        "Pixel",
+                        "Pixel XL",
+                        "Pixel 2",
+                        "Pixel 2 XL",
+                        "Pixel 3",
+                        "Pixel 3 XL");
 
-        assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
-                "10.1\" WXGA (Tablet)",
-                "2.7\" QVGA",
-                "2.7\" QVGA slider",
-                "3.2\" HVGA slider (ADP1)",
-                "3.2\" QVGA (ADP2)",
-                "3.3\" WQVGA",
-                "3.4\" WQVGA",
-                "3.7\" FWVGA slider",
-                "3.7\" WVGA (Nexus One)",
-                "4\" WVGA (Nexus S)",
-                "4.65\" 720p (Galaxy Nexus)",
-                "4.7\" WXGA",
-                "5.1\" WVGA",
-                "5.4\" FWVGA",
-                "7\" WSVGA (Tablet)",
-                "Android TV (1080p)",
-                "Android TV (720p)",
-                "Android Wear Round",
-                "Android Wear Round Chin",
-                "Android Wear Square",
-                "Foldable A",
-                "Galaxy Nexus",
-                "Mock Tag 1 Device Name",
-                "Nexus 10",
-                "Nexus 4",
-                "Nexus 5",
-                "Nexus 5X",
-                "Nexus 6",
-                "Nexus 6P",
-                "Nexus 7",
-                "Nexus 7 (2012)",
-                "Nexus 9",
-                "Nexus One",
-                "Nexus S",
-                "Pixel C",
-                "Pixel",
-                "Pixel XL",
-                "Pixel 2",
-                "Pixel 2 XL",
-                "Pixel 3",
-                "Pixel 3 XL");
+        assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES)))
+                .containsExactly(
+                        "10.1\" WXGA (Tablet)",
+                        "2.7\" QVGA",
+                        "2.7\" QVGA slider",
+                        "3.2\" HVGA slider (ADP1)",
+                        "3.2\" QVGA (ADP2)",
+                        "3.3\" WQVGA",
+                        "3.4\" WQVGA",
+                        "3.7\" FWVGA slider",
+                        "3.7\" WVGA (Nexus One)",
+                        "4\" WVGA (Nexus S)",
+                        "4.65\" 720p (Galaxy Nexus)",
+                        "4.7\" WXGA",
+                        "5.1\" WVGA",
+                        "5.4\" FWVGA",
+                        "7\" WSVGA (Tablet)",
+                        "7.3\" Foldable",
+                        "8\" Foldable",
+                        "Android TV (1080p)",
+                        "Android TV (720p)",
+                        "Android Wear Round",
+                        "Android Wear Round Chin",
+                        "Android Wear Square",
+                        "Galaxy Nexus",
+                        "Mock Tag 1 Device Name",
+                        "Nexus 10",
+                        "Nexus 4",
+                        "Nexus 5",
+                        "Nexus 5X",
+                        "Nexus 6",
+                        "Nexus 6P",
+                        "Nexus 7",
+                        "Nexus 7 (2012)",
+                        "Nexus 9",
+                        "Nexus One",
+                        "Nexus S",
+                        "Pixel C",
+                        "Pixel",
+                        "Pixel XL",
+                        "Pixel 2",
+                        "Pixel 2 XL",
+                        "Pixel 3",
+                        "Pixel 3 XL");
     }
 
     @Test
