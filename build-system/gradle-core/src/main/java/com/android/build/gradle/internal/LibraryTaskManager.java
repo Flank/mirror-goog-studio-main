@@ -179,7 +179,6 @@ public class LibraryTaskManager extends TaskManager {
         createExternalNativeBuildJsonGenerators(variantScope);
         createExternalNativeBuildTasks(variantScope);
 
-        // TODO not sure what to do about this...
         createMergeJniLibFoldersTasks(variantScope);
         createStripNativeLibraryTask(taskFactory, variantScope);
 

@@ -24,6 +24,8 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
+import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
@@ -170,7 +172,8 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     private fun hasFeatureDexFiles() = featureDexFiles.files.isNotEmpty()
 
     class CreationAction(
-        variantScope: VariantScope
+        variantScope: VariantScope,
+        private val packageCustomClassDependencies: Boolean
     ) : VariantTaskCreationAction<PerModuleBundleTask>(variantScope) {
 
         override val name: String
@@ -226,8 +229,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
                     artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES)
                 )
             }
-            task.nativeLibsFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
-                StreamFilter.NATIVE_LIBS)
+            task.nativeLibsFiles = getNativeLibsFiles(variantScope, packageCustomClassDependencies)
 
             task.abiFilters = variantScope.variantConfiguration.supportedAbis
         }
@@ -275,4 +277,24 @@ private class ResRelocator : JarMerger.Relocator {
         SdkConstants.FN_ANDROID_MANIFEST_XML -> "manifest/" + SdkConstants.FN_ANDROID_MANIFEST_XML
         else -> entryPath
     }
+}
+
+/**
+ * Returns a file collection containing all of the native libraries to be packaged.
+ */
+fun getNativeLibsFiles(
+    scope: VariantScope,
+    packageCustomClassDependencies: Boolean
+): FileCollection {
+    val nativeLibs = scope.globalScope.project.files()
+    if (scope.type.isForTesting) {
+        return nativeLibs.from(scope.artifacts.getFinalProduct<Directory>(MERGED_NATIVE_LIBS))
+    }
+    nativeLibs.from(scope.artifacts.getFinalProduct<Directory>(STRIPPED_NATIVE_LIBS))
+    if (packageCustomClassDependencies) {
+        nativeLibs.from(
+            scope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS)
+        )
+    }
+    return nativeLibs
 }

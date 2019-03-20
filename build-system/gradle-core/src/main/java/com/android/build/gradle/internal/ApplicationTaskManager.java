@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
@@ -202,7 +203,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(taskFactory, variantScope);
 
-
         if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException(
@@ -309,7 +309,7 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     protected Set<ScopeType> getJavaResMergingScopes(
             @NonNull VariantScope variantScope, @NonNull QualifiedContent.ContentType contentType) {
-        if (variantScope.consumesFeatureJars()) {
+        if (variantScope.consumesFeatureJars() && contentType == RESOURCES) {
             return TransformManager.SCOPE_FULL_WITH_FEATURES;
         }
         return TransformManager.SCOPE_FULL_PROJECT;
@@ -373,7 +373,9 @@ public class ApplicationTaskManager extends TaskManager {
             return;
         }
 
-        taskFactory.register(new PerModuleBundleTask.CreationAction(scope));
+        taskFactory.register(
+                new PerModuleBundleTask.CreationAction(
+                        scope, packagesCustomClassDependencies(scope, projectOptions)));
         taskFactory.register(new PerModuleReportDependenciesTask.CreationAction(scope));
 
         if (scope.getType().isBaseModule()) {

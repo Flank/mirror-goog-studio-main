@@ -150,6 +150,8 @@ public enum InternalArtifactType implements ArtifactType {
     NDK_LIBS,
     // native libs merged from module(s)
     MERGED_NATIVE_LIBS,
+    // native libs stripped of debug symbols
+    STRIPPED_NATIVE_LIBS,
 
     // Assets created by compiling shader
     SHADER_ASSETS,

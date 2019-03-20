@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
@@ -34,6 +35,7 @@ import com.google.common.truth.Truth.assertThat
 import org.bouncycastle.util.io.Streams
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
@@ -60,7 +62,8 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var dexFiles: FileCollection
     @Mock private lateinit var javaResProvider: Provider<RegularFile>
     @Mock private lateinit var javaResFiles: FileCollection
-    @Mock private lateinit var nativeLibsFiles: FileCollection
+    @Mock private lateinit var nativeLibsProvider: Provider<Directory>
+    @Mock private lateinit var nativeLibsFiles: ConfigurableFileCollection
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var artifacts: BuildArtifactsHolder
     @Mock private lateinit var featureSetMetadata: FileCollection
@@ -71,6 +74,7 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var taskContainer: MutableTaskContainer
     @Mock private lateinit var preBuildTask: TaskProvider<out Task>
     @Mock private lateinit var projectLayout: ProjectLayout
+    @Mock private lateinit var projectFiles: ConfigurableFileCollection
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -107,8 +111,10 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.transformManager).thenReturn(transformManager)
         Mockito.`when`(transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX))
             .thenReturn(dexFiles)
-        Mockito.`when`(transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS))
-            .thenReturn(nativeLibsFiles)
+        Mockito.`when`(project.files()).thenReturn(projectFiles)
+        Mockito.`when`(artifacts.getFinalProduct<Directory>(STRIPPED_NATIVE_LIBS))
+            .thenReturn(nativeLibsProvider)
+        Mockito.`when`(projectFiles.from(nativeLibsProvider)).thenReturn(nativeLibsFiles)
 
         Mockito.`when`(variantScope.getArtifactFileCollection(
             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
@@ -145,7 +151,7 @@ class PerModuleBundleTaskTest {
             .thenReturn(testFolder.newFolder("out"))
 
 
-        val configAction = PerModuleBundleTask.CreationAction(variantScope)
+        val configAction = PerModuleBundleTask.CreationAction(variantScope, false)
         configAction.preConfigure(task.name)
         configAction.configure(task)
     }

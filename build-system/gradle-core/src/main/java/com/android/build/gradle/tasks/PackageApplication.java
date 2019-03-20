@@ -109,7 +109,8 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull InternalArtifactType manifestType,
                 @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
-                @NonNull InternalArtifactType expectedOutputType) {
+                @NonNull InternalArtifactType expectedOutputType,
+                boolean packageCustomClassDependencies) {
             super(
                     packagingScope,
                     outputDirectory,
@@ -117,7 +118,8 @@ public class PackageApplication extends PackageAndroidArtifact {
                     manifests,
                     manifestType,
                     fileCache,
-                    outputScope);
+                    outputScope,
+                    packageCustomClassDependencies);
             this.expectedOutputType = expectedOutputType;
         }
 

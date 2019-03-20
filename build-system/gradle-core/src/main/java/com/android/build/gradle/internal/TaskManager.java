@@ -45,10 +45,10 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -132,6 +132,7 @@ import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.tasks.UninstallTask;
@@ -166,7 +167,6 @@ import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
-import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -730,6 +730,22 @@ public abstract class TaskManager {
         }
     }
 
+    /** Returns whether or not dependencies from the {@link CustomClassTransform} are packaged */
+    protected static boolean packagesCustomClassDependencies(
+            @NonNull VariantScope scope, @NonNull ProjectOptions options) {
+        return appliesCustomClassTransforms(scope, options) && !scope.getType().isFeatureSplit();
+    }
+
+    /** Returns whether or not custom class transforms are applied */
+    protected static boolean appliesCustomClassTransforms(
+            @NonNull VariantScope scope, @NonNull ProjectOptions options) {
+        final VariantType type = scope.getType();
+        return scope.getVariantConfiguration().getBuildType().isDebuggable()
+                && type.isApk()
+                && !type.isForTesting()
+                && !getAdvancedProfilingTransforms(options).isEmpty();
+    }
+
     @NonNull
     private static List<String> getAdvancedProfilingTransforms(@NonNull ProjectOptions options) {
         String string = options.get(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS);
@@ -903,24 +919,11 @@ public abstract class TaskManager {
         // merge the source folders together using the proper priority.
         taskFactory.register(
                 new MergeSourceSetFolders.MergeJniLibFoldersCreationAction(variantScope));
-        final MutableTaskContainer taskContainer = variantScope.getTaskContainer();
 
         // Compute the scopes that need to be merged.
         Set<ScopeType> mergeScopes = getJavaResMergingScopes(variantScope, NATIVE_LIBS);
 
         taskFactory.register(new MergeNativeLibsTask.CreationAction(mergeScopes, variantScope));
-
-        // also add a new merged native libs stream
-        Provider<Directory> nativeLibsProvider =
-                variantScope.getArtifacts().getFinalProduct(MERGED_NATIVE_LIBS);
-        variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "merged-native-libs")
-                                .addContentType(NATIVE_LIBS)
-                                .addScopes(mergeScopes)
-                                .setFileCollection(project.getLayout().files(nativeLibsProvider))
-                                .build());
     }
 
     public void createBuildConfigTask(@NonNull VariantScope scope) {
@@ -1131,8 +1134,7 @@ public abstract class TaskManager {
                 taskFactory.register(new PackageSplitRes.CreationAction(scope));
     }
 
-    @Nullable
-    public TaskProvider<PackageSplitAbi> createSplitAbiTasks(@NonNull VariantScope scope) {
+    public void createSplitAbiTasks(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
@@ -1141,7 +1143,7 @@ public abstract class TaskManager {
 
         Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
         if (filters.isEmpty()) {
-            return null;
+            return;
         }
 
         List<ApkData> fullApkDatas =
@@ -1159,10 +1161,9 @@ public abstract class TaskManager {
         taskFactory.register(new GenerateSplitAbiRes.CreationAction(scope));
 
         // then package those resources with the appropriate JNI libraries.
-        TaskProvider<PackageSplitAbi> packageSplitAbiTask =
-                taskFactory.register(new PackageSplitAbi.CreationAction(scope));
-
-        return packageSplitAbiTask;
+        taskFactory.register(
+                new PackageSplitAbi.CreationAction(
+                        scope, packagesCustomClassDependencies(scope, projectOptions)));
     }
 
     public void createSplitTasks(@NonNull VariantScope variantScope) {
@@ -1474,20 +1475,24 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
-    /** Create transform for stripping debug symbols from native libraries before deploying. */
-    public static void createStripNativeLibraryTask(
+    /** Create task for stripping debug symbols from native libraries before deploying. */
+    public void createStripNativeLibraryTask(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
-        TransformManager transformManager = scope.getTransformManager();
-        GlobalScope globalScope = scope.getGlobalScope();
-        transformManager.addTransform(
-                taskFactory,
-                scope,
-                new StripDebugSymbolTransform(
-                        globalScope.getProject(),
-                        globalScope.getSdkComponents().getNdkHandlerSupplier(),
-                        globalScope.getExtension().getPackagingOptions().getDoNotStrip(),
-                        scope.getVariantConfiguration().getType().isAar(),
-                        scope.consumesFeatureJars()));
+        taskFactory.register(new StripDebugSymbolsTask.CreationAction(scope));
+
+        // also add a new stripped native libs stream if an AAR
+        if (scope.getType().isAar()) {
+            Provider<Directory> nativeLibsProvider =
+                    scope.getArtifacts().getFinalProduct(STRIPPED_NATIVE_LIBS);
+            scope.getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "stripped-native-libs")
+                                    .addContentType(NATIVE_LIBS)
+                                    .addScopes(getJavaResMergingScopes(scope, NATIVE_LIBS))
+                                    .setFileCollection(
+                                            project.getLayout().files(nativeLibsProvider))
+                                    .build());
+        }
     }
 
     /** Creates the tasks to build unit tests. */
@@ -2056,17 +2061,15 @@ public abstract class TaskManager {
         }
 
         // ----- Android studio profiling transforms
-        final VariantType type = variantData.getType();
-        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
-                && type.isApk()
-                && !type.isForTesting()) {
-            boolean addDependencies = !type.isFeatureSplit();
+        if (appliesCustomClassTransforms(variantScope, projectOptions)) {
             for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
                 if (jar != null) {
                     transformManager.addTransform(
                             taskFactory,
                             variantScope,
-                            new CustomClassTransform(jar, addDependencies));
+                            new CustomClassTransform(
+                                    jar,
+                                    packagesCustomClassDependencies(variantScope, projectOptions)));
                 }
             }
         }
@@ -2222,7 +2225,7 @@ public abstract class TaskManager {
                         && extension.getTransforms().isEmpty()
                         && !minified
                         && supportsDesugaring
-                        && getAdvancedProfilingTransforms(projectOptions).isEmpty();
+                        && !appliesCustomClassTransforms(variantScope, projectOptions);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransformBuilder()
@@ -2654,7 +2657,8 @@ public abstract class TaskManager {
                                 manifestType,
                                 variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
-                                taskOutputType),
+                                taskOutputType,
+                                packagesCustomClassDependencies(variantScope, projectOptions)),
                         null,
                         task -> {
                             //noinspection VariableNotUsedInsideIf - we use the whole packaging scope below.

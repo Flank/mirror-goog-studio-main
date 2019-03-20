@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
+import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
@@ -1035,6 +1036,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @NonNull protected final OutputScope outputScope;
         @Nullable private final FileCache fileCache;
         @NonNull private final InternalArtifactType manifestType;
+        private final boolean packageCustomClassDependencies;
 
         public CreationAction(
                 @NonNull VariantScope variantScope,
@@ -1043,7 +1045,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull Provider<Directory> manifests,
                 @NonNull InternalArtifactType manifestType,
                 @Nullable FileCache fileCache,
-                @NonNull OutputScope outputScope) {
+                @NonNull OutputScope outputScope,
+                boolean packageCustomClassDependencies) {
             super(variantScope);
             this.project = variantScope.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
@@ -1052,6 +1055,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             this.outputScope = outputScope;
             this.manifestType = manifestType;
             this.fileCache = fileCache;
+            this.packageCustomClassDependencies = packageCustomClassDependencies;
         }
 
         @Override
@@ -1145,13 +1149,19 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             if (variantScope.getVariantData().getMultiOutputPolicy()
                     == MultiOutputPolicy.MULTI_APK) {
-                task.jniFolders = getJniFolders();
+                task.jniFolders =
+                        PerModuleBundleTaskKt.getNativeLibsFiles(
+                                variantScope, packageCustomClassDependencies);
             } else {
                 Set<String> filters =
                         AbiSplitOptions.getAbiFilters(
                                 globalScope.getExtension().getSplits().getAbiFilters());
 
-                task.jniFolders = filters.isEmpty() ? getJniFolders() : project.files();
+                task.jniFolders =
+                        filters.isEmpty()
+                                ? PerModuleBundleTaskKt.getNativeLibsFiles(
+                                        variantScope, packageCustomClassDependencies)
+                                : project.files();
             }
 
             task.apkList =
@@ -1179,13 +1189,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             Provider<RegularFile> mergedJavaResProvider =
                     getVariantScope().getArtifacts().getFinalProduct(MERGED_JAVA_RES);
             return project.getLayout().files(mergedJavaResProvider);
-        }
-
-        @NonNull
-        public FileCollection getJniFolders() {
-            return getVariantScope()
-                    .getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
         }
 
         @Nullable

@@ -77,6 +77,7 @@ class LibraryCacheabilityTest {
                     ":lib:packageReleaseResources",
                     ":lib:parseReleaseLibraryResources",
                     ":lib:processReleaseManifest",
+                    ":lib:stripReleaseDebugSymbols",
                     ":lib:verifyReleaseResources"
                 ),
                 /*
@@ -91,7 +92,6 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseGeneratedProguardFiles" /* Bug 127247527 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */,
                     ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
-                    ":lib:transformNativeLibsWithStripDebugSymbolForRelease" /* Bug 120414535 */,
                     ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
                 ),
                 SKIPPED to setOf(

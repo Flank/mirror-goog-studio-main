@@ -22,7 +22,6 @@ import com.android.build.OutputFile;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
-import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
@@ -31,6 +30,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -242,9 +242,11 @@ public class PackageSplitAbi extends AndroidBuilderTask {
     public static class CreationAction extends VariantTaskCreationAction<PackageSplitAbi> {
 
         private File outputDirectory;
+        private final boolean packageCustomClassDependencies;
 
-        public CreationAction(VariantScope scope) {
+        public CreationAction(VariantScope scope, boolean packageCustomClassDependencies) {
             super(scope);
+            this.packageCustomClassDependencies = packageCustomClassDependencies;
         }
 
         @Override
@@ -294,8 +296,7 @@ public class PackageSplitAbi extends AndroidBuilderTask {
             task.jniDebuggable = config.getBuildType().isJniDebuggable();
 
             task.jniFolders =
-                    scope.getTransformManager()
-                            .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
+                    PerModuleBundleTaskKt.getNativeLibsFiles(scope, packageCustomClassDependencies);
             task.jniDebuggable = config.getBuildType().isJniDebuggable();
             task.splits = scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
 

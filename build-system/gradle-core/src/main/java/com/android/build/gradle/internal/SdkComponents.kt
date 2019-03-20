@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal
 
 import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
+import com.android.build.gradle.internal.cxx.stripping.createSymbolStripExecutableFinder
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
@@ -109,6 +111,8 @@ open class SdkComponents(
     val supportBlasLibFolderProvider: Provider<File> = project.providers.provider { sdkLoadStrategy.getSupportBlasLibFolder() }
 
     val ndkFolderProvider: Provider<File> = project.providers.provider { ndkHandlerSupplier.get().ndkPlatform.ndkDirectory }
+    val stripExecutableFinderProvider: Provider<SymbolStripExecutableFinder> =
+        project.providers.provider { createSymbolStripExecutableFinder(ndkHandlerSupplier.get()) }
 
     @Synchronized
     fun unload() {
