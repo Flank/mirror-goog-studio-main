@@ -1738,7 +1738,7 @@ public abstract class TaskManager {
     private static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
         final VariantType variantType = variantScope.getVariantConfiguration().getType();
-        return !variantType.isTestComponent() && !variantType.isHybrid();
+        return !variantType.isForTesting() && !variantType.isHybrid();
     }
 
     /**
@@ -1760,7 +1760,7 @@ public abstract class TaskManager {
                 : project.getPath() + ':' + taskName;
     }
 
-    private void maybeCreateLintVitalTask(@NonNull ApkVariantData variantData) {
+    public void maybeCreateLintVitalTask(@NonNull ApkVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 

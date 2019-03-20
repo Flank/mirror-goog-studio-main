@@ -3,6 +3,7 @@ package com.android.build.gradle.integration.testing;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -102,6 +103,33 @@ public class SeparateTestModuleTest {
         // FIXME we can't know the variant yet because it's not passed through the new dependency
         // scheme.
         // assertThat(toInstall.first().getTargetVariant()).isEqualTo("debug")
+    }
+
+    /**
+     * Check that there are no problems with assembling a non-debug variant on the test module that
+     * corresponds to a non-debug variant on the app module
+     */
+    @Test
+    public void checkVariantTesting() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "android {\n"
+                        + "    buildTypes {\n"
+                        + "        nodebug {\n"
+                        + "            debuggable false\n"
+                        + "            signingConfig signingConfigs.debug\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
+        TestFileUtils.appendToFile(
+                project.getSubproject(":test").getBuildFile(),
+                "android { buildTypes.create('nodebug') }\n");
+
+        GradleBuildResult result = project.executor().run("clean", ":test:assembleNodebug");
+
+        // Verify that the lintVital task does not run. It should not be created (b/127843764)
+        assertThat(result.getTasks()).doesNotContain(":test:lintVitalNodebug");
     }
 
     private void addInstrumentationToManifest() throws IOException {

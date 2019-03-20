@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
+import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
@@ -159,6 +160,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     public void createLintTasks(VariantScope scope) {
+        // do nothing
+    }
+
+    @Override
+    public void maybeCreateLintVitalTask(@NonNull ApkVariantData variantData) {
         // do nothing
     }
 
