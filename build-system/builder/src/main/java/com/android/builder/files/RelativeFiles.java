@@ -109,14 +109,11 @@ public final class RelativeFiles {
      */
     @NonNull
     public static Set<RelativeFile> fromZip(@NonNull ZipCentralDirectory zip) throws IOException {
-        File zipFile = zip.getFile();
-        Preconditions.checkArgument(zipFile.isFile(), "!File.isFile(): %s", zipFile);
-
         Collection<DirectoryEntry> values = zip.getEntries().values();
         Set<RelativeFile> files = Sets.newHashSetWithExpectedSize(values.size());
 
         for (DirectoryEntry entry : values) {
-            files.add(new RelativeFile(zipFile, entry.getName()));
+            files.add(new RelativeFile(zip.getFile(), entry.getName()));
         }
 
         return Collections.unmodifiableSet(files);

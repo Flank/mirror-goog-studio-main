@@ -28,17 +28,12 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.test.assertFailsWith
 
 class ZipCentralDirectoryTest {
 
-    /**
-     * Temporary folder to use in tests.
-     */
     @get:Rule
     val temporaryFolder = TemporaryFolder()
-
-    @get:Rule
-    val expectedException: ExpectedException = ExpectedException.none()
 
     @Test
     fun basicTest() {
@@ -82,11 +77,10 @@ class ZipCentralDirectoryTest {
     @Test
     @Throws(IOException::class)
     fun testZip64File() {
-        expectedException.expect(Zip64NotSupportedException::class.java)
         val zip64 = createZip64File(66000, 0)
 
-        // this will throw the exception
-        ZipCentralDirectory(zip64).entries
+        assertFailsWith<Zip64NotSupportedException> {
+            ZipCentralDirectory(zip64).entries }
     }
 
     data class Entry(

@@ -21,17 +21,19 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.RandomAccessFile
-import java.lang.Short.BYTES as SHORT_BYTES
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.Charset
 import java.util.Collections
+import java.lang.Short.BYTES as SHORT_BYTES
 
 /**
  * Class parsing and representing a Zip file Central Directory Record (CDR)
  *
  * This class expects that the Zip is properly formed and does not provide validation
  * on the format.
+ *
+ * The underlying file is read lazily as needed, so it is light weight to create an instance.
  */
 class ZipCentralDirectory(
     val file: File
@@ -141,7 +143,7 @@ class ZipCentralDirectory(
                 }
             }
             throw Zip64NotSupportedException(
-                "Zip64 EOCD locator found but Zip64 format is not supported."
+                "Zip64 EOCD locator found but Zip64 format is not supported: $file"
             )
         }
 
