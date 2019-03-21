@@ -165,7 +165,7 @@ class WrongThreadDetectorTest {
 
                     public class Test {
                         @Slow
-                        public void slowMethod() { }
+                        public boolean slowMethod() { }
 
                         private void fastMethod() { }
 
@@ -208,11 +208,22 @@ class WrongThreadDetectorTest {
                     // modules.
                     package com.intellij.openapi.application;
                     import com.android.annotations.concurrency.UiThread;
+                    import org.jetbrains.annotations.NotNull;
                     public class Application {
-                        public void invokeLater(@UiThread Runnable run) { run.run(); }
+                        public void invokeLater(@NotNull @UiThread Runnable run) { run.run(); }
                         /** Fake method to check that it does no trigger the warnings */
-                        public void runOnPooledThread(Runnable run) { run.run(); }
+                        public void runOnPooledThread(@NotNull Runnable run) { run.run(); }
                     }
+                """
+                ).indented(),
+                java(
+                    """
+                    package org.jetbrains.annotations;
+
+                    @Documented
+                    @Retention(RetentionPolicy.CLASS)
+                    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.LOCAL_VARIABLE})
+                    public @interface NotNull {}
                 """
                 ).indented(),
                 java(

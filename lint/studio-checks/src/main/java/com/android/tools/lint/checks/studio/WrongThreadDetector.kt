@@ -185,6 +185,7 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         val lambdaArgument = lambdaCallExpression.getParameterForArgument(lambdaCall) ?: return null
 
         val annotations = lambdaArgument.annotations
+            .filter { it.isThreadingAnnotation() }
             .mapNotNull { it.qualifiedName }
             .toList()
 

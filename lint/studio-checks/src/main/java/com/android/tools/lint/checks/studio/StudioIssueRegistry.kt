@@ -29,7 +29,8 @@ class StudioIssueRegistry : IssueRegistry() {
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
-        FileComparisonDetector.ISSUE
+        FileComparisonDetector.ISSUE,
+        WrongThreadDetector.ISSUE
     )
 
 // TODO other checks:
