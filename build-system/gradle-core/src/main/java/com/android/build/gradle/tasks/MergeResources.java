@@ -716,7 +716,10 @@ public class MergeResources extends ResourceAwareTask {
                 task.generatedPngsOutputDir = variantScope.getGeneratedPngsOutputDir();
             }
 
-            if (globalScope.getExtension().getDataBinding().isEnabled()) {
+            boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
+            boolean isViewBindingEnabled =
+                    globalScope.getProjectOptions().get(BooleanOption.ENABLE_VIEW_BINDING);
+            if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
                 task.dataBindingLayoutInfoOutFolder = dataBindingLayoutInfoOutFolder;
                 task.dataBindingLayoutProcessor =
@@ -740,7 +743,8 @@ public class MergeResources extends ResourceAwareTask {
                                 return getProcessor()
                                         .processSingleFile(
                                                 RelativizableFile.fromAbsoluteFile(file, null),
-                                                out);
+                                                out,
+                                                isViewBindingEnabled);
                             }
 
                             @Override

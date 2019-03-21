@@ -2663,7 +2663,7 @@ public final class SdkConstants {
     public static final String ANDROIDX_RECYCLER_VIEW_ARTIFACT =
             "androidx.recyclerview:recyclerview";
     public static final String ANDROIDX_LEANBACK_ARTIFACT = "androidx.leanback:leanback";
-    public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotations:annotations";
+    public static final String ANDROIDX_ANNOTATIONS_ARTIFACT = "androidx.annotation:annotation";
     public static final String ANDROIDX_SUPPORT_LIB_ARTIFACT = "androidx.legacy:legacy-support-v4";
     public static final String ANDROIDX_VIEW_PAGER_LIB_ARTIFACT = "androidx.viewpager:viewpager";
     public static final String ANDROIDX_APPCOMPAT_LIB_ARTIFACT = "androidx.appcompat:appcompat";

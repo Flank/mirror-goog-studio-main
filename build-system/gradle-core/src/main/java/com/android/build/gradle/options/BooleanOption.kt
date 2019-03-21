@@ -75,6 +75,7 @@ enum class BooleanOption(
     NAMESPACED_R_CLASS("android.namespacedRClass", false),
     ENABLE_SEPARATE_ANNOTATION_PROCESSING("android.enableSeparateAnnotationProcessing", false),
     FULL_R8("android.enableR8.fullMode", false),
+    ENABLE_VIEW_BINDING("android.enableViewBinding"),
     CONDITIONAL_KEEP_RULES("android.useConditionalKeepRules", false),
     ENFORCE_UNIQUE_PACKAGE_NAMES("android.uniquePackageNames", false, status = Option.Status.STABLE),
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", false),

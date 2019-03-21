@@ -749,7 +749,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks
-        taskManager.addDataBindingDependenciesIfNecessary(
+        taskManager.addBindingDependenciesIfNecessary(
                 extension.getDataBinding(), variantManager.getVariantScopes());
 
 

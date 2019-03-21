@@ -96,6 +96,9 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     @get:Internal
     var encodeErrors: Boolean = false
         private set
+    @get:Input
+    var enableViewBinding: Boolean = false
+        private set
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
@@ -149,8 +152,9 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 incremental = inputs.isIncremental,
                 packageName = packageName,
                 artifactFolder = classInfoBundleDir,
-                v1ArtifactsFolder = if (v1Artifacts.isEmpty()) null else v1Artifacts.single(),
-                useAndroidX = useAndroidX
+                v1ArtifactsFolder = v1Artifacts.singleOrNull(),
+                useAndroidX = useAndroidX,
+                enableViewBinding = enableViewBinding
         )
     }
 
@@ -197,6 +201,8 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             // needed to decide whether data binding should encode errors or not
             task.encodeErrors = variantScope.globalScope
                 .projectOptions[BooleanOption.IDE_INVOKED_FROM_IDE]
+            task.enableViewBinding = variantScope.globalScope.projectOptions[
+                BooleanOption.ENABLE_VIEW_BINDING]
         }
     }
 
