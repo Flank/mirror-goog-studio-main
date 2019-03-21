@@ -22,8 +22,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 public abstract class ShellCommand {
-
-    public abstract void execute(
+    public abstract boolean execute(
             FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException;
 

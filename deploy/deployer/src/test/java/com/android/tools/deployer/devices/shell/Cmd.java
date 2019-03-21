@@ -34,21 +34,22 @@ public class Cmd extends ShellCommand {
     }
 
     @Override
-    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         try {
-            run(device, new Arguments(args), stdin, stdout);
+            return run(device, new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
             stdout.println(e.getMessage());
+            return false;
         }
     }
 
-    public void run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
+    public boolean run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
             throws IOException {
         String service = args.nextArgument();
         if (service == null) {
             stdout.println("cmd: no service specified; use -l to list all services");
-            return;
+            return false;
         }
 
         switch (service) {
@@ -56,27 +57,27 @@ public class Cmd extends ShellCommand {
                 String action = args.nextArgument();
                 if (action == null) {
                     stdout.println("Usage\n...message...");
-                    return;
+                    return false;
                 }
                 switch (action) {
                         // eg: pm install-create -r -t -S 5047
                     case "install-create":
                         stdout.format(
                                 "Success: created install session [%d]\n", device.createSession());
-                        return;
+                        return true;
                         // eg: install-write -S 5047 100000000 0_sample -
                     case "install-write":
                         {
                             String opt = args.nextOption();
                             if (opt == null) {
                                 stdout.println("Error: must specify a APK size");
-                                return;
+                                return false;
                             } else if (!opt.equals("-S")) {
                                 stdout.format(
                                         "\nException occurred while dumping:\n"
                                                 + "java.lang.IllegalArgumentException: Unknown option %s\n\tat com...\n",
                                         opt);
-                                return;
+                                return false;
                             }
                             // This should be a long, but we keep all the files in memory. Int is enough for tests.
                             int size = parseInt(args.nextArgument());
@@ -86,7 +87,7 @@ public class Cmd extends ShellCommand {
                                 stdout.println(
                                         "\nException occurred while dumping:\n"
                                                 + "java.lang.IllegalArgumentException: Invalid name: null\n\tat com...");
-                                return;
+                                return false;
                             }
                             String path = args.nextArgument();
                             byte[] apk;
@@ -95,11 +96,11 @@ public class Cmd extends ShellCommand {
                                 ByteStreams.readFully(stdin, apk);
                             } else {
                                 stdout.println("Error: APK content must be streamed");
-                                return;
+                                return false;
                             }
                             device.writeToSession(session, apk);
                             stdout.format("Success: streamed %d bytes\n", size);
-                            return;
+                            return true;
                         }
                     case "install-commit":
                         {
@@ -107,16 +108,17 @@ public class Cmd extends ShellCommand {
                             // On some APIs the "Success" part of install-commit is not printed. We allow this
                             // to be configured so we can reproduce that odd behaviour.
                             stdout.println(reportCommitSuccess ? "Success" : "");
-                            return;
+                            return true;
                         }
                     case "install-abandon":
                         device.abandonSession(parseSession(device, args));
                         stdout.println("Success");
-                        return;
+                        return true;
                 }
                 break;
         }
         stdout.println("Can't find service: " + service);
+        return false;
     }
 
     public int parseSession(FakeDevice device, Arguments args) {

@@ -37,6 +37,7 @@ public class FakeDevice {
     private final String api;
     private final Shell shell;
     private final Map<String, String> props;
+    private final Map<String, String> env;
     private final Map<String, byte[]> files;
     private final List<byte[]> apks;
 
@@ -52,6 +53,7 @@ public class FakeDevice {
         this.props.put("ro.product.cpu.abilist", ABI);
         this.props.put("ro.build.version.release", version);
         this.props.put("ro.build.version.sdk", api);
+        this.env = new HashMap<>();
         this.files = new HashMap<>();
         this.apks = new ArrayList<>();
         this.sessions = new HashMap<>();
@@ -72,6 +74,10 @@ public class FakeDevice {
 
     public Map<String, String> getProps() {
         return props;
+    }
+
+    public Map<String, String> getEnv() {
+        return env;
     }
 
     @Override

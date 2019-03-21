@@ -21,7 +21,8 @@ import java.io.PrintStream;
 
 public class BasicPm extends ShellCommand {
     @Override
-    public void execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout) {
+    public boolean execute(
+            FakeDevice device, String[] args, InputStream stdin, PrintStream stdout) {
         Arguments arguments = new Arguments(args);
         String action = arguments.nextArgument();
         if ("install".equals(action)) {
@@ -31,18 +32,20 @@ public class BasicPm extends ShellCommand {
             String pkg = arguments.nextArgument();
             if (pkg == null) {
                 stdout.print("\tpkg: null\nError: no package specified\n");
-                return;
+                return false;
             }
             byte[] file = device.readFile(pkg);
             if (file == null) {
                 stdout.print(
                         "\tpkg: /data/local/tmp/sample.apk2\nFailure [INSTALL_FAILED_INVALID_URI]\n");
-                return;
+                return false;
             }
             device.addApk(file);
             stdout.println("Success");
+            return true;
         } else {
             stdout.println("pm usage:\n...");
+            return false;
         }
     }
 
