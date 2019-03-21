@@ -83,7 +83,7 @@ public class Baseline {
             }
             whitelist.forEach(
                     (callstack) ->
-                            LOGGER.info(
+                            LOGGER.fine(
                                     String.format(
                                             "Ignoring whitelisted callstack:\n%s",
                                             formattedCallstack(callstack))));

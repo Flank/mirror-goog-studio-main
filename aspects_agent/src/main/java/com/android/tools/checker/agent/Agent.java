@@ -55,13 +55,13 @@ public class Agent {
 
         Aspects aspects = new Aspects(aspectsMap);
         aspectsMap.forEach(
-                (key, value) -> LOGGER.info(String.format("Rule added %s=%s", key, value)));
+                (key, value) -> LOGGER.fine(String.format("Rule added %s=%s", key, value)));
         inst.addTransformer(new Transform(aspects), inst.isRetransformClassesSupported());
 
         Baseline.parse(baselineFile == null ? null : Files.newInputStream(Paths.get(baselineFile)));
 
         if (inst.isRetransformClassesSupported()) {
-            LOGGER.info("Re-transformation enabled");
+            LOGGER.fine("Re-transformation enabled");
 
             /*
             Final classes are not transformed automatically by the transformer. In here, we manually go through
@@ -77,7 +77,7 @@ public class Agent {
                 }
                 if ((loadedClass.getModifiers() & Modifier.FINAL) != 0) {
                     try {
-                        LOGGER.info("Transforming final class " + loadedClass.getName());
+                        LOGGER.fine("Transforming final class " + loadedClass.getName());
                         inst.retransformClasses(loadedClass);
                     } catch (UnmodifiableClassException e) {
                         e.printStackTrace();

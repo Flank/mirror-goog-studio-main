@@ -90,7 +90,7 @@ public class InterceptVisitor extends AdviceAdapter {
             notFoundCallback.accept(key);
         } else {
             generateStaticCall(methodAspect);
-            LOGGER.info("Method Aspect found " + key);
+            LOGGER.fine("Method Aspect found " + key);
         }
 
         // If the method has any annotations, check if there are any aspects defined.
@@ -103,7 +103,7 @@ public class InterceptVisitor extends AdviceAdapter {
                                 String annotationAspect = aspects.apply(annotationName);
                                 if (annotationAspect != null) {
                                     generateStaticCall(annotationAspect);
-                                    LOGGER.info("Annotation Aspect found " + annotationName);
+                                    LOGGER.fine("Annotation Aspect found " + annotationName);
                                 } else {
                                     notFoundCallback.accept(annotationName);
                                 }
