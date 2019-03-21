@@ -11,3 +11,5 @@ RUN locale-gen en_US.UTF-8
 # For NDK bug (b/123781809)
 ENV LD_LIBRARY_PATH ""
 ENV CC ""
+# Set a variable we can test to make sure we are using correct Docker Image
+ENV STUDIO_IMAGE=true
