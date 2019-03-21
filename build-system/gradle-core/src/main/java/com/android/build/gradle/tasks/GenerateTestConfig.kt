@@ -68,20 +68,9 @@ import javax.inject.Inject
 open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory) :
     AndroidVariantTask() {
 
-    // This task has 2 types of inputs:
-    //   - testConfigInputs: Inputs that do not directly affect the output
-    //   - testConfigProperties: Inputs that are computed from testConfigInputs and directly affect
-    //     the output
-    // Since we want this task to rerun only when necessary, we do not register the indirect inputs
-    // but only the direct inputs with Gradle.
-    private lateinit var testConfigInputs: TestConfigInputs
-
     @get:Nested
-    val testConfigProperties: TestConfigProperties by lazy {
-        // The base for the relative paths in the test config file should be the current project
-        // directory, not the root project directory.
-        testConfigInputs.computeProperties(project.projectDir)
-    }
+    lateinit var testConfigInputs: TestConfigInputs
+        private set
 
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
@@ -92,7 +81,8 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     fun generateTestConfig() {
         workers.submit(
             GenerateTestConfigRunnable::class.java,
-            GenerateTestConfigParams(testConfigProperties, outputDirectory.get().asFile)
+            GenerateTestConfigParams(testConfigInputs.computeProperties(project.projectDir),
+                outputDirectory.get().asFile)
         )
         workers.close()
     }
@@ -133,7 +123,6 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
 
         override fun configure(task: GenerateTestConfig) {
             super.configure(task)
-
             task.testConfigInputs = TestConfigInputs(variantScope)
         }
     }
@@ -223,21 +212,10 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     }
 
     class TestConfigProperties constructor(
-        @get:Input
-        @get:Optional
         val resourceApkFile: String?,
-
-        @get:Input
-        @get:Optional
         val mergedResourcesDir: String?,
-
-        @get:Input
         val mergedAssetsDir: String,
-
-        @get:Input
         val mergedManifestDir: String,
-
-        @get:Input
         val customPackage: String
     ) : Serializable
 

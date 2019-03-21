@@ -60,7 +60,7 @@ enum class BooleanOption(
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
-    ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
+    ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
     CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES("android.consumeDependenciesAsSharedLibraries"),
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),

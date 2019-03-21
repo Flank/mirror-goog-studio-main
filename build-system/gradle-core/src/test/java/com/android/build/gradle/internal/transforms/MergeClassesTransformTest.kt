@@ -23,6 +23,7 @@ import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
 import com.android.build.api.transform.QualifiedContent.Scope.SUB_PROJECTS
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
+import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.transforms.TransformTestHelper.invocationBuilder
 import com.android.build.gradle.internal.transforms.TransformTestHelper.singleJarBuilder
 import com.android.testutils.truth.MoreTruth
@@ -55,10 +56,10 @@ class MergeClassesTransformTest {
             action: Action<in WorkerConfiguration>
         ) {
             val workerConfiguration = Mockito.mock(WorkerConfiguration::class.java)
-            val captor = ArgumentCaptor.forClass(JarRequest::class.java)
+            val captor = ArgumentCaptor.forClass(Workers.ActionParameters::class.java)
             action.execute(workerConfiguration)
             Mockito.verify<WorkerConfiguration>(workerConfiguration).params(captor.capture())
-            val workAction = JarWorkerRunnable(captor.value)
+            val workAction = JarWorkerRunnable(captor.value.delegateParameters as JarRequest)
             workAction.run()
         }
 

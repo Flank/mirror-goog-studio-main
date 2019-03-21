@@ -53,10 +53,8 @@ import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -76,7 +74,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class ProcessTestManifest extends ManifestProcessorTask {
 
-    @NonNull private Provider<Directory> testTargetMetadata;
+    @NonNull private FileCollection testTargetMetadata;
 
     @Nullable
     private File testManifestFile;
@@ -118,7 +116,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         if (!onlyTestApk && testTargetMetadata != null) {
             BuildElements manifestOutputs =
                     ExistingBuildElements.from(
-                            MERGED_MANIFESTS, testTargetMetadata.get().getAsFile());
+                            MERGED_MANIFESTS, testTargetMetadata.getSingleFile());
 
             java.util.Optional<BuildOutput> mainSplit =
                     manifestOutputs
@@ -253,7 +251,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @InputFiles
     @Optional
-    public Provider<Directory> getTestTargetMetadata() {
+    public FileCollection getTestTargetMetadata() {
         return testTargetMetadata;
     }
 
@@ -286,10 +284,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         @NonNull
         private final VariantScope scope;
 
-        @NonNull private final Provider<Directory> testTargetMetadata;
+        @NonNull private final FileCollection testTargetMetadata;
 
         public CreationAction(
-                @NonNull VariantScope scope, @NonNull Provider<Directory> testTargetMetadata) {
+                @NonNull VariantScope scope, @NonNull FileCollection testTargetMetadata) {
             super(scope, scope.getTaskName("process", "Manifest"), ProcessTestManifest.class);
             this.scope = scope;
             this.testTargetMetadata = testTargetMetadata;

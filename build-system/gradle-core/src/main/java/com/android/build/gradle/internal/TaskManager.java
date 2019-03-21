@@ -264,6 +264,7 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -757,9 +758,10 @@ public abstract class TaskManager {
             @NonNull VariantScope scope,
             @NonNull VariantScope testedScope) {
 
+        Provider<FileSystemLocation> mergedManifest =
+                testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS);
         taskFactory.register(
-                new ProcessTestManifest.CreationAction(
-                        scope, testedScope.getArtifacts().getFinalProduct(MERGED_MANIFESTS)));
+                new ProcessTestManifest.CreationAction(scope, project.files(mergedManifest)));
     }
 
     public void createRenderscriptTask(@NonNull VariantScope scope) {
