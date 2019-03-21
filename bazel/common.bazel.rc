@@ -144,6 +144,9 @@ build:remote --remote_executor=remotebuildexecution.googleapis.com
 # correctness and repeatability of the build.
 build:remote --experimental_strict_action_env=true
 
+# Enable jvmopt used for Foundry testing
+test:remote --jvmopt='-Dandroid.remote.run=true'
+
 # Set flags for uploading to BES.
 build:results-local --config=upsalite_results
 build:results-local --tls_enabled=true
