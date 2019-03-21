@@ -13,13 +13,27 @@ public class Assertions {
 
     private Assertions() {}
 
-    public static void assertIsNotEdt() {
-        if (Baseline.isWhitelisted(Thread.currentThread().getStackTrace())) {
-            // Skip whitelisted methods
-            return;
+    /**
+     * Whether the stacktrace is consumed by the {@link Baseline}, which can happen either:
+     *
+     * <p>1) The stacktrace is whitelisted therefore we should skip the assertion; or 2) We are in
+     * generating baseline mode so we shouldn't throw assertions, but add the stacktrace to the
+     * baseline instead.
+     */
+    private static boolean consumedByBaseline(StackTraceElement[] stackTrace) {
+        if (Baseline.isGeneratingBaseline()) {
+            Baseline.whitelistStackTrace(stackTrace);
+            return true;
         }
+        return Baseline.isWhitelisted(stackTrace);
+    }
 
+    public static void assertIsNotEdt() {
         if (SwingUtilities.isEventDispatchThread()) {
+            if (consumedByBaseline(Thread.currentThread().getStackTrace())) {
+                return;
+            }
+
             StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
             LOGGER.severe(
                     String.format(
@@ -30,12 +44,11 @@ public class Assertions {
     }
 
     public static void assertIsEdt() {
-        if (Baseline.isWhitelisted(Thread.currentThread().getStackTrace())) {
-            // Skip whitelisted methods
-            return;
-        }
-
         if (!SwingUtilities.isEventDispatchThread()) {
+            if (consumedByBaseline(Thread.currentThread().getStackTrace())) {
+                return;
+            }
+
             StackTraceMethod currentMethod = StackTraceMethod.getCurrentStackTraceMethod();
             LOGGER.severe(
                     String.format(

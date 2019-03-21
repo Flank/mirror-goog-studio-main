@@ -18,6 +18,8 @@ package com.android.tools.checker;
 
 import static com.android.tools.checker.agent.AgentTestUtils.callMethod;
 import static com.android.tools.checker.agent.AgentTestUtils.loadAndTransform;
+import static com.android.tools.checker.agent.AgentTestUtils.stackTraceBuilder;
+import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 
 import com.android.tools.checker.agent.Baseline;
@@ -26,9 +28,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import org.junit.Before;
 import org.junit.Test;
 
 public class AssertionsTest {
+
+    @Before
+    public void setUp() {
+        Baseline.isGeneratingBaseline = false;
+        Baseline.whitelist.clear();
+    }
 
     @Test
     public void exceptionThrownWhenMethodCalledFromWrongThread()
@@ -64,6 +73,32 @@ public class AssertionsTest {
             callMethod(instance, "blockingMethod");
         } catch (Exception ignore) {
             fail("Whitelisted method is not supposed to cause an exception to be thrown.");
+        }
+    }
+
+    @Test
+    public void exceptionNotThrownWhenGeneratingBaseline()
+            throws IOException, IllegalAccessException, InstantiationException {
+        Baseline.isGeneratingBaseline = true;
+        Set<String> notFound = new HashSet<>();
+        ImmutableMap<String, String> matcher =
+                ImmutableMap.of(
+                        "@com.android.tools.checker.BlockingTest",
+                        "com.android.tools.checker.Assertions#assertIsEdt");
+        Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
+
+        try {
+            callMethod(instance, "blockingMethod");
+            // In addition to not throwing an exception, we should add the method to the whitelist
+            StackTraceElement[] stackTrace =
+                    stackTraceBuilder(
+                            "Test2",
+                            "blockingMethod",
+                            "sun.reflect.NativeMethodAccessorImpl",
+                            "invoke0");
+            assertTrue(Baseline.isWhitelisted(stackTrace));
+        } catch (Exception ignore) {
+            fail("Exception is not supposed to be thrown when generating the baseline.");
         }
     }
 }

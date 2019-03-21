@@ -58,7 +58,10 @@ public class Agent {
                 (key, value) -> LOGGER.fine(String.format("Rule added %s=%s", key, value)));
         inst.addTransformer(new Transform(aspects), inst.isRetransformClassesSupported());
 
-        Baseline.parse(baselineFile == null ? null : Files.newInputStream(Paths.get(baselineFile)));
+        if (!Baseline.isGeneratingBaseline()) {
+            Baseline.parse(
+                    baselineFile == null ? null : Files.newInputStream(Paths.get(baselineFile)));
+        }
 
         if (inst.isRetransformClassesSupported()) {
             LOGGER.fine("Re-transformation enabled");

@@ -17,12 +17,20 @@
 package com.android.tools.checker.agent;
 
 import static com.android.tools.checker.agent.AgentTestUtils.stackTraceBuilder;
+import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import org.junit.Before;
 import org.junit.Test;
 
 public class BaselineFileTest {
+
+    @Before
+    public void setUp() {
+        Baseline.whitelist.clear();
+    }
+
     @Test
     public void parseBaselineFile() {
         String baseline =
@@ -39,5 +47,16 @@ public class BaselineFileTest {
         Baseline.parse(new ByteArrayInputStream(baseline.getBytes()));
         assertTrue(Baseline.isWhitelisted(stackTrace1));
         assertTrue(Baseline.isWhitelisted(stackTrace2));
+    }
+
+    @Test
+    public void addStackTracesToBaseline() {
+        StackTraceElement[] stackTrace =
+                stackTraceBuilder(
+                        "com.example.MyClass", "topMethod", "com.example.MyClass", "caller");
+        assertFalse(Baseline.isWhitelisted(stackTrace));
+
+        Baseline.whitelistStackTrace(stackTrace);
+        assertTrue(Baseline.isWhitelisted(stackTrace));
     }
 }

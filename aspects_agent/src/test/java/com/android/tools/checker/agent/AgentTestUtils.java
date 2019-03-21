@@ -47,20 +47,6 @@ public class AgentTestUtils {
         }
     }
 
-    static StackTraceElement[] stackTraceBuilder(
-            String class1, String method1, String class2, String method2) {
-        StackTraceElement topElement = new StackTraceElement(class1, method1, null, 0);
-        StackTraceElement secondTopElement = new StackTraceElement(class2, method2, null, 0);
-
-        StackTraceElement[] stackTrace = new StackTraceElement[5];
-        // Ignore the first two elements, as they should be Thread.currentThread().getStackTrace()
-        // and the method who called Baseline#isWhitelisted.
-        stackTrace[2] = topElement;
-        stackTrace[3] = secondTopElement;
-
-        return stackTrace;
-    }
-
     static void callMethod(
             Class<?> clazz, Object instance, String methodName, boolean isPrivateMethod)
             throws NoSuchMethodException, IllegalAccessException {
@@ -88,6 +74,20 @@ public class AgentTestUtils {
     public static void callMethod(Object instance, String methodName)
             throws NoSuchMethodException, IllegalAccessException {
         callMethod(instance, methodName, false);
+    }
+
+    public static StackTraceElement[] stackTraceBuilder(
+            String class1, String method1, String class2, String method2) {
+        StackTraceElement topElement = new StackTraceElement(class1, method1, null, 0);
+        StackTraceElement secondTopElement = new StackTraceElement(class2, method2, null, 0);
+
+        StackTraceElement[] stackTrace = new StackTraceElement[5];
+        // Ignore the first two elements, as they should be Thread.currentThread().getStackTrace()
+        // and the method who called Baseline#isWhitelisted.
+        stackTrace[2] = topElement;
+        stackTrace[3] = secondTopElement;
+
+        return stackTrace;
     }
 
     public static Class<?> loadAndTransform(
