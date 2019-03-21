@@ -691,10 +691,12 @@ public class MergeResources extends ResourceAwareTask {
 
                             @Override
                             public boolean processSingleFile(File file, File out) throws Exception {
+                                // For cache relocatability, we want to pass relative paths here
+                                // instead of absolute paths. However, it is currently not possible
+                                // due to bug 128579779.
                                 return getProcessor()
                                         .processSingleFile(
-                                                RelativizableFile.Companion.fromAbsoluteFile(
-                                                        file, task.getProject().getProjectDir()),
+                                                RelativizableFile.fromAbsoluteFile(file, null),
                                                 out);
                             }
 
