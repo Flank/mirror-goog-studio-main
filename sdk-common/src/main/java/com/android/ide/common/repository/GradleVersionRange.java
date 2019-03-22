@@ -22,6 +22,13 @@ import com.google.common.base.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * GradleVersionRange is used to describe dependency version requirements.
+ *
+ * <p>e.g. a library has a dependency on androidx.core:core:1.5.7 it means that any library in the
+ * range [1.5.7, 2.0.0) would work as a dependency because androidx libraries guarantees semantic
+ * versioning.
+ */
 public class GradleVersionRange {
     private static final Pattern RANGE_PATTERN = Pattern.compile("\\[([^,)]+),([^,)]+)\\)");
     private final GradleVersion myMin;
@@ -37,31 +44,25 @@ public class GradleVersionRange {
      */
     @NonNull
     public static GradleVersionRange parse(@NonNull String value) {
-        return parse(value, false);
+        return parse(value, KnownVersionStability.INCOMPATIBLE);
     }
 
     /**
      * Parses the given version range.
      *
      * @param value the version range to parse.
-     * @param useSemanticVersioning true if the range rules for semantic versioning applies
+     * @param stability the stability of the artifact.
      * @return the created {@code Version} object.
      * @throws IllegalArgumentException if the given value does not conform with any of the
      *     supported version formats.
      * @see <a href="https://semver.org">Semantic Versioning</a>
      */
     @NonNull
-    public static GradleVersionRange parse(@NonNull String value, boolean useSemanticVersioning) {
+    public static GradleVersionRange parse(
+            @NonNull String value, @NonNull KnownVersionStability stability) {
         if (!value.startsWith("[")) {
             GradleVersion minimum = GradleVersion.parse(value);
-            if (!useSemanticVersioning) {
-                return new GradleVersionRange(minimum, null);
-            } else {
-                // For semantic versioning: treat the specified version as a minimum,
-                // and use the next major version as an exclusive max version.
-                return new GradleVersionRange(
-                        minimum, new GradleVersion(minimum.getMajor() + 1, 0, 0));
-            }
+            return new GradleVersionRange(minimum, stability.expiration(minimum));
         }
         Matcher matcher = RANGE_PATTERN.matcher(value);
         if (!matcher.matches()) {
@@ -77,15 +78,15 @@ public class GradleVersionRange {
      * formats.
      *
      * @param value the version to parse.
-     * @param useSemanticVersioning true if the range rules for semantic versioning applies.
+     * @param stability the stability of the artifact.
      * @return the created {@code GradleVersionRange} object, or {@code null} if the given value
      *     does not conform with any of the supported version formats.
      */
     @Nullable
     public static GradleVersionRange tryParse(
-            @NonNull String value, boolean useSemanticVersioning) {
+            @NonNull String value, @NonNull KnownVersionStability stability) {
         try {
-            return parse(value, useSemanticVersioning);
+            return parse(value, stability);
         } catch (RuntimeException ignored) {
         }
         return null;
@@ -102,7 +103,7 @@ public class GradleVersionRange {
      */
     @Nullable
     public static GradleVersionRange tryParse(@NonNull String value) {
-        return tryParse(value, false);
+        return tryParse(value, KnownVersionStability.INCOMPATIBLE);
     }
 
     @NonNull
