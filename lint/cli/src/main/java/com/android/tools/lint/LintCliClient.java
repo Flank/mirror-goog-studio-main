@@ -289,7 +289,9 @@ public class LintCliClient extends LintClient {
                 System.err.println(getBaselineCreationMessage(baselineFile));
                 return ERRNO_CREATED_BASELINE;
             }
-        } else if (baseline != null && baseline.getWriteOnClose() && baseline.getFixedCount() > 0
+        } else if (baseline != null
+                && baseline.getWriteOnClose()
+                && baseline.getFixedCount() > 0
                 && flags.isRemoveFixedBaselineIssues()) {
             baseline.close();
             return ERRNO_CREATED_BASELINE;

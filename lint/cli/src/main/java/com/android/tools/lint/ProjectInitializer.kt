@@ -79,6 +79,7 @@ private const val TAG_MERGED_MANIFEST = "merged-manifest"
 private const val TAG_CACHE = "cache"
 private const val TAG_AIDL = "aidl"
 private const val TAG_PROGUARD = "proguard"
+private const val TAG_ANNOTATIONS = "annotations"
 private const val ATTR_COMPILE_SDK_VERSION = "compile-sdk-version"
 private const val ATTR_TEST = "test"
 private const val ATTR_GENERATED = "generated"
@@ -133,6 +134,8 @@ data class ProjectMetadata(
     val jdkBootClasspath: List<File> = emptyList(),
     /** Target platforms we're analyzing  */
     val platforms: EnumSet<Platform>? = null,
+    /** Set of external annotations.zip files or external annotation directories */
+    val externalAnnotations: List<File> = emptyList(),
     /**
      * If true, the project metadata being passed in only represents a small
      * subset of the real project sources, so only lint checks which can be run
@@ -174,6 +177,9 @@ private class ProjectInitializer(
 
     /** map from module to a list of custom lint rules to apply for that module, if any */
     private val lintChecks = mutableMapOf<Project, List<File>>()
+
+    /** External annotations */
+    private val externalAnnotations: MutableList<File> = mutableListOf()
 
     /** map from module to a baseline to use for a given module, if any */
     private val baselines = mutableMapOf<Project, File?>()
@@ -263,6 +269,9 @@ private class ProjectInitializer(
                 TAG_LINT_CHECKS -> {
                     globalLintChecks.add(getFile(child, this.root))
                 }
+                TAG_ANNOTATIONS -> {
+                    externalAnnotations += getFile(child, this.root)
+                }
                 TAG_SDK -> {
                     sdk = getFile(child, this.root)
                 }
@@ -346,6 +355,7 @@ private class ProjectInitializer(
             baseline = baseline,
             globalLintChecks = globalLintChecks,
             lintChecks = lintChecks,
+            externalAnnotations = externalAnnotations,
             cache = cache,
             moduleBaselines = baselines,
             mergedManifests = mergedManifests,
@@ -504,6 +514,9 @@ private class ProjectInitializer(
                 }
                 TAG_LINT_CHECKS -> {
                     lintChecks.add(getFile(child, dir))
+                }
+                TAG_ANNOTATIONS -> {
+                    externalAnnotations += getFile(child, this.root)
                 }
                 TAG_DEP -> {
                     val target = child.getAttribute(ATTR_MODULE)

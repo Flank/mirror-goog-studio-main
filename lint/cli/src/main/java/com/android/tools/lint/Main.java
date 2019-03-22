@@ -462,6 +462,17 @@ public class Main {
 
                         return super.addBootClassPath(knownProjects, files);
                     }
+
+                    @NonNull
+                    @Override
+                    public List<File> getExternalAnnotations(
+                            @NonNull Collection<? extends Project> projects) {
+                        List<File> externalAnnotations = super.getExternalAnnotations(projects);
+                        if (metadata != null) {
+                            externalAnnotations.addAll(metadata.getExternalAnnotations());
+                        }
+                        return externalAnnotations;
+                    }
                 };
 
         // Mapping from file path prefix to URL. Applies only to HTML reports
