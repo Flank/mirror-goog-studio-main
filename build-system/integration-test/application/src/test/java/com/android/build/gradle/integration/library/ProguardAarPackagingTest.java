@@ -11,7 +11,7 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Joiner;
@@ -141,7 +141,7 @@ public class ProguardAarPackagingTest {
             throws IOException, InterruptedException, ProcessException {
         androidProject
                 .executor()
-                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleDebug");
 
         Aar debug = androidProject.getAar("debug");
@@ -158,7 +158,7 @@ public class ProguardAarPackagingTest {
             throws IOException, InterruptedException, ProcessException {
         androidProject
                 .executor()
-                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run("assembleRelease");
 
         Aar release = androidProject.getAar("release");

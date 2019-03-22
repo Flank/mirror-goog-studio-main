@@ -20,7 +20,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,7 +46,7 @@ public class LibMinifyLibDepConnectedTest {
     @Category(DeviceTests.class)
     public void connectedCheck() throws IOException, InterruptedException {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .executeConnectedCheck();
     }
 }

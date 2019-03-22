@@ -27,8 +27,8 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
@@ -353,7 +353,7 @@ public class MergeResourcesTest {
         // Run a full build with shrinkResources enabled
         GradleBuildResult result =
                 project.executor()
-                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(OptionalBooleanOption.ENABLE_R8, false)
                         .run(":app:clean", ":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long apkSizeWithShrinkResources =
@@ -365,7 +365,7 @@ public class MergeResourcesTest {
                 appBuildFile, "shrinkResources true", "shrinkResources false");
         result =
                 project.executor()
-                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(OptionalBooleanOption.ENABLE_R8, false)
                         .run(":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long apkSizeWithoutShrinkResources =
@@ -378,7 +378,7 @@ public class MergeResourcesTest {
                 appBuildFile, "shrinkResources false", "shrinkResources true");
         result =
                 project.executor()
-                        .with(BooleanOption.ENABLE_R8, false)
+                        .with(OptionalBooleanOption.ENABLE_R8, false)
                         .run(":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).didWork();
         long sameApkSizeShrinkResources =

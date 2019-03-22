@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -665,7 +666,7 @@ class DataBindingMinifyFeaturesTest(
     @Test
     fun assembleMinified() {
         val executor = project.executor()
-            .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
             .with(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING, true)
         when (multiApkMode) {
             MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")

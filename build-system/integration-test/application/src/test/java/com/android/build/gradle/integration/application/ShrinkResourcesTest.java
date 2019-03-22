@@ -29,7 +29,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
@@ -191,7 +191,7 @@ public class ShrinkResourcesTest {
                 "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
 
         project.executor()
-                .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
                 .run(
                         "clean",
                         apkPipeline.taskName("Release"),

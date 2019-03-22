@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
         GradleBuildResult result =
                 project.executor()
-                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                         .expectFailure()
                         .run("clean", ":test:assembleDebug");
         assertThat(result.getFailureMessage())
@@ -74,7 +74,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
     @Test
     public void checkMappingsApplied() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run("clean", ":test:assembleMinified");
 
         GradleTestProject testProject = project.getSubproject("test");

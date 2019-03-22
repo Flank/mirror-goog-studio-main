@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -264,7 +265,7 @@ public class DesugarMultiProjectTest {
                         || tool == Tool.D8_WITHOUT_ARTIFACT_TRANSFORMS;
         return project.executor()
                 .with(BooleanOption.ENABLE_D8_DESUGARING, enableD8Desugaring)
-                .with(BooleanOption.ENABLE_R8, tool == Tool.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, tool == Tool.R8)
                 .with(BooleanOption.ENABLE_R8_DESUGARING, tool == Tool.R8)
                 .with(
                         BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,

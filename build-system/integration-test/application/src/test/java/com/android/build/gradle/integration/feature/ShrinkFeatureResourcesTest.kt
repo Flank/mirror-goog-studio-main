@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -58,7 +59,7 @@ class ShrinkFeatureResourcesTest(val shrinker: CodeShrinker) {
                         + "}\n")
 
         project.executor()
-            .with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)
             .run("clean", "assembleRelease")
         project.getSubproject(":feature")
             .getFeatureApk(GradleTestProject.ApkType.RELEASE)

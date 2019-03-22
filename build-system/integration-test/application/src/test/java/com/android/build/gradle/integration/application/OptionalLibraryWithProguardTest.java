@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,14 +46,14 @@ public class OptionalLibraryWithProguardTest {
     @Test
     public void testThatProguardCompilesWithOptionalClasses() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run("clean", "app:assembleDebug");
     }
 
     @Test
     public void testUnitTestWithOptionalClasses() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run("clean", "mylibrary:test");
     }
 }

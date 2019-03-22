@@ -25,6 +25,7 @@ enum class OptionalBooleanOption(
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, status = STABLE),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, status = STABLE),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, status = STABLE),
+    ENABLE_R8("android.enableR8", status = Option.Status.STABLE),
     ;
 
     override fun parse(value: Any): Boolean {

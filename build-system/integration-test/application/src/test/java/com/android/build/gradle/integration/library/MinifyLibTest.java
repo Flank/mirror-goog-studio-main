@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
@@ -94,7 +95,7 @@ public class MinifyLibTest {
 
         AndroidProject model =
                 project.model()
-                        .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                        .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
                         .getOnlyModelMap()
@@ -202,6 +203,6 @@ public class MinifyLibTest {
     private GradleTaskExecutor getExecutor() {
         return project.executor()
                 .with(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION, separateRClass)
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
     }
 }

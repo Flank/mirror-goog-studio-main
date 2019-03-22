@@ -35,6 +35,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.desugar.resources.TestClass;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
@@ -354,7 +355,7 @@ public class DesugarAppTest {
                 .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
                 .with(BooleanOption.ENABLE_GRADLE_WORKERS, gradleWorkers == GradleWorkers.ENABLED)
                 .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
-                .with(BooleanOption.ENABLE_R8, java8LangSupport == R8)
+                .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
                 .with(
                         BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM,
                         artifactTransforms == ArtifactTransform.WITH_DESUGARING);

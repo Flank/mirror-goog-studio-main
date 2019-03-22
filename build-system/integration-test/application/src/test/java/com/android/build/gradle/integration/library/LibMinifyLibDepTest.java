@@ -23,7 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Rule;
@@ -67,16 +67,17 @@ public class LibMinifyLibDepTest {
 
     @Test
     public void checkTestAssemblyWithR8() throws Exception {
-        executor().with(BooleanOption.ENABLE_R8, true).run("assembleAndroidTest");
+        executor().with(OptionalBooleanOption.ENABLE_R8, true).run("assembleAndroidTest");
     }
 
     @Test
     public void checkTestAssemblyWithProguard() throws Exception {
-        executor().with(BooleanOption.ENABLE_R8, false).run("assembleAndroidTest");
+        executor().with(OptionalBooleanOption.ENABLE_R8, false).run("assembleAndroidTest");
     }
 
     @NonNull
     private GradleTaskExecutor executor() {
-        return project.executor().with(BooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8);
+        return project.executor()
+                .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8);
     }
 }

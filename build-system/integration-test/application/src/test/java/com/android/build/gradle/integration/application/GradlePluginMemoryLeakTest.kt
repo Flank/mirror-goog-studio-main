@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import org.junit.Rule
 import org.junit.Test
 
@@ -72,7 +73,7 @@ class GradlePluginMemoryLeakTest {
         for (i in 1..RUNS) {
             System.out.println("---- RUN $i ----")
             project.executor()
-                .with(BooleanOption.ENABLE_R8, false)
+                .with(OptionalBooleanOption.ENABLE_R8, false)
                 .run("assembleRelease")
             TestFileUtils.searchAndReplace(
                 project.file(BUILDSRC_JAVA_SOURCE_FILE),

@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -219,7 +220,9 @@ public class DesugarAppWithDesugarToolTest {
                         + "    try(java.io.StringWriter sw = new java.io.StringWriter(1)) {}\n"
                         + "}\n");
 
-        getProjectExecutor().with(BooleanOption.ENABLE_R8, false).run("assembleDebugAndroidTest");
+        getProjectExecutor()
+                .with(OptionalBooleanOption.ENABLE_R8, false)
+                .run("assembleDebugAndroidTest");
 
         assertThatApk(project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG))
                 .containsClass("Lcom/example/helloworld/HelloWorldTest;");

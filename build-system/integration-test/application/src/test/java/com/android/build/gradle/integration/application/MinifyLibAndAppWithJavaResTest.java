@@ -17,13 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.testutils.apk.Apk;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testDebugPackaging() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run(":app:assembleDebug");
         Apk debugApk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertNotNull(debugApk);
@@ -68,7 +67,7 @@ public class MinifyLibAndAppWithJavaResTest {
     @Test
     public void testReleasePackaging() throws Exception {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run(":app:assembleRelease");
         Apk releaseApk =
                 project.getSubproject("app").getApk(GradleTestProject.ApkType.RELEASE_SIGNED);

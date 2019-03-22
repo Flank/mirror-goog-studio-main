@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
@@ -100,7 +101,7 @@ public class DesugarAppWithLibraryTest {
         }
         project.executor()
                 .with(BooleanOption.ENABLE_D8_DESUGARING, java8LangSupport == D8)
-                .with(BooleanOption.ENABLE_R8, java8LangSupport == R8)
+                .with(OptionalBooleanOption.ENABLE_R8, java8LangSupport == R8)
                 .with(BooleanOption.ENABLE_R8_DESUGARING, java8LangSupport == R8)
                 .run(":app:assembleDebug");
         Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);

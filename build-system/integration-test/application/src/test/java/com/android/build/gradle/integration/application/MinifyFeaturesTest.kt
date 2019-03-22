@@ -24,7 +24,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.scope.CodeShrinker
-import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
@@ -675,7 +675,7 @@ class MinifyFeaturesTest(
          }
 
         val executor = project.executor()
-            .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
 
         when (multiApkMode) {
             MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")
@@ -800,7 +800,7 @@ class MinifyFeaturesTest(
     fun testBundleIsMinified() {
         Assume.assumeTrue(multiApkMode == MultiApkMode.DYNAMIC_APP)
         val executor = project.executor()
-            .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
         executor.run("bundleMinified")
 
         val bundleFile = getApkFolderOutput("minified", ":baseModule").bundleFile

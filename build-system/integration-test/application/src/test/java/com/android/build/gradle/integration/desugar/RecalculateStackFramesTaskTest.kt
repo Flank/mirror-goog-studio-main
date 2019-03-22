@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.desugar.resources.TestClass
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.testutils.TestInputsGenerator
 import com.google.common.collect.Lists
@@ -55,7 +56,7 @@ class RecalculateStackFramesTaskTest {
             .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
             .with(BooleanOption.ENABLE_D8_DESUGARING, false)
             .with(BooleanOption.ENABLE_R8_DESUGARING, false)
-            .with(BooleanOption.ENABLE_R8, false)
+            .with(OptionalBooleanOption.ENABLE_R8, false)
             .with(BooleanOption.ENABLE_DESUGAR, true)
             .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
             .run("fixStackFramesDebug")

@@ -19,7 +19,7 @@ package com.android.build.gradle.integration.library;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
@@ -44,7 +44,7 @@ public class LibMinifyJarDepTest {
     @Before
     public void setUp() throws IOException, InterruptedException {
         project.executor()
-                .with(BooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                 .run("clean", "assembleDebug", "assembleAndroidTest");
     }
 

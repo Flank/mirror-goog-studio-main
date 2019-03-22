@@ -31,11 +31,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.ArtifactPublishingUtil.publishArtifactToConfiguration;
+import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
-import static com.android.build.gradle.options.BooleanOption.ENABLE_R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
+import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -402,9 +403,15 @@ public class VariantScopeImpl implements VariantScope {
         }
 
         CodeShrinker codeShrinker = postProcessingOptions.getCodeShrinker();
-
-        if (codeShrinker != null && globalScope.getProjectOptions().get(ENABLE_R8)) {
-            return CodeShrinker.R8;
+        if (codeShrinker != null) {
+            Boolean enableR8 = globalScope.getProjectOptions().get(ENABLE_R8);
+            if (enableR8 == null) {
+                return codeShrinker;
+            } else if (enableR8) {
+                return R8;
+            } else {
+                return PROGUARD;
+            }
         }
 
         return codeShrinker;
