@@ -20,10 +20,8 @@ import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.repository.AndroidSdkHandler;
-
-import junit.framework.TestCase;
-
 import java.io.File;
+import junit.framework.TestCase;
 
 public class BuildToolInfoTest extends TestCase {
 
@@ -43,6 +41,44 @@ public class BuildToolInfoTest extends TestCase {
         assertTrue(curr.compareTo(new Revision(1, 5, 0)) > 0);
         // and we can reasonably expect to not be running with JVM 42.0.0
         assertTrue(curr.compareTo(new Revision(42, 0, 0)) < 0);
+    }
+
+    public void testIsPresentIn_removedComponent() {
+        // Jack and Jill were introduced in 21.1.0 and removed in 28
+        Revision rev21_0_0 = new Revision(21, 0, 0);
+        assertFalse(BuildToolInfo.PathId.JACK.isPresentIn(rev21_0_0));
+        assertFalse(BuildToolInfo.PathId.JILL.isPresentIn(rev21_0_0));
+
+        Revision rev21_1_0 = new Revision(21, 1, 0);
+        assertTrue(BuildToolInfo.PathId.JACK.isPresentIn(rev21_1_0));
+        assertTrue(BuildToolInfo.PathId.JILL.isPresentIn(rev21_1_0));
+
+        Revision rev23_0_0 = new Revision(23, 0, 0);
+        assertTrue(BuildToolInfo.PathId.JACK.isPresentIn(rev23_0_0));
+        assertTrue(BuildToolInfo.PathId.JILL.isPresentIn(rev23_0_0));
+
+        Revision rev28_0_0rc1 = new Revision(28, 0, 0, 1);
+        assertFalse(BuildToolInfo.PathId.JACK.isPresentIn(rev28_0_0rc1));
+        assertFalse(BuildToolInfo.PathId.JILL.isPresentIn(rev28_0_0rc1));
+
+        Revision rev28_0_0 = new Revision(28, 0, 0);
+        assertFalse(BuildToolInfo.PathId.JACK.isPresentIn(rev28_0_0));
+        assertFalse(BuildToolInfo.PathId.JILL.isPresentIn(rev28_0_0));
+    }
+
+    public void testIsPresentIn_componentWithNoRemovedRevision() {
+        // Daemon AAPT2 was introduced in 26.0.2
+        Revision rev25_0_0 = new Revision(25, 0, 0);
+        assertFalse(BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(rev25_0_0));
+
+        Revision rev26_0_0 = new Revision(26, 0, 0);
+        assertFalse(BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(rev26_0_0));
+
+        Revision rev26_0_2 = new Revision(26, 0, 2);
+        assertTrue(BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(rev26_0_2));
+
+        Revision rev28 = new Revision(28, 0, 0);
+        assertTrue(BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(rev28));
     }
 
     private static void recordBuildTool23(MockFileOp fop) {
