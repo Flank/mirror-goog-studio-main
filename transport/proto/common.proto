@@ -186,6 +186,10 @@ message Device {
   string boot_id = 9;  // unique ID regenerated each boot time
   bool is_emulator = 10;
   State state = 11;
+
+  // Should only be set if the pipeline does not support the device.
+  // e.g. pre-Lollipop devices.
+  string unsupported_reason = 12;
 }
 
 message Process {
