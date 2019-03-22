@@ -22,12 +22,8 @@
 #include "daemon/event_buffer.h"
 #include "perfd/samplers/sampler.h"
 #include "perfd/sessions/session.h"
-#include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
-#include "perfd/statsd/statsd_subscriber.h"
 #include "utils/clock.h"
 #include "utils/config.h"
-#include "utils/device_info.h"
-#include "utils/device_info_helper.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/memory_file_system.h"
@@ -90,26 +86,6 @@ TEST(Session, SamplerDeallocatedWhenSessionDies) {
   session2.samplers()[0].reset(sampler);
   // When session2 is out of scope, its samplers are expected to be deallocated.
   EXPECT_CALL(*sampler, Die());
-}
-
-TEST(Session, UsesStatsdForQ) {
-  FakeClock clock;
-  EventBuffer event_buffer(&clock);
-  FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
-                       "/");
-  proto::AgentConfig agent_config;
-  Config config(agent_config);
-  Daemon daemon(&clock, &config, &file_cache, &event_buffer);
-
-  DeviceInfoHelper::SetDeviceInfo(DeviceInfo::P);
-  Session session1(0, 1, 0, &daemon);
-  EXPECT_EQ(nullptr,
-            StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(10000));
-
-  DeviceInfoHelper::SetDeviceInfo(DeviceInfo::Q);
-  Session session2(0, 1, 0, &daemon);
-  EXPECT_NE(nullptr,
-            StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(10000));
 }
 
 }  // namespace profiler

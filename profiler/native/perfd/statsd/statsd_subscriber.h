@@ -22,8 +22,8 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include "proto/statsd/shell_config.pb.h"
 #include "pulled_atoms/pulled_atom.h"
-#include "statsd/proto/shell_config.pb.h"
 #include "utils/nonblocking_command_runner.h"
 
 namespace profiler {
