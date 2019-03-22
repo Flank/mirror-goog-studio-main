@@ -70,17 +70,8 @@ public class PerfDriver extends ExternalResource {
         mySdkLevel = sdkLevel;
         myUnifiedPipeline = unifiedPipeline;
         myIsOPlusDevice = TestUtils.isOPlusDevice(sdkLevel);
-        String codeName;
-        if (mySdkLevel >= 28) {
-            codeName = "P+";
-        } else if (mySdkLevel >= 26) {
-            codeName = "O";
-        } else {
-            codeName = "Pre-O";
-        }
         myPropertiesFile =
-                new DeviceProperties(
-                        codeName, String.valueOf(mySdkLevel), String.valueOf(mySdkLevel));
+                new DeviceProperties("", String.valueOf(mySdkLevel), String.valueOf(mySdkLevel));
         myPropertiesFile.writeFile();
     }
 
