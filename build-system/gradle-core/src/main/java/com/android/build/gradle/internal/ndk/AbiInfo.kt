@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.ndk;
+package com.android.build.gradle.internal.ndk
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.core.Abi;
-import java.io.File;
+import com.android.build.gradle.internal.core.Abi
+import com.google.gson.annotations.SerializedName
 
-/**
- * NdkInfo for r14.
- */
-public class NdkR14Info extends DefaultNdkInfo {
+/** Information about an ABI.  */
+data class AbiInfo(
+    val abi: Abi,
+    @SerializedName("deprecated")
+    val isDeprecated: Boolean,
+    @SerializedName("default")
+    val isDefault: Boolean) {
 
-    public NdkR14Info(@NonNull File root) {
-        super(root);
-    }
-
-    @Override
-    @NonNull
-    protected Abi getToolchainAbi(@NonNull Abi abi) {
-        if (abi == Abi.MIPS) {
-            return Abi.MIPS64;
-        }
-        return abi;
-    }
+    // Default constructor to be used by GSON to initialize default values.
+    constructor() : this(Abi.X86, false, true)
 }
