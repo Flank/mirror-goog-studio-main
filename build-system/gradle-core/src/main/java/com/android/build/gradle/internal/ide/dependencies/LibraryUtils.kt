@@ -70,7 +70,8 @@ fun clone(dependencies: Dependencies, modelLevel: Int): Dependencies {
     return DependenciesImpl(
         libraries,
         javaLibraries,
-        projects
+        projects,
+        Lists.newArrayList(dependencies.runtimeOnlyClasses)
     )
 }
 

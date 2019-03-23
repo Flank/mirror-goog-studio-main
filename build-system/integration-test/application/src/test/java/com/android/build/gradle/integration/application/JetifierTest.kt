@@ -186,13 +186,38 @@ class JetifierTest(private val withKotlin: Boolean) {
             .with(BooleanOption.ENABLE_JETIFIER, true)
             .expectFailure()
             .run("assembleDebug")
-        assertThat(result.stderr).contains("Failed to transform artifact 'doNotJetifyLib.jar (com.example.javalib:doNotJetifyLib:1.0)")
+        assertThat(result.stderr).contains(
+            "Failed to transform artifact 'doNotJetifyLib.jar" +
+                    " (com.example.javalib:doNotJetifyLib:1.0)"
+        )
 
         // Add doNotJetifyLib to a blacklist, the build should succeed
         TestFileUtils.appendToFile(
             project.gradlePropertiesFile,
             """android.jetifier.blacklist = doNot.*\\.jar, foo"""
         )
+        project.executor()
+            .with(BooleanOption.USE_ANDROID_X, true)
+            .with(BooleanOption.ENABLE_JETIFIER, true)
+            .run("assembleDebug")
+    }
+
+    @Test
+    fun testStripSignatures() {
+        // It's enough to test without Kotlin (to save test execution time)
+        assumeFalse(withKotlin)
+
+        prepareProjectForAndroidX()
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                implementation 'com.example.javalib:libWithSignatures:1.0'
+            }
+            """.trimIndent()
+        )
+
+        // Jetifier should be able to convert libWithSignatures
         project.executor()
             .with(BooleanOption.USE_ANDROID_X, true)
             .with(BooleanOption.ENABLE_JETIFIER, true)

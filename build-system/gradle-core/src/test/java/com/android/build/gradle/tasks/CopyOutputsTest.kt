@@ -84,12 +84,6 @@ class CopyOutputsTest {
 
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
-        val dslScope = DslScopeImpl(
-            FakeEvalIssueReporter(throwOnError = true),
-            FakeDeprecationReporter(),
-            FakeObjectFactory()
-        )
-
         val apkInfo =
             ApkData.of(
                 VariantOutput.OutputType.MAIN,
@@ -156,13 +150,13 @@ class CopyOutputsTest {
         `when`<MutableTaskContainer>(variantScope.taskContainer).thenReturn(taskContainer)
 
         `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.FULL_APK)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(apkDir, "output.json")), dslScope)
+            BuildableArtifactImpl(project.files(getOrCreateFile(apkDir, "output.json")))
         )
         `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.ABI_PACKAGED_SPLIT)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(splitDir, "output.json")), dslScope)
+            BuildableArtifactImpl(project.files(getOrCreateFile(splitDir, "output.json")))
         )
         `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(resDir, "output.json")), dslScope)
+            BuildableArtifactImpl(project.files(getOrCreateFile(resDir, "output.json")))
         )
     }
 

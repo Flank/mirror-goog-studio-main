@@ -186,7 +186,8 @@ public class IdeDependenciesFactoryTest {
                         Collections.emptyList(),
                         singletonList(javaLibraryB),
                         Collections.emptyList(),
-                        Lists.newArrayList(identifier1, identifier2));
+                        Lists.newArrayList(identifier1, identifier2),
+                        Collections.emptyList());
 
         BaseArtifactStub baseArtifactStub =
                 new BaseArtifactStub() {

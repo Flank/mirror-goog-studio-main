@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -234,7 +235,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                             COMPILE_CLASSPATH,
                             dependencyFailureHandler,
                             buildMapping);
-
             for (ResolvedArtifact artifact : artifacts) {
                 ComponentIdentifier id = artifact.getComponentIdentifier();
 
@@ -308,8 +308,28 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                 handleSources(variantScope.getGlobalScope().getProject(), ids, failureConsumer);
             }
 
+            // get runtime-only jars by filtering out compile dependencies from runtime artifacts.
+            Set<ComponentIdentifier> compileIdentifiers =
+                    artifacts
+                            .stream()
+                            .map(ResolvedArtifact::getComponentIdentifier)
+                            .collect(Collectors.toSet());
+            List<File> runtimeOnlyClasspath =
+                    runtimeArtifactCollection
+                            .getArtifacts()
+                            .stream()
+                            .filter(
+                                    it ->
+                                            !compileIdentifiers.contains(
+                                                    it.getId().getComponentIdentifier()))
+                            .map(ResolvedArtifactResult::getFile)
+                            .collect(Collectors.toList());
+
             return new DependenciesImpl(
-                    androidLibraries.build(), javaLibrary.build(), projects.build());
+                    androidLibraries.build(),
+                    javaLibrary.build(),
+                    projects.build(),
+                    runtimeOnlyClasspath);
         } finally {
             dependencyFailureHandler.collectIssues().forEach(failureConsumer);
         }

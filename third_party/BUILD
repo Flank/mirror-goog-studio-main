@@ -25,7 +25,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build.jetifier_jetifier-core",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta02:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-core/1.0.0-beta04:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
@@ -36,7 +36,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.android.tools.build.jetifier_jetifier-processor",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta02:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/jetifier/jetifier-processor/1.0.0-beta04:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.android.tools.build.jetifier_jetifier-core",

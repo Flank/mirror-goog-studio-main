@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static java.util.Objects.requireNonNull;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
@@ -22,19 +24,22 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 /** Creates a deep copy of a {@link Dependencies}. */
 public final class IdeDependenciesImpl extends IdeModel implements IdeDependencies {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final Collection<AndroidLibrary> myLibraries;
     @NonNull private final Collection<JavaLibrary> myJavaLibraries;
     @NonNull private final Collection<String> myProjects;
     @NonNull private final Collection<ProjectIdentifier> myJavaModules;
+    @NonNull private final Collection<File> myRuntimeOnlyClasses;
     private final int myHashCode;
 
     public IdeDependenciesImpl(
@@ -60,6 +65,12 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
                         dependencies::getJavaModules,
                         modelCache,
                         projectId -> new IdeProjectIdentifierImpl(projectId, modelCache));
+        myRuntimeOnlyClasses =
+                ImmutableList.copyOf(
+                        requireNonNull(
+                                copyNewProperty(
+                                        dependencies::getRuntimeOnlyClasses,
+                                        Collections.emptyList())));
 
         myHashCode = calculateHashCode();
     }
@@ -88,6 +99,12 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
         return myJavaModules;
     }
 
+    @NonNull
+    @Override
+    public Collection<File> getRuntimeOnlyClasses() {
+        return myRuntimeOnlyClasses;
+    }
+
     @Override
     public void forEachLibrary(@NonNull Consumer<IdeAndroidLibrary> action) {
         for (AndroidLibrary library : myLibraries) {
@@ -114,7 +131,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
         return Objects.equals(myLibraries, that.myLibraries)
                 && Objects.equals(myJavaLibraries, that.myJavaLibraries)
                 && Objects.equals(myProjects, that.myProjects)
-                && Objects.equals(myJavaModules, that.myJavaModules);
+                && Objects.equals(myJavaModules, that.myJavaModules)
+                && Objects.equals(myRuntimeOnlyClasses, that.myRuntimeOnlyClasses);
     }
 
     @Override
@@ -123,7 +141,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myLibraries, myJavaLibraries, myProjects, myJavaModules);
+        return Objects.hash(
+                myLibraries, myJavaLibraries, myProjects, myJavaModules, myRuntimeOnlyClasses);
     }
 
     @Override
@@ -137,6 +156,8 @@ public final class IdeDependenciesImpl extends IdeModel implements IdeDependenci
                 + myProjects
                 + ", myJavaModules="
                 + myJavaModules
+                + ", myRuntimeOnlyClasses="
+                + myRuntimeOnlyClasses
                 + '}';
     }
 }
