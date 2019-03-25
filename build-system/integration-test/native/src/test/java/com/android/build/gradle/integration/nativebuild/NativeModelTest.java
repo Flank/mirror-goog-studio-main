@@ -938,7 +938,7 @@ public class NativeModelTest {
         return ExternalNativeBuildTaskUtils.getOutputJson(
                 FileUtils.join(
                         buildNativeBuildOutputPath(config, project),
-                        config.buildSystem.getName(),
+                        config.buildSystem.getTag(),
                         variantName),
                 abi);
     }

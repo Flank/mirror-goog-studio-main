@@ -226,8 +226,12 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             return result;
         }
         for (Abi abi : getAbis()) {
-            File file = FileUtils.join(ndkBasePath, "libs", abi.getName(),
-                    String.format("lib%s_shared.so", stl));
+            File file =
+                    FileUtils.join(
+                            ndkBasePath,
+                            "libs",
+                            abi.getTag(),
+                            String.format("lib%s_shared.so", stl));
             checkState(file.isFile(), "Expected NDK STL shared object file at %s", file.toString());
             result.put(abi, file);
         }

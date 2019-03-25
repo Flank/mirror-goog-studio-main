@@ -38,7 +38,7 @@ public class AbiSplitOptions extends SplitOptions {
     protected Set<String> getDefaultValues() {
         Set<String> values = Sets.newHashSet();
         for (Abi abi : Abi.getDefaultValues()) {
-            values.add(abi.getName());
+            values.add(abi.getTag());
         }
         return values;
     }
@@ -47,7 +47,7 @@ public class AbiSplitOptions extends SplitOptions {
     protected ImmutableSet<String> getAllowedValues() {
         ImmutableSet.Builder<String> builder = ImmutableSet.builder();
         for (Abi abi : Abi.values()) {
-            builder.add(abi.getName());
+            builder.add(abi.getTag());
         }
         return builder.build();
     }

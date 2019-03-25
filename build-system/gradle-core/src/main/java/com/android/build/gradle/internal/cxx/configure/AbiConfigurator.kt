@@ -46,7 +46,7 @@ class AbiConfigurator(
     }
 
     init {
-        val ndkHandlerSupportedAbiStrings = ndkHandlerSupportedAbis.map(Abi::getName)
+        val ndkHandlerSupportedAbiStrings = ndkHandlerSupportedAbis.map(Abi::getTag)
         val userChosenAbis =
                 externalNativeBuildAbiFilters union splitsFilterAbis union ndkConfigAbiFilters
         val userMistakes =
@@ -59,12 +59,12 @@ class AbiConfigurator(
         val configurationAbis : Collection<Abi>
         if (userChosenAbis.isEmpty()) {
             // The user didn't explicitly name any ABIs so return the default set
-            allAbis = ndkHandlerDefaultAbis.map(Abi::getName)
+            allAbis = ndkHandlerDefaultAbis.map(Abi::getTag)
             configurationAbis = ndkHandlerDefaultAbis
         } else {
             // The user explicitly named some ABIs
             val recognizeAbleAbiStrings = Abi.values()
-                    .map(Abi::getName)
+                    .map(Abi::getTag)
                     .toSet()
             val selectedAbis =
                     sequenceOf(externalNativeBuildAbiFilters,

@@ -81,10 +81,10 @@ class InjectedAbiTest {
         assertThat(project.getApk("arm64-v8a", GradleTestProject.ApkType.DEBUG)).doesNotExist()
 
         val apk = project.getApk("x86", GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).contains("lib/" + Abi.X86.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.ARM64_V8A.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.X86_64.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.ARMEABI_V7A.getName() + "/libapp.so")
+        assertThat(apk).contains("lib/" + Abi.X86.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.ARM64_V8A.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.X86_64.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.ARMEABI_V7A.getTag() + "/libapp.so")
 
         var x86LastModifiedTime = java.nio.file.Files.getLastModifiedTime(
             project.getApk("x86", GradleTestProject.ApkType.DEBUG).file
@@ -175,10 +175,10 @@ class InjectedAbiTest {
         assertThat(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG)).doesNotExist()
 
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).contains("lib/" + Abi.X86.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.ARM64_V8A.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.X86_64.getName() + "/libapp.so")
-        assertThat(apk).doesNotContain("lib/" + Abi.ARMEABI_V7A.getName() + "/libapp.so")
+        assertThat(apk).contains("lib/" + Abi.X86.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.ARM64_V8A.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.X86_64.getTag() + "/libapp.so")
+        assertThat(apk).doesNotContain("lib/" + Abi.ARMEABI_V7A.getTag() + "/libapp.so")
 
         val apkLastModifiedTime = java.nio.file.Files.getLastModifiedTime(
             project.getApk(GradleTestProject.ApkType.DEBUG).file
@@ -209,8 +209,8 @@ class InjectedAbiTest {
             .run("clean", "assembleDebug")
 
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
-        assertThat(apk).contains("lib/" + Abi.X86.getName() + "/libapp.so")
-        assertThat(apk).contains("lib/" + Abi.ARM64_V8A.getName() + "/libapp.so")
+        assertThat(apk).contains("lib/" + Abi.X86.getTag() + "/libapp.so")
+        assertThat(apk).contains("lib/" + Abi.ARM64_V8A.getTag() + "/libapp.so")
     }
 
     private fun assertCorrectApk(apk: Apk) {

@@ -91,7 +91,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
                     File stlSharedObjectFile = checkNotNull(getStlSharedObjectFiles().get(abi));
                     File objAbi =
                             FileUtils.join(
-                                    getObjFolder(), abi.getName(), stlSharedObjectFile.getName());
+                                    getObjFolder(), abi.getTag(), stlSharedObjectFile.getName());
 
                     if (objAbi.delete()) {
                         info("removed file %s", objAbi);
@@ -165,7 +165,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             // to leave stale results hanging around.
             List<String> abiNames = Lists.newArrayList();
             for (Abi abi : Abi.values()) {
-                abiNames.add(abi.getName());
+                abiNames.add(abi.getTag());
             }
             task.abiNames = abiNames;
             task.generator = generator;

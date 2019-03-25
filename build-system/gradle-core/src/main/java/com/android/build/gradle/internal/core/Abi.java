@@ -119,10 +119,11 @@ public enum Abi {
     }
     
     /**
-     * Returns name of the ABI like "armeabi-v7a".
+     * Returns name of the ABI like "armeabi-v7a". Not called getName(...) because that conflicts
+     * confusingly with Kotlin's Enum::name.
      */
     @NonNull
-    public String getName() {
+    public String getTag() {
         return name;
     }
 

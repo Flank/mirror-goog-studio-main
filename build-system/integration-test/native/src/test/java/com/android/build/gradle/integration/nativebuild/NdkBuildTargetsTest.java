@@ -133,7 +133,7 @@ public class NdkBuildTargetsTest {
 
     private static void assertModel(NativeAndroidProject model) throws IOException {
         assertThat(model).isNotNull();
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
+        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getTag());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
         assertThat(model.getArtifacts()).hasSize(12);

@@ -126,7 +126,7 @@ class NativeModelBuilder(
         builder: NativeAndroidProjectBuilder,
         generator: ExternalNativeJsonGenerator
     ) {
-        builder.addBuildSystem(generator.nativeBuildSystem.getName())
+        builder.addBuildSystem(generator.nativeBuildSystem.getTag())
         builder.addVariantInfo(
             generator.variantName,
             generator.config.abiConfigurations.map { it.abiName }.distinct()

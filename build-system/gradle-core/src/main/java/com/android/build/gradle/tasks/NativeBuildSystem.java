@@ -39,10 +39,11 @@ public enum NativeBuildSystem {
     }
 
     /**
-     * Returns name of the build system.
+     * Returns name of the build system. Not called getName(...) because that conflicts confusingly
+     * with Kotlin's Enum::name.
      */
     @NonNull
-    public String getName() {
+    public String getTag() {
         return name;
     }
 }

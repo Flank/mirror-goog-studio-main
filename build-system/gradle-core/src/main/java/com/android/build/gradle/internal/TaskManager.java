@@ -364,8 +364,7 @@ public abstract class TaskManager {
         File objFolder = new File(scope.getGlobalScope().getIntermediatesDir(),
                 "ndk/" + variantData.getVariantConfiguration().getDirName() + "/obj");
         for (Abi abi : Abi.values()) {
-            scope.addNdkDebuggableLibraryFolders(abi,
-                    new File(objFolder, "local/" + abi.getName()));
+            scope.addNdkDebuggableLibraryFolders(abi, new File(objFolder, "local/" + abi.getTag()));
         }
 
     }

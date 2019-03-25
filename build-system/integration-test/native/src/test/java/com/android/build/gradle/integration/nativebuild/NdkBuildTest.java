@@ -138,7 +138,7 @@ public class NdkBuildTest {
     public void model() throws IOException {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
+        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getTag());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;

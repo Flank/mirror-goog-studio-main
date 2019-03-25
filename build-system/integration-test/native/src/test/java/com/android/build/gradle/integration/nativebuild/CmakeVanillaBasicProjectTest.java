@@ -138,7 +138,7 @@ public class CmakeVanillaBasicProjectTest {
     public void checkModel() throws IOException {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
+        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getTag());
         assertThat(model.getBuildFiles()).isNotEmpty();
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;

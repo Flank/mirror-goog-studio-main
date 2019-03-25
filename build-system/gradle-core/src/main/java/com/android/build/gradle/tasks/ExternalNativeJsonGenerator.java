@@ -159,7 +159,7 @@ public abstract class ExternalNativeJsonGenerator {
         } catch (ProcessException e) {
             error(
                     "executing external native build for %s %s",
-                    getNativeBuildSystem().getName(), config.makefile);
+                    getNativeBuildSystem().getTag(), config.makefile);
         }
     }
 
@@ -191,7 +191,7 @@ public abstract class ExternalNativeJsonGenerator {
             } catch (ProcessException e) {
                 error(
                         "executing external native build for %s %s",
-                        getNativeBuildSystem().getName(), config.makefile);
+                        getNativeBuildSystem().getTag(), config.makefile);
             }
             return null;
         }
@@ -234,7 +234,7 @@ public abstract class ExternalNativeJsonGenerator {
     public void buildForOneAbiName(boolean forceJsonGeneration, String abiName) {
         int built = 0;
         for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
-            if (!configuration.getAbi().getName().equals(abiName)) {
+            if (!configuration.getAbi().getTag().equals(abiName)) {
                 continue;
             }
             built++;
@@ -313,9 +313,9 @@ public abstract class ExternalNativeJsonGenerator {
                     info("created folder '%s'", configuration.getExternalNativeBuildFolder());
                 }
 
-                info("executing %s %s", getNativeBuildSystem().getName(), processBuilder);
+                info("executing %s %s", getNativeBuildSystem().getTag(), processBuilder);
                 String buildOutput = executeProcess(configuration);
-                info("done executing %s", getNativeBuildSystem().getName());
+                info("done executing %s", getNativeBuildSystem().getTag());
 
                 // Write the captured process output to a file for diagnostic purposes.
                 info("write build output %s", configuration.getBuildOutputFile().getAbsolutePath());
@@ -526,7 +526,7 @@ public abstract class ExternalNativeJsonGenerator {
         File intermediates =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
-                        buildSystem.getName(),
+                        buildSystem.getTag(),
                         variantData.getVariantConfiguration().getDirName());
 
         File soFolder = new File(intermediates, "lib");
@@ -597,7 +597,7 @@ public abstract class ExternalNativeJsonGenerator {
                             externalNativeBuildFolder.getParentFile().getParentFile(),
                             objFolder,
                             buildSystem,
-                            ndkInfo.findSuitablePlatformVersion(abi.getName(), version)));
+                            ndkInfo.findSuitablePlatformVersion(abi.getTag(), version)));
         }
 
         // defaultProjectCacheFolder is the $PROJECT/.cxx before any remapping requested by the user
@@ -732,12 +732,12 @@ public abstract class ExternalNativeJsonGenerator {
             return FileUtils.join(
                     projectDir,
                     CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
-                    buildSystem.getName(),
+                    buildSystem.getTag(),
                     variantName);
         }
 
         externalNativeBuildPath =
-                FileUtils.join(externalNativeBuildDir, buildSystem.getName(), variantName);
+                FileUtils.join(externalNativeBuildDir, buildSystem.getTag(), variantName);
 
         if (FileUtils.isFileInDirectory(externalNativeBuildPath, buildDir)) {
             File invalidPath = externalNativeBuildPath;
@@ -745,7 +745,7 @@ public abstract class ExternalNativeJsonGenerator {
                     FileUtils.join(
                             projectDir,
                             CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
-                            buildSystem.getName(),
+                            buildSystem.getTag(),
                             variantName);
             error(
                     "The build staging directory you specified ('%s')"

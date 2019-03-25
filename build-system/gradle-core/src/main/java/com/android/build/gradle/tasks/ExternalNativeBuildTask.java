@@ -223,8 +223,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                             String.format("Unknown ABI seen %s", libraryValue.abi));
                 }
                 File expectedOutputFile =
-                        FileUtils.join(
-                                getObjFolder(), abi.getName(), libraryValue.output.getName());
+                        FileUtils.join(getObjFolder(), abi.getTag(), libraryValue.output.getName());
                 if (!FileUtils.isSameFile(libraryValue.output, expectedOutputFile)) {
                     info(
                             "external build set its own library output location for '%s', "
@@ -245,8 +244,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             for (Abi abi : getStlSharedObjectFiles().keySet()) {
                 File stlSharedObjectFile = checkNotNull(getStlSharedObjectFiles().get(abi));
                 File objAbi =
-                        FileUtils.join(
-                                getObjFolder(), abi.getName(), stlSharedObjectFile.getName());
+                        FileUtils.join(getObjFolder(), abi.getTag(), stlSharedObjectFile.getName());
                 if (!objAbi.getParentFile().isDirectory()) {
                     // A build failure can leave the obj/abi folder missing. Just note that case
                     // and continue without copying STL.
@@ -461,7 +459,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
             default:
                 throw new RuntimeException(
                         "Unexpected native build system "
-                                + jsonGenerator.getNativeBuildSystem().getName());
+                                + jsonGenerator.getNativeBuildSystem().getTag());
         }
     }
 
@@ -506,7 +504,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                                                         jsonGenerator
                                                                 .getAbis()
                                                                 .stream()
-                                                                .map(Abi::getName)
+                                                                .map(Abi::getTag)
                                                                 .collect(Collectors.toList()))),
                                 this.getName());
                 return ImmutableList.of();

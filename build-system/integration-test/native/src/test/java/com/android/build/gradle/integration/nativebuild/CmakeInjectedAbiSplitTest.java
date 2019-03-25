@@ -132,13 +132,13 @@ public class CmakeInjectedAbiSplitTest {
 
     private static File getCmakeOutputLib(Abi abi) {
         return sProject.file(
-                "build/intermediates/cmake/debug/obj/" + abi.getName() + "/libhello-jni.so");
+                "build/intermediates/cmake/debug/obj/" + abi.getTag() + "/libhello-jni.so");
     }
 
     private static void checkApkContent(Apk apk, Abi... abis) throws IOException {
         List<Abi> abiList = Arrays.asList(abis);
         for (Abi abi : NdkHelper.getAbiList(sProject)) {
-            String path = "lib/" + abi.getName() + '/' + "libhello-jni.so";
+            String path = "lib/" + abi.getTag() + '/' + "libhello-jni.so";
             if (abiList.contains(abi)) {
                 assertThat(apk).contains(path);
             } else {
