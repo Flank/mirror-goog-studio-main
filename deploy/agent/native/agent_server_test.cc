@@ -86,12 +86,9 @@ class AgentServerTest : public ::testing::Test {
     sigemptyset(&set);
     sigaddset(&set, SIGCHLD);
 
-    timespec wait_time;
-    wait_time.tv_sec = 1;
-    wait_time.tv_nsec = 0;
-
     pthread_sigmask(SIG_BLOCK, &set, nullptr);
-    int result = sigtimedwait(&set, nullptr, &wait_time);
+    int result;
+    sigwait(&set, &result);
     pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
     return result == SIGCHLD;
 #else
