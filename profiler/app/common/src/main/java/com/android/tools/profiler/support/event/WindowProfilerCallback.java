@@ -16,24 +16,14 @@
 
 package com.android.tools.profiler.support.event;
 
-import android.view.ActionMode;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.SearchEvent;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.*;
 import android.view.accessibility.AccessibilityEvent;
 
 /**
  * A callback wrapper class that handles window events. This allows us to capture MotionEvents,
  * KeyEvents, and general window operations for us to report back to the Android Studio.
  */
-// TODO Have the Window profiler class send events back to Android studio.
 public final class WindowProfilerCallback implements Window.Callback {
-
     private final Window.Callback myRedirectCallback;
 
     public WindowProfilerCallback(Window.Callback redirectCallback) {
@@ -41,7 +31,8 @@ public final class WindowProfilerCallback implements Window.Callback {
     }
 
     // Native function to send touch event states via RPC to perfd.
-    private native void sendTouchEvent(int state, long downTime);
+    private native void sendTouchEvent(int state, long downTime, boolean isUpEvent);
+
     private native void sendKeyEvent(String text, long downTime);
 
     @Override
@@ -64,7 +55,8 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent motionEvent) {
-        sendTouchEvent(motionEvent.getAction(), motionEvent.getDownTime());
+        boolean isUpEvent = motionEvent.getActionMasked() == MotionEvent.ACTION_UP;
+        sendTouchEvent(motionEvent.getAction(), motionEvent.getDownTime(), isUpEvent);
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchTouchEvent(motionEvent);
         }
@@ -202,8 +194,8 @@ public final class WindowProfilerCallback implements Window.Callback {
     }
 
     @Override
-    public ActionMode onWindowStartingActionMode(android.view.ActionMode.Callback callback,
-            int type) {
+    public ActionMode onWindowStartingActionMode(
+            android.view.ActionMode.Callback callback, int type) {
         if (myRedirectCallback != null) {
             return myRedirectCallback.onWindowStartingActionMode(callback, type);
         }

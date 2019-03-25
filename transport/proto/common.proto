@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Common";
 
 import "cpu_data.proto";
+import "interaction_data.proto";
 import "layout_inspector.proto";
 import "network_data.proto";
 import "memory_data.proto";
@@ -64,6 +65,8 @@ message Event {
     // Energy Profiler Prefix = 500
 
     // Event Profiler Prefix = 600
+    INTERACTION = 601;
+    VIEW = 602;
 
     // Demo echo event = 1000
     ECHO = 1000;
@@ -147,6 +150,9 @@ message Event {
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
+    InteractionData interaction = 601;
+    ViewData view = 602;
+
     // Echo Event Prefix = 1000
     echo.EchoData echo = 1000;
 
