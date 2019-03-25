@@ -67,8 +67,8 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         predicate: Predicate<GradleVersion>?,
         allowPreview: Boolean = false
     ): GradleVersion? {
-        val groupId = dependency.groupId ?: return null
-        val artifactId = dependency.artifactId ?: return null
+        val groupId = dependency.groupId
+        val artifactId = dependency.artifactId
         val filter = when {
             dependency.acceptsGreaterRevisions() -> {
                 val prefix = dependency.revision.trimEnd('+')
@@ -115,14 +115,14 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         return artifactInfo.getGradleVersions().toSet()
     }
 
-    fun findDependencies(
+    fun findCompileDependencies(
         groupId: String,
         artifactId: String,
         version: GradleVersion
     ): List<GradleCoordinate> {
         val packageInfo = getPackageMap()[groupId] ?: return emptyList()
         val artifactInfo = packageInfo.findArtifact(artifactId)
-        return artifactInfo?.findDependencies(version, packageInfo) ?: emptyList()
+        return artifactInfo?.findCompileDependencies(version, packageInfo) ?: emptyList()
     }
 
     private fun findArtifact(groupId: String, artifactId: String): ArtifactInfo? {
@@ -156,14 +156,14 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 .filter { allowPreview || !it.isPreview }
                 .max()
 
-        fun findDependencies(
+        fun findCompileDependencies(
             version: GradleVersion,
             packageInfo: PackageInfo
         ): List<GradleCoordinate> {
-            return dependencyInfo[version] ?: loadDependencies(version, packageInfo)
+            return dependencyInfo[version] ?: loadCompileDependencies(version, packageInfo)
         }
 
-        private fun loadDependencies(
+        private fun loadCompileDependencies(
             version: GradleVersion,
             packageInfo: PackageInfo
         ): List<GradleCoordinate> {
@@ -171,7 +171,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 // Do not attempt to load a pom file that is known not to exist
                 return emptyList()
             }
-            val dependencies = packageInfo.loadDependencies(id, version)
+            val dependencies = packageInfo.loadCompileDependencies(id, version)
             dependencyInfo[version] = dependencies
             return dependencies
         }
@@ -214,10 +214,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
         fun findArtifact(id: String): ArtifactInfo? = artifacts[id]
 
-        fun loadDependencies(id: String, version: GradleVersion): List<GradleCoordinate> {
+        fun loadCompileDependencies(id: String, version: GradleVersion): List<GradleCoordinate> {
             val file = "${pkg.replace('.', '/')}/$id/$version/$id-$version.pom"
             val stream = findData(file)
-            return stream?.use { readPomFile(stream, file) } ?: emptyList()
+            return stream?.use { readCompileDependenciesFromPomFile(stream, file) } ?: emptyList()
         }
 
         private fun initializeIndex(map: MutableMap<String, ArtifactInfo>) {
@@ -244,15 +244,22 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 error(e, null)
             }
 
-        private fun readPomFile(stream: InputStream, file: String): List<GradleCoordinate> =
-            try {
+        private fun readCompileDependenciesFromPomFile(
+            stream: InputStream,
+            file: String
+        ): List<GradleCoordinate> {
+
+            return try {
                 val dependencies = mutableListOf<GradleCoordinate>()
                 val parser = KXmlParser()
                 parser.setInput(stream, SdkConstants.UTF_8)
                 while (parser.next() != XmlPullParser.END_DOCUMENT) {
                     val eventType = parser.eventType
                     if (eventType == XmlPullParser.START_TAG && parser.name == "dependency") {
-                        dependencies.add(readDependency(parser))
+                        val dependency = readCompileDependency(parser)
+                        if (dependency != null) {
+                            dependencies.add(dependency)
+                        }
                     }
                 }
                 dependencies
@@ -260,11 +267,13 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 error(e, "Problem reading POM file: $file")
                 emptyList()
             }
+        }
 
-        private fun readDependency(parser: KXmlParser): GradleCoordinate {
+        private fun readCompileDependency(parser: KXmlParser): GradleCoordinate? {
             var groupId = ""
             var artifactId = ""
             var version = ""
+            var scope = ""
             while (parser.next() != XmlPullParser.END_DOCUMENT) {
                 when (parser.eventType) {
                     XmlPullParser.START_TAG ->
@@ -272,13 +281,14 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                                 "groupId" -> groupId = parser.nextText()
                                 "artifactId" -> artifactId = parser.nextText()
                                 "version" -> version = parser.nextText()
+                                "scope" -> scope = parser.nextText()
                             }
                     XmlPullParser.END_TAG ->
                             if (parser.name == "dependency") {
                                 check(groupId, "groupId")
                                 check(artifactId, "artifactId")
                                 check(version, "version")
-                                return GradleCoordinate(groupId, artifactId, version)
+                                return if (scope == "compile") GradleCoordinate(groupId, artifactId, version) else null
                             }
                 }
             }

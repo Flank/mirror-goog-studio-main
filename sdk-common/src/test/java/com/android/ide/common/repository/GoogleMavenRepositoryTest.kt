@@ -175,6 +175,13 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
                       <type>aar</type>
                       <scope>compile</scope>
                     </dependency>
+                    <dependency>
+                      <groupId>org.mockito</groupId>
+                      <artifactId>mockito-core</artifactId>
+                      <version>1.9.5</version>
+                      <type>aar</type>
+                      <scope>test</scope>
+                    </dependency>
                   </dependencies>
                 </project>
             """.trimIndent()
@@ -213,7 +220,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
         val repo =
             StubGoogleMavenRepository(builtInData = builtInData) // no cache dir set: will only read built-in index
         val version = repo.findVersion("com.android.support", "leanback-v17")
-        val dependencies = repo.findDependencies("com.android.support", "leanback-v17", version!!)
+        val dependencies = repo.findCompileDependencies("com.android.support", "leanback-v17", version!!)
         assertThat(dependencies).containsExactly(
             GradleCoordinate.parseCoordinateString("com.android.support:support-compat:25.3.1"),
             GradleCoordinate.parseCoordinateString("com.android.support:support-core-ui:25.3.1"),
