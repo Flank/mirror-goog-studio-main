@@ -51,6 +51,15 @@ class CustomClassTransformTest {
         TestInputsGenerator.pathWithClasses(
             dependencyJarFile.toPath(), listOf(TestDependency::class.java))
 
+        // Create a fake dependency jar file with a native library
+        val nativeDependencyJarFile = project.testDir.resolve("fake_native_dependency.jar")
+        ZipOutputStream(FileOutputStream(nativeDependencyJarFile)).use { zip ->
+            val e = ZipEntry("lib/x86/foo.so")
+            zip.putNextEntry(e)
+            zip.write("foo".toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+        }
+
         // Create a custom class transform jar file
         val name = TestTransform::class.java.name
         val entry = name.replace('.', '/') + ".class"
@@ -76,6 +85,13 @@ class CustomClassTransformTest {
                 ByteStreams.copy(it, zip)
             }
             zip.closeEntry()
+
+            e = ZipEntry("dependencies/fake_native_dependency.jar")
+            zip.putNextEntry(e)
+            BufferedInputStream(FileInputStream(nativeDependencyJarFile)).use {
+                ByteStreams.copy(it, zip)
+            }
+            zip.closeEntry()
         }
 
         // run with ENABLE_DEXING_ARTIFACT_TRANSFORM = true to ensure it gets disabled by
@@ -84,8 +100,10 @@ class CustomClassTransformTest {
             .with(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS, jarFile.absolutePath)
             .with(BooleanOption.ENABLE_DEXING_ARTIFACT_TRANSFORM, true)
             .run("assembleDebug")
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
+        assertThatApk(apk)
             .containsClass(
                 "Lcom/android/build/gradle/integration/application/testData/TestDependency;")
+        assertThatApk(apk).containsFile("lib/x86/foo.so")
     }
 }
