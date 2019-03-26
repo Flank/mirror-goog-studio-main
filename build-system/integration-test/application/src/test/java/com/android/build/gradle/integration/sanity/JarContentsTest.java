@@ -365,6 +365,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/configure/",
                 "com/android/build/gradle/internal/cxx/json/",
                 "com/android/build/gradle/internal/cxx/logging/",
+                "com/android/build/gradle/internal/cxx/model/",
                 "com/android/build/gradle/internal/cxx/process/",
                 "com/android/build/gradle/internal/cxx/stripping/",
                 "com/android/build/gradle/internal/dependency/",
