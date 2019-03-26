@@ -3,7 +3,7 @@
     format="5"
     revision="1"
     name="Dynamic Feature"
-    description="Creates a new Android module that can be delivered conditionally">
+    description="Creates a new Android App Bundle module that can be dynamically delivered">
 
     <category value="Application" />
 
