@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_STATSD_PULLED_ATOMS_WIFI_BYTES_TRANSFER_H_
-#define PERFD_STATSD_PULLED_ATOMS_WIFI_BYTES_TRANSFER_H_
+#ifndef PERFD_STATSD_PULLED_ATOMS_MOBILE_BYTES_TRANSFER_H_
+#define PERFD_STATSD_PULLED_ATOMS_MOBILE_BYTES_TRANSFER_H_
 
 #include <sys/types.h>
 
@@ -22,13 +22,14 @@
 
 namespace profiler {
 
-// A pulled atom that contains bytes transferred over WiFi since device boot.
-class WifiBytesTransfer : public PulledAtom {
+// A pulled atom that contains bytes transferred over mobile network since
+// device boot.
+class MobileBytesTransfer : public PulledAtom {
  public:
-  WifiBytesTransfer(uint32_t uid) : uid_(uid), rx_bytes_(0), tx_bytes_(0) {}
+  MobileBytesTransfer(uint32_t uid) : uid_(uid), rx_bytes_(0), tx_bytes_(0) {}
 
   int32_t AtomId() override {
-    return android::os::statsd::Atom::PulledCase::kWifiBytesTransfer;
+    return android::os::statsd::Atom::PulledCase::kMobileBytesTransfer;
   }
   void BuildConfig(
       android::os::statsd::PulledAtomSubscription* pulled) override;
@@ -47,4 +48,4 @@ class WifiBytesTransfer : public PulledAtom {
 };
 }  // namespace profiler
 
-#endif  // PERFD_STATSD_PULLED_ATOMS_WIFI_BYTES_TRANSFER_H_
+#endif  // PERFD_STATSD_PULLED_ATOMS_MOBILE_BYTES_TRANSFER_H_

@@ -3,6 +3,7 @@ package(default_visibility = ["//visibility:public"])
 cc_library(
     name = "statsd",
     srcs = [
+        "pulled_atoms/mobile_bytes_transfer.cc",
         "pulled_atoms/wifi_bytes_transfer.cc",
         "statsd_subscriber.cc",
     ],

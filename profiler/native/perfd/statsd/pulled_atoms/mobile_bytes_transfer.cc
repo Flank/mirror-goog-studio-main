@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "wifi_bytes_transfer.h"
+#include "mobile_bytes_transfer.h"
 
 using android::os::statsd::Atom;
 using android::os::statsd::PulledAtomSubscription;
 
 namespace profiler {
 
-void WifiBytesTransfer::BuildConfig(PulledAtomSubscription* pulled) {
+void MobileBytesTransfer::BuildConfig(PulledAtomSubscription* pulled) {
   auto* matcher = pulled->mutable_matcher();
   matcher->set_atom_id(AtomId());
   auto* field_value_matcher = matcher->add_field_value_matcher();
   field_value_matcher->set_field(
-      android::os::statsd::WifiBytesTransfer::kUidFieldNumber);
+      android::os::statsd::MobileBytesTransfer::kUidFieldNumber);
   field_value_matcher->set_eq_int(uid_);
   pulled->set_freq_millis(kFreqMillis);
 }
 
-void WifiBytesTransfer::OnAtomReceived(const Atom& atom) {
-  auto wifi_bytes_transfer = atom.wifi_bytes_transfer();
-  rx_bytes_ = wifi_bytes_transfer.rx_bytes();
-  tx_bytes_ = wifi_bytes_transfer.tx_bytes();
+void MobileBytesTransfer::OnAtomReceived(const Atom& atom) {
+  auto mobile_bytes_transfer = atom.mobile_bytes_transfer();
+  rx_bytes_ = mobile_bytes_transfer.rx_bytes();
+  tx_bytes_ = mobile_bytes_transfer.tx_bytes();
 }
 }  // namespace profiler

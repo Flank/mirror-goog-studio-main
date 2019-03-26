@@ -35,7 +35,7 @@ class PulledAtom {
       android::os::statsd::PulledAtomSubscription* pulled) = 0;
   // Callback to handle when an atom is received for this subscription.
   // Dispatched on a separate thread.
-  virtual void OnAtomRecieved(const android::os::statsd::Atom& atom) = 0;
+  virtual void OnAtomReceived(const android::os::statsd::Atom& atom) = 0;
 };
 }  // namespace profiler
 

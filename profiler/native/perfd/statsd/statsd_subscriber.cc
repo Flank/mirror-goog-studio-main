@@ -103,7 +103,7 @@ void StatsdSubscriber::HandleOutput(int stdout_fd) {
         auto atom = shell_data.atom(i);
         auto search = pulled_atoms_.find(atom.pulled_case());
         if (search != pulled_atoms_.end()) {
-          search->second->OnAtomRecieved(atom);
+          search->second->OnAtomReceived(atom);
         }
       }
     } else {
