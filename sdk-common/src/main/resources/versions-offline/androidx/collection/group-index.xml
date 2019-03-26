@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.collection>
-  <collection-ktx versions="1.0.0,1.1.0-alpha02"/>
-  <collection versions="1.0.0,1.1.0-alpha02"/>
+  <collection-ktx versions="1.0.0,1.1.0-alpha03"/>
+  <collection versions="1.0.0,1.1.0-alpha03"/>
 </androidx.collection>
 

@@ -2,5 +2,6 @@
 <androidx.savedstate>
   <savedstate-common versions="1.0.0-alpha01"/>
   <savedstate-bundle versions="1.0.0-alpha01"/>
+  <savedstate versions="1.0.0-alpha02"/>
 </androidx.savedstate>
 

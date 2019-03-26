@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<androidx.work>
+  <work-rxjava2 versions="2.0.0"/>
+  <work-runtime versions="2.0.0"/>
+  <work-testing versions="2.0.0"/>
+  <work-runtime-ktx versions="2.0.0"/>
+</androidx.work>
+
