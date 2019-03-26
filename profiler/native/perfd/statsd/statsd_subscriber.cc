@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-#include "proto/statsd/shell_data.pb.h"
+#include "statsd/proto/shell_data.pb.h"
 #include "utils/log.h"
 
 using android::os::statsd::ShellData;
