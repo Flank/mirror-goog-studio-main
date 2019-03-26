@@ -87,6 +87,7 @@ class Aapt2FromMavenTest {
 
     private fun testRunningAapt2FromMaven(artifact: FileCollection) {
         val buildService = object : Aapt2DaemonBuildService() {
+            //noinspection StopShip
             override fun getParameters(): BuildServiceParameters.None = TODO()
         }
         val registry = WorkerActionServiceRegistry()

@@ -35,8 +35,11 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.tools.lint.model.LmVariant;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
+import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UComment;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UFile;
@@ -78,8 +81,12 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                             "Code contains `STOPSHIP` marker",
                             "Using the comment `// STOPSHIP` can be used to flag code that is incomplete but "
                                     + "checked in. This comment marker can be used to indicate that the code should not "
-                                    + "be shipped until the issue is addressed, and lint will look for these.  In Gradle "
-                                    + "projects, this is only checked for non-debug (release) builds.",
+                                    + "be shipped until the issue is addressed, and lint will look for these. In Gradle "
+                                    + "projects, this is only checked for non-debug (release) builds.\n"
+                                    + "\n"
+                                    + "In Kotlin, the `TODO()` method is also treated as a stop ship marker; you can use "
+                                    + "it to make incomplete code compile, but it will throw an exception at runtime "
+                                    + "and therefore should be fixed before shipping releases.",
                             Category.CORRECTNESS,
                             10,
                             Severity.FATAL,
@@ -128,8 +135,8 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
             @Nullable Node xmlNode,
             @Nullable UComment javaNode,
             @NonNull CharSequence source,
-            int offset,
-            int start,
+            @SuppressWarnings("SameParameterValue") int offset,
+            @SuppressWarnings("SameParameterValue") int start,
             int end) {
         assert javaContext != null || xmlContext != null;
         char prev = 0;
@@ -201,6 +208,38 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                 .build();
     }
 
+    @Nullable
+    @Override
+    public List<String> getApplicableMethodNames() {
+        return Collections.singletonList("TODO");
+    }
+
+    @Override
+    public void visitMethodCall(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
+        String message =
+                "`TODO` call found; points to code which must be fixed prior " + "to release";
+        PsiClass containingClass = method.getContainingClass();
+        if (containingClass == null ||
+                // See libraries/stdlib/jvm/build/stdlib-declarations.json
+                !"kotlin.StandardKt__StandardKt".equals(containingClass.getQualifiedName())) {
+            return;
+        }
+
+        Location location = context.getLocation(node);
+        LintFix fix =
+                LintFix.create()
+                        .name("Remove TODO")
+                        .replace()
+                        .all()
+                        .with("")
+                        .reformat(true)
+                        .build();
+        context.report(STOP_SHIP, node, location, message, fix);
+    }
+
     /**
      * Returns true iff the current variant is a release build. Returns null if we don't know (e.g.
      * it's not a Gradle project, or we could not obtain a Gradle model.)
@@ -219,7 +258,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     private static class CommentChecker extends UElementHandler {
         private final JavaContext mContext;
 
-        public CommentChecker(JavaContext context) {
+        CommentChecker(JavaContext context) {
             mContext = context;
         }
 

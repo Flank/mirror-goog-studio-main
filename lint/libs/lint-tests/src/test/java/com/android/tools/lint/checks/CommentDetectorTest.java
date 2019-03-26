@@ -74,6 +74,70 @@ public class CommentDetectorTest extends AbstractCheckTest {
                                 + "+     /* We must ! */\n");
     }
 
+    public void testKotlin() {
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "class Hidden {\n"
+                                        + "    // Innocent comment...?\n"
+                                        + "    /* \\u002a\\u002f static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
+                                        + "    /* \\u002A\\U002F static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
+                                        + "    /* Normal \\\\u002A\\U002F */ // OK\n"
+                                        + "\n"
+                                        + "    // STOPSHIP\n"
+                                        + "    /* We must STOPSHIP! */\n"
+                                        + "    var x = \"STOPSHIP\" // OK\n"
+                                        + "\n"
+                                        + "    fun test() {\n"
+                                        + "        TODO()\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    fun test2() {\n"
+                                        + "        TODO(\"This is not yet implemented\")\n"
+                                        + "    }\n"
+                                        + "}"))
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/Hidden.kt:9: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "    // STOPSHIP\n"
+                                + "       ~~~~~~~~\n"
+                                + "src/test/pkg/Hidden.kt:10: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "    /* We must STOPSHIP! */\n"
+                                + "               ~~~~~~~~\n"
+                                + "src/test/pkg/Hidden.kt:14: Error: TODO call found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "        TODO()\n"
+                                + "        ~~~~~~\n"
+                                + "src/test/pkg/Hidden.kt:18: Error: TODO call found; points to code which must be fixed prior to release [StopShip]\n"
+                                + "        TODO(\"This is not yet implemented\")\n"
+                                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/Hidden.kt:5: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
+                                + "    /* \\u002a\\u002f static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
+                                + "       ~~~~~~~~~~~~\n"
+                                + "src/test/pkg/Hidden.kt:6: Warning: Code might be hidden here; found unicode escape sequence which is interpreted as comment end, compiled code follows [EasterEgg]\n"
+                                + "    /* \\u002A\\U002F static { System.out.println(\"I'm executed on class load\"); } \\u002f\\u002a */ \n"
+                                + "       ~~~~~~~~~~~~\n"
+                                + "4 errors, 2 warnings")
+                .expectFixDiffs(
+                        ""
+                                + "Fix for src/test/pkg/Hidden.kt line 9: Remove STOPSHIP:\n"
+                                + "@@ -9 +9\n"
+                                + "-     // STOPSHIP\n"
+                                + "+     // \n"
+                                + "Fix for src/test/pkg/Hidden.kt line 10: Remove STOPSHIP:\n"
+                                + "@@ -10 +10\n"
+                                + "-     /* We must STOPSHIP! */\n"
+                                + "+     /* We must ! */\n"
+                                + "Fix for src/test/pkg/Hidden.kt line 14: Remove TODO:\n"
+                                + "@@ -14 +14\n"
+                                + "-         TODO()\n"
+                                + "Fix for src/test/pkg/Hidden.kt line 18: Remove TODO:\n"
+                                + "@@ -18 +18\n"
+                                + "-         TODO(\"This is not yet implemented\")");
+    }
+
     public void test2() {
         //noinspection all // Sample code
         lint().files(
