@@ -17,23 +17,34 @@
 
 #include <string.h>
 
+#include <utils/log.h>
+
+using profiler::Log;
 using std::string;
 
 namespace profiler {
 
-bool NonBlockingCommandRunner::Run(const char* const arguments[],
-                                   StdoutCallback* callback) {
-  return Run(arguments, std::string(), callback, nullptr);
-}
-
-bool NonBlockingCommandRunner::Run(const char* const arguments[],
-                                   const string& input) {
-  return Run(arguments, input, nullptr, nullptr);
-}
-
+// Integration tests use this file to avoid forking a non-existent command.
+// Unit tests DON'T use this but the device variant instead.
 bool NonBlockingCommandRunner::Run(const char* const arguments[],
                                    const string& input,
+                                   StdoutCallback* callback,
                                    const char* const env_args[]) {
-  return Run(arguments, input, nullptr, env_args);
+  // This version of the file only runs on host and doesn't actually fork a
+  // command.
+  if (log_command_) {
+    Log::D("Mock command forking: %s", executable_path_.c_str());
+  }
+  return true;
 }
+
+void NonBlockingCommandRunner::Kill() {
+  if (IsRunning()) {
+    child_process_id_ = 0;
+    if (read_data_thread_.joinable()) {
+      read_data_thread_.join();
+    }
+  }
+}
+
 }  // namespace profiler

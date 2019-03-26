@@ -70,6 +70,7 @@ cc_library(
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/transport",
     ],
     tags = ["no_windows"],
@@ -81,6 +82,7 @@ cc_library(
         "//tools/base/profiler/native/perfd/graphics:profiler_graphics",
         "//tools/base/profiler/native/perfd/memory:profiler_memory",
         "//tools/base/profiler/native/perfd/network:profiler_network",
+        "//tools/base/profiler/native/perfd/statsd",
         "//tools/base/transport/daemon",
         "//tools/base/transport/proto:cc_proto",
     ],
@@ -98,6 +100,7 @@ cc_test(
     copts = [
         "-Itools/base/profiler/native",
         "-Itools/base/transport",
+        "-I$(GENDIR)/tools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/transport",
     ],
     data = [

@@ -47,12 +47,14 @@ cc_library(
             "bash_command.android.cc",
             "device_info.android.cc",
             "log.android.cc",
+            "nonblocking_command_runner.android.cc",
             "process_manager.android.cc",
         ],
         [
             "bash_command.host.cc",
             "device_info.host.cc",
             "log.cc",
+            "nonblocking_command_runner.host.cc",
             "process_manager.host.cc",
         ],
     ),
@@ -121,7 +123,6 @@ cc_test(
         "file_reader_test.cc",
         "memory_map_test.cc",
         "native_backtrace_test.cc",
-        "nonblocking_command_runner_test.cc",
         "producer_consumer_queue_test.cc",
         "shared_mutex_test.cc",
         "stopwatch_test.cc",
@@ -147,5 +148,29 @@ cc_test(
         "//tools/base/transport/daemon",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/tests/test:testutils",
+    ],
+)
+
+# Unit test for the device variant of NonblockingCommandRunner rather than the
+# mock version in the host variant.
+cc_test(
+    name = "nonblocking_command_runner_test",
+    srcs = [
+        "log.cc",
+        "log.h",
+        "nonblocking_command_runner.android.cc",
+        "nonblocking_command_runner.cc",
+        "nonblocking_command_runner.h",
+        "nonblocking_command_runner_test.cc",
+        "thread_name.cc",
+        "thread_name.h",
+    ],
+    copts = [
+        "-Itools/base/transport",
+    ],
+    linkstatic = 1,
+    tags = ["no_windows"],
+    deps = [
+        "//external:gmock_main",
     ],
 )

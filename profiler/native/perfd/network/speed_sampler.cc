@@ -15,17 +15,53 @@
  */
 #include "speed_sampler.h"
 
+#include "perfd/statsd/pulled_atoms/mobile_bytes_transfer.h"
+#include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
+#include "perfd/statsd/statsd_subscriber.h"
+#include "statsd/proto/atoms.pb.h"
 #include "utils/clock.h"
+#include "utils/device_info.h"
+
+using android::os::statsd::Atom;
 
 namespace profiler {
 
-void SpeedSampler::Refresh() { stats_reader_.Refresh(); }
+void SpeedSampler::Refresh() {
+  if (DeviceInfo::feature_level() < DeviceInfo::Q) {
+    stats_reader_.Refresh();
+  }
+  // In Q, we use statsd and handle data via callback. No need to refresh.
+}
 
 proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
+  uint64_t bytes_sent;
+  uint64_t bytes_received;
 
-  uint64_t bytes_sent = stats_reader_.bytes_tx(uid);
-  uint64_t bytes_received = stats_reader_.bytes_rx(uid);
+  if (DeviceInfo::feature_level() < DeviceInfo::Q) {
+    bytes_sent = stats_reader_.bytes_tx(uid);
+    bytes_received = stats_reader_.bytes_rx(uid);
+  } else {
+    // stats file is deprecated in Q. Use statsd.
+    bytes_sent = 0;
+    bytes_received = 0;
+    auto* wifi_bytes_transfer =
+        StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(
+            Atom::PulledCase::kWifiBytesTransfer);
+    auto* mobile_bytes_transfer =
+        StatsdSubscriber::Instance().FindAtom<MobileBytesTransfer>(
+            Atom::PulledCase::kMobileBytesTransfer);
+    if (wifi_bytes_transfer != nullptr) {
+      assert(wifi_bytes_transfer->uid() == uid);
+      bytes_sent += wifi_bytes_transfer->tx_bytes();
+      bytes_received += wifi_bytes_transfer->rx_bytes();
+    }
+    if (mobile_bytes_transfer != nullptr) {
+      assert(mobile_bytes_transfer->uid() == uid);
+      bytes_sent += mobile_bytes_transfer->tx_bytes();
+      bytes_received += mobile_bytes_transfer->rx_bytes();
+    }
+  }
 
   auto time = clock_->GetCurrentTime();
   if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
@@ -38,7 +74,7 @@ proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
     rx_speed_converters_.at(uid).Add(time, bytes_received);
   }
 
-  profiler::proto::SpeedData *speed_data = data.mutable_speed_data();
+  profiler::proto::SpeedData* speed_data = data.mutable_speed_data();
   speed_data->set_sent(tx_speed_converters_.at(uid).speed());
   speed_data->set_received(rx_speed_converters_.at(uid).speed());
   return data;

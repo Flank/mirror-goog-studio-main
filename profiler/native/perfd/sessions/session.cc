@@ -21,7 +21,12 @@
 #include "perfd/samplers/memory_usage_sampler.h"
 #include "perfd/samplers/network_connection_count_sampler.h"
 #include "perfd/samplers/network_speed_sampler.h"
+#include "perfd/statsd/pulled_atoms/mobile_bytes_transfer.h"
+#include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
+#include "perfd/statsd/statsd_subscriber.h"
+#include "utils/device_info.h"
 #include "utils/procfs_files.h"
+#include "utils/uid_fetcher.h"
 
 namespace profiler {
 
@@ -49,6 +54,18 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
         std::unique_ptr<Sampler>(new profiler::MemoryUsageSampler(
             *this, daemon->clock(), daemon->buffer())));
   }
+
+  if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
+    // statsd is supported on Q+ devices.
+    int32_t uid = UidFetcher::GetUid(pid);
+    Log::V("Subscribe to statsd atoms for pid %d (uid: %d)", pid, uid);
+    if (uid >= 0) {
+      StatsdSubscriber::Instance().SubscribeToPulledAtom(
+          std::unique_ptr<WifiBytesTransfer>(new WifiBytesTransfer(uid)));
+      StatsdSubscriber::Instance().SubscribeToPulledAtom(
+          std::unique_ptr<MobileBytesTransfer>(new MobileBytesTransfer(uid)));
+    }
+  }
 }
 
 bool Session::IsActive() const { return info_.end_timestamp() == LLONG_MAX; }
@@ -57,11 +74,19 @@ void Session::StartSamplers() {
   for (auto& sampler : samplers_) {
     sampler->Start();
   }
+
+  if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
+    StatsdSubscriber::Instance().Run();
+  }
 }
 
 void Session::StopSamplers() {
   for (auto& sampler : samplers_) {
     sampler->Stop();
+  }
+
+  if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
+    StatsdSubscriber::Instance().Stop();
   }
 }
 
