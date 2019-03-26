@@ -47,9 +47,13 @@ public class AndroidLibraryStub extends BaseStub implements Library {
     @NonNull private final File myArtifactFile;
 
     public AndroidLibraryStub() {
+        this("artifact:address:1.0");
+    }
+
+    public AndroidLibraryStub(@NonNull String artifactAddress) {
         this(
                 LIBRARY_ANDROID,
-                "artifact:address:1.0",
+                artifactAddress,
                 new File("libraryFolder"),
                 "manifest.xml",
                 "file.jar",
