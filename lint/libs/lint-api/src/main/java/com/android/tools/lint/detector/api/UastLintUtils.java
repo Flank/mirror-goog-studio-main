@@ -240,11 +240,14 @@ public class UastLintUtils {
                 && (variable instanceof PsiLocalVariable || variable instanceof PsiParameter)) {
             UMethod containingFunction = UastUtils.getContainingUMethod(call);
             if (containingFunction != null) {
-                ConstantEvaluator.LastAssignmentFinder finder =
-                        new ConstantEvaluator.LastAssignmentFinder(
-                                variable, call, context, evaluator, 1);
-                containingFunction.getUastBody().accept(finder);
-                value = finder.getCurrentValue();
+                UExpression body = containingFunction.getUastBody();
+                if (body != null) {
+                    ConstantEvaluator.LastAssignmentFinder finder =
+                            new ConstantEvaluator.LastAssignmentFinder(
+                                    variable, call, context, evaluator, 1);
+                    body.accept(finder);
+                    value = finder.getCurrentValue();
+                }
             }
         } else {
             UExpression initializer = context.getInitializerBody(variable);

@@ -1704,4 +1704,36 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
             SUPPORT_ANNOTATIONS_JAR
         ).run().expectClean()
     }
+
+    fun test127955232() {
+        // Regression test for https://issuetracker.google.com/127955232
+        // 127955232: Unexpected failure during lint analysis - NullPointerException
+        lint().files(
+            kotlin(
+                """
+                package com.example.myapplication
+
+                import android.content.Context
+
+                data class Test(val context: Context,
+                                val testInt: Int,
+                                val testString: String = context.getString(if (testInt == 0) R.string.test_string_1 else R.string.test_string_2))
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                public final class R {
+                    public static final class string {
+                        public static final int test_string_1 = 0x7f0a000e;
+                        public static final int test_string_2 = 0x7f020057;
+                    }
+                }
+                """
+            ).indented(),
+            SUPPORT_ANNOTATIONS_CLASS_PATH,
+            SUPPORT_ANNOTATIONS_JAR
+        ).run().expectClean()
+    }
 }
