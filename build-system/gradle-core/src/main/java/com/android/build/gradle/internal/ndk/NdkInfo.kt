@@ -40,4 +40,12 @@ interface NdkInfo {
 
     /** Return the executable for removing debug symbols from a shared object.  */
     fun getStripExecutable(abi: Abi): File
+
+    /**
+     * Validates that the described NDK is valid.
+     *
+     * Performs a sanity check that the pointed-to NDK contains all the expected pieces. If any
+     * issues are found, an error message is returned. If no issues are found, null is returned.
+     */
+    fun validate(): String?
 }

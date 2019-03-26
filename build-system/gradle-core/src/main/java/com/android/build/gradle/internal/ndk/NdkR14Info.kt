@@ -29,4 +29,18 @@ class NdkR14Info(val root: File) : DefaultNdkInfo(root) {
             Abi.MIPS64
         } else abi
     }
+
+    override fun validate(): String? {
+        val error = super.validate()
+        if (error != null) {
+            return error
+        }
+
+        val sysrootDir = rootDirectory.resolve("sysroot")
+        if (!sysrootDir.isDirectory) {
+            return "$sysrootDir is not a directory."
+        }
+
+        return null
+    }
 }

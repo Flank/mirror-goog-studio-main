@@ -26,6 +26,7 @@ import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.Maps
 import java.io.File
+import java.nio.file.Files
 import java.util.Locale
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.logging.Logging
@@ -33,7 +34,7 @@ import java.io.FileFilter
 import kotlin.streams.toList
 
 /** Default NdkInfo. Used for r13 and earlier.  */
-open class DefaultNdkInfo(private val rootDirectory: File) : NdkInfo {
+open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
 
     private val platformConfigurator: PlatformConfigurator = PlatformConfigurator(rootDirectory)
 
@@ -190,4 +191,16 @@ open class DefaultNdkInfo(private val rootDirectory: File) : NdkInfo {
             .stream()
             .map{ it.abi }
             .toList()
+
+    override fun validate(): String? {
+        val platformsDir = rootDirectory.resolve("platforms")
+        if (!platformsDir.isDirectory) {
+            return "$platformsDir is not a directory."
+        }
+        val toolchainsDir = rootDirectory.resolve("toolchains")
+        if (!toolchainsDir.isDirectory) {
+            return "$toolchainsDir is not a directory."
+        }
+        return null
+    }
 }
