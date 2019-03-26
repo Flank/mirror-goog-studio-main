@@ -58,18 +58,17 @@ public final class ActivityThreadInstrumentation {
         }
 
         try {
-            Log.v(TAG, "Fixing application context");
+            // Update the application and activity context objects to properly point to the new
+            // LoadedApk that was created by the package update. We fix activity contexts even if
+            // the activities wil be restarted, as those contexts may still be in use by app code.
+            Log.v(TAG, "Fixing application and activity contexts");
             Object newResourcesImpl = fixAppContext(mActivityThread);
+            for (Object activity : getActivityClientRecords(mActivityThread)) {
+                fixActivityContext(activity, newResourcesImpl);
+            }
+
             if (mRestart) {
-                // If we're restarting, the activities will be fixed by the call to updateApplicationInfo.
                 updateApplicationInfo(mActivityThread);
-            } else {
-                // If we're not restarting, update each activity so its internal resources point to the
-                // proper LoadedApk; that is, the application's LoadedApk.
-                Log.v(TAG, "Fixing activity contexts");
-                for (Object activity : getActivityClientRecords(mActivityThread)) {
-                    fixActivityContext(activity, newResourcesImpl);
-                }
             }
         } catch (Exception ex) {
             // The actual risks of the patch are unknown; although it seems to be safe, we're using some
