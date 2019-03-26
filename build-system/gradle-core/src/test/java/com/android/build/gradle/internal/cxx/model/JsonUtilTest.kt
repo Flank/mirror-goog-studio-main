@@ -61,7 +61,7 @@ class JsonUtilTest {
             override val objFolder = File("objFolder")
             override val jsonFolder = File("jsonFolder")
             override val gradleBuildOutputFolder = File("gradleBuildOutputFolder")
-            override val isDebuggable = false
+            override val isDebuggableEnabled = false
             override val validAbiList = listOf(Abi.ARMEABI_V7A)
             override val module = module
         }

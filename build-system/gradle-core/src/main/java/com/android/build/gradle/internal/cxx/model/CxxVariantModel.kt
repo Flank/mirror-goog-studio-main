@@ -40,7 +40,7 @@ interface CxxVariantModel {
     /**  The gradle build output folder (ex '$moduleRootFolder/.cxx/cxx/debug') */
     val gradleBuildOutputFolder: File
     /**  Whether this variant build is debuggable */
-    val isDebuggable: Boolean
+    val isDebuggableEnabled: Boolean
     /**  The list of valid ABIs for this variant */
     val validAbiList : List<Abi>
     /**  The module that this variant is part of */

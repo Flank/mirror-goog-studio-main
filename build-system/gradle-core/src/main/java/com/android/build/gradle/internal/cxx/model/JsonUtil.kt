@@ -127,7 +127,7 @@ private data class MutableCxxVariantModel(
     override var objFolder: File = File("."),
     override var jsonFolder: File = File("."),
     override var gradleBuildOutputFolder: File = File("."),
-    override var isDebuggable: Boolean = false,
+    override var isDebuggableEnabled: Boolean = false,
     override var validAbiList: List<Abi> = listOf()
 ) : CxxVariantModel
 
@@ -142,7 +142,7 @@ private fun CxxVariantModel.toMutable() =
         objFolder,
         jsonFolder,
         gradleBuildOutputFolder,
-        isDebuggable,
+        isDebuggableEnabled,
         validAbiList
     )
 
