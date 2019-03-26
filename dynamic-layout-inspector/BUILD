@@ -22,6 +22,7 @@ cc_library(
     name = "jni",
     srcs = [
         "src/main/native/layoutinspector_java_jni.cc",
+        "src/main/native/properties_java_jni.cc",
     ],
     copts = ANDROID_COPTS + [
         # TODO: Remove dependency when agent.h no longer includes

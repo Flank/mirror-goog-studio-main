@@ -1,9 +1,25 @@
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.android.tools.agent.layoutinspector.property;
 
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.view.View;
 import android.view.inspector.PropertyReader;
+import com.android.tools.agent.layoutinspector.common.Resource;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -32,23 +48,17 @@ public class ViewNode<V extends View> {
         return mProperties;
     }
 
-    public void readProperties(V view, Map<String, Integer> stringMap) {
-        PropertyReader reader = createPropertyReader(view, stringMap);
+    public void readProperties(V view) {
+        PropertyReader reader = createPropertyReader(view);
         mType.readProperties(view, reader);
     }
 
-    public Resource getLayoutResource(V view, Map<String, Integer> stringMap) {
-        SimplePropertyReader reader = createPropertyReader(view, stringMap);
-        return reader.getResourceValue(getSourceLayoutResId(view));
+    public Resource getLayoutResource(V view) {
+        return Resource.fromResourceId(view, getSourceLayoutResId(view));
     }
 
-    private SimplePropertyReader createPropertyReader(V view, Map<String, Integer> stringMap) {
-        int layoutId = getSourceLayoutResId(view);
-        Map<Integer, Integer> resourceMap = Collections.emptyMap();
-        if (layoutId != 0) {
-            resourceMap = getAttributeSourceResourceMap(view);
-        }
-        return new SimplePropertyReader(stringMap, resourceMap, view.getResources());
+    private SimplePropertyReader createPropertyReader(V view) {
+        return new SimplePropertyReader(view);
     }
 
     private int getSourceLayoutResId(V view) {
@@ -74,17 +84,12 @@ public class ViewNode<V extends View> {
     }
 
     private class SimplePropertyReader implements PropertyReader {
-        private final Map<String, Integer> mStringMap;
+        private final V mView;
         private final Map<Integer, Integer> mResourceMap;
-        private final Resources mResources;
 
-        private SimplePropertyReader(
-                Map<String, Integer> stringMap,
-                Map<Integer, Integer> resourceMap,
-                Resources resources) {
-            mStringMap = stringMap;
-            mResourceMap = resourceMap;
-            mResources = resources;
+        private SimplePropertyReader(V view) {
+            mView = view;
+            mResourceMap = getAttributeSourceResourceMap(view);
         }
 
         @Override
@@ -130,7 +135,7 @@ public class ViewNode<V extends View> {
         @Override
         public void readObject(int id, Object o) {
             if (o instanceof String) {
-                readAny(id, generateStringId((String) o));
+                readAny(id, o.toString().intern());
                 mProperties.get(id).setType(ValueType.STRING);
             } else {
                 readAny(id, null);
@@ -169,50 +174,19 @@ public class ViewNode<V extends View> {
 
         @Override
         public void readResourceId(int id, int value) {
-            readAny(id, getResourceValue(value));
+            readAny(id, Resource.fromResourceId(mView, value));
         }
 
         private void readAny(int id, Object value) {
             Property property = mProperties.get(id);
             PropertyType type = property.getPropertyType();
-            property.setNameId(generateStringId(type.getName()));
             property.setValue(value);
             property.setSource(getResourceValueOfAttribute(type.getAttributeId()));
         }
 
         private Resource getResourceValueOfAttribute(int attributeId) {
             Integer resourceId = mResourceMap.get(attributeId);
-            return resourceId != null ? getResourceValue(resourceId) : null;
-        }
-
-        private Resource getResourceValue(int resourceId) {
-            if (resourceId <= 0) {
-                return null;
-            }
-            try {
-                String type = mResources.getResourceTypeName(resourceId);
-                String packageName = mResources.getResourcePackageName(resourceId);
-                String name = mResources.getResourceEntryName(resourceId);
-                return new Resource(
-                        generateStringId(type),
-                        generateStringId(packageName),
-                        generateStringId(name));
-            } catch (Resources.NotFoundException ex) {
-                return null;
-            }
-        }
-
-        private int generateStringId(String str) {
-            if (str == null || str.isEmpty()) {
-                return 0;
-            }
-            Integer id = mStringMap.get(str);
-            if (id != null) {
-                return id;
-            }
-            int newId = mStringMap.size() + 1;
-            mStringMap.put(str, newId);
-            return newId;
+            return resourceId != null ? Resource.fromResourceId(mView, resourceId) : null;
         }
     }
 }

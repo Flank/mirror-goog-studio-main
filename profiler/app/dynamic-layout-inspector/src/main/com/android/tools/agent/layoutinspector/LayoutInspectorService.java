@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,19 +19,12 @@ package com.android.tools.agent.layoutinspector;
 import android.view.View;
 import android.view.ViewDebug;
 import android.view.ViewGroup;
-import com.android.tools.agent.layoutinspector.property.Property;
-import com.android.tools.agent.layoutinspector.property.Resource;
-import com.android.tools.agent.layoutinspector.property.ValueType;
-import com.android.tools.agent.layoutinspector.property.ViewNode;
-import com.android.tools.agent.layoutinspector.property.ViewTypeTree;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -42,6 +35,7 @@ import java.util.concurrent.Executors;
  */
 @SuppressWarnings("unused") // invoked via jni
 public class LayoutInspectorService {
+    private final Properties properties = new Properties();
 
     private static LayoutInspectorService sInstance;
 
@@ -126,31 +120,6 @@ public class LayoutInspectorService {
         }
     }
 
-    /** Adds a string entry into the event protobuf. */
-    private native void addString(long event, int id, String str);
-
-    /** Adds an int32 property value into the event protobuf. */
-    private native long addIntProperty(long event, int name, int type, int value);
-
-    /** Adds an int64 property value into the event protobuf. */
-    private native long addLongProperty(long event, int name, int type, long value);
-
-    /** Adds a double property value into the event protobuf. */
-    private native long addDoubleProperty(long event, int name, int type, double value);
-
-    /** Adds a float property value into the event protobuf. */
-    private native long addFloatProperty(long event, int name, int type, float value);
-
-    /** Adds a resource property value into the event protobuf. */
-    private native long addResourceProperty(
-            long event, int name, int type, int res_namespace, int res_type, int res_name);
-
-    /** Adds a resource property value into the event protobuf. */
-    private native void addPropertySource(long propertyId, int namespace, int type, int name);
-
-    /** Adds the layout of the view as a resource. */
-    private native void addLayoutResource(long event, int namespace, int type, int name);
-
     /** Sends the properties via the agent. */
     private native void sendProperties(long event, long viewId);
 
@@ -163,77 +132,26 @@ public class LayoutInspectorService {
     @SuppressWarnings("unused") // invoked via jni
     public void onGetPropertiesInspectorCommand(long viewId, long event) {
         try {
-            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
-            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
-            View root = ((List<View>) getViewsMethod.invoke(null)).get(0);
+            View root = findRootView();
             View view = findViewById(root, viewId);
             if (view == null) {
                 return;
             }
-
-            Map<String, Integer> stringMap = new HashMap<>();
-            ViewTypeTree typeTree = new ViewTypeTree();
-            ViewNode<View> node = typeTree.nodeOf(view);
-            node.readProperties(view, stringMap);
-            Resource layout = node.getLayoutResource(view, stringMap);
-            if (layout != null) {
-                addLayoutResource(event, layout.getNamespace(), layout.getType(), layout.getName());
-            }
-
-            for (Map.Entry<String, Integer> entry : stringMap.entrySet()) {
-                addString(event, entry.getValue(), entry.getKey());
-            }
-
-            for (Property property : node.getProperties()) {
-                long propertyId = addProperty(event, property);
-                Resource source = property.getSource();
-                if (propertyId != 0 && source != null) {
-                    addPropertySource(
-                            propertyId, source.getNamespace(), source.getType(), source.getName());
-                }
-            }
+            properties.loadProperties(view, event);
             sendProperties(event, viewId);
         } catch (Throwable ex) {
             sendErrorMessage(ex);
         }
     }
 
-    private long addProperty(long event, Property property) {
-        int name = property.getNameId();
-        ValueType valueType = property.getValueType();
-        int type = valueType.ordinal();
-        Object value = property.getValue();
-        if (value == null) {
-            return 0;
-        }
-        switch (valueType) {
-            case STRING:
-            case INT32:
-            case INT16:
-            case BOOLEAN:
-            case BYTE:
-            case CHAR:
-            case GRAVITY:
-            case INT_ENUM:
-            case INT_FLAG:
-                return addIntProperty(event, name, type, (int) value);
-            case INT64:
-                return addLongProperty(event, name, type, (long) value);
-            case DOUBLE:
-                return addDoubleProperty(event, name, type, (double) value);
-            case FLOAT:
-                return addFloatProperty(event, name, type, (float) value);
-            case RESOURCE:
-                Resource resource = (Resource) value;
-                return addResourceProperty(
-                        event,
-                        name,
-                        type,
-                        resource.getNamespace(),
-                        resource.getType(),
-                        resource.getName());
-            default:
-                return 0;
+    private View findRootView() {
+        try {
+            Class<?> windowInspector = Class.forName("android.view.inspector.WindowInspector");
+            Method getViewsMethod = windowInspector.getMethod("getGlobalWindowViews");
+            List<View> views = (List<View>) getViewsMethod.invoke(null);
+            return views.isEmpty() ? null : views.get(0);
+        } catch (Throwable ex) {
+            return null;
         }
     }
 
