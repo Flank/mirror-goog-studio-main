@@ -2731,7 +2731,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect("No warnings.")
     }
 
-    fun testDataBindingWithKapt() {
+    fun testDataBindingWithKaptUsingApplyPluginSyntax() {
         lint().files(
             gradle(
                 "apply plugin: 'com.android.application'\n" +
@@ -2750,7 +2750,7 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect("No warnings.")
     }
 
-    fun testDataBindingWithoutKapt() {
+    fun testDataBindingWithoutKaptUsingApplyPluginSyntax() {
         lint().files(
             gradle(
                 "apply plugin: 'com.android.application'\n" +
@@ -2772,6 +2772,81 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "0 errors, 1 warnings"
             )
     }
+
+    fun testDataBindingWithKaptUsingPluginBlockSyntax() {
+        lint().files(
+            gradle(
+                """
+                plugins {
+                  id 'com.android.application'
+                  id 'kotlin-android'
+                  id 'kotlin-kapt'
+                }
+
+                android {
+                  dataBinding {
+                    enabled true
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect("No warnings.")
+    }
+
+    fun testDataBindingWithoutKaptUsingPluginBlockSyntax() {
+        lint().files(
+            gradle(
+                """
+                plugins {
+                  id 'com.android.application'
+                  id 'kotlin-android'
+                }
+
+                android {
+                  dataBinding {
+                    enabled true
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect(
+                "build.gradle:8: Warning: If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin. [DataBindingWithoutKapt]\n" +
+                        "    enabled true\n" +
+                        "    ~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
+    }
+
+    fun testDataBindingWithKaptUsingMixedPluginSyntax() {
+        lint().files(
+            gradle(
+                """
+                plugins {
+                  id 'com.android.application'
+                  id 'kotlin-android'
+                }
+
+                apply plugin: 'kotlin-kapt'
+
+                android {
+                  dataBinding {
+                    enabled true
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect("No warnings.")
+    }
+
 
     fun testJava8WithLifecycleAnnotationProcessor() {
         lint().files(

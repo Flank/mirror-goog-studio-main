@@ -375,6 +375,13 @@ open class GradleDetector : Detector(), GradleScanner {
                         .replace().text(plugin).with(replaceWith).autoFix().build()
                     report(context, valueCookie, DEPRECATED, message, fix)
                 }
+
+                if (plugin == "kotlin-android") {
+                    mAppliedKotlinAndroidPlugin = true
+                }
+                if (plugin == "kotlin-kapt") {
+                    mAppliedKotlinKaptPlugin = true
+                }
             }
         } else if (parent == "dependencies") {
             if (value.startsWith("files('") && value.endsWith("')")) {
