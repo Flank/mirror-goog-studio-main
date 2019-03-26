@@ -189,10 +189,13 @@ task dslHtml(type: Docbook2Xhtml) {
 }
 
 task dslHtmlZip(type: Zip) {
-  dependsOn dslHtml
-  from dslHtml.destDir
+  //dependsOn dslHtml
+  //from dslHtml.destDir
   destinationDir docsDir
   baseName 'gradle-dsl'
+  doLast {
+    warn("DSL html generation disabled b/128964940")
+  }
 }
 
 def javaApiUrl = "http://docs.oracle.com/javase/8/docs/api/"
