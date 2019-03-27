@@ -21,3 +21,26 @@ java_binary(
         "//tools/base/third_party:com.google.guava_guava",
     ],
 )
+
+java_library(
+    name = "combine_notices_lib",
+    srcs = ["src/com/android/tools/utils/CombineNotices.java"],
+)
+
+java_binary(
+    name = "combine_notices",
+    main_class = "com.android.tools.utils.CombineNotices",
+    runtime_deps = [":combine_notices_lib"],
+)
+
+java_test(
+    name = "CombineNoticesTest",
+    srcs = ["testSrc/com/android/tools/utils/CombineNoticesTest.java"],
+    test_class = "com.android.tools.utils.CombineNoticesTest",
+    deps = [
+        ":combine_notices_lib",
+        "//prebuilts/tools/common/m2/repository/com/google/jimfs/jimfs/1.1:jar",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
+    ],
+)

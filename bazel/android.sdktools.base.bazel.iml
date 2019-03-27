@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/testSrc" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/sdk/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/sdk/testSrc" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -122,5 +123,6 @@
     <orderEntry type="library" name="groovy" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="android.sdktools.base.lint.cli" />
+    <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
   </component>
 </module>
