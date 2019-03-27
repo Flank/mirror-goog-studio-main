@@ -2647,7 +2647,9 @@ public final class SdkConstants {
     public static final String MAPS_ARTIFACT = "com.google.android.gms:play-services-maps";
     public static final String ADS_ARTIFACT = "com.google.android.gms:play-services-ads";
     public static final String LEANBACK_V17_ARTIFACT = "com.android.support:leanback-v17";
-    public static final String ANNOTATIONS_LIB_ARTIFACT = "com.android.support:support-annotations";
+    public static final String ANNOTATIONS_LIB_ARTIFACT_ID = "support-annotations";
+    public static final String ANNOTATIONS_LIB_ARTIFACT =
+            SUPPORT_LIB_GROUP_ID + ":" + ANNOTATIONS_LIB_ARTIFACT_ID;
     public static final String MEDIA_ROUTER_LIB_ARTIFACT = "com.android.support:mediarouter-v7";
 
     public static final String ANDROIDX_MATERIAL_ARTIFACT = "com.google.android.material:material";

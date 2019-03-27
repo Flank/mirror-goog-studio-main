@@ -15,7 +15,9 @@
  */
 package com.android.ide.common.repository
 
+import com.android.SdkConstants.ANNOTATIONS_LIB_ARTIFACT_ID
 import com.android.SdkConstants.MATERIAL2_PKG
+import com.android.SdkConstants.SUPPORT_LIB_GROUP_ID
 
 private const val FIREBASE_GROUP_ID = "com.google.firebase"
 private const val GOOGLE_MOBILE_SERVICES_GROUP_ID = "com.google.android.gms"
@@ -86,6 +88,7 @@ fun stabilityOf(
         groupId == GOOGLE_MOBILE_SERVICES_GROUP_ID -> gmsAndFirebaseStability(revision)
         groupId == FIREBASE_GROUP_ID -> gmsAndFirebaseStability(revision)
         groupId == MATERIAL2_PKG -> KnownVersionStability.SEMANTIC
+        groupId == SUPPORT_LIB_GROUP_ID -> supportLibStability(artifactId)
         MavenRepositories.isAndroidX(groupId) -> KnownVersionStability.SEMANTIC
         else -> KnownVersionStability.INCOMPATIBLE
     }
@@ -107,6 +110,23 @@ private fun gmsAndFirebaseStability(revision: String): KnownVersionStability {
     val version = GradleVersion.tryParse(revision)
     return if (version != null && version.major >= GMS_AND_FIREBASE_SEMANTIC_START)
         KnownVersionStability.SEMANTIC
+    else
+        KnownVersionStability.INCOMPATIBLE
+}
+
+/**
+ * Stability of legacy support libraries.
+ *
+ * All support libraries must have the exact same version number.
+ * However there are JetPack libraries that point to an old version of the support
+ * annotations. This library just contain annotations and we will make the assumption
+ * here that we nothing was removed or changed in the last couple of versions.
+ *
+ * <p>JetPack Details b/129408604
+ */
+private fun supportLibStability(artifactId: String): KnownVersionStability {
+    return if (artifactId == ANNOTATIONS_LIB_ARTIFACT_ID)
+        KnownVersionStability.STABLE
     else
         KnownVersionStability.INCOMPATIBLE
 }

@@ -27,6 +27,11 @@ class KnownVersionStabilityTest {
         assertThat(stabilityOf("androidx.appcompat", "appcompat"))
             .isEqualTo(KnownVersionStability.SEMANTIC)
 
+        assertThat(stabilityOf("com.android.support", "support-annotations"))
+          .isEqualTo(KnownVersionStability.STABLE)
+        assertThat(stabilityOf("androidx.annotation", "annotation"))
+          .isEqualTo(KnownVersionStability.SEMANTIC)
+
         assertThat(stabilityOf("com.android.support", "design"))
             .isEqualTo(KnownVersionStability.INCOMPATIBLE)
         assertThat(stabilityOf("com.google.android.material", "material"))
