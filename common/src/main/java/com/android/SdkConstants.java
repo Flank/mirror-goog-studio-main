@@ -1339,6 +1339,7 @@ public final class SdkConstants {
     public static final String ATTR_AUTOFILL_HINTS = "autofillHints"; //$NON-NLS-1$
     public static final String ATTR_TEXT = "text"; //$NON-NLS-1$
     public static final String ATTR_TEXT_SIZE = "textSize"; //$NON-NLS-1$
+    public static final String ATTR_ALPHA = "alpha"; //$NON-NLS-1$
     public static final String ATTR_LABEL = "label"; //$NON-NLS-1$
     public static final String ATTR_HINT = "hint"; //$NON-NLS-1$
     public static final String ATTR_PROMPT = "prompt"; //$NON-NLS-1$
