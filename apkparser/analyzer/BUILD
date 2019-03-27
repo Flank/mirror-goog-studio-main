@@ -51,7 +51,6 @@ java_library(
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.smali_baksmali",
         "//tools/base/third_party:org.smali_dexlib2",

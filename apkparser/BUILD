@@ -26,7 +26,6 @@ java_library(
     srcs = glob(["binary-resources/src/main/java/**"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
     ],
