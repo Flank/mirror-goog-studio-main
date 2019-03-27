@@ -255,8 +255,8 @@ TEST_F(CpuServiceTest, AtraceRunsOnOWithPerfettoDisabled) {
   RunAtraceTest(DeviceInfo::O, false, false);
 }
 
-TEST_F(CpuServiceTest, AtraceRunsOnPWithPerfettoEnabled) {
-  RunAtraceTest(DeviceInfo::P, true, false);
+TEST_F(CpuServiceTest, PerfettoRunsOnPWithPerfettoEnabled) {
+  RunAtraceTest(DeviceInfo::P, true, true);
 }
 
 TEST_F(CpuServiceTest, AtraceRunsOnQWithPerfettoDisabled) {

@@ -349,7 +349,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
 }
 
 bool CpuServiceImpl::usePerfetto() {
-  return DeviceInfo::feature_level() >= DeviceInfo::Q &&
+  return DeviceInfo::feature_level() >= DeviceInfo::P &&
          cpu_config_.use_perfetto();
 }
 
