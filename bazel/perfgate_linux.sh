@@ -43,13 +43,10 @@ if [[ -d "${dist_dir}" ]]; then
   readonly upsalite_id="$(sed -n 's/\r$//;s/^.* invocation_id: //p' "${command_log}")"
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id}'\" />" > "${dist_dir}"/upsalite_test_results.html
 
-  readonly bin_dir="$("${script_dir}"/bazel info ${config_options} bazel-bin)"
-  cp -a ${bin_dir}/tools/idea/updater/updater_deploy.jar ${dist_dir}/android-studio-updater.jar
-
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
 
   # Upload perfgate performance files
-  (cd "${testlogs_dir}" && zip -R "${dist_dir}"/perfgate_data.zip "*outputs.zip")
+  find "${testlogs_dir}" -type f -name outputs.zip -exec zip -r "${dist_dir}/perfgate_data.zip" {} \;
 
   # Create profile html in ${dist_dir} so it ends up in Artifacts.
   ${script_dir}/bazel analyze-profile --html ${dist_dir}/prof
@@ -57,6 +54,6 @@ if [[ -d "${dist_dir}" ]]; then
 fi
 
 # Clean up the Bazel output directory.
-"${script_dir}/bazel clean"
+"${script_dir}/bazel" clean
 
 exit $bazel_status
