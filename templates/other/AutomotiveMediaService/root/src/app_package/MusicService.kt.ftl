@@ -56,33 +56,9 @@ import java.util.ArrayList
  */
 class ${mediaBrowserServiceName} : MediaBrowserServiceCompat() {
 
-    private lateinit var mSession: MediaSessionCompat
+    private lateinit var session: MediaSessionCompat
 
-    override fun onCreate() {
-        super.onCreate()
-
-        mSession = MediaSessionCompat(this, "${mediaBrowserServiceName}")
-        sessionToken = mSession.sessionToken
-        mSession.setCallback(MediaSessionCallback())
-        mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
-                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
-    }
-
-    override fun onDestroy() {
-        mSession.release()
-    }
-
-    override fun onGetRoot(clientPackageName: String,
-                           clientUid: Int,
-                           rootHints: Bundle?): MediaBrowserServiceCompat.BrowserRoot? {
-        return MediaBrowserServiceCompat.BrowserRoot("root", null)
-    }
-
-    override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaItem>>) {
-        result.sendResult(ArrayList())
-    }
-
-    private inner class MediaSessionCallback : MediaSessionCompat.Callback() {
+    private val callback = object : MediaSessionCompat.Callback() {
         override fun onPlay() {}
 
         override fun onSkipToQueueItem(queueId: Long) {}
@@ -102,5 +78,29 @@ class ${mediaBrowserServiceName} : MediaBrowserServiceCompat() {
         override fun onCustomAction(action: String?, extras: Bundle?) {}
 
         override fun onPlayFromSearch(query: String?, extras: Bundle?) {}
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        session = MediaSessionCompat(this, "${mediaBrowserServiceName}")
+        sessionToken = session.sessionToken
+        session.setCallback(callback)
+        session.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS)
+    }
+
+    override fun onDestroy() {
+        session.release()
+    }
+
+    override fun onGetRoot(clientPackageName: String,
+                           clientUid: Int,
+                           rootHints: Bundle?): MediaBrowserServiceCompat.BrowserRoot? {
+        return MediaBrowserServiceCompat.BrowserRoot("root", null)
+    }
+
+    override fun onLoadChildren(parentId: String, result: Result<MutableList<MediaItem>>) {
+        result.sendResult(ArrayList())
     }
 }
