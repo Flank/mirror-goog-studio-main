@@ -4,7 +4,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
     defaultConfig {
-        minSdkVersion rootProject.supportLibMinSdk
+        minSdkVersion rootProject.ndk19SupportLibMinSdk
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     externalNativeBuild {
