@@ -3,12 +3,13 @@ package com.android.build.gradle.integration.application;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Iterables;
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class ApplicationIdInLibsTest {
             GradleTestProject.builder().fromTestProject("applicationIdInLibsTest").create();
 
     @Test
-    public void testLibPlaceholderSubstitutaionInFinalApk() throws Exception {
+    public void testLibPlaceholderSubstitutionInFinalApk() throws Exception {
         Map<String, ProjectBuildOutput> outputModels =
                 project.executeAndReturnOutputMultiModel("clean", "app:assembleDebug");
         assertThat(
@@ -69,9 +70,9 @@ public class ApplicationIdInLibsTest {
                 ProjectBuildOutputUtils.getVariantBuildOutput(projectBuildOutput, "flavorDebug");
         assertThat(debugBuildOutput.getOutputs()).hasSize(1);
 
-        List<String> apkBadging =
-                ApkHelper.getApkBadging(
-                        Iterables.getOnlyElement(debugBuildOutput.getOutputs()).getOutputFile());
+        File apk = Iterables.getOnlyElement(debugBuildOutput.getOutputs()).getOutputFile();
+
+        List<String> apkBadging = ApkSubject.getBadging(apk.toPath());
 
         for (String line : apkBadging) {
             if (line.contains("uses-permission: name=" + permission)) {

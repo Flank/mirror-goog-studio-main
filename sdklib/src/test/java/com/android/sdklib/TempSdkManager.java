@@ -433,9 +433,6 @@ public class TempSdkManager extends ExternalResource {
 
         createFakeBuildToolsFile(
                 buildToolsDir, revision,
-                BuildToolInfo.PathId.AAPT, SdkConstants.FN_AAPT);
-        createFakeBuildToolsFile(
-                buildToolsDir, revision,
                 BuildToolInfo.PathId.AIDL, SdkConstants.FN_AIDL);
         createFakeBuildToolsFile(
                 buildToolsDir, revision,

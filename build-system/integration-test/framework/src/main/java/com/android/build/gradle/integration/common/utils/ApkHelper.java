@@ -18,12 +18,12 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
-import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.LineCollector;
 import com.android.utils.StdLogger;
 import com.google.common.base.Splitter;
@@ -83,27 +83,14 @@ public class ApkHelper {
         return handler.getProcessOutput().processStandardOutputLines(lineProcessor);
     }
 
-    @NonNull
-    public static List<String> getApkBadging(@NonNull File apk) {
-        File aapt = SdkHelper.getAapt();
-
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(aapt);
-        builder.addArgs("dump", "badging", apk.getPath());
-
-        return ApkHelper.runAndGetOutput(builder.createProcess());
-    }
-
     /**
      * Returns the locales of an apk as found in the badging information
      * @param apk the apk
      * @return the list of locales or null.
-     *
-     * @see #getApkBadging(File)
      */
     @Nullable
     public static List<String> getLocales(@NonNull File apk) {
-        List<String> output = getApkBadging(apk);
+        List<String> output = ApkSubject.getBadging(apk.toPath());
 
         for (String line : output) {
             Matcher m = PATTERN_LOCALES.matcher(line.trim());

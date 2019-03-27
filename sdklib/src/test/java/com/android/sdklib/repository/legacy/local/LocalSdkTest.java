@@ -173,8 +173,6 @@ public class LocalSdkTest extends TestCase {
         assertNotNull(bt);
         assertEquals(new Revision(16, 0, 0), bt.getRevision());
         assertEquals(new File("/sdk/platform-tools"), bt.getLocation());
-        assertEquals("/sdk/platform-tools/" + SdkConstants.FN_AAPT,
-                     mFOp.getAgnosticAbsPath(bt.getPath(PathId.AAPT)));
 
         // clearing local packages also clears the legacy build-tools
         mLS.clearLocalPkg(PkgType.PKG_ALL);
@@ -228,8 +226,6 @@ public class LocalSdkTest extends TestCase {
         assertNotNull(bt18a);
         assertEquals(new Revision(18, 1, 2), bt18a.getRevision());
         assertEquals(new File("/sdk/build-tools/18.1.2"), bt18a.getLocation());
-        assertEquals("/sdk/build-tools/18.1.2/" + SdkConstants.FN_AAPT,
-                     mFOp.getAgnosticAbsPath(bt18a.getPath(PathId.AAPT)));
 
         // -- get specific build tools by version
 
@@ -240,8 +236,6 @@ public class LocalSdkTest extends TestCase {
         assertNotNull(bt17);
         assertEquals(new Revision(17, 0, 0), bt17.getRevision());
         assertEquals(new File("/sdk/build-tools/17"), bt17.getLocation());
-        assertEquals("/sdk/build-tools/17/" + SdkConstants.FN_AAPT,
-                     mFOp.getAgnosticAbsPath(bt17.getPath(PathId.AAPT)));
 
         assertNull(mLS.getBuildTool(new Revision(0)));
         assertNull(mLS.getBuildTool(new Revision(16, 17, 18)));

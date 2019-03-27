@@ -130,10 +130,10 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                             assertThat(languageFilter).isNull()
                         }
                         VariantOutput.OutputType.MAIN, VariantOutput.OutputType.FULL_SPLIT -> {
-                            val manifestContent = ApkSubject.getManifestContent(output.outputPath)
-                            assertThat(manifestContains(manifestContent, "config fr:")).isTrue()
-                            assertThat(manifestContains(manifestContent, "config de:")).isTrue()
-                            assertThat(manifestContains(manifestContent, "config en:")).isFalse()
+                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                            assertThat(manifestContent).contains("fr")
+                            assertThat(manifestContent).contains("de")
+                            assertThat(manifestContent).doesNotContain("en")
 
                         }
                     }
@@ -181,19 +181,19 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 .forEach { output ->
             when(output.apkData.type) {
                 VariantOutput.OutputType.SPLIT -> {
-                    val manifestContent = ApkSubject.getManifestContent(output.outputPath)
+                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
                     val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
                     if (languageFilter != null) {
                         for (language in languageFilter.split(",")) {
-                            assertThat(manifestContains(manifestContent, "config $language:")).isTrue()
+                            assertThat(manifestContent).contains(language)
                         }
                     }
                 }
                 VariantOutput.OutputType.MAIN, VariantOutput.OutputType.FULL_SPLIT  -> {
-                    val manifestContent = ApkSubject.getManifestContent(output.outputPath)
-                    assertThat(manifestContains(manifestContent, "config es:")).isTrue()
-                    assertThat(manifestContains(manifestContent, "config fr:")).isFalse()
-                    assertThat(manifestContains(manifestContent, "config de:")).isFalse()
+                    val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                    assertThat(manifestContent).contains("es")
+                    assertThat(manifestContent).doesNotContain("fr")
+                    assertThat(manifestContent).doesNotContain("de")
 
                 }
             }
@@ -236,39 +236,31 @@ class SplitHandlingTest(private val pureSplit: Boolean) {
                 .forEach { output ->
                     when(output.apkData.type) {
                         VariantOutput.OutputType.SPLIT -> {
-                            val manifestContent = ApkSubject.getManifestContent(output.outputPath)
+                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
                             val languageFilter = output.getFilter(VariantOutput.FilterType.LANGUAGE.name)
                             if (languageFilter != null) {
                                 for (language in languageFilter.split(",")) {
-                                    assertThat(manifestContains(manifestContent, "config $language:")).isTrue()
+                                    assertThat(manifestContent).contains(language)
                                 }
                             }
                         }
                         VariantOutput.OutputType.MAIN -> {
-                            val manifestContent = ApkSubject.getManifestContent(output.outputPath)
+                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
                             // all remaining languages are packaged in the main APK.
-                            assertThat(manifestContains(manifestContent, "config de:")).isTrue()
-                            assertThat(manifestContains(manifestContent, "config fr:")).isFalse()
-                            assertThat(manifestContains(manifestContent, "config en:")).isFalse()
+                            assertThat(manifestContent).contains("de")
+                            assertThat(manifestContent).doesNotContain("fr")
+                            assertThat(manifestContent).doesNotContain("en")
 
                         }
                         VariantOutput.OutputType.FULL_SPLIT -> {
                             // we don't do language based multi-apk so all languages should be packaged.
-                            val manifestContent = ApkSubject.getManifestContent(output.outputPath)
-                            assertThat(manifestContains(manifestContent, "config es:")).isTrue()
-                            assertThat(manifestContains(manifestContent, "config fr:")).isTrue()
-                            assertThat(manifestContains(manifestContent, "config de:")).isTrue()
+                            val manifestContent = ApkSubject.getConfigurations(output.outputPath)
+                            assertThat(manifestContent).contains("es")
+                            assertThat(manifestContent).contains("fr")
+                            assertThat(manifestContent).contains("de")
                         }
                     }
                 }
-    }
-
-    private fun manifestContains(manifestContent: List<String> , pattern: String) : Boolean {
-        return manifestContent
-                .stream()
-                .filter({ line -> line.contains(pattern) })
-                .findFirst()
-                .isPresent
     }
 
     private fun getCause(t: Throwable?) : Throwable? {

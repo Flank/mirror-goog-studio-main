@@ -21,11 +21,11 @@ import static com.google.common.truth.Truth.assertAbout;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.builder.core.ApkInfoParser;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,6 +51,7 @@ import org.junit.Assert;
 public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk> {
 
     public static Subject.Factory<ApkSubject, Apk> apks() {
+        //noinspection resource
         return ApkSubject::new;
     }
 
@@ -74,9 +75,38 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     private static ApkInfoParser.ApkInfo getApkInfo(@NonNull Path apk) {
         ProcessExecutor processExecutor =
                 new DefaultProcessExecutor(new StdLogger(StdLogger.Level.ERROR));
-        ApkInfoParser parser = new ApkInfoParser(SdkHelper.getAapt(), processExecutor);
+        ApkInfoParser parser = new ApkInfoParser(TestUtils.getAapt2().toFile(), processExecutor);
         try {
             return parser.parseApk(apk.toFile());
+        } catch (ProcessException e) {
+            throw new UncheckedIOException(new IOException(e));
+        }
+    }
+
+    @NonNull
+    public static List<String> getConfigurations(@NonNull Path apk) {
+        ProcessExecutor processExecutor =
+                new DefaultProcessExecutor(new StdLogger(StdLogger.Level.ERROR));
+        ApkInfoParser parser = new ApkInfoParser(TestUtils.getAapt2().toFile(), processExecutor);
+        try {
+            return parser.getConfigurations(apk.toFile());
+        } catch (ProcessException e) {
+            throw new UncheckedIOException(new IOException(e));
+        }
+    }
+
+    @NonNull
+    public static List<String> getBadging(@NonNull File apk) {
+        return getBadging(apk.toPath());
+    }
+
+    @NonNull
+    public static List<String> getBadging(@NonNull Path apk) {
+        ProcessExecutor processExecutor =
+                new DefaultProcessExecutor(new StdLogger(StdLogger.Level.ERROR));
+        ApkInfoParser parser = new ApkInfoParser(TestUtils.getAapt2().toFile(), processExecutor);
+        try {
+            return parser.getAaptOutput(apk.toFile());
         } catch (ProcessException e) {
             throw new UncheckedIOException(new IOException(e));
         }
@@ -86,9 +116,9 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     public static List<String> getManifestContent(@NonNull Path apk) {
         ProcessExecutor processExecutor =
                 new DefaultProcessExecutor(new StdLogger(StdLogger.Level.ERROR));
-        ApkInfoParser parser = new ApkInfoParser(SdkHelper.getAapt(), processExecutor);
+        ApkInfoParser parser = new ApkInfoParser(TestUtils.getAapt2().toFile(), processExecutor);
         try {
-            return parser.getFullAaptOutput(apk.toFile());
+            return parser.getManifestContent(apk.toFile());
         } catch (ProcessException e) {
             throw new UncheckedIOException(new IOException(e));
         }
@@ -165,7 +195,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
     public void hasMaxSdkVersion(int maxSdkVersion) {
 
-        List<String> output = ApkHelper.getApkBadging(actual().getFile().toFile());
+        List<String> output = getBadging(actual().getFile().toFile().toPath());
 
         checkMaxSdkVersion(output, maxSdkVersion);
     }

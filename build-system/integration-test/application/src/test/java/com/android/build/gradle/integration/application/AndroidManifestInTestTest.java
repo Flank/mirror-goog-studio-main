@@ -19,9 +19,7 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
-import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.testutils.apk.Apk;
 import java.util.List;
 import org.junit.Rule;
@@ -38,14 +36,8 @@ public class AndroidManifestInTestTest {
         project.execute("assembleDebugAndroidTest");
         Apk testApk = project.getTestApk();
 
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(SdkHelper.getAapt());
+        List<String> output = ApkSubject.getManifestContent(testApk.getFile());
 
-        builder.addArgs("l", "-a", testApk.getFile().toString());
-
-        List<String> output = ApkHelper.runAndGetOutput(builder.createProcess());
-
-        System.out.println("Beginning dump");
         boolean foundPermission = false;
         boolean foundMetadata = false;
         boolean isDebuggable = false;

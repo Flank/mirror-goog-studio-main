@@ -16,6 +16,7 @@
 
 package com.android.builder.core;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.process.BaseProcessOutputHandler;
@@ -28,6 +29,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,8 +41,7 @@ public class ApkInfoParser {
     private static final Pattern PATTERN = Pattern.compile(
             "^package: name='([^']+)' versionCode='([0-9]*)' versionName='([^']*)'.*$");
 
-    @NonNull
-    private final File mAaptFile;
+    @NonNull private final File aapt2File;
     @NonNull
     private final ProcessExecutor mProcessExecutor;
 
@@ -55,7 +56,10 @@ public class ApkInfoParser {
         @Nullable
         private final String mVersionName;
 
-        private ApkInfo(@NonNull String packageName, Integer versionCode, String versionName) {
+        private ApkInfo(
+                @NonNull String packageName,
+                @Nullable Integer versionCode,
+                @Nullable String versionName) {
             mPackageName = packageName;
             mVersionCode = versionCode;
             mVersionName = versionName;
@@ -88,13 +92,21 @@ public class ApkInfoParser {
 
     /**
      * Constructs a new parser
-     * @param aaptFile aapt file to use to gather the info
-     * @param processExecutor a process Executor to call aapt
+     *
+     * @param aapt2File the AAPT2 executable file or the directory containing it.
+     * @param processExecutor a process executor to call AAPT2
      */
-    public ApkInfoParser(
-            @NonNull File aaptFile,
-            @NonNull ProcessExecutor processExecutor) {
-        mAaptFile = aaptFile;
+    public ApkInfoParser(@NonNull File aapt2File, @NonNull ProcessExecutor processExecutor) {
+        if (aapt2File.isDirectory()) {
+            this.aapt2File = new File(aapt2File, SdkConstants.FN_AAPT2);
+        } else {
+            this.aapt2File = aapt2File;
+        }
+
+        if (!this.aapt2File.getName().toLowerCase(Locale.ENGLISH).startsWith("aapt2")) {
+            throw new IllegalStateException("AAPT is deprecated now, AAPT2 should be used instead");
+        }
+
         mProcessExecutor = processExecutor;
     }
 
@@ -108,9 +120,9 @@ public class ApkInfoParser {
     @NonNull
     public ApkInfo parseApk(@NonNull File apkFile) throws ProcessException {
 
-        if (!mAaptFile.isFile()) {
+        if (!aapt2File.isFile()) {
             throw new IllegalStateException(
-                    "aapt is missing from location: " + mAaptFile.getAbsolutePath());
+                    "aapt is missing from location: " + aapt2File.getAbsolutePath());
         }
 
         return getApkInfo(getAaptOutput(apkFile));
@@ -151,27 +163,22 @@ public class ApkInfoParser {
         return new ApkInfo(pkgName, intVersionCode, versionName);
     }
 
-    /**
-     * Returns the aapt output.
-     *
-     * @param apkFile the apk file to call aapt on.
-     * @return the output as a list of files.
-     * @throws ProcessException when aapt failed to execute
-     */
+    /** Returns the full 'aapt2 dump badging' output for the given APK. */
     @NonNull
-    private List<String> getAaptOutput(@NonNull File apkFile) throws ProcessException {
+    public List<String> getAaptOutput(@NonNull File apkFile) throws ProcessException {
         return invokeAaptWithParameters(apkFile, "dump", "badging");
     }
-    /**
-     * Returns the full aapt manifest dump output.
-     *
-     * @param apkFile the apk file to call aapt on.
-     * @return the output as a list of files.
-     * @throws ProcessException when aapt failed to execute
-     */
+
     @NonNull
-    public List<String> getFullAaptOutput(@NonNull File apkFile) throws ProcessException {
-        return invokeAaptWithParameters(apkFile, "l", "-a");
+    public List<String> getManifestContent(@NonNull File apkFile) throws ProcessException {
+        return invokeAaptWithParameters(
+                apkFile, "dump", "xmltree", "--file", "AndroidManifest.xml");
+    }
+
+    /** Returns the configurations (e.g. languages) in the APK. */
+    @NonNull
+    public List<String> getConfigurations(@NonNull File apkFile) throws ProcessException {
+        return invokeAaptWithParameters(apkFile, "dump", "configurations");
     }
 
     private List<String> invokeAaptWithParameters(@NonNull File apkFile, String... parameters)
@@ -179,20 +186,21 @@ public class ApkInfoParser {
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        builder.setExecutable(mAaptFile);
+        builder.setExecutable(aapt2File);
         builder.addArgs(parameters);
         builder.addArgs(apkFile.getPath());
 
         CachedProcessOutputHandler processOutputHandler = new CachedProcessOutputHandler();
 
-        mProcessExecutor.execute(
-                builder.createProcess(), processOutputHandler)
-                .rethrowFailure().assertNormalExitValue();
+        // b/129476626 AAPT2 dump will result 1 instead of 0. Once fixed add back the
+        // '.assertNormalExitValue()'
+        mProcessExecutor.execute(builder.createProcess(), processOutputHandler).rethrowFailure();
 
         BaseProcessOutputHandler.BaseProcessOutput output = processOutputHandler.getProcessOutput();
 
         LineCollector lineCollector = new LineCollector();
         output.processStandardOutputLines(lineCollector);
+
         return lineCollector.getResult();
     }
 }

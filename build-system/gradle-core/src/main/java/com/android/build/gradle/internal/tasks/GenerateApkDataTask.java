@@ -24,6 +24,7 @@ import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -32,7 +33,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
-import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -42,12 +42,13 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -66,15 +67,10 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
 
     private int targetSdkVersion;
 
-    private Provider<BuildToolInfo> buildToolInfoProvider;
-
-    @Input
-    public String getBuildToolsVersion() {
-        return buildToolInfoProvider.get().getRevision().toString();
-    }
+    private FileCollection aapt2Executable;
 
     @TaskAction
-    void generate() throws IOException, ProcessException, InterruptedException {
+    void generate() throws IOException, ProcessException {
         // if the FileCollection contains no file, then there's nothing to do just abort.
         File apkDirectory = null;
         if (apkDirectoryFileCollection != null) {
@@ -131,9 +127,9 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
                     outDir,
                     getMainPkgName(),
                     ANDROID_WEAR_MICRO_APK,
-                    buildToolInfoProvider.get());
+                    aapt2Executable.getSingleFile());
         } else {
-            builder.generateUnbundledWearApkData(outDir, getMainPkgName());
+            AndroidBuilder.generateUnbundledWearApkData(outDir, getMainPkgName());
         }
 
         AndroidBuilder.generateApkDataEntryInManifest(
@@ -174,6 +170,12 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
     @Input
     public int getTargetSdkVersion() {
         return targetSdkVersion;
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NONE)
+    public FileCollection getAapt2Executable() {
+        return aapt2Executable;
     }
 
     public void setTargetSdkVersion(int targetSdkVersion) {
@@ -234,8 +236,7 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
 
-            task.buildToolInfoProvider =
-                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
+            task.aapt2Executable = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
         }
     }
 }

@@ -23,7 +23,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.android.testutils.truth.PathSubject.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -34,20 +33,12 @@ import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.core.ApkInfoParser;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.ide.common.process.DefaultProcessExecutor;
-import com.android.ide.common.process.ProcessExecutor;
-import com.android.repository.Revision;
-import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.sdklib.BuildToolInfo;
-import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.utils.StdLogger;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -66,7 +57,6 @@ public class VariantDependencyTest {
             .create();
 
     private static ModelContainer<AndroidProject> model;
-    private static ApkInfoParser apkInfoParser;
     private static LibraryGraphHelper helper;
     private static ProjectBuildOutput outputModel;
 
@@ -117,22 +107,6 @@ public class VariantDependencyTest {
         outputModel = project.executeAndReturnOutputModel("clean", "assemble");
         model = project.model().fetchAndroidProjects();
         helper = new LibraryGraphHelper(model);
-
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        BuildToolInfo buildToolInfo =
-                AndroidSdkHandler.getInstance(project.getAndroidHome())
-                        .getBuildToolInfo(
-                                Revision.parseRevision(DEFAULT_BUILD_TOOL_VERSION), progress);
-
-        File aapt = null;
-        if (buildToolInfo != null) {
-             aapt = new File(buildToolInfo.getPath(BuildToolInfo.PathId.AAPT));
-        }
-        assertTrue("Test requires build-tools " + DEFAULT_BUILD_TOOL_VERSION,
-                aapt != null && aapt.isFile());
-        ProcessExecutor processExecutor = new DefaultProcessExecutor(
-                new StdLogger(StdLogger.Level.ERROR));
-        apkInfoParser = new ApkInfoParser(aapt, processExecutor);
     }
 
     @AfterClass
@@ -140,7 +114,6 @@ public class VariantDependencyTest {
         project = null;
         model = null;
         helper = null;
-        apkInfoParser = null;
     }
 
     @Test

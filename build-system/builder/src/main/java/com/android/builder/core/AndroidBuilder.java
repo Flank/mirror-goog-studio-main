@@ -573,16 +573,10 @@ public class AndroidBuilder {
             @NonNull File outResFolder,
             @NonNull String mainPkgName,
             @NonNull String resName,
-            @NonNull BuildToolInfo buildToolInfo)
+            @NonNull File aapt2Executable)
             throws ProcessException, IOException {
 
-        String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
-        if (aapt == null) {
-            throw new IllegalStateException(
-                    "Unable to get aapt location from Build Tools " + buildToolInfo.getRevision());
-        }
-
-        ApkInfoParser parser = new ApkInfoParser(new File(aapt), mProcessExecutor);
+        ApkInfoParser parser = new ApkInfoParser(aapt2Executable, mProcessExecutor);
         ApkInfoParser.ApkInfo apkInfo = parser.parseApk(apkFile);
 
         if (!apkInfo.getPackageName().equals(mainPkgName)) {

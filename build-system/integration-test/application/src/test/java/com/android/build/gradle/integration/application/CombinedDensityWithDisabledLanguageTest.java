@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -37,7 +37,7 @@ public class CombinedDensityWithDisabledLanguageTest {
                     .create();
 
     @Before
-    public void setup() throws IOException, InterruptedException {
+    public void setup() throws IOException {
         AssumeBuildToolsUtil.assumeBuildToolsAtLeast(21);
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -87,7 +87,7 @@ public class CombinedDensityWithDisabledLanguageTest {
 
         //// check that our language resources are indeed packaged in the main APK.
         List<String> apkDump =
-                ApkHelper.getApkBadging(
+                ApkSubject.getBadging(
                         VariantBuildOutputUtils.getMainOutputFile(debugVariantOutput)
                                 .getOutputFile());
         assertThat(apkDump)

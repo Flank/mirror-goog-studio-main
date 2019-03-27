@@ -70,11 +70,6 @@ public class SdkHelper {
     }
 
     @NonNull
-    public static File getAapt() {
-        return getBuildTool(BuildToolInfo.PathId.AAPT);
-    }
-
-    @NonNull
     public static File getDxJar() {
         return getBuildTool(BuildToolInfo.PathId.DX_JAR);
     }

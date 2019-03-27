@@ -23,7 +23,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
@@ -82,7 +82,7 @@ public class PlaceholderInLibsTest {
         assertEquals(1, output.getOutputs().size());
 
         List<String> apkBadging =
-                ApkHelper.getApkBadging(output.getOutputs().iterator().next().getOutputFile());
+                ApkSubject.getBadging(output.getOutputs().iterator().next().getOutputFile());
 
         for (String line : apkBadging) {
             if (line.contains("uses-permission: name=" +

@@ -1,14 +1,13 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -86,7 +85,7 @@ public class CombinedLanguageWithDisabledDensityTest {
 
         // check that our density resources are indeed packaged in the main APK.
         List<String> apkDump =
-                ApkHelper.getApkBadging(
+                ApkSubject.getBadging(
                         VariantBuildOutputUtils.getMainOutputFile(debugVariantOutput)
                                 .getOutputFile());
         assertThat(apkDump).contains("densities: '160' '240' '320' '480'");
