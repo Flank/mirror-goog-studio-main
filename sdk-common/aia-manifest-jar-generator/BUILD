@@ -1,5 +1,5 @@
 load("//tools/base/bazel:proto.bzl", "java_proto_library")
-load("//tools/base/bazel:utils.bzl", "java_jarjar", "archive")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 java_proto_library(
     name = "proto",

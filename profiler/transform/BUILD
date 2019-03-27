@@ -1,4 +1,4 @@
-load("//tools/base/bazel:utils.bzl", "java_jarjar", "archive")
+load("//tools/base/bazel:utils.bzl", "java_jarjar", "flat_archive")
 
 java_library(
     name = "transform",
@@ -21,7 +21,7 @@ java_jarjar(
     visibility = ["//visibility:public"],
 )
 
-archive(
+flat_archive(
     name = "dependencies",
     deps = {
         "//tools/base/profiler/app:studio-profiler": "dependencies",

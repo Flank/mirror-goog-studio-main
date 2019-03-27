@@ -556,6 +556,7 @@ def iml_module(
             baseline = lint_baseline,
             deps = prod_deps,
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
+            external_annotations = ["//tools/base/external-annotations:annotations.zip"],
             tags = ["no_windows"],
         )
 

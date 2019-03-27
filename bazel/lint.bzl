@@ -20,6 +20,9 @@ def _lint_test_impl(ctx):
     for jar in ctx.files.custom_rules:
         project_xml += "<lint-checks jar=\"{0}\" />\n".format(jar.short_path)
 
+    for zip in ctx.files.external_annotations:
+        project_xml += "<annotations file=\"{0}\" />\n".format(zip.short_path)
+
     project_xml += "<module name=\"{0}\" android=\"false\" library=\"true\">\n".format(ctx.label.name)
 
     for file in ctx.files.srcs:
@@ -49,7 +52,8 @@ def _lint_test_impl(ctx):
         files = (
             [ctx.outputs.project_xml, ctx.file.baseline] +
             ctx.files.srcs +
-            ctx.files.custom_rules
+            ctx.files.custom_rules +
+            ctx.files.external_annotations
         ),
         transitive_files = depset(
             transitive = [
@@ -65,6 +69,7 @@ lint_test = rule(
     attrs = {
         "srcs": attr.label_list(allow_files = True),
         "custom_rules": attr.label_list(allow_files = True),
+        "external_annotations": attr.label_list(allow_files = True),
         "deps": attr.label_list(allow_files = True),
         "baseline": attr.label(allow_single_file = True),
         "_binary": attr.label(

@@ -149,7 +149,7 @@ def srcjar(name, java_library, visibility = None):
         cmd = "cp $(location " + implicit_jar + ") $@",
     )
 
-def _archive_impl(ctx):
+def _flat_archive_impl(ctx):
     inputs = []
     zipper_args = ["c", ctx.outputs.out.path]
     for dep, target in ctx.attr.deps.items():
@@ -167,20 +167,55 @@ def _archive_impl(ctx):
         mnemonic = "archiver",
     )
 
-archive = rule(
+flat_archive = rule(
     attrs = {
         "deps": attr.label_keyed_string_dict(
             non_empty = True,
             allow_files = True,
         ),
-        "$zipper": attr.label(
+        "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
             executable = True,
         ),
     },
     outputs = {"out": "%{name}.jar"},
-    implementation = _archive_impl,
+    implementation = _flat_archive_impl,
+)
+
+def _dir_archive_impl(ctx):
+    zipper_args = ["c", ctx.outputs.out.path]
+    prefix = ctx.attr.dir
+    for file in ctx.files.files:
+        if not file.short_path.startswith(prefix):
+            fail(file.short_path + "is not in " + prefix)
+        else:
+            zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.short_path))
+
+    ctx.action(
+        inputs = ctx.files.files,
+        outputs = [ctx.outputs.out],
+        executable = ctx.executable._zipper,
+        arguments = zipper_args,
+        progress_message = "Creating archive...",
+        mnemonic = "archiver",
+    )
+
+dir_archive = rule(
+    attrs = {
+        "files": attr.label_list(
+            allow_files = True,
+        ),
+        "dir": attr.string(mandatory = True),
+        "ext": attr.string(default = "zip"),
+        "_zipper": attr.label(
+            default = Label("@bazel_tools//tools/zip:zipper"),
+            cfg = "host",
+            executable = True,
+        ),
+    },
+    outputs = {"out": "%{name}.%{ext}"},
+    implementation = _dir_archive_impl,
 )
 
 def _replace_manifest_iml(ctx):

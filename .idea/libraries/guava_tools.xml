@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="guava-tools">
     <ANNOTATIONS>
-      <root url="file://$PROJECT_DIR$/.idea/codeContracts" />
+      <root url="file://$PROJECT_DIR$/external-annotations" />
     </ANNOTATIONS>
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre/guava-27.0.1-jre.jar!/" />
