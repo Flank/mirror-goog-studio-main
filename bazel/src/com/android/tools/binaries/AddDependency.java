@@ -23,6 +23,7 @@ import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
 import com.android.tools.utils.WorkspaceUtils;
 import com.google.common.collect.Lists;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionContext;
@@ -131,7 +133,36 @@ public class AddDependency {
 
         for (ArtifactResult artifactResult : result.getArtifactResults()) {
             imports.generateImportRules(artifactResult.getArtifact());
+            copyNotice(artifactResult.getArtifact());
         }
+    }
+
+    private void copyNotice(Artifact artifact) {
+        File artifactDir = artifact.getFile().getParentFile();
+        String[] possibleNames = {"LICENSE", "LICENSE.txt", "NOTICE", "NOTICE.txt"};
+        try {
+            File currentDir = artifactDir.getCanonicalFile();
+            while (!currentDir.equals(mRepo.getDirectory().toFile().getCanonicalFile())) {
+                for (String name : possibleNames) {
+                    File possibleLicense = new File(currentDir, name);
+                    if (possibleLicense.exists()) {
+                        Files.copy(
+                                possibleLicense.toPath(),
+                                (new File(artifactDir, "NOTICE")).toPath());
+                        return;
+                    }
+                }
+                currentDir = currentDir.getParentFile();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.err.println(
+                "No NOTICE found for "
+                        + artifact
+                        + "! It must be added manually if "
+                        + artifact
+                        + " will ever by used by the commandlinetools sdk component.");
     }
 
     private static void usage() {
