@@ -224,7 +224,7 @@ abstract class AndroidJavaCompile: JavaCompile(), VariantAwareTask {
         // JavaPreCompileTask as it needs to be done even in incremental builds where
         // JavaPreCompileTask may be UP-TO-DATE.
         recordAnnotationProcessorsForAnalytics(
-            annotationProcessors.keys, project.path, variantName
+            annotationProcessors, project.path, variantName
         )
 
         logger.info(

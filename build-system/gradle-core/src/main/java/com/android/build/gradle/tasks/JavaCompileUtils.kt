@@ -244,15 +244,21 @@ fun readAnnotationProcessorsFromJsonFile(
 
 }
 
+/**
+ * Records names & incrementality of annotation processors, and whether all of them
+ * are incremental to see if the user can run annotation processing incrementally.
+ */
 fun recordAnnotationProcessorsForAnalytics(
-    processors: Set<String>,
+    processors: Map<String, Boolean>,
     projectPath: String,
     variantName: String
 ) {
     val variant = ProcessProfileWriter.getOrCreateVariant(projectPath, variantName)
-    for (processor in processors) {
+    for (processor in processors.entries) {
         val builder = AnnotationProcessorInfo.newBuilder()
-        builder.spec = processor
+        builder.spec = processor.key
+        builder.isIncremental = processor.value
         variant.addAnnotationProcessors(builder)
     }
+    variant.isAnnotationProcessingIncremental = !processors.values.contains(false)
 }

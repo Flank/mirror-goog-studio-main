@@ -28,9 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
@@ -65,13 +64,13 @@ public class AndroidJavaCompileTest {
         task.getProcessorListFile()
                 .set(project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath()));
 
-        Set<String> annotationProcessors =
-                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();
+        Map<String, Boolean> annotationProcessors =
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, project.getPath(), task.variantName);
 
-        Collection<String> processorNames = getProcessorList();
-        assertThat(processorNames).isEmpty();
+        Map<String, Boolean> processors = getProcessors();
+        assertThat(processors).isEmpty();
     }
 
     @Test
@@ -86,16 +85,25 @@ public class AndroidJavaCompileTest {
         task.getProcessorListFile()
                 .set(project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath()));
 
-        Set<String> annotationProcessors =
-                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();
+        Map<String, Boolean> annotationProcessors =
+                JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
         JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
                 annotationProcessors, project.getPath(), task.variantName);
 
-        Collection<String> processorNames = getProcessorList();
-        assertThat(processorNames).containsExactly("processor1", "processor2");
+        Map<String, Boolean> processors = getProcessors();
+        assertThat(processors).containsEntry("processor1", false);
+        assertThat(processors).containsEntry("processor2", true);
+        assertThat(annotationProcessingIncremental()).isFalse();
+
+        Files.write(
+                inputFile.toPath(), "{\"processor1\":true,\"processor2\":true}".getBytes("utf-8"));
+        annotationProcessors = JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile);
+        JavaCompileUtils.recordAnnotationProcessorsForAnalytics(
+                annotationProcessors, project.getPath(), task.variantName);
+        assertThat(annotationProcessingIncremental()).isTrue();
     }
 
-    private Collection<String> getProcessorList() {
+    private Map<String, Boolean> getProcessors() {
         GradleBuildVariant.Builder variant =
                 ProcessProfileWriter.getOrCreateVariant(project.getPath(), VARIANT_NAME);
 
@@ -103,6 +111,18 @@ public class AndroidJavaCompileTest {
         List<AnnotationProcessorInfo> procs = variant.getAnnotationProcessorsList();
         assertThat(procs).isNotNull();
 
-        return procs.stream().map(AnnotationProcessorInfo::getSpec).collect(Collectors.toList());
+        return procs.stream()
+                .collect(
+                        Collectors.toMap(
+                                AnnotationProcessorInfo::getSpec,
+                                AnnotationProcessorInfo::getIsIncremental));
+    }
+
+    private Boolean annotationProcessingIncremental() {
+        GradleBuildVariant.Builder variant =
+                ProcessProfileWriter.getOrCreateVariant(project.getPath(), VARIANT_NAME);
+
+        assertThat(variant).isNotNull();
+        return variant.getIsAnnotationProcessingIncremental();
     }
 }
