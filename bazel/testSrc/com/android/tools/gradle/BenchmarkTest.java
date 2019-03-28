@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class BenchmarkTest {
 
@@ -48,6 +49,7 @@ public class BenchmarkTest {
         String benchmarkSize = null;
         String benchmarkType = null;
         boolean benchmarkWithWorkers = false;
+        String testProjectGradleRootFromSourceRoot = ".";
         List<String> setupDiffs = new ArrayList<>();
         int warmUps = 0;
         int iterations = 0;
@@ -57,11 +59,14 @@ public class BenchmarkTest {
         List<String> startups = new ArrayList<>();
         List<String> cleanups = new ArrayList<>();
         List<File> mutations = new ArrayList<>();
+        List<String> mutationDiffs = new ArrayList<>();
         List<String> buildProperties = new ArrayList<>();
         List<BenchmarkListener> listeners = new ArrayList<>();
         boolean fromStudio = false;
 
         Iterator<String> it = Arrays.asList(args).iterator();
+        // See http://cs/android/prebuilts/studio/buildbenchmarks/scenarios.bzl for meaning of
+        // these flags.
         while (it.hasNext()) {
             String arg = it.next();
             if (arg.equals("--project") && it.hasNext()) {
@@ -100,6 +105,8 @@ public class BenchmarkTest {
                 setupDiffs.add(it.next());
             } else if (arg.equals("--mutation") && it.hasNext()) {
                 mutations.add(new File(it.next()));
+            } else if (arg.equals("--mutation-diff") && it.hasNext()) {
+                mutationDiffs.add(it.next());
             } else if (arg.equals("--build_property") && it.hasNext()) {
                 buildProperties.add(it.next());
             } else if (arg.equals("--listener") && it.hasNext()) {
@@ -108,6 +115,8 @@ public class BenchmarkTest {
                 fromStudio = Boolean.valueOf(it.next());
             } else if (arg.equals("--with-workers") && it.hasNext()) {
                 benchmarkWithWorkers = Boolean.valueOf(it.next());
+            } else if (arg.equals("--gradle-root") && it.hasNext()) {
+                testProjectGradleRootFromSourceRoot = it.next();
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -125,10 +134,12 @@ public class BenchmarkTest {
                         benchmarkSize,
                         benchmarkType,
                         benchmarkWithWorkers,
+                        testProjectGradleRootFromSourceRoot,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
                         setupDiffs,
                         mutations,
+                        mutationDiffs,
                         startups,
                         cleanups,
                         tasks,
@@ -169,9 +180,11 @@ public class BenchmarkTest {
             String benchmarkSize,
             String benchmarkType,
             boolean benchmarkWithWorkers,
+            String testProjectGradleRootFromSourceRoot,
             BenchmarkRun benchmarkRun,
             List<String> setupDiffs,
             List<File> mutations,
+            List<String> mutationDiffs,
             List<String> startups,
             List<String> cleanups,
             List<String> tasks,
@@ -220,12 +233,15 @@ public class BenchmarkTest {
             diff.apply(src, 3);
         }
 
+        mutations.addAll(
+                mutationDiffs.stream().map(s -> new File(data, s)).collect(Collectors.toList()));
         UnifiedDiff[] diffs = new UnifiedDiff[mutations.size()];
         for (int i = 0; i < mutations.size(); i++) {
             diffs[i] = new UnifiedDiff(mutations.get(i));
         }
 
-        try (Gradle gradle = new Gradle(src, out, distribution)) {
+        try (Gradle gradle =
+                new Gradle(new File(src, testProjectGradleRootFromSourceRoot), out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
