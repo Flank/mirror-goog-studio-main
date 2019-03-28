@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="gradle-api">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/5.3-rc-2/generated-gradle-jars/gradle-api-5.3-rc-2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../out/.gradle/caches/5.3.1/generated-gradle-jars/gradle-api-5.3.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
