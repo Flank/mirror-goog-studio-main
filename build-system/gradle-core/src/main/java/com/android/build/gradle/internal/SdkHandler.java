@@ -420,6 +420,8 @@ public class SdkHandler {
             // during SdkHandler set-up.
             return;
         }
+
+        loader.getSdkInfo(logger); // We need to make sure the loader was initialized.
         ndkHandler.installFromSdk(loader, sdkLibData);
     }
 
