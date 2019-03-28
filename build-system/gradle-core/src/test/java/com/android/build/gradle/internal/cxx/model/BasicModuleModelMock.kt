@@ -29,19 +29,26 @@ import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.model.CoreCmakeOptions
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions
+import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.internal.ndk.NdkInfo
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
+import com.android.builder.model.ApiVersion
+import com.android.builder.model.ProductFlavor
+import com.android.sdklib.AndroidVersion
 import org.gradle.api.Project
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import java.io.File
+import java.util.function.Supplier
 
 /**
  * Set up up a mock for constructing [CxxModuleModel]. It takes a lot of plumbing so this can
@@ -122,6 +129,21 @@ open class BasicModuleModelMock {
             SdkConstants.FN_LOCAL_PROPERTIES
         )
     }
+    val ndkHandler = mock(
+        NdkHandler::class.java,
+        throwUnmocked
+    )
+    val productFlavor = mock(
+        ProductFlavor::class.java,
+        throwUnmocked
+    )
+    val ndkInfo = mock(
+        NdkInfo::class.java
+    )
+    val minSdkVersion = mock(
+        ApiVersion::class.java,
+        throwUnmocked
+    )
     init {
         doReturn(extension).`when`(global).extension
         doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
@@ -170,6 +192,17 @@ open class BasicModuleModelMock {
         doReturn(listOf(Abi.X86)).`when`(ndkPlatform).defaultAbis
         doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
         doReturn(true).`when`(coreBuildType).isDebuggable
+        doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
+        doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
+        doReturn(true).`when`(ndkPlatform).isConfigured
+        doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
+        doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
+        doReturn(18).`when`(minSdkVersion).apiLevel
+        doReturn(null).`when`(minSdkVersion).codename
+        doReturn(ndkInfo).`when`(ndkPlatform).ndkInfo
+        Mockito.`when`(ndkInfo.findSuitablePlatformVersion(
+            "x86",
+            AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename))).thenReturn(18)
     }
 
     fun getHumanReadable(abi: CxxAbiModel) : String {

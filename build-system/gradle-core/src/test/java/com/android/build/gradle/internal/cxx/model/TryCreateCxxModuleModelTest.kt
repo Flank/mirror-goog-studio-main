@@ -88,7 +88,8 @@ class TryCreateCxxModuleModelTest {
     fun `remap of buildStagingDirectory`() {
         BasicCmakeMock().let {
             RecordingLoggingEnvironment().use { logEnvironment ->
-                doReturn(File("my-build-staging-directory")).`when`(it.cmake).buildStagingDirectory
+                doReturn(File("my-build-staging-directory"))
+                    .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(0)
@@ -101,13 +102,14 @@ class TryCreateCxxModuleModelTest {
     fun `remap of buildStagingDirectory into build folder`() {
         BasicCmakeMock().let {
             RecordingLoggingEnvironment().use { logEnvironment ->
-                doReturn(File(it.project.buildDir, "my-build-staging-directory")).`when`(it.cmake)
-                    .buildStagingDirectory
+                doReturn(File(it.project.buildDir, "my-build-staging-directory"))
+                    .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
                 assertThat(logEnvironment.errors).hasSize(0)
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(1)
-                assertThat(logEnvironment.errors[0]).contains("The build staging directory you specified")
+                assertThat(logEnvironment.errors[0])
+                    .contains("The build staging directory you specified")
                 assertThat(finalStagingDir.path).doesNotContain("build-dir")
                 assertThat(finalStagingDir.path).contains(".cxx")
             }

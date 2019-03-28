@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import java.io.File
@@ -42,7 +43,8 @@ interface CxxModuleModel {
     val splitsAbiFilters: Set<String>
     /**  Folder for intermediates (ex source-root/Source/Android/app/build/intermediates) */
     val intermediatesFolder: File
-    /**  The colon-delimited gradle path to this module (ex app:) */
+    /**  The colon-delimited gradle path to this module
+     *   (ex ':app' in ./gradlew :app:externalNativeBuildDebug) */
     val gradleModulePathName: String
     /**  Dir of the project (ex source-root/Source/Android/app) */
     val moduleRootFolder: File
@@ -61,8 +63,12 @@ interface CxxModuleModel {
     /**  The module level .cxx folder (ex $moduleRootFolder/.cxx) */
     val cxxFolder: File
     /**  Folder path to the NDK (ex /Android/sdk/ndk/20.0.5344622) */
-    val ndkFolder: File?
+    val ndkFolder: File
     /** The version of the NDK (ex 20.0.5344622-rc1) */
-    val ndkVersion: Revision?
+    val ndkVersion: Revision
+    /** ABIs supported by this NDK (ex x86, x86_64) */
+    val ndkSupportedAbiList: List<Abi>
+    /** ABIS that are default for this NDK (ex x86_64) */
+    val ndkDefaultAbiList: List<Abi>
 }
 

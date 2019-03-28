@@ -168,21 +168,27 @@ class CxxModuleModelTest {
     private fun checkMethodName(method: Method) {
         when(method.returnType) {
             File::class.java -> {
-                assertThat(method.name.endsWith("Folder") || method.name.endsWith("File"))
-                    .named("vals with File type must end with Folder or File: ${method.toGenericString()}")
+                assertThat(method.name.endsWith("Folder") ||
+                        method.name.endsWith("File"))
+                    .named("vals with File type must end with Folder or File: " +
+                            "${method.toGenericString()}")
                     .isTrue()
             }
             Boolean::class.java -> {
-                assertThat(method.name.startsWith("is") || method.name.startsWith("has"))
-                    .named("vals with Boolean type must start with 'is' or 'has': ${method.toGenericString()}")
+                assertThat(method.name.startsWith("is") ||
+                        method.name.startsWith("has"))
+                    .named("vals with Boolean type must start with 'is' or 'has': " +
+                            "${method.toGenericString()}")
                     .isTrue()
                 assertThat(method.name.endsWith("Enabled"))
-                    .named("vals with Boolean type must end with 'Enabled': ${method.toGenericString()}")
+                    .named("vals with Boolean type must end with 'Enabled': " +
+                            "${method.toGenericString()}")
                     .isTrue()
             }
             List::class.java -> {
                 assertThat(method.name.endsWith("List"))
-                    .named("vals with List type must end with 'List': ${method.toGenericString()}")
+                    .named("vals with List type must end with 'List': " +
+                            "${method.toGenericString()}")
                     .isTrue()
             }
         }

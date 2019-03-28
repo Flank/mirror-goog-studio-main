@@ -86,8 +86,10 @@ private data class MutableCxxModuleModel(
     override var ndkSymlinkFolder: File? = null,
     override var compilerSettingsCacheFolder: File = File("."),
     override var cxxFolder: File = File("."),
-    override var ndkFolder: File? = null,
-    override var ndkVersion: Revision? = null
+    override var ndkFolder: File = File("."),
+    override var ndkVersion: Revision = Revision.parseRevision("0.0.0"),
+    override var ndkSupportedAbiList: List<Abi> = listOf(),
+    override var ndkDefaultAbiList: List<Abi> = listOf()
 ) : CxxModuleModel
 
 private fun CxxModuleModel.toMutable() = MutableCxxModuleModel(

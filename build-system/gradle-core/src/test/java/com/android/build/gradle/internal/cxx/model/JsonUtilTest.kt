@@ -30,6 +30,8 @@ class JsonUtilTest {
     private val abi  : CxxAbiModel
     init {
         val module = object : CxxModuleModel {
+            override val ndkSupportedAbiList = Abi.values().toList()
+            override val ndkDefaultAbiList = listOf(Abi.X86_64)
             override val isNativeCompilerSettingsCacheEnabled = false
             override val sdkFolder = File("soFolder")
             override val isBuildOnlyTargetAbiEnabled = true
