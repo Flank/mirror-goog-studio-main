@@ -72,7 +72,8 @@ public interface IDevice extends IShellEnabledDevice {
     enum HardwareFeature {
         WATCH("watch"),
         EMBEDDED("embedded"),
-        TV("tv");
+        TV("tv"),
+        AUTOMOTIVE("automotive");
 
         private final String mCharacteristic;
 
