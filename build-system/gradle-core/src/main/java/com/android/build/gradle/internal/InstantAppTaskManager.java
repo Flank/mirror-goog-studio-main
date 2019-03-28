@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleInstantApp;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import java.io.File;
 import java.util.Collection;
@@ -63,6 +64,18 @@ public class InstantAppTaskManager extends TaskManager {
 
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
+        // add a warning that the instantapp module is deprecated and will be removed in the future.
+        globalScope
+                .getAndroidBuilder()
+                .getIssueReporter()
+                .reportWarning(
+                        EvalIssueReporter.Type.PLUGIN_OBSOLETE,
+                        "The com.android.instantapp plugin is deprecated and will be removed in a future"
+                                + " gradle plugin version. Please switch to using the Android App"
+                                + " Bundle to build your instant app. For more information on"
+                                + " migrating to Android App Bundles, please visit"
+                                + " https://developer.android.com/topic/google-play-instant/feature-module-migration");
+
         // Create the bundling task.
         File bundleDir = variantScope.getApkLocation();
         TaskProvider<BundleInstantApp> bundleTask =

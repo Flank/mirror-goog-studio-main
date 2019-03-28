@@ -322,10 +322,13 @@ public class FeatureTest {
         assertThat(featureModel.isBaseSplit()).isFalse();
         AndroidProject baseModel = models.get(":baseFeature");
         assertThat(baseModel.isBaseSplit()).isTrue();
+        AndroidProject instantAppModel = models.get(":bundle");
 
         assertThat(featureModel)
                 .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
         assertThat(baseModel)
+                .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
+        assertThat(instantAppModel)
                 .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
     }
 
