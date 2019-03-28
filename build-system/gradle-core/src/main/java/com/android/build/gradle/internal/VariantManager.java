@@ -74,6 +74,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -101,7 +102,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -111,10 +111,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -1465,14 +1466,27 @@ public class VariantManager implements VariantModel {
     }
 
     /**
-     * Calculates the default variant to put in the model
+     * Calculates the default variant to put in the model.
+     *
+     * <p>Given user preferences, this attempts to respect them in the presence of the variant
+     * filter.
+     *
+     * <p>This prioritizes by, in decending order of preference:
+     *
+     * <ol>
+     *   <li>The build author's explicit build type settings
+     *   <li>The build author's explicit product flavor settings, matching the highest number of
+     *       chosen defaults
+     *   <li>The implicit default build type
+     *   <li>The alphabetically sorted default product flavors, left to right
+     * </ol>
      *
      * @param syncIssueConsumer any arising user configuration issues will be reported here.
      * @return the name of a variant that exists under the presence of the variant filter. Only
      *     returns null if all variants are removed.
      */
     @Nullable
-    public String getDefaultVariant(Consumer<SyncIssue> syncIssueConsumer) {
+    public String getDefaultVariant(@NonNull Consumer<SyncIssue> syncIssueConsumer) {
         // Finalize the DSL we are about to read.
         finalizeDefaultVariantDsl();
 
@@ -1481,46 +1495,144 @@ public class VariantManager implements VariantModel {
             return null;
         }
 
-        String defaultBuildType = getDefaultBuildType(syncIssueConsumer);
+        // Otherwise get the 'best' build type, respecting the user's preferences first.
 
-        if (productFlavors.isEmpty()) {
-            return defaultBuildType;
-        }
+        @Nullable
+        String chosenBuildType = getBuildAuthorSpecifiedDefaultBuildType(syncIssueConsumer);
+        Map<String, String> chosenFlavors =
+                getBuildAuthorSpecifiedDefaultFlavors(syncIssueConsumer);
 
-        Map<String, String> defaultFlavorsPerDimension = getDefaultFlavors(syncIssueConsumer);
+        Comparator<VariantScope> preferredDefaultVariantScopeComparator =
+                new BuildAuthorSpecifiedDefaultBuildTypeComparator(chosenBuildType)
+                        .thenComparing(
+                                new BuildAuthorSpecifiedDefaultsFlavorComparator(chosenFlavors))
+                        .thenComparing(new DefaultBuildTypeComparator())
+                        .thenComparing(new DefaultFlavorComparator());
 
-        // Find the variant with those properties.
-        for (VariantScope variantScope : getVariantScopes()) {
-            if (isDefaultVariant(defaultBuildType, defaultFlavorsPerDimension, variantScope)) {
-                return variantScope.getFullVariantName();
-            }
-        }
-        throw new IllegalStateException("Variant must exist");
+        // Ignore test, base feature and feature variants.
+        // * Test variants have corresponding production variants
+        // * Hybrid feature variants have corresponding library variants.
+        Optional<VariantScope> defaultVariantScope =
+                variantScopes
+                        .stream()
+                        .filter(it -> !it.getType().isTestComponent())
+                        .filter(it -> !it.getType().isHybrid())
+                        .min(preferredDefaultVariantScopeComparator);
+        return defaultVariantScope.map(TransformVariantScope::getFullVariantName).orElse(null);
     }
 
-    private boolean isDefaultVariant(
-            String defaultBuildType,
-            Map<String, String> defaultFlavorsPerDimension,
-            VariantScope variantScope) {
-        if (!variantScope
-                .getVariantData()
-                .getVariantConfiguration()
-                .getBuildType()
-                .getName()
-                .equals(defaultBuildType)) {
-            return false;
+    /**
+     * Compares variants prioritizing those that match the given default build type.
+     *
+     * <p>The best match is the <em>minimum</em> element.
+     *
+     * <p>Note: this comparator imposes orderings that are inconsistent with equals, as variants
+     * that do not match the default will compare the same.
+     */
+    private static class BuildAuthorSpecifiedDefaultBuildTypeComparator
+            implements Comparator<VariantScope> {
+        @Nullable private final String chosen;
+
+        private BuildAuthorSpecifiedDefaultBuildTypeComparator(@Nullable String chosen) {
+            this.chosen = chosen;
         }
-        for (CoreProductFlavor productFlavor :
-                variantScope.getVariantData().getVariantConfiguration().getProductFlavors()) {
-            if (!defaultFlavorsPerDimension
-                    .get(productFlavor.getDimension())
-                    .equals(productFlavor.getName())) {
-                return false;
+
+        @Override
+        public int compare(@NonNull VariantScope v1, @NonNull VariantScope v2) {
+            if (chosen == null) {
+                return 0;
             }
+            int b1Score =
+                    v1.getVariantConfiguration().getBuildType().getName().equals(chosen) ? 1 : 0;
+            int b2Score =
+                    v2.getVariantConfiguration().getBuildType().getName().equals(chosen) ? 1 : 0;
+            return b2Score - b1Score;
         }
-        return true;
     }
 
+    /**
+     * Compares variants prioritizing those that match the given default flavors over those that do
+     * not.
+     *
+     * <p>The best match is the <em>minimum</em> element.
+     *
+     * <p>Note: this comparator imposes orderings that are inconsistent with equals, as variants
+     * that do not match the default will compare the same.
+     */
+    private static class BuildAuthorSpecifiedDefaultsFlavorComparator
+            implements Comparator<VariantScope> {
+
+        @NonNull private final Map<String, String> defaultFlavors;
+
+        BuildAuthorSpecifiedDefaultsFlavorComparator(@NonNull Map<String, String> defaultFlavors) {
+            this.defaultFlavors = defaultFlavors;
+        }
+
+        @Override
+        public int compare(VariantScope v1, VariantScope v2) {
+            int f1Score = 0;
+            int f2Score = 0;
+
+            for (CoreProductFlavor flavor : v1.getVariantConfiguration().getProductFlavors()) {
+                if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
+                    f1Score++;
+                }
+            }
+            for (CoreProductFlavor flavor : v2.getVariantConfiguration().getProductFlavors()) {
+                if (flavor.getName().equals(defaultFlavors.get(flavor.getDimension()))) {
+                    f2Score++;
+                }
+            }
+            return f2Score - f1Score;
+        }
+    }
+
+    /**
+     * Compares variants on build types.
+     *
+     * <p>Prefers 'debug', then falls back to the first alphabetically.
+     *
+     * <p>The best match is the <em>minimum</em> element.
+     */
+    private static class DefaultBuildTypeComparator implements Comparator<VariantScope> {
+        @Override
+        public int compare(VariantScope v1, VariantScope v2) {
+            String b1 = v1.getVariantConfiguration().getBuildType().getName();
+            String b2 = v2.getVariantConfiguration().getBuildType().getName();
+            if (b1.equals(b2)) {
+                return 0;
+            } else if (b1.equals("debug")) {
+                return -1;
+            } else if (b2.equals("debug")) {
+                return 1;
+            } else {
+                return b1.compareTo(b2);
+            }
+        }
+    }
+
+    /**
+     * Compares variants prioritizing product flavors alphabetically, left-to-right.
+     *
+     * <p>The best match is the <em>minimum</em> element.
+     */
+    private static class DefaultFlavorComparator implements Comparator<VariantScope> {
+        @Override
+        public int compare(VariantScope v1, VariantScope v2) {
+            // Compare flavors left-to right.
+            for (int i = 0; i < v1.getVariantConfiguration().getProductFlavors().size(); i++) {
+                String f1 = v1.getVariantConfiguration().getProductFlavors().get(i).getName();
+                String f2 = v2.getVariantConfiguration().getProductFlavors().get(i).getName();
+                int diff = f1.compareTo(f2);
+                if (diff != 0) {
+                    return diff;
+                }
+            }
+            return 0;
+        }
+    }
+
+    /** Prevent any subsequent modifications to the default variant DSL properties. */
     private void finalizeDefaultVariantDsl() {
         for (BuildTypeData buildTypeData : buildTypes.values()) {
             buildTypeData.getBuildType().getIsDefault().finalizeValue();
@@ -1533,21 +1645,25 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    @NonNull
-    private String getDefaultBuildType(Consumer<SyncIssue> issueConsumer) {
-        ImmutableSortedSet<String> buildTypeNames = getBuildTypeNames();
-
-        if (buildTypeNames.isEmpty()) {
-            throw new IllegalStateException("Expected at least one build type.");
-        }
-
+    /**
+     * Computes explicit build-author default build type.
+     *
+     * @param issueConsumer any configuration issues will be added here, e.g. if multiple build
+     *     types are marked as default.
+     * @return user specified default build type, null if none set.
+     */
+    @Nullable
+    private String getBuildAuthorSpecifiedDefaultBuildType(
+            @NonNull Consumer<SyncIssue> issueConsumer) {
         // First look for the user setting
-        List<String> buildTypesMarkedAsDefault = new ArrayList<>();
-        for (String buildType : buildTypeNames) {
-            if (buildTypes.get(buildType).getBuildType().getIsDefault().get()) {
-                buildTypesMarkedAsDefault.add(buildType);
+        List<String> buildTypesMarkedAsDefault = new ArrayList<>(1);
+        for (BuildTypeData buildType : buildTypes.values()) {
+            if (buildType.getBuildType().getIsDefault().get()) {
+                buildTypesMarkedAsDefault.add(buildType.getBuildType().getName());
             }
         }
+        Collections.sort(buildTypesMarkedAsDefault);
+
         if (buildTypesMarkedAsDefault.size() > 1) {
             issueConsumer.accept(
                     new SyncIssueImpl(
@@ -1560,67 +1676,42 @@ public class VariantManager implements VariantModel {
                                     + "Please only set `isDefault = true` for one build type."));
         }
 
-        if (!buildTypesMarkedAsDefault.isEmpty()) {
-            // This picks the first alphabetically that was tagged, to make it stable,
-            // even if the user accidentally tags two build types as default.
-            return buildTypesMarkedAsDefault.get(0);
+        if (buildTypesMarkedAsDefault.isEmpty()) {
+            return null;
         }
-
-        // Then default to debug
-        if (buildTypeNames.contains("debug")) {
-            return "debug";
-        }
-
-        // Otherwise pick the first alphabetically, and there's always at least one build type.
-        return buildTypeNames.first();
-    }
-
-    /** Returns a sorted set of build type names that were not ignored by the variant filter */
-    @NonNull
-    private ImmutableSortedSet<String> getBuildTypeNames() {
-        ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
-        // This needs to iterate through the variants, as flavors might have been removed by the
-        // variant filter
-        for (VariantScope variantScope : getVariantScopes()) {
-            builder.add(
-                    variantScope
-                            .getVariantData()
-                            .getVariantConfiguration()
-                            .getBuildType()
-                            .getName());
-        }
-        return builder.build();
+        // This picks the first alphabetically that was tagged, to make it stable,
+        // even if the user accidentally tags two build types as default.
+        return buildTypesMarkedAsDefault.get(0);
     }
 
     /**
-     * Computes default flavors for each dimension.
+     * Computes explicit user set default product flavors for each dimension.
      *
-     * @param issueConsumer any configuration issues will be added here.
-     * @return A map from flavor dimension to the default flavor for that dimension
+     * @param issueConsumer any configuration issues will be added here, e.g. if multiple flavors in
+     *     one dimension are marked as default.
+     * @return map from flavor dimension to the user-specified default flavor for that dimension,
+     *     with entries missing for flavors without user-specified defaults.
      */
     @NonNull
-    private Map<String, String> getDefaultFlavors(Consumer<SyncIssue> issueConsumer) {
-        ImmutableSortedSet<String> flavorNames = getFlavorNames();
-        Map<String, String> defaults = new HashMap<>();
+    private Map<String, String> getBuildAuthorSpecifiedDefaultFlavors(
+            @NonNull Consumer<SyncIssue> issueConsumer) {
         // Using ArrayListMultiMap to preserve sorting of flavor names.
         ArrayListMultimap<String, String> userDefaults = ArrayListMultimap.create();
 
-        for (String flavorName : flavorNames) {
+        for (ProductFlavorData<CoreProductFlavor> flavor : productFlavors.values()) {
             com.android.build.gradle.internal.dsl.ProductFlavor productFlavor =
-                    (com.android.build.gradle.internal.dsl.ProductFlavor)
-                            productFlavors.get(flavorName).getProductFlavor();
+                    (com.android.build.gradle.internal.dsl.ProductFlavor) flavor.getProductFlavor();
             String dimension = productFlavor.getDimension();
-            // Store the first alphabetically as a default
-            defaults.putIfAbsent(dimension, flavorName);
-            // Store the user preference
             if (productFlavor.getIsDefault().get()) {
-                userDefaults.put(dimension, flavorName);
+                userDefaults.put(dimension, productFlavor.getName());
             }
         }
 
+        ImmutableMap.Builder<String, String> defaults = ImmutableMap.builder();
         // For each user preference, validate it and override the alphabetical default.
         for (String dimension : userDefaults.keySet()) {
             List<String> userDefault = userDefaults.get(dimension);
+            Collections.sort(userDefault);
             if (!userDefault.isEmpty()) {
                 // This picks the first alphabetically that was tagged, to make it stable,
                 // even if the user accidentally tags two flavors in the same dimension as default.
@@ -1638,26 +1729,13 @@ public class VariantManager implements VariantModel {
                                         + "': '"
                                         + Joiner.on("', '").join(userDefault)
                                         + "'.\n"
-                                        + "Please only set `isDefault = true` for one product flavor "
+                                        + "Please only set `isDefault = true` "
+                                        + "for one product flavor "
                                         + "in each flavor dimension."));
             }
         }
 
-        return ImmutableMap.copyOf(defaults);
+        return defaults.build();
     }
 
-    /** Returns a sorted set of flavor names that were not ignored by the variant filter */
-    @NonNull
-    private ImmutableSortedSet<String> getFlavorNames() {
-        ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
-        // This needs to iterate through the variants, as flavors might have been removed by the
-        // variant filter
-        for (VariantScope variantScope : getVariantScopes()) {
-            for (CoreProductFlavor productFlavor :
-                    variantScope.getVariantData().getVariantConfiguration().getProductFlavors()) {
-                builder.add(productFlavor.getName());
-            }
-        }
-        return builder.build();
-    }
 }

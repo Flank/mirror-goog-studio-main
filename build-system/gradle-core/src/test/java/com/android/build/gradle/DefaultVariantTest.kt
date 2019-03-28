@@ -158,6 +158,79 @@ class DefaultVariantTest {
         ).isEqualTo("f2F3Debug")
     }
 
+
+    @Test
+    fun `test removal default flavor with multiple dimensions`() {
+        assertThat(
+            computeDefaultVariant(
+                """
+                flavorDimensions 'number', 'letter'
+                productFlavors {
+                    f1 { dimension = 'number' }
+                    f2 { dimension = 'number' }
+                    fa { dimension = 'letter' }
+                    fb { dimension = 'letter' }
+                }
+                variantFilter { variant ->
+                    if (variant.name == 'f1FaDebug') {
+                        variant.ignore = true
+                    }
+                }
+                """
+            )
+        ).isEqualTo("f1FbDebug")
+    }
+
+    @Test
+    fun `test removal default flavor with multiple dimensions and explicit choice`() {
+        assertThat(
+            computeDefaultVariant(
+                """
+                flavorDimensions 'number', 'letter'
+                productFlavors {
+                    f1 { dimension = 'number' }
+                    f2 { dimension = 'number'; isDefault = true }
+                    fa { dimension = 'letter' }
+                    fb { dimension = 'letter' }
+                }
+                variantFilter { variant ->
+                    if (variant.name == 'f2FaDebug') {
+                        variant.ignore = true
+                    }
+                }
+                """
+            )
+        ).isEqualTo("f2FbDebug")
+    }
+
+    @Test
+    fun `test matching heuristic with filtering picks variant with most matching`() {
+        assertThat(
+            computeDefaultVariant(
+                """
+                flavorDimensions 'number', 'letter', 'something'
+                productFlavors {
+                    f1 { dimension = 'number' }
+                    f2 { dimension = 'number'; isDefault = true }
+                    fa { dimension = 'letter' }
+                    fb { dimension = 'letter'; isDefault = true  }
+                    fx { dimension = 'something' }
+                    fy { dimension = 'something'; isDefault = true }
+                }
+                variantFilter { variant ->
+                    variant.ignore =
+                            (variant.name == 'f2FbFxDebug') ||
+                            (variant.name == 'f2FbFyDebug') ||
+                            (variant.name == 'f2FaFyDebug') ||
+                            (variant.buildType.name == 'release')
+                }
+                """
+            )
+        ).isEqualTo("f1FbFyDebug")
+        // Left to right comparison this would be f2FaFxDebug, (as f1 is first)
+        // but f1FbFyDebug matches two of the user's settings, so the heuristic should prefer that.
+    }
+
     @Test
     fun `test late change`() {
         assertThat(computeDefaultVariant("")).isEqualTo("debug")
@@ -254,26 +327,45 @@ class DefaultVariantTest {
         )
     }
 
+    @Test
+    fun `test feature plugin defaults to debug`() {
+        assertThat(
+            computeDefaultVariant(
+                dsl = """
+                    buildTypes {
+                        a
+                        z
+                    }
+                    """,
+                pluginType = TestProjects.Plugin.FEATURE
+            )
+        ).isEqualTo("debug")
+    }
+
     private class Result(val defaultVariant: String?, val syncIssues: Set<SyncIssue>)
 
-    private fun computeDefaultVariant(dsl: String): String? {
-        val result = computeDefaultVariantWithSyncIssues(dsl)
+    private fun computeDefaultVariant(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP): String? {
+        val result = computeDefaultVariantWithSyncIssues(dsl, pluginType)
         assertThat(result.syncIssues).isEmpty()
         return result.defaultVariant
     }
 
-    private fun computeDefaultVariantWithSyncIssues(dsl: String) : Result {
+    private fun computeDefaultVariantWithSyncIssues(dsl: String, pluginType: TestProjects.Plugin = TestProjects.Plugin.APP) : Result {
         project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
-            .withPlugin(TestProjects.Plugin.APP)
+            .withPlugin(pluginType)
             .build()
-        project.extensions.getByType<AppExtension>(AppExtension::class.java).apply {
+        project.extensions.getByType<TestedExtension>(TestedExtension::class.java).apply {
             setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         }
         Eval.me(
             "project",
             project, "project.android {\n $dsl\n }\n"
         )
-        val plugin = project.plugins.getPlugin<AppPlugin>(AppPlugin::class.java)
+        val plugin = when (pluginType) {
+            TestProjects.Plugin.APP -> project.plugins.getPlugin(AppPlugin::class.java)
+            TestProjects.Plugin.LIBRARY -> project.plugins.getPlugin(LibraryPlugin::class.java)
+            TestProjects.Plugin.FEATURE -> project.plugins.getPlugin(FeaturePlugin::class.java)
+        }
 
         plugin.variantManager.populateVariantDataList()
 
