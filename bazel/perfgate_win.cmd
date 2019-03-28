@@ -12,8 +12,6 @@ set TESTTAGFILTERS=perfgate_multi_run,perfgate_only,-no_windows,-no_test_windows
 
 set CONFIGOPTIONS=--config=postsubmit
 
-set AUTHCREDS=--auth_credentials=C:\buildbot\android-studio-alphasource.json
-
 
 @rem The current directory the executing script is in.
 set SCRIPTDIR=%~dp0
@@ -36,7 +34,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof --runs_per_test=10 -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof --runs_per_test=10 -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT

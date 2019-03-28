@@ -55,12 +55,15 @@ build --copt=-fvisibility=hidden
 # finds make in the ndk-build script (see b/72179674).
 build --test_env=SHELL
 
-build:upsalite_results --bes_backend=buildeventservice.googleapis.com
-build:upsalite_results --bes_timeout=60s
-build:upsalite_results --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
-build:upsalite_results --project_id=908081808034
+# Set flags for uploading to ResultStore
+build:cloud_resultstore --bes_backend=buildeventservice.googleapis.com
+build:cloud_resultstore --bes_timeout=60s
+build:cloud_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-source-tools
+build:cloud_resultstore --project_id=908081808034
+build:cloud_resultstore --tls_enabled=true
+build:cloud_resultstore --auth_enabled=true
 
-build:remote_common --config=upsalite_results
+build:remote_common --config=cloud_resultstore
 
 # Enable the remote cache so all remote action results can be shared
 build:remote_common --remote_cache=remotebuildexecution.googleapis.com
@@ -137,11 +140,7 @@ build:remote --remote_executor=remotebuildexecution.googleapis.com
 # behavior and therefore improves both the remote cache hit rate and the
 # correctness and repeatability of the build.
 build:remote --experimental_strict_action_env=true
+build:remote --auth_credentials=tools/vendor/adt_infra_internal/.android-studio-alphasource.json
 
 # Enable jvmopt used for Foundry testing
 test:remote --jvmopt='-Dandroid.remote.run=true'
-
-# Set flags for uploading to BES.
-build:results-local --config=upsalite_results
-build:results-local --tls_enabled=true
-build:results-local --auth_enabled=true

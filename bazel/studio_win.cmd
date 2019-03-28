@@ -16,8 +16,6 @@ set CONFIGOPTIONSPOST=--config=postsubmit
 set CONFIGOPTIONSPSQ=--config=presubmit
 set CONFIGOPTIONS=%CONFIGOPTIONSPOST%
 
-set AUTHCREDS=--auth_credentials=C:\buildbot\android-studio-alphasource.json
-
 IF "%BUILDNUMBER:~0,1%"=="P" (
   set TESTTAGFILTERS=%TESTTAGFILTERSPSQ%
   set CONFIGOPTIONS=%CONFIGOPTIONSPSQ%
@@ -44,7 +42,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% %AUTHCREDS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof  -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test %CONFIGOPTIONS% --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof  -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT
