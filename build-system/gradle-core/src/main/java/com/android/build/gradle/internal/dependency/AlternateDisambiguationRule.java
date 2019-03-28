@@ -42,6 +42,9 @@ public class AlternateDisambiguationRule<T extends Named>
     @Override
     public void execute(MultipleCandidatesDetails<T> details) {
         final T consumerValue = details.getConsumerValue();
+        if (consumerValue == null) {
+            return;
+        }
 
         List<String> alternatesForValue = alternates.get(consumerValue.getName());
         if (alternatesForValue == null) {
