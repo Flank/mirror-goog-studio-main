@@ -143,7 +143,7 @@ filegroup(
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-28"],
+    srcs = [":platforms/android-Q"],
     visibility = ["//visibility:public"],
 )
 
@@ -174,6 +174,13 @@ filegroup(
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
     name = "platforms/android-27",
+)
+
+platform_filegroup(
+    name = "platforms/android-Q",
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__"
+    ],
 )
 
 platform_filegroup(
