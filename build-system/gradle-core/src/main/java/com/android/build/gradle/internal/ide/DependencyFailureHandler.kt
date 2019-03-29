@@ -26,8 +26,8 @@ import com.google.common.collect.ListMultimap
 import java.util.function.BiConsumer
 import java.util.regex.Pattern
 
-private val pattern = Pattern.compile(".*any matches for ([a-zA-Z0-9:\\-.+]+) .*", Pattern.DOTALL)
-private val pattern2 = Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL)
+private val pattern = Pattern.compile(".*any matches for (\\S*) .*", Pattern.DOTALL)
+private val pattern2 = Pattern.compile(".*Could not find (\\S*)\\..*", Pattern.DOTALL)
 private val LINE_SPLITTER = Splitter.on(System.lineSeparator())
 
 class DependencyFailureHandler {
@@ -140,7 +140,7 @@ private fun processDependencyThrowable(
     resultConsumer.invoke(data, messages)
 }
 
-private fun checkForData(message: String): String? {
+internal fun checkForData(message: String): String? {
     var m = pattern.matcher(message)
     if (m.matches()) {
         return m.group(1)
