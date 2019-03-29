@@ -134,4 +134,10 @@ public class DefaultManifestParserTest {
         Boolean extractNativeLibs = defaultManifestParser.getExtractNativeLibs();
         assertThat(extractNativeLibs).isEqualTo(true);
     }
+
+    @Test
+    public void getUseEmbeddedDex() {
+        Boolean useEmbeddedDex = defaultManifestParser.getUseEmbeddedDex();
+        assertThat(useEmbeddedDex).isEqualTo(true);
+    }
 }

@@ -116,4 +116,11 @@ public interface ManifestAttributeSupplier {
      */
     @Nullable
     Boolean getExtractNativeLibs();
+
+    /**
+     * Returns value of the {@code useEmbeddedDex} attribute of the {@code application} tag, if
+     * present.
+     */
+    @Nullable
+    Boolean getUseEmbeddedDex();
 }

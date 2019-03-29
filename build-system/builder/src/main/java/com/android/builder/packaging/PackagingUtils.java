@@ -188,15 +188,20 @@ public class PackagingUtils {
                 getNativeLibrariesLibrariesPackagingMode(
                         manifest, isInExecutionPhase, issueReporter);
 
+        PackageEmbeddedDex useEmbeddedDex =
+                getUseEmbeddedDex(manifest, isInExecutionPhase, issueReporter);
+
         return getNoCompressPredicateForExtensions(
-                getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode));
+                getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode, useEmbeddedDex));
     }
 
     @NonNull
     public static List<String> getNoCompressGlobsForBundle(
             @NonNull Collection<String> aaptOptionsNoCompress) {
         return getAllNoCompressExtensions(
-                        aaptOptionsNoCompress, NativeLibrariesPackagingMode.COMPRESSED)
+                        aaptOptionsNoCompress,
+                        NativeLibrariesPackagingMode.COMPRESSED,
+                        PackageEmbeddedDex.DEFAULT)
                 .stream()
                 .map(s -> "**" + s)
                 .sorted()
@@ -223,6 +228,25 @@ public class PackagingUtils {
     }
 
     @NonNull
+    public static PackageEmbeddedDex getUseEmbeddedDex(
+            @NonNull File manifest,
+            @NonNull BooleanSupplier isInExecutionPhase,
+            @Nullable EvalIssueReporter issueReporter) {
+        checkState(manifest.exists());
+        DefaultManifestParser parser =
+                new DefaultManifestParser(manifest, isInExecutionPhase, issueReporter);
+        Boolean useEmbeddedDex = parser.getUseEmbeddedDex();
+
+        if (useEmbeddedDex == null) {
+            return PackageEmbeddedDex.DEFAULT;
+        } else if (Boolean.TRUE.equals(useEmbeddedDex)) {
+            return PackageEmbeddedDex.UNCOMPRESSED;
+        } else {
+            return PackageEmbeddedDex.COMPRESSED;
+        }
+    }
+
+    @NonNull
     private static Predicate<String> getNoCompressPredicateForExtensions(
             @NonNull Iterable<String> noCompressExtensions) {
         return name -> {
@@ -240,11 +264,15 @@ public class PackagingUtils {
     @NonNull
     private static List<String> getAllNoCompressExtensions(
             @Nullable Collection<String> aaptOptionsNoCompress,
-            @NonNull NativeLibrariesPackagingMode nativeLibrariesPackagingMode) {
+            @NonNull NativeLibrariesPackagingMode nativeLibrariesPackagingMode,
+            PackageEmbeddedDex useEmbeddedDex) {
         List<String> result = Lists.newArrayList(DEFAULT_DONT_COMPRESS_EXTENSIONS);
 
         if (nativeLibrariesPackagingMode == NativeLibrariesPackagingMode.UNCOMPRESSED_AND_ALIGNED) {
             result.add(SdkConstants.DOT_NATIVE_LIBS);
+        }
+        if (!useEmbeddedDex.isCompressed()) {
+            result.add(SdkConstants.DOT_DEX);
         }
 
         if (aaptOptionsNoCompress != null) {

@@ -1306,6 +1306,7 @@ public final class SdkConstants {
     public static final String ATTR_HANDLE_PROFILING = "handleProfiling";
     public static final String ATTR_TARGET_PACKAGE = "targetPackage";
     public static final String ATTR_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
+    public static final String ATTR_USE_EMBEDDED_DEX = "useEmbeddedDex";
     public static final String ATTR_SPLIT_NAME = "splitName";
     public static final String ATTR_FEATURE_SPLIT = "featureSplit";
     public static final String ATTR_TARGET_SANDBOX_VERSION = "targetSandboxVersion";

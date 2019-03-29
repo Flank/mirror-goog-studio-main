@@ -26,6 +26,7 @@ import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_SPLIT;
 import static com.android.SdkConstants.ATTR_TARGET_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
+import static com.android.SdkConstants.ATTR_USE_EMBEDDED_DEX;
 import static com.android.SdkConstants.ATTR_VERSION_CODE;
 import static com.android.SdkConstants.ATTR_VERSION_NAME;
 import static com.android.SdkConstants.NS_RESOURCES;
@@ -34,6 +35,7 @@ import static com.android.SdkConstants.TAG_INSTRUMENTATION;
 import static com.android.SdkConstants.TAG_MANIFEST;
 import static com.android.SdkConstants.TAG_USES_SDK;
 import static com.android.builder.core.DefaultManifestParser.Attribute.APP_EXTRACT_NATIVE_LIBS;
+import static com.android.builder.core.DefaultManifestParser.Attribute.APP_USE_EMBEDDED_DEX;
 import static com.android.builder.core.DefaultManifestParser.Attribute.INST_FUNCTIONAL_TEST;
 import static com.android.builder.core.DefaultManifestParser.Attribute.INST_HANDLE_PROF;
 import static com.android.builder.core.DefaultManifestParser.Attribute.INST_LABEL;
@@ -225,6 +227,14 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
         return parseBoolean(extractNativeLibs);
     }
 
+    @Nullable
+    @Override
+    public Boolean getUseEmbeddedDex() {
+        init();
+        String useEmbeddedDex = attributeValues.get(APP_USE_EMBEDDED_DEX);
+        return parseBoolean(useEmbeddedDex);
+    }
+
     /**
      * If {@code value} is {@code null}, it returns {@code ifNull}. Otherwise it tries to parse the
      * {@code value} to {@link Integer}. If parsing the {@link Integer} fails, it will return {@code
@@ -268,7 +278,9 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
         INST_TARGET_PKG,
         MIN_SDK_VERSION,
         TARGET_SDK_VERSION,
-        APP_EXTRACT_NATIVE_LIBS;
+        APP_EXTRACT_NATIVE_LIBS,
+        APP_USE_EMBEDDED_DEX,
+        ;
     }
 
     /** Parse the file and store the result in a map. */
@@ -341,6 +353,10 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                                                 APP_EXTRACT_NATIVE_LIBS,
                                                 attributes.getValue(
                                                         NS_RESOURCES, ATTR_EXTRACT_NATIVE_LIBS));
+                                        putValue(
+                                                APP_USE_EMBEDDED_DEX,
+                                                attributes.getValue(
+                                                        NS_RESOURCES, ATTR_USE_EMBEDDED_DEX));
                                     }
                                 }
                             }

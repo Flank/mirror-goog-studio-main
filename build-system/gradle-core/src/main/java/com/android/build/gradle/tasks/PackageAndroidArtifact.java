@@ -312,10 +312,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     /*
-     * We don't really use this. But this forces a full build if the native packaging mode changes.
+     * We don't really use this. But this forces a full build if the native libraries or dex
+     * packaging mode changes.
      */
     @Input
-    public List<String> getNativeLibrariesPackagingModeName() {
+    public List<String> getNativeLibrariesAndDexPackagingModeName() {
         ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         manifests
                 .get()
@@ -326,12 +327,20 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             if (manifest.isFile()
                                     && manifest.getName()
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
-                                listBuilder.add(
+                                String extractNativeLibs =
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                                         manifest,
                                                         () -> true,
                                                         getBuilder().getIssueReporter())
-                                                .toString());
+                                                .toString();
+                                listBuilder.add(extractNativeLibs);
+                                String useEmbeddedDex =
+                                        PackagingUtils.getUseEmbeddedDex(
+                                                        manifest,
+                                                        () -> true,
+                                                        getBuilder().getIssueReporter())
+                                                .toString();
+                                listBuilder.add(useEmbeddedDex);
                             }
                         });
         return listBuilder.build();
