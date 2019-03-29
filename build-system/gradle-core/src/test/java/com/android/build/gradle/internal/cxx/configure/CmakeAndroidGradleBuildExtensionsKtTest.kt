@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -43,7 +43,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private lateinit var ndkFolder: File
     private lateinit var toolchain: File
     private lateinit var sourceProperties: File
-    private val logger = RecordingLoggingEnvironment()
+    private val logger = PassThroughRecordingLoggingEnvironment()
 
     @Before
     fun setup() {

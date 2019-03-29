@@ -21,6 +21,8 @@ import com.android.build.gradle.internal.cxx.configure.findNdkPath
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.SdkHandler
+import com.android.build.gradle.internal.cxx.configure.NdkLocatorRecord
+import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.builder.sdk.InstallFailedException
 import com.android.builder.sdk.LicenceNotAcceptedException
 import com.android.builder.sdk.SdkLibData
@@ -28,6 +30,7 @@ import com.android.builder.sdk.SdkLoader
 import com.android.repository.Revision
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
+import com.google.gson.GsonBuilder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -35,6 +38,12 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Properties
 import org.gradle.api.logging.Logging
+import java.io.FileWriter
+
+val GSON = GsonBuilder()
+    .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
+    .setPrettyPrinting()
+    .create()
 
 /**
  * Handles NDK related information.
@@ -46,6 +55,7 @@ class NdkHandler(
     private val projectDir: File
 ) {
     private var currentNdkPlatform: NdkPlatform? = null
+    private var sideBySideLocatorRecord: NdkLocatorRecord? = null
 
     val ndkPlatform: NdkPlatform
         get() =
@@ -53,7 +63,8 @@ class NdkHandler(
                 currentNdkPlatform!!
             } else {
                 val ndkDirectory: File? = if (enableSideBySideNdk) {
-                    findNdkPath(ndkVersionFromDsl, projectDir)
+                    sideBySideLocatorRecord = findNdkPath(ndkVersionFromDsl, projectDir)
+                    sideBySideLocatorRecord!!.ndkFolder
                 } else {
                     findNdkDirectory(projectDir)
                 }
@@ -97,6 +108,18 @@ class NdkHandler(
         }
 
         invalidateNdk()
+    }
+
+    /**
+     * Write the side-by-side NDK locator to file.
+     */
+    fun writeNdkLocatorRecord(file : File) {
+        if (sideBySideLocatorRecord != null) {
+            file.parentFile.mkdirs()
+            FileWriter(file).use { writer->
+                GSON.toJson(sideBySideLocatorRecord, writer)
+            }
+        }
     }
 
     companion object {

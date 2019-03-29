@@ -513,8 +513,8 @@ public abstract class ExternalNativeJsonGenerator {
                 throw new InvalidUserDataException(
                         "NDK not configured. Download it with SDK manager.");
             }
-
         }
+
         NdkPlatform ndkPlatform = ndkHandler.getNdkPlatform();
         Revision ndkRevision = ndkPlatform.getRevision();
         File ndkFolder = ndkPlatform.getNdkDirectory();
@@ -537,6 +537,10 @@ public abstract class ExternalNativeJsonGenerator {
                         variantData.getName(),
                         buildDir,
                         externalNativeBuildDir);
+        // Write a record of how the NDK was located.
+        ndkHandler.writeNdkLocatorRecord(
+                FileUtils.join(
+                        externalNativeBuildFolder.getParentFile(), "ndk_locator_record.json"));
 
         File objFolder = new File(intermediates, "obj");
 

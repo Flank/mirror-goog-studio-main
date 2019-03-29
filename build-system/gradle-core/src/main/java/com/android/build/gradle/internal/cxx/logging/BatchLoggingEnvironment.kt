@@ -33,7 +33,7 @@ package com.android.build.gradle.internal.cxx.logging
  * case they want to use one of those.
  */
 class BatchLoggingEnvironment : ThreadLoggingEnvironment() {
-    private val messages =  mutableListOf<LoggingRecord>()
+    private val messages = mutableListOf<LoggingRecord>()
 
     override fun error(message: String) {
         messages.add(errorRecordOf(message))

@@ -42,39 +42,22 @@ import org.gradle.api.logging.Logging
  */
 
 /**
- * Stack of logger environments.
- */
-private val loggerStack = ThreadLocal.withInitial { mutableListOf<ThreadLoggingEnvironment>() }
-
-/**
- * The logger environment to use if there is no other environment. There should always be an
- * intentional logging environment so throw print a callstack to the console and throw a
- * RuntimeException.
- */
-private val BOTTOM_LOGGING_ENVIRONMENT = GradleBuildLoggingEnvironment(
-    Logging.getLogger(GradleBuildLoggingEnvironment::class.java))
-
-
-/**
- * The current logger.
- */
-private val logger : ThreadLoggingEnvironment
-    get() = loggerStack.get().firstOrNull() ?: BOTTOM_LOGGING_ENVIRONMENT
-
-/**
  * Report an error.
  */
-fun error(format: String, vararg args: Any) = logger.error(checkedFormat(format, args))
+fun error(format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(checkedFormat(format, args))
 
 /**
  * Report a warning.
  */
-fun warn(format: String, vararg args: Any) = logger.warn(checkedFormat(format, args))
+fun warn(format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(checkedFormat(format, args))
 
 /**
  * Report diagnostic/informational message.
  */
-fun info(format: String, vararg args: Any) = logger.info(checkedFormat(format, args))
+fun info(format: String, vararg args: Any) =
+    ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(checkedFormat(format, args))
 
 /**
  * If caller from Java side misuses %s-style formatting (too many %s for example), the exception
@@ -100,16 +83,6 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
 }
 
 /**
- * Push a new logging environment onto the stack of environments.
- */
-private fun push(logger: ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
-
-/**
- * Pop the top logging environment.
- */
-private fun pop() = loggerStack.get().removeAt(0)
-
-/**
  * Logger base class. When used from Java try-with-resources or Kotlin use() function it will
  * automatically register and deregister with the thread-local stack of loggers.
  */
@@ -124,6 +97,60 @@ abstract class ThreadLoggingEnvironment : AutoCloseable {
     abstract fun info(message : String)
     override fun close() {
         pop()
+    }
+
+    companion object {
+        /**
+         * Stack of logger environments.
+         */
+        private val loggerStack = ThreadLocal.withInitial {
+            mutableListOf<ThreadLoggingEnvironment>() }
+
+        /**
+         * The logger environment to use if there is no other environment. There should always be an
+         * intentional logging environment so throw print a callstack to the console and throw a
+         * RuntimeException.
+         */
+        private val BOTTOM_LOGGING_ENVIRONMENT = GradleBuildLoggingEnvironment(
+            Logging.getLogger(GradleBuildLoggingEnvironment::class.java))
+
+        /**
+         * The current logger.
+         */
+        private val logger : ThreadLoggingEnvironment
+            get() = loggerStack.get().firstOrNull() ?: BOTTOM_LOGGING_ENVIRONMENT
+
+        /**
+         * Push a new logging environment onto the stack of environments.
+         */
+        private fun push(logger: ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
+
+        /**
+         * Pop the top logging environment.
+         */
+        private fun pop() = loggerStack.get().removeAt(0)
+
+        /**
+         * Get the parent of the current logger.
+         */
+        @JvmStatic // error: using non-JVM static members protected in the superclass companion
+                   // is unsupported yet
+        protected fun parentLogger() = loggerStack.get()[1]
+
+        /**
+         * Report an error.
+         */
+        fun reportFormattedErrorToCurrentLogger(message: String) = logger.error(message)
+
+        /**
+         * Report a warning.
+         */
+        fun reportFormattedWarningToCurrentLogger(message: String) = logger.warn(message)
+
+        /**
+         * Report diagnostic/informational message.
+         */
+        fun reportFormattedInfoToCurrentLogger(message: String) = logger.info(message)
     }
 }
 
