@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.ide.dependencies;
 
-import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.FD_AAR_LIBS;
-import static com.android.SdkConstants.FD_JARS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
@@ -41,7 +38,6 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -291,7 +287,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                     false, /* dependencyItem.isSkipped() */
                                     ImmutableList.of(), /* androidLibraries */
                                     ImmutableList.of(), /* javaLibraries */
-                                    findLocalJarsAsFiles(extractedFolder)));
+                                    LibraryUtils.getLocalJarCache().get(extractedFolder)));
                 }
             }
 
@@ -363,22 +359,6 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                                                     messages.get(0)),
                                             messages)));
         }
-    }
-
-    @NonNull
-    private static List<File> findLocalJarsAsFiles(@NonNull File folder) {
-        File localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS);
-
-        if (!localJarRoot.isDirectory()) {
-            return ImmutableList.of();
-        }
-
-        File[] jarFiles = localJarRoot.listFiles((dir, name) -> name.endsWith(DOT_JAR));
-        if (jarFiles != null && jarFiles.length > 0) {
-            return ImmutableList.copyOf(jarFiles);
-        }
-
-        return ImmutableList.of();
     }
 
     ArtifactDependencyGraph() {

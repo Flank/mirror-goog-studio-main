@@ -120,6 +120,7 @@ fun Library.addToGlobalCache() {
 fun clearCaches() {
     globalLibrary.clear()
     libraryCache.clear()
+    localJarCache.clear()
 }
 
 fun getGlobalLibMap(): Map<String, Library> {
@@ -237,3 +238,16 @@ val libraryCache =
     })
 
 private val globalLibrary = Maps.newHashMap<String, Library>()
+
+val localJarCache = CreatingCache<File, List<File>>(CreatingCache.ValueFactory<File, List<File>> {
+    val localJarRoot = FileUtils.join(it, FD_JARS, FD_AAR_LIBS)
+
+    if (!localJarRoot.isDirectory) {
+        ImmutableList.of<File>()
+    } else {
+        val jarFiles = localJarRoot.listFiles { _, name -> name.endsWith(DOT_JAR) }
+        if (jarFiles != null && jarFiles.isNotEmpty()) {
+            ImmutableList.copyOf<File>(jarFiles)
+        } else ImmutableList.of<File>()
+    }
+})

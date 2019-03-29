@@ -107,3 +107,10 @@ Trace: org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter::execu
 # Trace: org.gradle.configuration.*
 # Trace: org.gradle.internal.buildevents.BuildResultLogger
 
+# model building
+Trace: com.android.build.gradle.internal.ide.ModelBuilder
+Trace: com.android.build.gradle.internal.ide.dependencies.ArtifactDependencyGraph
+#Trace: com.android.build.gradle.internal.ide.dependencies.LibraryUtils
+Trace: com.android.build.gradle.internal.ide.AndroidLibraryImpl
+Trace: com.android.build.gradle.internal.ide.JavaLibraryImpl
+
