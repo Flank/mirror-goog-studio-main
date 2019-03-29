@@ -32,6 +32,7 @@ import com.android.resources.ResourceType;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -42,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -67,6 +69,9 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
     private boolean mCheckDuplicates = true;
+
+    @NonNull
+    private Optional<ImmutableSet<ResourceFolderType>> mWhitelistedResources = Optional.empty();
 
     public ResourceSet(
             @NonNull String name,
@@ -261,6 +266,17 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         }
     }
 
+    public void setResourcesWhitelist(@NonNull ImmutableSet<ResourceFolderType> whitelist) {
+        mWhitelistedResources = Optional.of(whitelist);
+    }
+
+    private boolean isWhiteListed(File resourceFolder) {
+        return !mWhitelistedResources.isPresent()
+                || mWhitelistedResources
+                        .get()
+                        .contains(ResourceFolderType.getFolderType(resourceFolder.getName()));
+    }
+
     @Override
     protected void readSourceFolder(File sourceFolder, ILogger logger)
             throws MergingException {
@@ -268,7 +284,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
         File[] folders = sourceFolder.listFiles();
         if (folders != null) {
             for (File folder : folders) {
-                if (folder.isDirectory() && !isIgnored(folder)) {
+                if (folder.isDirectory() && isWhiteListed(folder) && !isIgnored(folder)) {
                     FolderData folderData = getFolderData(folder);
                     if (folderData != null) {
                         try {

@@ -27,9 +27,11 @@ import com.android.build.gradle.tasks.ProcessApplicationManifest
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.resources.ResourceSet
+import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
+import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import java.io.File
@@ -161,7 +163,9 @@ class DependencyResourcesComputer {
 
     fun getNavigationXmlsList(logger: ILogger): List<File> {
         val resourceSetList = compute()
+        val whitelist = Sets.immutableEnumSet(ResourceFolderType.NAVIGATION)
         resourceSetList.forEach {
+            it.setResourcesWhitelist(whitelist)
             it.loadFromFiles(logger)
         }
         return resourceSetList.flatMap {
