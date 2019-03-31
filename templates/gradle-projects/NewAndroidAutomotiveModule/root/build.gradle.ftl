@@ -18,13 +18,16 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "${getMaterialComponentName('android.support.test.runner.AndroidJUnitRunner', true)}"
+        testInstrumentationRunner "${getMaterialComponentName('android.support.test.runner.AndroidJUnitRunner', useAndroidX)}"
     }
 
+<#if javaVersion?? && javaVersion != "1.7">
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
+        targetCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
     }
+</#if>
 
     <@proguard.proguardConfig />
 }

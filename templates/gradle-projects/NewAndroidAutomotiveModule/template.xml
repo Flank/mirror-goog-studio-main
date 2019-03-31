@@ -5,8 +5,7 @@
     name="Automotive Module"
     description="Creates a new Android Automotive module."
     minApi="28"
-    minBuildApi="28"
-    requireAndroidX="true">
+    minBuildApi="28">
 
     <category value="Application" />
 

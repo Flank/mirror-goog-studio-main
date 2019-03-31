@@ -1,7 +1,7 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import ${getMaterialComponentName('android.support.test.InstrumentationRegistry', true)}
-import ${getMaterialComponentName('android.support.test.runner.AndroidJUnit4', true)}
+import ${getMaterialComponentName('android.support.test.InstrumentationRegistry', useAndroidX)}
+import ${getMaterialComponentName('android.support.test.runner.AndroidJUnit4', useAndroidX)}
 
 import org.junit.Test
 import org.junit.runner.RunWith

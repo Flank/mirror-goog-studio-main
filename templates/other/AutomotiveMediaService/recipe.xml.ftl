@@ -18,6 +18,6 @@
     <open file="${escapeXmlAttribute(srcOut)}/${mediaBrowserServiceName}.${ktOrJavaExt}" />
 
     <#if useCustomTheme>
-      <open file="${escapeXmlAttribute(resOut)}/values-v21/styles.xml" />
+      <open file="${escapeXmlAttribute(resOut)}/values/styles.xml" />
     </#if>
 </recipe>
