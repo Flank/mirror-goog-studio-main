@@ -1,6 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="${packageName}">
 
     <application>
+
+        <meta-data
+                android:name="com.google.android.gms.car.application"
+                android:resource="@xml/automotive_app_desc" />
+
         <#if useCustomTheme>
         <!--
              Use this meta data to override the theme from which Android Auto will

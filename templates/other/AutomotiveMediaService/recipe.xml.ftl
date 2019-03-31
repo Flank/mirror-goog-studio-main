@@ -1,23 +1,39 @@
 <?xml version="1.0"?>
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
+    <#if Mobileincluded!false>
+        <merge from="root/settings.gradle.ftl"
+               to="${escapeXmlAttribute(topOut)}/settings.gradle" />
+        <instantiate from="root/build.gradle.ftl"
+                     to="${escapeXmlAttribute(serviceProjectOut)}/build.gradle" />
+        <merge from="root/mobile-build.gradle.ftl"
+               to="${mobileProjectOut}/build.gradle" />
+        <merge from="root/automotive-build.gradle.ftl"
+               to="${automotiveProjectOut}/build.gradle" />
+    <#else>
+        <dependency mavenUrl="com.android.support:support-media-compat:${buildApi}.+" />
+    </#if>
+
+    <!-- Create media service -->
     <@kt.addAllKotlinDependencies />
-    <dependency mavenUrl="com.android.support:support-media-compat:${buildApi}.+" />
 
     <merge from="root/AndroidManifest.xml.ftl"
-             to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+             to="${escapeXmlAttribute(serviceManifestOut)}/AndroidManifest.xml" />
 
     <#if useCustomTheme>
       <merge from="root/res/values/styles.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
+             to="${escapeXmlAttribute(serviceResOut)}/values/styles.xml" />
     </#if>
 
-    <instantiate from="root/src/app_package/MusicService.${ktOrJavaExt}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${mediaBrowserServiceName}.${ktOrJavaExt}" />
+    <copy from="root/res/xml/automotive_app_desc.xml"
+          to="${escapeXmlAttribute(serviceResOut)}/xml/automotive_app_desc.xml" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${mediaBrowserServiceName}.${ktOrJavaExt}" />
+    <instantiate from="root/src/app_package/MusicService.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(serviceSrcOut)}/${mediaBrowserServiceName}.${ktOrJavaExt}" />
+
+    <open file="${escapeXmlAttribute(serviceSrcOut)}/${mediaBrowserServiceName}.${ktOrJavaExt}" />
 
     <#if useCustomTheme>
-      <open file="${escapeXmlAttribute(resOut)}/values/styles.xml" />
+      <open file="${escapeXmlAttribute(serviceResOut)}/values/styles.xml" />
     </#if>
 </recipe>

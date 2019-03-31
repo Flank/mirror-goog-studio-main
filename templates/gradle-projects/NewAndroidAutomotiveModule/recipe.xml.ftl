@@ -31,7 +31,7 @@
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 </#if>
 
-    <dependency mavenUrl="androidx.appcompat:appcompat:+" />
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
 <#if makeIgnore>
     <copy from="root://gradle-projects/common/gitignore"
