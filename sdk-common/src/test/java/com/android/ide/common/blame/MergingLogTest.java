@@ -24,7 +24,6 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,19 +74,20 @@ public class MergingLogTest {
         mergingLog.write();
         mergingLog = new MergingLog(tempDir);
 
-        Assert.assertEquals("", new SourceFile(absoluteFile("exploded/layout-land/a")),
-                mergingLog.find(new SourceFile(absoluteFile("merged/layout-land/a"))));
-
+        assertThat(mergingLog.find(new SourceFile(absoluteFile("merged/layout-land/a"))))
+                .isEqualTo(new SourceFile(absoluteFile("exploded/layout-land/a")));
 
         /*
-           Test
-            |---search query----|
-           |---------target----------|
-         */
-        Assert.assertEquals("", position2,
-                mergingLog.find(new SourceFilePosition(
-                        new SourceFile(absoluteFile("merged/values/values.xml")),
-                        new SourcePosition(4, 1, 35, 4, 2, 36))));
+          Test
+           |---search query----|
+          |---------target----------|
+        */
+        assertThat(
+                        mergingLog.find(
+                                new SourceFilePosition(
+                                        new SourceFile(absoluteFile("merged/values/values.xml")),
+                                        new SourcePosition(4, 1, 35, 4, 2, 36))))
+                .isEqualTo(position2);
 
         /*
          * Test
@@ -96,36 +96,51 @@ public class MergingLogTest {
          * |---------target----------|
          *                  |-wrong-|
          */
-        Assert.assertEquals(
-                "",
-                position1,
-                mergingLog.find(
-                        new SourceFilePosition(
-                                new SourceFile(absoluteFile("merged/values/values.xml")),
-                                new SourcePosition(3, -1, -1, 3, -1, -1))));
+        assertThat(
+                        mergingLog.find(
+                                new SourceFilePosition(
+                                        new SourceFile(absoluteFile("merged/values/values.xml")),
+                                        new SourcePosition(3, -1, -1, 3, -1, -1))))
+                .isEqualTo(position1);
 
         /*
-           Test
-                      |---search query----|
-           |------------target-------------|
-                   |-----wrong----|
+         * Test
+         *
+         *                   |search query|
+         *                 |---------target----------|
+         *     |-wrong-|
          */
-        Assert.assertEquals("", position1,
-                mergingLog.find(new SourceFilePosition(
-                        new SourceFile(absoluteFile("merged/values/values.xml")),
-                        new SourcePosition(5, 20, 35, 6, 25, 105))));
+        assertThat(
+                        mergingLog.find(
+                                new SourceFilePosition(
+                                        new SourceFile(absoluteFile("merged/values/values.xml")),
+                                        new SourcePosition(5, -1, -1, 5, -1, -1))))
+                .isEqualTo(position2);
+
+        /*
+          Test
+                     |---search query----|
+          |------------target-------------|
+                  |-----wrong----|
+        */
+        assertThat(
+                        mergingLog.find(
+                                new SourceFilePosition(
+                                        new SourceFile(absoluteFile("merged/values/values.xml")),
+                                        new SourcePosition(5, 20, 35, 6, 25, 105))))
+                .isEqualTo(position1);
 
         // Check that an unknown file returns itself.
         SourceFilePosition noMatch1 = new SourceFilePosition(
                 new SourceFile(absoluteFile("unknownFile")),
                 new SourcePosition(1, 2, 3));
-        Assert.assertEquals("", noMatch1, mergingLog.find(noMatch1));
+        assertThat(mergingLog.find(noMatch1)).isEqualTo(noMatch1);
 
         // And that a position that is not mapped in the file also returns itself.
         SourceFilePosition noMatch2 = new SourceFilePosition(
                 new SourceFile(absoluteFile("merged/values/values.xml")),
                 new SourcePosition(100, 0, 3000));
-        Assert.assertEquals("", noMatch2, mergingLog.find(noMatch2));
+        assertThat(mergingLog.find(noMatch2)).isEqualTo(noMatch2);
 
         mergingLog.write();
     }

@@ -209,6 +209,16 @@ public class MergingLog {
                         ? sortedMap.ceilingEntry(position)
                         : sortedMap.floorEntry(position);
 
+        // If the search failed then we should check starting from the last element in the map in
+        // case of ceiling search, or the first element in case of a floor search.
+        if (candidate == null) {
+            if (position.getStartColumn() == -1) {
+                candidate = sortedMap.lastEntry();
+            } else {
+                candidate = sortedMap.firstEntry();
+            }
+        }
+
         // Don't traverse the whole file.
         // This is the product of the depth and breadth of nesting that can be handled.
         int patience = 20;
