@@ -755,7 +755,11 @@ public final class SdkConstants {
     public static final String CLASS_FRAGMENT = "android.app.Fragment"; //$NON-NLS-1$
     public static final AndroidxName CLASS_V4_FRAGMENT =
             AndroidxName.of("android.support.v4.app.", "Fragment");
-    public static final String CLASS_ACTION_PROVIDER = "android.view.ActionProvider"; //$NON-NLS-1$
+
+    public static final String CLASS_ACTION_PROVIDER = "android.view.ActionProvider";
+    public static final String CLASS_V4_ACTION_PROVIDER = "android.support.v4.view.ActionProvider";
+    public static final String CLASS_ANDROIDX_ACTION_PROVIDER = "androidx.core.view.ActionProvider";
+
     public static final String CLASS_BACKUP_AGENT = "android.app.backup.BackupAgent"; //$NON-NLS-1$
     /**
      * MockView is part of the layoutlib bridge and used to display classes that have no rendering
