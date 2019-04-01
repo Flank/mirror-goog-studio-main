@@ -106,6 +106,7 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckDuplicateClassesTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
+import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
@@ -151,7 +152,6 @@ import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
-import com.android.build.gradle.internal.transforms.D8MainDexListTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
@@ -2119,52 +2119,11 @@ public abstract class TaskManager {
         }
 
         if (variantScope.getNeedsMainDexList()) {
-
-            // ---------
-            // create the transform that's going to take the code and the proguard keep list
-            // from above and compute the main class list.
-            D8MainDexListTransform multiDexTransform = new D8MainDexListTransform(variantScope);
-
-            transformManager.addTransform(
-                    taskFactory,
-                    variantScope,
-                    multiDexTransform,
-                    taskName -> {
-                        File mainDexListFile =
-                                variantScope
-                                        .getArtifacts()
-                                        .appendArtifact(
-                                                InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
-                                                taskName,
-                                                "mainDexList.txt");
-                        multiDexTransform.setMainDexListOutputFile(mainDexListFile);
-                    },
-                    null,
-                    null);
+            taskFactory.register(new D8MainDexListTask.CreationAction(variantScope, false));
         }
 
         if (variantScope.getNeedsMainDexListForBundle()) {
-            D8MainDexListTransform bundleMultiDexTransform =
-                    new D8MainDexListTransform(variantScope, true);
-            variantScope
-                    .getTransformManager()
-                    .addTransform(
-                            taskFactory,
-                            variantScope,
-                            bundleMultiDexTransform,
-                            taskName -> {
-                                File mainDexListFile =
-                                        variantScope
-                                                .getArtifacts()
-                                                .appendArtifact(
-                                                        InternalArtifactType
-                                                                .MAIN_DEX_LIST_FOR_BUNDLE,
-                                                        taskName,
-                                                        "mainDexList.txt");
-                                bundleMultiDexTransform.setMainDexListOutputFile(mainDexListFile);
-                            },
-                            null,
-                            null);
+            taskFactory.register(new D8MainDexListTask.CreationAction(variantScope, true));
         }
 
         createDexTasks(variantScope, dexingType);

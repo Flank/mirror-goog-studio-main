@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_WITH_RESOURCES
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.getPlatformRules
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType

@@ -115,7 +115,7 @@ public enum InternalArtifactType implements ArtifactType {
 
     // Artifacts for legacy multidex
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
-    LEGACY_MULTIDEX_MAIN_DEX_LIST,
+    LEGACY_MULTIDEX_MAIN_DEX_LIST(Kind.FILE),
 
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
@@ -248,7 +248,7 @@ public enum InternalArtifactType implements ArtifactType {
     MODULE_BUNDLE,
     // The main dex list for the bundle, unlike the main dex list for a monolithic application, this
     // analyzes all of the dynamic feature classes too.
-    MAIN_DEX_LIST_FOR_BUNDLE,
+    MAIN_DEX_LIST_FOR_BUNDLE(Kind.FILE),
     // The final Bundle, including feature module, ready for consumption at Play Store.
     // This is only valid for the base module.
     BUNDLE(Category.OUTPUTS, Kind.FILE),
