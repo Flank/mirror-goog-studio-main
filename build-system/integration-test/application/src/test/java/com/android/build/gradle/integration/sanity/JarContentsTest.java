@@ -59,6 +59,7 @@ public class JarContentsTest {
     private static final SetMultimap<String, String> EXPECTED;
 
     private static final String R8_NAMESPACE = "com/android/tools/r8/";
+    private static final String R8_PACKAGE_PREFIX = "com.android.tools.r8";
 
     static {
         // Useful command for getting these lists:
@@ -299,7 +300,7 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "META-INF/services/",
-                "META-INF/services/com.android.tools.r8.jetbrains.kotlinx.metadata.impl.extensions.MetadataExtensions",
+                "META-INF/services/" + R8_PACKAGE_PREFIX,
                 "NOTICE",
                 "r8-version.properties");
         expected.putAll(
@@ -1475,10 +1476,19 @@ public class JarContentsTest {
                 actual.addAll(
                         filesFromEntry
                                 .stream()
+                                // Packages under the R8 namespace are renamed.
                                 .filter(
                                         path ->
                                                 !path.startsWith(R8_NAMESPACE)
                                                         || path.equals(R8_NAMESPACE))
+                                // Services used by R8 are reloacted and renamed.
+                                .map(
+                                        path ->
+                                                path.startsWith(
+                                                                "META-INF/services/"
+                                                                        + R8_PACKAGE_PREFIX)
+                                                        ? "META-INF/services/" + R8_PACKAGE_PREFIX
+                                                        : path)
                                 .collect(Collectors.toList()));
             }
 
