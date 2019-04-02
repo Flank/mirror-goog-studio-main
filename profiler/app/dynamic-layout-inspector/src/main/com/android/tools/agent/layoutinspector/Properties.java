@@ -89,6 +89,7 @@ class Properties {
             case GRAVITY:
             case INT_ENUM:
             case INT_FLAG:
+            case COLOR:
                 return addIntProperty(event, name, type, (int) value);
             case INT64:
                 return addLongProperty(event, name, type, (long) value);
