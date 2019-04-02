@@ -28,25 +28,19 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 /**
- * Database for API checking: Allows quick lookup of a given class, method or field to see which API
- * level it was introduced in.
+ * Database for API checking: Allows quick lookup of a given class, method or field to see in which
+ * API level it was introduced, and possibly deprecated and/or removed.
  *
  * <p>This class is optimized for quick bytecode lookup used in conjunction with the ASM library: It
  * has lookup methods that take internal JVM signatures, and for a method call for example it
@@ -54,51 +48,36 @@ import java.util.Set;
  * ASM.
  *
  * <p>The {@link Api} class provides access to the full Android API along with version information,
- * initialized from an XML file. This lookup class adds a binary cache around the API to make
- * initialization faster and to require fewer objects. It creates a binary cache data structure,
- * which fits in a single byte array, which means that to open the database you can just read in the
- * byte array and go. On one particular machine, this takes about 30-50 ms versus 600-800ms for the
- * full parse. It also helps memory by placing everything in a compact byte array instead of needing
- * separate strings (2 bytes per character in a char[] for the 25k method entries, 11k field entries
- * and 6k class entries) - and it also avoids the same number of Map.Entry objects. When creating
- * the memory data structure it performs a few other steps to help memory:
+ * initialized from an XML file.
+ *
+ * <p>When creating the memory data structure it performs a few other steps to help memory:
  *
  * <ul>
- *   <li>It stores the strings as single bytes, since all the JVM signatures are in ASCII
- *   <li>It strips out the method return types (which takes the biLnary size down from about 4.7M to
+ *   <li>It strips out the method return types (which takes the binary size down from about 4.7M to
  *       4.0M)
  *   <li>It strips out all APIs that have since=1, since the lookup only needs to find classes,
  *       methods and fields that have an API level *higher* than 1. This drops the memory use down
  *       from 4.0M to 1.7M.
  * </ul>
  */
-public class ApiLookup {
+public class ApiLookup extends ApiDatabase {
     public static final String XML_FILE_PATH = "api-versions.xml"; // relative to the SDK data/ dir
     /** Database moved from platform-tools to SDK in API level 26 */
     public static final int SDK_DATABASE_MIN_VERSION = 26;
 
-    private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 15;
-    private static final boolean DEBUG_SEARCH = false;
-    private static final boolean WRITE_STATS = false;
-
+    private static final int API_LOOKUP_BINARY_FORMAT_VERSION = 0;
     private static final int CLASS_HEADER_MEMBER_OFFSETS = 1;
     private static final int CLASS_HEADER_API = 2;
     private static final int CLASS_HEADER_DEPRECATED = 3;
     private static final int CLASS_HEADER_REMOVED = 4;
     private static final int CLASS_HEADER_INTERFACES = 5;
-    private static final int HAS_EXTRA_BYTE_FLAG = 1 << 7;
-    private static final int API_MASK = ~HAS_EXTRA_BYTE_FLAG;
 
     @VisibleForTesting static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
 
-    private final Api mInfo;
-    private byte[] mData;
-    private int[] mIndices;
+    private final Api<ApiClass> mInfo;
 
     private static final Map<AndroidVersion, WeakReference<ApiLookup>> instances = new HashMap<>();
 
-    private int containerCount;
     private final IAndroidTarget target;
 
     /**
@@ -203,7 +182,7 @@ public class ApiLookup {
 
         // Incorporate version number in the filename to avoid upgrade filename
         // conflicts on Windows (such as issue #26663)
-        sb.append('-').append(BINARY_FORMAT_VERSION);
+        sb.append('-').append(getBinaryFormatVersion(API_LOOKUP_BINARY_FORMAT_VERSION));
 
         if (platformVersion != null) {
             sb.append('-').append(platformVersion.replace(' ', '_'));
@@ -242,13 +221,13 @@ public class ApiLookup {
                             + xmlFile
                             + "\nto "
                             + binaryData);
-            if (!createCache(client, xmlFile, binaryData)) {
+            if (!cacheCreator(xmlFile).create(client, binaryData)) {
                 return null;
             }
         } else if (!binaryData.exists()
                 || binaryData.lastModified() < xmlFile.lastModified()
                 || binaryData.length() == 0) {
-            if (!createCache(client, xmlFile, binaryData)) {
+            if (!cacheCreator(xmlFile).create(client, binaryData)) {
                 return null;
             }
         }
@@ -261,30 +240,32 @@ public class ApiLookup {
         return new ApiLookup(client, xmlFile, binaryData, null, target);
     }
 
-    private static boolean createCache(LintClient client, File xmlFile, File binaryData) {
-        long begin = WRITE_STATS ? System.currentTimeMillis() : 0;
+    private static CacheCreator cacheCreator(File xmlFile) {
+        return (client, binaryData) -> {
+            long begin = WRITE_STATS ? System.currentTimeMillis() : 0;
 
-        Api info;
-        try {
-            info = Api.parseApi(xmlFile);
-        } catch (RuntimeException e) {
-            client.log(e, "Can't read API file " + xmlFile.getAbsolutePath());
+            Api<ApiClass> info;
+            try {
+                info = Api.parseApi(xmlFile);
+            } catch (RuntimeException e) {
+                client.log(e, "Can't read API file " + xmlFile.getAbsolutePath());
+                return false;
+            }
+
+            if (WRITE_STATS) {
+                long end = System.currentTimeMillis();
+                System.out.println("Reading XML data structures took " + (end - begin) + " ms");
+            }
+
+            try {
+                writeDatabase(binaryData, info, API_LOOKUP_BINARY_FORMAT_VERSION);
+                return true;
+            } catch (IOException e) {
+                client.log(e, "Can't write API cache file");
+            }
+
             return false;
-        }
-
-        if (WRITE_STATS) {
-            long end = System.currentTimeMillis();
-            System.out.println("Reading XML data structures took " + (end - begin) + " ms");
-        }
-
-        try {
-            writeDatabase(binaryData, info);
-            return true;
-        } catch (IOException e) {
-            client.log(e, "Can't write API cache file");
-        }
-
-        return false;
+        };
     }
 
     /** Use one of the {@link #get} factory methods instead. */
@@ -292,497 +273,16 @@ public class ApiLookup {
             @NonNull LintClient client,
             @NonNull File xmlFile,
             @Nullable File binaryFile,
-            @Nullable Api info,
+            @Nullable Api<ApiClass> info,
             @Nullable IAndroidTarget target) {
         mInfo = info;
         this.target = target;
 
         if (binaryFile != null) {
-            readData(client, xmlFile, binaryFile);
+            readData(client, binaryFile, cacheCreator(xmlFile), API_LOOKUP_BINARY_FORMAT_VERSION);
         }
     }
 
-    /**
-     * Database format:
-     *
-     * <pre>
-     * (Note: all numbers are big endian; the format uses 1, 2, 3 and 4 byte integers.)
-     *
-     *
-     * 1. A file header, which is the exact contents of {@link #FILE_HEADER} encoded
-     *     as ASCII characters. The purpose of the header is to identify what the file
-     *     is for, for anyone attempting to open the file.
-     * 2. A file version number. If the binary file does not match the reader's expected
-     *     version, it can ignore it (and regenerate the cache from XML).
-     *
-     * 3. The index table. When the data file is read, this is used to initialize the
-     *    {@link #mIndices} array. The index table is built up like this:
-     *    a. The number of index entries (e.g. number of elements in the {@link #mIndices} array)
-     *        [a 4-byte integer]
-     *    b. The number of java/javax packages [a 4-byte integer]
-     *    c. Offsets to the container entries, one for each package or a class containing inner
-     *       classes [a 4-byte integer].
-     *    d. Offsets to the class entries, one for each class [a 4-byte integer].
-     *    e. Offsets to the member entries, one for each member [a 4-byte integer].
-     *
-     * 4. The member entries -- one for each member. A given class entry will point to the
-     *    first and last members in the index table above, and the offset of a given member
-     *    is pointing to the offset of these entries.
-     *    a. The name and description (except for the return value) of the member, in JVM format
-     *       (e.g. for toLowerCase(char) we'd have "toLowerCase(C)". This is converted into
-     *       UTF_8 representation as bytes [n bytes, the length of the byte representation of
-     *       the description).
-     *    b. A terminating 0 byte [1 byte].
-     *    c. One, two or three bytes representing the API levels when the member was introduced,
-     *       deprecated, and removed, respectively. The third byte is present only if the member
-     *       was removed. The second byte is present only if the member was deprecated or removed.
-     *       All bytes except the last one have the top bit ({@link #HAS_EXTRA_BYTE_FLAG}) set.
-     *
-     * 5. The class entries -- one for each class.
-     *    a. The index within this class entry where the metadata (other than the name)
-     *       can be found. [1 byte]. This means that if you know a class by its number,
-     *       you can quickly jump to its metadata without scanning through the string to
-     *       find the end of it, by just adding this byte to the current offset and
-     *       then you're at the data described below for (d).
-     *    b. The name of the class (just the base name, not the package), as encoded as a
-     *       UTF-8 string. [n bytes]
-     *    c. A terminating 0 [1 byte].
-     *    d. The index in the index table (3) of the first member in the class [a 3-byte integer.]
-     *    e. The number of members in the class [a 2-byte integer].
-     *    f. One, two or three bytes representing the API levels when the class was introduced,
-     *       deprecated, and removed, respectively. The third byte is present only if the class
-     *       was removed. The second byte is present only if the class was deprecated or removed.
-     *       All bytes except the last one have the top bit ({@link #HAS_EXTRA_BYTE_FLAG}) set.
-     *    g. The number of new super classes and interfaces [1 byte]. This counts only
-     *       super classes and interfaces added after the original API level of the class.
-     *    h. For each super class or interface counted in g,
-     *       I. The index of the class [a 3-byte integer]
-     *       II. The API level the class/interface was added [1 byte]
-     *
-     * 6. The container entries -- one for each package and for each class containing inner classes.
-     *    a. The name of the package or the outer class [n bytes].
-     *    b. A terminating 0 for packages, or 1 for outer classes [1 byte].
-     *    c. The index in the index table (3) of the first class in the package or the first inner
-     *       class [a 3-byte integer.]
-     *    d. The number of classes in the package or the number of inner classes in the outer class
-     *       [a 2-byte integer].
-     * </pre>
-     */
-    private void readData(
-            @NonNull LintClient client, @NonNull File xmlFile, @NonNull File binaryFile) {
-        if (!binaryFile.exists()) {
-            client.log(null, "%1$s does not exist", binaryFile);
-            return;
-        }
-        long start = WRITE_STATS ? System.currentTimeMillis() : 0;
-        try {
-            byte[] b = Files.toByteArray(binaryFile);
-
-            // First skip the header
-            int offset = 0;
-            byte[] expectedHeader = FILE_HEADER.getBytes(StandardCharsets.US_ASCII);
-            for (byte anExpectedHeader : expectedHeader) {
-                if (anExpectedHeader != b[offset++]) {
-                    client.log(
-                            null,
-                            "Incorrect file header: not an API database cache "
-                                    + "file, or a corrupt cache file");
-                    return;
-                }
-            }
-
-            // Read in the format number.
-            if (b[offset++] != BINARY_FORMAT_VERSION) {
-                // Force regeneration of new binary data with up to date format.
-                if (createCache(client, xmlFile, binaryFile)) {
-                    readData(client, xmlFile, binaryFile); // Recurse
-                }
-
-                return;
-            }
-
-            int indexCount = get4ByteInt(b, offset);
-            offset += 4;
-            containerCount = get4ByteInt(b, offset);
-            offset += 4;
-
-            mIndices = new int[indexCount];
-            for (int i = 0; i < indexCount; i++) {
-                // TODO: Pack the offsets: They increase by a small amount for each entry, so
-                // no need to spend 4 bytes on each. These will need to be processed when read
-                // back in anyway, so consider storing the offset -deltas- as single bytes and
-                // adding them up cumulatively in readData().
-                mIndices[i] = get4ByteInt(b, offset);
-                offset += 4;
-            }
-            mData = b;
-            // TODO: We only need to keep the data portion here since we've initialized
-            // the offset array separately.
-            // TODO: Investigate (profile) accessing the byte buffer directly instead of
-            // accessing a byte array.
-
-            if (WRITE_STATS) {
-                long end = System.currentTimeMillis();
-                System.out.println("\nRead API database in " + (end - start) + " milliseconds.");
-                System.out.print("Size of data table: " + mData.length + " bytes");
-                System.out.println(String.format(" (%.3gMB)", mData.length / (1024. * 1024.)));
-            }
-        } catch (Throwable e) {
-            client.log(null, "Failure reading binary cache file %1$s", binaryFile.getPath());
-            client.log(
-                    null,
-                    "Please delete the file and restart the IDE/lint: %1$s",
-                    binaryFile.getPath());
-            client.log(e, null);
-        }
-    }
-
-    /** See the {@link #readData(LintClient, File, File)} for documentation on the data format. */
-    private static void writeDatabase(File file, Api info) throws IOException {
-        Map<String, ApiClass> classMap = info.getClasses();
-
-        List<ApiClassOwner> containers = new ArrayList<>(info.getContainers().values());
-        Collections.sort(containers);
-
-        // Compute members of each class that must be included in the database; we can
-        // skip those that have the same since-level as the containing class. And we
-        // also need to keep those entries that are marked deprecated or removed.
-        int estimatedSize = 0;
-        for (ApiClassOwner container : containers) {
-            estimatedSize += 4; // offset entry
-            estimatedSize += container.getName().length() + 20; // Container entry.
-
-            for (ApiClass cls : container.getClasses()) {
-                estimatedSize += 4; // offset entry
-                estimatedSize += cls.getName().length() + 20; // Class entry.
-
-                Set<String> allMethods = cls.getAllMethods(info);
-                Set<String> allFields = cls.getAllFields(info);
-                List<String> members = new ArrayList<>(allMethods.size() + allFields.size());
-                members.addAll(allMethods);
-                members.addAll(allFields);
-
-                estimatedSize += 2 + 4 * (cls.getInterfaces().size());
-                if (cls.getSuperClasses().size() > 1) {
-                    estimatedSize += 2 + 4 * (cls.getSuperClasses().size());
-                }
-
-                // Only include classes that have one or more members requiring version 2 or higher:
-                Collections.sort(members);
-                cls.members = members;
-                for (String member : members) {
-                    estimatedSize += member.length();
-                    estimatedSize += 16;
-                }
-            }
-
-            // Ensure that the classes are sorted.
-            Collections.sort(container.getClasses());
-        }
-
-        // Write header
-        ByteBuffer buffer = ByteBuffer.allocate(estimatedSize);
-        buffer.order(ByteOrder.BIG_ENDIAN);
-        buffer.put(FILE_HEADER.getBytes(StandardCharsets.US_ASCII));
-        buffer.put((byte) BINARY_FORMAT_VERSION);
-
-        int indexCountOffset = buffer.position();
-        int indexCount = 0;
-
-        buffer.putInt(0); // placeholder
-
-        // Write the number of containers in the containers index.
-        buffer.putInt(containers.size());
-
-        // Write container index.
-        int newIndex = buffer.position();
-        for (ApiClassOwner container : containers) {
-            container.indexOffset = newIndex;
-            newIndex += 4;
-            indexCount++;
-        }
-
-        // Write class index.
-        for (ApiClassOwner container : containers) {
-            for (ApiClass cls : container.getClasses()) {
-                cls.indexOffset = newIndex;
-                cls.index = indexCount;
-                newIndex += 4;
-                indexCount++;
-            }
-        }
-
-        // Write member indices.
-        for (ApiClassOwner container : containers) {
-            for (ApiClass cls : container.getClasses()) {
-                if (cls.members != null && !cls.members.isEmpty()) {
-                    cls.memberOffsetBegin = newIndex;
-                    cls.memberIndexStart = indexCount;
-                    for (String ignored : cls.members) {
-                        newIndex += 4;
-                        indexCount++;
-                    }
-                    cls.memberOffsetEnd = newIndex;
-                    cls.memberIndexLength = indexCount - cls.memberIndexStart;
-                } else {
-                    cls.memberOffsetBegin = -1;
-                    cls.memberOffsetEnd = -1;
-                    cls.memberIndexStart = -1;
-                    cls.memberIndexLength = 0;
-                }
-            }
-        }
-
-        // Fill in the earlier index count.
-        buffer.position(indexCountOffset);
-        buffer.putInt(indexCount);
-        buffer.position(newIndex);
-
-        // Write member entries.
-        for (ApiClassOwner container : containers) {
-            for (ApiClass apiClass : container.getClasses()) {
-                String cls = apiClass.getName();
-                int index = apiClass.memberOffsetBegin;
-                for (String member : apiClass.members) {
-                    // Update member offset to point to this entry
-                    int start = buffer.position();
-                    buffer.position(index);
-                    buffer.putInt(start);
-                    index = buffer.position();
-                    buffer.position(start);
-
-                    int since;
-                    if (member.indexOf('(') >= 0) {
-                        since = apiClass.getMethod(member, info);
-                    } else {
-                        since = apiClass.getField(member, info);
-                    }
-                    if (since == 0) {
-                        assert false : cls + ':' + member;
-                        since = 1;
-                    }
-
-                    int deprecatedIn = apiClass.getMemberDeprecatedIn(member, info);
-                    assert deprecatedIn >= 0
-                            : "Invalid deprecatedIn " + deprecatedIn + " for " + member;
-                    int removedIn = apiClass.getMemberRemovedIn(member, info);
-                    assert removedIn >= 0 : "Invalid removedIn " + removedIn + " for " + member;
-
-                    byte[] signature = member.getBytes(StandardCharsets.UTF_8);
-                    for (byte b : signature) {
-                        // Make sure all signatures are really just simple ASCII.
-                        assert b == (b & 0x7f) : member;
-                        buffer.put(b);
-                        // Skip types on methods
-                        if (b == (byte) ')') {
-                            break;
-                        }
-                    }
-                    buffer.put((byte) 0);
-                    writeSinceDeprecatedInRemovedIn(buffer, since, deprecatedIn, removedIn);
-                }
-                assert index == apiClass.memberOffsetEnd : apiClass.memberOffsetEnd;
-            }
-        }
-
-        // Write class entries. These are written together, rather than
-        // being spread out among the member entries, in order to have
-        // reference locality (search that a binary search through the classes
-        // are likely to look at entries near each other.)
-        for (ApiClassOwner container : containers) {
-            List<ApiClass> classes = container.getClasses();
-            for (ApiClass cls : classes) {
-                int index = buffer.position();
-                buffer.position(cls.indexOffset);
-                buffer.putInt(index);
-                buffer.position(index);
-                String name = cls.getSimpleName();
-                int pos = name.lastIndexOf('$');
-                if (pos > 0) {
-                    name = name.substring(pos + 1);
-                }
-
-                byte[] nameBytes = name.getBytes(StandardCharsets.UTF_8);
-                assert nameBytes.length < 254 : name;
-                buffer.put((byte) (nameBytes.length + 2)); // 2: terminating 0, and this byte itself
-                buffer.put(nameBytes);
-                buffer.put((byte) 0);
-
-                // 3 bytes for beginning, 2 bytes for *length*
-                put3ByteInt(buffer, cls.memberIndexStart);
-                put2ByteInt(buffer, cls.memberIndexLength);
-
-                ApiClass apiClass = classMap.get(cls.getName());
-                assert apiClass != null : cls.getName();
-                int since = apiClass.getSince();
-                int deprecatedIn = apiClass.getDeprecatedIn();
-                int removedIn = apiClass.getRemovedIn();
-                writeSinceDeprecatedInRemovedIn(buffer, since, deprecatedIn, removedIn);
-
-                List<Pair<String, Integer>> interfaces = apiClass.getInterfaces();
-                int count = 0;
-                if (!interfaces.isEmpty()) {
-                    for (Pair<String, Integer> pair : interfaces) {
-                        int api = pair.getSecond();
-                        if (api > apiClass.getSince()) {
-                            count++;
-                        }
-                    }
-                }
-                List<Pair<String, Integer>> supers = apiClass.getSuperClasses();
-                if (!supers.isEmpty()) {
-                    for (Pair<String, Integer> pair : supers) {
-                        int api = pair.getSecond();
-                        if (api > apiClass.getSince()) {
-                            count++;
-                        }
-                    }
-                }
-                buffer.put((byte) count);
-                if (count > 0) {
-                    for (Pair<String, Integer> pair : supers) {
-                        int api = pair.getSecond();
-                        if (api > apiClass.getSince()) {
-                            ApiClass superClass = classMap.get(pair.getFirst());
-                            assert superClass != null : cls;
-                            put3ByteInt(buffer, superClass.index);
-                            buffer.put((byte) api);
-                        }
-                    }
-                    for (Pair<String, Integer> pair : interfaces) {
-                        int api = pair.getSecond();
-                        if (api > apiClass.getSince()) {
-                            ApiClass interfaceClass = classMap.get(pair.getFirst());
-                            assert interfaceClass != null : cls;
-                            put3ByteInt(buffer, interfaceClass.index);
-                            buffer.put((byte) api);
-                        }
-                    }
-                }
-            }
-        }
-
-        for (ApiClassOwner container : containers) {
-            int index = buffer.position();
-            buffer.position(container.indexOffset);
-            buffer.putInt(index);
-            buffer.position(index);
-
-            byte[] bytes = container.getName().getBytes(StandardCharsets.UTF_8);
-            buffer.put(bytes);
-            buffer.put(container.isClass() ? (byte) 1 : (byte) 0);
-
-            List<ApiClass> classes = container.getClasses();
-            if (classes.isEmpty()) {
-                put3ByteInt(buffer, 0);
-                put2ByteInt(buffer, 0);
-            } else {
-                // 3 bytes for beginning, 2 bytes for *length*
-                int firstClassIndex = classes.get(0).index;
-                int classCount = classes.get(classes.size() - 1).index - firstClassIndex + 1;
-                put3ByteInt(buffer, firstClassIndex);
-                put2ByteInt(buffer, classCount);
-            }
-        }
-
-        int size = buffer.position();
-        assert size <= buffer.limit();
-        buffer.mark();
-
-        if (WRITE_STATS) {
-            System.out.print("Actual binary size: " + size + " bytes");
-            System.out.println(String.format(" (%.3gMB)", size / (1024. * 1024.)));
-        }
-
-        // Now dump this out as a file
-        // There's probably an API to do this more efficiently; TODO: Look into this.
-        byte[] b = new byte[size];
-        buffer.rewind();
-        buffer.get(b);
-        if (file.exists()) {
-            boolean deleted = file.delete();
-            assert deleted : file;
-        }
-
-        // Write to a different file and swap it in last minute.
-        // This helps in scenarios where multiple simultaneous Gradle
-        // threads are attempting to access the file before it's ready.
-        File tmp = new File(file.getPath() + "." + new Random().nextInt());
-        Files.asByteSink(tmp).write(b);
-        if (!tmp.renameTo(file)) {
-            //noinspection ResultOfMethodCallIgnored
-            tmp.delete();
-        }
-    }
-
-    private static void writeSinceDeprecatedInRemovedIn(
-            ByteBuffer buffer, int since, int deprecatedIn, int removedIn) {
-        assert since != 0 && since == (since & API_MASK); // Must fit in 7 bits.
-        assert deprecatedIn == (deprecatedIn & API_MASK); // Must fit in 7 bits.
-        assert removedIn == (removedIn & API_MASK); // Must fit in 7 bits.
-
-        boolean isDeprecated = deprecatedIn > 0;
-        boolean isRemoved = removedIn > 0;
-        // Writing "since" and, optionally, "deprecatedIn" and "removedIn".
-        if (isDeprecated || isRemoved) {
-            since |= HAS_EXTRA_BYTE_FLAG;
-        }
-        buffer.put((byte) since);
-        if (isDeprecated || isRemoved) {
-            if (isRemoved) {
-                deprecatedIn |= HAS_EXTRA_BYTE_FLAG;
-            }
-            buffer.put((byte) deprecatedIn);
-            if (isRemoved) {
-                buffer.put((byte) removedIn);
-            }
-        }
-    }
-
-    // For debugging only
-    private String dumpEntry(int offset) {
-        if (DEBUG_SEARCH) {
-            StringBuilder sb = new StringBuilder(200);
-            for (int i = offset; i < mData.length; i++) {
-                byte b = mData[i];
-                if (b == 0 || b == 1) {
-                    break;
-                }
-                char c = (char) Byte.toUnsignedInt(b);
-                sb.append(c);
-            }
-
-            return sb.toString();
-        } else {
-            return "<disabled>";
-        }
-    }
-
-    private static int compare(
-            byte[] data, int offset, byte terminator, String s, int sOffset, int max) {
-        int i = offset;
-        int j = sOffset;
-        for (; j < max; i++, j++) {
-            byte b = data[i];
-            char c = s.charAt(j);
-            if (c == '.' && (b == '/' || b == '$')) { // '.' matches both '/' and '$'.
-                continue;
-            }
-            // TODO: Check somewhere that the strings are purely in the ASCII range.
-            // If not, they will not match the database.
-            byte cb = (byte) c;
-            int delta = b - cb;
-            if (delta != 0) {
-                return delta;
-            }
-        }
-
-        byte b = data[i];
-        if (terminator == 1 && b == 0) { // Terminator 1 matches both 0 and 1.
-            return 0;
-        }
-        return b - terminator;
-    }
 
     /**
      * Returns the API version required by the given class reference, or -1 if this is not a known
@@ -885,7 +385,7 @@ public class ApiLookup {
                     return -1;
                 }
                 int deprecatedIn = Byte.toUnsignedInt(mData[offset]) & API_MASK;
-                ;
+
                 return deprecatedIn != 0 ? deprecatedIn : -1;
             }
         } else if (mInfo != null) {
@@ -1272,160 +772,6 @@ public class ApiLookup {
      */
     public boolean isValidJavaPackage(@NonNull String classOrPackageName, int packageNameLength) {
         return findContainer(classOrPackageName, packageNameLength, true) >= 0;
-    }
-
-    /** Returns the container index of the given package or class, or -1 if it is unknown. */
-    private int findContainer(
-            @NonNull String packageOrClassName, int containerNameLength, boolean packageOnly) {
-        // The index array contains class indexes from 0 to classCount and
-        // member indices from classCount to mIndices.length.
-        int low = 0;
-        int high = containerCount;
-        while (low < high) {
-            int middle = (low + high) >>> 1;
-            int offset = mIndices[middle];
-
-            if (DEBUG_SEARCH) {
-                System.out.println(
-                        "Comparing string \""
-                                + packageOrClassName.substring(0, containerNameLength)
-                                + "\" with entry at "
-                                + offset
-                                + ": "
-                                + dumpEntry(offset));
-            }
-
-            byte terminator = packageOnly ? (byte) 0 : (byte) 1;
-            int c = compare(mData, offset, terminator, packageOrClassName, 0, containerNameLength);
-            if (c == 0) {
-                if (DEBUG_SEARCH) {
-                    System.out.println("Found " + dumpEntry(offset));
-                }
-                return middle;
-            }
-
-            if (c < 0) {
-                low = middle + 1;
-            } else {
-                assert c > 0;
-                high = middle;
-            }
-        }
-
-        return -1;
-    }
-
-    private static int get4ByteInt(@NonNull byte[] data, int offset) {
-        byte b1 = data[offset++];
-        byte b2 = data[offset++];
-        byte b3 = data[offset++];
-        byte b4 = data[offset];
-        // The byte data is always big endian.
-        return (b1 & 0xFF) << 24 | (b2 & 0xFF) << 16 | (b3 & 0xFF) << 8 | (b4 & 0xFF);
-    }
-
-    private static void put3ByteInt(@NonNull ByteBuffer buffer, int value) {
-        // Big endian
-        byte b3 = (byte) (value & 0xFF);
-        value >>>= 8;
-        byte b2 = (byte) (value & 0xFF);
-        value >>>= 8;
-        byte b1 = (byte) (value & 0xFF);
-        buffer.put(b1);
-        buffer.put(b2);
-        buffer.put(b3);
-    }
-
-    private static void put2ByteInt(@NonNull ByteBuffer buffer, int value) {
-        // Big endian
-        byte b2 = (byte) (value & 0xFF);
-        value >>>= 8;
-        byte b1 = (byte) (value & 0xFF);
-        buffer.put(b1);
-        buffer.put(b2);
-    }
-
-    private static int get3ByteInt(@NonNull byte[] mData, int offset) {
-        byte b1 = mData[offset++];
-        byte b2 = mData[offset++];
-        byte b3 = mData[offset];
-        // The byte data is always big endian.
-        return (b1 & 0xFF) << 16 | (b2 & 0xFF) << 8 | (b3 & 0xFF);
-    }
-
-    private static int get2ByteInt(@NonNull byte[] data, int offset) {
-        byte b1 = data[offset++];
-        byte b2 = data[offset];
-        // The byte data is always big endian.
-        return (b1 & 0xFF) << 8 | (b2 & 0xFF);
-    }
-
-    /** Returns the class number of the given class, or -1 if it is unknown. */
-    private int findClass(@NonNull String className) {
-        int lastSeparator = lastIndexOfDotOrSlashOrDollar(className);
-        int containerNameLength = lastSeparator >= 0 ? lastSeparator : 0;
-        int containerNumber = findContainer(className, containerNameLength, false);
-        if (containerNumber < 0) {
-            return -1;
-        }
-        int classNameLength = className.length();
-        int classNameOffset = lastSeparator + 1;
-
-        int curr = mIndices[containerNumber];
-        // Skip the name of the container.
-        while ((mData[curr] & ~1) != 0) { // Iterate until encountering 0 or 1.
-            curr++;
-        }
-        curr++;
-
-        // 3 bytes for first offset.
-        int low = get3ByteInt(mData, curr);
-        curr += 3;
-
-        int length = get2ByteInt(mData, curr);
-        int high = low + length;
-        while (low < high) {
-            int middle = (low + high) >>> 1;
-            int offset = mIndices[middle];
-            offset++; // Skip the byte which points to the metadata after the name.
-
-            if (DEBUG_SEARCH) {
-                System.out.println(
-                        "Comparing string "
-                                + className.substring(0, classNameLength)
-                                + " with entry at "
-                                + offset
-                                + ": "
-                                + dumpEntry(offset));
-            }
-
-            int c = compare(mData, offset, (byte) 0, className, classNameOffset, classNameLength);
-            if (c == 0) {
-                if (DEBUG_SEARCH) {
-                    System.out.println("Found " + dumpEntry(offset));
-                }
-                return middle;
-            }
-
-            if (c < 0) {
-                low = middle + 1;
-            } else {
-                assert c > 0;
-                high = middle;
-            }
-        }
-
-        return -1;
-    }
-
-    private static int lastIndexOfDotOrSlashOrDollar(@NonNull String className) {
-        for (int i = className.length(); --i >= 0; ) {
-            char c = className.charAt(i);
-            if (c == '.' || c == '/' || c == '$') {
-                return i;
-            }
-        }
-        return -1;
     }
 
     /**

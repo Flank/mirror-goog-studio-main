@@ -22,6 +22,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
 import com.google.common.collect.Iterables;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,8 +42,7 @@ import java.util.Set;
  *
  * <p>{@link #getField} returns the API level when the field was introduced.
  */
-public final class ApiClass implements Comparable<ApiClass> {
-    private final String mName;
+public final class ApiClass extends ApiClassBase {
     private final int mSince;
     private final int mDeprecatedIn;
     private final int mRemovedIn;
@@ -59,29 +60,11 @@ public final class ApiClass implements Comparable<ApiClass> {
      */
     @Nullable private Map<String, Integer> mElementsRemovedIn;
 
-    // Persistence data: Used when writing out binary data in ApiLookup
-    List<String> members;
-    int index; // class number, e.g. entry in index where the pointer can be found
-    int indexOffset; // offset of the class entry
-    int memberOffsetBegin; // offset of the first member entry in the class
-    int memberOffsetEnd; // offset after the last member entry in the class
-    int memberIndexStart; // entry in index for first member
-    int memberIndexLength; // number of entries
-
     ApiClass(String name, int since, int deprecatedIn, int removedIn) {
-        mName = name;
+        super(name);
         mSince = since;
         mDeprecatedIn = deprecatedIn;
         mRemovedIn = removedIn;
-    }
-
-    /**
-     * Returns the name of the class.
-     *
-     * @return the name of the class
-     */
-    String getName() {
-        return mName;
     }
 
     /**
@@ -117,7 +100,7 @@ public final class ApiClass implements Comparable<ApiClass> {
      * @param name the name of the field.
      * @param info the information about the rest of the API
      */
-    int getField(String name, Api info) {
+    int getField(String name, Api<? extends ApiClassBase> info) {
         // The field can come from this class or from a super class or an interface
         // The value can never be lower than this introduction of this class.
         // When looking at super classes and interfaces, it can never be lower than when the
@@ -135,9 +118,9 @@ public final class ApiClass implements Comparable<ApiClass> {
 
         // Look at the super classes and interfaces.
         for (Pair<String, Integer> superClassPair : Iterables.concat(mSuperClasses, mInterfaces)) {
-            ApiClass superClass = info.getClass(superClassPair.getFirst());
-            if (superClass != null) {
-                int i = superClass.getField(name, info);
+            ApiClassBase superClass = info.getClass(superClassPair.getFirst());
+            if (superClass instanceof ApiClass) {
+                int i = ((ApiClass) superClass).getField(name, info);
                 if (i != 0) {
                     int tmp = Math.max(superClassPair.getSecond(), i);
                     if (apiLevel == 0 || tmp < apiLevel) {
@@ -184,7 +167,7 @@ public final class ApiClass implements Comparable<ApiClass> {
      * @param name the name of the field or method
      * @param info the information about the rest of the API
      */
-    private int getMemberRemovedInInternal(String name, Api info) {
+    private int getMemberRemovedInInternal(String name, Api<ApiClass> info) {
         int apiLevel = getValueWithDefault(mElementsRemovedIn, name, Integer.MAX_VALUE);
         if (apiLevel == Integer.MAX_VALUE) {
             if (mMethods.containsKey(name) || mFields.containsKey(name)) {
@@ -231,7 +214,7 @@ public final class ApiClass implements Comparable<ApiClass> {
      * @param methodSignature the method signature
      * @param info the information about the rest of the API
      */
-    int getMethod(String methodSignature, Api info) {
+    int getMethod(String methodSignature, Api<? extends ApiClassBase> info) {
         // The method can come from this class or from a super class.
         // The value can never be lower than this introduction of this class.
         // When looking at super classes, it can never be lower than when the super class became
@@ -250,9 +233,9 @@ public final class ApiClass implements Comparable<ApiClass> {
         if (!methodSignature.startsWith(CONSTRUCTOR_NAME)) {
             // Look at the super classes and interfaces.
             for (Pair<String, Integer> pair : Iterables.concat(mSuperClasses, mInterfaces)) {
-                ApiClass superClass = info.getClass(pair.getFirst());
-                if (superClass != null) {
-                    int i = superClass.getMethod(methodSignature, info);
+                ApiClassBase superClass = info.getClass(pair.getFirst());
+                if (superClass instanceof ApiClass) {
+                    int i = ((ApiClass) superClass).getMethod(methodSignature, info);
                     if (i != 0) {
                         int tmp = Math.max(pair.getSecond(), i);
                         if (apiLevel == 0 || tmp < apiLevel) {
@@ -328,41 +311,6 @@ public final class ApiClass implements Comparable<ApiClass> {
         }
     }
 
-    @NonNull
-    public String getContainerName() {
-        int index = lastIndexOfSlashOrDollar(mName);
-        if (index >= 0) {
-            return mName.substring(0, index);
-        }
-
-        return "";
-    }
-
-    private static int lastIndexOfSlashOrDollar(String className) {
-        for (int i = className.length(); --i >= 0; ) {
-            char c = className.charAt(i);
-            if (c == '/' || c == '$') {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    @NonNull
-    public String getSimpleName() {
-        int index = mName.lastIndexOf('/');
-        if (index != -1) {
-            return mName.substring(index + 1);
-        }
-
-        return mName;
-    }
-
-    @Override
-    public String toString() {
-        return mName;
-    }
-
     /**
      * Returns the set of all methods, including inherited ones.
      *
@@ -386,7 +334,7 @@ public final class ApiClass implements Comparable<ApiClass> {
         return mSuperClasses;
     }
 
-    private void addAllMethods(Api info, Set<String> set, boolean includeConstructors) {
+    private void addAllMethods(Api<ApiClass> info, Set<String> set, boolean includeConstructors) {
         if (includeConstructors) {
             set.addAll(mMethods.keySet());
         } else {
@@ -418,7 +366,7 @@ public final class ApiClass implements Comparable<ApiClass> {
         return members;
     }
 
-    private void addAllFields(Api info, Set<String> set) {
+    private void addAllFields(Api<ApiClass> info, Set<String> set) {
         set.addAll(mFields.keySet());
 
         for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
@@ -428,7 +376,7 @@ public final class ApiClass implements Comparable<ApiClass> {
         }
     }
 
-    private void addRemovedFields(Api info, Set<String> set) {
+    private void addRemovedFields(Api<ApiClass> info, Set<String> set) {
         set.addAll(mFields.keySet());
 
         for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
@@ -490,10 +438,156 @@ public final class ApiClass implements Comparable<ApiClass> {
         return removedMethods;
     }
 
+    /**
+     * Extends the basic format by additionally writing:
+     *
+     * <pre>
+     * 1. One, two or three bytes representing the API levels when the class was introduced,
+     * deprecated, and removed, respectively. The third byte is present only if the class
+     * was removed. The second byte is present only if the class was deprecated or removed.
+     *
+     * 2. The number of new super classes and interfaces [1 byte]. This counts only
+     * super classes and interfaces added after the original API level of the class.
+     *
+     * 3. For each super class or interface counted in g,
+     *     a. The index of the class [a 3-byte integer]
+     *     b. The API level the class/interface was added [1 byte]
+     * </pre>
+     */
     @Override
-    public int compareTo(@NonNull ApiClass other) {
-        return mName.compareTo(other.mName);
+    void writeSuperInterfaces(Api<? extends ApiClassBase> info, ByteBuffer buffer) {
+        int since = getSince();
+        int deprecatedIn = getDeprecatedIn();
+        int removedIn = getRemovedIn();
+        writeSinceDeprecatedInRemovedIn(buffer, since, deprecatedIn, removedIn);
+
+        List<Pair<String, Integer>> interfaces = getInterfaces();
+        int count = 0;
+        if (!interfaces.isEmpty()) {
+            for (Pair<String, Integer> pair : interfaces) {
+                int api = pair.getSecond();
+                if (api > getSince()) {
+                    count++;
+                }
+            }
+        }
+        List<Pair<String, Integer>> supers = getSuperClasses();
+        if (!supers.isEmpty()) {
+            for (Pair<String, Integer> pair : supers) {
+                int api = pair.getSecond();
+                if (api > getSince()) {
+                    count++;
+                }
+            }
+        }
+        buffer.put((byte) count);
+        if (count > 0) {
+            for (Pair<String, Integer> pair : supers) {
+                int api = pair.getSecond();
+                if (api > getSince()) {
+                    ApiClassBase superClass = info.getClasses().get(pair.getFirst());
+                    assert superClass != null : this;
+                    ApiDatabase.put3ByteInt(buffer, superClass.index);
+                    buffer.put((byte) api);
+                }
+            }
+            for (Pair<String, Integer> pair : interfaces) {
+                int api = pair.getSecond();
+                if (api > getSince()) {
+                    ApiClassBase interfaceClass = info.getClasses().get(pair.getFirst());
+                    assert interfaceClass != null : this;
+                    ApiDatabase.put3ByteInt(buffer, interfaceClass.index);
+                    buffer.put((byte) api);
+                }
+            }
+        }
     }
+
+    @Override
+    int computeExtraStorageNeeded(Api<? extends ApiClassBase> info) {
+        int estimatedSize = 0;
+
+        Set<String> allMethods = getAllMethods(info);
+        Set<String> allFields = getAllFields(info);
+        members = new ArrayList<>(allMethods.size() + allFields.size());
+        members.addAll(allMethods);
+        members.addAll(allFields);
+
+        estimatedSize += 2 + 4 * (getInterfaces().size());
+        if (getSuperClasses().size() > 1) {
+            estimatedSize += 2 + 4 * (getSuperClasses().size());
+        }
+
+        // Only include classes that have one or more members requiring version 2 or higher:
+        Collections.sort(members);
+        for (String member : members) {
+            estimatedSize += member.length();
+            estimatedSize += 16;
+        }
+        return estimatedSize;
+    }
+
+    /**
+     * Writes one, two or three bytes representing the API levels when the member was introduced,
+     * deprecated, and removed, respectively. The third byte is present only if the member was
+     * removed. The second byte is present only if the member was deprecated or removed.
+     */
+    @Override
+    void writeMemberData(Api<? extends ApiClassBase> info, String member, ByteBuffer buffer) {
+        int since;
+        if (member.indexOf('(') >= 0) {
+            since = getMethod(member, info);
+        } else {
+            since = getField(member, info);
+        }
+        if (since == 0) {
+            assert false : getName() + ':' + member;
+            since = 1;
+        }
+
+        int deprecatedIn = getMemberDeprecatedIn(member, info);
+        assert deprecatedIn >= 0 : "Invalid deprecatedIn " + deprecatedIn + " for " + member;
+        int removedIn = getMemberRemovedIn(member, info);
+        assert removedIn >= 0 : "Invalid removedIn " + removedIn + " for " + member;
+
+        byte[] signature = member.getBytes(StandardCharsets.UTF_8);
+        for (byte b : signature) {
+            // Make sure all signatures are really just simple ASCII.
+            assert b == (b & 0x7f) : member;
+            buffer.put(b);
+            // Skip types on methods
+            if (b == (byte) ')') {
+                break;
+            }
+        }
+        buffer.put((byte) 0);
+        writeSinceDeprecatedInRemovedIn(buffer, since, deprecatedIn, removedIn);
+    }
+
+    private static void writeSinceDeprecatedInRemovedIn(
+            ByteBuffer buffer, int since, int deprecatedIn, int removedIn) {
+        assert since != 0 && since == (since & ApiDatabase.API_MASK); // Must fit in 7 bits.
+        assert deprecatedIn == (deprecatedIn & ApiDatabase.API_MASK); // Must fit in 7 bits.
+        assert removedIn == (removedIn & ApiDatabase.API_MASK); // Must fit in 7 bits.
+
+        boolean isDeprecated = deprecatedIn > 0;
+        boolean isRemoved = removedIn > 0;
+        // Writing "since" and, optionally, "deprecatedIn" and "removedIn".
+        if (isDeprecated || isRemoved) {
+            since |= ApiDatabase.HAS_EXTRA_BYTE_FLAG;
+        }
+        buffer.put((byte) since);
+        if (isDeprecated || isRemoved) {
+            if (isRemoved) {
+                deprecatedIn |= ApiDatabase.HAS_EXTRA_BYTE_FLAG;
+            }
+            buffer.put((byte) deprecatedIn);
+            if (isRemoved) {
+                buffer.put((byte) removedIn);
+            }
+        }
+    }
+
 
     /* This code can be used to scan through all the fields and look for fields
        that have moved to a higher class:

@@ -411,6 +411,36 @@ class JavaEvaluator {
         return signature.toString()
     }
 
+    /**
+     * Constructs a simplified version of the internal JVM description of the given method. This is
+     * in the same format as {@link #getMethodDescription} above, the difference being we don't have
+     * the actual PSI for the method type, we just construct the signature from the [method] name,
+     * the list of [argumentTypes] and optionally include the [returnType].
+     */
+    open fun constructMethodDescription(
+        method: String,
+        includeName: Boolean = false,
+        argumentTypes: Array<PsiType>,
+        returnType: PsiType? = null,
+        includeReturn: Boolean = false
+    ): String? = buildString {
+        if (includeName) {
+            append(method)
+        }
+        append('(')
+        for (argumentType in argumentTypes) {
+            if (!appendJvmEquivalentSignature(this, argumentType)) {
+                return null
+            }
+        }
+        append(')')
+        if (includeReturn) {
+            if (!appendJvmEquivalentSignature(this, returnType)) {
+                return null
+            }
+        }
+    }
+
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated(
         "Most lint APIs (such as ApiLookup) no longer require internal JVM method\n" +

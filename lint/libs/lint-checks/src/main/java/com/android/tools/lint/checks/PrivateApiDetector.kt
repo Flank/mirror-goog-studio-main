@@ -16,8 +16,11 @@
 
 package com.android.tools.lint.checks
 
+import com.android.sdklib.AndroidVersion
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -28,15 +31,19 @@ import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.TypeEvaluator
 import com.android.tools.lint.detector.api.UastLintUtils
 import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiElementFactory
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiPrimitiveType
+import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClassLiteralExpression
 import org.jetbrains.uast.UElement
-import org.jetbrains.uast.ULocalVariable
+import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
-import org.jetbrains.uast.UTypeReferenceExpression
+import org.jetbrains.uast.USimpleNameReferenceExpression
 
 /**
  * Checks that the code is not using reflection to access hidden Android APIs
@@ -45,7 +52,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     companion object Issues {
         /** Using hidden/private APIs  */
         @JvmField
-        val ISSUE = Issue.create(
+        val PRIVATE_API = Issue.create(
             id = "PrivateApi",
             briefDescription = "Using Private APIs",
             explanation = """
@@ -53,6 +60,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
             spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
             """,
+            moreInfo = "https://developer.android.com/preview/restrictions-non-sdk-interfaces",
             category = Category.CORRECTNESS,
             priority = 6,
             severity = Severity.WARNING,
@@ -63,18 +71,110 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             )
         )
 
+        @JvmField
+        val DISCOURAGED_PRIVATE_API = Issue.create(
+            id = "DiscouragedPrivateApi",
+            briefDescription = "Using Discouraged Private API",
+            explanation = """
+            Usage of restricted non-SDK interface may throw an exception at runtime. Accessing \
+            non-SDK methods or fields through reflection has a high likelihood to break your app \
+            between versions, and is being restricted to facilitate future app compatibility.
+            """,
+            moreInfo = "https://developer.android.com/preview/restrictions-non-sdk-interfaces",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.WARNING,
+            androidSpecific = true,
+            implementation = Implementation(
+                PrivateApiDetector::class.java,
+                Scope.JAVA_FILE_SCOPE
+            )
+        )
+
+        @JvmField
+        val SOON_BLOCKED_PRIVATE_API = Issue.create(
+            id = "SoonBlockedPrivateApi",
+            briefDescription = "Using Soon-to-Be Blocked Private API",
+            explanation = """
+            Usage of restricted non-SDK interface will throw an exception at runtime. Accessing \
+            non-SDK methods or fields through reflection has a high likelihood to break your app \
+            between versions, and is being restricted to facilitate future app compatibility.
+            """,
+            moreInfo = "https://developer.android.com/preview/restrictions-non-sdk-interfaces",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.ERROR,
+            androidSpecific = true,
+            implementation = Implementation(
+                PrivateApiDetector::class.java,
+                Scope.JAVA_FILE_SCOPE
+            )
+        )
+
+        @JvmField
+        val BLOCKED_PRIVATE_API = Issue.create(
+            id = "BlockedPrivateApi",
+            briefDescription = "Using Blocked Private API",
+            explanation = """
+            Usage of restricted non-SDK interface is forbidden for this targetSDK. Accessing \
+            non-SDK methods or fields through reflection has a high likelihood to break your app \
+            between versions, and is being restricted to facilitate future app compatibility.
+            """,
+            moreInfo = "https://developer.android.com/preview/restrictions-non-sdk-interfaces",
+            category = Category.CORRECTNESS,
+            priority = 6,
+            severity = Severity.FATAL,
+            androidSpecific = true,
+            implementation = Implementation(
+                PrivateApiDetector::class.java,
+                Scope.JAVA_FILE_SCOPE
+            )
+        )
+
         private const val LOAD_CLASS = "loadClass"
         private const val FOR_NAME = "forName"
         private const val GET_CLASS = "getClass"
+        private const val GET_DECLARED_CONSTRUCTOR = "getDeclaredConstructor"
         private const val GET_DECLARED_METHOD = "getDeclaredMethod"
+        private const val GET_DECLARED_FIELD = "getDeclaredField"
+        private val KOTLIN_REFLECTION_METHODS = listOf(
+            "members", // this is available in kotlin-stdlib, the rest are in kotlin-reflect
+            "declaredMembers",
+            "declaredFunctions",
+            "declaredMemberFunctions",
+            "declaredMemberProperties"
+        )
         private const val ERROR_MESSAGE = "Accessing internal APIs via reflection is not " +
                 "supported and may not work on all devices or in the future"
+    }
+
+    private var client: LintClient? = null
+    private var psiFactory: PsiElementFactory? = null
+
+    // Only initialize private API database on demand, at most once per Lint session.
+    private var cachedApiDatabase: Boolean = false
+    private var privateApiDatabase: PrivateApiLookup? = null
+    private val apiDatabase: PrivateApiLookup?
+        get() {
+            if (!cachedApiDatabase && privateApiDatabase == null && client != null) {
+                privateApiDatabase = PrivateApiLookup.get(client!!)
+                cachedApiDatabase = true
+            }
+            return privateApiDatabase
+        }
+
+    override fun beforeCheckRootProject(context: Context) {
+        client = context.client
+        cachedApiDatabase = false
+        psiFactory = PsiElementFactory.SERVICE.getInstance(context.project.ideaProject)
     }
 
     // ---- Implements JavaPsiScanner ----
 
     override fun getApplicableMethodNames(): List<String>? =
-        listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
+        listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_CONSTRUCTOR, GET_DECLARED_METHOD, GET_DECLARED_FIELD)
+
+    override fun getApplicableReferenceNames(): List<String>? = KOTLIN_REFLECTION_METHODS
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
@@ -96,15 +196,18 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    private fun checkGetDeclaredMethod(
+    override fun visitReference(
         context: JavaContext,
-        call: UCallExpression
-    ) {
-        val cls = getClassFromMemberLookup(call) ?: return
+        reference: UReferenceExpression,
+        referenced: PsiElement) {
+        // Kotlin reflection is harder to analyze statically, there are multiple ways of
+        // finally matching a method from the collection of declared members, etc. We heuristically
+        // try to match the strings we see with method and field names from the private API list.
+        // TODO: implement once Lint supports resolving property access.
+    }
 
-        if (!(cls.startsWith("com.android.") || cls.startsWith("android."))) {
-            return
-        }
+    private fun checkGetDeclaredMethod(context: JavaContext, call: UCallExpression) {
+        val cls = getJavaClassFromMemberLookup(call) ?: return
 
         val arguments = call.valueArguments
         if (arguments.isEmpty()) {
@@ -112,13 +215,32 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         }
         val methodName = ConstantEvaluator.evaluateString(context, arguments[0], false)
 
-        val aClass = context.evaluator.findClass(cls) ?: return
+        val aClass = context.evaluator.findClass(cls)
+        if (aClass != null && aClass.findMethodsByName(methodName, true).isNotEmpty()) {
+            return
+        }
 
-        // TODO: Fields?
-        val methodsByName = aClass.findMethodsByName(methodName, true)
-        if (methodsByName.isEmpty()) {
-            val location = context.getLocation(call)
-            context.report(ISSUE, call, location, ERROR_MESSAGE)
+        val targetSdk = context.project.targetSdk
+        val location = context.getLocation(call)
+        if (targetSdk < AndroidVersion.VersionCodes.O) {
+            if (!(cls.startsWith("com.android.") || cls.startsWith("android."))) {
+                return
+            }
+            context.report(PRIVATE_API, call, location, ERROR_MESSAGE)
+        } else if (methodName != null) {
+            // When targetSDK is at least 28, we perform stricter checks against the API blacklist.
+            val argTypes =
+                if (arguments.size >= 2) arguments.subList(1, arguments.size)
+                    .mapNotNull { getJavaClassType(it) }
+                    .toTypedArray()
+                else
+                    emptyArray()
+
+            val desc = context.evaluator
+                .constructMethodDescription(method = methodName, argumentTypes = argTypes) ?: return
+
+            val restriction = apiDatabase?.getMethodRestriction(cls, methodName, desc)
+            reportIssue(context, restriction, methodName, call)
         }
     }
 
@@ -155,7 +277,7 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
 
         if (isInternal) {
             val location = context.getLocation(call)
-            context.report(ISSUE, call, location, ERROR_MESSAGE)
+            context.report(PRIVATE_API, call, location, ERROR_MESSAGE)
         }
     }
 
@@ -167,59 +289,119 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
      *
      * @return the fully qualified name of the class, if found
      */
-    private fun getClassFromMemberLookup(call: UCallExpression): String? =
-        findReflectionClass(call.receiver)
+    private fun getJavaClassFromMemberLookup(call: UCallExpression): String? =
+        getJavaClassType(call.receiver)?.canonicalText
 
-    private fun findReflectionClass(element: UElement?): String? {
-        if (element is UQualifiedReferenceExpression &&
-            element.selector is UCallExpression
-        ) {
-            return findReflectionClass(element.selector)
-        }
-        if (element is UCallExpression) {
-            // Inlined class lookup?
-            //   foo.getClass()
-            //   Class.forName(cls)
-            //   loader.loadClass()
-
-            val name = element.methodName
-            if (FOR_NAME == name || LOAD_CLASS == name) {
-                val arguments = element.valueArguments
-                if (arguments.isNotEmpty()) {
-                    return ConstantEvaluator.evaluateString(null, arguments[0], false)
-                }
-            } else if (GET_CLASS == name) {
-                val qualifier = element.receiver
-                val qualifierType = TypeEvaluator.evaluate(qualifier)
-                if (qualifierType is PsiClassType) {
-                    // Called getClass(): return the internal class mapping to the public class?
-                    return qualifierType.canonicalText
-                }
-            }
-
-            // TODO: Are there any other common reflection utility methods (from reflection
-            // libraries etc) ?
-        } else if (element is UReferenceExpression) {
-            // Variable (local, parameter or field) reference
-            //   myClass.getDeclaredMethod()
-            val resolved = element.resolve()
-            if (resolved is ULocalVariable) {
-                val expression = UastLintUtils.findLastAssignment(resolved as PsiVariable, element)
-                return findReflectionClass(expression)
-            }
-        } else if (element is UClassLiteralExpression) {
-            // Class literal, e.g.
-            //   MyClass.class
-            val expression = element.expression
-            if (expression is UTypeReferenceExpression) {
-                return expression.getQualifiedName()
-            }
+    /** We know [element] has type java.lang.Class<T> and we try to find out the PsiType for T. */
+    private fun getJavaClassType(element: UElement?): PsiType? {
+        if (element is UExpression) {
+            // First try the type inferred from the Psi, in case it's a known class reference.
             val type = element.getExpressionType()
-            if (type is PsiClassType) {
-                return type.canonicalText
+
+            if (type is PsiClassType && type.parameterCount == 1) {
+                var clazz = type.parameters[0]
+
+                if (clazz is PsiClassType) {
+                    PsiPrimitiveType.getUnboxedType(clazz)?.let {
+                        // Make sure we extract the primitive type (int.class, Integer.TYPE in Java,
+                        // Int::class.javaPrimitiveType in Kotlin)
+                        if (element is UQualifiedReferenceExpression) {
+                            val identifier =
+                                (element.selector as? USimpleNameReferenceExpression)?.identifier
+                            if (identifier == "javaPrimitiveType" || identifier == "TYPE") {
+                                clazz = it
+                            }
+                        }
+                        if (element is UClassLiteralExpression && element.evaluate() is PsiPrimitiveType) {
+                            clazz = it
+                        }
+                    }
+                    return clazz
+                }
+                // Here we might have a wildcard type, most likely an unbounded Class<?> coming from
+                // a loadClass or Class.forName() call. We can also have a bounded <? extends Foo>,
+                // from foo.getClass(), but if Foo is not final we cannot statically guarantee the
+                // receiver is indeed class Foo. So we fall-through to the handling below.
+            }
+            if (element is UReferenceExpression) {
+                val resolved = element.resolve()
+                if (resolved is PsiVariable) {
+                    // Follow the indirection and inspect the actual definition
+                    UastLintUtils.findLastAssignment(resolved, element)?.let { expression ->
+                        return getJavaClassType(expression)
+                    }
+                }
+
+                if (element is UQualifiedReferenceExpression && element.selector is UCallExpression) {
+                    val call = element.selector as UCallExpression
+                    val name = call.methodName
+
+                    if (FOR_NAME == name || LOAD_CLASS == name) {
+                        val arguments = call.valueArguments
+                        if (arguments.isNotEmpty()) {
+                            return ConstantEvaluator
+                                .evaluateString(null, arguments[0], false)?.let {
+                                    psiFactory!!.createTypeFromText(it, null)
+                                }
+                        }
+                    } else if (GET_CLASS == name) {
+                        return TypeEvaluator.evaluate(element.receiver)
+                    }
+
+                    // TODO: Are there any other common reflection utility methods (from reflection
+                    // libraries etc) ?
+                }
             }
         }
+        return TypeEvaluator.evaluate(element)
+    }
 
-        return null
+    private fun reportIssue(
+        context: JavaContext,
+        restriction: Restriction?,
+        api: String,
+        call: UCallExpression
+    ) {
+        val targetSdk = context.project.targetSdk
+
+        fun fatal() {
+            context.report(BLOCKED_PRIVATE_API, call, context.getLocation(call),
+                "Reflective access to $api is forbidden when targeting API $targetSdk and above"
+            )
+        }
+
+        fun error() {
+            context.report(SOON_BLOCKED_PRIVATE_API, call, context.getLocation(call),
+                "Reflective access to $api will throw an exception when targeting API $targetSdk and above"
+            )
+        }
+
+        fun warning() {
+            context.report(DISCOURAGED_PRIVATE_API, call, context.getLocation(call),
+                "Reflective access to $api, which is not part of the public SDK and therefore likely to change in future Android releases"
+            )
+        }
+
+        when (restriction) {
+            Restriction.BLACK -> fatal()
+            Restriction.GREY_MAX_O ->
+                if (targetSdk <= AndroidVersion.VersionCodes.O ||
+                    VersionChecks.isWithinVersionCheckConditional(
+                        context.evaluator, call, AndroidVersion.VersionCodes.O, false)) {
+                    warning()
+                } else {
+                    error()
+                }
+            Restriction.GREY_MAX_P ->
+                if (targetSdk <= AndroidVersion.VersionCodes.P ||
+                  VersionChecks.isWithinVersionCheckConditional(
+                      context.evaluator, call, AndroidVersion.VersionCodes.P, false)) {
+                    warning()
+                } else {
+                    error()
+                }
+            Restriction.GREY -> warning()
+            else -> return // nothing to report
+        }
     }
 }

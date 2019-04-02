@@ -16,7 +16,7 @@
     <orderEntry type="module" module-name="android.sdktools.sdk-common" exported="" />
     <orderEntry type="module" module-name="android.sdktools.layoutlib-api" exported="" />
     <orderEntry type="module" module-name="intellij.java.psi" exported="" />
-    <orderEntry type="module" module-name="intellij.java.psi.impl" />
+    <orderEntry type="module" module-name="intellij.java.psi.impl" exported="" />
     <orderEntry type="module" module-name="android.sdktools.manifest-merger" exported="" />
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
     <orderEntry type="library" name="kotlin-reflect" level="project" />

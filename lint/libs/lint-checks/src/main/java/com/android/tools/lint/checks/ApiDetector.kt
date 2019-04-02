@@ -1621,10 +1621,10 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api > minSdk) {
                     val target = getTargetApi(expression)
                     if (target == -1 || api > target) {
-                        if (isWithinVersionCheckConditional(context.evaluator, expression, api)) {
+                        if (isWithinVersionCheckConditional(context.evaluator, expression, api, true)) {
                             return true
                         }
-                        if (isPrecededByVersionCheckExit(expression, api)) {
+                        if (isPrecededByVersionCheckExit(expression, api, true)) {
                             return true
                         }
 
@@ -2440,8 +2440,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val driver = context.driver
             return (driver.isSuppressed(context, UNSUPPORTED, element) ||
                     driver.isSuppressed(context, INLINED, element) ||
-                    isWithinVersionCheckConditional(context.evaluator, element, api) ||
-                    isPrecededByVersionCheckExit(element, api))
+                    isWithinVersionCheckConditional(context.evaluator, element, api, true) ||
+                    isPrecededByVersionCheckExit(element, api, true))
         }
 
         @JvmStatic

@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 360;
+    public static final int INITIAL_CAPACITY = 363;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -268,7 +268,10 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(PluralsDetector.MISSING);
         issues.add(PowerManagerDetector.INVALID_WAKE_LOCK_TAG);
         issues.add(PreferenceActivityDetector.ISSUE);
-        issues.add(PrivateApiDetector.ISSUE);
+        issues.add(PrivateApiDetector.PRIVATE_API);
+        issues.add(PrivateApiDetector.DISCOURAGED_PRIVATE_API);
+        issues.add(PrivateApiDetector.SOON_BLOCKED_PRIVATE_API);
+        issues.add(PrivateApiDetector.BLOCKED_PRIVATE_API);
         issues.add(PrivateKeyDetector.ISSUE);
         issues.add(PrivateResourceDetector.ISSUE);
         issues.add(ProguardDetector.SPLIT_CONFIG);
@@ -427,7 +430,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
 
             if (scope.contains(Scope.JAVA_FILE)) {
-                initialSize += 120;
+                initialSize += 125;
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {

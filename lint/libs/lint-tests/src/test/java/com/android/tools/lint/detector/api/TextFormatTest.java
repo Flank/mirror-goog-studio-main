@@ -293,7 +293,7 @@ public class TextFormatTest extends TestCase {
     public void testEscapedNewlines() {
         assertEquals(
                 "Using reflection to access hidden/private Android APIs is not safe; it will often not work on devices from other vendors, and it may suddenly stop working (if the API is removed) or crash spectacularly (if the API behavior changes, since there are no guarantees for compatibility).",
-                PrivateApiDetector.ISSUE.getExplanation(TextFormat.HTML));
+                PrivateApiDetector.PRIVATE_API.getExplanation(TextFormat.HTML));
         // Ignore newlines if they are escaped; used for line wrapping
         assertEquals("abcd<br/>\nef", RAW.convertTo("ab\\\ncd\nef", HTML));
     }

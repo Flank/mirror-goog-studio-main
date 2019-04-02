@@ -36,7 +36,7 @@ class ApiParser extends DefaultHandler {
     private static final String ATTR_REMOVED = "removed";
 
     private final Map<String, ApiClass> mClasses = new HashMap<>(6000);
-    private final Map<String, ApiClassOwner> mContainers = new HashMap<>();
+    private final Map<String, ApiClassOwner<ApiClass>> mContainers = new HashMap<>();
 
     private ApiClass mCurrentClass;
 
@@ -46,7 +46,7 @@ class ApiParser extends DefaultHandler {
         return mClasses;
     }
 
-    Map<String, ApiClassOwner> getContainers() {
+    Map<String, ApiClassOwner<ApiClass>> getContainers() {
         return mContainers;
     }
 
@@ -112,9 +112,9 @@ class ApiParser extends DefaultHandler {
         String containerName = cls.getContainerName();
         int len = containerName.length();
         boolean isClass = len < name.length() && name.charAt(len) == '$';
-        ApiClassOwner container = mContainers.get(containerName);
+        ApiClassOwner<ApiClass> container = mContainers.get(containerName);
         if (container == null) {
-            container = new ApiClassOwner(containerName, isClass);
+            container = new ApiClassOwner<>(containerName, isClass);
             mContainers.put(containerName, container);
         } else if (container.isClass() != isClass) {
             throw new RuntimeException("\"" + containerName + "\" is both a package and a class");

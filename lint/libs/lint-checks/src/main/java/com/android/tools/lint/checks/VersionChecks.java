@@ -198,14 +198,16 @@ public class VersionChecks {
         return false;
     }
 
-    public static boolean isPrecededByVersionCheckExit(@NonNull UElement element, int api) {
+    public static boolean isPrecededByVersionCheckExit(
+            @NonNull UElement element, int api, boolean isLowerBound) {
         //noinspection unchecked
         UExpression currentExpression =
                 UastUtils.getParentOfType(
                         element, UExpression.class, true, UMethod.class, UClass.class);
 
         while (currentExpression != null) {
-            VersionCheckWithExitFinder visitor = new VersionCheckWithExitFinder(element, api);
+            VersionCheckWithExitFinder visitor =
+                    new VersionCheckWithExitFinder(element, api, isLowerBound);
             currentExpression.accept(visitor);
 
             if (visitor.found()) {
@@ -230,13 +232,15 @@ public class VersionChecks {
 
         private final UElement endElement;
         private final int api;
+        private final boolean isLowerBound;
 
         private boolean found = false;
         private boolean done = false;
 
-        public VersionCheckWithExitFinder(UElement endElement, int api) {
+        public VersionCheckWithExitFinder(UElement endElement, int api, boolean isLowerBound) {
             this.endElement = endElement;
             this.api = api;
+            this.isLowerBound = isLowerBound;
         }
 
         @Override
@@ -265,7 +269,7 @@ public class VersionChecks {
             if (thenBranch != null) {
                 Boolean level =
                         isVersionCheckConditional(
-                                api, ifStatement.getCondition(), false, null, null);
+                                api, isLowerBound, ifStatement.getCondition(), false, null, null);
 
                 if (level != null && level) {
                     // See if the body does an immediate return
@@ -279,7 +283,7 @@ public class VersionChecks {
             if (elseBranch != null) {
                 Boolean level =
                         isVersionCheckConditional(
-                                api, ifStatement.getCondition(), true, null, null);
+                                api, isLowerBound, ifStatement.getCondition(), true, null, null);
 
                 if (level != null && level) {
                     if (isUnconditionalReturn(elseBranch)) {
@@ -319,14 +323,18 @@ public class VersionChecks {
     }
 
     public static boolean isWithinVersionCheckConditional(
-            @NonNull JavaEvaluator evaluator, @NonNull UElement element, int api) {
-        return isWithinVersionCheckConditional(evaluator, element, api, null);
+            @NonNull JavaEvaluator evaluator,
+            @NonNull UElement element,
+            int api,
+            boolean isLowerBound) {
+        return isWithinVersionCheckConditional(evaluator, element, api, isLowerBound, null);
     }
 
     public static boolean isWithinVersionCheckConditional(
             @NonNull JavaEvaluator evaluator,
             @NonNull UElement element,
             int api,
+            boolean isLowerBound,
             @Nullable ApiLevelLookup apiLookup) {
         UElement current = skipParentheses(element.getUastParent());
         UElement prev = element;
@@ -337,19 +345,22 @@ public class VersionChecks {
                 if (prev != condition) {
                     boolean fromThen = prev.equals(ifStatement.getThenExpression());
                     Boolean ok =
-                            isVersionCheckConditional(api, condition, fromThen, prev, apiLookup);
+                            isVersionCheckConditional(
+                                    api, isLowerBound, condition, fromThen, prev, apiLookup);
                     if (ok != null && ok) {
                         return true;
                     }
                 }
             } else if (current instanceof UPolyadicExpression
-                    && (isAndedWithConditional(current, api, prev)
-                            || isOredWithConditional(current, api, prev))) {
+                    && (isAndedWithConditional(current, api, isLowerBound, prev)
+                            || isOredWithConditional(current, api, isLowerBound, prev))) {
                 return true;
             } else if (current instanceof USwitchClauseExpressionWithBody) {
                 USwitchClauseExpressionWithBody body = (USwitchClauseExpressionWithBody) current;
                 for (UExpression condition : body.getCaseValues()) {
-                    Boolean ok = isVersionCheckConditional(api, condition, true, prev, apiLookup);
+                    Boolean ok =
+                            isVersionCheckConditional(
+                                    api, isLowerBound, condition, true, prev, apiLookup);
                     if (ok != null && ok) {
                         return true;
                     }
@@ -420,7 +431,11 @@ public class VersionChecks {
                                 };
                         if (lambdaInvocation != null
                                 && isWithinVersionCheckConditional(
-                                        evaluator, lambdaInvocation, api, newApiLookup)) {
+                                        evaluator,
+                                        lambdaInvocation,
+                                        api,
+                                        isLowerBound,
+                                        newApiLookup)) {
                             return true;
                         }
                     }
@@ -443,6 +458,7 @@ public class VersionChecks {
     @Nullable
     private static Boolean isVersionCheckConditional(
             int api,
+            boolean isLowerBound,
             @NonNull UElement element,
             boolean and,
             @Nullable UElement prev,
@@ -450,7 +466,7 @@ public class VersionChecks {
         if (element instanceof UPolyadicExpression) {
             if (element instanceof UBinaryExpression) {
                 UBinaryExpression binary = (UBinaryExpression) element;
-                Boolean ok = isVersionCheckConditional(api, and, binary, apiLookup);
+                Boolean ok = isVersionCheckConditional(api, isLowerBound, and, binary, apiLookup);
                 if (ok != null) {
                     return ok;
                 }
@@ -458,18 +474,18 @@ public class VersionChecks {
             UPolyadicExpression expression = (UPolyadicExpression) element;
             UastBinaryOperator tokenType = expression.getOperator();
             if (and && tokenType == UastBinaryOperator.LOGICAL_AND) {
-                if (isAndedWithConditional(element, api, prev)) {
+                if (isAndedWithConditional(element, api, isLowerBound, prev)) {
                     return true;
                 }
 
             } else if (!and && tokenType == UastBinaryOperator.LOGICAL_OR) {
-                if (isOredWithConditional(element, api, prev)) {
+                if (isOredWithConditional(element, api, isLowerBound, prev)) {
                     return true;
                 }
             }
         } else if (element instanceof UCallExpression) {
             UCallExpression call = (UCallExpression) element;
-            return isValidVersionCall(api, and, call);
+            return isValidVersionCall(api, isLowerBound, and, call);
         } else if (element instanceof UReferenceExpression) {
             // Constant expression for an SDK version check?
             UReferenceExpression refExpression = (UReferenceExpression) element;
@@ -481,7 +497,9 @@ public class VersionChecks {
                     UastContext context = UastUtils.getUastContext(element);
                     UExpression initializer = context.getInitializerBody(field);
                     if (initializer != null) {
-                        Boolean ok = isVersionCheckConditional(api, initializer, and, null, null);
+                        Boolean ok =
+                                isVersionCheckConditional(
+                                        api, isLowerBound, initializer, and, null, null);
                         if (ok != null) {
                             return ok;
                         }
@@ -493,19 +511,20 @@ public class VersionChecks {
                             instanceof UCallExpression) {
                 UCallExpression call =
                         (UCallExpression) ((UQualifiedReferenceExpression) element).getSelector();
-                return isValidVersionCall(api, and, call);
+                return isValidVersionCall(api, isLowerBound, and, call);
             } else if (resolved instanceof PsiMethod
                     && element instanceof UQualifiedReferenceExpression
                     && ((UQualifiedReferenceExpression) element).getReceiver()
                             instanceof UReferenceExpression) {
                 // Method call via Kotlin property syntax
-                return isValidVersionCall(api, and, element, (PsiMethod) resolved);
+                return isValidVersionCall(api, isLowerBound, and, element, (PsiMethod) resolved);
             }
         } else if (element instanceof UUnaryExpression) {
             UUnaryExpression prefixExpression = (UUnaryExpression) element;
             if (prefixExpression.getOperator() == UastPrefixOperator.LOGICAL_NOT) {
                 UExpression operand = prefixExpression.getOperand();
-                Boolean ok = isVersionCheckConditional(api, operand, !and, null, null);
+                Boolean ok =
+                        isVersionCheckConditional(api, isLowerBound, operand, !and, null, null);
                 if (ok != null) {
                     return ok;
                 }
@@ -515,19 +534,24 @@ public class VersionChecks {
     }
 
     @Nullable
-    private static Boolean isValidVersionCall(int api, boolean and, UCallExpression call) {
+    private static Boolean isValidVersionCall(
+            int api, boolean isLowerBound, boolean and, UCallExpression call) {
         PsiMethod method = call.resolve();
         if (method == null) {
             return null;
         }
-        return isValidVersionCall(api, and, call, method);
+        return isValidVersionCall(api, isLowerBound, and, call, method);
     }
 
     @Nullable
     private static Boolean isValidVersionCall(
-            int api, boolean and, @NonNull UElement call, @NonNull PsiMethod method) {
+            int api,
+            boolean isLowerBound,
+            boolean and,
+            @NonNull UElement call,
+            @NonNull PsiMethod method) {
         String name = method.getName();
-        if (name.startsWith("isAtLeast")) {
+        if (name.startsWith("isAtLeast") && isLowerBound) {
             PsiClass containingClass = method.getContainingClass();
             if (containingClass != null
                     // android.support.v4.os.BuildCompat,
@@ -554,7 +578,7 @@ public class VersionChecks {
         }
 
         int version = getMinSdkVersionFromMethodName(name);
-        if (version != -1) {
+        if (version != -1 && isLowerBound) {
             return api <= version;
         }
 
@@ -594,7 +618,8 @@ public class VersionChecks {
                                 || returnValue instanceof UCallExpression
                                 || returnValue instanceof UQualifiedReferenceExpression) {
                             Boolean isConditional =
-                                    isVersionCheckConditional(api, returnValue, and, null, null);
+                                    isVersionCheckConditional(
+                                            api, isLowerBound, returnValue, and, null, null);
                             if (isConditional != null) {
                                 return isConditional;
                             }
@@ -622,7 +647,9 @@ public class VersionChecks {
                                     }
                                     return -1;
                                 };
-                        Boolean ok = isVersionCheckConditional(api, returnValue, and, null, lookup);
+                        Boolean ok =
+                                isVersionCheckConditional(
+                                        api, isLowerBound, returnValue, and, null, lookup);
                         if (ok != null) {
                             return ok;
                         }
@@ -733,6 +760,7 @@ public class VersionChecks {
     @Nullable
     private static Boolean isVersionCheckConditional(
             int api,
+            boolean isLowerBound,
             boolean fromThen,
             @NonNull UBinaryExpression binary,
             @Nullable ApiLevelLookup apiLevelLookup) {
@@ -762,24 +790,48 @@ public class VersionChecks {
             }
             if (level != -1) {
                 if (tokenType == UastBinaryOperator.GREATER_OR_EQUALS) {
-                    // if (SDK_INT >= ICE_CREAM_SANDWICH) { <call> } else { ... }
-                    return level >= api && fromThen;
+                    if (isLowerBound) {
+                        // if (SDK_INT >= ICE_CREAM_SANDWICH) { <call> } else { ... }
+                        return level >= api && fromThen;
+                    } else {
+                        // if (SDK_INT >= ICE_CREAM_SANDWICH) { ... } else { <call> }
+                        return level - 1 <= api && !fromThen;
+                    }
                 } else if (tokenType == UastBinaryOperator.GREATER) {
-                    // if (SDK_INT > ICE_CREAM_SANDWICH) { <call> } else { ... }
-                    return level >= api - 1 && fromThen;
+                    if (isLowerBound) {
+                        // if (SDK_INT > ICE_CREAM_SANDWICH) { <call> } else { ... }
+                        return level >= api - 1 && fromThen;
+                    } else {
+                        // if (SDK_INT > ICE_CREAM_SANDWICH) { ... } else { <call> }
+                        return level <= api && !fromThen;
+                    }
                 } else if (tokenType == UastBinaryOperator.LESS_OR_EQUALS) {
-                    // if (SDK_INT <= ICE_CREAM_SANDWICH) { ... } else { <call> }
-                    return level >= api - 1 && !fromThen;
+                    if (isLowerBound) {
+                        // if (SDK_INT <= ICE_CREAM_SANDWICH) { ... } else { <call> }
+                        return level >= api - 1 && !fromThen;
+                    } else {
+                        // if (SDK_INT <= ICE_CREAM_SANDWICH) { <call> } else { ... }
+                        return level <= api && fromThen;
+                    }
                 } else if (tokenType == UastBinaryOperator.LESS) {
-                    // if (SDK_INT < ICE_CREAM_SANDWICH) { ... } else { <call> }
-                    return level >= api && !fromThen;
+                    if (isLowerBound) {
+                        // if (SDK_INT < ICE_CREAM_SANDWICH) { ... } else { <call> }
+                        return level >= api && !fromThen;
+                    } else {
+                        // if (SDK_INT < ICE_CREAM_SANDWICH) { <call> } else { ... }
+                        return level - 1 <= api && fromThen;
+                    }
                 } else if (tokenType == UastBinaryOperator.EQUALS
                         || tokenType == UastBinaryOperator.IDENTITY_EQUALS) {
-                    // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else {  }
-                    return level >= api && fromThen;
+                    // if (SDK_INT == ICE_CREAM_SANDWICH) { <call> } else { ... }
+                    if (isLowerBound) {
+                        return level >= api && fromThen;
+                    } else {
+                        return level <= api && fromThen;
+                    }
                 } else if (tokenType == UastBinaryOperator.NOT_EQUALS
                         || tokenType == UastBinaryOperator.IDENTITY_NOT_EQUALS) {
-                    // if (SDK_INT != ICE_CREAM_SANDWICH) { <call> } else {  }
+                    // if (SDK_INT != ICE_CREAM_SANDWICH) { ... } else { <call> }
                     return level == api && !fromThen;
                 } else {
                     assert false : tokenType;
@@ -818,25 +870,26 @@ public class VersionChecks {
     }
 
     private static boolean isOredWithConditional(
-            @NonNull UElement element, int api, @Nullable UElement before) {
+            @NonNull UElement element, int api, boolean isLowerBound, @Nullable UElement before) {
         if (element instanceof UBinaryExpression) {
             UBinaryExpression inner = (UBinaryExpression) element;
             if (inner.getOperator() == UastBinaryOperator.LOGICAL_OR) {
                 UExpression left = inner.getLeftOperand();
 
                 if (before != left) {
-                    Boolean ok = isVersionCheckConditional(api, left, false, null, null);
+                    Boolean ok =
+                            isVersionCheckConditional(api, isLowerBound, left, false, null, null);
                     if (ok != null) {
                         return ok;
                     }
                     UExpression right = inner.getRightOperand();
-                    ok = isVersionCheckConditional(api, right, false, null, null);
+                    ok = isVersionCheckConditional(api, isLowerBound, right, false, null, null);
                     if (ok != null) {
                         return ok;
                     }
                 }
             }
-            Boolean value = isVersionCheckConditional(api, false, inner, null);
+            Boolean value = isVersionCheckConditional(api, isLowerBound, false, inner, null);
             return value != null && value;
         } else if (element instanceof UPolyadicExpression) {
             UPolyadicExpression ppe = (UPolyadicExpression) element;
@@ -844,7 +897,7 @@ public class VersionChecks {
                 for (UExpression operand : ppe.getOperands()) {
                     if (operand.equals(before)) {
                         break;
-                    } else if (isOredWithConditional(operand, api, before)) {
+                    } else if (isOredWithConditional(operand, api, isLowerBound, before)) {
                         return true;
                     }
                 }
@@ -855,25 +908,26 @@ public class VersionChecks {
     }
 
     private static boolean isAndedWithConditional(
-            @NonNull UElement element, int api, @Nullable UElement before) {
+            @NonNull UElement element, int api, boolean isLowerBound, @Nullable UElement before) {
         if (element instanceof UBinaryExpression) {
             UBinaryExpression inner = (UBinaryExpression) element;
             if (inner.getOperator() == UastBinaryOperator.LOGICAL_AND) {
                 UExpression left = inner.getLeftOperand();
                 if (before != left) {
-                    Boolean ok = isVersionCheckConditional(api, left, true, null, null);
+                    Boolean ok =
+                            isVersionCheckConditional(api, isLowerBound, left, true, null, null);
                     if (ok != null) {
                         return ok;
                     }
                     UExpression right = inner.getRightOperand();
-                    ok = isVersionCheckConditional(api, right, true, null, null);
+                    ok = isVersionCheckConditional(api, isLowerBound, right, true, null, null);
                     if (ok != null) {
                         return ok;
                     }
                 }
             }
 
-            Boolean value = isVersionCheckConditional(api, true, inner, null);
+            Boolean value = isVersionCheckConditional(api, isLowerBound, true, inner, null);
             return value != null && value;
         } else if (element instanceof UPolyadicExpression) {
             UPolyadicExpression ppe = (UPolyadicExpression) element;
@@ -881,7 +935,7 @@ public class VersionChecks {
                 for (UExpression operand : ppe.getOperands()) {
                     if (operand.equals(before)) {
                         break;
-                    } else if (isAndedWithConditional(operand, api, before)) {
+                    } else if (isAndedWithConditional(operand, api, isLowerBound, before)) {
                         return true;
                     }
                 }

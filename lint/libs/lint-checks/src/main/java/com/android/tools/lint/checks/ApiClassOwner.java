@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** Represents a package or a class containing inner classes. */
-public class ApiClassOwner implements Comparable<ApiClassOwner> {
+public class ApiClassOwner<C extends ApiClassBase> implements Comparable<ApiClassOwner> {
     private final String mName;
     private final boolean isClass;
-    private final List<ApiClass> mClasses = new ArrayList<>(100);
+    private final List<C> mClasses = new ArrayList<>(100);
 
     // Persistence data: Used when writing out binary data in ApiLookup
     int indexOffset; // offset of the package entry
@@ -52,11 +52,11 @@ public class ApiClassOwner implements Comparable<ApiClassOwner> {
      * @return the classes in this container
      */
     @NonNull
-    public List<ApiClass> getClasses() {
+    public List<C> getClasses() {
         return mClasses;
     }
 
-    void addClass(@NonNull ApiClass cls) {
+    void addClass(@NonNull C cls) {
         mClasses.add(cls);
     }
 

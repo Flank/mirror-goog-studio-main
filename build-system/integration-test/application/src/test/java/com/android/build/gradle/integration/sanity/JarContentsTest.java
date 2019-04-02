@@ -1002,6 +1002,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/lint/",
                 "com/android/tools/lint/checks/",
+                "private-apis.txt",
                 "sdks-offline.xml",
                 "typos/",
                 "typos/typos-de.txt",

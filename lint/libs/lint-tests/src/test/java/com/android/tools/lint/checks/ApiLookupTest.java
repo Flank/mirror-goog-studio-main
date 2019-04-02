@@ -450,7 +450,7 @@ public class ApiLookupTest extends AbstractCheckTest {
             return;
         }
 
-        Api info = Api.parseApi(file);
+        Api<ApiClass> info = Api.parseApi(file);
         for (ApiClass cls : info.getClasses().values()) {
             int classSince = cls.getSince();
             String className = cls.getName();

@@ -13,22 +13,6 @@
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ApiLookup.java"
-            line="428"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
-            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ApiLookup.java"
-            line="694"/>
-    </issue>
-
-    <issue
-        id="DefaultLocale"
-        message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
-        <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ArraySizeDetector.java"
             line="162"/>
     </issue>

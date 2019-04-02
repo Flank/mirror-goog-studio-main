@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
@@ -31,11 +32,11 @@ import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.SAXException;
 
 /**
- * Main entry point for API description.
+ * Main entry point for API descriptions.
  *
- * <p>To create the {@code Api}, use {@link #parseApi(File)}.
+ * <p>To create the {@code Api}, use {@link #parseApi(File) or {@link #parseHiddenApi(URL)}}.
  */
-class Api {
+class Api<C extends ApiClassBase> {
     /**
      * Parses simplified API file.
      *
@@ -44,7 +45,7 @@ class Api {
      * @throws RuntimeException in case of an error
      */
     @NonNull
-    public static Api parseApi(File apiFile) {
+    public static Api<ApiClass> parseApi(File apiFile) {
         try (InputStream inputStream = new FileInputStream(apiFile)) {
             SAXParserFactory parserFactory = SAXParserFactory.newInstance();
             XmlUtils.configureSaxFactory(parserFactory, false, false);
@@ -52,31 +53,48 @@ class Api {
             ApiParser apiParser = new ApiParser();
             parser.parse(inputStream, apiParser);
             inputStream.close();
-            return new Api(apiParser.getClasses(), apiParser.getContainers());
+            return new Api<>(apiParser.getClasses(), apiParser.getContainers());
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private final Map<String, ApiClass> mClasses;
-    private final Map<String, ApiClassOwner> mContainers;
+    /**
+     * Parses private API file.
+     *
+     * @param input the input stream to the private API file (which might be inside a Jar)
+     * @return a new Api
+     * @throws RuntimeException in case of an error
+     */
+    @NonNull
+    public static Api<PrivateApiClass> parseHiddenApi(URL input) {
+        try (InputStream inputStream = input.openStream()) {
+            PrivateApiParser privateApiParser = new PrivateApiParser();
+            privateApiParser.parse(inputStream);
+            return new Api<>(privateApiParser.getClasses(), privateApiParser.getContainers());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private final Map<String, C> mClasses;
+    private final Map<String, ApiClassOwner<C>> mContainers;
 
     private Api(
-            @NonNull Map<String, ApiClass> classes,
-            @NonNull Map<String, ApiClassOwner> containers) {
+            @NonNull Map<String, C> classes, @NonNull Map<String, ApiClassOwner<C>> containers) {
         mClasses = Collections.unmodifiableMap(new MyHashMap<>(classes));
         mContainers = Collections.unmodifiableMap(new MyHashMap<>(containers));
     }
 
-    ApiClass getClass(String fqcn) {
+    C getClass(String fqcn) {
         return mClasses.get(fqcn);
     }
 
-    Map<String, ApiClass> getClasses() {
+    Map<String, C> getClasses() {
         return mClasses;
     }
 
-    Map<String, ApiClassOwner> getContainers() {
+    Map<String, ApiClassOwner<C>> getContainers() {
         return mContainers;
     }
 
