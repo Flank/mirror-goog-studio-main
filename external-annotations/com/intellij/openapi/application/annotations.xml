@@ -1,0 +1,5 @@
+<root>
+  <item name='com.intellij.openapi.application.Application void invokeLater(java.lang.Runnable) 0'>
+    <annotation name='com.android.annotations.concurrency.UiThread' />
+  </item>
+</root>
