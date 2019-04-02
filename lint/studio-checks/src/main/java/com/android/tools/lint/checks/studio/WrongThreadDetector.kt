@@ -104,8 +104,13 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         report(context, methodCallNode, location, message)
     }
 
-    private fun PsiAnnotation.isThreadingAnnotation(): Boolean =
-        THREADING_ANNOTATIONS.contains(qualifiedName)
+    private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
+        return THREADING_ANNOTATIONS.contains(qualifiedName)
+    }
+
+    private fun UAnnotation.isThreadingAnnotation(): Boolean {
+        return THREADING_ANNOTATIONS.contains(qualifiedName)
+    }
 
     private fun describeThreads(annotations: List<String>, any: Boolean): String {
         val sb = StringBuilder()
@@ -157,7 +162,7 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
 
                 // If it's an anonymous class, infer the context from the formal parameter
                 // annotation
-                return getThreadsFromExpressionContext(anonClassCall)
+                return getThreadsFromExpressionContext(context, anonClassCall)
                     ?: getThreadsFromMethod(context, method)
             }
 
@@ -171,7 +176,7 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
             UAnonymousClass::class.java, ULambdaExpression::class.java
         )
 
-        return getThreadsFromExpressionContext(lambdaCall)
+        return getThreadsFromExpressionContext(context, lambdaCall)
     }
 
     /**
@@ -179,12 +184,13 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
      * look into the formal parameters annotation to infer the thread context for the given lambda.
      */
     private fun getThreadsFromExpressionContext(
+        context: JavaContext,
         lambdaCall: UExpression?
     ): List<String>? {
         val lambdaCallExpression = lambdaCall?.uastParent as? UCallExpression ?: return null
         val lambdaArgument = lambdaCallExpression.getParameterForArgument(lambdaCall) ?: return null
 
-        val annotations = lambdaArgument.annotations
+        val annotations = context.evaluator.getAllAnnotations(lambdaArgument, false)
             .filter { it.isThreadingAnnotation() }
             .mapNotNull { it.qualifiedName }
             .toList()

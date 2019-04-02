@@ -16,7 +16,9 @@
 
 package com.android.tools.lint.checks.studio
 
+import com.android.tools.lint.checks.infrastructure.TestFiles.jar
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import org.junit.Test
 
 class WrongThreadDetectorTest {
@@ -198,6 +200,12 @@ class WrongThreadDetectorTest {
                                     slowMethod(); // OK
                                 }
                             });
+                            new Application().externallyAnnotated(new Runnable() {
+                                @Override
+                                public void run() {
+                                    slowMethod(); // WARN
+                                }
+                            });
                         }
                     }
                 """
@@ -213,6 +221,8 @@ class WrongThreadDetectorTest {
                         public void invokeLater(@NotNull @UiThread Runnable run) { run.run(); }
                         /** Fake method to check that it does no trigger the warnings */
                         public void runOnPooledThread(@NotNull Runnable run) { run.run(); }
+
+                        public void externallyAnnotated(@NotNull Runnable run) { run.rin(); }
                     }
                 """
                 ).indented(),
@@ -275,6 +285,19 @@ class WrongThreadDetectorTest {
                         }
                     }
                 """
+                ),
+                jar(
+                    "annotations.zip",
+                    xml(
+                        "com/intellij/openapi/application/annotations.xml",
+                        """
+                        <root>
+                            <item name='com.intellij.openapi.application.Application void externallyAnnotated(java.lang.Runnable) 0'>
+                                <annotation name='com.android.annotations.concurrency.UiThread' />
+                            </item>
+                        </root>
+                        """
+                    ).indented()
                 )
             )
             .issues(WrongThreadDetector.ISSUE)
@@ -290,7 +313,10 @@ class WrongThreadDetectorTest {
                 src/test/pkg/Test.java:34: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
                                 slowMethod(); // WARN
                                 ~~~~~~~~~~~~
-                3 errors, 0 warnings
+                src/test/pkg/Test.java:46: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
+                                slowMethod(); // WARN
+                                ~~~~~~~~~~~~
+                4 errors, 0 warnings
                 """
             )
     }
