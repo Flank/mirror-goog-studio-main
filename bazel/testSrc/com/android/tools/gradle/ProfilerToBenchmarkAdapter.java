@@ -64,8 +64,8 @@ public class ProfilerToBenchmarkAdapter {
     private static final Analyzer DEFAULT_ANALYZER =
             new WindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
-                    .setRunInfoQueryLimit(100)
-                    .setRecentWindowSize(50)
+                    .setRunInfoQueryLimit(160)
+                    .setRecentWindowSize(80)
                     .addMedianTolerance(
                             new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
                                     // const term of 10.0 ms to ignore regressions in trivial tasks
@@ -93,8 +93,8 @@ public class ProfilerToBenchmarkAdapter {
     private static final Analyzer TOTAL_BUILD_TIME_ANALYZER =
             new WindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MEDIAN)
-                    .setRunInfoQueryLimit(100)
-                    .setRecentWindowSize(50)
+                    .setRunInfoQueryLimit(160)
+                    .setRecentWindowSize(80)
                     .addMedianTolerance(
                             new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
                                     .setConstTerm(0.0)
@@ -115,8 +115,8 @@ public class ProfilerToBenchmarkAdapter {
     private static final Analyzer MIN_ANALYZER =
             new WindowDeviationAnalyzer.Builder()
                     .setMetricAggregate(Analyzer.MetricAggregate.MIN)
-                    .setRunInfoQueryLimit(100)
-                    .setRecentWindowSize(50)
+                    .setRunInfoQueryLimit(160)
+                    .setRecentWindowSize(80)
                     .addMedianTolerance(
                             new WindowDeviationAnalyzer.MedianToleranceParams.Builder()
                                     // constant term of 10.0 ms to ignore regressions in trivial tasks
