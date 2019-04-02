@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -30,8 +29,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
@@ -65,7 +64,7 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
     lateinit var packageName: Lazy<String>
         private set
 
-    @get:InputFiles
+    @get:Classpath
     lateinit var classes: FileCollection
         private set
 
