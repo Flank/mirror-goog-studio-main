@@ -36,6 +36,7 @@ import java.util.concurrent.Executors;
 @SuppressWarnings("unused") // invoked via jni
 public class LayoutInspectorService {
     private final Properties properties = new Properties();
+    private final ComponentTree componentTree = new ComponentTree();
 
     private static LayoutInspectorService sInstance;
 
@@ -47,12 +48,6 @@ public class LayoutInspectorService {
     }
 
     private LayoutInspectorService() {}
-
-    /**
-     * Creates a payload with the given message and id, and sends an event containing that id to
-     * Studio.
-     */
-    private native void sendSkiaPicture(byte[] message, int len, int id);
 
     /** This method is called when a layout inspector command is recieved by the agent. */
     @SuppressWarnings("unused") // invoked via jni
@@ -85,11 +80,8 @@ public class LayoutInspectorService {
                                         public void run() {
                                             command.run();
                                             byte[] arr = os.toByteArray();
-                                            sendSkiaPicture(
-                                                    arr,
-                                                    arr.length,
-                                                    (int) System.currentTimeMillis());
                                             os.reset();
+                                            captureAndSendComponentTree(arr);
                                         }
                                     });
                         }
@@ -117,6 +109,37 @@ public class LayoutInspectorService {
 
         } catch (Throwable e) {
             sendErrorMessage(e);
+        }
+    }
+
+    /** Allocates a SendRequest protobuf. */
+    private native long allocateSendRequest();
+
+    /** Frees a SendRequest protobuf. */
+    private native long freeSendRequest(long request);
+
+    /** Initializes the request as a ComponentTree and returns an event handle */
+    private native long initComponentTree(long request);
+
+    /** Sends a component tree to Ansroid Studio. */
+    private native long sendComponentTree(long request, byte[] image, int len, int id);
+
+    /** This method is called when a new image has been snapped. */
+    private void captureAndSendComponentTree(byte[] image) {
+        long request = 0;
+        try {
+            View root = findRootView();
+            request = allocateSendRequest();
+            long event = initComponentTree(request);
+            if (root != null) {
+                componentTree.loadTree(event, root);
+            }
+            int id = (int) System.currentTimeMillis();
+            sendComponentTree(request, image, image.length, id);
+        } catch (Throwable ex) {
+            sendErrorMessage(ex);
+        } finally {
+            freeSendRequest(request);
         }
     }
 

@@ -103,7 +103,7 @@ message Event {
 
     // Layout inspector prefix = 1100
     LAYOUT_INSPECTOR_ERROR = 1100;
-    SKIA_PICTURE = 1101;
+    COMPONENT_TREE = 1101;
     PROPERTIES = 1102;
   }
 

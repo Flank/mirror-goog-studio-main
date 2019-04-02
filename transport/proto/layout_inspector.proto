@@ -22,9 +22,15 @@ option java_outer_classname = "LayoutInspectorProto";
 message LayoutInspectorEvent {
   oneof union {
     string error_message = 1;
-    int32 payload_id = 2;
+    ComponentTreeEvent tree = 2;
     PropertyEvent properties = 3;
   }
+}
+
+message ComponentTreeEvent {
+  int32 payload_id = 1;
+  View root = 2;
+  repeated StringEntry string = 3;
 }
 
 message PropertyEvent {
@@ -32,6 +38,20 @@ message PropertyEvent {
   Resource layout = 2;
   repeated StringEntry string = 3;
   repeated Property property = 4;
+}
+
+message View {
+  int64 draw_id = 1;      // the uniqueDrawingId
+  Resource view_id = 2;   // the id attribute on a View
+  Resource layout = 3;    // the layout where the view was found
+  int32 x = 4;
+  int32 y = 5;
+  int32 width = 6;
+  int32 height = 7;
+  int32 class_name = 8;   // the simple class name of the view e.g. LinearLayout
+  int32 package_name = 9; // the package part of the class name e.g. android.view
+  int32 text_value = 10;  // the value of the text property if it exists
+  repeated View sub_view = 11;
 }
 
 message Property {

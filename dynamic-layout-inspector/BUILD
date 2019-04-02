@@ -21,6 +21,7 @@ cc_library(
 cc_library(
     name = "jni",
     srcs = [
+        "src/main/native/component_tree_java_jni.cc",
         "src/main/native/layoutinspector_java_jni.cc",
         "src/main/native/properties_java_jni.cc",
     ],
