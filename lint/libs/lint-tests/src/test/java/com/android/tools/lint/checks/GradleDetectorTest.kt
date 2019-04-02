@@ -2734,34 +2734,38 @@ class GradleDetectorTest : AbstractCheckTest() {
     fun testDataBindingWithKaptUsingApplyPluginSyntax() {
         lint().files(
             gradle(
-                "apply plugin: 'com.android.application'\n" +
-                        "apply plugin: 'kotlin-android'\n" +
-                        "apply plugin: 'kotlin-kapt'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "  dataBinding {\n" +
-                        "    enabled true\n" +
-                        "  }\n" +
-                        "}"
-            )
+                """
+                apply plugin: 'com.android.application'
+                apply plugin: 'kotlin-android'
+                apply plugin: 'kotlin-kapt'
+
+                android {
+                  dataBinding {
+                    enabled true
+                  }
+                }
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
-            .expect("No warnings.")
+            .expectClean()
     }
 
     fun testDataBindingWithoutKaptUsingApplyPluginSyntax() {
         lint().files(
             gradle(
-                "apply plugin: 'com.android.application'\n" +
-                        "apply plugin: 'kotlin-android'\n" +
-                        "\n" +
-                        "android {\n" +
-                        "  dataBinding {\n" +
-                        "    enabled true\n" +
-                        "  }\n" +
-                        "}"
-            )
+                """
+                apply plugin: 'com.android.application'
+                apply plugin: 'kotlin-android'
+
+                android {
+                  dataBinding {
+                    enabled true
+                  }
+                }
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
@@ -2789,12 +2793,12 @@ class GradleDetectorTest : AbstractCheckTest() {
                     enabled true
                   }
                 }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
-            .expect("No warnings.")
+            .expectClean()
 
         // Test kotlin
         lint().files(
@@ -2811,12 +2815,12 @@ class GradleDetectorTest : AbstractCheckTest() {
                     isEnabled = true
                   }
                 }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
-            .expect("No warnings.")
+            .expectClean()
     }
 
     fun testDataBindingWithoutKaptUsingPluginBlockSyntax() {
@@ -2834,8 +2838,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     enabled true
                   }
                 }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
@@ -2860,8 +2864,8 @@ class GradleDetectorTest : AbstractCheckTest() {
                     isEnabled = true
                   }
                 }
-                """.trimIndent()
-            )
+                """
+            ).indented()
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
@@ -2894,7 +2898,7 @@ class GradleDetectorTest : AbstractCheckTest() {
         )
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
-            .expect("No warnings.")
+            .expectClean()
     }
 
 
