@@ -2774,6 +2774,7 @@ class GradleDetectorTest : AbstractCheckTest() {
     }
 
     fun testDataBindingWithKaptUsingPluginBlockSyntax() {
+        // Test groovy
         lint().files(
             gradle(
                 """
@@ -2794,9 +2795,32 @@ class GradleDetectorTest : AbstractCheckTest() {
             .issues(DATA_BINDING_WITHOUT_KAPT)
             .run()
             .expect("No warnings.")
+
+        // Test kotlin
+        lint().files(
+            kts(
+                """
+                plugins {
+                  id("com.android.application")
+                  id("kotlin-android")
+                  id("kotlin-kapt")
+                }
+
+                android {
+                  dataBinding {
+                    isEnabled = true
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect("No warnings.")
     }
 
     fun testDataBindingWithoutKaptUsingPluginBlockSyntax() {
+        // Test groovy
         lint().files(
             gradle(
                 """
@@ -2819,6 +2843,32 @@ class GradleDetectorTest : AbstractCheckTest() {
                 "build.gradle:8: Warning: If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin. [DataBindingWithoutKapt]\n" +
                         "    enabled true\n" +
                         "    ~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings"
+            )
+
+        // Test kotlin
+        lint().files(
+            kts(
+                """
+                plugins {
+                  id("com.android.application")
+                  id("kotlin-android")
+                }
+
+                android {
+                  dataBinding {
+                    isEnabled = true
+                  }
+                }
+                """.trimIndent()
+            )
+        )
+            .issues(DATA_BINDING_WITHOUT_KAPT)
+            .run()
+            .expect(
+                "build.gradle.kts:8: Warning: If you plan to use data binding in a Kotlin project, you should apply the kotlin-kapt plugin. [DataBindingWithoutKapt]\n" +
+                        "    isEnabled = true\n" +
+                        "                ~~~~\n" +
                         "0 errors, 1 warnings"
             )
     }

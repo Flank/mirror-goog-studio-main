@@ -487,7 +487,8 @@ open class GradleDetector : Detector(), GradleScanner {
                 DEV_MODE_OBSOLETE,
                 "You no longer need a `dev` mode to enable multi-dexing during development, and this can break API version checks"
             )
-        } else if (property == "enabled" && parent == "dataBinding") {
+        } else if ((property == "enabled" || property == "isEnabled") && parent == "dataBinding") {
+            // Note: "enabled" is used by build.gradle and "isEnabled" is used by build.gradle.kts
             if (value == SdkConstants.VALUE_TRUE) {
                 if (mAppliedKotlinAndroidPlugin && !mAppliedKotlinKaptPlugin) {
                     val message =
