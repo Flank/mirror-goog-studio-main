@@ -21,11 +21,11 @@ public class Assertions {
      * baseline instead.
      */
     private static boolean consumedByBaseline(StackTraceElement[] stackTrace) {
-        if (Baseline.isGeneratingBaseline()) {
-            Baseline.whitelistStackTrace(stackTrace);
+        if (Baseline.getInstance().isGeneratingBaseline()) {
+            Baseline.getInstance().whitelistStackTrace(stackTrace);
             return true;
         }
-        return Baseline.isWhitelisted(stackTrace);
+        return Baseline.getInstance().isWhitelisted(stackTrace);
     }
 
     public static void assertIsNotEdt() {

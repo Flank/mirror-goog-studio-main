@@ -28,16 +28,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.Before;
 import org.junit.Test;
 
 public class AssertionsTest {
-
-    @Before
-    public void setUp() {
-        Baseline.isGeneratingBaseline = false;
-        Baseline.whitelist.clear();
-    }
 
     @Test
     public void exceptionThrownWhenMethodCalledFromWrongThread()
@@ -50,6 +43,7 @@ public class AssertionsTest {
         Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
 
         try {
+            Baseline.getInstance(true); // Force a fresh baseline
             callMethod(instance, "blockingMethod");
             fail("Exception was expected to be thrown as the method was not called from EDT.");
         } catch (Exception ignore) {
@@ -67,7 +61,7 @@ public class AssertionsTest {
                         "com.android.tools.checker.Assertions#assertIsEdt");
         Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
         String baseline = "Test2.blockingMethod|sun.reflect.NativeMethodAccessorImpl.invoke0";
-        Baseline.parse(new ByteArrayInputStream(baseline.getBytes()));
+        Baseline.getInstance(true).parse(new ByteArrayInputStream(baseline.getBytes()));
 
         try {
             callMethod(instance, "blockingMethod");
@@ -79,7 +73,7 @@ public class AssertionsTest {
     @Test
     public void exceptionNotThrownWhenGeneratingBaseline()
             throws IOException, IllegalAccessException, InstantiationException {
-        Baseline.isGeneratingBaseline = true;
+        System.setProperty("aspects.baseline.export.path", "/any/path");
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -88,6 +82,7 @@ public class AssertionsTest {
         Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
 
         try {
+            Baseline baseline = Baseline.getInstance(true);
             callMethod(instance, "blockingMethod");
             // In addition to not throwing an exception, we should add the method to the whitelist
             StackTraceElement[] stackTrace =
@@ -96,7 +91,8 @@ public class AssertionsTest {
                             "blockingMethod",
                             "sun.reflect.NativeMethodAccessorImpl",
                             "invoke0");
-            assertTrue(Baseline.isWhitelisted(stackTrace));
+            assertTrue(baseline.isWhitelisted(stackTrace));
+            System.clearProperty("aspects.baseline.export.path");
         } catch (Exception ignore) {
             fail("Exception is not supposed to be thrown when generating the baseline.");
         }

@@ -21,19 +21,13 @@ import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
 import java.io.ByteArrayInputStream;
-import org.junit.Before;
 import org.junit.Test;
 
 public class BaselineFileTest {
 
-    @Before
-    public void setUp() {
-        Baseline.whitelist.clear();
-    }
-
     @Test
     public void parseBaselineFile() {
-        String baseline =
+        String baselineContent =
                 "com.example.MyClass.topMethod|com.example.MyClass.caller\n"
                         + "com.example.MyOtherClass.callee|com.example.CrossClass.caller\n";
 
@@ -44,9 +38,10 @@ public class BaselineFileTest {
                 stackTraceBuilder(
                         "com.example.MyOtherClass", "callee", "com.example.CrossClass", "caller");
 
-        Baseline.parse(new ByteArrayInputStream(baseline.getBytes()));
-        assertTrue(Baseline.isWhitelisted(stackTrace1));
-        assertTrue(Baseline.isWhitelisted(stackTrace2));
+        Baseline baseline = Baseline.getInstance(true);
+        baseline.parse(new ByteArrayInputStream(baselineContent.getBytes()));
+        assertTrue(baseline.isWhitelisted(stackTrace1));
+        assertTrue(baseline.isWhitelisted(stackTrace2));
     }
 
     @Test
@@ -54,9 +49,10 @@ public class BaselineFileTest {
         StackTraceElement[] stackTrace =
                 stackTraceBuilder(
                         "com.example.MyClass", "topMethod", "com.example.MyClass", "caller");
-        assertFalse(Baseline.isWhitelisted(stackTrace));
+        Baseline baseline = Baseline.getInstance(true);
+        assertFalse(baseline.isWhitelisted(stackTrace));
 
-        Baseline.whitelistStackTrace(stackTrace);
-        assertTrue(Baseline.isWhitelisted(stackTrace));
+        baseline.whitelistStackTrace(stackTrace);
+        assertTrue(baseline.isWhitelisted(stackTrace));
     }
 }

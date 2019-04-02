@@ -47,7 +47,6 @@ import java.util.logging.Logger;
  * sun.configurations.Configuration.computeBestDevice|com.tools.Configuration.getDevice
  * com.example.Configuration.getDevice|com.nele.NlPreviewForm.lambda$initNeleModelWhenSmart$8
  *
- * <p>TODO(b/129057468): make this class a singleton instead of a static instance
  */
 public class Baseline {
     private static final Logger LOGGER = Logger.getLogger(Baseline.class.getName());
@@ -71,19 +70,21 @@ public class Baseline {
      */
     private static final int STACKTRACE_START_INDEX = 2;
 
+    private static Baseline instance;
+
     /**
      * Accessed through {@link #isGeneratingBaseline()}. When null, the getter should calculate its
      * value from system properties.
      */
-    @VisibleForTesting @Nullable public static Boolean isGeneratingBaseline;
+    @Nullable private Boolean isGeneratingBaseline;
 
     // TODO: allow whitelisting stack traces for specific rules.
-    @VisibleForTesting @NonNull public static Set<String> whitelist = new HashSet<>();
+    @NonNull private Set<String> whitelist = new HashSet<>();
 
     private Baseline() {}
 
     /** Parses the baseline content into a {@link Set<String>}. */
-    public static void parse(@Nullable InputStream input) {
+    public void parse(@Nullable InputStream input) {
         if (input == null) {
             return;
         }
@@ -101,26 +102,38 @@ public class Baseline {
                                     String.format(
                                             "Ignoring whitelisted callstack:\n%s",
                                             formattedCallstack(callstack))));
-            Baseline.whitelist = whitelist;
+            this.whitelist = whitelist;
         } catch (IOException e) {
             LOGGER.warning(String.format("Error while parsing the baseline.\n%s", e.getMessage()));
         }
+    }
+
+    @VisibleForTesting
+    public static Baseline getInstance(boolean createNewInstance) {
+        if (instance == null || createNewInstance) {
+            instance = new Baseline();
+        }
+        return instance;
+    }
+
+    public static Baseline getInstance() {
+        return getInstance(false);
     }
 
     /**
      * Checks whether the given {@link StackTraceElement} corresponds to a whitelisted callstack.
      * TODO: allow whitelisting callstacks for specific annotations/rules.
      */
-    public static boolean isWhitelisted(@NonNull StackTraceElement[] stackTrace) {
+    public boolean isWhitelisted(@NonNull StackTraceElement[] stackTrace) {
         return whitelist.contains(stackTraceToString(stackTrace));
     }
 
-    public static void whitelistStackTrace(StackTraceElement[] stackTrace) {
+    public void whitelistStackTrace(StackTraceElement[] stackTrace) {
         String parsedStackTrace = stackTraceToString(stackTrace);
         whitelist.add(parsedStackTrace);
     }
 
-    public static boolean isGeneratingBaseline() {
+    public boolean isGeneratingBaseline() {
         // Lazily determine if we're in generating baseline mode
         if (isGeneratingBaseline == null) {
             isGeneratingBaseline =
@@ -163,7 +176,7 @@ public class Baseline {
         return callstack.toString();
     }
 
-    private static void exportBaselineOnShutdown() {
+    private void exportBaselineOnShutdown() {
         Runnable writeBaselineToFile =
                 () -> {
                     String outputPath = System.getProperty("aspects.baseline.export.path");
