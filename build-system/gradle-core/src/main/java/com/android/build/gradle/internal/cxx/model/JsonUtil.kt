@@ -72,49 +72,41 @@ private data class MutableCxxModuleModel(
     override var sdkFolder: File = File("."),
     override var isNativeCompilerSettingsCacheEnabled: Boolean = false,
     override var isBuildOnlyTargetAbiEnabled: Boolean = false,
-    override var isSideBySideCmakeEnabled: Boolean = false,
     override var ideBuildTargetAbi: String? = null,
-    override var isGeneratePureSplitsEnabled: Boolean = false,
-    override var isUniversalApkEnabled: Boolean = false,
-    override var splitsAbiFilters: Set<String> = setOf(),
+    override var splitsAbiFilterSet: Set<String> = setOf(),
     override var intermediatesFolder: File = File("."),
     override var gradleModulePathName: String = "",
     override var moduleRootFolder: File = File("."),
-    override var buildFolder: File = File("."),
     override var makeFile: File = File("."),
     override var buildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE,
-    override var cmakeVersion: String? = null,
-    override var ndkSymlinkFolder: File? = null,
     override var compilerSettingsCacheFolder: File = File("."),
     override var cxxFolder: File = File("."),
     override var ndkFolder: File = File("."),
     override var ndkVersion: Revision = Revision.parseRevision("0.0.0"),
     override var ndkSupportedAbiList: List<Abi> = listOf(),
-    override var ndkDefaultAbiList: List<Abi> = listOf()
+    override var ndkDefaultAbiList: List<Abi> = listOf(),
+    override val cmake: CxxCmakeModuleModel? = null
 ) : CxxModuleModel
 
 private fun CxxModuleModel.toMutable() = MutableCxxModuleModel(
-    rootBuildGradleFolder,
-    sdkFolder,
-    isNativeCompilerSettingsCacheEnabled,
-    isBuildOnlyTargetAbiEnabled,
-    isSideBySideCmakeEnabled,
-    ideBuildTargetAbi,
-    isGeneratePureSplitsEnabled,
-    isUniversalApkEnabled,
-    splitsAbiFilters,
-    intermediatesFolder,
-    gradleModulePathName,
-    moduleRootFolder,
-    buildFolder,
-    makeFile,
-    buildSystem,
-    cmakeVersion,
-    ndkSymlinkFolder,
-    compilerSettingsCacheFolder,
-    cxxFolder,
-    ndkFolder,
-    ndkVersion
+    rootBuildGradleFolder = rootBuildGradleFolder,
+    sdkFolder = sdkFolder,
+    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
+    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
+    ideBuildTargetAbi = ideBuildTargetAbi,
+    splitsAbiFilterSet = splitsAbiFilterSet,
+    intermediatesFolder = intermediatesFolder,
+    gradleModulePathName = gradleModulePathName,
+    moduleRootFolder = moduleRootFolder,
+    makeFile = makeFile,
+    buildSystem = buildSystem,
+    compilerSettingsCacheFolder = compilerSettingsCacheFolder,
+    cxxFolder = cxxFolder,
+    ndkFolder = ndkFolder,
+    ndkVersion = ndkVersion,
+    ndkSupportedAbiList = ndkSupportedAbiList,
+    ndkDefaultAbiList = ndkDefaultAbiList,
+    cmake = cmake
 )
 
 /**
@@ -137,19 +129,18 @@ private data class MutableCxxVariantModel(
 
 private fun CxxVariantModel.toMutable() =
     MutableCxxVariantModel(
-        module.toMutable(),
-        buildSystemArgumentList,
-        cFlagList,
-        cppFlagsList,
-        variantName,
-        soFolder,
-        objFolder,
-        jsonFolder,
-        gradleBuildOutputFolder,
-        isDebuggableEnabled,
-        validAbiList
+        module = module.toMutable(),
+        buildSystemArgumentList = buildSystemArgumentList,
+        cFlagList = cFlagList,
+        cppFlagsList = cppFlagsList,
+        variantName = variantName,
+        soFolder = soFolder,
+        objFolder = objFolder,
+        jsonFolder = jsonFolder,
+        gradleBuildOutputFolder = gradleBuildOutputFolder,
+        isDebuggableEnabled = isDebuggableEnabled,
+        validAbiList = validAbiList
     )
-
 
 /**
  * Private mutable implementation of [CxxAbiModel] that Gson can use
@@ -170,17 +161,17 @@ private data class MutableCxxAbiModel(
 ) : CxxAbiModel
 
 fun CxxAbiModel.toMutable(): CxxAbiModel = MutableCxxAbiModel(
-    variant.toMutable(),
-    abi,
-    abiPlatformVersion,
-    cxxBuildFolder,
-    jsonFile,
-    gradleBuildOutputFolder,
-    objFolder,
-    buildCommandFile,
-    buildOutputFile,
-    modelOutputFile,
-    cmake?.toMutable()
+    variant = variant.toMutable(),
+    abi = abi,
+    abiPlatformVersion = abiPlatformVersion,
+    cxxBuildFolder = cxxBuildFolder,
+    jsonFile = jsonFile,
+    gradleBuildOutputFolder = gradleBuildOutputFolder,
+    objFolder = objFolder,
+    buildCommandFile = buildCommandFile,
+    buildOutputFile = buildOutputFile,
+    modelOutputFile = modelOutputFile,
+    cmake = cmake?.toMutable()
 )
 
 /**
@@ -198,12 +189,12 @@ private data class MutableCxxCmakeAbiModel(
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toMutable() = MutableCxxCmakeAbiModel(
-    cmakeListsWrapperFile,
-    toolchainWrapperFile,
-    buildGenerationStateFile,
-    cacheKeyFile,
-    compilerCacheUseFile,
-    compilerCacheWriteFile,
-    toolchainSettingsFromCacheFile
+    cmakeListsWrapperFile = cmakeListsWrapperFile,
+    toolchainWrapperFile = toolchainWrapperFile,
+    buildGenerationStateFile = buildGenerationStateFile,
+    cacheKeyFile = cacheKeyFile,
+    compilerCacheUseFile = compilerCacheUseFile,
+    compilerCacheWriteFile = compilerCacheWriteFile,
+    toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile
 )
 

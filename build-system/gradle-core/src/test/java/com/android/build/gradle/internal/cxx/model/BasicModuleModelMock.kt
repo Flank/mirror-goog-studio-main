@@ -43,6 +43,8 @@ import com.android.sdklib.AndroidVersion
 import org.gradle.api.Project
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 import org.mockito.invocation.InvocationOnMock
@@ -144,6 +146,12 @@ open class BasicModuleModelMock {
         ApiVersion::class.java,
         throwUnmocked
     )
+    private fun <T> any(): T {
+        Mockito.any<T>()
+        return uninitialized()
+    }
+    private fun <T> uninitialized(): T = null as T
+
     init {
         doReturn(extension).`when`(global).extension
         doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
@@ -203,10 +211,7 @@ open class BasicModuleModelMock {
         Mockito.`when`(ndkInfo.findSuitablePlatformVersion(
             "x86",
             AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename))).thenReturn(18)
-    }
-
-    fun getHumanReadable(abi: CxxAbiModel) : String {
-        return abi.toJsonString()
+        doNothing().`when`(ndkHandler).writeNdkLocatorRecord(any())
     }
 
     class RuntimeExceptionAnswer : Answer<Any> {

@@ -33,16 +33,10 @@ interface CxxModuleModel {
     val isNativeCompilerSettingsCacheEnabled: Boolean
     /** Whether to build a single ABI for IDE (default -pandroid.buildOnlyTargetAbi=true) */
     val isBuildOnlyTargetAbiEnabled: Boolean
-    /**  Whether side by side CMake is enabled (default -pandroid.enableSideBySideCmake=true) */
-    val isSideBySideCmakeEnabled: Boolean
     /**  The single ABI to build for IDE (example -pandroid.injected.build.abi="x86") */
     val ideBuildTargetAbi: String?
-    /**  Whether to generate pure splits (ex android.generatePureSplits true) */
-    val isGeneratePureSplitsEnabled: Boolean
-    /**  Whether building a universal APK (ex android.splits.abi.isUniversalApkEnabled true) */
-    val isUniversalApkEnabled: Boolean
     /**  The abiFilters from build.gradle (ex android.splits.abiFilters 'x86', 'x86_64') */
-    val splitsAbiFilters: Set<String>
+    val splitsAbiFilterSet: Set<String>
     /**  Folder for intermediates (ex source-root/Source/Android/app/build/intermediates) */
     val intermediatesFolder: File
     /**  The colon-delimited gradle path to this module
@@ -50,16 +44,10 @@ interface CxxModuleModel {
     val gradleModulePathName: String
     /**  Dir of the project (ex source-root/Source/Android/app) */
     val moduleRootFolder: File
-    /**  The build folder (ex source-root/Source/Android/app/build) */
-    val buildFolder: File
     /**  The makefile (ex android.externalNativeBuild.cmake.path 'CMakeLists.txt') */
     val makeFile: File
     /**  The type of native build system (ex CMAKE) */
     val buildSystem: NativeBuildSystem
-    /**  The version of CMake requested in build.gradle (ex android.externalNativeBuild.cmake.version '3.10.2') */
-    val cmakeVersion: String?
-    /**  The NDK symlink directory from local.settings (ex ndk.symlinkdir=C\:\/ndks) */
-    val ndkSymlinkFolder: File?
     /**  Location of project-wide compiler settings cache (ex $projectRoot/.cxx) */
     val compilerSettingsCacheFolder: File
     /**  The module level .cxx folder (ex $moduleRootFolder/.cxx) */
@@ -72,5 +60,7 @@ interface CxxModuleModel {
     val ndkSupportedAbiList: List<Abi>
     /** ABIS that are default for this NDK (ex x86_64) */
     val ndkDefaultAbiList: List<Abi>
+    /** Information relevant only to CMake. Null if not CMake build. */
+    val cmake: CxxCmakeModuleModel?
 }
 

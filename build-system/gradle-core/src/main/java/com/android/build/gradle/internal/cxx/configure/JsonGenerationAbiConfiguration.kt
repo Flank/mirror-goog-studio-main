@@ -97,8 +97,8 @@ fun createJsonGenerationAbiConfiguration(
 
     // Be *careful* don't use Enum.name when you mean Enum.getName(). The former is Kotlin's
     // definition of name in Enum.kt, the later is specific to the enum type itself.
-    val abiName = abi.getTag()
-    val buildSystemPresentationName = nativeBuildSystem.getTag()
+    val abiName = abi.tag
+    val buildSystemPresentationName = nativeBuildSystem.tag
     val objFolder = File(objBaseFolder, abiName)
 
     // Build up .cxx/cmake/debug/x86

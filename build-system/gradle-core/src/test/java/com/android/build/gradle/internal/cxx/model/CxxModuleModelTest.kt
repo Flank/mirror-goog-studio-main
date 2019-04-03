@@ -37,6 +37,7 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
     CxxCmakeAbiModel::class.java,
     CxxVariantModel::class.java,
     CxxAbiModel::class.java,
+    CxxCmakeModuleModel::class.java,
     CxxModuleModel::class.java
 )
 
@@ -169,26 +170,38 @@ class CxxModuleModelTest {
         when(method.returnType) {
             File::class.java -> {
                 assertThat(method.name.endsWith("Folder") ||
-                        method.name.endsWith("File"))
-                    .named("vals with File type must end with Folder or File: " +
-                            "${method.toGenericString()}")
+                        method.name.endsWith("File") ||
+                        method.name.endsWith("Exe"))
+                    .named("vals with File type must end with Folder, File, or Exe: " +
+                            method.toGenericString()
+                    )
                     .isTrue()
             }
             Boolean::class.java -> {
                 assertThat(method.name.startsWith("is") ||
                         method.name.startsWith("has"))
                     .named("vals with Boolean type must start with 'is' or 'has': " +
-                            "${method.toGenericString()}")
+                            method.toGenericString()
+                    )
                     .isTrue()
                 assertThat(method.name.endsWith("Enabled"))
                     .named("vals with Boolean type must end with 'Enabled': " +
-                            "${method.toGenericString()}")
+                            method.toGenericString()
+                    )
                     .isTrue()
             }
             List::class.java -> {
                 assertThat(method.name.endsWith("List"))
                     .named("vals with List type must end with 'List': " +
-                            "${method.toGenericString()}")
+                            method.toGenericString()
+                    )
+                    .isTrue()
+            }
+            Set::class.java -> {
+                assertThat(method.name.endsWith("Set"))
+                    .named("vals with Set type must end with 'Set': " +
+                            method.toGenericString()
+                    )
                     .isTrue()
             }
         }

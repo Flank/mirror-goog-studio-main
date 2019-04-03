@@ -96,7 +96,7 @@ fun createCxxVariantModel(
                 module.ndkDefaultAbiList,
                 externalNativeBuildAbiFilters(),
                 ndkAbiFilters(),
-                module.splitsAbiFilters,
+                module.splitsAbiFilterSet,
                 module.isBuildOnlyTargetAbiEnabled,
                 module.ideBuildTargetAbi
             ).validAbis.toList()

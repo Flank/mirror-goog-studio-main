@@ -63,16 +63,6 @@ class TryCreateCxxModuleModelTest {
     }
 
     @Test
-    fun `ndk symlinkdir works`() {
-        BasicCmakeMock().let {
-            it.localProperties.writeText("$NDK_SYMLINK_DIR=my-symlink-dir")
-            assertThat(it.localProperties.isFile).isTrue()
-            val module = tryCreateCxxModuleModel(it.global)!!
-            assertThat(module.ndkSymlinkFolder!!.path).contains("my-symlink-dir")
-        }
-    }
-
-    @Test
     fun `both cmake and ndk-build`() {
         BasicCmakeMock().let {
             doReturn(it.tempFolder.newFile("Android.mk")).`when`(it.ndkBuild).path

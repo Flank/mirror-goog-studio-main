@@ -16,10 +16,15 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.SdkConstants.CMAKE_DIR_PROPERTY
+import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
+import com.android.SdkConstants.PLATFORM_WINDOWS
+import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
+import com.android.build.gradle.internal.cxx.configure.findCmakePath
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
@@ -27,7 +32,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
 import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
-import com.android.build.gradle.options.BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -36,9 +40,12 @@ import com.android.build.gradle.internal.cxx.logging.error
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.utils.FileUtils
+import com.android.utils.FileUtils.join
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.InvalidUserDataException
 import java.io.File
+import java.io.IOException
+import java.util.function.Consumer
 
 /**
  * Examine the build.gradle DSL and determine whether the user has requested C/C++.
@@ -87,36 +94,87 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
         val path = localProperties.getProperty(property) ?: return null
         return File(path)
     }
+    val moduleRootFolder by lazy { global.project.projectDir }
+    val buildFolder by lazy { global.project.buildDir }
+    val cxxFolder by lazy { findCxxFolder(moduleRootFolder, buildStagingDirectory, buildFolder) }
     val ndkHandler by lazy {
         val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
-        if (!ndkHandler.ndkPlatform.isConfigured) {
-            global.sdkComponents.installNdk(ndkHandler)
+        try {
             if (!ndkHandler.ndkPlatform.isConfigured) {
-                throw InvalidUserDataException("NDK not configured. Download it with SDK manager.")
+                global.sdkComponents.installNdk(ndkHandler)
+                if (!ndkHandler.ndkPlatform.isConfigured) {
+                    throw InvalidUserDataException("NDK not configured. Download it with SDK manager.")
+                }
             }
+        } finally {
+            ndkHandler.writeNdkLocatorRecord(join(cxxFolder, "ndk_locator_record.json"))
         }
         ndkHandler
     }
     val ndkSymlinkFolder by lazy { localPropertyFile(NDK_SYMLINK_DIR) }
-    val moduleRootFolder by lazy { global.project.projectDir }
-    val buildFolder by lazy { global.project.buildDir }
-    val cxxFolder by lazy { findCxxFolder(moduleRootFolder, buildStagingDirectory, buildFolder) }
-    val ndkFolder:() -> File = {
-        trySymlinkNdk(ndkHandler.ndkPlatform.ndkDirectory, cxxFolder, ndkSymlinkFolder)
+    val cmakeDirLocalProperty by lazy { localPropertyFile(CMAKE_DIR_PROPERTY) }
+
+
+
+    val ndkFolder = {
+        trySymlinkNdk(ndkHandler.ndkPlatform.ndkDirectory, cxxFolder, ndkSymlinkFolder)}
+    val ndkVersion = { ndkHandler.ndkPlatform.revision }
+    val sdkFolder = { global.sdkComponents.getSdkFolder()!! }
+    val splitsAbiFilters = { global.extension.splits.abiFilters }
+    val intermediatesDir = { global.intermediatesDir }
+    val projectPath = { global.project.path }
+    val cmakeVersion = { global.extension.externalNativeBuild.cmake.version }
+    val isNativeCompilerSettingsCacheEnabled = { option(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE) }
+
+    val cmakeFolder = {
+        findCmakePath(
+            cmakeVersion(),
+            cmakeDirLocalProperty,
+            sdkFolder(),
+            Consumer { global.sdkComponents.installCmake(it) })
     }
-    val ndkVersion: () -> Revision = { ndkHandler.ndkPlatform.revision }
-    val sdkFolder: () -> File = { global.sdkComponents.getSdkFolder()!! }
-    val generatePureSplits:() -> Boolean = { global.extension.generatePureSplits }
-    val isUniversalApk:() -> Boolean = { global.extension.splits.abi.isUniversalApk }
-    val splitsAbiFilters: () -> Set<String> = { global.extension.splits.abiFilters }
-    val intermediatesDir: () -> File = { global.intermediatesDir }
-    val projectPath: () -> String = { global.project.path }
-    val cmakeVersion: () -> String? = { global.extension.externalNativeBuild.cmake.version }
-    val isNativeCompilerSettingsCacheEnabled: () -> Boolean = {
-        option(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
+
+    val cmake = {
+        if (buildSystem == CMAKE) {
+            val exe = if (CURRENT_PLATFORM == PLATFORM_WINDOWS) ".exe" else ""
+
+            val cmakeExe = {
+                join(cmakeFolder()!!, "bin", "cmake$exe")
+            }
+            val ninjaExe = {
+                join(cmakeFolder()!!, "bin", "ninja$exe")
+            }
+
+            val cmakeToolchainFile = {
+                join(ndkFolder(), "build", "cmake", "android.toolchain.cmake")
+            }
+            val foundCmakeVersion = {
+                try {
+                    CmakeUtils.getVersion(File(cmakeFolder(), "bin"))
+                } catch (e: IOException) {
+                    // For pre-ENABLE_SIDE_BY_SIDE_CMAKE case, the text of this message triggers
+                    // Android Studio to prompt for download.
+                    // Post-ENABLE_SIDE_BY_SIDE different messages may be thrown from
+                    // CmakeLocatorKt.findCmakePath to trigger download of particular versions of
+                    // CMake from the SDK.
+                    throw RuntimeException(
+                        "Unable to get the CMake version located at: " +
+                                File(cmakeFolder(), "bin").absolutePath
+                    )
+                }
+            }
+            object: CxxCmakeModuleModel {
+                override val cmakeExe by lazy { cmakeExe() }
+                override val foundCmakeVersion by lazy { foundCmakeVersion() }
+                override val ninjaExe by lazy { ninjaExe() }
+                override val cmakeToolchainFile by lazy { cmakeToolchainFile() }
+            }
+
+        } else {
+            null
+        }
     }
     val isBuildOnlyTargetAbiEnabled: () -> Boolean = { option(BUILD_ONLY_TARGET_ABI) }
-    val isSideBySideCmakeEnabled: () -> Boolean = { option(ENABLE_SIDE_BY_SIDE_CMAKE) }
     val ideBuildTargetAbi: () -> String? = { option(IDE_BUILD_TARGET_ABI) }
     val rootBuildGradlePath: () -> File = { global.project.rootDir }
     val compilerSettingsCacheFolder: () -> File = {
@@ -124,6 +182,7 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
             File(rootBuildGradlePath(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER) }
     val ndkSupportedAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.supportedAbis }
     val ndkDefaultAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.defaultAbis }
+
     return createCxxModuleModel(
         makeFile,
         buildSystem,
@@ -137,24 +196,19 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
         intermediatesDir,
         projectPath,
         { moduleRootFolder },
-        { buildFolder },
         isNativeCompilerSettingsCacheEnabled,
         isBuildOnlyTargetAbiEnabled,
-        isSideBySideCmakeEnabled,
         ideBuildTargetAbi,
-        generatePureSplits,
-        isUniversalApk,
         splitsAbiFilters,
-        cmakeVersion,
-        { ndkSymlinkFolder },
-        compilerSettingsCacheFolder
+        compilerSettingsCacheFolder,
+        cmake
     )
 }
 
 private val notImpl = { throw RuntimeException("Not Implemented") }
 
 @VisibleForTesting
-internal fun createCxxModuleModel(
+fun createCxxModuleModel(
     makeFile: File,
     buildSystem: NativeBuildSystem,
     rootBuildGradlePath: () -> File = notImpl,
@@ -167,21 +221,16 @@ internal fun createCxxModuleModel(
     intermediatesDir: () -> File = notImpl,
     projectPath: () -> String = notImpl,
     moduleRootFolder: () -> File = notImpl,
-    buildFolder: () -> File = notImpl,
     isNativeCompilerSettingsCacheEnabled: () -> Boolean = notImpl,
     isBuildOnlyTargetAbiEnabled: () -> Boolean = notImpl,
-    isSideBySideCmakeEnabled: () -> Boolean = notImpl,
     ideBuildTargetAbi: () -> String? = notImpl,
-    generatePureSplits: () -> Boolean = notImpl,
-    isUniversalApk: () -> Boolean = notImpl,
     splitsAbiFilters: () -> Set<String> = notImpl,
-    cmakeVersion: () -> String? = notImpl,
-    ndkSymLinkFolder: () -> File? = notImpl,
-    compilerSettingsCacheFolder: () -> File = notImpl): CxxModuleModel {
+    compilerSettingsCacheFolder: () -> File = notImpl,
+    cmake: () -> CxxCmakeModuleModel? = notImpl
+): CxxModuleModel {
     return object : CxxModuleModel {
         override val rootBuildGradleFolder by lazy { rootBuildGradlePath() }
-        // NDK fields can be rebound after an NDK has been installed. There may be no NDK before
-        // this so the fields start out as null.
+        override val cmake: CxxCmakeModuleModel? by lazy { cmake() }
         override val ndkFolder by lazy { ndkFolder() }
         override val ndkVersion by lazy { ndkVersion() }
         override val ndkSupportedAbiList by lazy { ndkSupportedAbis() }
@@ -193,17 +242,11 @@ internal fun createCxxModuleModel(
             isNativeCompilerSettingsCacheEnabled()
         }
         override val isBuildOnlyTargetAbiEnabled by lazy { isBuildOnlyTargetAbiEnabled() }
-        override val isSideBySideCmakeEnabled by lazy { isSideBySideCmakeEnabled() }
         override val ideBuildTargetAbi by lazy { ideBuildTargetAbi() }
-        override val isGeneratePureSplitsEnabled by lazy { generatePureSplits() }
-        override val isUniversalApkEnabled by lazy { isUniversalApk() }
-        override val splitsAbiFilters: Set<String> by lazy { splitsAbiFilters() }
+        override val splitsAbiFilterSet: Set<String> by lazy { splitsAbiFilters() }
         override val intermediatesFolder by lazy { intermediatesDir() }
         override val gradleModulePathName: String by lazy { projectPath() }
         override val moduleRootFolder: File by lazy { moduleRootFolder() }
-        override val buildFolder: File by lazy { buildFolder() }
-        override val cmakeVersion: String? by lazy { cmakeVersion() }
-        override val ndkSymlinkFolder: File? by lazy { ndkSymLinkFolder() }
         override val compilerSettingsCacheFolder by lazy { compilerSettingsCacheFolder() }
         override val cxxFolder by lazy { cxxFolder() }
     }

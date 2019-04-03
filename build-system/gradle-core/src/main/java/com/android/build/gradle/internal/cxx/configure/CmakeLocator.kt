@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_CMAKE
 import com.android.build.gradle.external.cmake.CmakeUtils
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.info
 import com.android.build.gradle.internal.cxx.logging.warn
 import com.android.build.gradle.internal.cxx.logging.error
@@ -494,11 +495,11 @@ private fun getCanarySdkPaths(sdkRoot : File?) : List<File> {
 }
 
 private fun getSdkCmakePackages(
-    sdkFolder: File?,
-    logger: ILogger
+    sdkFolder: File?
 ): List<LocalPackage> {
     val androidSdkHandler = AndroidSdkHandler.getInstance(sdkFolder)
-    val sdkManager = androidSdkHandler.getSdkManager(LoggerProgressIndicatorWrapper(logger))
+    val sdkManager = androidSdkHandler.getSdkManager(
+        LoggerProgressIndicatorWrapper(ThreadLoggingEnvironment.getILogger()))
     val packages = sdkManager.packages
     return packages.getLocalPackagesForPrefix(FD_CMAKE).toList()
 }
@@ -555,8 +556,7 @@ fun findCmakePath(
     cmakeVersionFromDsl: String?,
     cmakeFile: File?,
     sdkFolder: File?,
-    downloader: Consumer<String>,
-    logger: ILogger) : File? {
+    downloader: Consumer<String>) : File? {
     return findCmakePathLogic(
             cmakeVersionFromDsl,
             cmakeFile,
@@ -564,5 +564,5 @@ fun findCmakePath(
             { getEnvironmentPaths() },
             { getCanarySdkPaths(sdkFolder) },
             { folder -> getCmakeRevisionFromExecutable(folder) },
-            { getSdkCmakePackages(sdkFolder, logger) })
+            { getSdkCmakePackages(sdkFolder) })
 }

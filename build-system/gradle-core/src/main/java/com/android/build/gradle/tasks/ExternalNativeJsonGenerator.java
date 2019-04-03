@@ -18,25 +18,17 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
-import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_DEFAULT_CONFIGURATION_SUBFOLDER;
-import static com.android.build.gradle.internal.cxx.configure.ConstantsKt.CXX_LOCAL_PROPERTIES_CACHE_DIR;
-import static com.android.build.gradle.internal.cxx.configure.GradleLocalPropertiesKt.gradleLocalProperties;
 import static com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfigurationKt.createJsonGenerationAbiConfiguration;
 import static com.android.build.gradle.internal.cxx.configure.NativeBuildSystemVariantConfigurationKt.createNativeBuildSystemVariantConfig;
-import static com.android.build.gradle.internal.cxx.configure.NdkSymlinkerKt.trySymlinkNdk;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.info;
-import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warn;
 import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.cxx.configure.AbiConfigurator;
-import com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidationState;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
@@ -46,10 +38,9 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.GradleSyncLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.NdkInfo;
-import com.android.build.gradle.internal.ndk.NdkPlatform;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -80,13 +71,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.gradle.api.GradleException;
-import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
@@ -491,21 +480,14 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
         GlobalScope globalScope = scope.getGlobalScope();
-        checkNotNull(module.getSdkFolder(), "No Android SDK folder found");
-        NdkHandler ndkHandler = globalScope.getSdkComponents().getNdkHandlerSupplier().get();
-
-        if (!ndkHandler.getNdkPlatform().isConfigured()) {
-            globalScope.getSdkComponents().installNdk(ndkHandler);
-            if (!ndkHandler.getNdkPlatform().isConfigured()) {
-                throw new InvalidUserDataException(
-                        "NDK not configured. Download it with SDK manager.");
-            }
-        }
-
-        NdkPlatform ndkPlatform = ndkHandler.getNdkPlatform();
-        Revision ndkRevision = ndkPlatform.getRevision();
-        File ndkFolder = ndkPlatform.getNdkDirectory();
-        NdkInfo ndkInfo = ndkPlatform.getNdkInfo();
+        Revision ndkRevision = module.getNdkVersion();
+        NdkInfo ndkInfo =
+                globalScope
+                        .getSdkComponents()
+                        .getNdkHandlerSupplier()
+                        .get()
+                        .getNdkPlatform()
+                        .getNdkInfo();
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
@@ -520,17 +502,10 @@ public abstract class ExternalNativeJsonGenerator {
 
         File soFolder = new File(intermediates, "lib");
         File externalNativeBuildFolder =
-                findExternalNativeBuildFolder(
-                        module.getModuleRootFolder(),
-                        module.getBuildSystem(),
-                        variantData.getName(),
-                        module.getBuildFolder(),
-                        module.getCxxFolder());
-        // Write a record of how the NDK was located.
-        ndkHandler.writeNdkLocatorRecord(
                 FileUtils.join(
-                        externalNativeBuildFolder.getParentFile(), "ndk_locator_record.json"));
-
+                        module.getCxxFolder(),
+                        module.getBuildSystem().getTag(),
+                        variantData.getName());
         File objFolder = new File(intermediates, "obj");
 
         // Get the highest platform version below compileSdkVersion
@@ -541,19 +516,13 @@ public abstract class ExternalNativeJsonGenerator {
                 createNativeBuildSystemVariantConfig(
                         module.getBuildSystem(), variantData.getVariantConfiguration());
 
-        if (module.isGeneratePureSplitsEnabled() && module.isUniversalApkEnabled()) {
-            warn(
-                    "ABI based configuration splits"
-                            + " and universal APK cannot be both set, universal APK will not be build.");
-        }
-
         AbiConfigurator abiConfigurator =
                 new AbiConfigurator(
-                        ndkPlatform.getSupportedAbis(),
-                        ndkPlatform.getDefaultAbis(),
+                        module.getNdkSupportedAbiList(),
+                        module.getNdkDefaultAbiList(),
                         nativeBuildVariantConfig.externalNativeBuildAbiFilters,
                         nativeBuildVariantConfig.ndkAbiFilters,
-                        module.getSplitsAbiFilters(),
+                        module.getSplitsAbiFilterSet(),
                         module.isBuildOnlyTargetAbiEnabled(),
                         module.getIdeBuildTargetAbi());
 
@@ -584,24 +553,11 @@ public abstract class ExternalNativeJsonGenerator {
                     createJsonGenerationAbiConfiguration(
                             abi,
                             variantData.getName(),
-                            externalNativeBuildFolder.getParentFile().getParentFile(),
+                            module.getCxxFolder(),
                             objFolder,
                             module.getBuildSystem(),
                             ndkInfo.findSuitablePlatformVersion(abi.getTag(), version)));
         }
-
-        // defaultProjectCacheFolder is the $PROJECT/.cxx before any remapping requested by the user
-        File defaultProjectCacheFolder =
-                new File(module.getRootBuildGradleFolder(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER);
-
-        Properties localProperties = gradleLocalProperties(module.getRootBuildGradleFolder());
-        String userSpecifiedCxxCacheFolder =
-                localProperties.getProperty(CXX_LOCAL_PROPERTIES_CACHE_DIR);
-
-        File cacheFolder =
-                userSpecifiedCxxCacheFolder != null
-                        ? new File(userSpecifiedCxxCacheFolder)
-                        : defaultProjectCacheFolder;
 
         // TODO replace this with CxxVariantModel
         JsonGenerationVariantConfiguration config =
@@ -609,8 +565,7 @@ public abstract class ExternalNativeJsonGenerator {
                         module,
                         nativeBuildVariantConfig,
                         variantData.getName(),
-                        trySymlinkNdk(
-                                ndkFolder, externalNativeBuildFolder, module.getNdkSymlinkFolder()),
+                        module.getNdkFolder(),
                         soFolder,
                         objFolder,
                         externalNativeBuildFolder,
@@ -618,7 +573,7 @@ public abstract class ExternalNativeJsonGenerator {
                         abiConfigurations,
                         ndkRevision,
                         expectedJsons,
-                        cacheFolder);
+                        module.getCompilerSettingsCacheFolder());
 
         switch (module.getBuildSystem()) {
             case NDK_BUILD:
@@ -630,7 +585,7 @@ public abstract class ExternalNativeJsonGenerator {
                         stats);
             case CMAKE:
                 return createCmakeExternalNativeJsonGenerator(
-                        config, configurationFailures, globalScope, androidBuilder, stats);
+                        config, configurationFailures, androidBuilder, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }
@@ -644,106 +599,18 @@ public abstract class ExternalNativeJsonGenerator {
     private static ExternalNativeJsonGenerator createCmakeExternalNativeJsonGenerator(
             @NonNull JsonGenerationVariantConfiguration config,
             @NonNull Set<String> configurationFailures,
-            @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        File cmakeFolder;
-        if (config.module.isSideBySideCmakeEnabled()) {
-            cmakeFolder =
-                    CmakeLocatorKt.findCmakePath(
-                            config.module.getCmakeVersion(),
-                            globalScope.getSdkComponents().getCMakeExecutable(),
-                            config.module.getSdkFolder(),
-                            (version) -> globalScope.getSdkComponents().installCmake(version),
-                            androidBuilder.getLogger());
-
-        } else {
-            cmakeFolder =
-                    ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
-                            Objects.requireNonNull(config.module.getCmakeVersion()),
-                            globalScope.getSdkComponents().getCMakeExecutable(),
-                            config.module.getSdkFolder(),
-                            (version) -> globalScope.getSdkComponents().installCmake(version));
-        }
-
-        Revision cmakeVersion;
-        try {
-            cmakeVersion = CmakeUtils.getVersion(new File(cmakeFolder, "bin"));
-        } catch (IOException e) {
-            // For pre-ENABLE_SIDE_BY_SIDE_CMAKE case, the text of this message triggers
-            // Android Studio to prompt for download.
-            // Post-ENABLE_SIDE_BY_SIDE different messages may be thrown from
-            // CmakeLocatorKt.findCmakePath to trigger download of particular versions of
-            // CMake from the SDK.
-            throw new RuntimeException(
-                    "Unable to get the CMake version located at: "
-                            + (new File(cmakeFolder, "bin")).getAbsolutePath());
-        }
+        CxxCmakeModuleModel cmake = Objects.requireNonNull(config.module.getCmake());
+        File cmakeExe = config.module.getCmake().getCmakeExe();
 
         return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
                 config,
                 configurationFailures,
-                cmakeVersion,
+                cmake.getFoundCmakeVersion(),
                 androidBuilder,
-                Objects.requireNonNull(cmakeFolder),
+                Objects.requireNonNull(cmakeExe.getParentFile().getParentFile()), // parent of 'bin'
                 stats);
-    }
-
-    /**
-     * Find's the location of the build-system output folder. For example, .cxx/cmake/debug/x86/
-     *
-     * <p>If user specific externalNativeBuild.cmake.buildStagingFolder = 'xyz' then that folder
-     * will be used instead of the default of app/.cxx.
-     *
-     * <p>If the resulting build output folder would be inside of app/build then issue an error
-     * because app/build will be deleted when the user does clean and that will lead to undefined
-     * behavior.
-     *
-     * @param projectDir folder of app/build.gradle
-     * @param buildSystem cmake or ndk-build
-     * @param variantName the name of the variant like 'debug'
-     * @param buildDir the folder of app/build which holds build outputs
-     * @param externalNativeBuildDir the user-defined substitute folder
-     * @return path to the folder to hold native build outputs
-     */
-    private static File findExternalNativeBuildFolder(
-            @NonNull File projectDir,
-            @NonNull NativeBuildSystem buildSystem,
-            @NonNull String variantName,
-            @NonNull File buildDir,
-            @Nullable File externalNativeBuildDir) {
-        File externalNativeBuildPath;
-        if (externalNativeBuildDir == null) {
-            return FileUtils.join(
-                    projectDir,
-                    CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
-                    buildSystem.getTag(),
-                    variantName);
-        }
-
-        externalNativeBuildPath =
-                FileUtils.join(externalNativeBuildDir, buildSystem.getTag(), variantName);
-
-        if (FileUtils.isFileInDirectory(externalNativeBuildPath, buildDir)) {
-            File invalidPath = externalNativeBuildPath;
-            externalNativeBuildPath =
-                    FileUtils.join(
-                            projectDir,
-                            CXX_DEFAULT_CONFIGURATION_SUBFOLDER,
-                            buildSystem.getTag(),
-                            variantName);
-            error(
-                    "The build staging directory you specified ('%s')"
-                            + " is a subdirectory of your project's temporary build directory ('%s')."
-                            + "Files in this directory do not persist through clean builds.\n"
-                            + "Either use the default build staging directory ('%s'),"
-                            + "or specify a path outside the temporary build directory.",
-                    invalidPath.getAbsolutePath(),
-                    buildDir.getAbsolutePath(),
-                    externalNativeBuildPath.getAbsolutePath());
-        }
-
-        return externalNativeBuildPath;
     }
 
     public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)

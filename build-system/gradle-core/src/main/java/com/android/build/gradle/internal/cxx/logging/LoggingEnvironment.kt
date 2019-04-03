@@ -151,6 +151,25 @@ abstract class ThreadLoggingEnvironment : AutoCloseable {
          * Report diagnostic/informational message.
          */
         fun reportFormattedInfoToCurrentLogger(message: String) = logger.info(message)
+
+        /**
+         * Produce an ILogger over the current logger.
+         */
+        fun getILogger() = object : ILogger {
+            override fun error(t: Throwable?, format: String?, vararg args: Any) {
+                if (t != null) throw t
+                logger.error(checkedFormat(format!!, args))
+            }
+            override fun warning(format: String, vararg args: Any) {
+                logger.warn(checkedFormat(format, args))
+            }
+            override fun info(format: String, vararg args: Any) {
+                logger.info(checkedFormat(format, args))
+            }
+            override fun verbose(format: String, vararg args: Any) {
+                logger.info(checkedFormat(format, args))
+            }
+        }
     }
 }
 
