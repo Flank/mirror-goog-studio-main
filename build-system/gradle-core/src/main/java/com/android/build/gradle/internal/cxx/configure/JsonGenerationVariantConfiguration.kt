@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.repository.Revision
 import java.io.File
 
@@ -23,11 +24,9 @@ import java.io.File
  * Configuration information for generating C++ android_gradle_build.json.
  */
 data class JsonGenerationVariantConfiguration(
-    @JvmField val rootBuildGradlePath : File,
+    @JvmField val module : CxxModuleModel,
     @JvmField val buildSystem : NativeBuildSystemVariantConfig,
     @JvmField val variantName : String,
-    @JvmField val makefile: File,
-    @JvmField val sdkFolder: File,
     @JvmField val ndkFolder: File,
     @JvmField val soFolder: File,
     @JvmField val objFolder: File,
@@ -36,6 +35,5 @@ data class JsonGenerationVariantConfiguration(
     @JvmField val abiConfigurations: List<JsonGenerationAbiConfiguration>,
     @JvmField val ndkVersion : Revision,
     @JvmField val generatedJsonFiles : List<File>,
-    @JvmField val compilerSettingsCacheFolder : File,
-    @JvmField val enableCmakeCompilerSettingsCache : Boolean
+    @JvmField val compilerSettingsCacheFolder : File
 )

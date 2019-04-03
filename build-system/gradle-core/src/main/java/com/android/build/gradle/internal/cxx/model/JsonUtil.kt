@@ -68,6 +68,7 @@ private class RevisionTypeAdapter : TypeAdapter<Revision>() {
  * read and write.
  */
 private data class MutableCxxModuleModel(
+    override val rootBuildGradleFolder: File = File("."),
     override var sdkFolder: File = File("."),
     override var isNativeCompilerSettingsCacheEnabled: Boolean = false,
     override var isBuildOnlyTargetAbiEnabled: Boolean = false,
@@ -93,6 +94,7 @@ private data class MutableCxxModuleModel(
 ) : CxxModuleModel
 
 private fun CxxModuleModel.toMutable() = MutableCxxModuleModel(
+    rootBuildGradleFolder,
     sdkFolder,
     isNativeCompilerSettingsCacheEnabled,
     isBuildOnlyTargetAbiEnabled,

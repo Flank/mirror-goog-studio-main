@@ -203,11 +203,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cacheArgumentsList.addAll(getBuildArguments());
                 ConfigureCommandResult configureCommandResult;
                 File cmakeListsFolder = getMakefile().getParentFile();
-                if (config.enableCmakeCompilerSettingsCache) {
+                if (variant.module.isNativeCompilerSettingsCacheEnabled()) {
                     // Configure extensions
                     CmakeExecutionConfiguration executableConfiguration =
                             wrapCmakeListsForCompilerSettingsCaching(
-                                    config.compilerSettingsCacheFolder,
+                                    variant.compilerSettingsCacheFolder,
                                     abiConfig,
                                     getMakefile().getParentFile(),
                                     cacheArgumentsList);
@@ -831,7 +831,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
         // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
         // programmatically.
-        if (config.ndkVersion.getMajor() >= 15) {
+        if (variant.ndkVersion.getMajor() >= 15) {
             // Add our toolchain file.
             // Note: When setting this flag, Cmake's android toolchain would end up calling our
             // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only

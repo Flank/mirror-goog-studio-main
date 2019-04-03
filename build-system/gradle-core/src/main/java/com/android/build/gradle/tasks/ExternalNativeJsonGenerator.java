@@ -46,8 +46,7 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.GradleSyncLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
-import com.android.build.gradle.internal.dsl.Splits;
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.NdkInfo;
 import com.android.build.gradle.internal.ndk.NdkPlatform;
@@ -55,9 +54,6 @@ import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -100,17 +96,17 @@ import org.gradle.api.tasks.OutputFiles;
  * Base class for generation of native JSON.
  */
 public abstract class ExternalNativeJsonGenerator {
-    @NonNull final JsonGenerationVariantConfiguration config;
-    @NonNull final Set<String> configurationFailures;
+    @NonNull protected final JsonGenerationVariantConfiguration variant;
+    @NonNull protected final Set<String> configurationFailures;
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
 
     ExternalNativeJsonGenerator(
-            @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull JsonGenerationVariantConfiguration variant,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        this.config = config;
+        this.variant = variant;
         this.configurationFailures = configurationFailures;
         this.androidBuilder = androidBuilder;
         this.stats = stats;
@@ -161,13 +157,13 @@ public abstract class ExternalNativeJsonGenerator {
         } catch (ProcessException e) {
             error(
                     "executing external native build for %s %s",
-                    getNativeBuildSystem().getTag(), config.makefile);
+                    getNativeBuildSystem().getTag(), variant.module.getMakeFile());
         }
     }
 
     public List<Callable<Void>> parallelBuild(boolean forceJsonGeneration) {
-        List<Callable<Void>> buildSteps = new ArrayList<>(config.abiConfigurations.size());
-        for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
+        List<Callable<Void>> buildSteps = new ArrayList<>(variant.abiConfigurations.size());
+        for (JsonGenerationAbiConfiguration configuration : variant.abiConfigurations) {
             buildSteps.add(
                     () ->
                             buildForOneConfigurationConvertExceptions(
@@ -193,7 +189,7 @@ public abstract class ExternalNativeJsonGenerator {
             } catch (ProcessException e) {
                 error(
                         "executing external native build for %s %s",
-                        getNativeBuildSystem().getTag(), config.makefile);
+                        getNativeBuildSystem().getTag(), variant.module.getMakeFile());
             }
             return null;
         }
@@ -210,7 +206,7 @@ public abstract class ExternalNativeJsonGenerator {
     private void buildAndPropagateException(boolean forceJsonGeneration)
             throws IOException, ProcessException {
         Exception firstException = null;
-        for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
+        for (JsonGenerationAbiConfiguration configuration : variant.abiConfigurations) {
             try {
                 buildForOneConfiguration(forceJsonGeneration, configuration);
             } catch (@NonNull GradleException | IOException | ProcessException e) {
@@ -235,7 +231,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     public void buildForOneAbiName(boolean forceJsonGeneration, String abiName) {
         int built = 0;
-        for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
+        for (JsonGenerationAbiConfiguration configuration : variant.abiConfigurations) {
             if (!configuration.getAbi().getTag().equals(abiName)) {
                 continue;
             }
@@ -261,7 +257,7 @@ public abstract class ExternalNativeJsonGenerator {
             GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
                     GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
             variantStats.setAbi(AnalyticsUtil.getAbi(configuration.getAbiName()));
-            variantStats.setDebuggable(config.debuggable);
+            variantStats.setDebuggable(variant.debuggable);
             long startTime = System.currentTimeMillis();
             variantStats.setGenerationStartMs(startTime);
             try {
@@ -299,7 +295,7 @@ public abstract class ExternalNativeJsonGenerator {
                     // *.so basis.
                     // - If there is some other cause to recreate the JSon, such as command-line
                     // changed then wipe out the whole JSon folder.
-                    if (config.jsonFolder.exists()) {
+                    if (variant.jsonFolder.exists()) {
                         if (invalidationState.getSoftRegeneration()) {
                             info(
                                     "keeping json folder '%s' but regenerating project",
@@ -467,20 +463,15 @@ public abstract class ExternalNativeJsonGenerator {
     /** @return the variant name for this generator */
     @NonNull
     public String getVariantName() {
-        return config.variantName;
+        return variant.variantName;
     }
 
     @NonNull
     public static ExternalNativeJsonGenerator create(
-            @NonNull File rootBuildGradlePath,
-            @NonNull String projectPath,
-            @NonNull File projectDir,
-            @NonNull File buildDir,
-            @Nullable File externalNativeBuildDir,
-            @NonNull NativeBuildSystem buildSystem,
-            @NonNull File makefile,
+            @NonNull CxxModuleModel module,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
+        // TODO: Shouldn't send mutable state like configurationFailures through construction
         Set<String> configurationFailures = new HashSet<>();
         try (GradleSyncLoggingEnvironment ignore =
                 new GradleSyncLoggingEnvironment(
@@ -489,34 +480,18 @@ public abstract class ExternalNativeJsonGenerator {
                         configurationFailures,
                         androidBuilder.getIssueReporter(),
                         androidBuilder.getLogger())) {
-            return createImpl(
-                    configurationFailures,
-                    rootBuildGradlePath,
-                    projectPath,
-                    projectDir,
-                    buildDir,
-                    externalNativeBuildDir,
-                    buildSystem,
-                    makefile,
-                    androidBuilder,
-                    scope);
+            return createImpl(configurationFailures, module, androidBuilder, scope);
         }
     }
 
     @NonNull
     public static ExternalNativeJsonGenerator createImpl(
             @NonNull Set<String> configurationFailures,
-            @NonNull File rootBuildGradlePath,
-            @NonNull String projectPath,
-            @NonNull File projectDir,
-            @NonNull File buildDir,
-            @Nullable File externalNativeBuildDir,
-            @NonNull NativeBuildSystem buildSystem,
-            @NonNull File makefile,
+            @NonNull CxxModuleModel module,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
         GlobalScope globalScope = scope.getGlobalScope();
-        checkNotNull(globalScope.getSdkComponents().getSdkFolder(), "No Android SDK folder found");
+        checkNotNull(module.getSdkFolder(), "No Android SDK folder found");
         NdkHandler ndkHandler = globalScope.getSdkComponents().getNdkHandlerSupplier().get();
 
         if (!ndkHandler.getNdkPlatform().isConfigured()) {
@@ -533,22 +508,24 @@ public abstract class ExternalNativeJsonGenerator {
         NdkInfo ndkInfo = ndkPlatform.getNdkInfo();
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
         GradleBuildVariant.Builder stats =
-                ProcessProfileWriter.getOrCreateVariant(projectPath, scope.getFullVariantName());
+                ProcessProfileWriter.getOrCreateVariant(
+                        module.getGradleModulePathName(), scope.getFullVariantName());
         File intermediates =
                 FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        buildSystem.getTag(),
+                        module.getIntermediatesFolder(),
+                        module.getBuildSystem().getTag(),
                         variantData.getVariantConfiguration().getDirName());
 
         File soFolder = new File(intermediates, "lib");
         File externalNativeBuildFolder =
                 findExternalNativeBuildFolder(
-                        projectDir,
-                        buildSystem,
+                        module.getModuleRootFolder(),
+                        module.getBuildSystem(),
                         variantData.getName(),
-                        buildDir,
-                        externalNativeBuildDir);
+                        module.getBuildFolder(),
+                        module.getCxxFolder());
         // Write a record of how the NDK was located.
         ndkHandler.writeNdkLocatorRecord(
                 FileUtils.join(
@@ -562,27 +539,23 @@ public abstract class ExternalNativeJsonGenerator {
                 variantData.getVariantConfiguration().getMergedFlavor().getMinSdkVersion();
         NativeBuildSystemVariantConfig nativeBuildVariantConfig =
                 createNativeBuildSystemVariantConfig(
-                        buildSystem, variantData.getVariantConfiguration());
+                        module.getBuildSystem(), variantData.getVariantConfiguration());
 
-        Splits splits = globalScope.getExtension().getSplits();
-
-        if (globalScope.getExtension().getGeneratePureSplits()
-                && splits.getAbi().isUniversalApk()) {
+        if (module.isGeneratePureSplitsEnabled() && module.isUniversalApkEnabled()) {
             warn(
                     "ABI based configuration splits"
                             + " and universal APK cannot be both set, universal APK will not be build.");
         }
 
-        ProjectOptions projectOptions = globalScope.getProjectOptions();
         AbiConfigurator abiConfigurator =
                 new AbiConfigurator(
                         ndkPlatform.getSupportedAbis(),
                         ndkPlatform.getDefaultAbis(),
                         nativeBuildVariantConfig.externalNativeBuildAbiFilters,
                         nativeBuildVariantConfig.ndkAbiFilters,
-                        splits.getAbiFilters(),
-                        projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI),
-                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
+                        module.getSplitsAbiFilters(),
+                        module.isBuildOnlyTargetAbiEnabled(),
+                        module.getIdeBuildTargetAbi());
 
         // These are ABIs that are available on the current platform
         Collection<Abi> validAbis = abiConfigurator.getValidAbis();
@@ -594,7 +567,7 @@ public abstract class ExternalNativeJsonGenerator {
                         externalNativeBuildFolder, abiConfigurator.getAllAbis());
 
         // Set up per-abi configuration constants
-        if (buildSystem == NativeBuildSystem.NDK_BUILD) {
+        if (module.getBuildSystem() == NativeBuildSystem.NDK_BUILD) {
             // ndkPlatform-build create libraries in a "local" subfolder.
             objFolder = new File(objFolder, "local");
         }
@@ -606,21 +579,22 @@ public abstract class ExternalNativeJsonGenerator {
                             : new AndroidVersion(
                                     minSdkVersion.getApiLevel(), minSdkVersion.getCodename());
 
+            // TODO replace this with CxxAbiModel
             abiConfigurations.add(
                     createJsonGenerationAbiConfiguration(
                             abi,
                             variantData.getName(),
                             externalNativeBuildFolder.getParentFile().getParentFile(),
                             objFolder,
-                            buildSystem,
+                            module.getBuildSystem(),
                             ndkInfo.findSuitablePlatformVersion(abi.getTag(), version)));
         }
 
         // defaultProjectCacheFolder is the $PROJECT/.cxx before any remapping requested by the user
         File defaultProjectCacheFolder =
-                new File(rootBuildGradlePath, CXX_DEFAULT_CONFIGURATION_SUBFOLDER);
+                new File(module.getRootBuildGradleFolder(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER);
 
-        Properties localProperties = gradleLocalProperties(rootBuildGradlePath);
+        Properties localProperties = gradleLocalProperties(module.getRootBuildGradleFolder());
         String userSpecifiedCxxCacheFolder =
                 localProperties.getProperty(CXX_LOCAL_PROPERTIES_CACHE_DIR);
 
@@ -629,17 +603,14 @@ public abstract class ExternalNativeJsonGenerator {
                         ? new File(userSpecifiedCxxCacheFolder)
                         : defaultProjectCacheFolder;
 
+        // TODO replace this with CxxVariantModel
         JsonGenerationVariantConfiguration config =
                 new JsonGenerationVariantConfiguration(
-                        rootBuildGradlePath,
+                        module,
                         nativeBuildVariantConfig,
                         variantData.getName(),
-                        makefile,
-                        globalScope.getSdkComponents().getSdkFolder(),
                         trySymlinkNdk(
-                                ndkFolder,
-                                externalNativeBuildFolder,
-                                globalScope.getSdkComponents().getNdkSymlinkDirInLocalProp()),
+                                ndkFolder, externalNativeBuildFolder, module.getNdkSymlinkFolder()),
                         soFolder,
                         objFolder,
                         externalNativeBuildFolder,
@@ -647,15 +618,16 @@ public abstract class ExternalNativeJsonGenerator {
                         abiConfigurations,
                         ndkRevision,
                         expectedJsons,
-                        cacheFolder,
-                        globalScope
-                                .getProjectOptions()
-                                .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE));
+                        cacheFolder);
 
-        switch (buildSystem) {
+        switch (module.getBuildSystem()) {
             case NDK_BUILD:
                 return new NdkBuildExternalNativeJsonGenerator(
-                        config, configurationFailures, androidBuilder, projectDir, stats);
+                        config,
+                        configurationFailures,
+                        androidBuilder,
+                        module.getModuleRootFolder(),
+                        stats);
             case CMAKE:
                 return createCmakeExternalNativeJsonGenerator(
                         config, configurationFailures, globalScope, androidBuilder, stats);
@@ -675,25 +647,22 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        CoreExternalNativeBuild externalNativeBuild =
-                globalScope.getExtension().getExternalNativeBuild();
-
         File cmakeFolder;
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)) {
+        if (config.module.isSideBySideCmakeEnabled()) {
             cmakeFolder =
                     CmakeLocatorKt.findCmakePath(
-                            externalNativeBuild.getCmake().getVersion(),
+                            config.module.getCmakeVersion(),
                             globalScope.getSdkComponents().getCMakeExecutable(),
-                            globalScope.getSdkComponents().getSdkFolder(),
+                            config.module.getSdkFolder(),
                             (version) -> globalScope.getSdkComponents().installCmake(version),
                             androidBuilder.getLogger());
 
         } else {
             cmakeFolder =
                     ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
-                            Objects.requireNonNull(externalNativeBuild.getCmake().getVersion()),
+                            Objects.requireNonNull(config.module.getCmakeVersion()),
                             globalScope.getSdkComponents().getCMakeExecutable(),
-                            globalScope.getSdkComponents().getSdkFolder(),
+                            config.module.getSdkFolder(),
                             (version) -> globalScope.getSdkComponents().installCmake(version));
         }
 
@@ -804,7 +773,7 @@ public abstract class ExternalNativeJsonGenerator {
                     // information we have so the user can see partial information in the UI.
                     info("streaming fallback JSON for %s", file.getAbsolutePath());
                     NativeBuildConfigValueMini fallback = new NativeBuildConfigValueMini();
-                    fallback.buildFiles = Lists.newArrayList(config.makefile);
+                    fallback.buildFiles = Lists.newArrayList(variant.module.getMakeFile());
                     try (JsonReader reader =
                             new JsonReader(new StringReader(new Gson().toJson(fallback)))) {
                         callback.accept(reader);
@@ -815,84 +784,84 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    public JsonGenerationVariantConfiguration getConfig() {
-        return this.config;
+    public JsonGenerationVariantConfiguration getVariant() {
+        return this.variant;
     }
 
     @NonNull
     @InputFile
     public File getMakefile() {
-        return config.makefile;
+        return variant.module.getMakeFile();
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getObjFolder() {
-        return config.objFolder;
+        return variant.objFolder;
     }
 
     @NonNull
     // This should not be annotated with @OutputDirectory because getNativeBuildConfigurationsJsons
     // is already annotated with @OutputFiles
     public File getJsonFolder() {
-        return config.jsonFolder;
+        return variant.jsonFolder;
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getNdkFolder() {
-        return config.ndkFolder;
+        return variant.ndkFolder;
     }
 
     @Input
     public boolean isDebuggable() {
-        return config.debuggable;
+        return variant.debuggable;
     }
 
     @NonNull
     @Optional
     @Input
     public List<String> getBuildArguments() {
-        return config.buildSystem.arguments;
+        return variant.buildSystem.arguments;
     }
 
     @NonNull
     @Optional
     @Input
     public List<String> getcFlags() {
-        return config.buildSystem.cFlags;
+        return variant.buildSystem.cFlags;
     }
 
     @NonNull
     @Optional
     @Input
     public List<String> getCppFlags() {
-        return config.buildSystem.cppFlags;
+        return variant.buildSystem.cppFlags;
     }
 
     @NonNull
     @OutputFiles
     public List<File> getNativeBuildConfigurationsJsons() {
-        return config.generatedJsonFiles;
+        return variant.generatedJsonFiles;
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getSoFolder() {
-        return config.soFolder;
+        return variant.soFolder;
     }
 
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getSdkFolder() {
-        return config.sdkFolder;
+        return variant.module.getSdkFolder();
     }
 
     @Input
     @NonNull
     public Collection<Abi> getAbis() {
         List<Abi> result = Lists.newArrayList();
-        for (JsonGenerationAbiConfiguration configuration : config.abiConfigurations) {
+        for (JsonGenerationAbiConfiguration configuration : variant.abiConfigurations) {
             result.add(configuration.getAbi());
         }
         return result;

@@ -129,7 +129,7 @@ class NativeModelBuilder(
         builder.addBuildSystem(generator.nativeBuildSystem.getTag())
         builder.addVariantInfo(
             generator.variantName,
-            generator.config.abiConfigurations.map { it.abiName }.distinct()
+            generator.variant.abiConfigurations.map { it.abiName }.distinct()
         )
     }
 

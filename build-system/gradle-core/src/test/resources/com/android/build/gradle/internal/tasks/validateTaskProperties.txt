@@ -95,7 +95,6 @@ Warning: Task type 'com.android.build.gradle.tasks.CompatibleScreensManifest': p
 Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'abiSplits' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'fullApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.CopyOutputs': property 'resourcesSplits' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.config' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.jsonFolder' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.makefile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.nativeBuildSystem' is not annotated with an input or output annotation.
@@ -104,6 +103,7 @@ Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask':
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.sdkFolder' has @Input annotation used on property of type java.io.File.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.soFolder' has @Input annotation used on property of type java.io.File.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.stlSharedObjectFiles' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variant' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variantName' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExtractAnnotations': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.GenerateSplitAbiRes': property 'applicationIdOverride' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

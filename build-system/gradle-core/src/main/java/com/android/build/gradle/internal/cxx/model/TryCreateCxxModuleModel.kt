@@ -118,15 +118,16 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
     val isBuildOnlyTargetAbiEnabled: () -> Boolean = { option(BUILD_ONLY_TARGET_ABI) }
     val isSideBySideCmakeEnabled: () -> Boolean = { option(ENABLE_SIDE_BY_SIDE_CMAKE) }
     val ideBuildTargetAbi: () -> String? = { option(IDE_BUILD_TARGET_ABI) }
-    val rootDir: () -> File = { global.project.rootDir }
+    val rootBuildGradlePath: () -> File = { global.project.rootDir }
     val compilerSettingsCacheFolder: () -> File = {
         localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
-            File(rootDir(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER) }
+            File(rootBuildGradlePath(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER) }
     val ndkSupportedAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.supportedAbis }
     val ndkDefaultAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.defaultAbis }
     return createCxxModuleModel(
         makeFile,
         buildSystem,
+        rootBuildGradlePath,
         ndkFolder,
         ndkVersion,
         ndkSupportedAbis,
@@ -156,6 +157,7 @@ private val notImpl = { throw RuntimeException("Not Implemented") }
 internal fun createCxxModuleModel(
     makeFile: File,
     buildSystem: NativeBuildSystem,
+    rootBuildGradlePath: () -> File = notImpl,
     ndkFolder: () -> File = notImpl,
     ndkVersion: () -> Revision = notImpl,
     ndkSupportedAbis: () -> List<Abi> = notImpl,
@@ -177,6 +179,7 @@ internal fun createCxxModuleModel(
     ndkSymLinkFolder: () -> File? = notImpl,
     compilerSettingsCacheFolder: () -> File = notImpl): CxxModuleModel {
     return object : CxxModuleModel {
+        override val rootBuildGradleFolder by lazy { rootBuildGradlePath() }
         // NDK fields can be rebound after an NDK has been installed. There may be no NDK before
         // this so the fields start out as null.
         override val ndkFolder by lazy { ndkFolder() }

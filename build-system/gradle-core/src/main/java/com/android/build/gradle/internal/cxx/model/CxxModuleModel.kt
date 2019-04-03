@@ -25,6 +25,8 @@ import java.io.File
  * Holds immutable module-level information for C/C++ build and sync, see README.md
  */
 interface CxxModuleModel {
+    /** Folder of project-level build.gradle file (ex source-root/)*/
+    val rootBuildGradleFolder: File
     /** Install folder of SDK (ex sdk.dir=/path/to/sdk) */
     val sdkFolder: File
     /** Whether compiler settings cache is enabled (default -pandroid.enableNativeCompilerSettingsCache=false) */

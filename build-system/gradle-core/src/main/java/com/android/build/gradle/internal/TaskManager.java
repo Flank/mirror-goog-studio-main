@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
+import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANDROID_APIS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTPUBLISH;
@@ -75,12 +76,12 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -185,7 +186,6 @@ import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.CopyOutputs;
 import com.android.build.gradle.tasks.ExternalNativeBuildJsonTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
-import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeCleanTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -1420,24 +1420,9 @@ public abstract class TaskManager {
     }
 
     public void createExternalNativeBuildJsonGenerators(@NonNull VariantScope scope) {
+        CxxModuleModel module = tryCreateCxxModuleModel(scope.getGlobalScope());
 
-        CoreExternalNativeBuild externalNativeBuild = extension.getExternalNativeBuild();
-        ExternalNativeBuildTaskUtils.ExternalNativeBuildProjectPathResolution pathResolution =
-                ExternalNativeBuildTaskUtils.getProjectPath(externalNativeBuild);
-        if (pathResolution.errorText != null) {
-            globalScope
-                    .getAndroidBuilder()
-                    .getIssueReporter()
-                    .reportError(
-                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                            new EvalIssueException(
-                                    pathResolution.errorText,
-                                    scope.getVariantConfiguration().getFullName()));
-            return;
-        }
-
-        if (pathResolution.makeFile == null) {
-            // No project
+        if (module == null) {
             return;
         }
 
@@ -1447,15 +1432,7 @@ public abstract class TaskManager {
                                 project,
                                 () ->
                                         ExternalNativeJsonGenerator.create(
-                                                project.getRootDir(),
-                                                project.getPath(),
-                                                project.getProjectDir(),
-                                                project.getBuildDir(),
-                                                pathResolution.cxxBuildDir,
-                                                checkNotNull(pathResolution.buildSystem),
-                                                pathResolution.makeFile,
-                                                globalScope.getAndroidBuilder(),
-                                                scope)));
+                                                module, globalScope.getAndroidBuilder(), scope)));
     }
 
     public void createExternalNativeBuildTasks(@NonNull VariantScope scope) {

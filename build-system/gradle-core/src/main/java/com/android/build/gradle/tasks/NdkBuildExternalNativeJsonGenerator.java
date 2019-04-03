@@ -118,7 +118,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                                         abiConfig, applicationMk, false /* removeJobsFlag */),
                                 getBuildCommand(abiConfig, applicationMk, true /* removeJobsFlag */)
                                         + " clean",
-                                config.variantName,
+                                variant.variantName,
                                 buildOutput)
                         .build();
 
