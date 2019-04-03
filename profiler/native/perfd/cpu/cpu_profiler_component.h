@@ -23,7 +23,7 @@
 #include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/internal_cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "proto/agent_service.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 #include "utils/termination_service.h"
 
 namespace profiler {
@@ -43,9 +43,10 @@ class CpuProfilerComponent final : public ServiceComponent {
 
  public:
   // Creates a CPU perfd component and starts sampling right away.
-  explicit CpuProfilerComponent(Clock* clock, FileCache* file_cache,
-                                const proto::AgentConfig::CpuConfig& cpu_config,
-                                TerminationService* termination_service)
+  explicit CpuProfilerComponent(
+      Clock* clock, FileCache* file_cache,
+      const proto::DaemonConfig::CpuConfig& cpu_config,
+      TerminationService* termination_service)
       : cache_(kBufferCapacity, clock, file_cache),
         usage_sampler_(clock, &cache_),
         thread_monitor_(clock, &cache_),

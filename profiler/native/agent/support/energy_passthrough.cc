@@ -112,7 +112,7 @@ const SteadyClock& GetClock() {
 // appropriate metadata must be set by the caller.
 void SubmitEnergyEvent(const EnergyEvent& energy_event,
                        const std::string& stack = {}) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 

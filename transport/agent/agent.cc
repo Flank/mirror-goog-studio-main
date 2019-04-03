@@ -43,7 +43,9 @@ const int32_t kMaxBackgroundTasks = 100000;  // Worst case: ~100MB in memory
 namespace profiler {
 
 using grpc::Status;
+using proto::AgentConfig;
 using proto::AgentService;
+using proto::CommonConfig;
 using proto::HeartBeatRequest;
 using proto::HeartBeatResponse;
 using proto::InternalCpuService;
@@ -52,19 +54,19 @@ using proto::InternalEventService;
 using proto::InternalNetworkService;
 using std::lock_guard;
 
-Agent& Agent::Instance(const Config* config) {
-  static Agent* instance = new Agent(*config);
+Agent& Agent::Instance(const AgentConfig& config) {
+  static Agent* instance = new Agent(config);
   return *instance;
 }
 
-Agent::Agent(const Config& config)
-    : agent_config_(config.GetAgentConfig()),
+Agent::Agent(const AgentConfig& config)
+    : agent_config_(config),
       background_queue_("Studio:Agent", kMaxBackgroundTasks),
       can_grpc_target_change_(false),
       grpc_target_initialized_(false),
       memory_component_(nullptr),  // set in ConnectToDaemon()
       profiler_initialized_(false) {
-  if (agent_config_.socket_type() == proto::ABSTRACT_SOCKET) {
+  if (agent_config_.common().socket_type() == CommonConfig::ABSTRACT_SOCKET) {
     // We use an existing socket of which the file descriptor will be provided
     // into kAgentSocketName. This is provided via socket_thread_ so we don't
     // setup here.
@@ -72,7 +74,7 @@ Agent::Agent(const Config& config)
     socket_thread_ = std::thread(&Agent::RunSocketThread, this);
   } else {
     // Otherwise the agent communicates to daemon via a fixed port.
-    ConnectToDaemon(agent_config_.service_address());
+    ConnectToDaemon(agent_config_.common().service_address());
     // In Pre-O, only profilers can attach agent so we can initialize profilers
     // now.
     if (profiler::DeviceInfo::feature_level() < DeviceInfo::O) {
@@ -116,7 +118,7 @@ void Agent::SubmitAgentTasks(const std::vector<AgentServiceTask>& tasks) {
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(agent_stub(), ctx);
           success = status.ok();
         } while (!success);
@@ -136,7 +138,7 @@ void Agent::SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks) {
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(network_stub(), ctx);
           success = status.ok();
         } while (!success);
@@ -156,7 +158,7 @@ void Agent::SubmitEventTasks(const std::vector<EventServiceTask>& tasks) {
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(event_stub(), ctx);
           success = status.ok();
         } while (!success);
@@ -176,7 +178,7 @@ void Agent::SubmitEnergyTasks(const std::vector<EnergyServiceTask>& tasks) {
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(energy_stub(), ctx);
           success = status.ok();
         } while (!success);
@@ -196,7 +198,7 @@ void Agent::SubmitCpuTasks(const std::vector<CpuServiceTask>& tasks) {
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(cpu_stub(), ctx);
           success = status.ok();
         } while (!success);

@@ -29,7 +29,7 @@
 #include "service_component.h"
 #include "transport_component.h"
 #include "utils/clock.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
@@ -46,7 +46,7 @@ class Daemon {
   // Creates a daemon with |clock| as the source for timing values, with
   // |config| as the configuration, |file_cache| as the manager of temporary
   // files, and |buffer| as the central storage for all generated events.
-  Daemon(Clock* clock, Config* config, FileCache* file_cache,
+  Daemon(Clock* clock, DaemonConfig* config, FileCache* file_cache,
          EventBuffer* buffer);
 
   ~Daemon();
@@ -98,7 +98,7 @@ class Daemon {
   FileCache* file_cache() { return file_cache_; }
 
   // Returns the configuration parameters.
-  const Config* config() { return config_; }
+  const DaemonConfig* config() { return config_; }
 
   EventBuffer* buffer() { return buffer_; }
 
@@ -118,7 +118,8 @@ class Daemon {
   // located within the perfd directory, and it needs to be compatible with the
   // app's CPU architecture.
   bool TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
-                         const std::string& agent_lib_file_name);
+                         const std::string& agent_lib_file_name,
+                         const std::string& agent_config_path);
 
   void SetHeartBeatTimestamp(int32_t app_pid, int64_t timestamp);
 
@@ -157,8 +158,8 @@ class Daemon {
   std::vector<std::unique_ptr<ServiceComponent>> profiler_components_;
   // Clock that timestamps profiling data
   Clock* clock_;
-  // Config object for profiling settings
-  Config* config_;
+  // Config object for daemon settings
+  DaemonConfig* config_;
   // A shared cache for all profiler services
   FileCache* file_cache_;
   // The buffer with all the events

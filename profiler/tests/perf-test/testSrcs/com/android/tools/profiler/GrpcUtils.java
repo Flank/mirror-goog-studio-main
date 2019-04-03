@@ -94,7 +94,7 @@ public class GrpcUtils {
      * Begins the profiler session on the specified pid and attach the JVMTI agent via the
      * agentAttachPort.
      */
-    public Session beginSessionWithAgent(int pid, int agentAttachPort) {
+    public Session beginSessionWithAgent(int pid, int agentAttachPort, String agentConfigPath) {
         myTransportServiceStub.execute(
                 Transport.ExecuteRequest.newBuilder()
                         .setCommand(
@@ -104,7 +104,8 @@ public class GrpcUtils {
                                         .setStreamId(1234)
                                         .setAttachAgent(
                                                 Commands.AttachAgent.newBuilder()
-                                                        .setAgentLibFileName("libjvmtiagent.so"))
+                                                        .setAgentLibFileName("libjvmtiagent.so")
+                                                        .setAgentConfigPath(agentConfigPath))
                                         .build())
                         .build());
         // Block until we can verify the agent was fully attached, which takes a while.

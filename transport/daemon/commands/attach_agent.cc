@@ -36,8 +36,8 @@ Status AttachAgent::ExecuteOn(Daemon *daemon) {
                   "Process isn't running. Cannot attach agent.");
   }
 
-  bool attachable =
-      daemon->TryAttachAppAgent(pid, app_name, data_.agent_lib_file_name());
+  bool attachable = daemon->TryAttachAppAgent(
+      pid, app_name, data_.agent_lib_file_name(), data_.agent_config_path());
   if (!attachable) {
     Event event;
     event.set_pid(pid);

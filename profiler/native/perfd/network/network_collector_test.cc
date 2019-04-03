@@ -17,20 +17,20 @@
 
 #include <gtest/gtest.h>
 
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/fake_clock.h"
 
 namespace profiler {
 
 TEST(NetworkCollector, SamplersEmptyForNewPipeline) {
   FakeClock clock;
-  proto::AgentConfig agent_config;
-  Config config1(agent_config);
+  proto::DaemonConfig daemon_config;
+  DaemonConfig config1(daemon_config);
   NetworkCollector collector1(config1, &clock, 1);
   EXPECT_EQ(collector1.samplers().size(), 3);
 
-  agent_config.set_profiler_unified_pipeline(true);
-  Config config2(agent_config);
+  daemon_config.mutable_common()->set_profiler_unified_pipeline(true);
+  DaemonConfig config2(daemon_config);
   NetworkCollector collector2(config2, &clock, 1);
   EXPECT_EQ(collector2.samplers().size(), 0);
 }

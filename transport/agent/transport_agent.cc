@@ -17,12 +17,12 @@
 #include "jvmti.h"
 
 #include <dlfcn.h>
+#include <fstream>
 #include <string>
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
 #include "perfa/perfa.h"
-#include "utils/config.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
 
@@ -41,6 +41,13 @@ static std::string GetAppDataPath() {
   dladdr((void*)Agent_OnAttach, &dl_info);
   std::string so_path(dl_info.dli_fname);
   return so_path.substr(0, so_path.find_last_of('/') + 1);
+}
+
+static bool ParseConfigFromPath(const std::string& path, AgentConfig* config) {
+  std::fstream input(path, std::ios::in | std::ios::binary);
+  bool ret = config->ParseFromIstream(&input);
+  input.close();
+  return ret;
 }
 
 void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
@@ -66,9 +73,11 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   SetAllCapabilities(jvmti_env);
 
-  // TODO: Update options to support more than one argument if needed.
-  static const auto* const config = new profiler::Config(options);
-  auto const& agent_config = config->GetAgentConfig();
+  AgentConfig config;
+  if (!ParseConfigFromPath(options, &config)) {
+    Log::E("Failed to parse config from %s", options);
+    return JNI_ERR;
+  }
   Agent::Instance(config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
@@ -78,12 +87,12 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   EchoAgentCommand::RegisterAgentEchoCommandHandler(vm);
 
   // Resource inspector agent.
-  if (agent_config.android_feature_level() >= DeviceInfo::Q) {
+  if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
     LayoutInspectorAgentCommand::RegisterAgentLayoutInspectorCommandHandler(vm);
   }
 
   // Profiler agent.
-  SetupPerfa(vm, jvmti_env, agent_config);
+  SetupPerfa(vm, jvmti_env, config);
 
   Agent::Instance().AddDaemonConnectedCallback([] {
     Agent::Instance().StartHeartbeat();

@@ -99,7 +99,7 @@ void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     Agent::Instance().SubmitAgentTasks(
         {[pid, text, timestamp, event_down_time](AgentService::Stub& stub,
                                                  ClientContext& ctx) mutable {
@@ -128,7 +128,7 @@ void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
   JStringWrapper activity_name(env, name);
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     bool is_end_state;
     switch (state) {
       case ViewData::PAUSED:
@@ -191,7 +191,7 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     Agent::Instance().SubmitAgentTasks(
         {[jdownTime, jstate, pid, timestamp, jis_up_event](
              AgentService::Stub& stub, ClientContext& ctx) mutable {
@@ -281,7 +281,7 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     Agent::Instance().SubmitAgentTasks({[jstate, pid, timestamp](
                                             AgentService::Stub& stub,
                                             ClientContext& ctx) mutable {

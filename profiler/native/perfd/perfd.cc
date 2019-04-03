@@ -26,8 +26,8 @@
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
-#include "utils/config.h"
 #include "utils/current_process.h"
+#include "utils/daemon_config.h"
 #include "utils/termination_service.h"
 #include "utils/trace.h"
 
@@ -35,7 +35,7 @@ namespace profiler {
 
 int Perfd::Initialize(Daemon* daemon) {
   Trace::Init();
-  auto agent_config = daemon->config()->GetAgentConfig();
+  auto daemon_config = daemon->config()->GetConfig();
 
   auto* termination_service = TerminationService::Instance();
 
@@ -43,10 +43,9 @@ int Perfd::Initialize(Daemon* daemon) {
   daemon->RegisterProfilerComponent(std::unique_ptr<CommonProfilerComponent>(
       new CommonProfilerComponent(daemon)));
 
-  daemon->RegisterProfilerComponent(
-      std::unique_ptr<CpuProfilerComponent>(new CpuProfilerComponent(
-          daemon->clock(), daemon->file_cache(), agent_config.cpu_config(),
-          termination_service)));
+  daemon->RegisterProfilerComponent(std::unique_ptr<CpuProfilerComponent>(
+      new CpuProfilerComponent(daemon->clock(), daemon->file_cache(),
+                               daemon_config.cpu(), termination_service)));
 
   daemon->RegisterProfilerComponent(std::unique_ptr<MemoryProfilerComponent>(
       new MemoryProfilerComponent(daemon->clock(), daemon->file_cache())));
@@ -63,7 +62,7 @@ int Perfd::Initialize(Daemon* daemon) {
       std::unique_ptr<NetworkProfilerComponent>(new NetworkProfilerComponent(
           *(daemon->config()), daemon->clock(), daemon->file_cache())));
 
-  if (agent_config.energy_profiler_enabled()) {
+  if (daemon_config.common().energy_profiler_enabled()) {
     daemon->RegisterProfilerComponent(std::unique_ptr<EnergyProfilerComponent>(
         new EnergyProfilerComponent(daemon->file_cache())));
   }

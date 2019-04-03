@@ -23,7 +23,7 @@
 #include "event_buffer.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/transport.grpc.pb.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/memory_file_system.h"
@@ -36,14 +36,13 @@ class DaemonTest : public ::testing::Test {
  public:
   DaemonTest()
       : file_cache_(std::unique_ptr<FileSystem>(new MemoryFileSystem()), "/"),
-        config_(agent_config_),
+        config_(proto::DaemonConfig::default_instance()),
         buffer_(&clock_),
         daemon_(&clock_, &config_, &file_cache_, &buffer_) {}
 
   FakeClock clock_;
   FileCache file_cache_;
-  proto::AgentConfig agent_config_;
-  Config config_;
+  DaemonConfig config_;
   EventBuffer buffer_;
   Daemon daemon_;
 };

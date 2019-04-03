@@ -111,7 +111,7 @@ void TraceMonitor::CheckFixTracePathCall(int32_t tid,
 }
 
 void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 
@@ -154,7 +154,7 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
 }
 
 void TraceMonitor::SubmitStopEvent(int tid) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 

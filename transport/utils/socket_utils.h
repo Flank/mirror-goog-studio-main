@@ -19,10 +19,37 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include <grpc++/grpc++.h>
+
 namespace profiler {
 
 // Prefix used by gRPC to designate a Unix socket address.
 const char* const kGrpcUnixSocketAddrPrefix = "unix:";
+
+// This is a Unix abstract socket name that is passed to bind() with the
+// '@' replaced by '\0'. It designates an abstract socket of name
+// "AndroidStudioTransportAgent" (removing the "@" prefix).
+const char* const kAgentSocketName = "@AndroidStudioTransportAgent";
+
+// Default daemon file path if none are found on the command line. The path
+// points to a profiler::proto::DaemonConfig file.
+const char* const kDaemonConfigDefaultPath =
+    "/data/local/tmp/perfd/daemon.config";
+
+// The command line argument indicating that daemon is establishing
+// communication channel with the agent through Unix abstract socket.
+const char* const kConnectCmdLineArg = "connect";
+
+// Control messages that are sent by Perfd to Perfa via unix socket.
+// Also see profiler::ConnectAndSendDataToPerfa for more details on how each
+// message is used.
+const char* const kHeartBeatRequest = "H";
+const char* const kDaemonConnectRequest = "C";
+
+// Default timeout used for grpc calls in which the the grpc target can change.
+// In those cases, instead of having the grpc requests block and retry aimlessly
+// at a stale target, the requests abort and let users handle any errors.
+const int32_t kGrpcTimeoutSec = 1;
 
 // Populates Unix socket address structure |addr_un| and socket lenth |addr_len|
 // for a given Unix socket's |name|.
@@ -49,6 +76,10 @@ int ConnectAndSendDataToSocket(const char* destination, int send_fd,
 // Convenient method to accept connections and receive data from a socket.
 int AcceptAndGetDataFromSocket(int socket_fd, int* receive_fd, char* buffer,
                                int length, int to_sec, int to_usec);
+
+// A helper method to set timeout relative to system_clock::now() on |context|
+void SetClientContextTimeout(grpc::ClientContext* context, int32_t to_sec = 0,
+                             int32_t to_msec = 0);
 
 }  // namespace profiler
 

@@ -20,14 +20,14 @@
 #include "perfd/network/internal_network_service.h"
 #include "perfd/network/network_collector.h"
 #include "perfd/network/network_service.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
 
 class NetworkProfilerComponent final : public ServiceComponent {
  public:
-  explicit NetworkProfilerComponent(const Config& config, Clock* clock,
+  explicit NetworkProfilerComponent(const DaemonConfig& config, Clock* clock,
                                     FileCache* file_cache)
       : public_service_(config, clock, &network_cache_),
         internal_service_(file_cache, &network_cache_) {}

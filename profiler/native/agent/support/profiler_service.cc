@@ -21,10 +21,8 @@
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
 #include "utils/clock.h"
-#include "utils/config.h"
 
 using profiler::Agent;
-using profiler::Config;
 using profiler::JStringWrapper;
 using profiler::proto::ActivityData;
 using profiler::proto::AgentConfig;
@@ -38,9 +36,7 @@ Java_com_android_tools_profiler_support_ProfilerService_initializeNative(
     JNIEnv* env, jobject thiz, jstring jtext) {
   JStringWrapper text(env, jtext);
   AgentConfig agent_config;
-  agent_config.set_service_address(text.get());
-  agent_config.set_socket_type(profiler::proto::UNSPECIFIED_SOCKET);
-  Config config(agent_config);
-  Agent::Instance(&config);
+  agent_config.mutable_common()->set_service_address(text.get());
+  Agent::Instance(agent_config);
 }
 }

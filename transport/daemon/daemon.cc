@@ -27,7 +27,6 @@
 #include "commands/attach_agent.h"
 #include "connector.h"
 #include "utils/android_studio_version.h"
-#include "utils/config.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
 #include "utils/file_reader.h"
@@ -157,7 +156,7 @@ bool RunAgent(const string& app_name, const string& package_name,
 
 }  // namespace
 
-Daemon::Daemon(Clock* clock, Config* config, FileCache* file_cache,
+Daemon::Daemon(Clock* clock, DaemonConfig* config, FileCache* file_cache,
                EventBuffer* buffer)
     : clock_(clock),
       config_(config),
@@ -204,7 +203,8 @@ void Daemon::RunServer(const string& server_address) {
 }
 
 bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
-                               const string& agent_lib_file_name) {
+                               const string& agent_lib_file_name,
+                               const std::string& agent_config_path) {
   assert(profiler::DeviceInfo::feature_level() >= profiler::DeviceInfo::O);
 
   string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
@@ -229,8 +229,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
   // exist if we have profiled the same app before, and either Studio/daemon
   // has restarted and has lost any knowledge about such agent.
   if (!IsAppAgentAlive(app_pid, package_name)) {
-    RunAgent(app_name, package_name, config_->GetConfigFilePath(),
-             agent_lib_file_name);
+    RunAgent(app_name, package_name, agent_config_path, agent_lib_file_name);
   }
 
   // Only reconnect to perfa if an existing connection has not been detected.
@@ -244,7 +243,7 @@ bool Daemon::TryAttachAppAgent(int32_t app_pid, const std::string& app_name,
     } else if (fork_pid == 0) {
       // child process
       string socket_name;
-      socket_name.append(config_->GetAgentConfig().service_socket_name());
+      socket_name.append(config_->GetConfig().common().service_socket_name());
       RunConnector(app_pid, package_name, socket_name);
       // RunConnector calls execl() at the end. It returns only if an error
       // has occured.

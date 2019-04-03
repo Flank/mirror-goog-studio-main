@@ -49,7 +49,8 @@ Status BeginSession::ExecuteOn(Daemon* daemon) {
       case AgentData::UNSPECIFIED:
         // Agent has not been attached yet.
         if (daemon->TryAttachAppAgent(
-                pid, app_name, data_.jvmti_config().agent_lib_file_name())) {
+                pid, app_name, data_.jvmti_config().agent_lib_file_name(),
+                data_.jvmti_config().agent_config_path())) {
           // Wait for agent to be attached so the command can be forwarded to
           // agent.
           int32_t count = 0;

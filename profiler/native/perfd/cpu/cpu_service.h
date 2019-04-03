@@ -27,8 +27,8 @@
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
-#include "proto/agent_service.grpc.pb.h"
 #include "proto/cpu.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -42,7 +42,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
-                 const profiler::proto::AgentConfig::CpuConfig& cpu_config,
+                 const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service)
       : CpuServiceImpl(
             clock, cpu_cache, usage_sampler, thread_monitor, cpu_config,
@@ -59,7 +59,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
 
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
-                 const profiler::proto::AgentConfig::CpuConfig& cpu_config,
+                 const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service,
                  ActivityManager* activity_manager,
                  std::unique_ptr<SimpleperfManager> simpleperf_manager,
@@ -167,7 +167,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
 
-  const proto::AgentConfig::CpuConfig cpu_config_;
+  const proto::DaemonConfig::CpuConfig cpu_config_;
   ActivityManager* activity_manager_;
   std::unique_ptr<SimpleperfManager> simpleperf_manager_;
   std::unique_ptr<AtraceManager> atrace_manager_;

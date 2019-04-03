@@ -18,8 +18,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "utils/config.h"
 #include "utils/log.h"
+#include "utils/socket_utils.h"
 #include "utils/thread_name.h"
 
 namespace profiler {
@@ -96,7 +96,7 @@ void MemoryComponent::SubmitMemoryTasks(
         do {
           // Each grpc call needs a new ClientContext.
           grpc::ClientContext ctx;
-          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
           Status status = task(service_stub(), ctx);
           success = status.ok();
         } while (!success);

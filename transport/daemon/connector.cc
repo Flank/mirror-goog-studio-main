@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <cassert>
 #include "utils/clock.h"
-#include "utils/config.h"
 #include "utils/socket_utils.h"
 
 namespace {

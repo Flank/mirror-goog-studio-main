@@ -68,12 +68,7 @@ message SendBytesRequest {
 // rule, so more investigation is needed.
 message EmptyResponse {}
 
-enum SocketType {
-  UNSPECIFIED_SOCKET = 0;
-  ABSTRACT_SOCKET = 1;
-}
-
-// Proto used for configuring perfd + perfa.
+// Proto used for configuring the agent.
 // The message itself is created and pushed to device from Studio
 // and can be access via profiler::Config::Instance().
 message AgentConfig {
@@ -89,37 +84,12 @@ message AgentConfig {
     // The allocation sampling rate to use when starting a profiling session.
     AllocationSamplingRate sampling_rate = 5;
   }
-
-  message CpuConfig {
-    // Waiting time in Seconds for ART when stopping the ongoing ART profiling.
-    int32 art_stop_timeout_sec = 1;
-    // equivalent to StudioFlags.PROFILER_SIMPLEPERF_HOST
-    bool simpleperf_host = 2;
-    // equivalent to StudioFlags.PROFILER_USE_PERFETTO
-    bool use_perfetto = 3;
-  }
-
-  MemoryConfig mem_config = 1;
-  // Which socket type we are using when setting up our service
-  // if the device is O+ we use service_socket_name and
-  // ABSTRACT_SOCKET. If the device is pre O we use
-  // UNSPECIFIED_SOCKET and use the service_address.
-  SocketType socket_type = 2;
-  // address used for legacy devices (Nougat or older).
-  string service_address = 3;
-  // address used for jvmti devices that use unix sockets.
-  string service_socket_name = 4;
-  // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
-  bool energy_profiler_enabled = 6;
+  CommonConfig common = 1;
+  MemoryConfig mem = 2;
   // equivalent to StudioFlags.PROFILER_CPU_API_TRACING.
-  bool cpu_api_tracing_enabled = 7;
-  // Android API level as defined in com.android.sdklib.AndroidVersion.
-  int32 android_feature_level = 8;
-  CpuConfig cpu_config = 9;
-  // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
-  bool profiler_unified_pipeline = 10;
+  bool cpu_api_tracing_enabled = 3;
   // whether the agent should initialize advanced profiling on attach.
-  bool startup_profiling_enabled = 11;
+  bool startup_profiling_enabled = 4;
 }
 
 message RegisterAgentRequest {

@@ -20,8 +20,10 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.fakeandroid.ProcessRunner;
 import com.android.tools.profiler.proto.Agent;
 import com.android.tools.profiler.proto.Agent.AgentConfig.MemoryConfig;
+import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
+import com.android.tools.profiler.proto.Transport;
 import io.grpc.StatusRuntimeException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,7 +51,6 @@ public class PerfDriver extends ExternalResource {
     private final String myActivityClass;
 
     private static final String LOCAL_HOST = "127.0.0.1";
-    private File myConfigFile;
     private int myPid = -1;
     private FakeAndroidDriver myMockApp;
     private PerfdDriver myPerfdDriver;
@@ -59,6 +60,7 @@ public class PerfDriver extends ExternalResource {
     private DeviceProperties myPropertiesFile;
     private int mySdkLevel;
     private Session mySession;
+    private int myServerPort;
     private int myLiveAllocSamplingRate = 1;
 
     public PerfDriver(String activityClass, int sdkLevel) {
@@ -171,9 +173,14 @@ public class PerfDriver extends ExternalResource {
         }
 
         // Invoke beginSession to establish a session we can use to query data
+        File agentConfig = buildAgentConfig();
         mySession =
                 myIsOPlusDevice
-                        ? getGrpc().beginSessionWithAgent(getPid(), getCommunicationPort())
+                        ? getGrpc()
+                                .beginSessionWithAgent(
+                                        getPid(),
+                                        getCommunicationPort(),
+                                        agentConfig.getAbsolutePath())
                         : getGrpc().beginSession(getPid());
     }
 
@@ -212,10 +219,31 @@ public class PerfDriver extends ExternalResource {
      * Helper function to create and serialize AgentConfig for test to use, this is specific to each
      * test.
      */
-    private void buildAndSaveConfig(int sdkLevel) {
+    private File buildDaemonConfig() {
+        File file = null;
         try {
-            myConfigFile = myTemporaryFolder.newFile();
-            FileOutputStream outputStream = new FileOutputStream(myConfigFile);
+            file = myTemporaryFolder.newFile();
+            FileOutputStream outputStream = new FileOutputStream(file);
+            Transport.DaemonConfig config =
+                    Transport.DaemonConfig.newBuilder().setCommon(buildCommonConfig()).build();
+            config.writeTo(outputStream);
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException ex) {
+            Assert.fail("Failed to write config file: " + ex);
+        }
+        return file;
+    }
+
+    /**
+     * Helper function to create and serialize AgentConfig for test to use, this is specific to each
+     * test.
+     */
+    private File buildAgentConfig() {
+        File file = null;
+        try {
+            file = myTemporaryFolder.newFile();
+            FileOutputStream outputStream = new FileOutputStream(file);
             Agent.AgentConfig.MemoryConfig memConfig =
                     MemoryConfig.newBuilder()
                             .setUseLiveAlloc(true)
@@ -230,12 +258,8 @@ public class PerfDriver extends ExternalResource {
 
             Agent.AgentConfig config =
                     Agent.AgentConfig.newBuilder()
-                            .setMemConfig(memConfig)
-                            .setServiceAddress(LOCAL_HOST + ":" + getAvailablePort())
-                            .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
-                            .setEnergyProfilerEnabled(true)
-                            .setAndroidFeatureLevel(sdkLevel)
-                            .setProfilerUnifiedPipeline(myUnifiedPipeline)
+                            .setMem(memConfig)
+                            .setCommon(buildCommonConfig())
                             .build();
             config.writeTo(outputStream);
             outputStream.flush();
@@ -243,6 +267,15 @@ public class PerfDriver extends ExternalResource {
         } catch (IOException ex) {
             Assert.fail("Failed to write config file: " + ex);
         }
+        return file;
+    }
+
+    private Common.CommonConfig buildCommonConfig() {
+        return Common.CommonConfig.newBuilder()
+                .setServiceAddress(LOCAL_HOST + ":" + myServerPort)
+                .setEnergyProfilerEnabled(true)
+                .setProfilerUnifiedPipeline(myUnifiedPipeline)
+                .build();
     }
 
     /**
@@ -252,8 +285,9 @@ public class PerfDriver extends ExternalResource {
      */
     private void startPerfd() throws IOException {
         while (myPerfdDriver == null || myPerfdDriver.getPort() == 0) {
-            buildAndSaveConfig(mySdkLevel);
-            myPerfdDriver = new PerfdDriver(myConfigFile.getAbsolutePath());
+            myServerPort = getAvailablePort();
+            File daemonConfig = buildDaemonConfig();
+            myPerfdDriver = new PerfdDriver(daemonConfig.getAbsolutePath());
             myPerfdDriver.start();
         }
     }

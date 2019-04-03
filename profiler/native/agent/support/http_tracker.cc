@@ -85,7 +85,10 @@ struct PayloadBuffer {
       // background thread to consume it. Additional bytes reported before the
       // background thread finally runs will be sent out at the same time.
       chunks[juid].push_back(bytes->get());
-      if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+      if (Agent::Instance()
+              .agent_config()
+              .common()
+              .profiler_unified_pipeline()) {
         Agent::Instance().SubmitAgentTasks(
             {[juid, this](AgentService::Stub &stub, ClientContext &ctx) {
               std::ostringstream batched_bytes;
@@ -208,7 +211,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
     jlong jthread_id) {
   JStringWrapper thread_name(env, jthread_name);
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     int64_t timestamp = GetClock().GetCurrentTime();
     Agent::Instance().SubmitAgentTasks(
         {[timestamp, juid, thread_name, jthread_id](
@@ -245,7 +248,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onClose(
     JNIEnv *env, jobject thiz, jlong juid) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
     std::stringstream ss;
@@ -290,7 +293,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_onReadBegin(
     JNIEnv *env, jobject thiz, jlong juid) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     // No-op. This is merged into onRequest.
   } else {
     EnqueueHttpEvent(juid, HttpEventRequest::DOWNLOAD_STARTED);
@@ -307,7 +310,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onClose(
     JNIEnv *env, jobject thiz, jlong juid) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
     std::stringstream ss;
@@ -359,7 +362,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
   JStringWrapper fields(env, jfields);
   JStringWrapper method(env, jmethod);
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks({[request, url, stack, fields, method](
@@ -401,7 +404,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
   JStringWrapper fields(env, jfields);
 
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks({[request, fields](
@@ -434,7 +437,7 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onDi
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onError(
     JNIEnv *env, jobject thiz, jlong juid, jstring jstatus) {
-  if (Agent::Instance().agent_config().profiler_unified_pipeline()) {
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     SendEventRequest request;
     PrepopulateEventRequest(&request, juid);
     Agent::Instance().SubmitAgentTasks(

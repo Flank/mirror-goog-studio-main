@@ -23,7 +23,7 @@
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/profiler.grpc.pb.h"
 #include "utils/clock.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/memory_file_system.h"
@@ -49,8 +49,7 @@ class FakeCpuUsageSampler : public CpuUsageSampler {
 
 TEST(CpuUsageDataSampler, TestSampleCpuUsage) {
   FakeClock clock;
-  proto::AgentConfig agent_config;
-  Config config(agent_config);
+  DaemonConfig config(proto::DaemonConfig::default_instance());
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
   EventBuffer event_buffer(&clock);

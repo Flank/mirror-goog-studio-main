@@ -26,7 +26,7 @@
 #include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
 #include "perfd/statsd/statsd_subscriber.h"
 #include "utils/clock.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/device_info.h"
 #include "utils/device_info_helper.h"
 #include "utils/fake_clock.h"
@@ -34,7 +34,6 @@
 #include "utils/fs/memory_file_system.h"
 
 namespace profiler {
-
 namespace {
 class MockSampler final : public Sampler {
  public:
@@ -47,7 +46,6 @@ class MockSampler final : public Sampler {
   MOCK_METHOD0(Die, void());
   virtual ~MockSampler() { Die(); }
 };
-
 }  // namespace
 
 TEST(Session, SamplersAddedForNewPipeline) {
@@ -55,14 +53,14 @@ TEST(Session, SamplersAddedForNewPipeline) {
   EventBuffer event_buffer(&clock);
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
-  proto::AgentConfig agent_config;
-  Config config1(agent_config);
+  proto::DaemonConfig daemon_config;
+  DaemonConfig config1(daemon_config);
   Daemon daemon1(&clock, &config1, &file_cache, &event_buffer);
   Session session1(0, 0, 0, &daemon1);
   EXPECT_EQ(session1.samplers().size(), 0);
 
-  agent_config.set_profiler_unified_pipeline(true);
-  Config config2(agent_config);
+  daemon_config.mutable_common()->set_profiler_unified_pipeline(true);
+  DaemonConfig config2(daemon_config);
   Daemon daemon2(&clock, &config2, &file_cache, &event_buffer);
   Session session2(0, 0, 0, &daemon2);
   EXPECT_GT(session2.samplers().size(), 0);
@@ -73,14 +71,14 @@ TEST(Session, SamplerDeallocatedWhenSessionDies) {
   EventBuffer event_buffer(&clock);
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
-  proto::AgentConfig agent_config;
-  Config config1(agent_config);
+  proto::DaemonConfig daemon_config;
+  DaemonConfig config1(daemon_config);
   Daemon daemon1(&clock, &config1, &file_cache, &event_buffer);
   Session session1(0, 0, 0, &daemon1);
   EXPECT_EQ(session1.samplers().size(), 0);
 
-  agent_config.set_profiler_unified_pipeline(true);
-  Config config2(agent_config);
+  daemon_config.mutable_common()->set_profiler_unified_pipeline(true);
+  DaemonConfig config2(daemon_config);
   Daemon daemon2(&clock, &config2, &file_cache, &event_buffer);
   Session session2(0, 0, 0, &daemon2);
   EXPECT_GT(session2.samplers().size(), 0);
@@ -89,7 +87,8 @@ TEST(Session, SamplerDeallocatedWhenSessionDies) {
   auto* sampler = new MockSampler(session2, &event_buffer, 1000);
   // The test will fail if commenting the following line with reset().
   session2.samplers()[0].reset(sampler);
-  // When session2 is out of scope, its samplers are expected to be deallocated.
+  // When session2 is out of scope, its samplers are expected to be
+  // deallocated.
   EXPECT_CALL(*sampler, Die());
 }
 
@@ -98,8 +97,7 @@ TEST(Session, UsesStatsdForQ) {
   EventBuffer event_buffer(&clock);
   FileCache file_cache(std::unique_ptr<FileSystem>(new MemoryFileSystem()),
                        "/");
-  proto::AgentConfig agent_config;
-  Config config(agent_config);
+  DaemonConfig config(proto::DaemonConfig::default_instance());
   Daemon daemon(&clock, &config, &file_cache, &event_buffer);
 
   DeviceInfoHelper::SetDeviceInfo(DeviceInfo::P);

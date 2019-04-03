@@ -345,3 +345,25 @@ message AgentData {
   }
   Status status = 1;
 }
+
+// Shared by both DaemonConfig and AgentConfig
+message CommonConfig {
+  enum SocketType {
+    UNSPECIFIED_SOCKET = 0;
+    ABSTRACT_SOCKET = 1;
+  }
+
+  // Which socket type we are using when setting up our service
+  // if the device is O+ we use service_socket_name and
+  // ABSTRACT_SOCKET. If the device is pre O we use
+  // UNSPECIFIED_SOCKET and use the service_address.
+  SocketType socket_type = 1;
+  // address used for legacy devices (Nougat or older).
+  string service_address = 2;
+  // address used for jvmti devices that use unix sockets.
+  string service_socket_name = 3;
+  // equivalent to StudioFlags.PROFILER_ENERGY_PROFILER_ENABLED.
+  bool energy_profiler_enabled = 4;
+  // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
+  bool profiler_unified_pipeline = 5;
+}

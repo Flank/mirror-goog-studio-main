@@ -38,6 +38,8 @@ Status ProfilerServiceImpl::BeginSession(
   jvmti_config->set_attach_agent(request->jvmti_config().attach_agent());
   jvmti_config->set_agent_lib_file_name(
       request->jvmti_config().agent_lib_file_name());
+  jvmti_config->set_agent_config_path(
+      request->jvmti_config().agent_config_path());
   jvmti_config->set_live_allocation_enabled(
       request->jvmti_config().live_allocation_enabled());
 

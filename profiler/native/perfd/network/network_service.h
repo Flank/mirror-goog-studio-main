@@ -23,7 +23,7 @@
 #include "perfd/network/network_cache.h"
 #include "perfd/network/network_collector.h"
 #include "proto/network.grpc.pb.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
@@ -31,7 +31,7 @@ namespace profiler {
 // Service class to pass profiler data through grpc.
 class NetworkServiceImpl final : public proto::NetworkService::Service {
  public:
-  explicit NetworkServiceImpl(const Config &config, Clock *clock,
+  explicit NetworkServiceImpl(const DaemonConfig &config, Clock *clock,
                               NetworkCache *network_cache)
       : network_cache_(*network_cache),
         collector_(config, clock, kSampleRateMs) {}

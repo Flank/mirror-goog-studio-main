@@ -79,7 +79,7 @@ class TestTerminationService final : public TerminationService {
 // members of testing::Test
 struct CpuServiceTest : testing::Test {
   std::unique_ptr<CpuServiceImpl> ConfigureDefaultCpuServiceImpl(
-      const profiler::proto::AgentConfig::CpuConfig& config) {
+      const profiler::proto::DaemonConfig::CpuConfig& config) {
     // Set up CPU service.
     return std::unique_ptr<CpuServiceImpl>(new CpuServiceImpl(
         &clock_, &cache_, &sampler_, &thread_monitor_, config,
@@ -89,8 +89,8 @@ struct CpuServiceTest : testing::Test {
         std::unique_ptr<AtraceManager>(new AtraceManager(
             std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock_, 50,
             std::unique_ptr<Atrace>(new FakeAtrace(&clock_, false)))),
-        std::unique_ptr<PerfettoManager>(new PerfettoManager(&clock_,
-            std::unique_ptr<Perfetto>(new FakePerfetto())))));
+        std::unique_ptr<PerfettoManager>(new PerfettoManager(
+            &clock_, std::unique_ptr<Perfetto>(new FakePerfetto())))));
   }
 
   // Helper function to run atrace test.
@@ -103,7 +103,7 @@ struct CpuServiceTest : testing::Test {
     const int32_t kPid = 456;
     // Need to create an app cache for test to store profiling is running.
     cache_.AllocateAppCache(kPid);
-    profiler::proto::AgentConfig::CpuConfig config;
+    profiler::proto::DaemonConfig::CpuConfig config;
     config.set_use_perfetto(enable_perfetto);
     std::unique_ptr<CpuServiceImpl> cpu_service =
         ConfigureDefaultCpuServiceImpl(config);
@@ -164,7 +164,7 @@ struct CpuServiceTest : testing::Test {
 TEST_F(CpuServiceTest, StopSimpleperfTraceWhenPerfdTerminated) {
   const int64_t kSessionId = 123;
   const int32_t kPid = 456;
-  profiler::proto::AgentConfig::CpuConfig config;
+  profiler::proto::DaemonConfig::CpuConfig config;
   std::unique_ptr<CpuServiceImpl> cpu_service =
       ConfigureDefaultCpuServiceImpl(config);
 
@@ -209,7 +209,7 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
   // This test requires a customized ActivityManager instead of using the
   // default as such we construct the CpuServiceImpl below.
   TestActivityManager activity_manager{std::move(bash)};
-  profiler::proto::AgentConfig::CpuConfig cpu_config;
+  profiler::proto::DaemonConfig::CpuConfig cpu_config;
   CpuServiceImpl cpu_service{
       &clock_,
       &cache_,
@@ -223,8 +223,8 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
       std::unique_ptr<AtraceManager>(new AtraceManager(
           std::unique_ptr<FileSystem>(new MemoryFileSystem()), &clock_, 50,
           std::unique_ptr<Atrace>(new FakeAtrace(&clock_)))),
-      std::unique_ptr<PerfettoManager>(
-          new PerfettoManager(&clock_, std::unique_ptr<Perfetto>(new FakePerfetto())))};
+      std::unique_ptr<PerfettoManager>(new PerfettoManager(
+          &clock_, std::unique_ptr<Perfetto>(new FakePerfetto())))};
 
   // Start an ART recording.
   ServerContext context;

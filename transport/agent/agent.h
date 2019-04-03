@@ -33,7 +33,6 @@
 #include "memory_component.h"
 #include "utils/background_queue.h"
 #include "utils/clock.h"
-#include "utils/config.h"
 
 namespace profiler {
 
@@ -76,13 +75,15 @@ class Agent {
   // with a valid config.
   // Grab the singleton instance of the Agent. This will initialize the class if
   // necessary.
-  static Agent& Instance() { return Instance(nullptr); }
+  static Agent& Instance() {
+    return Instance(proto::AgentConfig::default_instance());
+  }
 
   // Returns a singleton instance of the agent.
-  // The first call, assumes |config| is a valid profiler::Config object.
+  // The first call, assumes |config| is a valid proto::Config object.
   // All following calls, simply return the singleton instance regardless of the
   // value of |config|.
-  static Agent& Instance(const profiler::Config* config);
+  static Agent& Instance(const proto::AgentConfig& config);
 
   const proto::AgentConfig& agent_config() const { return agent_config_; }
 
@@ -131,7 +132,7 @@ class Agent {
 
   // Use Agent::Instance() to initialize.
   // |config| is a valid profiler::Config object.
-  explicit Agent(const Config& config);
+  explicit Agent(const proto::AgentConfig& config);
   ~Agent() = delete;  // TODO: Support destroying the agent
 
   // In O+, getting the service stubs below will block until the Agent is

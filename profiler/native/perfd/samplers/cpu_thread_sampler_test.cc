@@ -25,7 +25,7 @@
 #include "proto/profiler.grpc.pb.h"
 #include "test/utils.h"
 #include "utils/clock.h"
-#include "utils/config.h"
+#include "utils/daemon_config.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/disk_file_system.h"
@@ -80,8 +80,7 @@ bool cmp(const proto::EventGroup& first, const proto::EventGroup& second) {
 
 TEST(CpuThreadSamplerTest, SampleCpuThreads) {
   FakeClock clock;
-  proto::AgentConfig agent_config;
-  Config config(agent_config);
+  DaemonConfig config(proto::DaemonConfig::default_instance());
   FileCache file_cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
   EventBuffer event_buffer(&clock);
   Daemon daemon(&clock, &config, &file_cache, &event_buffer);
