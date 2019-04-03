@@ -80,7 +80,7 @@ private fun findNdkPathImpl(
 
     // Record that a location was consider and rejected and for what reason
     fun considerAndReject(location: Location, reason: String) {
-        info("Considered ${location.ndkRoot} ${location.type.tag} but $reason")
+        info("Rejected ${location.ndkRoot} ${location.type.tag} because $reason")
     }
 
     val foundLocations = mutableListOf<Location>()
@@ -118,6 +118,11 @@ private fun findNdkPathImpl(
             }
     }
 
+    // Log all found locations
+    foundLocations.forEach { location ->
+        info("Considering ${location.ndkRoot} ${location.type.tag}")
+    }
+
     // Eliminate those that don't look like NDK folders
     val versionedLocations = foundLocations
         .mapNotNull { location ->
@@ -149,11 +154,14 @@ private fun findNdkPathImpl(
                 }
             }
         }
+        .sortedWith(compareBy({ -it.first.type.ordinal }, { it.second.revision }))
+        .asReversed()
+
+
 
     // From the existing NDKs find the highest. We'll use this as a fall-back in case there's an
     // error. We still want to succeed the sync and recover as best we can.
-    val highest =
-        versionedLocations.maxBy { (_, sourceProperties) -> sourceProperties.revision }
+    val highest = versionedLocations.firstOrNull()
 
     if (highest == null) {
         // The text of this message shouldn't change without also changing the corresponding
@@ -205,7 +213,6 @@ private fun findNdkPathImpl(
             .filter { (_, sourceProperties) ->
                 isAcceptableNdkVersion(sourceProperties.revision, ndkVersionFromDslRevision)
             }
-            .sortedWith(compareBy({ -it.first.type.ordinal }, { it.second.revision }))
             .toList()
 
         if (matchingLocations.isEmpty()) {
@@ -223,14 +230,14 @@ private fun findNdkPathImpl(
 
         // There could be multiple. Choose the preferred location and if there are multiple in that
         // location then choose the highest version there.
-        val foundNdkRoot = matchingLocations.last().first.ndkRoot
+        val foundNdkRoot = matchingLocations.first().first.ndkRoot
 
         if (matchingLocations.size > 1) {
             info(
                 "Found ${matchingLocations.size} NDK folders that matched requested " +
                         "version $ndkVersionFromDslRevision:"
             )
-            matchingLocations.reversed().forEachIndexed { index, (location, _) ->
+            matchingLocations.forEachIndexed { index, (location, _) ->
                 info(" (${index + 1}) ${location.ndkRoot} ${location.type.tag}")
             }
             info("  choosing $foundNdkRoot")
@@ -240,6 +247,29 @@ private fun findNdkPathImpl(
         return foundNdkRoot
 
     } else {
+        // If the user specified ndk.dir then it must be used.
+        if (ndkDirProperty != null) {
+            val ndkDirLocation =
+                versionedLocations.find { (location, _) ->
+                    location.type == NDK_DIR_LOCATION
+                }
+            if (ndkDirLocation == null) {
+                error(
+                    "Location specified by ndk.dir ($ndkDirProperty) did not contain a " +
+                            "valid NDK and and couldn't be used"
+                )
+
+                info(
+                    "Using ${highest.first.ndkRoot} which is " +
+                            "version ${highest.second.revision} as fallback but build will fail"
+                )
+                return highest.first.ndkRoot
+            }
+            val (location, version) = ndkDirLocation
+            info("Found requested ndk.dir (${location.ndkRoot}) which has version ${version.revision}")
+            return location.ndkRoot
+        }
+
         // No NDK version was requested.
         info(
             "No user requested version, choosing ${highest.first.ndkRoot} which is " +

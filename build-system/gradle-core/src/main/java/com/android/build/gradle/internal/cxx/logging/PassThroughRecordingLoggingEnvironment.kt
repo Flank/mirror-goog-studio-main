@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
+import com.google.gson.GsonBuilder
+import java.io.File
+
 /**
  * [ThreadLoggingEnvironment] that will record all of the messages received and then forward them
  * to the parent logger.
@@ -44,3 +48,9 @@ open class PassThroughRecordingLoggingEnvironment : ThreadLoggingEnvironment() {
      */
     val record get() = messages.map { it }
 }
+
+fun List<LoggingRecord>.toJsonString() = GsonBuilder()
+    .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
+    .setPrettyPrinting()
+    .create()
+    .toJson(this)

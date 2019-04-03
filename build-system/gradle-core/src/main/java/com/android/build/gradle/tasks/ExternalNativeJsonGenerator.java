@@ -27,6 +27,7 @@ import static com.android.build.gradle.internal.cxx.configure.NdkSymlinkerKt.try
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.info;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warn;
+import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -44,6 +45,7 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.GradleSyncLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -252,125 +254,135 @@ public abstract class ExternalNativeJsonGenerator {
     private void buildForOneConfiguration(
             boolean forceJsonGeneration, JsonGenerationAbiConfiguration configuration)
             throws GradleException, IOException, ProcessException {
-        checkForConfigurationErrors();
+        try (PassThroughRecordingLoggingEnvironment recorder =
+                new PassThroughRecordingLoggingEnvironment()) {
+            checkForConfigurationErrors();
 
-        GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
-                GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
-        variantStats.setAbi(AnalyticsUtil.getAbi(configuration.getAbiName()));
-        variantStats.setDebuggable(config.debuggable);
-        long startTime = System.currentTimeMillis();
-        variantStats.setGenerationStartMs(startTime);
-        try {
-            info(
-                    "Start JSON generation. Platform version: %s min SDK version: %s",
-                    configuration.getAbiPlatformVersion(),
-                    configuration.getAbiName(),
-                    configuration.getAbiPlatformVersion());
-            ProcessInfoBuilder processBuilder = getProcessBuilder(configuration);
-
-            // See whether the current build command matches a previously written build command.
-            String currentBuildCommand = processBuilder.toString();
-
-            JsonGenerationInvalidationState invalidationState =
-                    new JsonGenerationInvalidationState(
-                            forceJsonGeneration,
-                            configuration.getJsonFile(),
-                            configuration.getBuildCommandFile(),
-                            currentBuildCommand,
-                            getPreviousBuildCommand(configuration.getBuildCommandFile()),
-                            getDependentBuildFiles(configuration.getJsonFile()));
-
-            if (invalidationState.getRebuild()) {
-                info("rebuilding JSON %s due to:", configuration.getJsonFile());
-                for (String reason : invalidationState.getRebuildReasons()) {
-                    info(reason);
-                }
-
-                // Related to https://issuetracker.google.com/69408798
-                // Something has changed so we need to clean up some build intermediates and
-                // outputs.
-                // - If only a build file has changed then we try to keep .o files and,
-                // in the case of CMake, the generated Ninja project. In this case we must
-                // remove .so files because they are automatically packaged in the APK on a
-                // *.so basis.
-                // - If there is some other cause to recreate the JSon, such as command-line
-                // changed then wipe out the whole JSon folder.
-                if (config.jsonFolder.exists()) {
-                    if (invalidationState.getSoftRegeneration()) {
-                        info(
-                                "keeping json folder '%s' but regenerating project",
-                                configuration.getExternalNativeBuildFolder());
-
-                    } else {
-                        info(
-                                "removing stale contents from '%s'",
-                                configuration.getExternalNativeBuildFolder());
-                        FileUtils.deletePath(configuration.getExternalNativeBuildFolder());
-                    }
-                }
-
-                if (configuration.getExternalNativeBuildFolder().mkdirs()) {
-                    info("created folder '%s'", configuration.getExternalNativeBuildFolder());
-                }
-
-                info("executing %s %s", getNativeBuildSystem().getTag(), processBuilder);
-                String buildOutput = executeProcess(configuration);
-                info("done executing %s", getNativeBuildSystem().getTag());
-
-                // Write the captured process output to a file for diagnostic purposes.
-                info("write build output %s", configuration.getBuildOutputFile().getAbsolutePath());
-                Files.write(
-                        configuration.getBuildOutputFile().toPath(),
-                        buildOutput.getBytes(Charsets.UTF_8));
-                processBuildOutput(buildOutput, configuration);
-
-                if (!configuration.getJsonFile().exists()) {
-                    throw new GradleException(
-                            String.format(
-                                    "Expected json generation to create '%s' but it didn't",
-                                    configuration.getJsonFile()));
-                }
-
-                synchronized (stats) {
-                    // Related to https://issuetracker.google.com/69408798
-                    // Targets may have been removed or there could be other orphaned extra .so
-                    // files. Remove these and rely on the build step to replace them if they are
-                    // legitimate. This is to prevent unexpected .so files from being packaged in
-                    // the APK.
-                    removeUnexpectedSoFiles(
-                            configuration.getObjFolder(),
-                            AndroidBuildGradleJsons.getNativeBuildMiniConfig(
-                                    configuration.getJsonFile(), stats));
-                }
-
-                // Write the ProcessInfo to a file, this has all the flags used to generate the
-                // JSON. If any of these change later the JSON will be regenerated.
+            GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
+                    GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
+            variantStats.setAbi(AnalyticsUtil.getAbi(configuration.getAbiName()));
+            variantStats.setDebuggable(config.debuggable);
+            long startTime = System.currentTimeMillis();
+            variantStats.setGenerationStartMs(startTime);
+            try {
                 info(
-                        "write command file %s",
-                        configuration.getBuildCommandFile().getAbsolutePath());
-                Files.write(
-                        configuration.getBuildCommandFile().toPath(),
-                        currentBuildCommand.getBytes(Charsets.UTF_8));
+                        "Start JSON generation. Platform version: %s min SDK version: %s",
+                        configuration.getAbiPlatformVersion(),
+                        configuration.getAbiName(),
+                        configuration.getAbiPlatformVersion());
+                ProcessInfoBuilder processBuilder = getProcessBuilder(configuration);
 
-                // Record the outcome. JSON was built.
+                // See whether the current build command matches a previously written build command.
+                String currentBuildCommand = processBuilder.toString();
+
+                JsonGenerationInvalidationState invalidationState =
+                        new JsonGenerationInvalidationState(
+                                forceJsonGeneration,
+                                configuration.getJsonFile(),
+                                configuration.getBuildCommandFile(),
+                                currentBuildCommand,
+                                getPreviousBuildCommand(configuration.getBuildCommandFile()),
+                                getDependentBuildFiles(configuration.getJsonFile()));
+
+                if (invalidationState.getRebuild()) {
+                    info("rebuilding JSON %s due to:", configuration.getJsonFile());
+                    for (String reason : invalidationState.getRebuildReasons()) {
+                        info(reason);
+                    }
+
+                    // Related to https://issuetracker.google.com/69408798
+                    // Something has changed so we need to clean up some build intermediates and
+                    // outputs.
+                    // - If only a build file has changed then we try to keep .o files and,
+                    // in the case of CMake, the generated Ninja project. In this case we must
+                    // remove .so files because they are automatically packaged in the APK on a
+                    // *.so basis.
+                    // - If there is some other cause to recreate the JSon, such as command-line
+                    // changed then wipe out the whole JSon folder.
+                    if (config.jsonFolder.exists()) {
+                        if (invalidationState.getSoftRegeneration()) {
+                            info(
+                                    "keeping json folder '%s' but regenerating project",
+                                    configuration.getExternalNativeBuildFolder());
+
+                        } else {
+                            info(
+                                    "removing stale contents from '%s'",
+                                    configuration.getExternalNativeBuildFolder());
+                            FileUtils.deletePath(configuration.getExternalNativeBuildFolder());
+                        }
+                    }
+
+                    if (configuration.getExternalNativeBuildFolder().mkdirs()) {
+                        info("created folder '%s'", configuration.getExternalNativeBuildFolder());
+                    }
+
+                    info("executing %s %s", getNativeBuildSystem().getTag(), processBuilder);
+                    String buildOutput = executeProcess(configuration);
+                    info("done executing %s", getNativeBuildSystem().getTag());
+
+                    // Write the captured process output to a file for diagnostic purposes.
+                    info(
+                            "write build output %s",
+                            configuration.getBuildOutputFile().getAbsolutePath());
+                    Files.write(
+                            configuration.getBuildOutputFile().toPath(),
+                            buildOutput.getBytes(Charsets.UTF_8));
+                    processBuildOutput(buildOutput, configuration);
+
+                    if (!configuration.getJsonFile().exists()) {
+                        throw new GradleException(
+                                String.format(
+                                        "Expected json generation to create '%s' but it didn't",
+                                        configuration.getJsonFile()));
+                    }
+
+                    synchronized (stats) {
+                        // Related to https://issuetracker.google.com/69408798
+                        // Targets may have been removed or there could be other orphaned extra .so
+                        // files. Remove these and rely on the build step to replace them if they are
+                        // legitimate. This is to prevent unexpected .so files from being packaged in
+                        // the APK.
+                        removeUnexpectedSoFiles(
+                                configuration.getObjFolder(),
+                                AndroidBuildGradleJsons.getNativeBuildMiniConfig(
+                                        configuration.getJsonFile(), stats));
+                    }
+
+                    // Write the ProcessInfo to a file, this has all the flags used to generate the
+                    // JSON. If any of these change later the JSON will be regenerated.
+                    info(
+                            "write command file %s",
+                            configuration.getBuildCommandFile().getAbsolutePath());
+                    Files.write(
+                            configuration.getBuildCommandFile().toPath(),
+                            currentBuildCommand.getBytes(Charsets.UTF_8));
+
+                    // Record the outcome. JSON was built.
+                    variantStats.setOutcome(
+                            GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
+                                    .SUCCESS_BUILT);
+                } else {
+                    info("JSON '%s' was up-to-date", configuration.getJsonFile());
+                    variantStats.setOutcome(
+                            GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
+                                    .SUCCESS_UP_TO_DATE);
+                }
+                info("JSON generation completed without problems");
+            } catch (@NonNull GradleException | IOException | ProcessException e) {
                 variantStats.setOutcome(
-                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.SUCCESS_BUILT);
-            } else {
-                info("JSON '%s' was up-to-date", configuration.getJsonFile());
-                variantStats.setOutcome(
-                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome
-                                .SUCCESS_UP_TO_DATE);
-            }
-            info("JSON generation completed without problems");
-        } catch (@NonNull GradleException | IOException | ProcessException e) {
-            variantStats.setOutcome(
-                    GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.FAILED);
-            info("JSON generation completed with problem. Exception: " + e.toString());
-            throw e;
-        } finally {
-            variantStats.setGenerationDurationMs(System.currentTimeMillis() - startTime);
-            synchronized (stats) {
-                stats.addNativeBuildConfig(variantStats);
+                        GradleBuildVariant.NativeBuildConfigInfo.GenerationOutcome.FAILED);
+                info("JSON generation completed with problem. Exception: " + e.toString());
+                throw e;
+            } finally {
+                variantStats.setGenerationDurationMs(System.currentTimeMillis() - startTime);
+                synchronized (stats) {
+                    stats.addNativeBuildConfig(variantStats);
+                }
+                configuration.getJsonGenerationLoggingRecordFile().getParentFile().mkdirs();
+                Files.write(
+                        configuration.getJsonGenerationLoggingRecordFile().toPath(),
+                        toJsonString(recorder.getRecord()).getBytes(Charsets.UTF_8));
             }
         }
     }

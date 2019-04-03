@@ -68,7 +68,58 @@ class NdkLocatorKtTest {
         val versionRoot = "./non-existent-folder".toSlashFile()
         assertThat(getNdkVersionInfo(versionRoot)).isNull()
     }
-    
+
+    @Test
+    fun `non-existing ndk dir without NDK version in DSL (bug 129789776)`() {
+        val (path, record) = findNdkPathWithRecord(
+            ndkVersionFromDsl = null,
+            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
+            sdkFolder = null,
+            getNdkVersionedFolderNames = { listOf() },
+            getNdkSourceProperties ={ path -> when(path.path) {
+                "/my/ndk/folder".toSlash() -> null
+                "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(mapOf(
+                    SDK_PKG_REVISION.key to "18.1.23456"))
+                else -> throw RuntimeException(path.path)
+            } })
+        assertThat(path).isEqualTo("/my/ndk/environment-folder".toSlashFile())
+        assertThat(record.errors()).contains("""
+            Location specified by ndk.dir (/my/ndk/folder) did not contain a valid NDK and and couldn't be used
+            """
+            .trimIndent().toSlash())
+        assertThat(record.infos()).contains("""
+            Using /my/ndk/environment-folder which is version 18.1.23456 as fallback but build will fail
+            """
+            .trimIndent().toSlash())
+    }
+
+    @Test
+    fun `non-existing ndk dir without NDK version in DSL and with side-by-side versions available (bug 129789776)`() {
+        val (path, record) = findNdkPathWithRecord(
+            ndkVersionFromDsl = null,
+            ndkDirProperty = "/my/ndk/folder".toSlash(),
+            androidNdkHomeEnvironmentVariable = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456")  },
+            getNdkSourceProperties = { path -> when(path.path) {
+                "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(mapOf(
+                    SDK_PKG_REVISION.key to "18.1.23456"))
+                "/my/sdk/folder/ndk/18.1.00000".toSlash() -> SdkSourceProperties(mapOf(
+                    SDK_PKG_REVISION.key to "18.1.00000"))
+                else -> null
+            } })
+        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
+        assertThat(record.errors()).contains("""
+            Location specified by ndk.dir (/my/ndk/folder) did not contain a valid NDK and and couldn't be used
+            """
+            .trimIndent().toSlash())
+        assertThat(record.infos()).contains("""
+            Using /my/sdk/folder/ndk/18.1.23456 which is version 18.1.23456 as fallback but build will fail
+            """
+            .trimIndent().toSlash())
+    }
+
     @Test
     fun `same version in legacy folder and side-by-side folder (bug 129488603)`() {
         val (path, record) = findNdkPathWithRecord(
@@ -116,7 +167,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -134,7 +185,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -152,7 +203,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -175,7 +226,7 @@ class NdkLocatorKtTest {
     }
 
     @Test
-    fun nonExistingNdkDir() {
+    fun nonExistingNdkDirWithNdkVersionInDsl() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
             ndkDirProperty = "/my/ndk/folder".toSlash(),
@@ -262,7 +313,7 @@ class NdkLocatorKtTest {
             Compatible side by side NDK version was not found for android.ndkVersion '18.1.23456'
             """.trimIndent())
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -280,7 +331,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -298,7 +349,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -384,7 +435,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -402,7 +453,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -420,7 +471,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -504,7 +555,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -522,7 +573,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -541,7 +592,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -663,7 +714,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -681,7 +732,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -699,7 +750,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())    
     }
 
@@ -737,7 +788,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ANDROID_NDK_HOME but that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
+            Rejected /my/ndk/folder by ANDROID_NDK_HOME because that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
             .trimIndent().toSlash())
     }
 
@@ -756,7 +807,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
         assertThat(record.infos()).contains("""
-            Considered /my/sdk/folder/ndk-bundle in SDK ndk-bundle folder but that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
+            Rejected /my/sdk/folder/ndk-bundle in SDK ndk-bundle folder because that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
             .trimIndent().toSlash())
     }
 
@@ -788,7 +839,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -806,7 +857,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -825,7 +876,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -863,7 +914,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ANDROID_NDK_HOME but that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
+            Rejected /my/ndk/folder by ANDROID_NDK_HOME because that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
             .trimIndent().toSlash())
     }
 
@@ -882,7 +933,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
         assertThat(record.infos()).contains("""
-            Considered /my/sdk/folder/ndk/18.1.23456 in SDK ndk folder but that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
+            Rejected /my/sdk/folder/ndk/18.1.23456 in SDK ndk folder because that NDK had version 18.1.23456 which didn't match the requested version 17.1.23456"""
             .trimIndent().toSlash())
     }
 
@@ -933,7 +984,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -951,7 +1002,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -970,7 +1021,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -1056,7 +1107,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -1074,7 +1125,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -1093,7 +1144,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -1177,7 +1228,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -1195,7 +1246,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 
@@ -1214,7 +1265,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with invalid Pkg.Revision=bob"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
             .trimIndent().toSlash())
     }
 
@@ -1300,7 +1351,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
             .trimIndent().toSlash())
     }
 
@@ -1318,7 +1369,7 @@ class NdkLocatorKtTest {
         } })
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Considered /my/ndk/folder by ndk.dir but that location had source.properties with no Pkg.Revision"""
+            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
             .trimIndent().toSlash())
     }
 

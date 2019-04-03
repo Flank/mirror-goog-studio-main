@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.LoggingRecord
 import com.android.build.gradle.tasks.NativeBuildSystem
 import java.io.File
 
@@ -35,6 +36,7 @@ data class JsonGenerationAbiConfiguration(
         val objFolder : File,
         val buildCommandFile : File,
         val buildOutputFile : File,
+        val jsonGenerationLoggingRecordFile: File,
         val cmake : Cmake?) {
 
     /**
@@ -109,6 +111,8 @@ fun createJsonGenerationAbiConfiguration(
         File(externalNativeBuildFolder,"${buildSystemPresentationName}_build_command.txt")
     val buildOutputFile =
         File(externalNativeBuildFolder,"${buildSystemPresentationName}_build_output.txt")
+    val jsonGenerationLoggingRecordFile =
+        File(externalNativeBuildFolder,"json_generation_record.json")
 
     // Build up .cxx/gradle/debug/x86
     val externalNativeBuildGradleFolder =
@@ -142,5 +146,6 @@ fun createJsonGenerationAbiConfiguration(
         objFolder,
         buildCommandFile,
         buildOutputFile,
+        jsonGenerationLoggingRecordFile,
         cmake)
 }
