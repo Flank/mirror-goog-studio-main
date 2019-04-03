@@ -2720,6 +2720,30 @@ public final class SdkConstants {
     public static final AndroidxName BINDING_ADAPTER_ANNOTATION =
             AndroidxName.of("android.databinding.", "BindingAdapter");
 
+    public static final AndroidxName CLASS_LIVE_DATA =
+            AndroidxName.of("android.arch.lifecycle.", "LiveData");
+    public static final AndroidxName CLASS_OBSERVABLE_BOOLEAN =
+            AndroidxName.of("android.databinding.", "ObservableBoolean");
+    public static final AndroidxName CLASS_OBSERVABLE_BYTE =
+            AndroidxName.of("android.databinding.", "ObservableByte");
+    public static final AndroidxName CLASS_OBSERVABLE_CHAR =
+            AndroidxName.of("android.databinding.", "ObservableChar");
+    public static final AndroidxName CLASS_OBSERVABLE_SHORT =
+            AndroidxName.of("android.databinding.", "ObservableShort");
+    public static final AndroidxName CLASS_OBSERVABLE_INT =
+            AndroidxName.of("android.databinding.", "ObservableInt");
+    public static final AndroidxName CLASS_OBSERVABLE_LONG =
+            AndroidxName.of("android.databinding.", "ObservableLong");
+    public static final AndroidxName CLASS_OBSERVABLE_FLOAT =
+            AndroidxName.of("android.databinding.", "ObservableFloat");
+    public static final AndroidxName CLASS_OBSERVABLE_DOUBLE =
+            AndroidxName.of("android.databinding.", "ObservableDouble");
+    public static final AndroidxName CLASS_OBSERVABLE_FIELD =
+            AndroidxName.of("android.databinding.", "ObservableField");
+    public static final AndroidxName CLASS_OBSERVABLE_PARCELABLE =
+            AndroidxName.of("android.databinding.", "ObservableParcelable");
+
+
     /** Name of keep attribute in XML */
     public static final String ATTR_KEEP = "keep";
     /** Name of discard attribute in XML (to mark resources as not referenced, despite guesses) */
