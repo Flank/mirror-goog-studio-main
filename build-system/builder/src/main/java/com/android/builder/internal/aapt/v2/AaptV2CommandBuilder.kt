@@ -284,8 +284,7 @@ fun makeLinkCommand(config: AaptPackageConfig): ImmutableList<String> {
         builder.add("--preferred-density", preferredDensity)
     }
 
-    if (config.symbolOutputDir != null && (config.variantType.isAar
-            || !config.librarySymbolTableFiles.isEmpty())) {
+    if (config.symbolOutputDir != null) {
         val rDotTxt = File(config.symbolOutputDir, "R.txt")
         builder.add("--output-text-symbols", rDotTxt.absolutePath)
     }
