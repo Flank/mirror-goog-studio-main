@@ -11,7 +11,7 @@ def _lint_test_impl(ctx):
     classpath = depset()
     for dep in ctx.attr.deps:
         if JavaInfo in dep:
-            classpath += dep[JavaInfo].transitive_compile_time_jars
+            classpath += dep[JavaInfo].transitive_runtime_jars
 
     # Create project XML:
     project_xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

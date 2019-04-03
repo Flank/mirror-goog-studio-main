@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha08">
+<issues format="5" by="lint 26.5.0-alpha11">
 
     <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/BaseExtension.java"
-            line="923"/>
+            line="924"/>
     </issue>
 
     <issue
@@ -14,7 +14,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="695"/>
+            line="676"/>
     </issue>
 
     <issue
@@ -102,7 +102,7 @@
         message="This method should only be accessed from tests or within private scope">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/LinkApplicationAndroidResourcesTask.kt"
-            line="776"/>
+            line="777"/>
     </issue>
 
     <issue
@@ -131,10 +131,26 @@
 
     <issue
         id="UseValueOf"
+        message="Use `Integer.valueOf(index)` instead">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="78"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
         message="Use `Integer.valueOf(libraryList.size)` instead">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
             line="91"/>
+    </issue>
+
+    <issue
+        id="UseValueOf"
+        message="Use `Integer.valueOf(origIndex)` instead">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/tasks/BundleReportDependenciesTask.kt"
+            line="95"/>
     </issue>
 
     <issue
@@ -190,7 +206,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
-            line="58"/>
+            line="65"/>
     </issue>
 
     <issue
@@ -198,7 +214,39 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/Aapt2ErrorUtils.kt"
-            line="79"/>
+            line="86"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/res/namespaced/CompileSourceSetResources.kt"
+            line="124"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/build/gradle/internal/dependency/JetifyTransform.kt"
+            line="128"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
+            line="244"/>
+    </issue>
+
+    <issue
+        id="FileComparisons"
+        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
+        <location
+            file="src/main/java/com/android/build/gradle/tasks/VerifyLibraryResourcesTask.kt"
+            line="244"/>
     </issue>
 
     <issue
@@ -206,7 +254,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="255"/>
+            line="252"/>
     </issue>
 
     <issue
@@ -214,7 +262,7 @@
         message="Avoid using common ForkJoinPool, directly or indirectly (for example via CompletableFuture). It has a limited set of threads on some machines which leads to hangs. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/BasePlugin.java"
-            line="435"/>
+            line="441"/>
     </issue>
 
     <issue
@@ -262,7 +310,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
-            line="354"/>
+            line="375"/>
     </issue>
 
     <issue
@@ -278,7 +326,7 @@
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
-            line="155"/>
+            line="166"/>
     </issue>
 
 </issues>
