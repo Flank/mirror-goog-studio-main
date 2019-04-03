@@ -135,26 +135,26 @@ public class ApiLookupTest extends AbstractCheckTest {
         //assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
         //        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
         assertEquals(
-                16,
+                24,
                 mDb.getMethodDeprecatedIn(
-                        "android/app/Activity",
-                        "startManagingCursor",
-                        "(Landroid/database/Cursor;)V"));
+                        "android/app/Activity", "setProgressBarIndeterminate", "(Z)V"));
         assertEquals(
                 -1,
                 mDb.getMethodDeprecatedIn(
                         "android/app/Activity", "getParent", "()Landroid/app/Activity;"));
         // Deprecated
         assertEquals(
-                16,
+                17,
                 mDb.getMethodDeprecatedIn(
-                        "android/app/Service", "onStart", "(Landroid/content/Intent;I)V"));
+                        "android/content/IntentSender",
+                        "getTargetPackage",
+                        "()Ljava/lang/String;"));
         assertEquals(
-                16,
+                23,
                 mDb.getMethodDeprecatedIn(
                         "android/app/Fragment",
                         "onInflate",
-                        "(Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
+                        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
     }
 
     public void testDeprecatedClasses() {
@@ -211,7 +211,8 @@ public class ApiLookupTest extends AbstractCheckTest {
 
         removedMethods = mDb.getRemovedMethods("android/database/sqlite/SQLiteProgram");
         assertTrue(
-                removedMethods.contains(new ApiMember("compile(Ljava/lang/String;Z)", 1, 0, 16)));
+                removedMethods.contains(
+                        new ApiMember("native_bind_string(ILjava/lang/String;)", 1, 0, 16)));
         // Method moved to a super class
         assertTrue(
                 removedMethods
@@ -396,7 +397,9 @@ public class ApiLookupTest extends AbstractCheckTest {
     public void testDeprecatedIn() {
         assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
         assertEquals(
-                16, mDb.getFieldDeprecatedIn("dalvik/bytecode/Opcodes", "OP_IPUT_WIDE_VOLATILE"));
+                26,
+                mDb.getFieldDeprecatedIn(
+                        "android/accounts/AccountManager", "LOGIN_ACCOUNTS_CHANGED_ACTION"));
 
         assertEquals(
                 20,
