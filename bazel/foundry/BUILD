@@ -60,7 +60,7 @@ java_test(
         "-Xmx10000M",
     ],
     tags = [
-        "perfgate_test",
+        "perfgate_multi_run",
     ],
     test_class = "FoundryPerfgateMetrics",
     deps = [
