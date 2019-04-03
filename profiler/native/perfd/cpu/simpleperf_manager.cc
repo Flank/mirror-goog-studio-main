@@ -30,6 +30,7 @@
 #include "utils/process_manager.h"
 #include "utils/trace.h"
 
+using profiler::proto::CpuProfilingAppStopResponse;
 using std::string;
 
 namespace profiler {
@@ -134,10 +135,9 @@ bool SimpleperfManager::IsProfiling(const std::string &app_name) {
   return profiled_.find(app_name) != profiled_.end();
 }
 
-bool SimpleperfManager::StopProfiling(const std::string &app_name,
-                                      bool need_result,
-                                      bool report_sample_on_host,
-                                      std::string *error) {
+CpuProfilingAppStopResponse::Status SimpleperfManager::StopProfiling(
+    const std::string &app_name, bool need_result, bool report_sample_on_host,
+    std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling simpleperf");
   Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
@@ -146,7 +146,7 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
     Log::D("%s", msg.c_str());
     error->append("\n");
     error->append(msg);
-    return false;
+    return CpuProfilingAppStopResponse::NO_ONGOING_PROFILING;
   }
 
   OnGoingProfiling ongoing_recording;
@@ -157,7 +157,8 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
   pid_t current_pid = pm.GetPidForBinary(app_name);
   Log::D("%s app has pid:%d", app_name.c_str(), current_pid);
 
-  bool success = true;
+  CpuProfilingAppStopResponse::Status status =
+      CpuProfilingAppStopResponse::SUCCESS;
   if (need_result) {
     // Make sure it is still running.
     if (current_pid == -1) {
@@ -165,7 +166,7 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
       error->append("\n");
       error->append(msg);
       Log::D("%s", msg.c_str());
-      success = false;
+      status = CpuProfilingAppStopResponse::APP_PROCESS_DIED;
     }
 
     // Make sure pid is what is expected. A startup profiling didn't have pid
@@ -177,7 +178,7 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
       error->append("\n");
       error->append(msg);
       Log::D("%s", msg.c_str());
-      success = false;
+      status = CpuProfilingAppStopResponse::APP_PID_CHANGED;
     }
   }
 
@@ -190,29 +191,36 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());
     *error = msg;
-    success = false;
+    status = CpuProfilingAppStopResponse::PROFILER_PROCESS_DIED;
   } else {
     bool stop_simpleperf_success = StopSimpleperf(ongoing_recording, error);
-    success = success && stop_simpleperf_success;
-    if (stop_simpleperf_success) {
-      if (!WaitForSimpleperf(ongoing_recording, error)) success = false;
+    if (!stop_simpleperf_success) {
+      status = CpuProfilingAppStopResponse::STOP_COMMAND_FAILED;
+    } else {
+      if (!WaitForSimpleperf(ongoing_recording, error)) {
+        status = CpuProfilingAppStopResponse::WAIT_FAILED;
+      }
     }
   }
 
-  if (need_result && success) {
+  if (need_result && status == CpuProfilingAppStopResponse::SUCCESS) {
     if (report_sample_on_host) {
       // If report-sample is going to be executed on the host, just copy the raw
       // trace to the path returned by CPU service.
-      if (!CopyRawToTrace(ongoing_recording, error)) success = false;
+      if (!CopyRawToTrace(ongoing_recording, error)) {
+        status = CpuProfilingAppStopResponse::CANNOT_COPY_FILE;
+      }
     } else {
       // Otherwise, run report-sample on the device.
-      if (!ConvertRawToProto(ongoing_recording, error)) success = false;
+      if (!ConvertRawToProto(ongoing_recording, error)) {
+        status = CpuProfilingAppStopResponse::CANNOT_FORM_FILE;
+      }
     }
   }
 
   CleanUp(ongoing_recording);
 
-  return success;
+  return status;
 }
 
 bool SimpleperfManager::StopSimpleperf(

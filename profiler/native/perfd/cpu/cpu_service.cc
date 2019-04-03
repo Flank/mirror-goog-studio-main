@@ -278,43 +278,44 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
   ProfilingApp* app = cache_.GetOngoingCapture(pid);
   if (app == nullptr) {
     if (response != nullptr) {
-      response->set_status(CpuProfilingAppStopResponse::FAILURE);
+      response->set_status(CpuProfilingAppStopResponse::NO_ONGOING_PROFILING);
     }
     return;
   }
   CpuProfilerType profiler_type = app->configuration.profiler_type();
   string error;
-  bool success = false;
+  CpuProfilingAppStopResponse::Status status =
+      CpuProfilingAppStopResponse::SUCCESS;
   bool need_trace = response != nullptr;
   if (profiler_type == CpuProfilerType::SIMPLEPERF) {
-    success = simpleperf_manager_->StopProfiling(
+    status = simpleperf_manager_->StopProfiling(
         app->app_pkg_name, need_trace, cpu_config_.simpleperf_host(), &error);
   } else if (profiler_type == CpuProfilerType::ATRACE) {
     if (usePerfetto()) {
-      success = perfetto_manager_->StopProfiling(&error);
+      status = perfetto_manager_->StopProfiling(&error);
     } else {
-      success =
+      status =
           atrace_manager_->StopProfiling(app->app_pkg_name, need_trace, &error);
     }
   } else {  // Profiler is ART
-    success = activity_manager_->StopProfiling(
+    status = activity_manager_->StopProfiling(
         app->app_pkg_name, need_trace, &error,
         cpu_config_.art_stop_timeout_sec(), app->is_startup_profiling);
   }
 
   if (need_trace) {
-    if (success) {
+    if (status == CpuProfilingAppStopResponse::SUCCESS) {
       string trace_content;
       if (FileReader::Read(app->trace_path, &trace_content)) {
-        response->set_status(CpuProfilingAppStopResponse::SUCCESS);
+        response->set_status(status);
         response->set_trace(trace_content);
         response->set_trace_id(app->trace_id);
       } else {
+        response->set_status(CpuProfilingAppStopResponse::CANNOT_READ_FILE);
         response->set_error_message("Failed to read trace from device");
-        response->set_status(CpuProfilingAppStopResponse::FAILURE);
       }
     } else {
-      response->set_status(CpuProfilingAppStopResponse::FAILURE);
+      response->set_status(status);
       response->set_error_message(error);
     }
   }

@@ -36,6 +36,7 @@
 #include "utils/tokenizer.h"
 #include "utils/trace.h"
 
+using profiler::proto::CpuProfilingAppStopResponse;
 using std::string;
 
 namespace profiler {
@@ -177,8 +178,8 @@ string AtraceManager::GetNextDumpPath() {
   return path.str();
 }
 
-bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
-                                  bool need_result, std::string *error) {
+CpuProfilingAppStopResponse::Status AtraceManager::StopProfiling(
+    const std::string &app_pkg_name, bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
   Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
@@ -207,13 +208,15 @@ bool AtraceManager::StopProfiling(const std::string &app_pkg_name,
   if (isRunning) {
     assert(error != nullptr);
     error->append("Failed to stop atrace.");
-    return false;
+    return CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP;
   }
   if (need_result) {
-    return CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
-                        profiled_app_.trace_path.c_str());
+    if (!CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
+                      profiled_app_.trace_path.c_str())) {
+      return CpuProfilingAppStopResponse::CANNOT_FORM_FILE;
+    }
   }
-  return !isRunning;
+  return CpuProfilingAppStopResponse::SUCCESS;
 }
 
 void AtraceManager::Shutdown() {

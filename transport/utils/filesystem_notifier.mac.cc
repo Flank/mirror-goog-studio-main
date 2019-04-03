@@ -38,8 +38,9 @@ bool FileSystemNotifier::IsReadyToNotify() {
 
 // On Mac OS X, this always succeeds and never waits.
 // TODO: Implement this with FSEvents from File System Events API.
-bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
-  return true;
+FileSystemNotifier::WaitResult FileSystemNotifier::WaitUntilEventOccurs(
+    int64_t timeout_ms) {
+  return kSuccess;
 }
 
 uint32_t FileSystemNotifier::TranslateMask(uint32_t event_mask) { return 0; }

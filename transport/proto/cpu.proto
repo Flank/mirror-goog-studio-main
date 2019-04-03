@@ -273,7 +273,19 @@ message CpuProfilingAppStopResponse {
   enum Status {
     UNSPECIFIED = 0;
     SUCCESS = 1;
-    FAILURE = 2;
+    NO_ONGOING_PROFILING = 2;
+    APP_PROCESS_DIED = 3;
+    APP_PID_CHANGED = 4;
+    PROFILER_PROCESS_DIED = 5;
+    STOP_COMMAND_FAILED = 6;
+    STILL_PROFILING_AFTER_STOP = 7;
+    CANNOT_START_WAITING = 8;
+    WAIT_TIMEOUT = 9;
+    WAIT_FAILED = 10;
+    CANNOT_READ_WAIT_EVENT = 11;
+    CANNOT_COPY_FILE = 12;
+    CANNOT_FORM_FILE = 13;
+    CANNOT_READ_FILE = 14;
   }
   Status status = 1;
   string error_message = 2;

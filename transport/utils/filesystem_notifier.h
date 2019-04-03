@@ -26,6 +26,13 @@ class FileSystemNotifier {
   // Only power of two values are allowed: 3 doesn't work !
   enum Event { CLOSE = 1 };
 
+  enum WaitResult {
+    kUnspecified,
+    kSuccess,
+    kTimeout,
+    kCannotReadEvent,
+  };
+
   // A monitor on file |path| listening for |event_mask_| events.
   FileSystemNotifier(const std::string &path, uint32_t event_mask);
   ~FileSystemNotifier();
@@ -37,7 +44,7 @@ class FileSystemNotifier {
   // Wait until one of the events specified in |event_mask| (via constructor)
   // occurs OR at least |timeout_ms| has elapsed. Returns false if timeout or
   // if poll failed.
-  bool WaitUntilEventOccurs(int64_t timeout_ms = 5000);
+  WaitResult WaitUntilEventOccurs(int64_t timeout_ms = 5000);
 
  private:
   // Transforme a bit mask expressed in Event space to the underlying

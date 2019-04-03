@@ -22,6 +22,7 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
+using profiler::proto::CpuProfilingAppStopResponse;
 using profiler::proto::Device;
 using std::string;
 
@@ -49,10 +50,15 @@ bool PerfettoManager::StartProfiling(
   return is_profiling_;
 }
 
-bool PerfettoManager::StopProfiling(std::string* error) {
+CpuProfilingAppStopResponse::Status PerfettoManager::StopProfiling(
+    std::string* error) {
   Trace trace("CPU:StopProfiling perfetto");
   Shutdown();
-  return !is_profiling_;
+  if (is_profiling_) {
+    return CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP;
+  } else {
+    return CpuProfilingAppStopResponse::SUCCESS;
+  }
 }
 
 void PerfettoManager::Shutdown() {

@@ -23,6 +23,7 @@
 #include <string>
 
 #include "bash_command.h"
+#include "proto/cpu.grpc.pb.h"
 
 namespace profiler {
 
@@ -51,9 +52,10 @@ class ActivityManager {
   // no-op. If |need_result|, waits ART for |timeout_sec| Seconds for finishing
   // writing the trace file. Returns true is profiling stopped successfully.
   // Otherwise false and populate error_string.
-  bool StopProfiling(const std::string &app_package_name, bool need_result,
-                     std::string *error_string, int32_t timeout_sec,
-                     bool is_startup_profiling);
+  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+      const std::string &app_package_name, bool need_result,
+      std::string *error_string, int32_t timeout_sec,
+      bool is_startup_profiling);
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;

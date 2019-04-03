@@ -23,6 +23,7 @@
 #include <string>
 
 #include "perfd/cpu/simpleperf.h"
+#include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {
@@ -76,8 +77,9 @@ class SimpleperfManager {
   // |report_sample_on_host| indicates if the report-sample command should run
   // on the host instead of the device. Always cleans up raw data file and log
   // file.
-  bool StopProfiling(const std::string &app_name, bool need_result,
-                     bool report_sample_on_host, std::string *error);
+  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+      const std::string &app_name, bool need_result, bool report_sample_on_host,
+      std::string *error);
   // Returns true if the app is currently being profiled by a simpleperf
   // process.
   bool IsProfiling(const std::string &app_name);

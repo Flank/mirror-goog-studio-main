@@ -18,6 +18,7 @@
 #define PERFD_CPU_PERFETTO_MANAGER_H_
 
 #include "perfd/cpu/perfetto.h"
+#include "proto/cpu.grpc.pb.h"
 #include "protos/perfetto/config/perfetto_config.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/fs/file_system.h"
@@ -57,7 +58,8 @@ class PerfettoManager {
                       std::string *trace_path, std::string *error);
 
   // Stops profiling returns true if perfetto is no longer running.
-  bool StopProfiling(std::string *error);
+  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+      std::string *error);
 
   bool IsProfiling() { return is_profiling_; }
 

@@ -27,6 +27,7 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
+using profiler::proto::CpuProfilingAppStopResponse;
 using std::string;
 
 namespace {
@@ -81,10 +82,9 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
   return true;
 }
 
-bool ActivityManager::StopProfiling(const string &app_package_name,
-                                    bool need_result, string *error_string,
-                                    int32_t timeout_sec,
-                                    bool is_startup_profiling) {
+CpuProfilingAppStopResponse::Status ActivityManager::StopProfiling(
+    const string &app_package_name, bool need_result, string *error_string,
+    int32_t timeout_sec, bool is_startup_profiling) {
   Trace trace("CPU:StopProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
 
@@ -98,14 +98,14 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
   if (need_result) {
     if (!notifier.IsReadyToNotify()) {
       *error_string = "Unable to monitor trace file for completion";
-      return false;
+      return CpuProfilingAppStopResponse::CANNOT_START_WAITING;
     }
   }
 
   // Run stop command via actual am.
   if (!RunProfileStopCmd(app_package_name, error_string)) {
     *error_string = "Unable to run profile stop command";
-    return false;
+    return CpuProfilingAppStopResponse::STOP_COMMAND_FAILED;
   }
 
   if (need_result) {
@@ -116,18 +116,28 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
     // just waiting for 5 Seconds.
     if (is_startup_profiling && DeviceInfo::feature_level() < DeviceInfo::P) {
       std::this_thread::sleep_for(std::chrono::milliseconds(timeout_ms));
-      return true;
+      return CpuProfilingAppStopResponse::SUCCESS;
     }
 
     // Wait until ART has finished writing the trace to the file and closed the
     // file.
-    if (!notifier.WaitUntilEventOccurs(timeout_ms)) {
-      *error_string = "Wait for ART trace file failed.";
-      return false;
+    auto wait_result = notifier.WaitUntilEventOccurs(timeout_ms);
+    switch (wait_result) {
+      case FileSystemNotifier::kSuccess:
+        return CpuProfilingAppStopResponse::SUCCESS;
+      case FileSystemNotifier::kTimeout:
+        *error_string = "Wait for ART trace file timed out.";
+        return CpuProfilingAppStopResponse::WAIT_TIMEOUT;
+      case FileSystemNotifier::kCannotReadEvent:
+        *error_string = "Cannot read events while waiting for ART trace file.";
+        return CpuProfilingAppStopResponse::CANNOT_READ_WAIT_EVENT;
+      case FileSystemNotifier::kUnspecified:
+        *error_string = "Wait for ART trace file failed.";
+        return CpuProfilingAppStopResponse::WAIT_FAILED;
     }
   }
 
-  return true;
+  return CpuProfilingAppStopResponse::SUCCESS;
 }
 
 bool ActivityManager::TriggerHeapDump(int pid, const std::string &file_path,

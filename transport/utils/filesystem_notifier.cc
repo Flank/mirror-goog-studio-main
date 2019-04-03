@@ -69,13 +69,16 @@ FileSystemNotifier::~FileSystemNotifier() {
   close(file_descriptor_);
 }
 
-bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
+FileSystemNotifier::WaitResult FileSystemNotifier::WaitUntilEventOccurs(
+    int64_t timeout_ms) {
   // Use a non-blocking poll system so it will timeout if the file never
   // received the expected events.
   struct pollfd pfd = {file_descriptor_, POLLIN, 0};
   int ret = poll(&pfd, 1, timeout_ms);
-  if (ret < 0) {
-    return false;
+  if (ret == 0) {
+    return kTimeout;
+  } else if (ret < 0) {
+    return kUnspecified;
   }
 
   // The events have been received. Time to read them.
@@ -88,18 +91,18 @@ bool FileSystemNotifier::WaitUntilEventOccurs(int64_t timeout_ms) {
       read(file_descriptor_, reinterpret_cast<char *>(events), sizeof(events));
 
   if (length < 0) {
-    return false;
+    return kCannotReadEvent;
   }
 
   // Parse events.
   for (int i = 0; i < num_events; i++) {
     if (events[i].mask & event_mask_) {
       // Found one of the expected events.
-      return true;
+      return kSuccess;
     }
   }
 
   // This should never happen.
-  return false;
+  return kUnspecified;
 }
 }  // namespace profiler

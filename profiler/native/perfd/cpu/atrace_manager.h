@@ -25,8 +25,10 @@
 #include <thread>
 
 #include "perfd/cpu/atrace.h"
+#include "proto/cpu.grpc.pb.h"
 #include "utils/clock.h"
 #include "utils/fs/file_system.h"
+
 namespace profiler {
 
 // Entry storing all data related to an ongoing profiling.
@@ -65,8 +67,8 @@ class AtraceManager {
   bool StartProfiling(const std::string &app_name, int sampling_interval_us,
                       int buffer_size_in_mb, int *acquired_buffer_size_kb,
                       std::string *trace_path, std::string *error);
-  bool StopProfiling(const std::string &app_name, bool need_result,
-                     std::string *error);
+  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+      const std::string &app_name, bool need_result, std::string *error);
   void Shutdown();
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
