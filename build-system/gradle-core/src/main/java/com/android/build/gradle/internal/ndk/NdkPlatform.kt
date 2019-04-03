@@ -33,16 +33,10 @@ import java.io.File
  *     calling other functions will result in an exception.
  */
 data class NdkPlatform(
-    private val ndkDirectoryOrNull: File?,
-    private val ndkInfoOrNull: NdkInfo?,
-    private val revisionOrNull: Revision?,
+    val ndkDirectory: File,
+    val ndkInfo: NdkInfo,
+    val revision: Revision,
     private val compileSdkVersion: String) {
-
-    val isConfigured = ndkDirectoryOrNull != null && ndkDirectoryOrNull.isDirectory
-
-    val ndkDirectory : File by lazy { ndkDirectoryOrNull ?: throw RuntimeException(noNdkMessage()) }
-    val ndkInfo : NdkInfo by lazy { ndkInfoOrNull ?: throw RuntimeException(noNdkMessage()) }
-    val revision : Revision by lazy { revisionOrNull ?: throw RuntimeException(noNdkMessage()) }
 
     /**
      * Whether or not the NDK + compileSdkVersion supports 64 bit ABIs.
@@ -52,7 +46,7 @@ data class NdkPlatform(
         if (platformVersion == null) {
             false
         } else {
-            val targetString = platformVersion!!.replace("android-", "")
+            val targetString = platformVersion.replace("android-", "")
             try {
                 Integer.parseInt(targetString) >= 20
             } catch (ignored: NumberFormatException) {
@@ -76,7 +70,4 @@ data class NdkPlatform(
     val defaultAbis : List<Abi> by lazy {
         (if (supports64Bits) ndkInfo.defaultAbis else ndkInfo.default32BitsAbis).toList()
     }
-
-    private fun noNdkMessage() = "No NDK available to locate compile SDK " +
-            "version $compileSdkVersion. Caller should check ndk.isConfigured first."
 }

@@ -45,6 +45,7 @@ fun createCxxAbiModel(
                 .sdkComponents
                 .ndkHandlerSupplier.get()
                 .ndkPlatform
+                .getOrThrow()
                 .ndkInfo
                 .findSuitablePlatformVersion(abi.tag, version)
     }

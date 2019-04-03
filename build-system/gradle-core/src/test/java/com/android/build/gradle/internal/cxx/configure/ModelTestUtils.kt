@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.model.CoreCmakeOptions
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions
 import com.android.build.gradle.internal.ndk.NdkHandler
+import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -47,7 +48,7 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     val project = Mockito.mock(Project::class.java)
     val sdkComponents = Mockito.mock(SdkComponents::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)
-    val ndkPlatform = Mockito.mock(NdkPlatform::class.java)
+    val ndkPlatform = NdkInstallStatus.Valid(Mockito.mock(NdkPlatform::class.java))
     val baseVariantData = Mockito.mock(BaseVariantData::class.java)
     projectParentFolder.create()
     val projectDir = projectParentFolder.newFolder("project")
@@ -73,9 +74,8 @@ fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAb
     Mockito.doReturn(sdkComponents).`when`(global).sdkComponents
     Mockito.doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
     Mockito.doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
-    Mockito.doReturn(true).`when`(ndkPlatform).isConfigured
     Mockito.doReturn(buildDir).`when`(project).buildDir
-    Mockito.doReturn(ndkFolder).`when`(ndkPlatform).ndkDirectory
+    Mockito.doReturn(ndkFolder).`when`(ndkPlatform.getOrThrow()).ndkDirectory
     Mockito.doReturn("debug").`when`(baseVariantData).name
     val module = tryCreateCxxModuleModel(global)!!
     val variant = createCxxVariantModel(module, baseVariantData)

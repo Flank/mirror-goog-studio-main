@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.cxx.configure.findCmakePath
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
+import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
@@ -100,11 +101,11 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
     val ndkHandler by lazy {
         val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
         try {
+            when (ndkHandler.ndkPlatform) {
+                is NdkInstallStatus.NotInstalled -> global.sdkComponents.installNdk(ndkHandler)
+            }
             if (!ndkHandler.ndkPlatform.isConfigured) {
-                global.sdkComponents.installNdk(ndkHandler)
-                if (!ndkHandler.ndkPlatform.isConfigured) {
-                    throw InvalidUserDataException("NDK not configured. Download it with SDK manager.")
-                }
+                throw InvalidUserDataException("NDK not configured. Download it with SDK manager.")
             }
         } finally {
             ndkHandler.writeNdkLocatorRecord(join(cxxFolder, "ndk_locator_record.json"))
@@ -114,11 +115,9 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
     val ndkSymlinkFolder by lazy { localPropertyFile(NDK_SYMLINK_DIR) }
     val cmakeDirLocalProperty by lazy { localPropertyFile(CMAKE_DIR_PROPERTY) }
 
-
-
     val ndkFolder = {
-        trySymlinkNdk(ndkHandler.ndkPlatform.ndkDirectory, cxxFolder, ndkSymlinkFolder)}
-    val ndkVersion = { ndkHandler.ndkPlatform.revision }
+        trySymlinkNdk(ndkHandler.ndkPlatform.getOrThrow().ndkDirectory, cxxFolder, ndkSymlinkFolder)}
+    val ndkVersion = { ndkHandler.ndkPlatform.getOrThrow().revision }
     val sdkFolder = { global.sdkComponents.getSdkFolder()!! }
     val splitsAbiFilters = { global.extension.splits.abiFilters }
     val intermediatesDir = { global.intermediatesDir }
@@ -180,8 +179,9 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
     val compilerSettingsCacheFolder: () -> File = {
         localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
             File(rootBuildGradlePath(), CXX_DEFAULT_CONFIGURATION_SUBFOLDER) }
-    val ndkSupportedAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.supportedAbis }
-    val ndkDefaultAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.defaultAbis }
+
+    val ndkSupportedAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.getOrThrow().supportedAbis }
+    val ndkDefaultAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.getOrThrow().defaultAbis }
 
     return createCxxModuleModel(
         makeFile = makeFile,

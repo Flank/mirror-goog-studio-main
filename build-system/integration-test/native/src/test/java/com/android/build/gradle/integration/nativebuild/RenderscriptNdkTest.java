@@ -41,9 +41,11 @@ public class RenderscriptNdkTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        Revision ndkRevision = NdkHandler.findRevision(project.getAndroidNdkHome());
-        // ndk r11, r12 are missing renderscript, ndk r10 does support it and has null revision
-        assume().that(ndkRevision).isNull();
+        Revision ndkRevision = NdkHandler.findRevision(project.getAndroidNdkHome()).getOrThrow();
+
+        // NDKs r11-r13 were missing the renderscript tools.
+        // TODO: Re-enable test for r14+.
+        assume().that(ndkRevision.getMajor()).isLessThan(11);
 
         project.execute("clean", "assembleDebug");
     }
