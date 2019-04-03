@@ -47,11 +47,6 @@ class TransportServiceImpl final
                               const proto::AgentStatusRequest* request,
                               proto::AgentData* response) override;
 
-  grpc::Status ConfigureStartupAgent(
-      grpc::ServerContext* context,
-      const proto::ConfigureStartupAgentRequest* request,
-      proto::ConfigureStartupAgentResponse* response) override;
-
   grpc::Status Execute(grpc::ServerContext* context,
                        const proto::ExecuteRequest* request,
                        proto::ExecuteResponse* response) override;

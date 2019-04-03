@@ -83,7 +83,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
 
   // Profiler agent.
-  RegisterPerfaCommandHandlers(vm, jvmti_env, agent_config);
+  SetupPerfa(vm, jvmti_env, agent_config);
 
   Agent::Instance().AddDaemonConnectedCallback([] {
     Agent::Instance().StartHeartbeat();

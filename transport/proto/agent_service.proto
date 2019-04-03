@@ -118,6 +118,8 @@ message AgentConfig {
   CpuConfig cpu_config = 9;
   // equivalent to StudioFlags.PROFILER_UNIFIED_PIPELINE
   bool profiler_unified_pipeline = 10;
+  // whether the agent should initialize advanced profiling on attach.
+  bool startup_profiling_enabled = 11;
 }
 
 message RegisterAgentRequest {

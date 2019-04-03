@@ -275,21 +275,35 @@ void InitializePerfa(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                             JVMTI_THREAD_NORM_PRIORITY);
 }
 
-void RegisterPerfaCommandHandlers(JavaVM* vm, jvmtiEnv* jvmti_env,
-                                  const AgentConfig& agent_config) {
-  Agent::Instance().RegisterCommandHandler(
-      Command::BEGIN_SESSION,
-      [vm, jvmti_env, agent_config](const Command* command) -> void {
-        if (!Agent::Instance().IsProfilerInitalized()) {
-          JNIEnv* jni_env = GetThreadLocalJNI(vm);
-          Agent::Instance().InitializeProfilers();
-          MemoryTrackingEnv::Instance(vm, agent_config.mem_config());
-          InitializePerfa(jvmti_env, jni_env, agent_config);
-          // Perf-test currently waits on this message to determine that agent
-          // has finished profiler initialization.
-          Log::V("Profiler initialization complete on agent.");
-        }
-      });
+void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
+                        const AgentConfig& agent_config) {
+  JNIEnv* jni_env = GetThreadLocalJNI(vm);
+  Agent::Instance().InitializeProfilers();
+  InitializePerfa(jvmti_env, jni_env, agent_config);
+  // MemoryTrackingEnv needs to wait for the MemoryComponent in the agent,
+  // which blocks until the Daemon is connected, hence we delay initializing
+  // it in the callback below.
+  Agent::Instance().AddDaemonConnectedCallback([vm, agent_config] {
+    MemoryTrackingEnv::Instance(vm, agent_config.mem_config());
+  });
+  // Perf-test currently waits on this message to determine that agent
+  // has finished profiler initialization.
+  Log::V("Profiler initialization complete on agent.");
+}
+
+void SetupPerfa(JavaVM* vm, jvmtiEnv* jvmti_env,
+                const AgentConfig& agent_config) {
+  if (agent_config.startup_profiling_enabled()) {
+    InitializeProfiler(vm, jvmti_env, agent_config);
+  } else {
+    Agent::Instance().RegisterCommandHandler(
+        Command::BEGIN_SESSION,
+        [vm, jvmti_env, agent_config](const Command* command) -> void {
+          if (!Agent::Instance().IsProfilerInitalized()) {
+            InitializeProfiler(vm, jvmti_env, agent_config);
+          }
+        });
+  }
 }
 
 }  // namespace profiler

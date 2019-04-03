@@ -21,8 +21,8 @@
 #include "proto/agent_service.grpc.pb.h"
 
 namespace profiler {
-void RegisterPerfaCommandHandlers(JavaVM* vm, jvmtiEnv* jvmti_env,
-                                  const proto::AgentConfig& agent_config);
+void SetupPerfa(JavaVM* vm, jvmtiEnv* jvmti_env,
+                const proto::AgentConfig& agent_config);
 }  // end of namespace profiler
 
 #endif  // PERFA_PERFA_H_

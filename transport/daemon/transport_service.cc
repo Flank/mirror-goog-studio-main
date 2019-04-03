@@ -83,12 +83,6 @@ Status TransportServiceImpl::GetAgentStatus(
   return Status::OK;
 }
 
-Status TransportServiceImpl::ConfigureStartupAgent(
-    ServerContext* context, const proto::ConfigureStartupAgentRequest* request,
-    proto::ConfigureStartupAgentResponse* response) {
-  return daemon_->ConfigureStartupAgent(request, response);
-}
-
 Status TransportServiceImpl::Execute(ServerContext* context,
                                      const proto::ExecuteRequest* request,
                                      proto::ExecuteResponse* response) {

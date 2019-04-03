@@ -111,10 +111,6 @@ class Daemon {
 
   proto::AgentData::Status GetAgentStatus(int32_t pid);
 
-  grpc::Status ConfigureStartupAgent(
-      const profiler::proto::ConfigureStartupAgentRequest* request,
-      profiler::proto::ConfigureStartupAgentResponse* response);
-
   // Attaches an JVMTI agent to an app. Returns true if |agent_lib_file_name| is
   // attached successfully (either an agent already exists or a new one
   // attaches), otherwise returns false.
