@@ -18,7 +18,8 @@ package android.view.inspector;
 
 import android.annotation.AttrRes;
 import android.annotation.NonNull;
-
+import java.util.Set;
+import java.util.function.IntFunction;
 /**
  * An interface for mapping the string names of inspectable properties to integer identifiers.
  *
@@ -152,9 +153,7 @@ public interface PropertyMapper {
      * @throws PropertyConflictException If the property name is already mapped as another type.
      */
     int mapIntEnum(
-      @NonNull String name,
-      @AttrRes int attributeId,
-      @NonNull IntEnumMapping mapping);
+            @NonNull String name, @AttrRes int attributeId, @NonNull IntFunction<String> mapping);
 
     /**
      * Map a string name to an integer ID for an attribute that contains resource IDs.
@@ -176,9 +175,9 @@ public interface PropertyMapper {
      * @throws PropertyConflictException If the property name is already mapped as another type.
      */
     int mapIntFlag(
-      @NonNull String name,
-      @AttrRes int attributeId,
-      @NonNull IntFlagMapping mapping);
+            @NonNull String name,
+            @AttrRes int attributeId,
+            @NonNull IntFunction<Set<String>> mapping);
     /**
      * Thrown from a map method if a property name is already mapped as different type.
      */

@@ -3,7 +3,8 @@ package com.android.tools.agent.layoutinspector.property;
 import android.view.View;
 import android.view.inspector.*;
 import java.util.*;
-
+import java.util.Set;
+import java.util.function.IntFunction;
 /**
  * Holds a tree of {@link ViewType}s.
  *
@@ -12,7 +13,7 @@ import java.util.*;
  */
 public class ViewTypeTree {
     private InspectionCompanionProvider inspectionCompanionProvider =
-            new GeneratedInspectionCompanionProvider();
+            new StaticInspectionCompanionProvider();
     private Map<Class<? extends View>, ViewType<? extends View>> typeMap = new HashMap<>();
 
     public <V extends View> ViewNode<V> nodeOf(V view) {
@@ -55,7 +56,6 @@ public class ViewTypeTree {
             properties.addAll(superType.getProperties());
         }
         if (inspectionCompanion != null) {
-            nodeName = inspectionCompanion.getNodeName();
             PropertyTypeMapper mapper = new PropertyTypeMapper(properties);
             inspectionCompanion.mapProperties(mapper);
             properties = mapper.getProperties();
@@ -138,12 +138,12 @@ public class ViewTypeTree {
         }
 
         @Override
-        public int mapIntEnum(String name, int attributeId, IntEnumMapping intEnumMapping) {
+        public int mapIntEnum(String name, int attributeId, IntFunction<String> mapping) {
             return map(name, attributeId, ValueType.INT_ENUM);
         }
 
         @Override
-        public int mapIntFlag(String name, int attributeId, IntFlagMapping intFlagMapping) {
+        public int mapIntFlag(String name, int attributeId, IntFunction<Set<String>> mapping) {
             return map(name, attributeId, ValueType.INT_FLAG);
         }
 

@@ -24,7 +24,7 @@ import android.annotation.Nullable;
  *
  * @see android.processor.view.inspector.PlatformInspectableProcessor
  */
-public class GeneratedInspectionCompanionProvider implements InspectionCompanionProvider {
+public class StaticInspectionCompanionProvider implements InspectionCompanionProvider {
     /**
      * The suffix used for the generated class
      */
