@@ -16,7 +16,7 @@ class ${className} : ContentProvider() {
                 "at the given URI")
     }
 
-    override fun insert(uri: Uri, values: ContentValues): Uri? {
+    override fun insert(uri: Uri, values: ContentValues?): Uri? {
         TODO("Implement this to handle requests to insert a new row.")
     }
 

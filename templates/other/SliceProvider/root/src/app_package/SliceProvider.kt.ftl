@@ -26,8 +26,9 @@ class ${className} : SliceProvider() {
         var uriBuilder: Uri.Builder = Uri.Builder().scheme(ContentResolver.SCHEME_CONTENT)
         if (intent == null) return uriBuilder.build()
         val data = intent.data
-        if (data != null && data.path != null) {
-            val path = data.path.replace("${pathPrefix}", "")
+	val dataPath = data?.path
+        if (data != null && dataPath != null) {
+            val path = dataPath.replace("${pathPrefix}", "")
             uriBuilder = uriBuilder.path(path)
         }
         val context = context

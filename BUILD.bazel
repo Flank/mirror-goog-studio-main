@@ -245,6 +245,7 @@ coverage_report(
         "//tools/base/third_party:org.jdom_jdom2",
         "//tools/base/third_party:org.jetbrains_annotations",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-android-extensions-runtime",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-annotation-processing-gradle",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-build-common",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-compiler-embeddable",
