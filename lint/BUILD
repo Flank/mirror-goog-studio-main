@@ -104,6 +104,7 @@ iml_module(
 kotlin_library(
     name = "tools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
+    lint_baseline = "libs/lint-checks/lint_baseline.xml",
     pom = "lint-checks.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/resources",
     resources = glob(["libs/lint-checks/src/main/resources/**"]),
@@ -268,6 +269,8 @@ kotlin_test(
 kotlin_library(
     name = "studio-checks",
     srcs = ["studio-checks/src/main/java"],
+    lint_baseline = "studio-checks/empty_baseline.xml",
+    lint_classpath = ["//tools/base/lint/cli"],
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
@@ -298,4 +301,9 @@ kotlin_test(
         "//tools/base/lint/libs/lint-tests",
         "//tools/base/third_party:junit_junit",
     ],
+)
+
+exports_files(
+    srcs = ["studio-checks/empty_baseline.xml"],
+    visibility = ["//visibility:public"],
 )

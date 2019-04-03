@@ -107,6 +107,7 @@ def kotlin_library(
         jar_name = None,
         testonly = None,
         lint_baseline = None,
+        lint_classpath = [],
         **kwargs):
     kotlins = native.glob([src + "/**/*.kt" for src in srcs])
     javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
@@ -170,7 +171,7 @@ def kotlin_library(
             name = name + "_lint_test",
             srcs = lint_srcs,
             baseline = lint_baseline,
-            deps = deps + bundled_deps,
+            deps = deps + bundled_deps + lint_classpath,
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
             tags = ["no_windows"],
         )
