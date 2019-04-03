@@ -483,7 +483,8 @@ public class AnnotationDetector extends Detector implements SourceCodeScanner {
                 if (resolved != null) {
                     PsiClass cls = (PsiClass) resolved;
                     if (cls.isAnnotationType() && cls.getModifierList() != null) {
-                        for (PsiAnnotation a : cls.getModifierList().getAnnotations()) {
+                        for (PsiAnnotation a :
+                                mContext.getEvaluator().getAllAnnotations(cls, false)) {
                             String name = a.getQualifiedName();
                             if (INT_DEF_ANNOTATION.isEquals(name)) {
                                 checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);

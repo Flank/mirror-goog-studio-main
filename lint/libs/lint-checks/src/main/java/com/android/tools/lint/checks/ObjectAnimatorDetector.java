@@ -48,7 +48,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
@@ -401,12 +400,10 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
         } else {
             PsiModifierListOwner owner = bestMethod;
             while (owner != null) {
-                PsiModifierList modifierList = owner.getModifierList();
-                if (modifierList != null) {
-                    for (PsiAnnotation annotation : modifierList.getAnnotations()) {
-                        if (KEEP_ANNOTATION.isEquals(annotation.getQualifiedName())) {
-                            return;
-                        }
+                for (PsiAnnotation annotation :
+                        context.getEvaluator().getAllAnnotations(owner, false)) {
+                    if (KEEP_ANNOTATION.isEquals(annotation.getQualifiedName())) {
+                        return;
                     }
                 }
                 owner = PsiTreeUtil.getParentOfType(owner, PsiModifierListOwner.class, true);

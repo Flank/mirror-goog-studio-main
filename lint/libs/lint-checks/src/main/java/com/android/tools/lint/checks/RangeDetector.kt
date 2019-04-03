@@ -207,7 +207,7 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 // UDeclaration also extends PsiModifierListOwner!
                 if (resolved is PsiModifierListOwner) {
                     val referenceConstraint =
-                        RangeConstraint.create((resolved as PsiModifierListOwner?)!!)
+                        RangeConstraint.create((resolved as PsiModifierListOwner?)!!, context.evaluator)
                     val here = RangeConstraint.create(annotation)
                     if (here != null && referenceConstraint != null) {
                         val contains = here.contains(referenceConstraint)
@@ -265,8 +265,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     if (argument is UResolvable) {
                         val resolved = (argument as UResolvable).resolve()
                         if (resolved is PsiModifierListOwner) {
-                            val constraint = RangeConstraint
-                                .create((resolved as PsiModifierListOwner?)!!)
+                            val constraint = RangeConstraint.create(
+                                resolved,
+                                context.evaluator
+                            )
                             val here = RangeConstraint.create(annotation)
                             if (here != null && constraint != null) {
                                 val contains = here.contains(constraint)
@@ -362,8 +364,10 @@ class RangeDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                     // UAST-wise we could look for UDeclaration but it turns out
                     // UDeclaration also extends PsiModifierListOwner!
                     if (resolved is PsiModifierListOwner) {
-                        val referenceConstraint =
-                            RangeConstraint.create((resolved as PsiModifierListOwner?)!!)
+                        val referenceConstraint = RangeConstraint.create(
+                            resolved,
+                            context.evaluator
+                        )
                         val here = RangeConstraint.create(annotation)
                         if (here != null && referenceConstraint != null) {
                             val contains = here.contains(referenceConstraint)

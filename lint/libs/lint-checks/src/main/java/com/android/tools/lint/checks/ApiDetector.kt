@@ -70,6 +70,7 @@ import com.android.tools.lint.checks.VersionChecks.codeNameToApi
 import com.android.tools.lint.checks.VersionChecks.isPrecededByVersionCheckExit
 import com.android.tools.lint.checks.VersionChecks.isVersionCheckConditional
 import com.android.tools.lint.checks.VersionChecks.isWithinVersionCheckConditional
+import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext.Companion.getFqcn
@@ -113,7 +114,7 @@ import com.intellij.psi.PsiField
 import com.intellij.psi.PsiMember
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
-import com.intellij.psi.PsiModifierList
+import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiSuperExpression
 import com.intellij.psi.PsiType
@@ -990,37 +991,35 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // Desugar adds support for type annotations
                 !context.mainProject.isDesugaring(Desugaring.TYPE_ANNOTATIONS)
             ) {
-                val modifierList = node.modifierList
-                if (modifierList != null) {
-                    for (annotation in modifierList.annotations) {
-                        val name = annotation.qualifiedName
-                        if ("java.lang.annotation.Repeatable" == name) {
-                            val api = 24 // minSdk for repeatable annotations
-                            val minSdk = getMinSdk(context)
-                            if (!isSuppressed(context, api, node, minSdk)) {
-                                val location = context.getLocation(annotation)
-                                val min = Math.max(minSdk, getTargetApi(node))
-                                val message =
-                                    "Repeatable annotation requires API level $api (current min is $min)"
-                                context.report(
-                                    UNSUPPORTED,
-                                    annotation,
-                                    location,
-                                    message,
-                                    apiLevelFix(api)
-                                )
-                            }
-                        } else if ("java.lang.annotation.Target" == name) {
-                            val attributes = annotation.parameterList.attributes
-                            for (pair in attributes) {
-                                val value = pair.value
-                                if (value is PsiArrayInitializerMemberValue) {
-                                    for (t in value.initializers) {
-                                        checkAnnotationTarget(t, modifierList)
-                                    }
-                                } else if (value != null) {
-                                    checkAnnotationTarget(value, modifierList)
+                val evaluator = context.evaluator
+                for (annotation in evaluator.getAllAnnotations(node as PsiModifierListOwner, false)) {
+                    val name = annotation.qualifiedName
+                    if ("java.lang.annotation.Repeatable" == name) {
+                        val api = 24 // minSdk for repeatable annotations
+                        val minSdk = getMinSdk(context)
+                        if (!isSuppressed(context, api, node, minSdk)) {
+                            val location = context.getLocation(annotation)
+                            val min = Math.max(minSdk, getTargetApi(node))
+                            val message =
+                                "Repeatable annotation requires API level $api (current min is $min)"
+                            context.report(
+                                UNSUPPORTED,
+                                annotation,
+                                location,
+                                message,
+                                apiLevelFix(api)
+                            )
+                        }
+                    } else if ("java.lang.annotation.Target" == name) {
+                        val attributes = annotation.parameterList.attributes
+                        for (pair in attributes) {
+                            val value = pair.value
+                            if (value is PsiArrayInitializerMemberValue) {
+                                for (t in value.initializers) {
+                                    checkAnnotationTarget(t, node, evaluator)
                                 }
+                            } else if (value != null) {
+                                checkAnnotationTarget(value, node, evaluator)
                             }
                         }
                     }
@@ -1096,12 +1095,13 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
         private fun checkAnnotationTarget(
             element: PsiAnnotationMemberValue,
-            modifierList: PsiModifierList
+            modifierListOwner: PsiModifierListOwner,
+            evaluator: JavaEvaluator
         ) {
             if (element is UReferenceExpression) {
                 val referenceName = UastLintUtils.getReferenceName(element)
                 if ("TYPE_PARAMETER" == referenceName || "TYPE_USE" == referenceName) {
-                    val retention = modifierList.findAnnotation("java.lang.annotation.Retention")
+                    val retention = evaluator.findAnnotation(modifierListOwner, "java.lang.annotation.Retention")
                     if (retention == null || retention.text.contains("RUNTIME")) {
                         val location = context.getLocation(element as UElement)
                         val message =
@@ -1173,7 +1173,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (reference != null) {
                     val resolved = reference.resolve()
                     if (resolved is PsiClass) {
-                        checkRequiresApi(node, resolved, resolved.modifierList)
+                        checkRequiresApi(node, resolved, resolved)
                     }
                 }
 
@@ -1192,8 +1192,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val containingClass = method.containingClass ?: return
 
             // Enforce @RequiresApi
-            if (!checkRequiresApi(reference, method, method.modifierList)) {
-                checkRequiresApi(reference, method, containingClass.modifierList)
+            if (!checkRequiresApi(reference, method, method)) {
+                checkRequiresApi(reference, method, containingClass)
             }
 
             val parameterList = method.parameterList
@@ -1555,8 +1555,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             report(UNSUPPORTED, reference, location, "Call", signature, api, minSdk, apiLevelFix(api), owner, name, desc)
         }
 
-        private fun getRequiresApiFromAnnotations(modifierList: PsiModifierList): Int {
-            for (annotation in modifierList.annotations) {
+        private fun getRequiresApiFromAnnotations(modifierListOwner: PsiModifierListOwner): Int {
+            for (annotation in context.evaluator.getAllAnnotations(modifierListOwner, false)) {
                 val qualifiedName = annotation.qualifiedName
                 if (REQUIRES_API_ANNOTATION.isEquals(qualifiedName)) {
                     val wrapped = JavaUAnnotation.wrap(annotation)
@@ -1611,11 +1611,11 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
         private fun checkRequiresApi(
             expression: UElement,
             member: PsiMember,
-            modifierList: PsiModifierList?
+            modifierListOwner: PsiModifierListOwner?
         ): Boolean {
-            modifierList ?: return false
+            modifierListOwner ?: return false
 
-            val api = getRequiresApiFromAnnotations(modifierList)
+            val api = getRequiresApiFromAnnotations(modifierListOwner)
             if (api != -1) {
                 val minSdk = getMinSdk(context)
                 if (api > minSdk) {
@@ -1814,9 +1814,8 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             val owner = evaluator.getQualifiedName(containingClass) ?: return
 
             // Enforce @RequiresApi
-            val modifierList = field.modifierList
-            if (!checkRequiresApi(node, field, modifierList)) {
-                checkRequiresApi(node, field, containingClass.modifierList)
+            if (!checkRequiresApi(node, field, field)) {
+                checkRequiresApi(node, field, containingClass)
             }
 
             val api = apiDatabase.getFieldVersion(owner, name)

@@ -293,6 +293,7 @@ kotlin_test(
     jvm_flags = [
         "-Dtest.suite.jar=studio-checks-tests.jar",
     ],
+    tags = ["no_windows"],
     test_class = "com.android.testutils.JarTestSuite",
     visibility = ["//visibility:public"],
     deps = [

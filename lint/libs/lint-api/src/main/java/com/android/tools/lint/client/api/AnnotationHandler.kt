@@ -269,9 +269,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, SourceCo
                                     var found = false
 
                                     for (psiAnnotation in psiAnnotations ?: run {
-                                        val modifierList: PsiModifierList? = annotated.modifierList
                                         val array =
-                                            modifierList?.annotations ?: PsiAnnotation.EMPTY_ARRAY
+                                            context.evaluator.getAllAnnotations(annotated, false)
                                         psiAnnotations = array
                                         array
                                     }) {

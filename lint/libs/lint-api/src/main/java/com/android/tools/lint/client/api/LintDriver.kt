@@ -87,6 +87,7 @@ import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.util.Computable
 import com.intellij.openapi.util.io.FileUtil
+import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
 import com.intellij.psi.PsiArrayInitializerMemberValue
@@ -94,7 +95,6 @@ import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
-import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
 import org.jetbrains.uast.UAnnotated
@@ -2693,8 +2693,7 @@ class LintDriver
                 context != null && context.containsCommentSuppress()
         while (currentScope != null) {
             if (currentScope is PsiModifierListOwner) {
-                val modifierList = currentScope.modifierList
-                if (isSuppressed(issue, modifierList)) {
+                if (isAnnotatedWithSuppress(context, issue, currentScope)) {
                     if (customSuppressNames != null && context != null) {
                         flagInvalidSuppress(
                             context, issue, context.getLocation(currentScope),
@@ -2706,7 +2705,7 @@ class LintDriver
                 }
 
                 if (customSuppressNames != null &&
-                    isAnnotatedWith(modifierList, customSuppressNames)
+                    isAnnotatedWith(context, currentScope, customSuppressNames)
                 ) {
                     return true
                 }
@@ -3242,22 +3241,23 @@ class LintDriver
          * given issue (which can be null to check for the "all" annotation)
          *
          * @param issue the issue to be checked
-         *
-         * @param modifierList the modifier to check
+         * @param modifierListOwner the annotated element to check
+         * @param context [JavaContext] for checking external annotations
          *
          * @return true if the issue or all issues should be suppressed for this
          *         modifier
          */
         @JvmStatic
-        fun isSuppressed(
+        fun isAnnotatedWithSuppress(
+            context: JavaContext?,
             issue: Issue,
-            modifierList: PsiModifierList?
+            modifierListOwner: PsiModifierListOwner?
         ): Boolean {
-            if (modifierList == null) {
+            if (modifierListOwner == null) {
                 return false
             }
 
-            for (annotation in modifierList.annotations) {
+            for (annotation in getAnnotations(context, modifierListOwner)) {
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT ||
                             fqcn == SUPPRESS_WARNINGS_FQCN ||
@@ -3277,15 +3277,30 @@ class LintDriver
             return false
         }
 
+        private fun getAnnotations(
+            context: JavaContext?,
+            modifierListOwner: PsiModifierListOwner?
+        ): Array<PsiAnnotation> {
+            return if (modifierListOwner == null) {
+                PsiAnnotation.EMPTY_ARRAY
+            } else {
+                @Suppress("ExternalAnnotations") // We try external annotations first.
+                context?.evaluator?.getAllAnnotations(modifierListOwner, false)
+                    ?: modifierListOwner.modifierList?.annotations
+                    ?: PsiAnnotation.EMPTY_ARRAY
+            }
+        }
+
         private fun isAnnotatedWith(
-            modifierList: PsiModifierList?,
+            context: JavaContext?,
+            modifierListOwner: PsiModifierListOwner?,
             names: Set<String>
         ): Boolean {
-            if (modifierList == null) {
+            if (modifierListOwner == null) {
                 return false
             }
 
-            for (annotation in modifierList.annotations) {
+            for (annotation in getAnnotations(context, modifierListOwner)) {
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && names.contains(fqcn)) {
                     return true

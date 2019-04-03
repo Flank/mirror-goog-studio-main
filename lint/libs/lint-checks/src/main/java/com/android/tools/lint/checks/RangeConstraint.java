@@ -21,8 +21,8 @@ import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.java.JavaUAnnotation;
@@ -48,15 +48,13 @@ public abstract class RangeConstraint {
     }
 
     @Nullable
-    public static RangeConstraint create(@NonNull PsiModifierListOwner owner) {
-        PsiModifierList modifierList = owner.getModifierList();
-        if (modifierList != null) {
-            for (PsiAnnotation annotation : modifierList.getAnnotations()) {
-                RangeConstraint constraint = create(JavaUAnnotation.wrap(annotation));
-                // Pick first; they're mutually exclusive
-                if (constraint != null) {
-                    return constraint;
-                }
+    public static RangeConstraint create(
+            @NonNull PsiModifierListOwner owner, @NonNull JavaEvaluator evaluator) {
+        for (PsiAnnotation annotation : evaluator.getAllAnnotations(owner, false)) {
+            RangeConstraint constraint = create(JavaUAnnotation.wrap(annotation));
+            // Pick first; they're mutually exclusive
+            if (constraint != null) {
+                return constraint;
             }
         }
 
