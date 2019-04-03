@@ -18,67 +18,17 @@ package com.android.build.gradle.integration.common.utils;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.DefaultNdkInfo;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.ndk.NdkInfo;
-import com.android.repository.Revision;
-import com.android.sdklib.AndroidTargetHash;
-import com.android.sdklib.AndroidVersion;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
-import java.util.Objects;
 
 /**
  * Ndk related helper functions.
  */
 public class NdkHelper {
-
-    /**
-     * Gets the platform version supported by the specified ndk directory with specified upper bound
-     * version.
-     *
-     * @param ndkDir path to the NDK dir
-     * @param upperBoundVersionHash maximum allowed version (e.g. 'android-23'), can also be a
-     *     preview version (e.g. 'android-O')
-     * @return the platform version supported by this ndk
-     */
-    @NonNull
-    public static AndroidVersion getPlatformSupported(
-            @NonNull File ndkDir, @NonNull String upperBoundVersionHash) {
-        Revision ndkRevision = NdkHandler.findRevision(ndkDir);
-        return implPlatformSupported(ndkRevision, upperBoundVersionHash);
-    }
-
-    @VisibleForTesting
-    static AndroidVersion implPlatformSupported(
-            @Nullable Revision ndkRevision, @NonNull String upperBoundVersionHash) {
-        int major = ndkRevision != null ? ndkRevision.getMajor() : 10;
-        // for r10 max platform is 21, r11 max is 24, r12 max platform is 24
-        ImmutableMap<Integer, AndroidVersion> perVersion =
-                ImmutableMap.<Integer, AndroidVersion>builder()
-                        .put(10, new AndroidVersion(21, null))
-                        .put(11, new AndroidVersion(24, null))
-                        .put(12, new AndroidVersion(24, null))
-                        .put(13, new AndroidVersion(24, null))
-                        .put(14, new AndroidVersion(24, null))
-                        .put(15, new AndroidVersion(26, null))
-                        .build();
-
-        AndroidVersion maxVersion =
-                Objects.requireNonNull(AndroidTargetHash.getPlatformVersion(upperBoundVersionHash));
-        AndroidVersion ndkMaxSupported = perVersion.get(major);
-
-        if (maxVersion.getFeatureLevel() < ndkMaxSupported.getFeatureLevel()) {
-            return maxVersion;
-        } else {
-            return ndkMaxSupported;
-        }
-    }
 
     @NonNull
     public static NdkInfo getNdkInfo() {
