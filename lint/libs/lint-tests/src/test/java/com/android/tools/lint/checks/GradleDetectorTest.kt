@@ -120,162 +120,7 @@ class GradleDetectorTest : AbstractCheckTest() {
     override fun lint(): TestLintTask {
         val task = super.lint()
         task.sdkHome(mockSupportLibraryInstallation)
-
-        // Set up exactly the expected maven.google.com network output to ensure stable
-        // version suggestions in the tests
-        task.networkData(
-            "https://maven.google.com/master-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <metadata>
-                  <com.android.support/>
-                  <com.android.support.test/>
-                  <com.android.tools/>
-                  <com.android.tools.build/>
-                  <com.google.android.gms/>
-                  <com.google.android.support/>
-                </metadata>
-            """.trimIndent()
-        )
-        task.networkData(
-            "https://maven.google.com/com/android/tools/build/group-index.xml",
-            "" +
-                    "<?xml version='1.0' encoding='UTF-8'?>\n" +
-                    "<com.android.tools.build>\n" +
-                    "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0," +
-                    "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
-                    "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03\"/>\n" +
-                    "</com.android.tools.build>"
-        )
-        task.networkData(
-            "https://maven.google.com/com/android/support/group-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <com.android.support>
-                  <support-compat versions="19.1.0,25.3.1,26.0.0-beta1"/>
-                  <appcompat-v7 versions="19.1.0, 19.1.0,25.3.1,26.0.0-beta1"/>
-                  <multidex versions="1.0.1,1.0.1"/>
-                  <support-v4 versions="19.1.0,21.0.2,25.3.1,26.0.0-beta1"/>
-                </com.android.support>
-            """.trimIndent()
-        )
-        task.networkData(
-            "https://maven.google.com/com/google/android/support/group-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <com.google.android.support>
-                  <wearable versions="1.3.0,26.0.0-alpha1"/>
-                </com.google.android.support>
-            """.trimIndent()
-        )
-        task.networkData(
-            "https://maven.google.com/com/google/android/gms/group-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <com.google.android.gms>
-                  <play-services-wearable versions="6.1.71"/>
-                  <play-services versions="11.1.71"/>
-                </com.google.android.gms>
-            """.trimIndent()
-        )
-        task.networkData(
-            "https://maven.google.com/com/android/support/constraint/group-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <com.android.support.constraint>
-                  <constraint-layout versions="1.0.0,1.0.2"/>
-                </com.android.support.constraint>
-            """.trimIndent()
-        )
-        task.networkData(
-            "https://maven.google.com/com/android/support/test/group-index.xml",
-            """
-                <?xml version='1.0' encoding='UTF-8'?>
-                <com.android.support.test>
-                  <runner versions="0.3,0.5"/>
-                </com.android.support.test>
-            """.trimIndent()
-        )
-
-        // Similarly set up the expected SDK registry network output from dl.google.com to
-        // ensure stable SDK library suggestions in the tests
-        task.networkData(
-            SDK_REGISTRY_URL,
-            """
-            <sdk_metadata>
-             <library groupId="com.android.volley" artifactId="volley" recommended-version="1.1.0">
-              <versions from="1.1.0-rc2" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-              <versions from="1.1.0-rc1" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-              <versions from="1.0.0" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
-             </library>
-             <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
-              <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
-              </versions>
-              <versions from="1.2.4" to="1.2.13" status="insecure" description="Bad security bug CVE-4311" />
-               <vulnerability description="Buffer overflow vulnerability in this version." cve="CVE-4311" />
-              <versions to="1.2.0" status="obsolete" description="Library is obsolete." />
-             </library>
-             <library groupId="com.example.ads.thirdparty" artifactId="example" recommended-version="7.3.1">
-              <versions from="7.1.0" to="7.2.1" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." />
-              </versions>
-              <versions to="7.0.0" status="deprecated" description="Deprecated due to ANR issue">
-               <vulnerability description="Specifics and developer actions go here." />
-              </versions>
-              </library>
-            </sdk_metadata>
-            """.trimIndent()
-        )
-
-        // Also ensure we don't have a stale cache on disk.
-        val cacheDir =
-            com.android.tools.lint.checks.infrastructure.TestLintClient()
-                .getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
-        if (cacheDir != null && cacheDir.isDirectory) {
-            try {
-                FileUtils.deleteDirectoryContents(cacheDir)
-            } catch (e: IOException) {
-                fail(e.message)
-            }
-        }
-
-        val client: com.android.tools.lint.checks.infrastructure.TestLintClient =
-            object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                override fun getSdkHome(): File? {
-                    if (task.sdkHome != null) {
-                        return task.sdkHome
-                    }
-                    return mockSupportLibraryInstallation
-                }
-
-                override fun getHighestKnownVersion(
-                    coordinate: GradleCoordinate,
-                    filter: Predicate<GradleVersion>?
-                ): GradleVersion? {
-                    // Hardcoded for unit test to ensure stable data
-                    return if ("com.android.support.constraint" == coordinate.groupId && "constraint-layout" == coordinate.artifactId) {
-                        if (coordinate.isPreview) {
-                            GradleVersion.tryParse("1.0.3-alpha8")
-                        } else {
-                            GradleVersion.tryParse("1.0.2")
-                        }
-                    } else null
-                }
-            }
-        task.client(client)
-
-        val cacheDir2 =
-            com.android.tools.lint.checks.infrastructure.TestLintClient()
-                .getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
-        if (cacheDir2 != null && cacheDir2.isDirectory) {
-            try {
-                FileUtils.deleteDirectoryContents(cacheDir2)
-            } catch (e: IOException) {
-                fail(e.message)
-            }
-        }
-
+        initializeNetworkMocksAndCaches(task)
         return task
     }
 
@@ -3207,6 +3052,165 @@ class GradleDetectorTest : AbstractCheckTest() {
                     )
                 )
             }
+        }
+
+        fun initializeNetworkMocksAndCaches(task: TestLintTask): TestLintTask {
+            // Set up exactly the expected maven.google.com network output to ensure stable
+            // version suggestions in the tests
+            task.networkData(
+                "https://maven.google.com/master-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <metadata>
+                  <com.android.support/>
+                  <com.android.support.test/>
+                  <com.android.tools/>
+                  <com.android.tools.build/>
+                  <com.google.android.gms/>
+                  <com.google.android.support/>
+                </metadata>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/com/android/tools/build/group-index.xml",
+                "" +
+                        "<?xml version='1.0' encoding='UTF-8'?>\n" +
+                        "<com.android.tools.build>\n" +
+                        "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0," +
+                        "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
+                        "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03\"/>\n" +
+                        "</com.android.tools.build>"
+            )
+            task.networkData(
+                "https://maven.google.com/com/android/support/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support>
+                  <support-compat versions="19.1.0,25.3.1,26.0.0-beta1"/>
+                  <appcompat-v7 versions="19.1.0, 19.1.0,25.3.1,26.0.0-beta1"/>
+                  <multidex versions="1.0.1,1.0.1"/>
+                  <support-v4 versions="19.1.0,21.0.2,25.3.1,26.0.0-beta1"/>
+                </com.android.support>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/com/google/android/support/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.google.android.support>
+                  <wearable versions="1.3.0,26.0.0-alpha1"/>
+                </com.google.android.support>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/com/google/android/gms/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.google.android.gms>
+                  <play-services-wearable versions="6.1.71"/>
+                  <play-services versions="11.1.71"/>
+                </com.google.android.gms>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/com/android/support/constraint/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support.constraint>
+                  <constraint-layout versions="1.0.0,1.0.2"/>
+                </com.android.support.constraint>
+            """.trimIndent()
+            )
+            task.networkData(
+                "https://maven.google.com/com/android/support/test/group-index.xml",
+                """
+                <?xml version='1.0' encoding='UTF-8'?>
+                <com.android.support.test>
+                  <runner versions="0.3,0.5"/>
+                </com.android.support.test>
+            """.trimIndent()
+            )
+
+            // Similarly set up the expected SDK registry network output from dl.google.com to
+            // ensure stable SDK library suggestions in the tests
+            task.networkData(
+                SDK_REGISTRY_URL,
+                """
+            <sdk_metadata>
+             <library groupId="com.android.volley" artifactId="volley" recommended-version="1.1.0">
+              <versions from="1.1.0-rc2" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+              <versions from="1.1.0-rc1" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+              <versions from="1.0.0" status="deprecated" description="Bug affecting app stability" url="https://github.com/google/volley/releases" />
+             </library>
+             <library groupId="log4j" artifactId="log4j" recommended-version="1.2.17" recommended-version-sha="5af35056b4d257e4b64b9e8069c0746e8b08629f">
+              <versions from="1.2.14" to="1.2.16" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." cve="CVE-4313" />
+              </versions>
+              <versions from="1.2.4" to="1.2.13" status="insecure" description="Bad security bug CVE-4311" />
+               <vulnerability description="Buffer overflow vulnerability in this version." cve="CVE-4311" />
+              <versions to="1.2.0" status="obsolete" description="Library is obsolete." />
+             </library>
+             <library groupId="com.example.ads.thirdparty" artifactId="example" recommended-version="7.3.1">
+              <versions from="7.1.0" to="7.2.1" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." />
+              </versions>
+              <versions to="7.0.0" status="deprecated" description="Deprecated due to ANR issue">
+               <vulnerability description="Specifics and developer actions go here." />
+              </versions>
+              </library>
+            </sdk_metadata>
+            """.trimIndent()
+            )
+
+            // Also ensure we don't have a stale cache on disk.
+            val cacheDir =
+                com.android.tools.lint.checks.infrastructure.TestLintClient()
+                    .getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true)
+            if (cacheDir != null && cacheDir.isDirectory) {
+                try {
+                    FileUtils.deleteDirectoryContents(cacheDir)
+                } catch (e: IOException) {
+                    fail(e.message)
+                }
+            }
+
+            val client: com.android.tools.lint.checks.infrastructure.TestLintClient =
+                object : com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    override fun getSdkHome(): File? {
+                        if (task.sdkHome != null) {
+                            return task.sdkHome
+                        }
+                        return mockSupportLibraryInstallation
+                    }
+
+                    override fun getHighestKnownVersion(
+                        coordinate: GradleCoordinate,
+                        filter: Predicate<GradleVersion>?
+                    ): GradleVersion? {
+                        // Hardcoded for unit test to ensure stable data
+                        return if ("com.android.support.constraint" == coordinate.groupId && "constraint-layout" == coordinate.artifactId) {
+                            if (coordinate.isPreview) {
+                                GradleVersion.tryParse("1.0.3-alpha8")
+                            } else {
+                                GradleVersion.tryParse("1.0.2")
+                            }
+                        } else null
+                    }
+                }
+            task.client(client)
+
+            val cacheDir2 =
+                com.android.tools.lint.checks.infrastructure.TestLintClient()
+                    .getCacheDir(DEPRECATED_SDK_CACHE_DIR_KEY, true)
+            if (cacheDir2 != null && cacheDir2.isDirectory) {
+                try {
+                    FileUtils.deleteDirectoryContents(cacheDir2)
+                } catch (e: IOException) {
+                    fail(e.message)
+                }
+            }
+
+            return task;
         }
 
         // Utility for testOR2RequiresAppCompat26Beta1

@@ -18,6 +18,7 @@ package com.android.tools.lint
 
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.BuiltinIssueRegistry
+import com.android.tools.lint.checks.GradleDetectorTest
 import com.android.tools.lint.checks.PrivateResourceDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
@@ -63,22 +64,13 @@ class MemoryLeakTest {
     }
 
     private fun lint(): TestLintTask {
-        return TestLintTask().sdkHome(TestUtils.getSdk())
+        val task = TestLintTask()
+        GradleDetectorTest.initializeNetworkMocksAndCaches(task)
+        task.sdkHome(TestUtils.getSdk())
+        return task
     }
 
-    @Test
-    fun testForMemoryLeak() {
-        // Regression test for
-        // 119833503: Memory leak due to Lint's custom class loader when running with Gradle
-        //
-        // This test cannot guarantee that there are no memory leaks, but it gives us a
-        // chance at catching some automatically by running Lint and searching
-        // for surviving instances of LintCoreProjectEnvironment, PsiWhiteSpaceImpl, etc.
-        //
-        // A more thorough test would run Lint multiple times on a large and
-        // complex project using Gradle (with a daemon) in order to get better
-        // code coverage (and thus a better chance at catching a leak).
-
+    private fun doAnalysis() {
         lint().files(
 
             gradle("""
@@ -170,6 +162,21 @@ class MemoryLeakTest {
             .issues(*BuiltinIssueRegistry().issues.toTypedArray())
             .run()
             .expectClean()
+    }
+
+    @Test
+    fun testForMemoryLeak() {
+        // Regression test for
+        // 119833503: Memory leak due to Lint's custom class loader when running with Gradle
+        //
+        // This test cannot guarantee that there are no memory leaks, but it gives us a
+        // chance at catching some automatically by running Lint and searching
+        // for surviving instances of LintCoreProjectEnvironment, PsiWhiteSpaceImpl, etc.
+        //
+        // A more thorough test would run Lint multiple times on a large and
+        // complex project using Gradle (with a daemon) in order to get better
+        // code coverage (and thus a better chance at catching a leak).
+        doAnalysis()
 
         assertTrue(
             "Utility function `countLiveInstancesOf()` appears to be broken.",
