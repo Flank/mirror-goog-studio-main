@@ -18,31 +18,51 @@ package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.builder.packaging.PackageEmbeddedDex
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
-class UseEmbeddedDexPackagingTest {
+@RunWith(FilterableParameterized::class)
+class UseEmbeddedDexPackagingTest(private val embeddedDex: PackageEmbeddedDex) {
+
+    companion object {
+        @Parameterized.Parameters
+        @JvmStatic
+        fun getUseEmbeddedDexValues() = PackageEmbeddedDex.values()
+    }
+
+    private val useEmbeddedAttribute = when (embeddedDex) {
+        PackageEmbeddedDex.DEFAULT -> ""
+        PackageEmbeddedDex.COMPRESSED -> "android:useEmbeddedDex=\"false\""
+        PackageEmbeddedDex.UNCOMPRESSED -> "android:useEmbeddedDex=\"true\""
+    }
+
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestApp(
             MinimalSubProject.app("com.test")
-                .withFile("build.gradle",
+                .withFile(
+                    "build.gradle",
                     """
                         apply plugin: 'com.android.application'
                         android {
                           compileSdkVersion 'android-Q'
                         }
-                    """.trimIndent())
+                    """.trimIndent()
+                )
                 .withFile(
                     "src/main/AndroidManifest.xml",
                     """
                         <manifest xmlns:android="http://schemas.android.com/apk/res/android"
                          xmlns:dist="http://schemas.android.com/apk/distribution"
                     package="com.test">
-                    <application android:useEmbeddedDex="true"/>
+                    <application $useEmbeddedAttribute/>
                 </manifest>
                     """.trimIndent()
                 )
@@ -50,13 +70,18 @@ class UseEmbeddedDexPackagingTest {
         .create()
 
     @Test
-    fun testDexIsUncompressed() {
+    fun testDexIsPackagedCorrectly() {
         project.executor().run("assembleDebug")
 
         val apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         ZipFile(apk.file.toFile()).use {
             val classesDex = it.getEntry("classes.dex")
-            assertThat(classesDex.method).isEqualTo(ZipEntry.STORED)
+            val compression = when (embeddedDex) {
+                PackageEmbeddedDex.DEFAULT -> ZipEntry.DEFLATED
+                PackageEmbeddedDex.COMPRESSED -> ZipEntry.DEFLATED
+                PackageEmbeddedDex.UNCOMPRESSED -> ZipEntry.STORED
+            }
+            assertThat(classesDex.method).isEqualTo(compression)
         }
     }
 }
