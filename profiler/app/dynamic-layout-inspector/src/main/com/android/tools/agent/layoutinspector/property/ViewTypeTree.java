@@ -17,9 +17,11 @@
 package com.android.tools.agent.layoutinspector.property;
 
 import android.view.View;
-import android.view.inspector.*;
+import android.view.inspector.InspectionCompanion;
+import android.view.inspector.InspectionCompanionProvider;
+import android.view.inspector.PropertyMapper;
+import android.view.inspector.StaticInspectionCompanionProvider;
 import java.util.*;
-import java.util.Set;
 import java.util.function.IntFunction;
 /**
  * Holds a tree of {@link ViewType}s.
@@ -35,6 +37,8 @@ public class ViewTypeTree {
     public <V extends View> ViewNode<V> nodeOf(V view) {
         return typeOf(view).newNode();
     }
+
+    private IntFunction<Set<String>> gravityMapping = new GravityIntMapping();
 
     @SuppressWarnings("unchecked")
     private <V extends View> ViewType<V> typeOf(V view) {
@@ -150,17 +154,23 @@ public class ViewTypeTree {
 
         @Override
         public int mapGravity(String name, int attributeId) {
-            return map(name, attributeId, ValueType.GRAVITY);
+            int id = map(name, attributeId, ValueType.GRAVITY);
+            mProperties.get(id).setFlagMapping(gravityMapping);
+            return id;
         }
 
         @Override
         public int mapIntEnum(String name, int attributeId, IntFunction<String> mapping) {
-            return map(name, attributeId, ValueType.INT_ENUM);
+            int id = map(name, attributeId, ValueType.INT_ENUM);
+            mProperties.get(id).setEnumMapping(mapping);
+            return id;
         }
 
         @Override
         public int mapIntFlag(String name, int attributeId, IntFunction<Set<String>> mapping) {
-            return map(name, attributeId, ValueType.INT_FLAG);
+            int id = map(name, attributeId, ValueType.INT_FLAG);
+            mProperties.get(id).setFlagMapping(mapping);
+            return id;
         }
 
         @Override

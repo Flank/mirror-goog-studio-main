@@ -25,6 +25,7 @@ import com.android.tools.agent.layoutinspector.property.ValueType;
 import com.android.tools.agent.layoutinspector.property.ViewNode;
 import com.android.tools.agent.layoutinspector.property.ViewTypeTree;
 import java.util.Map;
+import java.util.Set;
 
 /** Services for loading the properties of a View into a PropertyEvent protobuf. */
 class Properties {
@@ -80,17 +81,18 @@ class Properties {
         }
         switch (valueType) {
             case STRING:
+            case INT_ENUM:
                 return addIntProperty(event, name, type, toInt((String) value));
             case INT32:
             case INT16:
             case BOOLEAN:
             case BYTE:
             case CHAR:
-            case GRAVITY:
-            case INT_ENUM:
-            case INT_FLAG:
             case COLOR:
                 return addIntProperty(event, name, type, (int) value);
+            case GRAVITY:
+            case INT_FLAG:
+                return addIntFlagProperty(event, name, type, (Set<String>) value);
             case INT64:
                 return addLongProperty(event, name, type, (long) value);
             case DOUBLE:
@@ -115,6 +117,14 @@ class Properties {
         return mStringTable.generateStringId(value);
     }
 
+    private long addIntFlagProperty(long event, int name, int type, Set<String> value) {
+        long propertyEvent = addFlagProperty(event, name, type);
+        for (String flag : value) {
+            addFlagPropertyValue(propertyEvent, toInt(flag));
+        }
+        return propertyEvent;
+    }
+
     /** Adds a string entry into the event protobuf. */
     private native void addString(long event, int id, String str);
 
@@ -133,6 +143,12 @@ class Properties {
     /** Adds a resource property value into the event protobuf. */
     private native long addResourceProperty(
             long event, int name, int type, int res_namespace, int res_type, int res_name);
+
+    /** Adds a flag property into the event protobuf. */
+    private native long addFlagProperty(long event, int name, int type);
+
+    /** Adds a flag property value into the flag property protobuf. */
+    private native void addFlagPropertyValue(long property, int flag);
 
     /** Adds a resource property value into the event protobuf. */
     private native void addPropertySource(long propertyId, int namespace, int type, int name);

@@ -16,12 +16,17 @@
 
 package com.android.tools.agent.layoutinspector.property;
 
+import java.util.Set;
+import java.util.function.IntFunction;
+
 /** The property type as determined from inspection. */
 public class PropertyType {
     private String mName;
     private int mAttributeId;
     private int mPropertyId;
     private ValueType mType;
+    private IntFunction<String> mEnumMapping;
+    private IntFunction<Set<String>> mFlagMapping;
 
     public PropertyType(String name, int attributeId, int propertyId, ValueType type) {
         mName = name;
@@ -44,5 +49,21 @@ public class PropertyType {
 
     public ValueType getType() {
         return mType;
+    }
+
+    public void setEnumMapping(IntFunction<String> enumMapping) {
+        mEnumMapping = enumMapping;
+    }
+
+    public IntFunction<String> getEnumMapping() {
+        return mEnumMapping;
+    }
+
+    public void setFlagMapping(IntFunction<Set<String>> flagMapping) {
+        mFlagMapping = flagMapping;
+    }
+
+    public IntFunction<Set<String>> getFlagMapping() {
+        return mFlagMapping;
     }
 }

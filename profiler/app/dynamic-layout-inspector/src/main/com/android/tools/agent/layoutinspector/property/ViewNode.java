@@ -165,17 +165,21 @@ public class ViewNode<V extends View> {
 
         @Override
         public void readGravity(int id, int value) {
-            readAny(id, value);
+            readIntFlag(id, value);
         }
 
         @Override
         public void readIntEnum(int id, int value) {
-            readAny(id, value);
+            Property property = mProperties.get(id);
+            PropertyType type = property.getPropertyType();
+            readAny(id, type.getEnumMapping().apply(value));
         }
 
         @Override
         public void readIntFlag(int id, int value) {
-            readAny(id, value);
+            Property property = mProperties.get(id);
+            PropertyType type = property.getPropertyType();
+            readAny(id, type.getFlagMapping().apply(value));
         }
 
         @Override

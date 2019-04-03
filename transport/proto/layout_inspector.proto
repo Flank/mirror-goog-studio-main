@@ -65,7 +65,12 @@ message Property {
     double double_value = 7;
     float float_value = 8;
     Resource resource_value = 9;
+    FlagValue flag_value = 10;
   }
+}
+
+message FlagValue {
+  repeated int32 flag = 1;
 }
 
 message StringEntry {

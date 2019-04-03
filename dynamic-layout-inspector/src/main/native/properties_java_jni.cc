@@ -122,4 +122,22 @@ Java_com_android_tools_agent_layoutinspector_Properties_addLayoutResource(
   PropertyEvent *event = (PropertyEvent *)jevent;
   saveResource(event->mutable_layout(), namespace_, type, name);
 }
+
+JNIEXPORT jlong JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_addFlagProperty(
+    JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type) {
+  PropertyEvent *event = (PropertyEvent *)jevent;
+  auto *property = event->add_property();
+  property->set_name(name);
+  property->set_type(static_cast<Property_Type>(type));
+  return (long)property;
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_addFlagPropertyValue(
+    JNIEnv *env, jclass clazz, jlong jproperty, jint flag) {
+  Property *property = (Property *)jproperty;
+  auto *flags = property->mutable_flag_value();
+  flags->add_flag(flag);
+}
 }
