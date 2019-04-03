@@ -9,7 +9,7 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 
 build_tag_filters=-no_linux
-test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable
+test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only
 
 # If the build number starts with a 'P', this is a pre-submit builder.
 if [[ "${build_number:0:1}" == "P" ]]; then

@@ -12,7 +12,7 @@ readonly script_dir="$(dirname "$0")"
 readonly command_log="$(${script_dir}/bazel info command_log)"
 
 # Run Bazel
-"${script_dir}/bazel" --max_idle_secs=60 test --config=postsubmit --config=local --config=results-local --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable --auth_credentials=/buildbot/android-studio-alphasource.json --profile=${dist_dir}/prof -- $(< "${script_dir}/targets")
+"${script_dir}/bazel" --max_idle_secs=60 test --config=postsubmit --config=local --config=results-local --build_tag_filters=-no_mac --test_tag_filters=-no_mac,-no_test_mac,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only --auth_credentials=/buildbot/android-studio-alphasource.json --profile=${dist_dir}/prof -- $(< "${script_dir}/targets")
 
 readonly bazel_status=$?
 

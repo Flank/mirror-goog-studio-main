@@ -20,7 +20,7 @@ fi
   test \
   --config=remote \
   ${auth_options} \
-  --test_tag_filters=-no_linux,-no_test_linux,coverage-test \
+  --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate_only \
   --define agent_coverage=true \
   -- \
   //tools/...

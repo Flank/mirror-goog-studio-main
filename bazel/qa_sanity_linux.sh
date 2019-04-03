@@ -25,7 +25,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
 # options.
 
 # Run Bazel tests - no emulator tests should run here
-target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator
+target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emulator,-perfgate_only
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \

@@ -8,7 +8,7 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
-set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,perfgate_test
+set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,perfgate_test,perfgate_only
 
 set CONFIGOPTIONS=--config=postsubmit
 
