@@ -167,7 +167,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -313,7 +313,7 @@ class NdkLocatorKtTest {
             Compatible side by side NDK version was not found for android.ndkVersion '18.1.23456'
             """.trimIndent())
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -435,7 +435,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -555,7 +555,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -714,7 +714,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -839,7 +839,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -984,7 +984,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -1107,7 +1107,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -1228,7 +1228,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 
@@ -1351,7 +1351,7 @@ class NdkLocatorKtTest {
         )
         assertThat(path).isNull()
         assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location didn't exist"""
+            Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
             .trimIndent().toSlash())
     }
 

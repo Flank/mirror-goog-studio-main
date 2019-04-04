@@ -129,7 +129,7 @@ private fun findNdkPathImpl(
             val versionInfo = getNdkSourceProperties(location.ndkRoot)
             when {
                 versionInfo == null -> {
-                    considerAndReject(location, "that location didn't exist")
+                    considerAndReject(location, "that location has no $FN_SOURCE_PROP")
                     null
                 }
                 versionInfo.getValue(SDK_PKG_REVISION) == null -> {
