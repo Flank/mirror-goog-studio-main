@@ -76,7 +76,7 @@ class NdkHandler(
                     revision = null
                 } else {
                     revision = findRevision(ndkDirectory)
-                    if (revision == null) {
+                    if (revision == null || revision.major < 14) {
                         ndkInfo = DefaultNdkInfo(ndkDirectory)
                     } else {
                         ndkInfo = NdkR14Info(ndkDirectory)
