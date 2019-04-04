@@ -48,16 +48,15 @@ import java.util.EnumSet
 import java.util.jar.JarOutputStream
 import java.util.zip.ZipEntry
 
-private val VALUE_ID_SPLITTER = Splitter.on(',').trimResults()
-
 @Throws(IOException::class)
-fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path) {
+fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: Boolean = false) {
+    val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
     JarOutputStream(BufferedOutputStream(Files.newOutputStream(outJar))).use { jarOutputStream ->
-        tables.forEach { table ->
+        mergedTables.forEach { table ->
             val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
             for (resType in ResourceType.values()) {
                 // Don't write empty R$ classes.
-                val bytes = generateResourceTypeClass(table, resType) ?: continue
+                val bytes = generateResourceTypeClass(table, resType, finalIds) ?: continue
                 resourceTypes.add(resType)
                 val innerR = internalName(table, resType)
                 jarOutputStream.putNextEntry(ZipEntry(innerR + SdkConstants.DOT_CLASS))
@@ -103,7 +102,8 @@ private fun generateOuterRClass(resourceTypes: EnumSet<ResourceType>, packageR: 
     return cw.toByteArray()
 }
 
-private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType): ByteArray? {
+private fun generateResourceTypeClass(
+    table: SymbolTable, resType: ResourceType, finalIds: Boolean): ByteArray? {
     val symbols = table.getSymbolByResourceType(resType)
     if (symbols.isEmpty()) {
         return null
@@ -124,7 +124,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
 
     for (s in symbols) {
         cw.visitField(
-                ACC_PUBLIC + ACC_STATIC,
+                ACC_PUBLIC + ACC_STATIC + if (finalIds) ACC_FINAL else 0,
                 s.canonicalName,
                 s.javaType.desc,
                 null,

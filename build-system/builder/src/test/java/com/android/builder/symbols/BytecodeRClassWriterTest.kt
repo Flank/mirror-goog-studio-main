@@ -81,6 +81,36 @@ class BytecodeRClassWriterTest {
     }
 
     @Test
+    fun testSamePackageSymbolTablesAreMerged() {
+        val rJar = mTemporaryFolder.newFile("R.jar")
+
+        val symbolTable1 = SymbolTable.builder()
+            .tablePackage("com.example.foo")
+            .add(Symbol.NormalSymbol(ResourceType.ID, "foo", 0x0))
+            .build()
+
+        val symbolTable2 = SymbolTable.builder()
+            .tablePackage("com.example.foo")
+            .add(Symbol.NormalSymbol(ResourceType.ID, "bar", 0x1))
+            .build()
+
+        exportToCompiledJava(listOf(symbolTable1, symbolTable2), rJar.toPath())
+
+        Zip(rJar).use {
+            assertThat(it.entries).hasSize(2)
+
+            assertThat(it.entries.map { f -> f.toString() }).containsExactly(
+                "/com/example/foo/R.class",
+                "/com/example/foo/R\$id.class")
+        }
+
+        URLClassLoader(arrayOf(rJar.toURI().toURL()), null).use { rJarClassLoader ->
+            val actualFields = loadFields(rJarClassLoader, "com.example.foo.R\$id")
+            assertThat(actualFields).containsExactly("int foo = 0", "int bar = 1")
+        }
+    }
+
+    @Test
     fun generateRFilesContentTest() {
         val javacCompiledDir = mTemporaryFolder.newFolder("javac-compiled")
         val generatedRJar = mTemporaryFolder.newFile("R.jar")
