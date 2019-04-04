@@ -248,10 +248,12 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
                         )
                     }
                     DexMergingAction.MERGE_PROJECT -> {
-                        val streams =
-                            variantScope.transformManager.getStreams(StreamFilter.DEX_ARCHIVE)
                         val files =
-                            variantScope.globalScope.project.files(*streams.stream().map { it.fileCollection }.toArray())
+                            variantScope.globalScope.project.files(
+                                variantScope.transformManager.getPipelineOutputAsFileCollection(
+                                    StreamFilter.DEX_ARCHIVE
+                                )
+                            )
                         val variantType = variantScope.type
                         if (variantType.isTestComponent && variantType.isApk) {
                             val testedVariantData =

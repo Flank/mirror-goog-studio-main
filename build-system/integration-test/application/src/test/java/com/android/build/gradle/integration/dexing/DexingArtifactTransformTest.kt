@@ -21,9 +21,11 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.options.BooleanOption
+import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.util.zip.ZipOutputStream
 
 class DexingArtifactTransformTest {
 
@@ -169,6 +171,24 @@ class DexingArtifactTransformTest {
                 .with(BooleanOption.ENABLE_DEXING_DESUGARING_ARTIFACT_TRANSFORM, false)
                 .run("assembleDebug")
         assertThat(result.tasks).doesNotContain(":mergeExtDexDebug")
+    }
+
+    /** Regression test for b/129910310. */
+    @Test
+    fun testGeneratedBytecodeIsProcessed() {
+        TestInputsGenerator.jarWithEmptyClasses(
+            project.testDir.resolve("generated-classes.jar").toPath(), setOf("test/A")
+        )
+
+        project.buildFile.appendText("""
+            android.applicationVariants.all { variant ->
+                def generated = project.files("generated-classes.jar")
+                variant.registerPostJavacGeneratedBytecode(generated)
+            }
+        """.trimIndent())
+        val result =
+            project.executor().run("assembleDebug")
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG)).containsClass("Ltest/A;")
     }
 
     private fun executor() =
