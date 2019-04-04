@@ -9,7 +9,7 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 
 build_tag_filters=-no_linux
-test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,perfgate_test,perfgate_only
+test_tag_filters=perfgate_test,perfgate_only,-no_linux,-no_test_linux
 
 config_options="--config=postsubmit"
 
