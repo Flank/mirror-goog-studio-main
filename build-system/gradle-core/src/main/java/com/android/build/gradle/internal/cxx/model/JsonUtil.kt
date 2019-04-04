@@ -114,6 +114,7 @@ private fun CxxModuleModel.toMutable() = MutableCxxModuleModel(
  * use to read and write.
  */
 private data class MutableCxxVariantModel(
+    // TODO these can all be val, serialization still works. Rename classes to Cxx*ModelData
     override var module: MutableCxxModuleModel = MutableCxxModuleModel(),
     override var buildSystemArgumentList: List<String> = listOf(),
     override var cFlagList: List<String> = listOf(),
@@ -124,7 +125,8 @@ private data class MutableCxxVariantModel(
     override var jsonFolder: File = File("."),
     override var gradleBuildOutputFolder: File = File("."),
     override var isDebuggableEnabled: Boolean = false,
-    override var validAbiList: List<Abi> = listOf()
+    override var validAbiList: List<Abi> = listOf(),
+    override val buildTargetSet: Set<String> = setOf()
 ) : CxxVariantModel
 
 private fun CxxVariantModel.toMutable() =
@@ -139,7 +141,8 @@ private fun CxxVariantModel.toMutable() =
         jsonFolder = jsonFolder,
         gradleBuildOutputFolder = gradleBuildOutputFolder,
         isDebuggableEnabled = isDebuggableEnabled,
-        validAbiList = validAbiList
+        validAbiList = validAbiList,
+        buildTargetSet = buildTargetSet
     )
 
 /**
@@ -157,7 +160,8 @@ private data class MutableCxxAbiModel(
     override var buildCommandFile: File = File("."),
     override var buildOutputFile: File = File("."),
     override var modelOutputFile: File = File("."),
-    override var cmake: MutableCxxCmakeAbiModel? = null
+    override var cmake: MutableCxxCmakeAbiModel? = null,
+    override val jsonGenerationLoggingRecordFile: File = File(".")
 ) : CxxAbiModel
 
 fun CxxAbiModel.toMutable(): CxxAbiModel = MutableCxxAbiModel(
@@ -171,6 +175,7 @@ fun CxxAbiModel.toMutable(): CxxAbiModel = MutableCxxAbiModel(
     buildCommandFile = buildCommandFile,
     buildOutputFile = buildOutputFile,
     modelOutputFile = modelOutputFile,
+    jsonGenerationLoggingRecordFile = jsonGenerationLoggingRecordFile,
     cmake = cmake?.toMutable()
 )
 
@@ -185,7 +190,8 @@ private data class MutableCxxCmakeAbiModel(
     override var cacheKeyFile: File = File("."),
     override var compilerCacheUseFile: File = File("."),
     override var compilerCacheWriteFile: File = File("."),
-    override var toolchainSettingsFromCacheFile: File = File(".")
+    override var toolchainSettingsFromCacheFile: File = File("."),
+    override val compileCommandsJsonFile: File = File(".")
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toMutable() = MutableCxxCmakeAbiModel(
@@ -195,6 +201,7 @@ private fun CxxCmakeAbiModel.toMutable() = MutableCxxCmakeAbiModel(
     cacheKeyFile = cacheKeyFile,
     compilerCacheUseFile = compilerCacheUseFile,
     compilerCacheWriteFile = compilerCacheWriteFile,
-    toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile
+    toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile,
+    compileCommandsJsonFile = compileCommandsJsonFile
 )
 

@@ -35,6 +35,7 @@ fun createCxxVariantModel(
             baseVariantData.variantConfiguration)
     }
     val buildSystemArgumentList: () -> List<String> = { buildSystem.arguments }
+    val buildTargetSet: () -> Set<String> = { buildSystem.targets }
     val cFlags: () -> List<String> = { buildSystem.cFlags }
     val cppFlags: () -> List<String> = { buildSystem.cppFlags }
     val variantName: () -> String = { baseVariantData.name }
@@ -45,14 +46,15 @@ fun createCxxVariantModel(
     val ndkAbiFilters: () -> Set<String> = { buildSystem.ndkAbiFilters }
 
     return createCxxVariantModel(
-        module,
-        buildSystemArgumentList,
-        cFlags,
-        cppFlags,
-        variantName,
-        isDebuggable,
-        externalNativeBuildAbiFilters,
-        ndkAbiFilters
+        module = module,
+        buildSystemArgumentList = buildSystemArgumentList,
+        cFlags = cFlags,
+        cppFlags = cppFlags,
+        variantName = variantName,
+        isDebuggable = isDebuggable,
+        externalNativeBuildAbiFilters = externalNativeBuildAbiFilters,
+        ndkAbiFilters = ndkAbiFilters,
+        buildTargetSet = buildTargetSet
     )
 }
 
@@ -67,8 +69,10 @@ fun createCxxVariantModel(
     variantName: () -> String = notImpl,
     isDebuggable: () -> Boolean = notImpl,
     externalNativeBuildAbiFilters: () -> Set<String> = notImpl,
-    ndkAbiFilters: () -> Set<String> = notImpl): CxxVariantModel {
+    ndkAbiFilters: () -> Set<String> = notImpl,
+    buildTargetSet: () -> Set<String> = notImpl): CxxVariantModel {
     return object : CxxVariantModel {
+        override val buildTargetSet by lazy { buildTargetSet() }
         private val intermediatesFolder by lazy {
             join(module.intermediatesFolder, module.buildSystem.tag, this.variantName) }
         override val module = module

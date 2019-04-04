@@ -935,12 +935,12 @@ public class NativeModelTest {
     }
 
     private File getJsonFile(String variantName, String abi) {
-        return ExternalNativeBuildTaskUtils.getOutputJson(
-                FileUtils.join(
-                        buildNativeBuildOutputPath(config, project),
-                        config.buildSystem.getTag(),
-                        variantName),
-                abi);
+        return FileUtils.join(
+                buildNativeBuildOutputPath(config, project),
+                config.buildSystem.getTag(),
+                variantName,
+                abi,
+                "android_gradle_build.json");
     }
 
     /** Validates the NativeBuildConfigValue. Note: workingDirectory is optional. */

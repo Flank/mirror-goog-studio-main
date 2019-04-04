@@ -19,12 +19,11 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -37,48 +36,40 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull List<CxxAbiModel> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, stats);
     }
 
     @NonNull
     @Override
-    List<String> getCacheArguments(@NonNull JsonGenerationAbiConfiguration abiConfig) {
-        List<String> cacheArguments = getCommonCacheArguments(abiConfig);
+    List<String> getCacheArguments(@NonNull CxxAbiModel abi) {
+        List<String> cacheArguments = getCommonCacheArguments(abi);
         cacheArguments.add(
-                String.format("-DCMAKE_TOOLCHAIN_FILE=%s", getToolChainFile().getAbsolutePath()));
+                String.format(
+                        "-DCMAKE_TOOLCHAIN_FILE=%s",
+                        cmake.getCmakeToolchainFile().getAbsolutePath()));
         cacheArguments.add(
-                String.format("-DCMAKE_MAKE_PROGRAM=%s", getNinjaExecutable().getAbsolutePath()));
+                String.format("-DCMAKE_MAKE_PROGRAM=%s", cmake.getNinjaExe().getAbsolutePath()));
         cacheArguments.add("-GAndroid Gradle - Ninja");
         return cacheArguments;
     }
 
     @NonNull
     @Override
-    public String executeProcessAndGetOutput(@NonNull JsonGenerationAbiConfiguration abiConfig)
+    public String executeProcessAndGetOutput(@NonNull CxxAbiModel abi)
             throws ProcessException, IOException {
-        String logPrefix = variant.getVariantName() + "|" + abiConfig.getAbiName() + " :";
+        String logPrefix = variant.getVariantName() + "|" + abi.getAbi().getTag() + " :";
         return createProcessOutputJunction(
-                        abiConfig.getExternalNativeBuildFolder(),
-                        "android_gradle_generate_cmake_ninja_json_" + abiConfig.getAbiName(),
-                        getProcessBuilder(abiConfig),
+                        abi.getCxxBuildFolder(),
+                        "android_gradle_generate_cmake_ninja_json_" + abi.getAbi().getTag(),
+                        getProcessBuilder(abi),
                         androidBuilder,
                         logPrefix)
                 .logStderrToInfo()
                 .logStdoutToInfo()
                 .executeAndReturnStdoutString();
-    }
-
-
-    @NonNull
-    private File getNinjaExecutable() {
-        if (isWindows()) {
-            return new File(getCmakeBinFolder(), "ninja.exe");
-        }
-        return new File(getCmakeBinFolder(), "ninja");
     }
 }

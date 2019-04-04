@@ -33,13 +33,13 @@ interface CxxModuleModel {
     val isNativeCompilerSettingsCacheEnabled: Boolean
     /** Whether to build a single ABI for IDE (default -pandroid.buildOnlyTargetAbi=true) */
     val isBuildOnlyTargetAbiEnabled: Boolean
-    /**  The single ABI to build for IDE (example -pandroid.injected.build.abi="x86") */
+    /** The ABIs to build for IDE (example -pandroid.injected.build.abi="x86,x86_64") */
     val ideBuildTargetAbi: String?
-    /**  The abiFilters from build.gradle (ex android.splits.abiFilters 'x86', 'x86_64') */
+    /** The abiFilters from build.gradle (ex android.splits.abiFilters 'x86', 'x86_64') */
     val splitsAbiFilterSet: Set<String>
-    /**  Folder for intermediates (ex source-root/Source/Android/app/build/intermediates) */
+    /** Folder for intermediates (ex source-root/Source/Android/app/build/intermediates) */
     val intermediatesFolder: File
-    /**  The colon-delimited gradle path to this module
+    /** The colon-delimited gradle path to this module
      *   (ex ':app' in ./gradlew :app:externalNativeBuildDebug) */
     val gradleModulePathName: String
     /**  Dir of the project (ex source-root/Source/Android/app) */

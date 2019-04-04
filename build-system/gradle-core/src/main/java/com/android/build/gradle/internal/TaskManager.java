@@ -1458,7 +1458,6 @@ public abstract class TaskManager {
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(
                         new ExternalNativeBuildTask.CreationAction(
-                                targetAbi,
                                 generator,
                                 generateTask,
                                 scope,

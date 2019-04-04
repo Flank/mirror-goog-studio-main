@@ -43,6 +43,11 @@ interface CxxVariantModel {
     val isDebuggableEnabled: Boolean
     /**  The list of valid ABIs for this variant */
     val validAbiList : List<Abi>
+    /**
+     * The list of build targets.
+     *  ex, android.defaultConfig.externalNativeBuild.targets "my-target"
+     */
+    val buildTargetSet : Set<String>
     /**  The module that this variant is part of */
     val module: CxxModuleModel
 }

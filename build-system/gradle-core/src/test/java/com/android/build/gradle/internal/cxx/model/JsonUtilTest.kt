@@ -51,6 +51,7 @@ class JsonUtilTest {
         }
 
         val variant = object : CxxVariantModel {
+            override val buildTargetSet = setOf("buildTargetSet")
             override val buildSystemArgumentList = listOf("buildSystemArgumentList")
             override val cFlagList = listOf("cFlagList")
             override val cppFlagsList = listOf("cppFlagList")
@@ -64,6 +65,7 @@ class JsonUtilTest {
             override val module = module
         }
         val cmake = object : CxxCmakeAbiModel {
+            override val compileCommandsJsonFile = File("compileCommandsJsonFile")
             override val cmakeListsWrapperFile = File("cmakeListsWrapperFile")
             override val toolchainWrapperFile = File("toolchainWrapperFile")
             override val buildGenerationStateFile = File("buildGenerationStateFile")
@@ -73,6 +75,7 @@ class JsonUtilTest {
             override val toolchainSettingsFromCacheFile = File("toolchainSettingsFromCacheFile")
         }
         val abi = object : CxxAbiModel {
+            override val jsonGenerationLoggingRecordFile = File("jsonGenerationLoggingRecordFile")
             override val abi = Abi.X86
             override val abiPlatformVersion = 28
             override val cxxBuildFolder = File("cxxBuildFolder")

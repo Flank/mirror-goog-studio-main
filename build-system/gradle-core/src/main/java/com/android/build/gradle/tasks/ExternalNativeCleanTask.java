@@ -54,8 +54,6 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
 
     @NonNull private Provider<ExternalNativeJsonGenerator> generator;
 
-    @NonNull private List<String> abiNames;
-
     @TaskAction
     void clean() throws ProcessException, IOException {
         try (GradleBuildLoggingEnvironment ignore =
@@ -160,22 +158,20 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
         @Override
         public void configure(@NonNull ExternalNativeCleanTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            // Attempt to clean every possible ABI even those that aren't currently built.
-            // This covers cases where user has changed abiFilters or platform. We don't want
-            // to leave stale results hanging around.
-            List<String> abiNames = Lists.newArrayList();
-            for (Abi abi : Abi.values()) {
-                abiNames.add(abi.getTag());
-            }
-            task.abiNames = abiNames;
             task.generator = generator;
-
             task.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
         }
     }
 
     @NonNull
     private List<File> getNativeBuildConfigurationsJsons() {
+        // Attempt to clean every possible ABI even those that aren't currently built.
+        // This covers cases where user has changed abiFilters or platform. We don't want
+        // to leave stale results hanging around.
+        List<String> abiNames = Lists.newArrayList();
+        for (Abi abi : Abi.values()) {
+            abiNames.add(abi.getTag());
+        }
         ExternalNativeJsonGenerator jsonGenerator = generator.get();
         return ExternalNativeBuildTaskUtils.getOutputJsons(jsonGenerator.getJsonFolder(), abiNames);
     }

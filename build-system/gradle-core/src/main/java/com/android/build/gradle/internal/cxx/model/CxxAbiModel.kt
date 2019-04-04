@@ -41,8 +41,11 @@ interface CxxAbiModel {
     val buildOutputFile: File
     /**  Output file of the Cxx*Model structure */
     val modelOutputFile: File
+    /** Json Generation logging record */
+    val jsonGenerationLoggingRecordFile: File
     /**  CMake-specific settings for this ABI */
     val cmake: CxxCmakeAbiModel?
     /**  The variant for this ABI */
     val variant: CxxVariantModel
 }
+

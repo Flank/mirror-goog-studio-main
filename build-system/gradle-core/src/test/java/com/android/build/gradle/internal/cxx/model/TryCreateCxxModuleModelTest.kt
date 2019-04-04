@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test

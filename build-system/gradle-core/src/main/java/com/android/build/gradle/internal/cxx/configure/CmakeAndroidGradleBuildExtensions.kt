@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.configure
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import java.io.File
 
 /**
@@ -90,9 +91,7 @@ import java.io.File
  * This is the Before Ninja Project Generation from above.
  */
 fun wrapCmakeListsForCompilerSettingsCaching(
-    cacheRootFolder: File,
-    config: JsonGenerationAbiConfiguration,
-    cmakeListsFolder: File,
+    abi: CxxAbiModel,
     args: List<String>
 ): CmakeExecutionConfiguration {
     val commandLine = parseCmakeArguments(args)
@@ -102,21 +101,21 @@ fun wrapCmakeListsForCompilerSettingsCaching(
                 "$ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED was set to false")
         // Remove ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED so user doesn't get warning
         // about unused property
-        return CmakeExecutionConfiguration(cmakeListsFolder,
+        return CmakeExecutionConfiguration(abi.variant.module.makeFile.parentFile,
             commandLine.removeProperty(ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED)
                 .map { it.sourceArgument })
     }
-    val cache = CmakeCompilerSettingsCache(cacheRootFolder)
+    val cache = CmakeCompilerSettingsCache(abi.variant.module.compilerSettingsCacheFolder)
     val fileWriter = IdempotentFileWriter()
     val cacheKey = makeCmakeCompilerCacheKey(commandLine)
 
     if (cacheKey == null) {
         info("Not wrapping toolchain because couldn't construct cache key")
-        return CmakeExecutionConfiguration(cmakeListsFolder, args)
+        return CmakeExecutionConfiguration(abi.variant.module.makeFile.parentFile, args)
     }
 
     // Write the cache files to .cxx so they can be used after the build.
-    fileWriter.addFile(config.cmake!!.cacheKeyFile.path, cacheKey.toJsonString())
+    fileWriter.addFile(abi.cmake!!.cacheKeyFile.path, cacheKey.toJsonString())
 
     val cachedProperties = cache.tryGetValue(cacheKey)
 
@@ -128,7 +127,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
         replaceToolchainWithWrapper(
             commandLine = commandLine,
             cachedProperties = cachedProperties,
-            config = config,
+            config = abi,
             fileWriter = fileWriter
         )
     }
@@ -140,7 +139,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     // CMakeLists.txt such as helping with CCACHE-like scenarios.
     val result = replaceCmakeListsWithWrapper(
         commandLine = toolchainReplaced,
-        config = config,
+        abi = abi,
         fileWriter = fileWriter
     )
 
@@ -155,7 +154,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
 private fun replaceToolchainWithWrapper(
     commandLine: List<CommandLineArgument>,
     cachedProperties: String,
-    config: JsonGenerationAbiConfiguration,
+    config: CxxAbiModel,
     fileWriter: IdempotentFileWriter
 ): List<CommandLineArgument> {
     with(config.cmake!!) {
@@ -163,12 +162,12 @@ private fun replaceToolchainWithWrapper(
             when (arg) {
                 is DefineProperty -> {
                     if (arg.propertyName == CMAKE_TOOLCHAIN_FILE.name) {
-                        fileWriter.addFile(toolchainSettingsFromCache.path, cachedProperties)
+                        fileWriter.addFile(toolchainSettingsFromCacheFile.path, cachedProperties)
                         fileWriter.addFile(
                             toolchainWrapperFile.path,
                             wrapCmakeToolchain(
                                 originalToolchainFile = File(arg.propertyValue),
-                                cacheFile = toolchainSettingsFromCache.absoluteFile,
+                                cacheFile = toolchainSettingsFromCacheFile.absoluteFile,
                                 cacheUseSignalFile = compilerCacheUseFile
                             )
                         )
@@ -188,10 +187,10 @@ private fun replaceToolchainWithWrapper(
  */
 private fun replaceCmakeListsWithWrapper(
     commandLine: List<CommandLineArgument>,
-    config: JsonGenerationAbiConfiguration,
+    abi: CxxAbiModel,
     fileWriter: IdempotentFileWriter
 ): CmakeExecutionConfiguration {
-    with(config.cmake!!) {
+    with(abi.cmake!!) {
         return CmakeExecutionConfiguration(
             cmakeListsWrapperFile.parentFile,
             commandLine.asSequence().map { arg ->
@@ -202,7 +201,7 @@ private fun replaceCmakeListsWithWrapper(
                             cmakeListsWrapperFile.path,
                             wrapCmakeLists(
                                 originalCmakeListsFolder = File(arg.path),
-                                gradleBuildOutputFolder = gradleBuildOutputFolder,
+                                gradleBuildOutputFolder = abi.gradleBuildOutputFolder,
                                 buildGenerationStateFile = buildGenerationStateFile
                             )
                         )
@@ -223,15 +222,14 @@ private fun replaceCmakeListsWithWrapper(
  * the settings before writing to the cache.
  */
 fun writeCompilerSettingsToCache(
-    cacheRootFolder: File,
-    config: JsonGenerationAbiConfiguration
+    abi: CxxAbiModel
 ) {
-    with(config.cmake!!) {
+    with(abi.cmake!!) {
         var cacheWriteStatus = "Exception while writing cache, check the log."
         var cacheUseStatus = false
         try {
 
-            if (cacheRootFolder.isDirectory && compilerCacheUseFile.isFile) {
+            if (abi.variant.module.compilerSettingsCacheFolder.isDirectory && compilerCacheUseFile.isFile) {
                 // We check for cacheRootFolder existence just in case it is removed manually
                 // by user after we record the cache as being used, in which case we take that to
                 // mean user might want to not use the cache.
@@ -295,7 +293,7 @@ fun writeCompilerSettingsToCache(
                 .sorted()
                 .joinToString("\n")
 
-            val cache = CmakeCompilerSettingsCache(cacheRootFolder)
+            val cache = CmakeCompilerSettingsCache(abi.variant.module.compilerSettingsCacheFolder)
             cache.saveKeyValue(key, compilerCheckVariables)
             cacheWriteStatus = ""
         } finally {

@@ -24,11 +24,12 @@ import com.android.build.gradle.tasks.NativeBuildSystem
  * underlying native build system. That is, it hides whether the build system is CMake or ndk-build.
  */
 data class NativeBuildSystemVariantConfig(
-    @JvmField val externalNativeBuildAbiFilters: Set<String>,
-    @JvmField val ndkAbiFilters: Set<String>,
-    @JvmField val arguments: List<String>,
-    @JvmField val cFlags: List<String>,
-    @JvmField val cppFlags: List<String>)
+    val externalNativeBuildAbiFilters: Set<String>,
+    val ndkAbiFilters: Set<String>,
+    val arguments: List<String>,
+    val cFlags: List<String>,
+    val cppFlags: List<String>,
+    val targets: Set<String>)
 
 fun createNativeBuildSystemVariantConfig(
     buildSystem: NativeBuildSystem,
@@ -128,6 +129,32 @@ fun createNativeBuildSystemVariantConfig(
             config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.cppFlags ?: listOf()
         else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
 
-    return NativeBuildSystemVariantConfig(externalNativeBuildAbiFilters, ndkAbiFilters, arguments, cFlags, cppFlags)
+    /**
+     * The set of build system c++ targets from the externalNativeBuild part of the DSL. For example,
+     *
+     * <pre>
+     *     defaultConfig {
+     *         externalNativeBuild {
+     *             cmake {
+     *                 targets "my-target"
+     *             }
+     *         }
+     *     }
+     * </pre>
+     */
+    val targets: Set<String> = when (buildSystem) {
+        NativeBuildSystem.CMAKE ->
+            config.externalNativeBuildOptions.externalNativeCmakeOptions?.targets ?: setOf()
+        NativeBuildSystem.NDK_BUILD ->
+            config.externalNativeBuildOptions.externalNativeNdkBuildOptions?.targets ?: setOf()
+        else -> throw IllegalArgumentException("Unknown ExternalNativeJsonGenerator type")}
+
+    return NativeBuildSystemVariantConfig(
+        externalNativeBuildAbiFilters,
+        ndkAbiFilters,
+        arguments,
+        cFlags,
+        cppFlags,
+        targets)
 
 }

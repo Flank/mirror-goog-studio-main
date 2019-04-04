@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradle
 import static com.android.build.gradle.internal.cxx.configure.CmakeSourceFileNamingKt.hasCmakeHeaderFileExtensions;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseIndexingVisitorKt.indexCompilationDatabase;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchainVisitorKt.populateCompilationDatabaseToolchains;
-import static com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils.getOutputFolder;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -46,7 +46,6 @@ import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessag
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.cxx.configure.CmakeExecutionConfiguration;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchain;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
@@ -55,6 +54,7 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -80,6 +80,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
 
@@ -93,12 +94,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull List<CxxAbiModel> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File cmakeFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, configurationFailures, androidBuilder, cmakeFolder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, stats);
     }
 
     /**
@@ -128,12 +128,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @NonNull
     @Override
-    List<String> getCacheArguments(@NonNull JsonGenerationAbiConfiguration abiConfig) {
-        List<String> cacheArguments = getCommonCacheArguments(abiConfig);
+    List<String> getCacheArguments(@NonNull CxxAbiModel abi) {
+        List<String> cacheArguments = getCommonCacheArguments(abi);
         cacheArguments.add("-DCMAKE_SYSTEM_NAME=Android");
-        cacheArguments.add(String.format("-DCMAKE_ANDROID_ARCH_ABI=%s", abiConfig.getAbiName()));
-        cacheArguments.add(
-                String.format("-DCMAKE_SYSTEM_VERSION=%s", abiConfig.getAbiPlatformVersion()));
+        cacheArguments.add(String.format("-DCMAKE_ANDROID_ARCH_ABI=%s", abi.getAbi().getTag()));
+        cacheArguments.add(String.format("-DCMAKE_SYSTEM_VERSION=%s", abi.getAbiPlatformVersion()));
         // Generates the compile_commands json file that will help us get the compiler executable
         // and flags.
         cacheArguments.add("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON");
@@ -141,35 +140,29 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         cacheArguments.add(
                 String.format(
-                        "-DCMAKE_TOOLCHAIN_FILE=%s",
-                        getToolchainFile(abiConfig.getAbiName()).getAbsolutePath()));
+                        "-DCMAKE_TOOLCHAIN_FILE=%s", getToolchainFile(abi).getAbsolutePath()));
 
         // By default, use the ninja generator.
         cacheArguments.add("-G Ninja");
 
         // To preserve backward compatibility with fork CMake look for ninja.exe next to cmake.exe
         // and use it. If it's not there then normal CMake search logic will be used.
-        File possibleNinja =
-                isWindows()
-                        ? new File(getCmakeBinFolder(), "ninja.exe")
-                        : new File(getCmakeBinFolder(), "ninja");
-        if (possibleNinja.isFile()) {
-            cacheArguments.add(String.format("-DCMAKE_MAKE_PROGRAM=%s", possibleNinja));
+        if (cmake.getNinjaExe().isFile()) {
+            cacheArguments.add(String.format("-DCMAKE_MAKE_PROGRAM=%s", cmake.getNinjaExe()));
         }
         return cacheArguments;
     }
 
     @NonNull
     @Override
-    public String executeProcessAndGetOutput(@NonNull JsonGenerationAbiConfiguration abiConfig)
+    public String executeProcessAndGetOutput(@NonNull CxxAbiModel abi)
             throws ProcessException, IOException {
         // Once a Cmake server object is created
         // - connect to the server
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
-        try (PrintWriter serverLogWriter =
-                getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abiConfig.getAbiName()))) {
+        try (PrintWriter serverLogWriter = getCmakeServerLogWriter(abi.getCxxBuildFolder())) {
             ILogger logger = LoggerWrapper.getLogger(CmakeServerExternalNativeJsonGenerator.class);
             // Create a new cmake server for the given Cmake and configure the given project.
             ServerReceiver serverReceiver =
@@ -185,40 +178,36 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                                     message ->
                                             receiveDiagnosticMessage(
                                                     serverLogWriter, logger, message));
-            Server cmakeServer = ServerFactory.create(getCmakeBinFolder(), serverReceiver);
+            File cmakeBinFolder = cmake.getCmakeExe().getParentFile();
+            Server cmakeServer = ServerFactory.create(cmakeBinFolder, serverReceiver);
             if (cmakeServer == null) {
                 throw new RuntimeException(
                         "Unable to create a Cmake server located at: "
-                                + getCmakeBinFolder().getAbsolutePath());
+                                + cmakeBinFolder.getAbsolutePath());
             }
 
             if (!cmakeServer.connect()) {
                 throw new RuntimeException(
                         "Unable to connect to Cmake server located at: "
-                                + getCmakeBinFolder().getAbsolutePath());
+                                + cmakeBinFolder.getAbsolutePath());
             }
 
             try {
-                List<String> cacheArgumentsList = getCacheArguments(abiConfig);
+                List<String> cacheArgumentsList = getCacheArguments(abi);
                 cacheArgumentsList.addAll(getBuildArguments());
                 ConfigureCommandResult configureCommandResult;
-                File cmakeListsFolder = getMakefile().getParentFile();
+                File cmakeListsFolder = variant.getModule().getMakeFile().getParentFile();
                 if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
                     // Configure extensions
                     CmakeExecutionConfiguration executableConfiguration =
-                            wrapCmakeListsForCompilerSettingsCaching(
-                                    variant.getModule().getCompilerSettingsCacheFolder(),
-                                    abiConfig,
-                                    getMakefile().getParentFile(),
-                                    cacheArgumentsList);
+                            wrapCmakeListsForCompilerSettingsCaching(abi, cacheArgumentsList);
 
                     cacheArgumentsList = executableConfiguration.getArgs();
                     cmakeListsFolder = executableConfiguration.getCmakeListsFolder();
                 }
 
                 // Handshake
-                doHandshake(
-                        cmakeListsFolder, abiConfig.getExternalNativeBuildFolder(), cmakeServer);
+                doHandshake(cmakeListsFolder, abi.getCxxBuildFolder(), cmakeServer);
 
                 // Configure
                 String[] argsArray = cacheArgumentsList.toArray(new String[0]);
@@ -239,7 +228,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                                     + configureCommandResult.interactiveMessages);
                 }
 
-                generateAndroidGradleBuild(abiConfig, cmakeServer);
+                generateAndroidGradleBuild(abi, cmakeServer);
                 return configureCommandResult.interactiveMessages;
             } finally {
                 cmakeServer.disconnect();
@@ -359,6 +348,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             @NonNull File sourceDirectory,
             @NonNull File buildDirectory,
             @NonNull ProtocolVersion cmakeServerProtocolVersion) {
+        if (!sourceDirectory.isDirectory()) {
+            error("Not a directory: %s", sourceDirectory);
+        }
         HandshakeRequest handshakeRequest = new HandshakeRequest();
         handshakeRequest.cookie = "gradle-cmake-cookie";
         handshakeRequest.generator = getGenerator(getBuildArguments());
@@ -407,8 +399,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      * @throws IOException I/O failure
      */
     private void generateAndroidGradleBuild(
-            @NonNull JsonGenerationAbiConfiguration config, @NonNull Server cmakeServer)
-            throws IOException {
+            @NonNull CxxAbiModel config, @NonNull Server cmakeServer) throws IOException {
         NativeBuildConfigValue nativeBuildConfigValue =
                 getNativeBuildConfigValue(config, cmakeServer);
         AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile(
@@ -423,8 +414,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      */
     @VisibleForTesting
     protected NativeBuildConfigValue getNativeBuildConfigValue(
-            @NonNull JsonGenerationAbiConfiguration abiConfig, @NonNull Server cmakeServer)
-            throws IOException {
+            @NonNull CxxAbiModel abi, @NonNull Server cmakeServer) throws IOException {
         NativeBuildConfigValue nativeBuildConfigValue = createDefaultNativeBuildConfigValue();
 
         assert nativeBuildConfigValue.stringTable != null;
@@ -432,20 +422,17 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // Build file
         assert nativeBuildConfigValue.buildFiles != null;
-        nativeBuildConfigValue.buildFiles.addAll(getBuildFiles(abiConfig, cmakeServer));
+        nativeBuildConfigValue.buildFiles.addAll(getBuildFiles(abi, cmakeServer));
 
         // Clean commands
         assert nativeBuildConfigValue.cleanCommands != null;
         nativeBuildConfigValue.cleanCommands.add(
-                CmakeUtils.getCleanCommand(
-                        getCmakeExecutable(), abiConfig.getExternalNativeBuildFolder()));
+                CmakeUtils.getCleanCommand(cmake.getCmakeExe(), abi.getCxxBuildFolder()));
 
         // Build targets command.
         assert nativeBuildConfigValue.buildTargetsCommand != null;
         nativeBuildConfigValue.buildTargetsCommand =
-                CmakeUtils.getBuildTargetsCommand(
-                        getCmakeExecutable(),
-                        getOutputFolder(getJsonFolder(), abiConfig.getAbiName()));
+                CmakeUtils.getBuildTargetsCommand(cmake.getCmakeExe(), abi.getCxxBuildFolder());
 
         CodeModel codeModel = cmakeServer.codemodel();
         if (!ServerUtils.isCodeModelValid(codeModel)) {
@@ -464,7 +451,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // toolchains
         nativeBuildConfigValue.toolchains =
                 getNativeToolchains(
-                        abiConfig.getAbiName(),
+                        abi,
                         cmakeServer,
                         nativeBuildConfigValue.cppFileExtensions,
                         nativeBuildConfigValue.cFileExtensions);
@@ -482,14 +469,10 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     }
 
                     NativeLibraryValue nativeLibraryValue =
-                            getNativeLibraryValue(
-                                    abiConfig.getAbiName(),
-                                    abiConfig.getExternalNativeBuildFolder(),
-                                    target,
-                                    strings);
+                            getNativeLibraryValue(abi, abi.getCxxBuildFolder(), target, strings);
                     nativeLibraryValue.toolchain = toolchainHashString;
                     String libraryName =
-                            target.name + "-" + config.name + "-" + abiConfig.getAbiName();
+                            target.name + "-" + config.name + "-" + abi.getAbi().getTag();
                     assert nativeBuildConfigValue.libraries != null;
                     nativeBuildConfigValue.libraries.put(libraryName, nativeLibraryValue);
                 } // target
@@ -500,17 +483,20 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @VisibleForTesting
     protected NativeLibraryValue getNativeLibraryValue(
-            @NonNull String abi,
+            @NonNull CxxAbiModel abi,
             @NonNull File workingDirectory,
             @NonNull Target target,
             StringTable strings)
             throws FileNotFoundException {
         return getNativeLibraryValue(
-                getCmakeExecutable(),
-                getOutputFolder(getJsonFolder(), abi),
+                cmake.getCmakeExe(),
+                abi.getCxxBuildFolder(),
                 isDebuggable(),
-                new JsonReader(new FileReader(getCompileCommandsJson(abi))),
-                abi,
+                new JsonReader(
+                        new FileReader(
+                                Objects.requireNonNull(abi.getCmake())
+                                        .getCompileCommandsJsonFile())),
+                abi.getAbi().getTag(),
                 workingDirectory,
                 target,
                 strings);
@@ -653,8 +639,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      * are currently ignored.
      */
     @NonNull
-    private List<File> getBuildFiles(
-            @NonNull JsonGenerationAbiConfiguration config, @NonNull Server cmakeServer)
+    private List<File> getBuildFiles(@NonNull CxxAbiModel config, @NonNull Server cmakeServer)
             throws IOException {
         CmakeInputsResult cmakeInputsResult = cmakeServer.cmakeInputs();
         if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)) {
@@ -754,8 +739,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      * @return a map of toolchain hash to toolchain value. The map will have only one entry.
      */
     @NonNull
-    private Map<String, NativeToolchainValue> getNativeToolchains(
-            @NonNull String abi,
+    private static Map<String, NativeToolchainValue> getNativeToolchains(
+            @NonNull CxxAbiModel abi,
             @NonNull Server cmakeServer,
             @NonNull Collection<String> cppExtensionSet,
             @NonNull Collection<String> cExtensionSet) {
@@ -763,7 +748,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         File cCompilerExecutable = null;
         File cppCompilerExecutable = null;
 
-        File compilationDatabase = getCompileCommandsJson(abi);
+        File compilationDatabase =
+                Objects.requireNonNull(abi.getCmake()).getCompileCommandsJsonFile();
         if (compilationDatabase.exists()) {
             CompilationDatabaseToolchain toolchain =
                     populateCompilationDatabaseToolchains(
@@ -797,7 +783,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     /** Returns the toolchain file to be used. */
     @NonNull
-    private File getToolchainFile(@NonNull String abi) {
+    private File getToolchainFile(@NonNull CxxAbiModel abi) {
         // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
         // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
         // programmatically.
@@ -806,9 +792,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             // Note: When setting this flag, Cmake's android toolchain would end up calling our
             // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only
             // once.
-            return getToolChainFile();
+            return cmake.getCmakeToolchainFile();
         }
-        return getPreNDKr15WrapperToolchainFile(getOutputFolder(getJsonFolder(), abi));
+        return getPreNDKr15WrapperToolchainFile(abi);
     }
 
     /**
@@ -817,19 +803,22 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      * should install NDK r15+ so it works with CMake 3.7+.
      */
     @NonNull
-    private File getPreNDKr15WrapperToolchainFile(@NonNull File outputFolder) {
+    private File getPreNDKr15WrapperToolchainFile(CxxAbiModel abi) {
         StringBuilder tempAndroidToolchain =
                 new StringBuilder(
                         "# This toolchain file was generated by Gradle to support NDK versions r14 and below.\n");
 
         // Include the original android toolchain
         tempAndroidToolchain
-                .append(String.format("include(\"%s\")", normalizeFilePath(getToolChainFile())))
+                .append(
+                        String.format(
+                                "include(\"%s\")",
+                                normalizeFilePath(cmake.getCmakeToolchainFile())))
                 .append(System.lineSeparator());
         // Overwrite the CMAKE_SYSTEM_VERSION to 1 so we skip CMake's Android toolchain.
         tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)").append(System.lineSeparator());
 
-        File toolchainFile = getTempToolchainFile(outputFolder);
+        File toolchainFile = getTempToolchainFile(abi.getCxxBuildFolder());
         try {
             FileUtils.writeStringToFile(toolchainFile, tempAndroidToolchain.toString());
         } catch (IOException e) {

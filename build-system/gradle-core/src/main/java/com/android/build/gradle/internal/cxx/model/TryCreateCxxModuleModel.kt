@@ -184,24 +184,24 @@ fun tryCreateCxxModuleModel(global : GlobalScope) : CxxModuleModel? {
     val ndkDefaultAbis: () -> List<Abi> = { ndkHandler.ndkPlatform.defaultAbis }
 
     return createCxxModuleModel(
-        makeFile,
-        buildSystem,
-        rootBuildGradlePath,
-        ndkFolder,
-        ndkVersion,
-        ndkSupportedAbis,
-        ndkDefaultAbis,
-        { cxxFolder },
-        sdkFolder,
-        intermediatesDir,
-        projectPath,
-        { moduleRootFolder },
-        isNativeCompilerSettingsCacheEnabled,
-        isBuildOnlyTargetAbiEnabled,
-        ideBuildTargetAbi,
-        splitsAbiFilters,
-        compilerSettingsCacheFolder,
-        cmake
+        makeFile = makeFile,
+        buildSystem = buildSystem,
+        rootBuildGradlePath = rootBuildGradlePath,
+        ndkFolder = ndkFolder,
+        ndkVersion = ndkVersion,
+        ndkSupportedAbis = ndkSupportedAbis,
+        ndkDefaultAbis = ndkDefaultAbis,
+        cxxFolder = { cxxFolder },
+        sdkFolder = sdkFolder,
+        intermediatesDir = intermediatesDir,
+        projectPath = projectPath,
+        moduleRootFolder = { moduleRootFolder },
+        isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
+        isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
+        ideBuildTargetAbi = ideBuildTargetAbi,
+        splitsAbiFilters = splitsAbiFilters,
+        compilerSettingsCacheFolder = compilerSettingsCacheFolder,
+        cmake = cmake
     )
 }
 

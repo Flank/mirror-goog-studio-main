@@ -23,6 +23,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils.join
 import com.google.common.annotations.VisibleForTesting
+import java.io.File
 
 /**
  * Construct a [CxxAbiModel], careful to be lazy with module level fields.
@@ -48,9 +49,9 @@ fun createCxxAbiModel(
                 .findSuitablePlatformVersion(abi.tag, version)
     }
     return createCxxAbiModel(
-        variant,
-        abi,
-        abiPlatformVersion
+        variant = variant,
+        abi = abi,
+        abiPlatformVersion = abiPlatformVersion
     )
 }
 
@@ -60,6 +61,9 @@ fun createCxxAbiModel(
     abi: Abi,
     abiPlatformVersion: () -> Int) : CxxAbiModel {
     return object : CxxAbiModel {
+        override val jsonGenerationLoggingRecordFile by lazy {
+            join(cxxBuildFolder,"json_generation_record.json")
+        }
         private val buildSystemPresentationName by lazy {
             variant.module.buildSystem.tag }
         override val variant = variant
@@ -78,10 +82,12 @@ fun createCxxAbiModel(
         override val buildOutputFile by lazy {
             join(cxxBuildFolder, "${buildSystemPresentationName}_build_output.txt") }
         override val modelOutputFile by lazy {
-            join(cxxBuildFolder,"build-model.yaml") }
+            join(cxxBuildFolder,"build_model.json") }
         override val cmake by lazy {
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 object : CxxCmakeAbiModel {
+                    override val compileCommandsJsonFile by lazy {
+                        join(cxxBuildFolder, "compile_commands.json") }
                     override val cmakeListsWrapperFile by lazy {
                         join(gradleBuildOutputFolder, "CMakeLists.txt") }
                     override val toolchainWrapperFile by lazy {

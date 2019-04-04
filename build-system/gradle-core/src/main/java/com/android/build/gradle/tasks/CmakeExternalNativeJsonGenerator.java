@@ -23,7 +23,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,19 +53,17 @@ import java.util.regex.Pattern;
 abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     private static final Pattern cmakeFileFinder =
             Pattern.compile("^(.*CMake (Error|Warning).* at\\s+)([^:]+)(:.*)$", Pattern.DOTALL);
-
-    @NonNull final File cmakeInstallFolder;
+    @NonNull protected final CxxCmakeModuleModel cmake;
 
     CmakeExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
-            @NonNull List<JsonGenerationAbiConfiguration> abis,
+            @NonNull List<CxxAbiModel> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
         super(variant, abis, configurationFailures, androidBuilder, stats);
-        this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
+        this.cmake = Objects.requireNonNull(variant.getModule().getCmake());
 
         // Check some basic requirements. This code executes at sync time but any call to
         // recordConfigurationError will later cause the generation of json to fail.
@@ -90,7 +90,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
      * @return Returns the cache arguments
      */
     @NonNull
-    abstract List<String> getCacheArguments(@NonNull JsonGenerationAbiConfiguration abiConfig);
+    abstract List<String> getCacheArguments(@NonNull CxxAbiModel abi);
 
     /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
@@ -99,33 +99,30 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
      * @return Returns the combination of STDIO and STDERR from running the process.
      */
     @NonNull
-    public abstract String executeProcessAndGetOutput(
-            @NonNull JsonGenerationAbiConfiguration abiConfig) throws ProcessException, IOException;
+    public abstract String executeProcessAndGetOutput(@NonNull CxxAbiModel abi)
+            throws ProcessException, IOException;
 
     @NonNull
     @Override
-    public String executeProcess(@NonNull JsonGenerationAbiConfiguration abiConfig)
-            throws ProcessException, IOException {
-        String output = executeProcessAndGetOutput(abiConfig);
+    public String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException {
+        String output = executeProcessAndGetOutput(abi);
         return correctMakefilePaths(output, getMakefile().getParentFile());
     }
 
     @Override
-    void processBuildOutput(
-            @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig) {
+    void processBuildOutput(@NonNull String buildOutput, @NonNull CxxAbiModel abi) {
         if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
-            writeCompilerSettingsToCache(
-                    variant.getModule().getCompilerSettingsCacheFolder(), abiConfig);
+            writeCompilerSettingsToCache(abi);
         }
     }
 
     @NonNull
     @Override
-    ProcessInfoBuilder getProcessBuilder(@NonNull JsonGenerationAbiConfiguration abiConfig) {
+    ProcessInfoBuilder getProcessBuilder(@NonNull CxxAbiModel abi) {
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
-        builder.setExecutable(getCmakeExecutable());
-        builder.addArgs(getProcessBuilderArgs(abiConfig));
+        builder.setExecutable(cmake.getCmakeExe());
+        builder.addArgs(getProcessBuilderArgs(abi));
 
         return builder;
     }
@@ -133,23 +130,18 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     /** Returns the list of arguments to be passed to process builder. */
     @VisibleForTesting
     @NonNull
-    List<String> getProcessBuilderArgs(@NonNull JsonGenerationAbiConfiguration abiConfig) {
+    List<String> getProcessBuilderArgs(@NonNull CxxAbiModel abi) {
         List<String> processBuilderArgs = Lists.newArrayList();
         // CMake requires a folder. Trim the filename off.
         File cmakeListsFolder = getMakefile().getParentFile();
         processBuilderArgs.add(String.format("-H%s", cmakeListsFolder));
-        processBuilderArgs.add(String.format("-B%s", abiConfig.getExternalNativeBuildFolder()));
-        processBuilderArgs.addAll(getCacheArguments(abiConfig));
+        processBuilderArgs.add(String.format("-B%s", abi.getCxxBuildFolder()));
+        processBuilderArgs.addAll(getCacheArguments(abi));
 
         // Add user provided build arguments
         processBuilderArgs.addAll(getBuildArguments());
         if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
-            return wrapCmakeListsForCompilerSettingsCaching(
-                            variant.getModule().getCompilerSettingsCacheFolder(),
-                            abiConfig,
-                            cmakeListsFolder,
-                            processBuilderArgs)
-                    .getArgs();
+            return wrapCmakeListsForCompilerSettingsCaching(abi, processBuilderArgs).getArgs();
         }
         return processBuilderArgs;
     }
@@ -159,16 +151,15 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
      *
      * @return list of default cache arguments
      */
-    protected List<String> getCommonCacheArguments(
-            @NonNull JsonGenerationAbiConfiguration abiConfig) {
+    protected List<String> getCommonCacheArguments(@NonNull CxxAbiModel abi) {
         List<String> cacheArguments = Lists.newArrayList();
-        cacheArguments.add(String.format("-DANDROID_ABI=%s", abiConfig.getAbiName()));
+        cacheArguments.add(String.format("-DANDROID_ABI=%s", abi.getAbi().getTag()));
         cacheArguments.add(
-                String.format("-DANDROID_PLATFORM=android-%s", abiConfig.getAbiPlatformVersion()));
+                String.format("-DANDROID_PLATFORM=android-%s", abi.getAbiPlatformVersion()));
         cacheArguments.add(
                 String.format(
                         "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s",
-                        new File(getObjFolder(), abiConfig.getAbiName())));
+                        new File(getObjFolder(), abi.getAbi().getTag())));
         cacheArguments.add(
                 String.format("-DCMAKE_BUILD_TYPE=%s", isDebuggable() ? "Debug" : "Release"));
         cacheArguments.add(String.format("-DANDROID_NDK=%s", getNdkFolder()));
@@ -183,12 +174,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         }
 
         return cacheArguments;
-    }
-
-    /** Returns the compile commands json file for the given abi. */
-    @NonNull
-    public File getCompileCommandsJson(@NonNull String abi) {
-        return ExternalNativeBuildTaskUtils.getCompileCommandsJson(getJsonFolder(), abi);
     }
 
     @NonNull
@@ -280,32 +265,5 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         }
 
         return input;
-    }
-
-    @NonNull
-    protected File getToolChainFile() {
-        String toolchainFileName = "android.toolchain.cmake";
-        File ndkCmakeFolder = new File(new File(getNdkFolder(), "build"), "cmake");
-        // Toolchain file should be located at ndk/build/cmake/ for NDK r13+.
-        File toolchainFile = new File(ndkCmakeFolder, toolchainFileName);
-        if (!toolchainFile.exists()) {
-            // Toolchain file for NDK r12 is in the SDK.
-            // TODO: remove this when we stop caring about r12.
-            toolchainFile = new File(cmakeInstallFolder, toolchainFileName);
-        }
-        return toolchainFile;
-    }
-
-    @NonNull
-    protected File getCmakeBinFolder() {
-        return new File(cmakeInstallFolder, "bin");
-    }
-
-    @NonNull
-    protected File getCmakeExecutable() {
-        if (isWindows()) {
-            return new File(getCmakeBinFolder(), "cmake.exe");
-        }
-        return new File(getCmakeBinFolder(), "cmake");
     }
 }

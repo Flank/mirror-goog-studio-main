@@ -36,6 +36,7 @@ class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).arguments
         doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).getcFlags()
         doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).cppFlags
+        doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).targets
         doReturn(tempFolder.newFile("CMakeLists.txt")).`when`(cmake).path
     }
 }

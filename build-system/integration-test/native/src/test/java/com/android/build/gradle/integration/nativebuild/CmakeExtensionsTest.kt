@@ -24,14 +24,12 @@ import com.android.builder.model.NativeAndroidProject
 import org.junit.Rule
 import org.junit.Test
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration
-import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.internal.core.Abi
 import org.junit.Before
 import java.io.File
 import com.google.common.truth.Truth.assertThat
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
-import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.CmakeBuildGenerationState
@@ -41,8 +39,12 @@ import com.android.build.gradle.internal.cxx.configure.CmakeCompilerCacheWrite
 import com.android.build.gradle.internal.cxx.configure.CmakeCompilerSettingsCache
 import com.android.build.gradle.internal.cxx.configure.CmakePropertyValue
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
-import com.android.build.gradle.internal.cxx.configure.createJsonGenerationAbiConfiguration
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
+import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.options.BooleanOption.*
+import com.android.build.gradle.tasks.NativeBuildSystem
 
 /**
  * Parameterized JUnit test for CMake compiler settings cache.
@@ -69,6 +71,7 @@ class CmakeExtensionsTest(
                 arrayOf("3.10.4819442", true, null, true),
                 arrayOf<Any?>("3.6.4111459", true, ".cxx-alternate", true),
                 arrayOf("3.10.4819442", false, null, false),
+                arrayOf<Any?>("3.10.4819442", false, ".cxx-alternate", false),
                 arrayOf("3.6.4111459", false, null, false),
                 arrayOf("3.10.4819442", null, ".cxx-alternate", false),
                 arrayOf("3.6.4111459", null, null, false)
@@ -143,14 +146,17 @@ class CmakeExtensionsTest(
         }
     }
 
-    private fun getAbiConfiguration() : JsonGenerationAbiConfiguration {
-        return createJsonGenerationAbiConfiguration(
-            Abi.X86,
-            "debug",
-            File(project.testDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER),
-            File(project.testDir, "build/intermediates/cmake/obj"),
-            NativeBuildSystem.CMAKE,
-    21)
+    private fun getAbiConfiguration() : CxxAbiModel {
+        val module = createCxxModuleModel(
+            makeFile = File("CMakeLists.txt"),
+            buildSystem = NativeBuildSystem.CMAKE,
+            moduleRootFolder = { project.testDir },
+            cxxFolder = { File(project.testDir, ".cxx") }
+        )
+        val variant = createCxxVariantModel(
+            module,
+            variantName = { "debug" })
+        return createCxxAbiModel(variant, Abi.X86) { 21 }
     }
 
     @Test
@@ -184,7 +190,7 @@ class CmakeExtensionsTest(
      * At the end, it also checks CMake properties before and after using the the cache to see
      * if build properties were the same (up to some properties that are known to not matter).
      */
-    private fun checkCaching(config: JsonGenerationAbiConfiguration) {
+    private fun checkCaching(config: CxxAbiModel) {
         val cmake = config.cmake!!
         assertThat(cmake.buildGenerationStateFile.isFile)
             .named(cmake.buildGenerationStateFile.toString()).isTrue()
@@ -264,7 +270,7 @@ class CmakeExtensionsTest(
     /**
      * The user disabled caching. Make sure it worked.
      */
-    private fun checkNonCaching(config: JsonGenerationAbiConfiguration) {
+    private fun checkNonCaching(config: CxxAbiModel) {
         assertThat(config.cmake!!.compilerCacheWriteFile.exists())
             .named(config.cmake!!.compilerCacheWriteFile.toString())
             .isFalse()
