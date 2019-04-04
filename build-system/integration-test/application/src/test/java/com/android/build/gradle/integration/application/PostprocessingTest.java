@@ -111,7 +111,9 @@ public class PostprocessingTest {
                         + "}\n");
 
         Files.asCharSink(project.file("proguard-rules.pro"), StandardCharsets.UTF_8)
-                .write("-printconfiguration build/proguard-config.txt");
+                .write(
+                        "-keep class com.example.helloworld.HelloWorld$DataClass\n"
+                                + "-printconfiguration build/proguard-config.txt");
 
         TestFileUtils.addMethod(
                 project.getMainSrcDir("java/com/example/helloworld/HelloWorld.java"),
@@ -122,6 +124,7 @@ public class PostprocessingTest {
                         + "static class OtherClassToRemove {}\n");
 
         project.execute("assembleRelease");
+
         assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
                 .doesNotContainClass("Lcom/example/helloworld/HelloWorld$OtherDataClassToRemove;");
         assertThatApk(project.getApk(GradleTestProject.ApkType.RELEASE))
