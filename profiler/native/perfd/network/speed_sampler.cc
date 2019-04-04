@@ -35,48 +35,52 @@ void SpeedSampler::Refresh() {
 
 proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
-  uint64_t bytes_sent;
-  uint64_t bytes_received;
+  uint64_t bytes_sent = 0;
+  uint64_t bytes_received = 0;
+  bool has_data = false;
 
   if (DeviceInfo::feature_level() < DeviceInfo::Q) {
     bytes_sent = stats_reader_.bytes_tx(uid);
     bytes_received = stats_reader_.bytes_rx(uid);
+    has_data = true;
   } else {
     // stats file is deprecated in Q. Use statsd.
-    bytes_sent = 0;
-    bytes_received = 0;
     auto* wifi_bytes_transfer =
         StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(
             Atom::PulledCase::kWifiBytesTransfer);
     auto* mobile_bytes_transfer =
         StatsdSubscriber::Instance().FindAtom<MobileBytesTransfer>(
             Atom::PulledCase::kMobileBytesTransfer);
-    if (wifi_bytes_transfer != nullptr) {
+    if (wifi_bytes_transfer != nullptr && wifi_bytes_transfer->has_data()) {
       assert(wifi_bytes_transfer->uid() == uid);
       bytes_sent += wifi_bytes_transfer->tx_bytes();
       bytes_received += wifi_bytes_transfer->rx_bytes();
+      has_data = true;
     }
-    if (mobile_bytes_transfer != nullptr) {
+    if (mobile_bytes_transfer != nullptr && mobile_bytes_transfer->has_data()) {
       assert(mobile_bytes_transfer->uid() == uid);
       bytes_sent += mobile_bytes_transfer->tx_bytes();
       bytes_received += mobile_bytes_transfer->rx_bytes();
+      has_data = true;
     }
   }
 
-  auto time = clock_->GetCurrentTime();
-  if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
-    SpeedConverter tx_converter(time, bytes_sent);
-    SpeedConverter rx_converter(time, bytes_received);
-    tx_speed_converters_.emplace(uid, tx_converter);
-    rx_speed_converters_.emplace(uid, rx_converter);
-  } else {
-    tx_speed_converters_.at(uid).Add(time, bytes_sent);
-    rx_speed_converters_.at(uid).Add(time, bytes_received);
-  }
+  if (has_data) {
+    auto time = clock_->GetCurrentTime();
+    if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
+      SpeedConverter tx_converter(time, bytes_sent);
+      SpeedConverter rx_converter(time, bytes_received);
+      tx_speed_converters_.emplace(uid, tx_converter);
+      rx_speed_converters_.emplace(uid, rx_converter);
+    } else {
+      tx_speed_converters_.at(uid).Add(time, bytes_sent);
+      rx_speed_converters_.at(uid).Add(time, bytes_received);
+    }
 
-  profiler::proto::SpeedData* speed_data = data.mutable_speed_data();
-  speed_data->set_sent(tx_speed_converters_.at(uid).speed());
-  speed_data->set_received(rx_speed_converters_.at(uid).speed());
+    profiler::proto::SpeedData* speed_data = data.mutable_speed_data();
+    speed_data->set_sent(tx_speed_converters_.at(uid).speed());
+    speed_data->set_received(rx_speed_converters_.at(uid).speed());
+  }
   return data;
 }
 

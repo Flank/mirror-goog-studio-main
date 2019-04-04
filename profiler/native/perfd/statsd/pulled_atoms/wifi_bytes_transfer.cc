@@ -31,8 +31,15 @@ void WifiBytesTransfer::BuildConfig(PulledAtomSubscription* pulled) {
 }
 
 void WifiBytesTransfer::OnAtomReceived(const Atom& atom) {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  has_data_ = true;
   auto wifi_bytes_transfer = atom.wifi_bytes_transfer();
   rx_bytes_ = wifi_bytes_transfer.rx_bytes();
   tx_bytes_ = wifi_bytes_transfer.tx_bytes();
+}
+
+bool WifiBytesTransfer::has_data() {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  return has_data_;
 }
 }  // namespace profiler

@@ -31,8 +31,15 @@ void MobileBytesTransfer::BuildConfig(PulledAtomSubscription* pulled) {
 }
 
 void MobileBytesTransfer::OnAtomReceived(const Atom& atom) {
+  std::lock_guard<std::mutex> lock(data_mutex_);
   auto mobile_bytes_transfer = atom.mobile_bytes_transfer();
   rx_bytes_ = mobile_bytes_transfer.rx_bytes();
   tx_bytes_ = mobile_bytes_transfer.tx_bytes();
+  has_data_ = true;
+}
+
+bool MobileBytesTransfer::has_data() {
+  std::lock_guard<std::mutex> lock(data_mutex_);
+  return has_data_;
 }
 }  // namespace profiler
