@@ -162,9 +162,15 @@ cc_test(
         "nonblocking_command_runner.cc",
         "nonblocking_command_runner.h",
         "nonblocking_command_runner_test.cc",
-        "thread_name.cc",
         "thread_name.h",
-    ],
+    ] + select({
+        "//tools/base/bazel:darwin": [
+            "thread_name.mac.cc",
+        ],
+        "//conditions:default": [
+            "thread_name.cc",
+        ],
+    }),
     copts = [
         "-Itools/base/transport",
     ],
