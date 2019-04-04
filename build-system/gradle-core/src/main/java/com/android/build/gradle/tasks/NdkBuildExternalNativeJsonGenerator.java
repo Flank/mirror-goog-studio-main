@@ -27,9 +27,9 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -56,12 +56,13 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     @NonNull private final File projectDir;
 
     NdkBuildExternalNativeJsonGenerator(
-            @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull CxxVariantModel variant,
+            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File projectDir,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, configurationFailures, androidBuilder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, stats);
         this.projectDir = projectDir;
         this.stats.setNativeBuildSystemType(
                 GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);
@@ -118,7 +119,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                                         abiConfig, applicationMk, false /* removeJobsFlag */),
                                 getBuildCommand(abiConfig, applicationMk, true /* removeJobsFlag */)
                                         + " clean",
-                                variant.variantName,
+                                variant.getVariantName(),
                                 buildOutput)
                         .build();
 

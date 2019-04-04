@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctio
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
@@ -36,12 +36,13 @@ import java.util.Set;
 class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
     // Constructor
     CmakeAndroidNinjaExternalNativeJsonGenerator(
-            @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull CxxVariantModel variant,
+            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, cmakeInstallFolder, stats);
     }
 
     @NonNull
@@ -60,7 +61,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     @Override
     public String executeProcessAndGetOutput(@NonNull JsonGenerationAbiConfiguration abiConfig)
             throws ProcessException, IOException {
-        String logPrefix = variant.variantName + "|" + abiConfig.getAbiName() + " :";
+        String logPrefix = variant.getVariantName() + "|" + abiConfig.getAbiName() + " :";
         return createProcessOutputJunction(
                         abiConfig.getExternalNativeBuildFolder(),
                         "android_gradle_generate_cmake_ninja_json_" + abiConfig.getAbiName(),

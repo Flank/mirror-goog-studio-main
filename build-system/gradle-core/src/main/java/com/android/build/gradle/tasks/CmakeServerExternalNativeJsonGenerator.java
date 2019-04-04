@@ -29,7 +29,6 @@ import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.external.cmake.server.BuildFiles;
 import com.android.build.gradle.external.cmake.server.CmakeInputsResult;
 import com.android.build.gradle.external.cmake.server.CodeModel;
-import com.android.build.gradle.external.cmake.server.CompileCommand;
 import com.android.build.gradle.external.cmake.server.ComputeResult;
 import com.android.build.gradle.external.cmake.server.Configuration;
 import com.android.build.gradle.external.cmake.server.ConfigureCommandResult;
@@ -48,7 +47,6 @@ import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.cxx.configure.CmakeExecutionConfiguration;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchain;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
@@ -57,6 +55,7 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
@@ -93,12 +92,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
 
     public CmakeServerExternalNativeJsonGenerator(
-            @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull CxxVariantModel variant,
+            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, configurationFailures, androidBuilder, cmakeFolder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, cmakeFolder, stats);
     }
 
     /**
@@ -203,11 +203,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cacheArgumentsList.addAll(getBuildArguments());
                 ConfigureCommandResult configureCommandResult;
                 File cmakeListsFolder = getMakefile().getParentFile();
-                if (variant.module.isNativeCompilerSettingsCacheEnabled()) {
+                if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
                     // Configure extensions
                     CmakeExecutionConfiguration executableConfiguration =
                             wrapCmakeListsForCompilerSettingsCaching(
-                                    variant.compilerSettingsCacheFolder,
+                                    variant.getModule().getCompilerSettingsCacheFolder(),
                                     abiConfig,
                                     getMakefile().getParentFile(),
                                     cacheArgumentsList);
@@ -795,43 +795,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         return toolchains;
     }
 
-    /** Helper function that returns the flags used to compile a given file. */
-    @VisibleForTesting
-    static String getAndroidGradleFileLibFlags(
-            @NonNull String fileName, @NonNull List<CompileCommand> compileCommands) {
-        String flags = null;
-
-        // Get the path of the given file name so we can compare it with the file specified within
-        // CompileCommand.
-        Path fileNamePath = Paths.get(fileName);
-
-        // Search for the CompileCommand for the given file and parse the flags used to compile the
-        // file.
-        for (CompileCommand compileCommand : compileCommands) {
-            if (compileCommand.command == null || compileCommand.file == null) {
-                continue;
-            }
-
-            if (fileNamePath.compareTo(Paths.get(compileCommand.file)) != 0) {
-                continue;
-            }
-
-            flags =
-                    compileCommand.command.substring(
-                            compileCommand.command.indexOf(' ') + 1,
-                            compileCommand.command.indexOf(fileName));
-            break;
-        }
-        return flags;
-    }
-
     /** Returns the toolchain file to be used. */
     @NonNull
     private File getToolchainFile(@NonNull String abi) {
         // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
         // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
         // programmatically.
-        if (variant.ndkVersion.getMajor() >= 15) {
+        if (variant.getModule().getNdkVersion().getMajor() >= 15) {
             // Add our toolchain file.
             // Note: When setting this flag, Cmake's android toolchain would end up calling our
             // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only

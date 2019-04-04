@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.JsonGenerationAbiConfiguration;
-import com.android.build.gradle.internal.cxx.configure.JsonGenerationVariantConfiguration;
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -55,12 +55,13 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @NonNull final File cmakeInstallFolder;
 
     CmakeExternalNativeJsonGenerator(
-            @NonNull JsonGenerationVariantConfiguration config,
+            @NonNull CxxVariantModel variant,
+            @NonNull List<JsonGenerationAbiConfiguration> abis,
             @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File cmakeInstallFolder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(config, configurationFailures, androidBuilder, stats);
+        super(variant, abis, configurationFailures, androidBuilder, stats);
         this.cmakeInstallFolder = cmakeInstallFolder;
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
 
@@ -112,8 +113,9 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @Override
     void processBuildOutput(
             @NonNull String buildOutput, @NonNull JsonGenerationAbiConfiguration abiConfig) {
-        if (variant.module.isNativeCompilerSettingsCacheEnabled()) {
-            writeCompilerSettingsToCache(variant.compilerSettingsCacheFolder, abiConfig);
+        if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
+            writeCompilerSettingsToCache(
+                    variant.getModule().getCompilerSettingsCacheFolder(), abiConfig);
         }
     }
 
@@ -141,9 +143,9 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
         // Add user provided build arguments
         processBuilderArgs.addAll(getBuildArguments());
-        if (variant.module.isNativeCompilerSettingsCacheEnabled()) {
+        if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
             return wrapCmakeListsForCompilerSettingsCaching(
-                            variant.compilerSettingsCacheFolder,
+                            variant.getModule().getCompilerSettingsCacheFolder(),
                             abiConfig,
                             cmakeListsFolder,
                             processBuilderArgs)

@@ -89,7 +89,7 @@ class NativeModelBuilder(
         project: Project
     ): Any? {
         // Prevents parameter interface evolution from breaking the model builder.
-        var modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
+        val modelBuilderParameter = FailsafeModelBuilderParameter(parameter)
         return when (modelName) {
             nativeAndroidProjectClass ->
                 if (modelBuilderParameter.shouldBuildVariant) buildFullNativeAndroidProject(project)
@@ -126,10 +126,10 @@ class NativeModelBuilder(
         builder: NativeAndroidProjectBuilder,
         generator: ExternalNativeJsonGenerator
     ) {
-        builder.addBuildSystem(generator.nativeBuildSystem.getTag())
+        builder.addBuildSystem(generator.nativeBuildSystem.tag)
         builder.addVariantInfo(
             generator.variantName,
-            generator.variant.abiConfigurations.map { it.abiName }.distinct()
+            generator.abis.map { it.tag }.distinct()
         )
     }
 
