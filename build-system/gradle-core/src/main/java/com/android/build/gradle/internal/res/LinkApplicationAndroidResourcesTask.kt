@@ -588,7 +588,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             super.configure(task)
 
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            task.setSourceOutputDir(sourceOutputDir)
+            task.sourceOutputDir = sourceOutputDir
 
             task.dependenciesFileCollection = variantScope
                 .getArtifactFileCollection(
@@ -938,10 +938,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     fun setType(type: VariantType) {
         this.type = type
-    }
-
-    fun setSourceOutputDir(sourceOutputDir: File?) {
-        this.sourceOutputDir = sourceOutputDir
     }
 
     @Input
