@@ -809,6 +809,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                             AndroidBuilder.processResources(
                                 aaptDaemon,
                                 configBuilder.build(),
+                                null,
                                 LoggerWrapper(logger)
                             )
                         }

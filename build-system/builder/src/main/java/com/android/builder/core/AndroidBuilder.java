@@ -35,6 +35,7 @@ import com.android.builder.internal.aapt.v2.Aapt2InternalException;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
+import com.android.builder.symbols.BytecodeRClassWriterKt;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
@@ -58,10 +59,12 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -530,7 +533,10 @@ public class AndroidBuilder {
     }
 
     public static void processResources(
-            @NonNull Aapt2 aapt, @NonNull AaptPackageConfig aaptConfig, @NonNull ILogger logger)
+            @NonNull Aapt2 aapt,
+            @NonNull AaptPackageConfig aaptConfig,
+            @Nullable File rJar,
+            @NonNull ILogger logger)
             throws IOException, ProcessException {
 
         try {
@@ -542,7 +548,7 @@ public class AndroidBuilder {
         }
 
         File sourceOut = aaptConfig.getSourceOutputDir();
-        if (sourceOut != null) {
+        if (sourceOut != null || rJar != null) {
             // Figure out what the main symbol file's package is.
             String mainPackageName = aaptConfig.getCustomPackageForR();
             if (mainPackageName == null) {
@@ -563,8 +569,15 @@ public class AndroidBuilder {
                             aaptConfig.getLibrarySymbolTableFiles());
 
             boolean finalIds = aaptConfig.getUseFinalIds();
-
-            RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
+            if (rJar != null) { // not yet used, will be used in non-namespaced case
+                BytecodeRClassWriterKt.exportToCompiledJava(
+                        Iterables.concat(Collections.singleton(mainSymbols), depSymbolTables),
+                        rJar.toPath(),
+                        finalIds);
+            } else { // namespaced case, TODO: use exportToCompiledJava instead b/130110629
+                RGeneration.generateRForLibraries(
+                        mainSymbols, depSymbolTables, sourceOut, finalIds);
+            }
         }
     }
 

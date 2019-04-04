@@ -35,7 +35,7 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
         val logger = Logging.getLogger(this::class.java)
         useAaptDaemon(params.aapt2ServiceKey) { daemon ->
             try {
-                AndroidBuilder.processResources(daemon, params.request, LoggerWrapper(logger))
+                AndroidBuilder.processResources(daemon, params.request, null, LoggerWrapper(logger))
             } catch (exception: Aapt2Exception) {
                 throw rewriteLinkException(
                     exception,
