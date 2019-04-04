@@ -2,22 +2,20 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.FileSubject.assertThat;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.utils.FileUtils;
-import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Tests for DSL AAPT options. */
 public class AaptOptionsTest {
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Rule
     public GradleTestProject project =
@@ -33,45 +31,38 @@ public class AaptOptionsTest {
 
     @Test
     public void testAaptOptionsFlagsWithAapt2() throws IOException, InterruptedException {
+        File ids = temporaryFolder.newFile();
+
+        String idsFilePath = ids.getAbsolutePath();
+        String windowsFriendlyFilePath = idsFilePath.replace("\\", "\\\\");
+        String additionalParams = "additionalParameters \"--emit-ids\", \""
+                + windowsFriendlyFilePath
+                + "\"";
+
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
                         + "android {\n"
                         + "  aaptOptions {\n"
-                        + "    additionalParameters \"--extra-packages\", \"com.boop.beep\"\n"
+                        + "    "
+                        + additionalParams
+                        + "\n"
                         + "  }\n"
                         + "}\n");
 
         project.executor().run("clean", "assembleDebug");
 
-        Joiner joiner = Joiner.on(File.separator);
-        File extraR =
-                new File(
-                        joiner.join(
-                                ArtifactTypeUtil.getOutputDir(
-                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                                        project.getOutputDir().getParentFile()),
-                                "debug",
-                                "processDebugResources",
-                                SdkConstants.FD_RES_CLASS,
-                                "com",
-                                "boop",
-                                "beep",
-                                "R.java"));
+        // Check that ids file is generated
+        assertThat(ids).exists();
+        assertThat(ids).contains("raw/kept");
+        FileUtils.delete(ids);
 
-        // Check that the extra R.java file was generated in the specified package.
-        assertThat(extraR).exists();
-        assertThat(extraR).contains("package com.boop.beep");
-
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "additionalParameters \"--extra-packages\", \"com.boop.beep\"",
-                "");
+        TestFileUtils.searchAndReplace(project.getBuildFile(), additionalParams, "");
 
         project.executor().run("assembleDebug");
 
-        // Check that the extra R.java file is not generated if the extra options aren't present.
-        assertThat(extraR).doesNotExist();
+        // Check that ids file is not generated
+        assertThat(ids).doesNotExist();
     }
 
     @Test
