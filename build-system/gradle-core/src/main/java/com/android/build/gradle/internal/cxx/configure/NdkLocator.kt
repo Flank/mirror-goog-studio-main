@@ -129,7 +129,11 @@ private fun findNdkPathImpl(
             val versionInfo = getNdkSourceProperties(location.ndkRoot)
             when {
                 versionInfo == null -> {
-                    considerAndReject(location, "that location has no $FN_SOURCE_PROP")
+                    if (location.ndkRoot.resolve("RELEASE.TXT").exists()) {
+                        considerAndReject(location, "it contains an unsupported (pre-r11) NDK")
+                    } else {
+                        considerAndReject(location, "that location has no $FN_SOURCE_PROP")
+                    }
                     null
                 }
                 versionInfo.getValue(SDK_PKG_REVISION) == null -> {
