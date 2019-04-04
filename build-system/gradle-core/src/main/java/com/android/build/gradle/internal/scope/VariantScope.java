@@ -314,4 +314,7 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     FileCollection getSigningConfigFileCollection();
+
+    @NonNull
+    File getSymbolTableFile();
 }

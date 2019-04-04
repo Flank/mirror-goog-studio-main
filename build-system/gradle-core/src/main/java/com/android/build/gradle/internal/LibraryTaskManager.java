@@ -139,13 +139,7 @@ public class LibraryTaskManager extends TaskManager {
         // of the r.txt file to be directly in the bundle.
         createProcessResTask(
                 variantScope,
-                new File(
-                        globalScope.getIntermediatesDir(),
-                        "symbols/"
-                                + variantScope
-                                        .getVariantData()
-                                        .getVariantConfiguration()
-                                        .getDirName()),
+                variantScope.getSymbolTableFile(),
                 null,
                 // Switch to package where possible so we stop merging resources in
                 // libraries

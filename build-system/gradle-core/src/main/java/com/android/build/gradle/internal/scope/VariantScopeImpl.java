@@ -1519,4 +1519,12 @@ public class VariantScopeImpl implements VariantScope {
                             AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
         }
     }
+
+    @NonNull
+    @Override
+    public File getSymbolTableFile() {
+        return new File(
+                globalScope.getIntermediatesDir(),
+                "symbols/" + variantData.getVariantConfiguration().getDirName());
+    }
 }

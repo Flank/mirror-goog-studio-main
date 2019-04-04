@@ -959,9 +959,7 @@ public abstract class TaskManager {
             InternalArtifactType packageOutputType) {
         createProcessResTask(
                 scope,
-                new File(
-                        globalScope.getIntermediatesDir(),
-                        "symbols/" + scope.getVariantData().getVariantConfiguration().getDirName()),
+                scope.getSymbolTableFile(),
                 packageOutputType,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
