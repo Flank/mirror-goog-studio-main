@@ -28,12 +28,15 @@ import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.utils.FileUtils
 import com.google.common.collect.Iterables
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -58,7 +61,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
         private set
 
     @get:InputFiles
-    lateinit var sourceDir: BuildableArtifact
+    lateinit var sourceDir: Provider<Directory>
         private set
 
     @get:InputFiles
@@ -101,7 +104,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
 
         // Analyze resources and usages and strip out unused
         val analyzer = ResourceUsageAnalyzer(
-            Iterables.getOnlyElement(sourceDir.files),
+            sourceDir.get().asFile,
             classes,
             manifestFile,
             mappingFile,
@@ -185,7 +188,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
 
             task.dex = variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
 
-            task.sourceDir = variantScope.artifacts.getFinalArtifactFiles(
+            task.sourceDir = variantScope.artifacts.getFinalProduct(
                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
             )
             task.resourceDir = variantScope.artifacts.getFinalArtifactFiles(

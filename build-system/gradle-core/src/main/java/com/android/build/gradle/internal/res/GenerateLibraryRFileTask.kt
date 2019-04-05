@@ -15,11 +15,13 @@
  */
 package com.android.build.gradle.internal.res
 
+import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -34,7 +36,9 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -52,17 +56,19 @@ import java.io.Serializable
 import javax.inject.Inject
 
 @CacheableTask
-open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerExecutor) : ProcessAndroidResources() {
+open class GenerateLibraryRFileTask @Inject constructor(
+    objects: ObjectFactory, workerExecutor: WorkerExecutor) : ProcessAndroidResources() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @get:OutputDirectory @get:Optional var sourceOutputDirectory: File? = null; private set
-    @Input fun outputSources() = sourceOutputDirectory != null
+    @get:OutputDirectory @get:Optional var sourceOutputDirectory= objects.directoryProperty(); private set
+    @Input fun outputSources() = !enableSeparateRClassCompilation
 
     @get:OutputFile @get:Optional var rClassOutputJar: File? = null; private set
     @Input fun outputRClassJar() = rClassOutputJar != null
 
-    override fun getSourceOutputDir() = sourceOutputDirectory ?: rClassOutputJar
+    override fun getSourceOutputDir()= if (enableSeparateRClassCompilation) rClassOutputJar
+    else sourceOutputDirectory.get().asFile
 
     @get:OutputFile lateinit var textSymbolOutputFile: File
         private set
@@ -91,6 +97,8 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
     var namespacedRClass: Boolean = false
         private set
 
+    private var enableSeparateRClassCompilation = false
+
     @Throws(IOException::class)
     override fun doFullTaskAction() {
         val manifest = Iterables.getOnlyElement(
@@ -106,7 +114,7 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
                     platformAttrRTxt.singleFile,
                     dependencies.files,
                     packageForR.get(),
-                    sourceOutputDirectory,
+                    if (!enableSeparateRClassCompilation) sourceOutputDirectory.get().asFile else null,
                     rClassOutputJar,
                     textSymbolOutputFile,
                     namespacedRClass,
@@ -172,7 +180,8 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
             get() = GenerateLibraryRFileTask::class.java
 
         private lateinit var rClassOutputJar: File
-        private lateinit var sourceOutputDirectory: File
+        private val enableSeparateRClassCompilation =
+            variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)
 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
@@ -182,15 +191,22 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
                     .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
                         taskName,
                         "R.jar")
-            } else {
-                sourceOutputDirectory = variantScope.artifacts
-                    .appendArtifact(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES, taskName)
             }
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.processAndroidResTask = taskProvider
+
+            if (!enableSeparateRClassCompilation) {
+                variantScope.artifacts.producesDir(
+                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    taskProvider.map { it.sourceOutputDirectory },
+                    SdkConstants.FD_RES_CLASS
+                )
+            }
         }
 
         override fun configure(task: GenerateLibraryRFileTask) {
@@ -206,10 +222,9 @@ open class GenerateLibraryRFileTask @Inject constructor(workerExecutor: WorkerEx
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
-            if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
+            task.enableSeparateRClassCompilation = enableSeparateRClassCompilation
+            if (enableSeparateRClassCompilation) {
                 task.rClassOutputJar = rClassOutputJar
-            } else {
-                task.sourceOutputDirectory = sourceOutputDirectory
             }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile

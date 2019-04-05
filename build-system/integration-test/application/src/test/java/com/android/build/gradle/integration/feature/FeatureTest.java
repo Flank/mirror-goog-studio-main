@@ -157,7 +157,6 @@ public class FeatureTest {
                                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                                 featureProject.file("build")),
                         "debugFeature",
-                        "processDebugFeatureResources",
                         SdkConstants.FD_RES_CLASS,
                         "com",
                         "example",

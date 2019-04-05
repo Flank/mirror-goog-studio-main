@@ -1176,12 +1176,10 @@ public class ModelBuilder<Extension extends AndroidConfig>
         if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)
                 && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
             folders.add(
-                    Iterables.get(
-                            artifacts
-                                    .getFinalArtifactFiles(
-                                            InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)
-                                    .getFiles(),
-                            0));
+                    artifacts
+                            .getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)
+                            .get()
+                            .getAsFile());
         }
         folders.add(
                 scope.getArtifacts()

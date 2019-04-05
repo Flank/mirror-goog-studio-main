@@ -53,7 +53,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -100,7 +99,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull private final Logger logger;
 
-    @NonNull private final BuildableArtifact sourceDir;
+    @NonNull private final Provider<Directory> sourceDir;
     @NonNull private final BuildableArtifact resourceDir;
     @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final Provider<Directory> mergedManifests;
@@ -127,8 +126,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         BuildArtifactsHolder artifacts = variantScope.getArtifacts();
         this.sourceDir =
-                artifacts.getFinalArtifactFiles(
-                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+                artifacts.getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
         this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
@@ -186,7 +184,7 @@ public class ShrinkResourcesTransform extends Transform {
         Collection<SecondaryFile> secondaryFiles = Lists.newLinkedList();
 
         // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-        secondaryFiles.add(SecondaryFile.nonIncremental(sourceDir));
+        secondaryFiles.add(SecondaryFile.nonIncremental(sourceDir.get().getAsFile()));
         secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir));
 
         if (mappingFileSrc != null) {
@@ -413,7 +411,7 @@ public class ShrinkResourcesTransform extends Transform {
                             : null;
             buildTypeName =
                     transform.variantData.getVariantConfiguration().getBuildType().getName();
-            sourceDir = Iterables.getOnlyElement(transform.sourceDir.getFiles());
+            sourceDir = transform.sourceDir.get().getAsFile();
             resourceDir = BuildableArtifactUtil.singleFile(transform.resourceDir);
             isInfoLoggingEnabled = transform.logger.isEnabled(LogLevel.INFO);
             isDebugLoggingEnabled = transform.logger.isEnabled(LogLevel.DEBUG);

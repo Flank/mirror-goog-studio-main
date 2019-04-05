@@ -143,7 +143,6 @@ public class AndroidTestResourcesTest {
                                 InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
                                 new File(fixture.getTestDir(), "build")),
                         "debugAndroidTest",
-                        "processDebugAndroidTestResources",
                         SdkConstants.FD_RES_CLASS,
                         "com",
                         "example",

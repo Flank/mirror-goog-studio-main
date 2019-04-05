@@ -19,6 +19,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import org.gradle.api.file.Directory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.compile.JavaCompile
@@ -63,7 +64,7 @@ open class CompileRClassTask : JavaCompile(), VariantAwareTask {
             val artifacts = variantScope.artifacts
             task.classpath = task.project.files()
             task.source(
-                artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
+                artifacts.getFinalProduct<Directory>(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
             task.destinationDir = destinationDir
         }
     }

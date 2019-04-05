@@ -100,7 +100,6 @@ class PrivateResourcesTest {
                 project.getSubproject("app").generatedDir,
             "runtime_r_class_sources",
             "debug",
-            "processDebugResources" ,
             "out",
             "com", "foo", "bar", "symbols", "R.java")
         assertThat(privateR).exists()
@@ -161,7 +160,6 @@ class PrivateResourcesTest {
                 project.getSubproject("app").generatedDir,
             "runtime_r_class_sources",
             "debug",
-            "processDebugResources",
             "out",
             "com", "example", "android", "multiproject", "R.java")
         assertThat(publicR).exists()
@@ -175,7 +173,6 @@ class PrivateResourcesTest {
                 project.getSubproject("app").generatedDir,
             "runtime_r_class_sources",
             "debug",
-            "processDebugResources",
             "out",
             "com", "foo", "bar", "symbols", "R.java")
         assertThat(privateR).doesNotExist()

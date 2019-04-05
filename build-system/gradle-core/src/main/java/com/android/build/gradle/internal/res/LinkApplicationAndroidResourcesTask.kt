@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.internal.res.namespaced.getAaptDaemon
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -66,13 +67,16 @@ import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -91,7 +95,9 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 @CacheableTask
-open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
+open class LinkApplicationAndroidResourcesTask @Inject constructor(
+    objects: ObjectFactory,
+    workerExecutor: WorkerExecutor) :
     ProcessAndroidResources() {
 
     companion object {
@@ -105,7 +111,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         }
     }
 
-    private var sourceOutputDir: File? = null
+    @Internal
+    private var sourceOutputDir= objects.directoryProperty()
 
     private var textSymbolOutputDir: Supplier<File?> = Supplier { null }
 
@@ -577,7 +584,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         baseName: String,
         isLibrary: Boolean
     ) : BaseCreationAction(scope, generateLegacyMultidexMainDexProguardRules, baseName, isLibrary) {
-        private var sourceOutputDir: File? = null
 
         override fun preconditionsCheck(variantData: BaseVariantData) {
             if (variantData.type.isAar) {
@@ -591,22 +597,18 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             }
         }
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            sourceOutputDir = variantScope
-                .artifacts
-                .appendArtifact(
-                    InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                    taskName,
-                    SdkConstants.FD_RES_CLASS
-                )
+        override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
+            super.handleProvider(taskProvider)
+
+            variantScope.artifacts.producesDir(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                taskProvider.map { it.sourceOutputDir },
+                SdkConstants.FD_RES_CLASS)
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
             super.configure(task)
-
-            // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            task.sourceOutputDir = sourceOutputDir
 
             task.dependenciesFileCollection = variantScope
                 .getArtifactFileCollection(
@@ -634,23 +636,21 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         generateLegacyMultidexMainDexProguardRules: Boolean,
         baseName: String?
     ) : BaseCreationAction(scope, generateLegacyMultidexMainDexProguardRules, baseName, false) {
-        private var sourceOutputDir: File? = null
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
+            super.handleProvider(taskProvider)
 
-            sourceOutputDir = variantScope.artifacts
-                .appendArtifact(
-                    InternalArtifactType.RUNTIME_R_CLASS_SOURCES, taskName, "out"
-                )
+            variantScope.artifacts.producesDir(InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                taskProvider.map { it.sourceOutputDir },
+                "out")
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
             super.configure(task)
 
             val projectOptions = variantScope.globalScope.projectOptions
-
-            task.sourceOutputDir = sourceOutputDir
 
             val dependencies = ArrayList<FileCollection>(2)
             dependencies.add(
@@ -933,8 +933,12 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     @OutputDirectory
     @Optional
-    override fun getSourceOutputDir(): File? {
+    fun getSourceOutputFolder(): DirectoryProperty {
         return sourceOutputDir
+    }
+
+    override fun getSourceOutputDir(): File? {
+        return sourceOutputDir.get().asFile
     }
 
     @org.gradle.api.tasks.OutputFile

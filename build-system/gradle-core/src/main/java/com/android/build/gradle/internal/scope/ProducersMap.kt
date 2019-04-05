@@ -59,10 +59,14 @@ class ProducersMap<T: FileSystemLocation>(
      */
     fun getProducers(artifactType: ArtifactType)=
         producersMap.getOrPut(artifactType) {
-            Producers<T>(
+            Producers(
                 artifactType,
                 identifier,
                 buildDirectory,
+                when(artifactType.kind()) {
+                    ArtifactType.Kind.DIRECTORY -> buildDirectory.dir("__EMPTY_DIR__")
+                    ArtifactType.Kind.FILE -> buildDirectory.file("__EMPTY_FILE__")
+                } as Provider<T>,
                 objectFactory.listProperty(when(artifactType.kind()) {
                     ArtifactType.Kind.DIRECTORY -> Directory::class.java
                     ArtifactType.Kind.FILE -> RegularFile::class.java
@@ -100,7 +104,8 @@ class ProducersMap<T: FileSystemLocation>(
         val artifactType: ArtifactType,
         val identifier: () -> String,
         val buildDirectory: DirectoryProperty,
-        val listProperty: ListProperty<T>) : ArrayList<Producer<T>>() {
+        private val emptyProvider: Provider<T>,
+        private val listProperty: ListProperty<T>) : ArrayList<Producer<T>>() {
 
         val buildDir:File = buildDirectory.get().asFile
 
@@ -110,7 +115,9 @@ class ProducersMap<T: FileSystemLocation>(
         // configure all the tasks producing this artifact type.
         val injectable: Provider<T> =
             buildDirectory.flatMap {
-                resolveAllAndReturnLast()
+                // once all resolution and task configuration has happened, return the empty
+                // provider if there are no producer registered.
+                resolveAllAndReturnLast() ?: emptyProvider
             }
 
         val lastProducerTaskName: Provider<String> =
@@ -131,7 +138,7 @@ class ProducersMap<T: FileSystemLocation>(
             originalProperty: Provider<Property<T>>,
             taskName: String,
             fileName: String) {
-            listProperty.add(originalProperty.map { it -> it.get() })
+            listProperty.add(originalProperty.map { it.get() })
             add(Producer(settableProperty, originalProperty, taskName, fileName))
         }
 
