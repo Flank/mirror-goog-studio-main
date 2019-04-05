@@ -70,7 +70,7 @@ data class AaptPackageConfig(
         private var librarySymbolTableFiles: ImmutableCollection<File> = ImmutableSet.of()
         private var symbolOutputDir: File? = null
         private var isVerbose: Boolean = false
-        private var resourceDirs: ImmutableList<File> = ImmutableList.of()
+        private var resourceDirsBuilder: ImmutableList.Builder<File> = ImmutableList.builder()
         private var proguardOutputFile: File? = null
         private var mainDexListProguardOutputFile: File? = null
         private var splits: ImmutableCollection<String>? = null
@@ -99,34 +99,34 @@ data class AaptPackageConfig(
          */
         fun build(): AaptPackageConfig {
             return AaptPackageConfig(
-                    manifestFile = manifestFile!!,
-                    options = options!!,
-                    androidJarPath = androidJarPath!!,
-                    sourceOutputDir = sourceOutputDir,
-                    resourceOutputApk = resourceOutputApk,
-                    librarySymbolTableFiles = librarySymbolTableFiles,
-                    symbolOutputDir = symbolOutputDir,
-                    verbose = isVerbose,
-                    resourceDirs = resourceDirs,
-                    proguardOutputFile = proguardOutputFile,
-                    mainDexListProguardOutputFile = mainDexListProguardOutputFile,
-                    splits = splits,
-                    debuggable = debuggable,
-                    customPackageForR = customPackageForR,
-                    preferredDensity = preferredDensity,
-                    resourceConfigs = resourceConfigs,
-                    generateProtos = isGenerateProtos,
-                    variantType = variantType!!,
-                    imports = imports,
-                    packageId = packageId,
-                    allowReservedPackageId = allowReservedPackageId,
-                    dependentFeatures = dependentFeatures,
-                    listResourceFiles = listResourceFiles,
-                    staticLibrary = staticLibrary,
-                    staticLibraryDependencies = staticLibraryDependencies,
-                    intermediateDir = intermediateDir,
-                    useConditionalKeepRules = useConditionalKeepRules,
-                    useFinalIds = useFinalIds
+                manifestFile = manifestFile!!,
+                options = options!!,
+                androidJarPath = androidJarPath!!,
+                sourceOutputDir = sourceOutputDir,
+                resourceOutputApk = resourceOutputApk,
+                librarySymbolTableFiles = librarySymbolTableFiles,
+                symbolOutputDir = symbolOutputDir,
+                verbose = isVerbose,
+                resourceDirs = resourceDirsBuilder.build(),
+                proguardOutputFile = proguardOutputFile,
+                mainDexListProguardOutputFile = mainDexListProguardOutputFile,
+                splits = splits,
+                debuggable = debuggable,
+                customPackageForR = customPackageForR,
+                preferredDensity = preferredDensity,
+                resourceConfigs = resourceConfigs,
+                generateProtos = isGenerateProtos,
+                variantType = variantType!!,
+                imports = imports,
+                packageId = packageId,
+                allowReservedPackageId = allowReservedPackageId,
+                dependentFeatures = dependentFeatures,
+                listResourceFiles = listResourceFiles,
+                staticLibrary = staticLibrary,
+                staticLibraryDependencies = staticLibraryDependencies,
+                intermediateDir = intermediateDir,
+                useConditionalKeepRules = useConditionalKeepRules,
+                useFinalIds = useFinalIds
             )
         }
 
@@ -171,13 +171,18 @@ data class AaptPackageConfig(
             return this
         }
 
-        fun setResourceDir(resourceDir: File?): Builder {
+        fun addResourceDir(resourceDir: File?): Builder {
             if (resourceDir != null && !resourceDir.isDirectory) {
                 throw IllegalArgumentException("Path '" + resourceDir.absolutePath
                         + "' is not a readable directory.")
             }
 
-            this.resourceDirs = ImmutableList.of(resourceDir!!)
+            this.resourceDirsBuilder.add(resourceDir!!)
+            return this
+        }
+
+        fun addResourceDirectories(resourceDirectories: Iterable<File?>): Builder {
+            resourceDirectories.forEach { addResourceDir(it) }
             return this
         }
 

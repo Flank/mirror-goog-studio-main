@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SourceProvider;
@@ -136,6 +137,8 @@ public class MergeResources extends ResourceAwareTask {
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
     private boolean pseudoLocalesEnabled;
+
+    private boolean precompileRemoteResources;
 
     private ImmutableSet<Flag> flags;
 
@@ -441,7 +444,7 @@ public class MergeResources extends ResourceAwareTask {
         // back to full task run. Because the cached ResourceList is modified we don't want
         // to recompute this twice (plus, why recompute it twice anyway?)
         if (processedInputs == null) {
-            processedInputs = getResourcesComputer().compute();
+            processedInputs = getResourcesComputer().compute(precompileRemoteResources);
             List<ResourceSet> generatedSets = new ArrayList<>(processedInputs.size());
 
             for (ResourceSet resourceSet : processedInputs) {
@@ -759,6 +762,9 @@ public class MergeResources extends ResourceAwareTask {
             task.flags = flags;
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
+
+            task.precompileRemoteResources =
+                    globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES);
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 

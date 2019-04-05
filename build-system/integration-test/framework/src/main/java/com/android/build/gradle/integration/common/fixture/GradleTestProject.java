@@ -338,7 +338,7 @@ public final class GradleTestProject implements TestRule {
         this.heapSize = rootProject.getHeapSize();
     }
 
-    private static Path getGradleUserHome(File buildDir) {
+    public static Path getGradleUserHome(File buildDir) {
         if (TestUtils.runningFromBazel()) {
             return BazelIntegrationTestsSuite.GRADLE_USER_HOME;
         }

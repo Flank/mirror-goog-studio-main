@@ -15,7 +15,8 @@
  */
 package com.android.build.gradle.internal
 
-import com.android.annotations.VisibleForTesting
+import com.android.SdkConstants.FD_RES_LAYOUT
+import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -30,6 +31,7 @@ import com.android.ide.common.resources.ResourceSet
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
 import com.android.utils.ILogger
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets
 import org.gradle.api.artifacts.ArtifactCollection
@@ -58,7 +60,13 @@ class DependencyResourcesComputer {
     var validateEnabled: Boolean = false
         private set
 
-    fun compute(): List<ResourceSet> {
+    /**
+     * Computes resource sets for merging, if precompileRemoteResources flag is enabled we filter
+     * out the non-values and non-layout resources as it's precompiled and is consumed directly in
+     * the linking step.
+     */
+    @JvmOverloads
+    fun compute(precompileRemoteResources: Boolean = false): List<ResourceSet> {
         val sourceFolderSets = getResSet()
         var size = sourceFolderSets.size
         libraries?.let {
@@ -72,6 +80,14 @@ class DependencyResourcesComputer {
         // get the dependencies first
         libraries?.let {
             val libArtifacts = it.artifacts
+
+            // Layout resources can have databinding values so they need to go through the merging
+            // step, same thing for values resources as we impose stricter rules for them different
+            // from aapt.
+            val folderFilter = { folder: File ->
+                folder.name.startsWith(FD_RES_LAYOUT) || folder.name.startsWith(FD_RES_VALUES)
+            }
+
             // the order of the artifact is descending order, so we need to reverse it.
             for (artifact in libArtifacts) {
                 val resourceSet = ResourceSet(
@@ -81,6 +97,10 @@ class DependencyResourcesComputer {
                 )
                 resourceSet.isFromDependency = true
                 resourceSet.addSource(artifact.file)
+
+                if (precompileRemoteResources) {
+                    resourceSet.setFolderFilter(folderFilter)
+                }
 
                 // add to 0 always, since we need to reverse the order.
                 resourceSetList.add(0, resourceSet)
@@ -177,4 +197,3 @@ class DependencyResourcesComputer {
         }.reversed()
     }
 }
-

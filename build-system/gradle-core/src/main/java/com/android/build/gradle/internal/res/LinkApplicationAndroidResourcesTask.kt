@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.options.BooleanOption
@@ -64,6 +65,7 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
@@ -229,6 +231,8 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
     var useFinalIds: Boolean = true
         private set
 
+    private var compiledRemoteResources: ArtifactCollection? = null
+
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
@@ -262,6 +266,12 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             unprocessedManifest.remove(mainOutput)
 
+            val compiledRemoteResourcesDirs =
+                if (getCompiledRemoteResources() == null) emptyList<File>() else {
+                    // the order of the artifact is descending order, so we need to reverse it.
+                    getCompiledRemoteResources()!!.reversed().toImmutableList()
+                }
+
             it.submit(
                 AaptSplitInvoker::class.java,
                 AaptSplitInvokerParams(
@@ -273,6 +283,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                     mainOutput.apkData,
                     true,
                     aapt2ServiceKey,
+                    compiledRemoteResourcesDirs,
                     this
                 )
             )
@@ -296,6 +307,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                                 apkInfo,
                                 false,
                                 aapt2ServiceKey,
+                                compiledRemoteResourcesDirs,
                                 this
                             )
                         )
@@ -547,6 +559,14 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
             )
+
+            if (variantScope.globalScope.projectOptions.get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
+                task.compiledRemoteResources =
+                    variantScope.getArtifactCollection(
+                        RUNTIME_CLASSPATH, ALL,
+                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
+                    )
+            }
         }
     }
 
@@ -782,6 +802,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                         .setAndroidJarPath(params.androidJarPath)
                         .setUseConditionalKeepRules(params.useConditionalKeepRules)
                         .setUseFinalIds(params.useFinalIds)
+                        .addResourceDirectories(params.compiledRemoteResourcesDirs)
 
                     if (params.isNamespaced) {
                         val packagedDependencies = ImmutableList.builder<File>()
@@ -795,7 +816,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
                         if (params.generateCode) {
                             configBuilder.setLibrarySymbolTableFiles(params.dependencies)
                         }
-                        configBuilder.setResourceDir(checkNotNull(params.inputResourcesDir))
+                        configBuilder.addResourceDir(checkNotNull(params.inputResourcesDir))
                     }
 
                     @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -863,6 +884,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
         val apkData: ApkData,
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2ServiceKey?,
+        val compiledRemoteResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask
     ) : Serializable {
         val resourceConfigs: Set<String> = splitList.resourceConfigs
@@ -951,6 +973,17 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
     fun setMergeBlameLogFolder(mergeBlameLogFolder: File) {
         this.mergeBlameLogFolder = mergeBlameLogFolder
+    }
+
+    /**
+     * Returns a file collection of the directories containing the compiled remote libraries
+     * resource files.
+     */
+    @Optional
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    fun getCompiledRemoteResources(): FileCollection? {
+        return compiledRemoteResources?.artifactFiles
     }
 
     @Input
