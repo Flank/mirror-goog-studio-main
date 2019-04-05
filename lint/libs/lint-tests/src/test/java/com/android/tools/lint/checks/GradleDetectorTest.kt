@@ -2746,7 +2746,6 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expectClean()
     }
 
-
     fun testJava8WithLifecycleAnnotationProcessor() {
         lint().files(
             gradle(
@@ -3210,7 +3209,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 }
             }
 
-            return task;
+            return task
         }
 
         // Utility for testOR2RequiresAppCompat26Beta1
