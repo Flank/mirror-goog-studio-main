@@ -28,6 +28,7 @@ class ProcfsFiles {
 
   virtual std::string GetSystemStatFilePath() const;
   virtual std::string GetProcessStatFilePath(int32_t pid) const;
+  virtual std::string GetProcessStatusFilePath(int32_t pid) const;
   virtual std::string GetProcessTaskDir(int32_t pid) const;
   virtual std::string GetSystemCpuPath() const;
   virtual std::string GetSystemCurrentCpuFrequencyPath(int32_t cpu) const;

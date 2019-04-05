@@ -27,58 +27,17 @@ namespace profiler {
 // Contains utils for fetching a process's uid from it's pid.
 class UidFetcher {
  public:
-  static bool GetUidStringFromPidFile(std::string file_path,
-                                      std::string *uid_result) {
-    std::string content;
-    FileReader::Read(file_path, &content);
-
-    // Find the uid value start position. It's supposed to be after the prefix,
-    // also after empty spaces on the same line.
-    static const char *const kUidPrefix = "Uid:";
-    size_t start = content.find(kUidPrefix);
-    if (start != std::string::npos) {
-      // Find the uid end position, which should be empty space or new line,
-      // and check the uid value contains 0-9 only.
-      Tokenizer tokenizer(content, " \t");
-      tokenizer.set_index(start + strlen(kUidPrefix));
-      tokenizer.SkipDelimiters();
-      std::string uid;
-      char next_char;
-      if (tokenizer.GetNextToken(Tokenizer::IsDigit, &uid) &&
-          tokenizer.GetNextChar(&next_char) &&
-          Tokenizer::IsWhitespace(next_char)) {
-        uid_result->assign(uid);
-        return true;
-      }
-    }
-    return false;
-  }
-
-  static bool GetUidString(int pid, std::string *uid_result) {
-    return GetUidStringFromPidFile(GetPidStatusFilePath(pid), uid_result);
-  }
-
   // Returns -1 if the corresponding Uid can't be found. Note that this does a
   // file read operation to get the uid, and should not be called too frequently
   // unless necessary.
-  static int GetUid(int pid) {
-    std::string uid_string;
-    if (GetUidString(pid, &uid_string)) {
-      return atoi(uid_string.c_str());
-    }
-    return -1;
-  }
+  static int GetUid(int pid);
+
+  // Visible for testing
+  static bool GetUidStringFromPidFile(std::string file_path,
+                                      std::string *uid_result);
 
  private:
-  // Returns path of pid status file.
-  // TODO Move this to a "constants.h" or something similar when it exists.
-  static std::string GetPidStatusFilePath(const int pid) {
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "/proc/%d/status", pid);
-    return buffer;
-  }
-
-  UidFetcher(){};
+  UidFetcher() = delete;
 };
 
 }  // namespace profiler

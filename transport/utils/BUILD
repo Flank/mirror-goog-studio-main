@@ -29,18 +29,21 @@ cc_library(
         "termination_service.cc",
         "tokenizer.cc",
         "trace.cc",
+        "uid_fetcher.cc",
     ] + select({
         "//tools/base/bazel:darwin": [
             "clock.mac.cc",
             "current_process.mac.cc",
             "filesystem_notifier.mac.cc",
             "thread_name.mac.cc",
+            "uid_fetcher.mac.cc",
         ],
         "//conditions:default": [
             "clock.cc",
             "current_process.linux.cc",
             "filesystem_notifier.cc",
             "thread_name.cc",
+            "uid_fetcher.linux.cc",
         ],
     }) + select_android(
         [
