@@ -22,7 +22,7 @@ namespace profiler {
 int64_t SteadyClock::GetCurrentTime() const {
   timespec time;
   clock_gettime(CLOCK_MONOTONIC, &time);
-  return 1000000000 * time.tv_sec + time.tv_nsec;
+  return static_cast<int64_t>(1000000000) * time.tv_sec + time.tv_nsec;
 }
 
 }  // namespace profiler
