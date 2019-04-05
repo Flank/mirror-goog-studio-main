@@ -22,14 +22,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that the target method should only be called on the UI thread. If the annotated element
- * is a class, then all methods in the class should be called on the UI thread.
+ * Indicates that the target method should only be called on the UI thread. Methods running on UI
+ * thread should not call {@link Slow} methods.
  *
- * <p>Methods running on UI thread should not call {@link Slow} methods.
+ * <p>If the annotated element is a class, then all methods in the class should be called on the UI
+ * thread.
+ *
+ * <p>If the annotated element is a method parameter, e.g. a {@link Runnable}, it means the callback
+ * will be invoked on the UI thread.
  *
  * @see AnyThread
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE, ElementType.PARAMETER})
 public @interface UiThread {}

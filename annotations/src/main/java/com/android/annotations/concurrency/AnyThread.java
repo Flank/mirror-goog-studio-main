@@ -30,10 +30,13 @@ import java.lang.annotation.Target;
  * <p>If the annotated element is a class, then all methods in the class obey the contract described
  * above.
  *
+ * <p>If the annotated element is a method parameter, e.g. a {@link Runnable}, it means the callback
+ * may be invoked on any thread and needs to obey hte contract described above.
+ *
  * @see UiThread
  * @see Slow
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.PARAMETER})
 public @interface AnyThread {}
