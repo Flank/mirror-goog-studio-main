@@ -51,7 +51,7 @@
             <d:keyboard>qwerty</d:keyboard>
             <d:nav>dpad</d:nav>
             <d:ram unit="KiB">3774492</d:ram>
-            <d:buttons>hard</d:buttons>
+            <d:buttons>soft</d:buttons>
             <d:internal-storage unit="KiB">10255672</d:internal-storage>
             <d:removable-storage unit="MiB">0</d:removable-storage>
             <d:cpu>Generic CPU</d:cpu>
@@ -116,7 +116,7 @@
             <d:keyboard>qwerty</d:keyboard>
             <d:nav>dpad</d:nav>
             <d:ram unit="GiB">2</d:ram>
-            <d:buttons>hard</d:buttons>
+            <d:buttons>soft</d:buttons>
             <d:internal-storage unit="GiB">7811891</d:internal-storage>
             <d:removable-storage unit="MiB">0</d:removable-storage>
             <d:cpu>Generic CPU</d:cpu>
