@@ -330,7 +330,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
             len--;
         }
         // If the string ends with '\', then we keep the space after it.
-        if (len > 0 && string.charAt(s + len - 1) == '\\' && len < string.length()) {
+        if (len > 0 && string.charAt(s + len - 1) == '\\' && s + len < string.length()) {
             len++;
         }
 

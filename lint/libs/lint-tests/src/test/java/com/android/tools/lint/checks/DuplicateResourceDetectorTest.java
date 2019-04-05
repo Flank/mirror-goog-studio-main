@@ -346,6 +346,11 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                                         + "<string name=\"some_string9\">Unicode\\u1234</string>\n"
                                         + "<string name=\"some_string10\">Unicode\\u12.</string>\n"
                                         + "<string name=\"news\">  \"  What's New \"    </string>\n"
+                                        // Regression test for
+                                        //  https://issuetracker.google.com/129985008
+                                        + "<string name=\"space_slash\"> \\</string>\n"
+                                        + "<string name=\"space_slash2\">  \\</string>\n"
+                                        + "<string name=\"space_slash3\">   \\</string>\n"
                                         + "</resources>\n"
                                         + "\n"))
                 .run()
