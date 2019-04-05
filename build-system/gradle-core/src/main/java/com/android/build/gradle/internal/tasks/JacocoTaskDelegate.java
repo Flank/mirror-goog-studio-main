@@ -97,9 +97,10 @@ public class JacocoTaskDelegate {
         if (inputs.isIncremental()) {
             processIncrementally(executor, inputs);
         } else {
+            FileUtils.cleanOutputDir(output);
             for (File file : inputClasses.getFiles()) {
                 Map<Action, List<File>> nonIncToProcess =
-                        getFilesForInstrumentationNonIncrementally(file, output);
+                        getFilesForInstrumentationNonIncrementally(file);
                 WorkerItemParameter parameter =
                         new WorkerItemParameter(nonIncToProcess, file, output);
 
@@ -206,9 +207,8 @@ public class JacocoTaskDelegate {
 
     @NonNull
     private static Map<Action, List<File>> getFilesForInstrumentationNonIncrementally(
-            @NonNull File inputDir, @NonNull File outputDir) throws IOException {
+            @NonNull File inputDir) {
         Map<Action, List<File>> toProcess = Maps.newHashMap();
-        FileUtils.cleanOutputDir(outputDir);
         Iterable<File> files = FileUtils.getAllFiles(inputDir);
         for (File inputFile : files) {
             Action fileAction = calculateAction(inputFile, inputDir);
