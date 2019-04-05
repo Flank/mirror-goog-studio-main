@@ -66,9 +66,8 @@ class MergeClassesTransform(
         val fromDirectories =
             invocation.referencedInputs.flatMap { it.directoryInputs }.map { it.file }
 
-        // Filter out everything but the .class and .kotlin_module files.
-        val classFilter: (className: String) -> Boolean =
-            { it -> CLASS_PATTERN.matcher(it).matches() || KOTLIN_MODULE_PATTERN.matcher(it).matches() }
+        // Filter out everything but the .class files.
+        val classFilter: (className: String) -> Boolean = { it -> CLASS_PATTERN.matcher(it).matches() }
 
         val workers = Workers.preferWorkers(
             invocation.context.projectName,
@@ -90,6 +89,5 @@ class MergeClassesTransform(
 
     companion object {
         private val CLASS_PATTERN = Pattern.compile(".*\\.class$")
-        private val KOTLIN_MODULE_PATTERN = Pattern.compile("^META-INF/.*\\.kotlin_module$")
     }
 }
