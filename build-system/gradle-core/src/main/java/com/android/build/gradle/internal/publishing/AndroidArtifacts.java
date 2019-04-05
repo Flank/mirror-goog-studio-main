@@ -79,6 +79,8 @@ public class AndroidArtifacts {
     private static final String TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
             "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
+    private static final String TYPE_COMPILED_REMOTE_RESOURCES =
+            "android-compiled-remote-resources";
     private static final String TYPE_MODULE_BUNDLE = "android-module-bundle";
     private static final String TYPE_LIB_DEPENDENCIES = "android-lib-dependencies";
 
@@ -209,6 +211,7 @@ public class AndroidArtifacts {
         ASSETS(TYPE_ASSETS),
         SHARED_ASSETS(TYPE_SHARED_ASSETS),
         SYMBOL_LIST(TYPE_SYMBOL),
+        COMPILED_REMOTE_RESOURCES(TYPE_COMPILED_REMOTE_RESOURCES),
         /**
          * The symbol list with the package name as the first line. As the r.txt format in the AAR
          * cannot be changed, this is created by prepending the package name from the
