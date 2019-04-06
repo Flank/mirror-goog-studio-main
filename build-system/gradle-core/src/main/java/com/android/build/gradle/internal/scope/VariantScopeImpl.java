@@ -128,6 +128,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.provider.Provider;
@@ -147,7 +148,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull private final TransformManager transformManager;
     @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
-    @NonNull private BuildArtifactsHolder buildArtifactsHolder;
+    @NonNull private BuildArtifactsHolder artifacts;
 
     private final MutableTaskContainer taskContainer = new MutableTaskContainer();
 
@@ -167,7 +168,7 @@ public class VariantScopeImpl implements VariantScope {
         if (globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             throw new RuntimeException("InstantRun mode is not supported");
         }
-        this.buildArtifactsHolder =
+        this.artifacts =
                 new VariantBuildArtifactsHolder(
                         getProject(),
                         getFullVariantName(),
@@ -628,13 +629,13 @@ public class VariantScopeImpl implements VariantScope {
                 mainCollection.plus(variantData.getGeneratedBytecode(generatedBytecodeKey));
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            mainCollection =
-                    mainCollection.plus(
-                            buildArtifactsHolder
-                                    .getFinalArtifactFiles(
-                                            InternalArtifactType
-                                                    .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-                                    .get());
+            Provider<FileSystemLocation> namespacedRClassJar =
+                    artifacts.getFinalProduct(
+                            InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR);
+
+            ConfigurableFileTree fileTree =
+                    getProject().fileTree(namespacedRClassJar).builtBy(namespacedRClassJar);
+            mainCollection = mainCollection.plus(fileTree);
             mainCollection =
                     mainCollection.plus(
                             getArtifactFileCollection(
@@ -646,13 +647,13 @@ public class VariantScopeImpl implements VariantScope {
                     .getProjectOptions()
                     .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 FileCollection namespacedClasses =
-                        buildArtifactsHolder
+                        artifacts
                                 .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_CLASSES_JAR)
                                 .get();
                 mainCollection = mainCollection.plus(namespacedClasses);
 
                 FileCollection namespacedRClasses =
-                        buildArtifactsHolder
+                        artifacts
                                 .getFinalArtifactFiles(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR)
@@ -663,35 +664,37 @@ public class VariantScopeImpl implements VariantScope {
             BaseVariantData tested = getTestedVariantData();
             if (tested != null) {
                 mainCollection =
-                        mainCollection.plus(
-                                tested.getScope()
-                                        .getArtifacts()
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType
-                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-                                        .get());
+                        getProject()
+                                .files(
+                                        mainCollection,
+                                        tested.getScope()
+                                                .getArtifacts()
+                                                .getFinalProduct(
+                                                        InternalArtifactType
+                                                                .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                                                .get());
             }
         } else {
-            if (buildArtifactsHolder.hasArtifact(
+            if (artifacts.hasFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                BuildableArtifact rJar =
-                        buildArtifactsHolder.getFinalArtifactFiles(
+                Provider<FileSystemLocation> rJar =
+                        artifacts.getFinalProduct(
                                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar.get());
+                mainCollection = getProject().files(mainCollection, rJar);
             }
             BaseVariantData tested = getTestedVariantData();
             if (tested != null
                     && tested.getScope()
                             .getArtifacts()
-                            .hasArtifact(
+                            .hasFinalProduct(
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
-                BuildableArtifact rJar =
+                Provider<FileSystemLocation> rJar =
                         tested.getScope()
                                 .getArtifacts()
-                                .getFinalArtifactFiles(
+                                .getFinalProduct(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
-                mainCollection = mainCollection.plus(rJar.get());
+                mainCollection = getProject().files(mainCollection, rJar);
             }
         }
 
@@ -715,7 +718,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public BuildArtifactsHolder getArtifacts() {
-        return buildArtifactsHolder;
+        return artifacts;
     }
 
     @Override

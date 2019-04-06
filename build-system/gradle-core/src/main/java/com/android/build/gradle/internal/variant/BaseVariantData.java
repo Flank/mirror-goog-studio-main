@@ -71,6 +71,7 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.resources.TextResource;
@@ -636,6 +637,22 @@ public abstract class BaseVariantData {
         }
 
         return defaultJavaSources;
+    }
+
+    @NonNull
+    public List<Provider<? extends FileSystemLocation>> getGeneratedSources() {
+        ImmutableList.Builder<Provider<? extends FileSystemLocation>> listBuilder =
+                ImmutableList.builder();
+
+        // then all the generated src folders.
+        if (scope.getArtifacts()
+                .hasFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
+            Provider<Directory> rClassSource =
+                    scope.getArtifacts()
+                            .getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+            listBuilder.add(rClassSource);
+        }
+        return listBuilder.build();
     }
 
     /**

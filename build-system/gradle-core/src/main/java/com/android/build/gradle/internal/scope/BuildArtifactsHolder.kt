@@ -264,7 +264,7 @@ abstract class BuildArtifactsHolder(
         operationType: OperationType,
         taskProvider: TaskProvider<*>,
         product: Provider<Property<Directory>>,
-        fileName: String) {
+        fileName: String = "out") {
 
         produces(artifactType,
             directoryProducersMap,
@@ -274,6 +274,33 @@ abstract class BuildArtifactsHolder(
             project.objects.directoryProperty(),
             fileName)
     }
+
+    private val dummyTask by lazy {
+        project.tasks.register("dummy" + getIdentifier())
+    }
+
+    fun emptyDir(artifactType: ArtifactType) {
+        produces<Directory>(artifactType,
+            directoryProducersMap,
+            OperationType.INITIAL,
+            dummyTask,
+            dummyTask.map { project.objects.directoryProperty() },
+            project.objects.directoryProperty(),
+            "out"
+        )
+    }
+
+    fun emptyFile(artifactType: ArtifactType) {
+        produces<RegularFile>(artifactType,
+            fileProducersMap,
+            OperationType.INITIAL,
+            dummyTask,
+            dummyTask.map { project.objects.fileProperty() },
+            project.objects.fileProperty(),
+            "out"
+        )
+    }
+
 
     private fun <T : FileSystemLocation> produces(artifactType: ArtifactType,
         producersMap: ProducersMap<T>,

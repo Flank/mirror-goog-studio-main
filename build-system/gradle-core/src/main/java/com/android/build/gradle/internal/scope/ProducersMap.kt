@@ -70,7 +70,8 @@ class ProducersMap<T: FileSystemLocation>(
                 objectFactory.listProperty(when(artifactType.kind()) {
                     ArtifactType.Kind.DIRECTORY -> Directory::class.java
                     ArtifactType.Kind.FILE -> RegularFile::class.java
-                } as Class<T>)
+                } as Class<T>),
+                objectFactory.listProperty(Provider::class.java as Class<Provider<T>>)
             )
         }!!
 
@@ -105,7 +106,8 @@ class ProducersMap<T: FileSystemLocation>(
         val identifier: () -> String,
         val buildDirectory: DirectoryProperty,
         private val emptyProvider: Provider<T>,
-        private val listProperty: ListProperty<T>) : ArrayList<Producer<T>>() {
+        private val listProperty: ListProperty<T>,
+        val dependencies: ListProperty<Provider<T>>) : ArrayList<Producer<T>>() {
 
         val buildDir:File = buildDirectory.get().asFile
 
@@ -114,7 +116,7 @@ class ProducersMap<T: FileSystemLocation>(
         // built artifact will be used, we must resolve all file locations which will in turn
         // configure all the tasks producing this artifact type.
         val injectable: Provider<T> =
-            buildDirectory.flatMap {
+            dependencies.flatMap {
                 // once all resolution and task configuration has happened, return the empty
                 // provider if there are no producer registered.
                 resolveAllAndReturnLast() ?: emptyProvider
@@ -139,6 +141,7 @@ class ProducersMap<T: FileSystemLocation>(
             taskName: String,
             fileName: String) {
             listProperty.add(originalProperty.map { it.get() })
+            dependencies.add(originalProperty)
             add(Producer(settableProperty, originalProperty, taskName, fileName))
         }
 

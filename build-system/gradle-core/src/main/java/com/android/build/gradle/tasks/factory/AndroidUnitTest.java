@@ -198,11 +198,12 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                     Objects.requireNonNull(scope.getTestedVariantData()).getScope();
             if (testedScope
                     .getArtifacts()
-                    .hasArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                    .hasFinalProduct(
+                            InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
                 collection.from(
                         testedScope
                                 .getArtifacts()
-                                .getFinalArtifactFiles(
+                                .getFinalProduct(
                                         InternalArtifactType
                                                 .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             }

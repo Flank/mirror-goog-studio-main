@@ -131,8 +131,8 @@ open class BundleAar : Zip(), VariantAwareTask {
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
             task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
-            if (artifacts.hasArtifact(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-                task.from(artifacts.getFinalArtifactFiles(
+            if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
+                task.from(artifacts.getFinalProduct<RegularFile>(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
             if (artifacts.hasArtifact(InternalArtifactType.RES_STATIC_LIBRARY)) {

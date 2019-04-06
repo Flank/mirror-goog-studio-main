@@ -31,6 +31,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -72,7 +73,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
 
     @get:InputFiles
     @get:Optional
-    var thisRClassClasses: BuildableArtifact? = null
+    var thisRClassClasses: Provider<RegularFile>? = null
         private set
 
     @get:InputFiles
@@ -98,7 +99,10 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
         javacClasses.get().asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
-        thisRClassClasses?.get()?.asFileTree?.visit(collector)
+        val rRClassJarFile = thisRClassClasses?.get()?.asFile
+        if (rRClassJarFile!=null) {
+            project.fileTree(rRClassJarFile).visit(collector)
+        }
 
         workers.use {
             it.submit(
@@ -136,7 +140,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
             task.modulePath = globalScope.project.path
             if (globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses = variantScope.artifacts
-                    .getFinalArtifactFiles(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                    .getFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 task.dependencyRClassClasses = variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,

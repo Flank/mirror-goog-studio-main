@@ -743,14 +743,14 @@ public class ModelBuilder<Extension extends AndroidConfig>
         VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
         if (testedScope
                 .getArtifacts()
-                .hasArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                .hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
             additionalTestClasses.add(
-                    Iterables.getOnlyElement(
-                            testedScope
-                                    .getArtifacts()
-                                    .getFinalArtifactFiles(
-                                            InternalArtifactType
-                                                    .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)));
+                    testedScope
+                            .getArtifacts()
+                            .getFinalProduct(
+                                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
+                            .get()
+                            .getAsFile());
         }
 
         // No files are possible if the SDK was not configured properly.

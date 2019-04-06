@@ -387,7 +387,7 @@ public class LibraryTaskManager extends TaskManager {
         }
 
         FileCollection compileRClass =
-                variantScope.getArtifacts().getFinalArtifactFiles(rClassJar).get();
+                project.files(variantScope.getArtifacts().getFinalProduct(rClassJar));
         variantScope
                 .getTransformManager()
                 .addStream(

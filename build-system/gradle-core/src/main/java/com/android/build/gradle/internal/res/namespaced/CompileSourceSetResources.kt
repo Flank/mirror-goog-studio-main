@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -28,13 +29,17 @@ import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
@@ -47,7 +52,7 @@ import javax.inject.Inject
  * The link step handles resource overlays.
  */
 open class CompileSourceSetResources
-@Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
+@Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection
@@ -67,8 +72,7 @@ open class CompileSourceSetResources
     lateinit var outputDirectory: File
         private set
     @get:OutputDirectory
-    lateinit var partialRDirectory: File
-        private set
+    val partialRDirectory: DirectoryProperty = objects.directoryProperty()
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -139,7 +143,7 @@ open class CompileSourceSetResources
                     Aapt2CompileDeleteRunnable.Params(
                         outputDirectory = outputDirectory,
                         deletedInputs = deletes,
-                        partialRDirectory = partialRDirectory
+                        partialRDirectory = partialRDirectory.get().asFile
                     )
                 )
             }
@@ -157,7 +161,7 @@ open class CompileSourceSetResources
                     partialRFile = getPartialR(file))
 
     private fun getPartialR(file: File) =
-        File(partialRDirectory, "${Aapt2RenamingConventions.compilationRename(file)}-R.txt")
+        File(partialRDirectory.get().asFile, "${Aapt2RenamingConventions.compilationRename(file)}-R.txt")
 
     private fun submit(requests: List<CompileResourceRequest>) {
         if (requests.isEmpty()) {
@@ -199,8 +203,16 @@ open class CompileSourceSetResources
             super.preConfigure(taskName)
             outputDirectory = variantScope.artifacts
                 .appendArtifact(InternalArtifactType.RES_COMPILED_FLAT_FILES, taskName)
-            partialRDirectory = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.PARTIAL_R_FILES, taskName)
+        }
+
+        override fun handleProvider(taskProvider: TaskProvider<out CompileSourceSetResources>) {
+            super.handleProvider(taskProvider)
+
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.PARTIAL_R_FILES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                taskProvider.map { it.partialRDirectory })
         }
 
         override fun configure(task: CompileSourceSetResources) {
@@ -208,7 +220,6 @@ open class CompileSourceSetResources
 
             task.inputDirectories = inputDirectories
             task.outputDirectory = outputDirectory
-            task.partialRDirectory = partialRDirectory
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize =
                     variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled

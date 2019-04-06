@@ -125,7 +125,6 @@ class NonNamespacedApplicationLightRClassesTest {
             libFiles.getIntermediateFile(
                     "compile_only_not_namespaced_r_class_jar",
                     "debug",
-                    "generateDebugRFile",
                     "R.jar")).exists()
 
         assertThat(

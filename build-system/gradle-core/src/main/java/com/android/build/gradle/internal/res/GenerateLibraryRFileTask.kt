@@ -36,7 +36,6 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -64,10 +63,10 @@ open class GenerateLibraryRFileTask @Inject constructor(
     @get:OutputDirectory @get:Optional var sourceOutputDirectory= objects.directoryProperty(); private set
     @Input fun outputSources() = !enableSeparateRClassCompilation
 
-    @get:OutputFile @get:Optional var rClassOutputJar: File? = null; private set
-    @Input fun outputRClassJar() = rClassOutputJar != null
+    @get:OutputFile @get:Optional var rClassOutputJar= objects.fileProperty()
+        private set
 
-    override fun getSourceOutputDir()= if (enableSeparateRClassCompilation) rClassOutputJar
+    override fun getSourceOutputDir()= if (enableSeparateRClassCompilation) rClassOutputJar.get().asFile
     else sourceOutputDirectory.get().asFile
 
     @get:OutputFile lateinit var textSymbolOutputFile: File
@@ -115,7 +114,7 @@ open class GenerateLibraryRFileTask @Inject constructor(
                     dependencies.files,
                     packageForR.get(),
                     if (!enableSeparateRClassCompilation) sourceOutputDirectory.get().asFile else null,
-                    rClassOutputJar,
+                    if (enableSeparateRClassCompilation) rClassOutputJar.get().asFile else null,
                     textSymbolOutputFile,
                     namespacedRClass,
                     symbolsWithPackageNameOutputFile
@@ -179,20 +178,8 @@ open class GenerateLibraryRFileTask @Inject constructor(
         override val type: Class<GenerateLibraryRFileTask>
             get() = GenerateLibraryRFileTask::class.java
 
-        private lateinit var rClassOutputJar: File
         private val enableSeparateRClassCompilation =
             variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-                rClassOutputJar = variantScope.artifacts
-                    .appendArtifact(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
-                        taskName,
-                        "R.jar")
-            }
-        }
 
         override fun handleProvider(taskProvider: TaskProvider<out GenerateLibraryRFileTask>) {
             super.handleProvider(taskProvider)
@@ -205,6 +192,14 @@ open class GenerateLibraryRFileTask @Inject constructor(
                     taskProvider,
                     taskProvider.map { it.sourceOutputDirectory },
                     SdkConstants.FD_RES_CLASS
+                )
+            } else {
+                variantScope.artifacts.producesFile(
+                    InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    taskProvider.map { it.rClassOutputJar },
+                    "R.jar"
                 )
             }
         }
@@ -223,9 +218,6 @@ open class GenerateLibraryRFileTask @Inject constructor(
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
             task.enableSeparateRClassCompilation = enableSeparateRClassCompilation
-            if (enableSeparateRClassCompilation) {
-                task.rClassOutputJar = rClassOutputJar
-            }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
