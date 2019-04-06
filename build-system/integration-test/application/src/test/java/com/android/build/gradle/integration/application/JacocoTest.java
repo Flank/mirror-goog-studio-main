@@ -24,9 +24,17 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.TestInputsGenerator;
+import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
+import com.android.testutils.truth.DexClassSubject;
+import com.android.testutils.truth.DexSubject;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.google.common.truth.Truth8;
+import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,5 +90,28 @@ public class JacocoTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
         project.executor().run("assembleDebug");
+    }
+
+    @Test
+    public void testJarIsProceedByJacoco() throws Exception {
+        TestInputsGenerator.jarWithEmptyClasses(
+                new File(project.getTestDir(), "generated-classes.jar").toPath(),
+                Collections.singleton("test/A"));
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.applicationVariants.all { variant ->\n"
+                        + "    def generated = project.files(\"generated-classes.jar\")\n"
+                        + "    variant.registerPostJavacGeneratedBytecode(generated)\n"
+                        + "}\n"
+                        + "android.buildTypes.debug.testCoverageEnabled = true\n");
+
+        project.executor().run("assembleDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        Truth8.assertThat(apk.getMainDexFile()).isPresent();
+        Dex dexClasses = apk.getMainDexFile().get();
+        DexSubject.assertThat(dexClasses).containsClass("Ltest/A;");
+        DexClassSubject.assertThat(dexClasses.getClasses().get("Ltest/A;")).hasField("$jacocoData");
     }
 }

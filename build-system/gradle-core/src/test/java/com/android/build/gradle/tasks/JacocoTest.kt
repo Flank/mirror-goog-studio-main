@@ -16,12 +16,19 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeIncrementalTaskInputs
 import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.tasks.JacocoTaskDelegate
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.testutils.truth.PathSubject.assertThat
+import com.android.testutils.TestInputsGenerator
+import com.android.testutils.truth.FileSubject.assertThat
+import com.google.common.truth.Truth
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.workers.WorkerExecutor
 import org.junit.After
 import org.junit.Before
@@ -44,12 +51,12 @@ class JacocoTest {
     @Before
     fun setup() {
         MockitoAnnotations.initMocks(this)
-        Workers.useDirectWorkerExecutor= true
+        Workers.useDirectWorkerExecutor = true
     }
 
     @After
     fun tearDown() {
-        Workers.useDirectWorkerExecutor= false
+        Workers.useDirectWorkerExecutor = false
     }
 
     @Test
@@ -60,14 +67,26 @@ class JacocoTest {
         inputDir.resolve("META-INF/MANIFEST.MF").createNewFile()
 
         val outputDir = tmp.newFolder()
+        val outputJarDir = tmp.newFolder()
+        val outputJarDirProvider: Provider<Directory>
+                = FakeGradleProvider(FakeGradleDirectory(outputJarDir))
+
+        val inputJar = inputDir.resolve("foo.jar")
+        TestInputsGenerator.jarWithEmptyClasses(inputJar.toPath(), setOf("test/A"))
+
+        Truth.assertThat(outputJarDir.listFiles()).isEmpty()
+
         val jacocoDelegate = JacocoTaskDelegate(
-            FakeFileCollection(), outputDir, createBuildArtifact(inputDir)
-        )
+            FakeFileCollection(), outputDir, outputJarDirProvider, createBuildArtifact(inputDir, inputJar))
+
         jacocoDelegate.run(
             Workers.preferWorkers("test", "test", workerExecutor),
             FakeIncrementalTaskInputs())
 
-        assertThat(File(outputDir, "META-INF/copiedFile.kotlin_module")).exists();
-        assertThat(File(outputDir, "META-INF/MANIFEST.MF")).doesNotExist();
+        assertThat(File(outputDir, "META-INF/copiedFile.kotlin_module")).exists()
+        assertThat(File(outputDir, "META-INF/MANIFEST.MF")).doesNotExist()
+
+        Truth.assertThat(outputJarDir.listFiles()).hasLength(1)
+        Truth.assertThat(outputJarDir.listFiles().first().name).endsWith(SdkConstants.DOT_JAR)
     }
 }

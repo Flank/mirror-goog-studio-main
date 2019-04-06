@@ -124,7 +124,9 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
                     variantScope.artifacts.getFinalArtifactFiles(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES))
+                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
+                    variantScope.artifacts.getFinalArtifactFiles(
+                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS).get().asFileTree)
             } else {
                 referencedClasses.from(
                     variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES))

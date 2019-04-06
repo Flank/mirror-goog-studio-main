@@ -2487,19 +2487,27 @@ public abstract class TaskManager {
                         ImmutableSet.of(DefaultContentType.CLASSES));
         taskFactory.register(new JacocoTask.CreationAction(variantScope));
 
+        FileCollection instumentedClasses =
+                project.files(
+                        variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES)
+                                .get(),
+                        variantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(
+                                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS)
+                                .get()
+                                .getAsFileTree());
+
         variantScope
                 .getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "jacoco-instrumented-classes")
                                 .addContentTypes(DefaultContentType.CLASSES)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        variantScope
-                                                .getArtifacts()
-                                                .getFinalArtifactFiles(
-                                                        InternalArtifactType
-                                                                .JACOCO_INSTRUMENTED_CLASSES)
-                                                .get())
+                                .setFileCollection(instumentedClasses)
                                 .build());
     }
 
