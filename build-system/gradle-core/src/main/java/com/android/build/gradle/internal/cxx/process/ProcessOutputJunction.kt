@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.process
 
-import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessException
@@ -66,7 +66,7 @@ class ProcessOutputJunction(
     fun execute(processHandler: DefaultProcessOutputHandler) {
         commandFile.parentFile.mkdirs()
         commandFile.delete()
-        info(process.toString())
+        infoln(process.toString())
         commandFile.writeText(process.toString())
         stderrFile.delete()
         stdoutFile.delete()

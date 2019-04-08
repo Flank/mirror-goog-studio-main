@@ -36,7 +36,7 @@ import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
-import com.android.build.gradle.internal.cxx.logging.error
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.utils.FileUtils
@@ -266,7 +266,7 @@ private fun getProjectPath(config: CoreExternalNativeBuild)
 
     return when {
         externalProjectPaths.size > 1 -> {
-            error("More than one externalNativeBuild path specified")
+            errorln("More than one externalNativeBuild path specified")
             null
         }
         externalProjectPaths.isEmpty() -> {
@@ -299,7 +299,7 @@ private fun findCxxFolder(
     return when {
         buildStagingDirectory == null -> defaultCxxFolder
         FileUtils.isFileInDirectory(buildStagingDirectory, buildFolder) -> {
-            error("""
+            errorln("""
             The build staging directory you specified ('${buildStagingDirectory.absolutePath}')
             is a subdirectory of your project's temporary build directory (
             '${buildFolder.absolutePath}'). Files in this directory do not persist through clean

@@ -41,18 +41,18 @@ class LoggingEnvironmentTest {
     fun testEnvironmentIsPerThread() {
         val thread1 = thread {
             TestLoggingEnvironment("thread 1").use { logger ->
-                error("error")
-                warn("warn")
-                info("info")
+                errorln("error")
+                warnln("warn")
+                infoln("info")
                 assertThat(logger.messages).containsExactly("error thread 1: error",
                     "warn thread 1: warn", "info thread 1: info")
             }
         }
         val thread2 = thread {
             TestLoggingEnvironment("thread 2").use { logger ->
-                error("error")
-                warn("warn")
-                info("info")
+                errorln("error")
+                warnln("warn")
+                infoln("info")
                 assertThat(logger.messages).containsExactly("error thread 2: error",
                     "warn thread 2: warn", "info thread 2: info")
             }
@@ -64,12 +64,12 @@ class LoggingEnvironmentTest {
     @Test
     fun testEnvironmentsNest() {
         TestLoggingEnvironment("nest 1").use { outer ->
-            error("error")
+            errorln("error")
             TestLoggingEnvironment("nest 2").use { inner ->
-                error("error")
+                errorln("error")
                 assertThat(inner.messages).containsExactly("error nest 2: error")
             }
-            error("error")
+            errorln("error")
             assertThat(outer.messages).containsExactly("error nest 1: error",
                 "error nest 1: error")
         }

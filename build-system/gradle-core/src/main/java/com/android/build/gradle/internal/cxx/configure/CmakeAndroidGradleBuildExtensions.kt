@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
-import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import java.io.File
 
@@ -97,7 +97,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     val commandLine = parseCmakeArguments(args)
     if (commandLine.getCmakeBooleanProperty(
             ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED) == false) {
-        info("Not using cached compiler settings because " +
+        infoln("Not using cached compiler settings because " +
                 "$ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED was set to false")
         // Remove ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED so user doesn't get warning
         // about unused property
@@ -110,7 +110,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     val cacheKey = makeCmakeCompilerCacheKey(commandLine)
 
     if (cacheKey == null) {
-        info("Not wrapping toolchain because couldn't construct cache key")
+        infoln("Not wrapping toolchain because couldn't construct cache key")
         return CmakeExecutionConfiguration(abi.variant.module.makeFile.parentFile, args)
     }
 
@@ -120,7 +120,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
     val cachedProperties = cache.tryGetValue(cacheKey)
 
     val toolchainReplaced = if (cachedProperties == null) {
-        info("Not wrapping toolchain because compiler settings have not been cached before")
+        infoln("Not wrapping toolchain because compiler settings have not been cached before")
         commandLine
     } else {
         // Replace the original toolchain with a wrapper

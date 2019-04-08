@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
-import com.android.build.gradle.internal.cxx.logging.warn
+import com.android.build.gradle.internal.cxx.logging.warnln
 import java.io.File
 
 /**
@@ -32,7 +32,7 @@ fun makeCmakeCompilerCacheKey(commandLine : List<CommandLineArgument>) : CmakeCo
         .removeBlacklistedFlags()
         .findAndroidNdk()
     if (ndkInstallationFolder == null) {
-        warn("$ANDROID_NDK property was not defined")
+        warnln("$ANDROID_NDK property was not defined")
         return null
     }
     val sourceProperties = readSourceProperties(ndkInstallationFolder) ?: return null
@@ -107,7 +107,7 @@ private fun Sequence<CommandLineArgument>.findAndroidNdk()
 private fun readSourceProperties(ndkInstallationFolder : File) :  SdkSourceProperties? {
     val sourceProperties = File(ndkInstallationFolder, "source.properties")
     if (!sourceProperties.isFile) {
-        warn("ANDROID_NDK location ($ndkInstallationFolder) had no source.properties")
+        warnln("ANDROID_NDK location ($ndkInstallationFolder) had no source.properties")
         return null
     }
     return SdkSourceProperties.fromInstallFolder(ndkInstallationFolder)

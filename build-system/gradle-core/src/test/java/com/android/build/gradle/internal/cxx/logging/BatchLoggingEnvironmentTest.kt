@@ -26,9 +26,9 @@ class BatchLoggingEnvironmentTest {
     fun errorInfoAndWarnCombine() {
         RecordingLoggingEnvironment().use { record ->
             BatchLoggingEnvironment().use {
-                info("info")
-                warn("warn")
-                error("error")
+                infoln("info")
+                warnln("warn")
+                errorln("error")
             }
             assertThat(record.messageCount).isEqualTo(1)
             assertThat(record.errors).containsExactly("error\nwarn\ninfo")
@@ -39,8 +39,8 @@ class BatchLoggingEnvironmentTest {
     fun infoAndWarnCombine() {
         RecordingLoggingEnvironment().use { record ->
             BatchLoggingEnvironment().use {
-                info("info")
-                warn("warn")
+                infoln("info")
+                warnln("warn")
             }
             assertThat(record.messageCount).isEqualTo(1)
             assertThat(record.warnings).containsExactly("warn\ninfo")
@@ -51,7 +51,7 @@ class BatchLoggingEnvironmentTest {
     fun justInfo() {
         RecordingLoggingEnvironment().use { record ->
             BatchLoggingEnvironment().use {
-                info("info")
+                infoln("info")
             }
             assertThat(record.messageCount).isEqualTo(1)
             assertThat(record.infos).containsExactly("info")

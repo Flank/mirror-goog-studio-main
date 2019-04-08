@@ -21,7 +21,7 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradle
 import static com.android.build.gradle.internal.cxx.configure.CmakeSourceFileNamingKt.hasCmakeHeaderFileExtensions;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseIndexingVisitorKt.indexCompilationDatabase;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchainVisitorKt.populateCompilationDatabaseToolchains;
-import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -349,7 +349,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             @NonNull File buildDirectory,
             @NonNull ProtocolVersion cmakeServerProtocolVersion) {
         if (!sourceDirectory.isDirectory()) {
-            error("Not a directory: %s", sourceDirectory);
+            errorln("Not a directory: %s", sourceDirectory);
         }
         HandshakeRequest handshakeRequest = new HandshakeRequest();
         handshakeRequest.cookie = "gradle-cmake-cookie";

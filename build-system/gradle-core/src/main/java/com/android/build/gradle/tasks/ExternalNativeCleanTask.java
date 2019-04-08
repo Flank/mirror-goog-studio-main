@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.info;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -58,8 +58,8 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
     void clean() throws ProcessException, IOException {
         try (GradleBuildLoggingEnvironment ignore =
                 new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
-            info("starting clean");
-            info("finding existing JSONs");
+            infoln("starting clean");
+            infoln("finding existing JSONs");
 
             List<File> existingJsons = Lists.newArrayList();
             for (File json : getNativeBuildConfigurationsJsons()) {
@@ -80,11 +80,11 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
                 }
                 targetNames.add(Joiner.on(",").join(targets));
             }
-            info("about to execute %s clean commands", cleanCommands.size());
+            infoln("about to execute %s clean commands", cleanCommands.size());
             executeProcessBatch(cleanCommands, targetNames);
 
             if (!getStlSharedObjectFiles().isEmpty()) {
-                info("remove STL shared object files");
+                infoln("remove STL shared object files");
                 for (Abi abi : getStlSharedObjectFiles().keySet()) {
                     File stlSharedObjectFile = checkNotNull(getStlSharedObjectFiles().get(abi));
                     File objAbi =
@@ -92,13 +92,13 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
                                     getObjFolder(), abi.getTag(), stlSharedObjectFile.getName());
 
                     if (objAbi.delete()) {
-                        info("removed file %s", objAbi);
+                        infoln("removed file %s", objAbi);
                     } else {
-                        info("failed to remove file %s", objAbi);
+                        infoln("failed to remove file %s", objAbi);
                     }
                 }
             }
-            info("clean complete");
+            infoln("clean complete");
         }
     }
 
@@ -119,7 +119,7 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             for (int i = 1; i < tokens.size(); ++i) {
                 processBuilder.addArgs(tokens.get(i));
             }
-            info("%s", processBuilder);
+            infoln("%s", processBuilder);
             createProcessOutputJunction(
                             this.getObjFolder(),
                             "android_gradle_clean_" + commandIndex,

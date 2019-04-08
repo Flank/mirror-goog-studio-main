@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.info
-import com.android.build.gradle.internal.cxx.logging.warn
-import com.android.build.gradle.internal.cxx.logging.error
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import java.io.File
@@ -96,7 +96,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
     ): Int {
 
         val abi = Abi.getByName(abiName) ?: run {
-            error("Specified abi='$abiName' is not recognized.")
+            errorln("Specified abi='$abiName' is not recognized.")
             // Fall back so that processing can continue after the error
             return sensibleDefaultPlatformApiVersionForErrorCase
         }
@@ -110,7 +110,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
             // for that ABI
             val platformDir = FileUtils.join(ndkRoot, "platforms")
             if (!platformDir.isDirectory) {
-                warn("NDK folder '$ndkRoot' specified does not contain 'platforms'.")
+                warnln("NDK folder '$ndkRoot' specified does not contain 'platforms'.")
                 // Fall back so that processing can continue after the error
                 return sensibleDefaultPlatformApiVersionForErrorCase
             }
@@ -166,14 +166,14 @@ class PlatformConfigurator(private val ndkRoot: File) {
                 val lookup = platformNameAliases[codeNameOrNull]
                 when {
                     lookup != null -> {
-                        info("Version minSdkVersion='$codeNameOrNull' is mapped to '$lookup'.")
+                        infoln("Version minSdkVersion='$codeNameOrNull' is mapped to '$lookup'.")
                         lookup
                     }
                     else -> {
                         // This version is not yet known (or is an error), choose a very high
                         // version number which will then be lowered to the maximum version
                         // actually installed in the referenced NDK.
-                        error("API codeName '$codeNameOrNull' is not recognized.")
+                        errorln("API codeName '$codeNameOrNull' is not recognized.")
                         veryHighPlatformApiVersion
                     }
                 }
@@ -184,7 +184,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
         val minSdkVersionIsDefault = minSdkVersionOrNull == AndroidVersion.DEFAULT.apiLevel
         return when {
             minSdkVersionIsDefault && minSdkVersionFromCodeName == null -> {
-                info(
+                infoln(
                     "Neither codeName nor minSdkVersion specified. Using minimum platform " +
                             "version for '$abiName'."
                 )
@@ -193,14 +193,14 @@ class PlatformConfigurator(private val ndkRoot: File) {
             !minSdkVersionIsDefault && minSdkVersionFromCodeName != null ->
                 when (minSdkVersionOrNull) {
                     minSdkVersionFromCodeName -> {
-                        warn(
+                        warnln(
                             "Both codeName and minSdkVersion specified. " +
                                     "They agree but only one should be specified."
                         )
                         minSdkVersionOrNull
                     }
                     else -> {
-                        warn(
+                        warnln(
                             "Disagreement between codeName='$codeNameOrNull' " +
                                     "and minSdkVersion='$minSdkVersionOrNull'. Only one " +
                                     "should be specified."
@@ -214,7 +214,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
                 // in the minSdkVersion field. Try to look up the alias now.
                 val lookup = platformNameAliases[minSdkVersionOrNull.toString()]
                 if (lookup != null) {
-                    info(
+                    infoln(
                         "Version minSdkVersion='${displayVersionString(
                             minSdkVersionOrNull!!,
                             androidVersionOrNull
@@ -256,12 +256,12 @@ class PlatformConfigurator(private val ndkRoot: File) {
             .mapNotNull {
                 val version = it.name.substring("android-".length).toIntOrNull()
                 if (version == null) {
-                    info("Found non-numeric platform folder '${it.name}'. Ignoring.")
+                    infoln("Found non-numeric platform folder '${it.name}'. Ignoring.")
                 }
                 version
             }
         if (versions.isEmpty()) {
-            error("Abi '$abi' is not recognized in '$ndkRoot'.")
+            errorln("Abi '$abi' is not recognized in '$ndkRoot'.")
             // This should be impossible but fall back to a sensible default
             return sensibleDefaultPlatformApiVersionForErrorCase
         }
@@ -271,7 +271,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
         if (!versions.contains(clamped)) {
             // We've seen some users remove unused platforms folders. If we matched a missing
             // folder then warn and then take the highest platform version.
-            warn("Expected platform folder platforms/android-$clamped, " +
+            warnln("Expected platform folder platforms/android-$clamped, " +
                     "using platform API $min instead.")
             return min
         }
@@ -291,7 +291,7 @@ class PlatformConfigurator(private val ndkRoot: File) {
             minSdkVersion < min -> min
             minSdkVersion > max -> {
                 if (minSdkVersion < veryHighPlatformApiVersion) {
-                    warn(
+                    warnln(
                         "Platform version '${displayVersionString(
                             minSdkVersion,
                             displayVersion

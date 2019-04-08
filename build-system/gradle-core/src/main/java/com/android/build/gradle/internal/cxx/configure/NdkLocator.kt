@@ -32,9 +32,9 @@ import com.android.build.gradle.internal.cxx.logging.BatchLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.LoggingRecord
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment
 
-import com.android.build.gradle.internal.cxx.logging.info
-import com.android.build.gradle.internal.cxx.logging.warn
-import com.android.build.gradle.internal.cxx.logging.error
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.repository.Revision
 import java.io.File
 import java.io.FileNotFoundException
@@ -70,17 +70,17 @@ private fun findNdkPathImpl(
 ): File? {
 
     // Record status of user-supplied information
-    info("android.ndkVersion from module build.gradle is ${ndkVersionFromDsl ?: "not set"}")
-    info("$NDK_DIR_PROPERTY in local.properties is ${ndkDirProperty ?: "not set"}")
-    info(
+    infoln("android.ndkVersion from module build.gradle is ${ndkVersionFromDsl ?: "not set"}")
+    infoln("$NDK_DIR_PROPERTY in local.properties is ${ndkDirProperty ?: "not set"}")
+    infoln(
         "ANDROID_NDK_HOME environment variable is " +
                 (androidNdkHomeEnvironmentVariable ?: "not set")
     )
-    info("sdkFolder is ${sdkFolder ?: "not set"}")
+    infoln("sdkFolder is ${sdkFolder ?: "not set"}")
 
     // Record that a location was consider and rejected and for what reason
     fun considerAndReject(location: Location, reason: String) {
-        info("Rejected ${location.ndkRoot} ${location.type.tag} because $reason")
+        infoln("Rejected ${location.ndkRoot} ${location.type.tag} because $reason")
     }
 
     val foundLocations = mutableListOf<Location>()
@@ -103,7 +103,7 @@ private fun findNdkPathImpl(
         try {
             ndkVersionFromDslRevision = Revision.parseRevision(ndkVersionFromDsl)
         } catch (e: NumberFormatException) {
-            error("Requested NDK version '$ndkVersionFromDsl' could not be parsed")
+            errorln("Requested NDK version '$ndkVersionFromDsl' could not be parsed")
         }
     }
 
@@ -120,7 +120,7 @@ private fun findNdkPathImpl(
 
     // Log all found locations
     foundLocations.forEach { location ->
-        info("Considering ${location.ndkRoot} ${location.type.tag}")
+        infoln("Considering ${location.ndkRoot} ${location.type.tag}")
     }
 
     // Eliminate those that don't look like NDK folders
@@ -171,9 +171,9 @@ private fun findNdkPathImpl(
         // The text of this message shouldn't change without also changing the corresponding
         // hotfix in Android Studio that recognizes this text
         if (ndkVersionFromDslRevision == null) {
-            warn("Compatible side by side NDK version was not found.")
+            warnln("Compatible side by side NDK version was not found.")
         } else {
-            warn(
+            warnln(
                 "Compatible side by side NDK version was not found for android.ndkVersion " +
                         "'$ndkVersionFromDslRevision'"
             )
@@ -190,7 +190,7 @@ private fun findNdkPathImpl(
                 location.type == NDK_DIR_LOCATION
             }
             if (ndkDirLocation == null) {
-                error(
+                errorln(
                     "Location specified by ndk.dir ($ndkDirProperty) did not contain a " +
                             "valid NDK and so couldn't satisfy the requested NDK version " +
                             "$ndkVersionFromDsl"
@@ -198,12 +198,12 @@ private fun findNdkPathImpl(
             } else {
                 val (location, version) = ndkDirLocation
                 if (isAcceptableNdkVersion(version.revision, ndkVersionFromDslRevision)) {
-                    info(
+                    infoln(
                         "Choosing ${location.ndkRoot} from $NDK_DIR_PROPERTY which had the requested " +
                                 "version $ndkVersionFromDsl"
                     )
                 } else {
-                    error(
+                    errorln(
                         "Requested NDK version $ndkVersionFromDsl did not match the version " +
                                 "${version.revision} requested by $NDK_DIR_PROPERTY at ${location.ndkRoot}"
                     )
@@ -221,7 +221,7 @@ private fun findNdkPathImpl(
 
         if (matchingLocations.isEmpty()) {
             // No versions matched the requested revision
-            error("No version of NDK matched the requested version $ndkVersionFromDsl")
+            errorln("No version of NDK matched the requested version $ndkVersionFromDsl")
             versionedLocations.onEach { (location, version) ->
                 considerAndReject(
                     location,
@@ -237,16 +237,16 @@ private fun findNdkPathImpl(
         val foundNdkRoot = matchingLocations.first().first.ndkRoot
 
         if (matchingLocations.size > 1) {
-            info(
+            infoln(
                 "Found ${matchingLocations.size} NDK folders that matched requested " +
                         "version $ndkVersionFromDslRevision:"
             )
             matchingLocations.forEachIndexed { index, (location, _) ->
-                info(" (${index + 1}) ${location.ndkRoot} ${location.type.tag}")
+                infoln(" (${index + 1}) ${location.ndkRoot} ${location.type.tag}")
             }
-            info("  choosing $foundNdkRoot")
+            infoln("  choosing $foundNdkRoot")
         } else {
-            info("Found requested NDK version $ndkVersionFromDslRevision at $foundNdkRoot")
+            infoln("Found requested NDK version $ndkVersionFromDslRevision at $foundNdkRoot")
         }
         return foundNdkRoot
 
@@ -258,24 +258,24 @@ private fun findNdkPathImpl(
                     location.type == NDK_DIR_LOCATION
                 }
             if (ndkDirLocation == null) {
-                error(
+                errorln(
                     "Location specified by ndk.dir ($ndkDirProperty) did not contain a " +
                             "valid NDK and and couldn't be used"
                 )
 
-                info(
+                infoln(
                     "Using ${highest.first.ndkRoot} which is " +
                             "version ${highest.second.revision} as fallback but build will fail"
                 )
                 return highest.first.ndkRoot
             }
             val (location, version) = ndkDirLocation
-            info("Found requested ndk.dir (${location.ndkRoot}) which has version ${version.revision}")
+            infoln("Found requested ndk.dir (${location.ndkRoot}) which has version ${version.revision}")
             return location.ndkRoot
         }
 
         // No NDK version was requested.
-        info(
+        infoln(
             "No user requested version, choosing ${highest.first.ndkRoot} which is " +
                     "version ${highest.second.revision}"
         )

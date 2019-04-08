@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.logging.info
-import com.android.build.gradle.internal.cxx.logging.error
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.logging.errorln
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -71,12 +71,12 @@ fun trySymlinkNdk(
         return originalNdkFolder
     }
     if (ndkSymlinkFolder.path.contains("$")) {
-        error("Could not symlink from $originalNdkFolder to request " +
+        errorln("Could not symlink from $originalNdkFolder to request " +
                 "$ndkSymlinkFolder because that path contains '$'")
         return originalNdkFolder
     }
     if (!originalNdkFolder.isDirectory) {
-        error("Could not symlink from $originalNdkFolder to request " +
+        errorln("Could not symlink from $originalNdkFolder to request " +
                 "$ndkSymlinkFolder because $originalNdkFolder doesn't exist")
         return originalNdkFolder
     }
@@ -84,7 +84,7 @@ fun trySymlinkNdk(
     // Attempt to get source.properties from the NDK folder. This is partially to validate the
     // NDK folder but also to get the NDK version to use as a sub-folder.
     if (!originalNdkFolder.toPath().resolve("source.properties").toFile().isFile) {
-        error("Could not symlink from $originalNdkFolder to request " +
+        errorln("Could not symlink from $originalNdkFolder to request " +
                 "$ndkSymlinkFolder because $originalNdkFolder doesn't have " +
                 "source.properties")
         return originalNdkFolder
@@ -94,7 +94,7 @@ fun trySymlinkNdk(
 
     // If it doesn't look like an NDK then abort
     if (version == null) {
-        error("Could not symlink from $originalNdkFolder to request " +
+        errorln("Could not symlink from $originalNdkFolder to request " +
                 "$ndkSymlinkFolder because $originalNdkFolder doesn't have " +
                 "source.properties that looks like NDK")
         return originalNdkFolder
@@ -110,14 +110,14 @@ fun trySymlinkNdk(
 
     // If the target folder already exists then return it. This assumes it was symlinked.
     if (versionedSymlinkFolder.toFile().exists()) {
-        info("Symlink target $versionedSymlinkFolder already existed")
+        infoln("Symlink target $versionedSymlinkFolder already existed")
         return versionedSymlinkFolder.toFile()
     }
 
     // Follow any already-existing symlink to get the underlying real path
     val originalNdkFolderRealPath = originalNdkFolder.toPath().toRealPath()
 
-    info("Symlinking NDK folder $originalNdkFolder to $versionedSymlinkFolder")
+    infoln("Symlinking NDK folder $originalNdkFolder to $versionedSymlinkFolder")
 
     return try {
         Files.createSymbolicLink(
@@ -126,11 +126,11 @@ fun trySymlinkNdk(
         ).toFile()
     } catch (e: FileAlreadyExistsException) {
         // The symlinked folder already existed. This isn't a problem. Just return the symlink path
-        info("Symlink target $versionedSymlinkFolder already existed")
+        infoln("Symlink target $versionedSymlinkFolder already existed")
         versionedSymlinkFolder.toFile()
     } catch (e: IOException) {
         // Couldn't create a link so use the original folder
-        error("Could not symlink NDK folder $originalNdkFolder to " +
+        errorln("Could not symlink NDK folder $originalNdkFolder to " +
                 "$versionedSymlinkFolder due to exception $e")
         originalNdkFolder
     }

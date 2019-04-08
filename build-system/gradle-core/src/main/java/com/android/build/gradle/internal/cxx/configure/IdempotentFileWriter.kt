@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.logging.info
+import com.android.build.gradle.internal.cxx.logging.infoln
 import java.io.File
 
 /**
@@ -45,11 +45,11 @@ class IdempotentFileWriter {
                 val originalContent = file.readText()
                 if (originalContent == content) {
                     // Content wouldn't change so don't write.
-                    info("Not writing $file because there was no change")
+                    infoln("Not writing $file because there was no change")
                     continue
                 }
             }
-            info("Writing $file")
+            infoln("Writing $file")
             file.parentFile.mkdirs()
             file.writeText(content)
             written.add(path)

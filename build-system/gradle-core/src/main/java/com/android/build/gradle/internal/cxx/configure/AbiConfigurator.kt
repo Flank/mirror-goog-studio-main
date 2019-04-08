@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.error
-import com.android.build.gradle.internal.cxx.logging.warn
+import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.options.StringOption
 
 /**
@@ -52,7 +52,7 @@ class AbiConfigurator(
         val userMistakes =
                 userChosenAbis subtract ndkHandlerSupportedAbiStrings
         if (!userMistakes.isEmpty()) {
-            error("ABIs [${sortAndJoinAbiStrings(userMistakes)}] are not supported for platform. " +
+            errorln("ABIs [${sortAndJoinAbiStrings(userMistakes)}] are not supported for platform. " +
                 "Supported ABIs are [${sortAndJoinAbiStrings(ndkHandlerSupportedAbiStrings)}].")
         }
 
@@ -89,7 +89,7 @@ class AbiConfigurator(
                 // The user (or android studio) didn't select any legal ABIs, that's an error
                 // since there's nothing to build. Fall back to the ABIs from build.gradle so
                 // that there's something to show the user.
-                error("ABIs [$ideBuildTargetAbi] set by " +
+                errorln("ABIs [$ideBuildTargetAbi] set by " +
                                 "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                                 "flag is not supported. Supported ABIs " +
                                 "are [${sortAndJoinAbiStrings(allAbis)}].")
@@ -99,7 +99,7 @@ class AbiConfigurator(
                 if (!invalidAbis.isEmpty()) {
                     // The user (or android studio) selected some illegal ABIs. Give a warning and
                     // continue on.
-                    warn("ABIs [$ideBuildTargetAbi] set by " +
+                    warnln("ABIs [$ideBuildTargetAbi] set by " +
                         "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                         "flag contained '${sortAndJoinAbiStrings(invalidAbis)}' which is invalid.")
                 }
@@ -109,7 +109,7 @@ class AbiConfigurator(
                     // The user (or android studio) selected some ABIs that are valid but that
                     // aren't targeted by this build configuration. Warn but continue on with any
                     // ABIs that were valid.
-                    warn("ABIs [$ideBuildTargetAbi] set by " +
+                    warnln("ABIs [$ideBuildTargetAbi] set by " +
                         "'${StringOption.IDE_BUILD_TARGET_ABI.propertyName}' gradle " +
                         "flag contained '${sortAndJoinAbi(legalButNotTargetedByConfiguration)}' " +
                         "not targeted by this project.")

@@ -44,19 +44,19 @@ import org.gradle.api.logging.Logging
 /**
  * Report an error.
  */
-fun error(format: String, vararg args: Any) =
+fun errorln(format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedErrorToCurrentLogger(checkedFormat(format, args))
 
 /**
  * Report a warning.
  */
-fun warn(format: String, vararg args: Any) =
+fun warnln(format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedWarningToCurrentLogger(checkedFormat(format, args))
 
 /**
  * Report diagnostic/informational message.
  */
-fun info(format: String, vararg args: Any) =
+fun infoln(format: String, vararg args: Any) =
     ThreadLoggingEnvironment.reportFormattedInfoToCurrentLogger(checkedFormat(format, args))
 
 /**

@@ -18,7 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
-import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.error;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
@@ -69,18 +69,18 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         // recordConfigurationError will later cause the generation of json to fail.
         File cmakelists = getMakefile();
         if (cmakelists.isDirectory()) {
-            error(
+            errorln(
                     "Gradle project cmake.path %s is a folder. It must be CMakeLists.txt",
                     cmakelists);
         } else if (cmakelists.isFile()) {
             String filename = cmakelists.getName();
             if (!filename.equals("CMakeLists.txt")) {
-                error(
+                errorln(
                         "Gradle project cmake.path specifies %s but it must be CMakeLists.txt",
                         filename);
             }
         } else {
-            error("Gradle project cmake.path is %s but that file doesn't exist", cmakelists);
+            errorln("Gradle project cmake.path is %s but that file doesn't exist", cmakelists);
         }
     }
 

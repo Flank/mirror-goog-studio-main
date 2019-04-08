@@ -21,8 +21,8 @@ enum class LoggingLevel {
     WARN,
     ERROR;
     fun log(message : String) = when(this) {
-        INFO -> info(message)
-        WARN -> warn(message)
-        ERROR -> error(message)
+        INFO -> infoln(message)
+        WARN -> warnln(message)
+        ERROR -> errorln(message)
     }
 }
