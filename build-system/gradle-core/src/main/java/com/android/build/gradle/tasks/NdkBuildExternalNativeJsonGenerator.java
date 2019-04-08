@@ -21,7 +21,7 @@ import static com.android.SdkConstants.PLATFORM_WINDOWS;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
-import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
+import static com.android.build.gradle.internal.cxx.services.CxxProcessServiceKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gnumake.NativeBuildConfigValueBuilder;
@@ -162,10 +162,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     @Override
     String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException {
         return createProcessOutputJunction(
+                        abi.getVariant().getModule(),
                         abi.getObjFolder(),
                         "android_gradle_generate_ndk_build_json_" + abi.getAbi().getTag(),
                         getProcessBuilder(abi),
-                        androidBuilder,
                         "")
                 .logStderrToInfo()
                 .executeAndReturnStdoutString();

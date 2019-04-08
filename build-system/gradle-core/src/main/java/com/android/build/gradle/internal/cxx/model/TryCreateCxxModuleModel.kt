@@ -36,6 +36,7 @@ import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
@@ -92,6 +93,7 @@ fun tryCreateCxxModuleModel(global : GlobalScope, cmakeLocator : CmakeLocator) :
         return File(path)
     }
     return object : CxxModuleModel {
+        override val services by lazy { createDefaultServiceRegistry(global) }
         private val ndkHandler by lazy {
             val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
             try {
