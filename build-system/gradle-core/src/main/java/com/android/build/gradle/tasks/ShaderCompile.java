@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.sdklib.BuildToolInfo;
+import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -78,11 +78,11 @@ public class ShaderCompile extends AndroidBuilderTask {
         this.workers = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
     }
 
-    private Provider<BuildToolInfo> buildToolInfoProvider;
+    private Provider<Revision> buildToolInfoRevisionProvider;
 
     @Input
     public String getBuildToolsVersion() {
-        return buildToolInfoProvider.get().getRevision().toString();
+        return buildToolInfoRevisionProvider.get().toString();
     }
 
     private Provider<File> ndkLocation;
@@ -201,8 +201,8 @@ public class ShaderCompile extends AndroidBuilderTask {
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
 
-            task.buildToolInfoProvider =
-                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
+            task.buildToolInfoRevisionProvider =
+                    scope.getGlobalScope().getSdkComponents().getBuildToolsRevisionProvider();
         }
     }
 }
