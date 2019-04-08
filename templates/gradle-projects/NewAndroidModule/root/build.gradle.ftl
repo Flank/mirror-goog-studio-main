@@ -6,7 +6,7 @@ apply plugin: 'com.android.feature'
   <#if isLibraryProject>
 apply plugin: 'com.android.library'
   <#elseif isDynamicFeature>
-apply plugin: 'com.andorid.dynamic-feature'
+apply plugin: 'com.android.dynamic-feature'
   <#else>
 apply plugin: 'com.android.application'
   </#if>
