@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.repository.Revision
 import com.google.common.reflect.ClassPath
 import com.google.common.truth.Truth.assertThat
@@ -42,6 +43,7 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
 )
 
 private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
+    CxxServiceRegistry::class.java,
     List::class.java,
     Set::class.java,
     String::class.java,
