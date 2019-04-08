@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
@@ -121,15 +120,17 @@ abstract class DataItem<F extends DataFile> implements Serializable {
 
     /**
      * Resets the state of the item be TOUCHED. All other states are removed.
+     *
      * @return this
-     * @see #isWritten()
+     * @see #isTouched()
+     * @see #wasTouched()
      */
     @NonNull
     DataItem<F> resetStatusToTouched() {
-        boolean wasNotTouched = !isTouched();
+        boolean wasTouched = isTouched();
         mStatus = MASK_TOUCHED;
 
-        if (!wasNotTouched) {
+        if (!wasTouched) {
             wasTouched();
         }
 
