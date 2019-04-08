@@ -67,15 +67,14 @@ class CpuCache {
   // (|from|, |to|].
   ThreadSampleResponse GetThreads(int32_t pid, int64_t from, int64_t to);
 
-  // Adds start event for non-startup profiling. Returns a unique ID to identify
-  // the profiling. Returns -1 if not successful.
-  int32_t AddProfilingStart(int32_t pid, const ProfilingApp& record);
+  // Adds start event for non-startup profiling. Returns true if succesfully
+  // added.
+  bool AddProfilingStart(int32_t pid, const ProfilingApp& record);
   // Adds stop event for non-startup profiling.
   bool AddProfilingStop(int32_t pid);
-  // Adds start event for startup profiling. Returns a unique ID to identify the
-  // profiling.
-  int32_t AddStartupProfilingStart(const std::string& apk_pkg_name,
-                                   const ProfilingApp& record);
+  // Adds start event for startup profiling.
+  void AddStartupProfilingStart(const std::string& apk_pkg_name,
+                                const ProfilingApp& record);
   // Adds stop event for startup profiling.
   void AddStartupProfilingStop(const std::string& apk_pkg_name);
 

@@ -40,7 +40,7 @@ struct ProfilingApp {
   // The last start profiling requests processed successfully.
   profiler::proto::CpuProfilerConfiguration configuration;
   profiler::proto::TraceInitiationType initiation_type;
-  int32_t trace_id;
+  int64_t trace_id;
   bool is_startup_profiling = false;
 };
 

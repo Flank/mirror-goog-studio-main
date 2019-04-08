@@ -131,7 +131,7 @@ message TraceInfo {
   TraceInitiationType initiation_type = 3;
   int64 from_timestamp = 4;  // inclusive
   int64 to_timestamp = 5;    // inclusive
-  int32 trace_id = 6;
+  int64 trace_id = 6;
   // Path to the binary file containing the trace content.
   string trace_file_path = 7;
   // These threads are those having data captured by the designated trace.
@@ -141,7 +141,7 @@ message TraceInfo {
 message GetTraceRequest {
   Session session = 1;
   // Trace ID should be unique within a session.
-  int32 trace_id = 2;
+  int64 trace_id = 2;
 }
 
 message GetTraceResponse {
@@ -290,7 +290,7 @@ message CpuProfilingAppStopResponse {
   Status status = 1;
   string error_message = 2;
   // Trace ID should be unique within an app.
-  int32 trace_id = 3;
+  int64 trace_id = 3;
   // TODO: remove this trace attribute after fully migrating to the new API.
   bytes trace = 4;
 }

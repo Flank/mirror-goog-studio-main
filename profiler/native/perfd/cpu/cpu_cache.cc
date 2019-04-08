@@ -103,13 +103,11 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   return response;
 }
 
-int32_t CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
+bool CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
   auto* found = FindAppCache(pid);
-  if (found == nullptr) return -1;
+  if (found == nullptr) return false;
   found->ongoing_capture = found->capture_cache.Add(record);
-  int32_t id = GenerateTraceId();
-  found->ongoing_capture->trace_id = id;
-  return id;
+  return true;
 }
 
 bool CpuCache::AddProfilingStop(int32_t pid) {
@@ -121,12 +119,9 @@ bool CpuCache::AddProfilingStop(int32_t pid) {
   return true;
 }
 
-int32_t CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
-                                           const ProfilingApp& record) {
+void CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
+                                        const ProfilingApp& record) {
   startup_profiling_apps_[apk_pkg_name] = record;
-  int32_t id = GenerateTraceId();
-  startup_profiling_apps_[apk_pkg_name].trace_id = id;
-  return id;
 }
 
 void CpuCache::AddStartupProfilingStop(const string& apk_pkg_name) {
@@ -207,11 +202,6 @@ CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
     }
   }
   return nullptr;
-}
-
-int32_t CpuCache::GenerateTraceId() {
-  static int32_t trace_id = 0;
-  return trace_id++;
 }
 
 string CpuCache::GetCachedFileName(int32_t pid, int32_t trace_id) {

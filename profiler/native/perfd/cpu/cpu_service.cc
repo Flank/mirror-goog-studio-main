@@ -250,10 +250,12 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   if (success) {
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
 
+    int64_t timestampNs = clock_->GetCurrentTime();
     ProfilingApp profiling_app;
     profiling_app.app_pkg_name = app_pkg_name;
+    profiling_app.trace_id = timestampNs;
     profiling_app.trace_path = trace_path;
-    profiling_app.start_timestamp = clock_->GetCurrentTime();
+    profiling_app.start_timestamp = timestampNs;
     profiling_app.end_timestamp = -1;  // -1 means not end yet (ongoing)
     profiling_app.configuration = configuration;
     profiling_app.initiation_type = TraceInitiationType::INITIATED_BY_UI;
@@ -359,8 +361,10 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     const profiler::proto::StartupProfilingRequest* request,
     profiler::proto::StartupProfilingResponse* response) {
   ProfilingApp app;
+  int64_t timestampNs = clock_->GetCurrentTime();
   app.app_pkg_name = request->app_package();
-  app.start_timestamp = clock_->GetCurrentTime();
+  app.trace_id = timestampNs;
+  app.start_timestamp = timestampNs;
   app.end_timestamp = -1;
   app.configuration = request->configuration();
   app.initiation_type = TraceInitiationType::INITIATED_BY_STARTUP;
