@@ -39,7 +39,7 @@ public class Assertions {
                     String.format(
                             "%s.%s method called from EDT",
                             currentMethod.getClassName(), currentMethod.getMethodName()));
-            throw new RuntimeException("This method should not be called on the EDT thread");
+            throw new RuntimeException("This method should not be called on the EDT");
         }
     }
 
@@ -56,19 +56,19 @@ public class Assertions {
                             currentMethod.getClassName(),
                             currentMethod.getMethodName(),
                             currentMethod.getThreadName()));
-            throw new RuntimeException("This method should be called on the EDT thread");
+            throw new RuntimeException("This method should be called on the EDT");
         }
     }
 
     public static void warnIsNotEdt() {
         if (SwingUtilities.isEventDispatchThread()) {
-            LOGGER.warning("This method should not be called on the EDT thread");
+            LOGGER.warning("This method should not be called on the EDT");
         }
     }
 
     public static void warnIsEdt() {
         if (!SwingUtilities.isEventDispatchThread()) {
-            LOGGER.warning("This method should be called on the EDT thread");
+            LOGGER.warning("This method should be called on the EDT");
         }
     }
 
