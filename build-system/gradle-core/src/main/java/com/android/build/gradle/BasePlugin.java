@@ -667,8 +667,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
     @VisibleForTesting
     final void createAndroidTasks() {
         // Make sure unit tests set the required fields.
-        checkState(extension.getBuildToolsRevision() != null,
-                "buildToolsVersion is not specified.");
         checkState(extension.getCompileSdkVersion() != null, "compileSdkVersion is not specified.");
         extension
                 .getCompileOptions()
