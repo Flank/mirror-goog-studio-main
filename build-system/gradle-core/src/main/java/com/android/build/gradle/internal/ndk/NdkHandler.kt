@@ -109,10 +109,12 @@ class NdkHandler(
     }
 
     private fun getNdkInfo(ndkDirectory: File, revision: Revision): NdkInfo {
-        return if (revision.major < 14) {
-            DefaultNdkInfo(ndkDirectory)
-        } else {
+        return if (revision.major >= 19) {
+            NdkR19Info(ndkDirectory)
+        } else if (revision.major >= 14) {
             NdkR14Info(ndkDirectory)
+        } else {
+            DefaultNdkInfo(ndkDirectory)
         }
     }
 
