@@ -16,9 +16,7 @@
 
 package com.android.tools.apk.analyzer;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -62,6 +60,9 @@ public class ApkAnalyzerCliTest {
         cli.run("apk", "compare", "--files-only", "apk1", "apk2");
         cli.run("-h", "apk", "compare", "--files-only", "apk1", "apk2");
         verify(impl, times(2)).apkCompare(Paths.get("apk1"), Paths.get("apk2"), false, true, false);
+
+        cli.run("files", "list", "--raw-size", "apk1");
+        verify(impl).filesList(Paths.get("apk1"), true, false, false);
     }
 
     @Test

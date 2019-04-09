@@ -425,7 +425,7 @@ public class ApkAnalyzerCli {
                     PrintStream err,
                     @NonNull ApkAnalyzerImpl impl,
                     @NonNull String... args) {
-                OptionParser parser = super.getParser();
+                OptionParser parser = getParser();
                 OptionSet opts = parseOrPrintHelp(parser, err, args);
                 impl.filesList(
                         opts.valueOf(getFileSpec()).toPath(),
