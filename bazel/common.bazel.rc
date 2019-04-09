@@ -62,6 +62,7 @@ build:cloud_resultstore --auth_scope=https://www.googleapis.com/auth/cloud-sourc
 build:cloud_resultstore --project_id=908081808034
 build:cloud_resultstore --tls_enabled=true
 build:cloud_resultstore --auth_enabled=true
+build:cloud_resultstore --auth_credentials=tools/vendor/adt_infra_internal/.android-studio-alphasource.json
 
 build:remote_common --config=cloud_resultstore
 
@@ -140,7 +141,6 @@ build:remote --remote_executor=remotebuildexecution.googleapis.com
 # behavior and therefore improves both the remote cache hit rate and the
 # correctness and repeatability of the build.
 build:remote --experimental_strict_action_env=true
-build:remote --auth_credentials=tools/vendor/adt_infra_internal/.android-studio-alphasource.json
 
 # Enable jvmopt used for Foundry testing
 test:remote --jvmopt='-Dandroid.remote.run=true'
