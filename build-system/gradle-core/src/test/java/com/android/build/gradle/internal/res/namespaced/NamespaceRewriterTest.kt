@@ -486,6 +486,7 @@ class NamespaceRewriterTest {
         val namespaced = File(temporaryFolder.newFolder("namespaced", "values"), "values.xml")
         val localTable = SymbolTable.builder()
                 .tablePackage("com.example.local")
+                .add(symbol("attr", "showText"))
                 .build()
         val moduleTable = SymbolTable.builder()
             .tablePackage("com.example.module")
@@ -494,7 +495,6 @@ class NamespaceRewriterTest {
             .add(symbol("string", "string")) // just make sure we don't rewrite the types
             .add(symbol("string", "activity_name")) // overrides library string
             .add(symbol("string", "activity_ref")) // to make sure we will reference the app one
-            .add(symbol("attr", "showText"))
             .add(symbol("attr", "labelPosition"))
             .build()
         val dependencyTable = SymbolTable.builder()
@@ -528,11 +528,11 @@ class NamespaceRewriterTest {
     <style name="MyStyle2" parent="@*com.example.dependency:style/StyleParent">
         <item name="android:textSize">20sp</item>
         <item name="android:textColor">#008</item>
-        <item name="*com.example.module:showText">true</item>
+        <item name="showText">true</item>
     </style>
 
     <declare-styleable name="PieChart">
-        <attr name="*com.example.module:showText" format="boolean" />
+        <attr name="showText" format="boolean" />
         <attr name="*com.example.module:labelPosition" format="enum">
             <enum name="left" value="0" />
             <enum name="right" value="1" />

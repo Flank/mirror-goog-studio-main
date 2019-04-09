@@ -277,7 +277,9 @@ class NamespaceRewriter(
                     // Only handle name nodes and skip if already has a package.
                     if (it.nodeName == "name" && !it.nodeValue.contains(":")) {
                         val foundPackage = findPackageForAttr(it.nodeValue)
-                        it.nodeValue = "*$foundPackage:${it.nodeValue}"
+                        if (foundPackage != localPackage) {
+                            it.nodeValue = "*$foundPackage:${it.nodeValue}"
+                        }
                     }
                 }
             }
