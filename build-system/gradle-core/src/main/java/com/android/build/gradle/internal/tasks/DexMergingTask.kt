@@ -18,12 +18,14 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -170,6 +172,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
         variantScope: VariantScope,
         private val action: DexMergingAction,
         private val dexingType: DexingType,
+        private val dexingUsingArtifactTransforms: Boolean = true,
         private val separateFileDependenciesDexingTask: Boolean = false,
         private val outputType: InternalArtifactType = InternalArtifactType.DEX
     ) : VariantTaskCreationAction<DexMergingTask>(variantScope) {
@@ -226,39 +229,64 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
             fun forAction(action: DexMergingAction): FileCollection {
                 when (action) {
                     DexMergingAction.MERGE_EXTERNAL_LIBS -> {
-                        // If the file dependencies are being dexed in a task, don't also include them here
-                        val artifactScope: AndroidArtifacts.ArtifactScope = if (separateFileDependenciesDexingTask) {
-                            AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE
+                        return if (dexingUsingArtifactTransforms) {
+                            // If the file dependencies are being dexed in a task, don't also include them here
+                            val artifactScope: AndroidArtifacts.ArtifactScope = if (separateFileDependenciesDexingTask) {
+                                AndroidArtifacts.ArtifactScope.REPOSITORY_MODULE
+                            } else {
+                                AndroidArtifacts.ArtifactScope.EXTERNAL
+                            }
+                             variantScope.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                artifactScope,
+                                AndroidArtifacts.ArtifactType.DEX,
+                                attributes
+                            )
                         } else {
-                            AndroidArtifacts.ArtifactScope.EXTERNAL
+                            variantScope.globalScope.project.files(
+                                variantScope.transformManager.getPipelineOutputAsFileCollection(
+                                    StreamFilter.DEX_ARCHIVE,
+                                    StreamFilter {_, scopes -> scopes == setOf(QualifiedContent.Scope.EXTERNAL_LIBRARIES) }
+                                ))
                         }
-                        return variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            artifactScope,
-                            AndroidArtifacts.ArtifactType.DEX,
-                            attributes
-                        )
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
-                        return variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.DEX,
-                            attributes
-                        )
+                        return if (dexingUsingArtifactTransforms) {
+                            variantScope.getArtifactFileCollection(
+                                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                                AndroidArtifacts.ArtifactScope.PROJECT,
+                                AndroidArtifacts.ArtifactType.DEX,
+                                attributes
+                            )
+                        } else {
+                            variantScope.globalScope.project.files(
+                                variantScope.transformManager.getPipelineOutputAsFileCollection(
+                                    StreamFilter.DEX_ARCHIVE,
+                                    StreamFilter {_, scopes ->
+                                        scopes == setOf(QualifiedContent.Scope.SUB_PROJECTS)
+                                                || scopes == setOf(
+                                            QualifiedContent.Scope.SUB_PROJECTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES
+                                        )}
+                                ))
+                        }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
                         val files =
                             variantScope.globalScope.project.files(
-                                variantScope.transformManager.getPipelineOutputAsFileCollection(
-                                    StreamFilter.DEX_ARCHIVE
-                                )
+                                variantScope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
+                                    types.contains(ExtendedContentType.DEX_ARCHIVE) && scopes.contains(
+                                        QualifiedContent.Scope.PROJECT
+                                    )
+                                }
                             )
                         val variantType = variantScope.type
                         if (variantType.isTestComponent && variantType.isApk) {
                             val testedVariantData =
                                 checkNotNull(variantScope.testedVariantData) { "Test component without testedVariantData" }
-                            if (testedVariantData.type.isAar) {
+                            if (dexingUsingArtifactTransforms && testedVariantData.type.isAar) {
+                                // If dexing using artifact transforms, library production code will
+                                // be dex'ed in a task, so we need to fetch the output directly.
+                                // Otherwise, it will be in the dex'ed in the dex builder transform.
                                 files.from(
                                     testedVariantData.scope.artifacts.getFinalArtifactFiles(
                                         InternalArtifactType.DEX

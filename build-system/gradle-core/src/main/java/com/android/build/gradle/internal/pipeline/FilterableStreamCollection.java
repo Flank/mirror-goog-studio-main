@@ -55,6 +55,12 @@ public abstract class FilterableStreamCollection {
     @NonNull
     public FileCollection getPipelineOutputAsFileCollection(
             @NonNull StreamFilter streamFilter) {
+        return getPipelineOutputAsFileCollection(streamFilter, streamFilter);
+    }
+
+    @NonNull
+    public FileCollection getPipelineOutputAsFileCollection(
+            @NonNull StreamFilter streamFilter, @NonNull StreamFilter contentFilter) {
         final Project project = getProject();
 
         ImmutableList<TransformStream> streams = getStreams(streamFilter);
@@ -63,14 +69,14 @@ public abstract class FilterableStreamCollection {
         }
 
         if (streams.size() == 1) {
-            return streams.get(0).getOutputFileCollection(project, streamFilter);
+            return streams.get(0).getOutputFileCollection(project, contentFilter);
         }
 
         // create a global collection that will return all the collections.
         ConfigurableFileCollection collection = project.files();
 
         for (TransformStream stream : streams) {
-            collection.from(stream.getOutputFileCollection(project, streamFilter));
+            collection.from(stream.getOutputFileCollection(project, contentFilter));
         }
 
         return collection;

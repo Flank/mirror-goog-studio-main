@@ -83,7 +83,7 @@ import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-/** Testing the {@link DexArchiveBuilderTransform} and {@link DexMergerTransform}. */
+/** Testing the {@link DexArchiveBuilderTransform}. */
 @RunWith(Parameterized.class)
 public class DexArchiveBuilderTransformTest {
     private File cacheDir;
