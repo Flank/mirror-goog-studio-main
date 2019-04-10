@@ -68,6 +68,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import javax.xml.parsers.ParserConfigurationException;
 import org.objectweb.asm.AnnotationVisitor;
@@ -196,7 +198,8 @@ public class ResourceUsageAnalyzer {
     /** Special marker regexp which does not match a resource name */
     static final String NO_MATCH = "-nomatch-";
 
-    private final File mResourceClassDir;
+    /* A source of resource classes to track, can be either a folder or a jar */
+    private final File mResourceClasseseSource;
     private final File mProguardMapping;
     /** These can be class or dex files. */
     private final Iterable<File> mClasses;
@@ -230,14 +233,14 @@ public class ResourceUsageAnalyzer {
     private String mResourcesWrapper;
 
     public ResourceUsageAnalyzer(
-            @NonNull File rDir,
+            @NonNull File rClasses,
             @NonNull Iterable<File> classes,
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull Iterable<File> resources,
             @Nullable File reportFile,
             @NonNull ApkFormat format) {
-        mResourceClassDir = rDir;
+        mResourceClasseseSource = rClasses;
         mProguardMapping = mapping;
         mClasses = classes;
         mMergedManifest = manifest;
@@ -260,14 +263,14 @@ public class ResourceUsageAnalyzer {
     }
 
     public ResourceUsageAnalyzer(
-            @NonNull File rDir,
+            @NonNull File rClasses,
             @NonNull Iterable<File> classes,
             @NonNull File manifest,
             @Nullable File mapping,
             @NonNull File resources,
             @Nullable File reportFile,
             @NonNull ApkFormat format) {
-        this(rDir, classes, manifest, mapping, Arrays.asList(resources), reportFile, format);
+        this(rClasses, classes, manifest, mapping, Arrays.asList(resources), reportFile, format);
     }
 
     public void dispose() {
@@ -293,7 +296,7 @@ public class ResourceUsageAnalyzer {
     }
 
     public void analyze() throws IOException, ParserConfigurationException, SAXException {
-        gatherResourceValues(mResourceClassDir);
+        gatherResourceValues(mResourceClasseseSource);
         recordMapping(mProguardMapping);
 
         for (File jarOrDir : mClasses) {
@@ -1564,13 +1567,78 @@ public class ResourceUsageAnalyzer {
                     gatherResourceValues(child);
                 }
             }
-        } else if (file.isFile() && file.getName().equals(SdkConstants.FN_RESOURCE_CLASS)) {
-            parseResourceClass(file);
+        } else if (file.isFile()) {
+            if (file.getName().equals(SdkConstants.FN_RESOURCE_CLASS)) {
+                parseResourceSourceClass(file);
+            } else if (file.getName().equals(SdkConstants.FN_R_CLASS_JAR)) {
+                parseResourceRJar(file);
+            }
         }
     }
 
+    private static ResourceType extractResourceType(String entryName) {
+        String rClassName = entryName.substring(entryName.lastIndexOf('/') + 1);
+        if (!rClassName.startsWith("R$")) {
+            return null;
+        }
+        String resourceTypeName =
+                rClassName.substring("R$".length(), rClassName.length() - DOT_CLASS.length());
+        return ResourceType.fromClassName(resourceTypeName);
+    }
+
+    private void parseResourceRJar(File jarFile) throws IOException {
+        try (ZipFile zFile = new ZipFile(jarFile)) {
+            Enumeration<? extends ZipEntry> entries = zFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                String entryName = entry.getName();
+                if (entryName.endsWith(DOT_CLASS)) {
+                    ResourceType resourceType = extractResourceType(entryName);
+                    if (resourceType == null) {
+                        continue;
+                    }
+                    String owner = entryName.substring(0, entryName.length() - DOT_CLASS.length());
+                    byte[] classData = ByteStreams.toByteArray(zFile.getInputStream(entry));
+                    parseResourceCompiledClass(classData, owner, resourceType);
+                }
+            }
+        }
+    }
+
+    private void parseResourceCompiledClass(
+            byte[] classData, String owner, ResourceType resourceType) {
+        ClassReader classReader = new ClassReader(classData);
+        ClassVisitor fieldVisitor =
+                new ClassVisitor(Opcodes.ASM5) {
+                    @Override
+                    public FieldVisitor visitField(
+                            int access, String name, String desc, String signature, Object value) {
+                        // We only want integer or integer array (styleable) fields
+                        if (desc.equals("I") || desc.equals("[I")) {
+                            String resourceValue =
+                                    resourceType == ResourceType.STYLEABLE
+                                            ? null
+                                            : value.toString();
+                            mModel.addResource(resourceType, name, resourceValue);
+                            addOwner(owner, resourceType);
+                        }
+                        return null;
+                    }
+                };
+        classReader.accept(fieldVisitor, SKIP_DEBUG | SKIP_FRAMES);
+    }
+
+    private void addOwner(@NonNull String owner, @NonNull ResourceType type) {
+        Pair<ResourceType, Map<String, String>> pair = mResourceObfuscation.get(owner);
+        if (pair == null) {
+            Map<String, String> nameMap = Maps.newHashMap();
+            pair = Pair.of(type, nameMap);
+        }
+        mResourceObfuscation.put(owner, pair);
+    }
+
     // TODO: Use PSI here
-    private void parseResourceClass(File file) throws IOException {
+    private void parseResourceSourceClass(File file) throws IOException {
         String s = Files.toString(file, UTF_8);
         // Simple parser which handles only aapt's special R output
         String pkg = null;
@@ -1599,13 +1667,7 @@ public class ResourceUsageAnalyzer {
             }
 
             if (pkg != null) {
-                String owner = pkg + "/R$" + type.getName();
-                Pair<ResourceType, Map<String, String>> pair = mResourceObfuscation.get(owner);
-                if (pair == null) {
-                    Map<String, String> nameMap = Maps.newHashMap();
-                    pair = Pair.of(type, nameMap);
-                }
-                mResourceObfuscation.put(owner, pair);
+                addOwner(pkg + "/R$" + type.getName(), type);
             }
 
             index = end;

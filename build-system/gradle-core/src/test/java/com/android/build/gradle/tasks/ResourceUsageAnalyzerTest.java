@@ -30,6 +30,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceType;
+import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -49,15 +50,29 @@ import java.util.zip.ZipOutputStream;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** TODO: Test Resources#getIdentifier() handling */
 @SuppressWarnings("SpellCheckingInspection")
+@RunWith(Parameterized.class)
 public class ResourceUsageAnalyzerTest {
+
+    @NonNull private final boolean resourcesFromDir;
+
+    public ResourceUsageAnalyzerTest(@NonNull Boolean param) {
+        this.resourcesFromDir = param;
+    }
 
     enum CodeInput {
         NO_SHRINKER,
         PROGUARD,
         R8
+    }
+
+    @Parameterized.Parameters(name = "resourcesFromDir={0}")
+    public static Boolean[] getParameters() {
+        return new Boolean[] {Boolean.TRUE, Boolean.FALSE};
     }
 
     @ClassRule
@@ -103,7 +118,7 @@ public class ResourceUsageAnalyzerTest {
         classes = createUnproguardedClasses(dir);
         mapping = null;
 
-        File rDir = createResourceClassFolder(dir);
+        File rDir = createResourceSources(dir);
         File mergedManifest = createMergedManifest(dir);
         File resources = createResourceFolder(dir);
 
@@ -151,7 +166,7 @@ public class ResourceUsageAnalyzerTest {
                 analyzer.getModel().dumpConfig());
     }
 
-    private static void check(CodeInput codeInput, boolean inPlace) throws Exception {
+    private void check(CodeInput codeInput, boolean inPlace) throws Exception {
         File dir = sTemporaryFolder.newFolder();
 
         File mapping;
@@ -172,13 +187,14 @@ public class ResourceUsageAnalyzerTest {
             default:
                 throw new AssertionError();
         }
-        File rDir = createResourceClassFolder(dir);
+        File rSource = createResourceSources(dir);
+
         File mergedManifest = createMergedManifest(dir);
         File resources = createResourceFolder(dir);
 
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
-                        rDir,
+                        rSource,
                         Collections.singleton(classes),
                         mergedManifest,
                         mapping,
@@ -671,7 +687,10 @@ public class ResourceUsageAnalyzerTest {
                     + "</manifest>");
     }
 
-    private static File createResourceClassFolder(File dir) throws IOException {
+    private File createResourceSources(File dir) throws IOException {
+        if (!resourcesFromDir) {
+            return TestResources.getFile(ResourceUsageAnalyzerTest.class, "R.jar");
+        }
         File rDir = new File(dir, "app/build/source/r/release".replace('/', separatorChar));
         //noinspection ResultOfMethodCallIgnored
         rDir.mkdirs();
