@@ -46,8 +46,8 @@ using grpc::Status;
 using proto::AgentConfig;
 using proto::AgentService;
 using proto::CommonConfig;
+using proto::EmptyResponse;
 using proto::HeartBeatRequest;
-using proto::HeartBeatResponse;
 using proto::InternalCpuService;
 using proto::InternalEnergyService;
 using proto::InternalEventService;
@@ -279,7 +279,7 @@ void Agent::RunHeartbeatThread() {
   while (true) {
     int64_t start_ns = stopwatch.GetElapsed();
     // TODO: handle erroneous status
-    HeartBeatResponse response;
+    EmptyResponse response;
     grpc::ClientContext context;
 
     // Set a deadline on the context, so we can get a proper status code if

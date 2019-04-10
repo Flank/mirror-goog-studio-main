@@ -22,18 +22,25 @@
 #include "proto/common.grpc.pb.h"
 
 using grpc::ServerContext;
+using profiler::proto::EmptyResponse;
 using profiler::proto::Event;
 using profiler::proto::HeartBeatRequest;
-using profiler::proto::HeartBeatResponse;
+using profiler::proto::SendCommandRequest;
 
 namespace profiler {
 
 grpc::Status AgentServiceImpl::HeartBeat(ServerContext* context,
                                          const HeartBeatRequest* request,
-                                         HeartBeatResponse* response) {
+                                         EmptyResponse* response) {
   auto now = daemon_->clock()->GetCurrentTime();
   daemon_->SetHeartBeatTimestamp(request->pid(), now);
   return grpc::Status::OK;
+}
+
+grpc::Status AgentServiceImpl::SendCommand(
+    grpc::ServerContext* context, const proto::SendCommandRequest* request,
+    proto::EmptyResponse* response) {
+  return daemon_->Execute(request->command());
 }
 
 grpc::Status AgentServiceImpl::SendEvent(grpc::ServerContext* context,

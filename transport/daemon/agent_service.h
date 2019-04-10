@@ -35,7 +35,11 @@ class AgentServiceImpl : public proto::AgentService::Service {
 
   grpc::Status HeartBeat(grpc::ServerContext* context,
                          const proto::HeartBeatRequest* request,
-                         proto::HeartBeatResponse* response) override;
+                         proto::EmptyResponse* response) override;
+
+  grpc::Status SendCommand(grpc::ServerContext* context,
+                           const proto::SendCommandRequest* request,
+                           proto::EmptyResponse* response) override;
 
   grpc::Status SendEvent(grpc::ServerContext* context,
                          const proto::SendEventRequest* request,

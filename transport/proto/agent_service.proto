@@ -26,7 +26,15 @@ import "memory.proto";
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice
   // versa.
-  rpc HeartBeat(HeartBeatRequest) returns (HeartBeatResponse) {}
+  rpc HeartBeat(HeartBeatRequest) returns (EmptyResponse) {}
+
+  // Equilvalent to the |Execute| rpc call in transport.proto, but this command
+  // orignates from the app agent. Note that the command will be handled via
+  // the daemon (if a handler is present), then forwarded back to the app agent
+  // via the generic command routing logic. If we deem the extra forward to
+  // be problematic/unnecessary, we can introduce an additional flag to commands
+  // to halt forwarding.
+  rpc SendCommand(SendCommandRequest) returns (EmptyResponse) {}
 
   rpc SendEvent(SendEventRequest) returns (EmptyResponse) {}
 
@@ -44,7 +52,9 @@ message HeartBeatRequest {
   int32 pid = 1;
 }
 
-message HeartBeatResponse {}
+message SendCommandRequest {
+  Command command = 1;
+}
 
 message SendEventRequest {
   // The event. It contains the id of the process that generated the Event.
