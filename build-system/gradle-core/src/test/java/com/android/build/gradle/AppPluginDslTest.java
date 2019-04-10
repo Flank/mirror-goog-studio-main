@@ -391,8 +391,8 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks();
 
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
-        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
+        assertThat(project.getTasks().getNames()).contains(R8_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(R8_DEBUG_ANDROID_TEST);
     }
 
     @Test

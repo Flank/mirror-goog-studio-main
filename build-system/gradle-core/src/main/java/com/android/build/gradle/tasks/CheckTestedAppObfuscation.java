@@ -49,7 +49,7 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
     void checkIfAppIsObfuscated() {
         if (!mappingFile.isEmpty()) {
             throw new RuntimeException(
-                    "Mapping file found in tested application. Proguard must also be enabled in "
+                    "Mapping file found in tested application. Code shrinker must also be enabled in "
                             + "test plugin with:\n"
                             + "android {\n"
                             + "    buildTypes {\n"
@@ -57,7 +57,6 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
                             + getVariantName()
                             + " {\n"
                             + "            minifyEnabled true\n"
-                            + "            useProguard true\n"
                             + "        }\n"
                             + "    }\n"
                             + "}\n");

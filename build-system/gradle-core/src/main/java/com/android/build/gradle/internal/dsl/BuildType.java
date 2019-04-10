@@ -86,7 +86,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Nullable private String postProcessingDslMethodUsed;
 
     private boolean shrinkResources = false;
-    private Boolean useProguard;
+    private Boolean useProguard = false;
     private Boolean crunchPngs;
     private boolean isCrunchPngsDefault = true;
     private final Property<Boolean> isDefault;
@@ -600,7 +600,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     public void setUseProguard(boolean useProguard) {
         checkPostProcessingConfiguration(PostProcessingConfiguration.OLD_DSL, "setUseProguard");
-        this.useProguard = useProguard;
+        if (dslChecksEnabled.get()) {
+            deprecationReporter.reportObsoleteUsage(
+                    "useProguard", DeprecationReporter.DeprecationTarget.DSL_USE_PROGUARD);
+        }
     }
 
     /** {@inheritDoc} */
