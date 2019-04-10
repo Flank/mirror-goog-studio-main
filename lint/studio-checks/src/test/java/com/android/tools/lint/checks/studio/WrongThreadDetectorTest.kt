@@ -132,19 +132,19 @@ class WrongThreadDetectorTest {
             .run()
             .expect(
                 """
-                src/test/pkg/Test.java:9: Error: Method uiThread must be called from the UI thread, currently inferred thread is worker thread [WrongThread]
+                src/test/pkg/Test.java:9: Error: Method uiThread must be called from the UI thread, currently inferred thread is worker thread. [WrongThread]
                         uiThread(); // WARN
                         ~~~~~~~~~~
-                src/test/pkg/Test.java:10: Error: Method method must be called from the UI thread, currently inferred thread is worker thread [WrongThread]
+                src/test/pkg/Test.java:10: Error: Method method must be called from the UI thread, currently inferred thread is worker thread. [WrongThread]
                         UiThreadClass.method(); // WARN
                         ~~~~~~~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:15: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
+                src/test/pkg/Test.java:15: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
                         slowMethod(); // WARN
                         ~~~~~~~~~~~~
-                src/test/pkg/Test.java:33: Error: Method uiThread must be called from the UI thread, currently inferred thread is any thread [WrongThread]
+                src/test/pkg/Test.java:33: Error: Method uiThread must be called from the UI thread, currently inferred thread is any thread. [WrongThread]
                         uiThread(); // WARN
                         ~~~~~~~~~~
-                src/test/pkg/Test.java:34: Error: Method slowMethod must be called from the worker thread, currently inferred thread is any thread [WrongThread]
+                src/test/pkg/Test.java:34: Error: Method slowMethod must be called from the worker thread, currently inferred thread is any thread. [WrongThread]
                         slowMethod(); // WARN
                         ~~~~~~~~~~~~
                 5 errors, 0 warnings
@@ -171,41 +171,90 @@ class WrongThreadDetectorTest {
 
                         private void fastMethod() { }
 
+                        @UiThread
+                        private void uiMethod() { }
+
                         public void test() {
                             new AnAction() {
                                 @UiThread
                                 public void update(@NotNull AnActionEvent e) {
                                     fastMethod(); // OK
-                                    slowMethod(); // WARN
+                                    slowMethod(); // WARN1
+                                    uiMethod(); // OK
                                 }
                             };
                             new Application().invokeLater(() -> {
                                 fastMethod(); // OK
-                                slowMethod(); // WARN
-                                fastMethod(); // OK
+                                slowMethod(); // WARN2
+                                uiMethod(); // OK
                             });
                             new Application().runOnPooledThread(() -> {
                                 slowMethod(); // OK
+                                uiMethod(); // OK until we have @WorkerThread
                             });
                             new Application().invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
                                     fastMethod(); // OK
-                                    slowMethod(); // WARN
+                                    slowMethod(); // WARN3
+                                    uiMethod(); // OK
                                 }
                             });
                             new Application().runOnPooledThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     slowMethod(); // OK
+                                    uiMethod(); // OK until we have @WorkerThread
                                 }
                             });
                             new Application().externallyAnnotated(new Runnable() {
                                 @Override
                                 public void run() {
-                                    slowMethod(); // WARN
+                                    slowMethod(); // WARN4
+                                    slowMethod(); // WARN5
+                                    uiMethod(); // OK
                                 }
                             });
+                        }
+
+                        @Slow
+                        public void test2() {
+                            fastMethod(); // OK
+                            slowMethod(); // OK
+                            uiMethod(); // WARN6
+
+                            new Application().invokeLater(() -> {
+                                fastMethod(); // OK
+                                slowMethod(); // WARN7
+                                uiMethod(); // OK
+                            });
+
+                            new Application().invokeLater(this::fastMethod); // OK
+                            new Application().invokeLater(this::uiMethod); // OK
+                            new Application().invokeLater(this::slowMethod); // WARN8
+
+                            new Application().runWriteAction(() -> { // WARN 9
+                                fastMethod(); // OK
+                                slowMethod(); // WARN10
+                                uiMethod(); // OK
+                            });
+                        }
+
+                        @UiThread
+                        public void test3() {
+                            fastMethod(); // OK
+                            slowMethod(); // WARN11
+                            uiMethod(); // OK
+
+                            new Application().runWriteAction(() -> {
+                                fastMethod(); // OK
+                                slowMethod(); // WARN12
+                                uiMethod(); // OK
+                            });
+
+                            new Application().runWriteAction(this::fastMethod); // OK
+                            new Application().runWriteAction(this::uiMethod); // OK
+                            new Application().runWriteAction(this::slowMethod); // WARN13
                         }
                     }
                 """
@@ -222,7 +271,10 @@ class WrongThreadDetectorTest {
                         /** Fake method to check that it does no trigger the warnings */
                         public void runOnPooledThread(@NotNull Runnable run) { run.run(); }
 
-                        public void externallyAnnotated(@NotNull Runnable run) { run.rin(); }
+                        public void externallyAnnotated(@NotNull Runnable run) { run.run(); }
+
+                        @UiThread
+                        public void runWriteAction(@NotNull @UiThread Runnable run) { run.run(); }
                     }
                 """
                 ).indented(),
@@ -304,19 +356,46 @@ class WrongThreadDetectorTest {
             .run()
             .expect(
                 """
-                src/test/pkg/Test.java:19: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
-                                slowMethod(); // WARN
+                src/test/pkg/Test.java:22: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                                slowMethod(); // WARN1
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:24: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
-                            slowMethod(); // WARN
+                src/test/pkg/Test.java:28: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                            slowMethod(); // WARN2
                             ~~~~~~~~~~~~
-                src/test/pkg/Test.java:34: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
-                                slowMethod(); // WARN
+                src/test/pkg/Test.java:39: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                                slowMethod(); // WARN3
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:46: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
-                                slowMethod(); // WARN
+                src/test/pkg/Test.java:53: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                                slowMethod(); // WARN4
                                 ~~~~~~~~~~~~
-                4 errors, 0 warnings
+                src/test/pkg/Test.java:54: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                                slowMethod(); // WARN5
+                                ~~~~~~~~~~~~
+                src/test/pkg/Test.java:64: Error: Method uiMethod must be called from the UI thread, currently inferred thread is worker thread. [WrongThread]
+                        uiMethod(); // WARN6
+                        ~~~~~~~~~~
+                src/test/pkg/Test.java:68: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                            slowMethod(); // WARN7
+                            ~~~~~~~~~~~~
+                src/test/pkg/Test.java:74: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                        new Application().invokeLater(this::slowMethod); // WARN8
+                                                      ~~~~~~~~~~~~~~~~
+                src/test/pkg/Test.java:76: Error: Method runWriteAction must be called from the UI thread, currently inferred thread is worker thread. [WrongThread]
+                        new Application().runWriteAction(() -> { // WARN 9
+                        ^
+                src/test/pkg/Test.java:78: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                            slowMethod(); // WARN10
+                            ~~~~~~~~~~~~
+                src/test/pkg/Test.java:86: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                        slowMethod(); // WARN11
+                        ~~~~~~~~~~~~
+                src/test/pkg/Test.java:91: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                            slowMethod(); // WARN12
+                            ~~~~~~~~~~~~
+                src/test/pkg/Test.java:97: Error: Method slowMethod must be called from the worker thread, currently inferred thread is UI thread. [WrongThread]
+                        new Application().runWriteAction(this::slowMethod); // WARN13
+                                                         ~~~~~~~~~~~~~~~~
+                13 errors, 0 warnings
                 """
             )
     }

@@ -20,11 +20,14 @@ import com.android.annotations.concurrency.AnyThread
 import com.android.annotations.concurrency.Slow
 import com.android.annotations.concurrency.UiThread
 import com.android.tools.lint.detector.api.AnnotationUsageType
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PACKAGE
+import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
-import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
@@ -34,6 +37,7 @@ import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UAnonymousClass
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
@@ -69,8 +73,18 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
-        if (method != null) {
-            checkMethodCallThreading(context, usage, method, qualifiedName)
+        when (type) {
+            METHOD_CALL, METHOD_CALL_CLASS, METHOD_CALL_PACKAGE -> {
+                checkMethodCallThreading(context, usage, method ?: return, qualifiedName)
+            }
+            METHOD_CALL_PARAMETER -> {
+                checkCallableReference(
+                    context,
+                    (usage as? UCallableReferenceExpression) ?: return,
+                    qualifiedName
+                )
+            }
+            else -> return // We don't care about other [AnnotationUsageType]s.
         }
     }
 
@@ -94,21 +108,55 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         }
 
         val message = String.format(
-            "%1\$s %2\$s must be called from the %3\$s thread, currently inferred thread is %4\$s thread",
+            "%1\$s %2\$s must be called from the %3\$s thread, " +
+                    "currently inferred thread is %4\$s thread.",
             if (method.isConstructor) "Constructor" else "Method",
-            method.name, describeThreads(listOf(annotationQualifiedName), true),
-            describeThreads(callerThreads, false)
+            method.name,
+            describeThread(annotationQualifiedName),
+            describeThreads(callerThreads, true)
         )
 
-        val location = context.getLocation(methodCallNode)
-        report(context, methodCallNode, location, message)
+        report(context, methodCallNode, message)
+    }
+
+    /**
+     * Checks that the given callable reference (e.g. `this::compute`), passed as an argument to
+     * another method, obeys the contract of threading annotations.
+     *
+     * @param context the lint scanning context
+     * @param reference the UAST node of the reference
+     * @param callerThread fully qualified name of the threading annotation present on the method
+     *                     parameter, which needs to be compatible with all annotations on the
+     *                     method being passed as reference
+     */
+    private fun checkCallableReference(
+        context: JavaContext,
+        reference: UCallableReferenceExpression,
+        callerThread: String
+    ) {
+        val referencedMethod = reference.resolve() as? PsiMethod ?: return
+        val calleeThreads = context.evaluator
+            .getAllAnnotations(referencedMethod, false)
+            .filter { it.isThreadingAnnotation() }
+
+        val invalidThread = calleeThreads.asSequence()
+            .mapNotNull { it.qualifiedName }
+            .firstOrNull { !threadCompatible(callerThread, it) }
+            ?: return
+
+        val message = String.format(
+            "%1\$s %2\$s must be called from the %3\$s thread, " +
+                    "currently inferred thread is %4\$s thread.",
+            if (referencedMethod.isConstructor) "Constructor" else "Method",
+            referencedMethod.name,
+            describeThread(invalidThread),
+            describeThread(callerThread)
+        )
+
+        report(context, reference, message)
     }
 
     private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
-        return THREADING_ANNOTATIONS.contains(qualifiedName)
-    }
-
-    private fun UAnnotation.isThreadingAnnotation(): Boolean {
         return THREADING_ANNOTATIONS.contains(qualifiedName)
     }
 
@@ -138,11 +186,11 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
     private fun allThreadsCompatible(callers: List<String>, callee: String): Boolean {
         // ALL calling contexts must be valid
         assert(!callers.isEmpty())
-        return callers.all { allThreadsCompatible(it, callee) }
+        return callers.all { threadCompatible(it, callee) }
     }
 
     /** returns true if the two threads are compatible  */
-    private fun allThreadsCompatible(caller: String, callee: String): Boolean =
+    private fun threadCompatible(caller: String, callee: String): Boolean =
         (callee == caller) || (ANY_THREAD == callee)
 
     /** Attempts to infer the current thread context at the site of the given method call  */
@@ -272,11 +320,10 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
 
     private fun report(
         context: JavaContext,
-        scope: UElement?,
-        location: Location,
+        scope: UElement,
         message: String
     ) {
-        context.report(ISSUE, scope, location, message, null)
+        context.report(ISSUE, scope, context.getLocation(scope), message, null)
     }
 
     companion object {
