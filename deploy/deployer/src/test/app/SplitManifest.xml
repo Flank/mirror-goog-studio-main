@@ -1,0 +1,7 @@
+<?xml version='1.0'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android'
+          package='%PACKAGE'
+          split="split_01"
+          android:versionCode='%VERSION'
+          android:versionName='1.0'>
+</manifest>

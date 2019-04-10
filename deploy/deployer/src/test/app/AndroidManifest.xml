@@ -1,0 +1,15 @@
+<?xml version='1.0'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android'
+          package='%PACKAGE'
+          android:versionCode='%VERSION'
+          android:versionName='1.0'>
+    <uses-sdk android:minSdkVersion="19"/>
+    <application android:label='A Hello Android'>
+        <activity android:name='com.example.simpleapp.MainActivity'>
+             <intent-filter>
+                <category android:name='android.intent.category.LAUNCHER'/>
+                <action android:name='android.intent.action.MAIN'/>
+             </intent-filter>
+        </activity>
+    </application>
+</manifest>
