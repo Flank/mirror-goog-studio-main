@@ -33,7 +33,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private val logger = RecordingLoggingEnvironment()
     private val abi = createCmakeProjectCxxAbiForTest(projectParentFolder)
     private val cmakeListsFolder = abi.variant.module.makeFile
-    private val cmakeToolchainFile = abi.variant.module.cmake!!.cmakeToolchainFile
+    private val cmakeToolchainFile = abi.variant.module.cmakeToolchainFile
     private val moduleRootFolder = abi.variant.module.moduleRootFolder
     private val ndkFolder = abi.variant.module.ndkFolder
 

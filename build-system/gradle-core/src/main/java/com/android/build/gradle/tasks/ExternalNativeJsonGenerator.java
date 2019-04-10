@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt
 import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.createCxxAbiModel;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
+import static com.android.build.gradle.internal.cxx.model.JsonUtilKt.writeJsonToFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -350,6 +351,7 @@ public abstract class ExternalNativeJsonGenerator {
                 Files.write(
                         abi.getJsonGenerationLoggingRecordFile().toPath(),
                         toJsonString(recorder.getRecord()).getBytes(Charsets.UTF_8));
+                writeJsonToFile(abi);
             }
         }
     }

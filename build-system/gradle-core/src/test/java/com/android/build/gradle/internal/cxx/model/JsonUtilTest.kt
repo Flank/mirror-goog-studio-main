@@ -24,84 +24,27 @@ import org.junit.Test
 import java.io.File
 
 class JsonUtilTest {
-    private val module : CxxModuleModel
-    private val variant  : CxxVariantModel
-    private val cmake  : CxxCmakeAbiModel
-    private val abi  : CxxAbiModel
-    init {
-        val module = object : CxxModuleModel {
-            override val rootBuildGradleFolder: File = File("rootBuildGradleFolder")
-            override val cmake: CxxCmakeModuleModel? = null
-            override val ndkSupportedAbiList = Abi.values().toList()
-            override val ndkDefaultAbiList = listOf(Abi.X86_64)
-            override val isNativeCompilerSettingsCacheEnabled = false
-            override val sdkFolder = File("soFolder")
-            override val isBuildOnlyTargetAbiEnabled = true
-            override val ideBuildTargetAbi = "ideBuildTargetAbi"
-            override val splitsAbiFilterSet = setOf("ABI")
-            override val intermediatesFolder = File("intermediates")
-            override val gradleModulePathName = ":app"
-            override val moduleRootFolder = File("moduleRootFolder")
-            override val makeFile = File("makeFile")
-            override val buildSystem = NativeBuildSystem.CMAKE
-            override val compilerSettingsCacheFolder = File("compilerSettingsCacheFolder")
-            override val cxxFolder = File("cxxFolder")
-            override val ndkFolder = File("ndkFolder")
-            override val ndkVersion = Revision.parseRevision("1.2.3")
-        }
-
-        val variant = object : CxxVariantModel {
-            override val buildTargetSet = setOf("buildTargetSet")
-            override val buildSystemArgumentList = listOf("buildSystemArgumentList")
-            override val cFlagList = listOf("cFlagList")
-            override val cppFlagsList = listOf("cppFlagList")
-            override val variantName = "variantName"
-            override val soFolder = File("soFolder")
-            override val objFolder = File("objFolder")
-            override val jsonFolder = File("jsonFolder")
-            override val gradleBuildOutputFolder = File("gradleBuildOutputFolder")
-            override val isDebuggableEnabled = false
-            override val validAbiList = listOf(Abi.ARMEABI_V7A)
-            override val module = module
-        }
-        val cmake = object : CxxCmakeAbiModel {
-            override val compileCommandsJsonFile = File("compileCommandsJsonFile")
-            override val cmakeListsWrapperFile = File("cmakeListsWrapperFile")
-            override val toolchainWrapperFile = File("toolchainWrapperFile")
-            override val buildGenerationStateFile = File("buildGenerationStateFile")
-            override val cacheKeyFile = File("cacheKeyFile")
-            override val compilerCacheUseFile = File("compilerCacheUseFile")
-            override val compilerCacheWriteFile = File("compilerCacheWriteFile")
-            override val toolchainSettingsFromCacheFile = File("toolchainSettingsFromCacheFile")
-        }
-        val abi = object : CxxAbiModel {
-            override val jsonGenerationLoggingRecordFile = File("jsonGenerationLoggingRecordFile")
-            override val abi = Abi.X86
-            override val abiPlatformVersion = 28
-            override val cxxBuildFolder = File("cxxBuildFolder")
-            override val jsonFile = File("jsonFile")
-            override val gradleBuildOutputFolder = File("gradleBuildOutputFolder")
-            override val objFolder = File("objFolder")
-            override val buildCommandFile = File("buildCommandFile")
-            override val buildOutputFile = File("buildOutputFile")
-            override val modelOutputFile = File("modelOutputFile")
-            override val cmake = cmake
-            override val variant = variant
-        }
-
-        this.module = module
-        this.variant = variant
-        this.cmake = cmake
-        this.abi = abi
-    }
-
     @Test
     fun `round trip`() {
-        val json = abi.toJsonString()
-        val writtenBackAbi = createCxxAbiModelFromJson(json)
-        val writtenBackJson = writtenBackAbi.toJsonString()
-        assertThat(json).isEqualTo(writtenBackJson)
-        assertThat(writtenBackAbi.variant.module.cxxFolder.path).isEqualTo("cxxFolder")
-        assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo("1.2.3")
+        BasicCmakeMock().let {
+            // Walk all vals in the model and invoke them
+            val module = tryCreateCxxModuleModel(it.global)!!
+            val variant = createCxxVariantModel(
+                module,
+                it.baseVariantData
+            )
+            val abi = createCxxAbiModel(
+                variant,
+                Abi.X86,
+                it.global,
+                it.baseVariantData
+            )
+            val json = abi.toJsonString()
+            val writtenBackAbi = createCxxAbiModelFromJson(json)
+            val writtenBackJson = writtenBackAbi.toJsonString()
+            assertThat(json).isEqualTo(writtenBackJson)
+            assertThat(writtenBackAbi.variant.module.cxxFolder.path).endsWith(".cxx")
+            assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo("19.2.3")
+        }
     }
 }

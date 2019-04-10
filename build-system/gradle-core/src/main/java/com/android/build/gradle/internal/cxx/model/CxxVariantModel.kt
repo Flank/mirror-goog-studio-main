@@ -17,37 +17,82 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.utils.FileUtils.join
 import java.io.File
 
 /**
  * Holds immutable ABI-level information for C/C++ build and sync, see README.md
  */
 interface CxxVariantModel {
-    /**  Arguments passed to CMake or ndk-build (ex android.defaultConfig.externalNativeBuild.arguments '-DMY_PROP=1') */
+    /**
+     * Arguments passed to CMake or ndk-build
+     *   ex, android.defaultConfig.externalNativeBuild.arguments '-DMY_PROP=1'
+     */
     val buildSystemArgumentList: List<String>
-    /**  C flags forwarded to compiler (ex android.defaultConfig.externalNativeBuild.cFlagList '-DTHIS_IS_C=1') */
+
+    /**
+     * C flags forwarded to compiler
+     *   ex, android.defaultConfig.externalNativeBuild.cFlagList '-DTHIS_IS_C=1'
+     */
     val cFlagList: List<String>
-    /**  C++ flags forwarded to compiler (ex android.defaultConfig.externalNativeBuild.cppFlagsList '-DTHIS_IS_CPP=1')) */
+
+    /**
+     * C++ flags forwarded to compiler
+     *   ex, android.defaultConfig.externalNativeBuild.cppFlagsList '-DTHIS_IS_CPP=1'
+     */
     val cppFlagsList: List<String>
-    /**  The name of the variant (ex debug) */
+
+    /**
+     * The name of the variant
+     *   ex, debug
+     */
     val variantName: String
-    /**  Base folder for .so files (ex $moduleRootFolder/build/intermediates/cmake/debug/lib) */
+
+    /**
+     * Base folder for .so files
+     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
+     */
     val soFolder: File
-    /**  Base folder for .o files (ex $moduleRootFolder/build/intermediates/cmake/debug/obj) */
+        get() = join(module.intermediatesFolder, module.buildSystem.tag, variantName, "lib")
+
+    /**
+     * Base folder for .o files
+     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
+     */
     val objFolder: File
-    /**  Base folder for android_gradle_build.json files (ex $moduleRootFolder/.cxx/cmake/debug) */
+
+    /**
+     * Base folder for android_gradle_build.json files
+     *   ex, $moduleRootFolder/.cxx/cmake/debug
+     */
     val jsonFolder: File
-    /**  The gradle build output folder (ex '$moduleRootFolder/.cxx/cxx/debug') */
+        get() = join(module.cxxFolder, module.buildSystem.tag, variantName)
+
+    /**
+     * The gradle build output folder
+     *   ex, '$moduleRootFolder/.cxx/cxx/debug'
+     */
     val gradleBuildOutputFolder: File
-    /**  Whether this variant build is debuggable */
+        get() = join(module.cxxFolder, "cxx", variantName)
+
+    /**
+     * Whether this variant build is debuggable
+     */
     val isDebuggableEnabled: Boolean
-    /**  The list of valid ABIs for this variant */
+
+    /**
+     * The list of valid ABIs for this variant
+     */
     val validAbiList : List<Abi>
+
     /**
      * The list of build targets.
      *  ex, android.defaultConfig.externalNativeBuild.targets "my-target"
      */
     val buildTargetSet : Set<String>
-    /**  The module that this variant is part of */
+
+    /**
+     * The module that this variant is part of
+     */
     val module: CxxModuleModel
 }

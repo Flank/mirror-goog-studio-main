@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.SdkConstants
 import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
 import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
@@ -38,13 +38,13 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.ApiVersion
+import com.android.builder.core.DefaultApiVersion
 import com.android.builder.model.ProductFlavor
+import com.android.repository.Revision
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils.join
 import org.gradle.api.Project
-import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
@@ -58,7 +58,55 @@ import java.util.function.Supplier
  * be reused between tests that need this.
  */
 open class BasicModuleModelMock {
-    val tempFolder = TemporaryFolder()
+    private val abisJson = """
+    {
+      "armeabi-v7a": {
+        "bitness": 32,
+        "default": true,
+        "deprecated": false
+      },
+      "arm64-v8a": {
+        "bitness": 64,
+        "default": true,
+        "deprecated": false
+      },
+      "x86": {
+        "bitness": 32,
+        "default": true,
+        "deprecated": false
+      },
+      "x86_64": {
+        "bitness": 64,
+        "default": true,
+        "deprecated": false
+      }
+    }
+    """.trimIndent()
+
+    private val platformsJson = """
+    {
+      "min": 16,
+      "max": 29,
+      "aliases": {
+        "20": 19,
+        "25": 24,
+        "J": 16,
+        "J-MR1": 17,
+        "J-MR2": 18,
+        "K": 19,
+        "L": 21,
+        "L-MR1": 22,
+        "M": 23,
+        "N": 24,
+        "N-MR1": 24,
+        "O": 26,
+        "O-MR1": 27,
+        "P": 28,
+        "Q": 29
+      }
+    }
+    """.trimIndent()
+    val tempFolder = createTempDir()
     val throwUnmocked = RuntimeExceptionAnswer()
     val global = mock(
         GlobalScope::class.java,
@@ -80,7 +128,7 @@ open class BasicModuleModelMock {
         CoreNdkBuildOptions::class.java,
         throwUnmocked
     )
-    val ndkPlatform = NdkInstallStatus.Valid(
+    val ndkInstallStatus = NdkInstallStatus.Valid(
         mock(
             NdkPlatform::class.java,
             throwUnmocked
@@ -126,13 +174,8 @@ open class BasicModuleModelMock {
         CoreBuildType::class.java,
         throwUnmocked
     )
-    val projectRootDir by lazy { tempFolder.newFolder("root-dir") }
-    val localProperties by lazy {
-        File(
-            projectRootDir,
-            SdkConstants.FN_LOCAL_PROPERTIES
-        )
-    }
+    val projectRootDir = join(tempFolder, "project-dir")
+    val sdkDir = join(tempFolder, "sdk-dir")
     val ndkHandler = mock(
         NdkHandler::class.java,
         throwUnmocked
@@ -144,8 +187,9 @@ open class BasicModuleModelMock {
     val ndkInfo = mock(
         NdkInfo::class.java
     )
-    val minSdkVersion = mock(
-        ApiVersion::class.java,
+    val minSdkVersion = DefaultApiVersion(18)
+    val cmakeFinder = mock(
+        CmakeLocator::class.java,
         throwUnmocked
     )
     private fun <T> any(): T {
@@ -169,17 +213,17 @@ open class BasicModuleModelMock {
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
         doReturn(setOf<String>()).`when`(coreNdkOptions).abiFilters
         doReturn("debug").`when`(baseVariantData).name
-        tempFolder.create()
         projectRootDir.mkdirs()
+        sdkDir.mkdirs()
 
         doReturn(sdkComponents).`when`(global).sdkComponents
         doReturn(projectOptions).`when`(global).projectOptions
         doReturn(project).`when`(global).project
-        val app = tempFolder.newFolder("Source", "Android", "app")
+        val app = join(projectRootDir, "Source", "Android", "app")
         val buildDir = File(app, "build")
         val intermediates = File(buildDir, "intermediates")
         doReturn(intermediates).`when`(global).intermediatesDir
-        doReturn(File("./sdk-folder")).`when`(sdkComponents).getSdkFolder()
+        doReturn(sdkDir).`when`(sdkComponents).getSdkFolder()
         doReturn(false).`when`(projectOptions)
             .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
         doReturn(true)
@@ -198,21 +242,29 @@ open class BasicModuleModelMock {
         doReturn(buildDir).`when`(project).buildDir
         doReturn(projectRootDir).`when`(project).rootDir
         doReturn("3.10.2").`when`(cmake).version
-        doReturn(listOf(Abi.X86)).`when`(ndkPlatform.getOrThrow()).supportedAbis
-        doReturn(listOf(Abi.X86)).`when`(ndkPlatform.getOrThrow()).defaultAbis
+        doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
+        doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
         doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
         doReturn(true).`when`(coreBuildType).isDebuggable
         doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
-        doReturn(ndkPlatform).`when`(ndkHandler).ndkPlatform
+        doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
         doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
-        doReturn(18).`when`(minSdkVersion).apiLevel
-        doReturn(null).`when`(minSdkVersion).codename
-        doReturn(ndkInfo).`when`(ndkPlatform.getOrThrow()).ndkInfo
+        doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
         Mockito.`when`(ndkInfo.findSuitablePlatformVersion(
             "x86",
             AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename))).thenReturn(18)
         doNothing().`when`(ndkHandler).writeNdkLocatorRecord(any())
+        val ndkFolder = join(sdkDir, "ndk", "19.2.3")
+        doReturn(ndkFolder).`when`(ndkInstallStatus.getOrThrow()).ndkDirectory
+        doReturn(Revision.parseRevision("19.2.3")).`when`(ndkInstallStatus.getOrThrow()).revision
+        doReturn(join(sdkDir, "cmake", "3.10.2")).`when`(cmakeFinder)
+            .findCmakePath(any(), any(), any(), any())
+
+        val meta = join(ndkFolder, "meta")
+        meta.mkdirs()
+        File(meta, "platforms.json").writeText(platformsJson)
+        File(meta, "abis.json").writeText(abisJson)
     }
 
     class RuntimeExceptionAnswer : Answer<Any> {

@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.cxx.configure.createNativeBuildSystemVa
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils.join
-import com.google.common.annotations.VisibleForTesting
 
 /**
  * Construct a [CxxVariantModel], careful to be lazy with module-level fields.
@@ -29,77 +28,36 @@ import com.google.common.annotations.VisibleForTesting
 fun createCxxVariantModel(
     module: CxxModuleModel,
     baseVariantData: BaseVariantData) : CxxVariantModel {
-    val buildSystem by lazy {
-        createNativeBuildSystemVariantConfig(
-            module.buildSystem,
-            baseVariantData.variantConfiguration)
-    }
-    val buildSystemArgumentList: () -> List<String> = { buildSystem.arguments }
-    val buildTargetSet: () -> Set<String> = { buildSystem.targets }
-    val cFlags: () -> List<String> = { buildSystem.cFlags }
-    val cppFlags: () -> List<String> = { buildSystem.cppFlags }
-    val variantName: () -> String = { baseVariantData.name }
-    val isDebuggable: () -> Boolean = { baseVariantData.variantConfiguration.buildType.isDebuggable }
-    val externalNativeBuildAbiFilters: () -> Set<String> = {
-        buildSystem.externalNativeBuildAbiFilters
-    }
-    val ndkAbiFilters: () -> Set<String> = { buildSystem.ndkAbiFilters }
-
-    return createCxxVariantModel(
-        module = module,
-        buildSystemArgumentList = buildSystemArgumentList,
-        cFlags = cFlags,
-        cppFlags = cppFlags,
-        variantName = variantName,
-        isDebuggable = isDebuggable,
-        externalNativeBuildAbiFilters = externalNativeBuildAbiFilters,
-        ndkAbiFilters = ndkAbiFilters,
-        buildTargetSet = buildTargetSet
-    )
-}
-
-private val notImpl = { throw RuntimeException("Not Implemented") }
-
-@VisibleForTesting
-fun createCxxVariantModel(
-    module: CxxModuleModel,
-    buildSystemArgumentList: () -> List<String> = notImpl,
-    cFlags: () -> List<String> = notImpl,
-    cppFlags: () -> List<String> = notImpl,
-    variantName: () -> String = notImpl,
-    isDebuggable: () -> Boolean = notImpl,
-    externalNativeBuildAbiFilters: () -> Set<String> = notImpl,
-    ndkAbiFilters: () -> Set<String> = notImpl,
-    buildTargetSet: () -> Set<String> = notImpl): CxxVariantModel {
     return object : CxxVariantModel {
-        override val buildTargetSet by lazy { buildTargetSet() }
+        private val buildSystem by lazy {
+            createNativeBuildSystemVariantConfig(
+                module.buildSystem,
+                baseVariantData.variantConfiguration)
+        }
         private val intermediatesFolder by lazy {
-            join(module.intermediatesFolder, module.buildSystem.tag, this.variantName) }
+            join(module.intermediatesFolder, module.buildSystem.tag, variantName)
+        }
+        override val buildTargetSet get() = buildSystem.targets
         override val module = module
-        override val buildSystemArgumentList by lazy { buildSystemArgumentList() }
-        override val cFlagList by lazy { cFlags() }
-        override val cppFlagsList by lazy { cppFlags() }
-        override val variantName by lazy { variantName() }
-        override val soFolder by lazy { join(intermediatesFolder, "lib") }
-        override val objFolder by lazy {
+        override val buildSystemArgumentList get() = buildSystem.arguments
+        override val cFlagList get() = buildSystem.cFlags
+        override val cppFlagsList get() = buildSystem.cppFlags
+        override val variantName get() = baseVariantData.name
+        override val objFolder get() =
             if (module.buildSystem == NativeBuildSystem.NDK_BUILD) {
                 // ndkPlatform-build create libraries in a "local" subfolder.
                 join(intermediatesFolder, "obj", "local")
             } else {
                 join(intermediatesFolder, "obj")
             }
-        }
-        override val gradleBuildOutputFolder by lazy {
-            join(module.cxxFolder, "cxx", this.variantName) }
-        override val jsonFolder by lazy {
-            join(module.cxxFolder, module.buildSystem.tag, this.variantName) }
-        override val isDebuggableEnabled by lazy { isDebuggable() }
+        override val isDebuggableEnabled get() =
+            baseVariantData.variantConfiguration.buildType.isDebuggable
         override val validAbiList by lazy {
             AbiConfigurator(
                 module.ndkSupportedAbiList,
                 module.ndkDefaultAbiList,
-                externalNativeBuildAbiFilters(),
-                ndkAbiFilters(),
+                buildSystem.externalNativeBuildAbiFilters,
+                buildSystem.ndkAbiFilters,
                 module.splitsAbiFilterSet,
                 module.isBuildOnlyTargetAbiEnabled,
                 module.ideBuildTargetAbi
@@ -107,3 +65,4 @@ fun createCxxVariantModel(
         }
     }
 }
+

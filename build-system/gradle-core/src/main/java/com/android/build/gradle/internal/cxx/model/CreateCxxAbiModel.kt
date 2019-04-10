@@ -21,8 +21,6 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.sdklib.AndroidVersion
-import com.android.utils.FileUtils.join
-import com.google.common.annotations.VisibleForTesting
 import java.io.File
 
 /**
@@ -33,77 +31,30 @@ fun createCxxAbiModel(
     abi: Abi,
     global: GlobalScope,
     baseVariantData: BaseVariantData) : CxxAbiModel {
-
-    val abiPlatformVersion: () -> Int = {
-        val minSdkVersion = baseVariantData.variantConfiguration.mergedFlavor.minSdkVersion
-        val version = if (minSdkVersion == null) {
-            null
-        } else{
-            AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename)
-        }
-        global
+    return object : CxxAbiModel {
+        override val variant = variant
+        override val abi = abi
+        override val abiPlatformVersion by lazy {
+            val minSdkVersion =
+                baseVariantData.variantConfiguration.mergedFlavor.minSdkVersion
+            val version = if (minSdkVersion == null) {
+                null
+            } else{
+                AndroidVersion(minSdkVersion.apiLevel, minSdkVersion.codename)
+            }
+            global
                 .sdkComponents
                 .ndkHandlerSupplier.get()
                 .ndkPlatform
                 .getOrThrow()
                 .ndkInfo
                 .findSuitablePlatformVersion(abi.tag, version)
-    }
-    return createCxxAbiModel(
-        variant = variant,
-        abi = abi,
-        abiPlatformVersion = abiPlatformVersion
-    )
-}
-
-@VisibleForTesting
-fun createCxxAbiModel(
-    variant: CxxVariantModel,
-    abi: Abi,
-    abiPlatformVersion: () -> Int) : CxxAbiModel {
-    return object : CxxAbiModel {
-        override val jsonGenerationLoggingRecordFile by lazy {
-            join(cxxBuildFolder,"json_generation_record.json")
         }
-        private val buildSystemPresentationName by lazy {
-            variant.module.buildSystem.tag }
-        override val variant = variant
-        override val abi = abi
-        override val abiPlatformVersion by lazy {
-            abiPlatformVersion() }
-        override val cxxBuildFolder by lazy {
-            join(variant.jsonFolder, abi.tag) }
-        override val jsonFile by lazy {
-            join(cxxBuildFolder,"android_gradle_build.json") }
-        override val gradleBuildOutputFolder by lazy {
-            join(variant.gradleBuildOutputFolder, abi.tag) }
-        override val objFolder by lazy { join(variant.objFolder, abi.tag) }
-        override val buildCommandFile by lazy {
-            join(cxxBuildFolder, "${buildSystemPresentationName}_build_command.txt") }
-        override val buildOutputFile by lazy {
-            join(cxxBuildFolder, "${buildSystemPresentationName}_build_output.txt") }
-        override val modelOutputFile by lazy {
-            join(cxxBuildFolder,"build_model.json") }
         override val cmake by lazy {
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 object : CxxCmakeAbiModel {
-                    override val compileCommandsJsonFile by lazy {
-                        join(cxxBuildFolder, "compile_commands.json") }
-                    override val cmakeListsWrapperFile by lazy {
-                        join(gradleBuildOutputFolder, "CMakeLists.txt") }
-                    override val toolchainWrapperFile by lazy {
-                        join(gradleBuildOutputFolder,
-                            "android_gradle_build.toolchain.cmake") }
-                    override val buildGenerationStateFile by lazy {
-                        join(gradleBuildOutputFolder, "build_generation_state.json") }
-                    override val cacheKeyFile by lazy {
-                        join(gradleBuildOutputFolder, "compiler_cache_key.json") }
-                    override val compilerCacheUseFile by lazy {
-                        join(gradleBuildOutputFolder, "compiler_cache_use.json") }
-                    override val compilerCacheWriteFile by lazy {
-                        join(gradleBuildOutputFolder, "compiler_cache_write.json") }
-                    override val toolchainSettingsFromCacheFile by lazy {
-                        join(gradleBuildOutputFolder, "compiler_settings_cache.cmake") }
+                    override val cmakeWrappingBaseFolder: File
+                        get() = gradleBuildOutputFolder
                 }
             } else {
                 null
@@ -111,3 +62,4 @@ fun createCxxAbiModel(
         }
     }
 }
+

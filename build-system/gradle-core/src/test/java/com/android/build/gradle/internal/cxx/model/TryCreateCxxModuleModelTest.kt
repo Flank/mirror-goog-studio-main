@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.mockito.Mockito.doReturn
@@ -53,10 +54,7 @@ class TryCreateCxxModuleModelTest {
             // Walk all vals in the model and invoke them
             val module = tryCreateCxxModuleModel(it.global)!!
             CxxModuleModel::class.java.methods.toList().onEach { method ->
-                if (!method.toGenericString().contains("NdkFolder") &&
-                    !method.toGenericString().contains("NdkVersion")) {
-                    method.invoke(module)
-                }
+                method.invoke(module)
             }
         }
     }
@@ -64,7 +62,7 @@ class TryCreateCxxModuleModelTest {
     @Test
     fun `both cmake and ndk-build`() {
         BasicCmakeMock().let {
-            doReturn(it.tempFolder.newFile("Android.mk")).`when`(it.ndkBuild).path
+            doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
             RecordingLoggingEnvironment().use { logEnvironment ->
                 assertThat(tryCreateCxxModuleModel(it.global)).isNull()
                 assertThat(logEnvironment.errors).hasSize(1)

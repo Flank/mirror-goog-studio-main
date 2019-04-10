@@ -551,12 +551,13 @@ fun findCmakePathLogic(
  * cmakeVersionFromDsl is the, possibly null, CMake version from the user's build.gradle.
  *   If it is null then a default version will be chosen.
  */
-fun findCmakePath(
-    cmakeVersionFromDsl: String?,
-    cmakeFile: File?,
-    sdkFolder: File?,
-    downloader: Consumer<String>) : File? {
-    return findCmakePathLogic(
+class CmakeLocator {
+    fun findCmakePath(
+        cmakeVersionFromDsl: String?,
+        cmakeFile: File?,
+        sdkFolder: File?,
+        downloader: Consumer<String>): File? {
+        return findCmakePathLogic(
             cmakeVersionFromDsl,
             cmakeFile,
             downloader,
@@ -564,4 +565,5 @@ fun findCmakePath(
             { getCanarySdkPaths(sdkFolder) },
             { folder -> getCmakeRevisionFromExecutable(folder) },
             { getSdkCmakePackages(sdkFolder) })
+    }
 }

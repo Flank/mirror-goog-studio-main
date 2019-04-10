@@ -50,7 +50,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
         cacheArguments.add(
                 String.format(
                         "-DCMAKE_TOOLCHAIN_FILE=%s",
-                        cmake.getCmakeToolchainFile().getAbsolutePath()));
+                        abi.getVariant().getModule().getCmakeToolchainFile().getAbsolutePath()));
         cacheArguments.add(
                 String.format("-DCMAKE_MAKE_PROGRAM=%s", cmake.getNinjaExe().getAbsolutePath()));
         cacheArguments.add("-GAndroid Gradle - Ninja");

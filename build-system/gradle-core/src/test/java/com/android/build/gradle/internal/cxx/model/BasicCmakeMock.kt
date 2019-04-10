@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
+import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
 
@@ -37,6 +38,6 @@ class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).getcFlags()
         doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).cppFlags
         doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).targets
-        doReturn(tempFolder.newFile("CMakeLists.txt")).`when`(cmake).path
+        doReturn(join(projectRootDir, "CMakeLists.txt")).`when`(cmake).path
     }
 }

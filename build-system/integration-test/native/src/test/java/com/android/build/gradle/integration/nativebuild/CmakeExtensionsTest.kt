@@ -24,7 +24,6 @@ import com.android.builder.model.NativeAndroidProject
 import org.junit.Rule
 import org.junit.Test
 import com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat
-import com.android.build.gradle.internal.core.Abi
 import org.junit.Before
 import java.io.File
 import com.google.common.truth.Truth.assertThat
@@ -40,11 +39,9 @@ import com.android.build.gradle.internal.cxx.configure.CmakeCompilerSettingsCach
 import com.android.build.gradle.internal.cxx.configure.CmakePropertyValue
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
-import com.android.build.gradle.internal.cxx.model.createCxxModuleModel
-import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.options.BooleanOption.*
-import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.utils.FileUtils.join
 
 /**
  * Parameterized JUnit test for CMake compiler settings cache.
@@ -147,16 +144,8 @@ class CmakeExtensionsTest(
     }
 
     private fun getAbiConfiguration() : CxxAbiModel {
-        val module = createCxxModuleModel(
-            makeFile = File("CMakeLists.txt"),
-            buildSystem = NativeBuildSystem.CMAKE,
-            moduleRootFolder = { project.testDir },
-            cxxFolder = { File(project.testDir, ".cxx") }
-        )
-        val variant = createCxxVariantModel(
-            module,
-            variantName = { "debug" })
-        return createCxxAbiModel(variant, Abi.X86) { 21 }
+        val modelFile = join(project.testDir, ".cxx", "cmake", "debug", "x86", "build_model.json")
+        return createCxxAbiModelFromJson(modelFile.readText())
     }
 
     @Test

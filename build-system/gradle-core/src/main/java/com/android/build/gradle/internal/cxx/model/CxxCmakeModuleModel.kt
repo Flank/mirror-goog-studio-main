@@ -20,12 +20,21 @@ import com.android.repository.Revision
 import java.io.File
 
 interface CxxCmakeModuleModel {
-    /** Path to cmake.exe (ex /path/to/cmake/cmake.exe) */
+    /**
+     * Path to cmake.exe
+     *   ex, /path/to/cmake/cmake.exe
+     */
     val cmakeExe: File
-    /** The version of CMake found by executing CMake --version (ex 3.10.2) */
+
+    /**
+     * The version of CMake found by executing CMake --version
+     *   ex, 3.10.2
+     */
     val foundCmakeVersion: Revision
-    /** Path to ninja.exe (ex /path/to/ninja/ninja.exe) */
+
+    /**
+     * Path to ninja.exe
+     *   ex, /path/to/ninja/ninja.exe
+     */
     val ninjaExe: File
-    /** Path to the CMake toolchain in NDK (ex /path/to/ndk/android.toolchain.cmake) */
-    val cmakeToolchainFile: File
 }
