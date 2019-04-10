@@ -16,43 +16,31 @@
 #ifndef PERFD_STATSD_PULLED_ATOMS_WIFI_BYTES_TRANSFER_H_
 #define PERFD_STATSD_PULLED_ATOMS_WIFI_BYTES_TRANSFER_H_
 
-#include <sys/types.h>
-#include <mutex>
-
-#include "pulled_atom.h"
+#include "bytes_transfer.h"
 
 namespace profiler {
 
 // A pulled atom that contains bytes transferred over WiFi since device boot.
-class WifiBytesTransfer : public PulledAtom {
+class WifiBytesTransfer : public BytesTransfer {
  public:
-  WifiBytesTransfer(uint32_t uid)
-      : uid_(uid), rx_bytes_(0), tx_bytes_(0), has_data_(false) {}
+  WifiBytesTransfer(int32_t pid, int32_t uid, Clock* clock,
+                    EventBuffer* event_buffer)
+      : BytesTransfer(pid, uid, clock, event_buffer) {}
 
-  int32_t AtomId() override {
+  int32_t atom_id() override {
     return android::os::statsd::Atom::PulledCase::kWifiBytesTransfer;
   }
-  void BuildConfig(
-      android::os::statsd::PulledAtomSubscription* pulled) override;
-  void OnAtomReceived(const android::os::statsd::Atom& atom) override;
 
-  uint32_t uid() { return uid_; }
-
-  // Since we initialize rx/tx bytes with 0, we need a flag to inidicate whether
-  // we actually have data from statsd. Otherwise we'll see a jump from 0 to x
-  // when the first polling occurs.
-  bool has_data();
-  int64_t rx_bytes() { return rx_bytes_; }
-  int64_t tx_bytes() { return tx_bytes_; }
-
- private:
-  const int32_t kFreqMillis = 500;
-
-  uint32_t uid_;
-  int64_t rx_bytes_;
-  int64_t tx_bytes_;
-  bool has_data_;
-  std::mutex data_mutex_;
+ protected:
+  int32_t uid_field_id() override {
+    return android::os::statsd::WifiBytesTransfer::kUidFieldNumber;
+  }
+  std::pair<int64_t, int64_t> ExtractBytes(
+      const android::os::statsd::Atom& atom) override {
+    auto wifi_bytes_transfer = atom.wifi_bytes_transfer();
+    return std::make_pair(wifi_bytes_transfer.tx_bytes(),
+                          wifi_bytes_transfer.rx_bytes());
+  }
 };
 }  // namespace profiler
 

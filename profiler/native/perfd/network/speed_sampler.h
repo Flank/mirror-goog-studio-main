@@ -18,9 +18,9 @@
 
 #include "perfd/network/net_stats_file_reader.h"
 #include "perfd/network/network_sampler.h"
-#include "perfd/network/speed_converter.h"
 #include "proto/network.pb.h"
 #include "utils/clock.h"
+#include "utils/speed_converter.h"
 
 #include <string>
 #include <unordered_map>

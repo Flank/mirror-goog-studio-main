@@ -44,7 +44,7 @@ StatsdSubscriber& StatsdSubscriber::Instance() {
 
 void StatsdSubscriber::SubscribeToPulledAtom(
     std::unique_ptr<PulledAtom> pulled_atom) {
-  pulled_atoms_[pulled_atom->AtomId()] = std::move(pulled_atom);
+  pulled_atoms_[pulled_atom->atom_id()] = std::move(pulled_atom);
 }
 
 void StatsdSubscriber::Run() {

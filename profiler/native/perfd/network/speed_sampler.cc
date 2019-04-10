@@ -15,72 +15,31 @@
  */
 #include "speed_sampler.h"
 
-#include "perfd/statsd/pulled_atoms/mobile_bytes_transfer.h"
-#include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
-#include "perfd/statsd/statsd_subscriber.h"
-#include "statsd/proto/atoms.pb.h"
 #include "utils/clock.h"
-#include "utils/device_info.h"
-
-using android::os::statsd::Atom;
 
 namespace profiler {
 
-void SpeedSampler::Refresh() {
-  if (DeviceInfo::feature_level() < DeviceInfo::Q) {
-    stats_reader_.Refresh();
-  }
-  // In Q, we use statsd and handle data via callback. No need to refresh.
-}
+void SpeedSampler::Refresh() { stats_reader_.Refresh(); }
 
 proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
-  uint64_t bytes_sent = 0;
-  uint64_t bytes_received = 0;
-  bool has_data = false;
+  uint64_t bytes_sent = stats_reader_.bytes_tx(uid);
+  uint64_t bytes_received = stats_reader_.bytes_rx(uid);
 
-  if (DeviceInfo::feature_level() < DeviceInfo::Q) {
-    bytes_sent = stats_reader_.bytes_tx(uid);
-    bytes_received = stats_reader_.bytes_rx(uid);
-    has_data = true;
+  auto time = clock_->GetCurrentTime();
+  if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
+    SpeedConverter tx_converter(time, bytes_sent);
+    SpeedConverter rx_converter(time, bytes_received);
+    tx_speed_converters_.emplace(uid, tx_converter);
+    rx_speed_converters_.emplace(uid, rx_converter);
   } else {
-    // stats file is deprecated in Q. Use statsd.
-    auto* wifi_bytes_transfer =
-        StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(
-            Atom::PulledCase::kWifiBytesTransfer);
-    auto* mobile_bytes_transfer =
-        StatsdSubscriber::Instance().FindAtom<MobileBytesTransfer>(
-            Atom::PulledCase::kMobileBytesTransfer);
-    if (wifi_bytes_transfer != nullptr && wifi_bytes_transfer->has_data()) {
-      assert(wifi_bytes_transfer->uid() == uid);
-      bytes_sent += wifi_bytes_transfer->tx_bytes();
-      bytes_received += wifi_bytes_transfer->rx_bytes();
-      has_data = true;
-    }
-    if (mobile_bytes_transfer != nullptr && mobile_bytes_transfer->has_data()) {
-      assert(mobile_bytes_transfer->uid() == uid);
-      bytes_sent += mobile_bytes_transfer->tx_bytes();
-      bytes_received += mobile_bytes_transfer->rx_bytes();
-      has_data = true;
-    }
+    tx_speed_converters_.at(uid).Add(time, bytes_sent);
+    rx_speed_converters_.at(uid).Add(time, bytes_received);
   }
 
-  if (has_data) {
-    auto time = clock_->GetCurrentTime();
-    if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
-      SpeedConverter tx_converter(time, bytes_sent);
-      SpeedConverter rx_converter(time, bytes_received);
-      tx_speed_converters_.emplace(uid, tx_converter);
-      rx_speed_converters_.emplace(uid, rx_converter);
-    } else {
-      tx_speed_converters_.at(uid).Add(time, bytes_sent);
-      rx_speed_converters_.at(uid).Add(time, bytes_received);
-    }
-
-    profiler::proto::SpeedData* speed_data = data.mutable_speed_data();
-    speed_data->set_sent(tx_speed_converters_.at(uid).speed());
-    speed_data->set_received(rx_speed_converters_.at(uid).speed());
-  }
+  profiler::proto::SpeedData* speed_data = data.mutable_speed_data();
+  speed_data->set_sent(tx_speed_converters_.at(uid).speed());
+  speed_data->set_received(rx_speed_converters_.at(uid).speed());
   return data;
 }
 

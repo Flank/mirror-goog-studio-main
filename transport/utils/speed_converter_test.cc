@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfd/network/speed_converter.h"
-#include "utils/clock.h"
+#include "utils/speed_converter.h"
 
 #include <gtest/gtest.h>
+
+#include "utils/clock.h"
 
 using profiler::Clock;
 using profiler::SpeedConverter;

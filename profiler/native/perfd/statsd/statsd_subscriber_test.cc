@@ -18,6 +18,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "pulled_atoms/wifi_bytes_transfer.h"
+#include "utils/fake_clock.h"
 
 using ::testing::_;
 using ::testing::A;
@@ -44,23 +45,26 @@ class StatsdSubscriberTest : public ::testing::Test {
 };
 
 TEST_F(StatsdSubscriberTest, FindsSubscrbiedAtoms) {
+  FakeClock clock;
   StatsdSubscriber::Instance().SubscribeToPulledAtom(
-      std::unique_ptr<WifiBytesTransfer>(new WifiBytesTransfer(1)));
+      std::unique_ptr<WifiBytesTransfer>(
+          new WifiBytesTransfer(1, 1, &clock, nullptr)));
   auto* wifi_bytes_transfer =
       StatsdSubscriber::Instance().FindAtom<WifiBytesTransfer>(10000);
   EXPECT_NE(nullptr, wifi_bytes_transfer);
-  EXPECT_EQ(1, wifi_bytes_transfer->uid());
+  EXPECT_EQ(1, wifi_bytes_transfer->pid());
 }
 
 TEST_F(StatsdSubscriberTest, RunsAndStopsCommand) {
+  FakeClock clock;
   NiceMock<MockNonBlockingCommandRunner> mock_runner;
   StatsdSubscriber statsd(&mock_runner);
   ON_CALL(mock_runner, IsRunning).WillByDefault(Return(false));
   ON_CALL(mock_runner, Run(_, _, _, _)).WillByDefault(Return(true));
   EXPECT_CALL(mock_runner, Run(_, _, _, _)).Times(1);
   EXPECT_CALL(mock_runner, Kill).Times(AtLeast(1));
-  statsd.SubscribeToPulledAtom(
-      std::unique_ptr<WifiBytesTransfer>(new WifiBytesTransfer(1)));
+  statsd.SubscribeToPulledAtom(std::unique_ptr<WifiBytesTransfer>(
+      new WifiBytesTransfer(1, 1, &clock, nullptr)));
   statsd.Run();
   statsd.Stop();
 }

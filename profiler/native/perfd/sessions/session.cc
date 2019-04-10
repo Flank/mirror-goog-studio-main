@@ -39,12 +39,11 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
   info_.set_start_timestamp(start_timestamp);
   info_.set_end_timestamp(LLONG_MAX);
 
-  if (daemon->config()->GetConfig().common().profiler_unified_pipeline()) {
+  bool profiler_unified_pipeline =
+      daemon->config()->GetConfig().common().profiler_unified_pipeline();
+  if (profiler_unified_pipeline) {
     samplers_.push_back(std::unique_ptr<Sampler>(
         new profiler::NetworkConnectionCountSampler(*this, daemon->buffer())));
-    samplers_.push_back(
-        std::unique_ptr<Sampler>(new profiler::NetworkSpeedSampler(
-            *this, daemon->clock(), daemon->buffer())));
     samplers_.push_back(
         std::unique_ptr<Sampler>(new profiler::CpuUsageDataSampler(
             *this, daemon->clock(), daemon->buffer())));
@@ -53,17 +52,28 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
     samplers_.push_back(
         std::unique_ptr<Sampler>(new profiler::MemoryUsageSampler(
             *this, daemon->clock(), daemon->buffer())));
+
+    // On Q+ devices, we use statsd to collect network speed.
+    if (DeviceInfo::feature_level() < DeviceInfo::Q) {
+      samplers_.push_back(
+          std::unique_ptr<Sampler>(new profiler::NetworkSpeedSampler(
+              *this, daemon->clock(), daemon->buffer())));
+    }
   }
 
+  // statsd is supported on Q+ devices.
   if (DeviceInfo::feature_level() >= DeviceInfo::Q) {
-    // statsd is supported on Q+ devices.
+    // For legacy pipeline we initiate the network buffer on StartProfiling.
+    auto buffer = profiler_unified_pipeline ? daemon->buffer() : nullptr;
     int32_t uid = UidFetcher::GetUid(pid);
     Log::V("Subscribe to statsd atoms for pid %d (uid: %d)", pid, uid);
     if (uid >= 0) {
       StatsdSubscriber::Instance().SubscribeToPulledAtom(
-          std::unique_ptr<WifiBytesTransfer>(new WifiBytesTransfer(uid)));
+          std::unique_ptr<WifiBytesTransfer>(
+              new WifiBytesTransfer(pid, uid, daemon->clock(), buffer)));
       StatsdSubscriber::Instance().SubscribeToPulledAtom(
-          std::unique_ptr<MobileBytesTransfer>(new MobileBytesTransfer(uid)));
+          std::unique_ptr<MobileBytesTransfer>(
+              new MobileBytesTransfer(pid, uid, daemon->clock(), buffer)));
     }
   }
 }

@@ -29,7 +29,7 @@ class PulledAtom {
   virtual ~PulledAtom() = default;
 
   // Returns the field ID of the atom, as defined in atoms.proto.
-  virtual int32_t AtomId() = 0;
+  virtual int32_t atom_id() = 0;
   // Builds a single pulled subscription, filling the fields of the given proto.
   virtual void BuildConfig(
       android::os::statsd::PulledAtomSubscription* pulled) = 0;

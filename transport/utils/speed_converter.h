@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_NETWORK_SPEED_CONVERTER_H_
-#define PERFD_NETWORK_SPEED_CONVERTER_H_
+#ifndef UTILS_SPEED_CONVERTER_H_
+#define UTILS_SPEED_CONVERTER_H_
 
 #include <cstdint>
 
@@ -27,6 +27,9 @@ namespace profiler {
 // Android devices return absolute number of bytes sent / received since device
 // boot; however, we're more interested in current speeds, so this class handles
 // transforming the data appropriately.
+//
+// TODO: move to profiler/utils when we separate transport and profiler
+// namespaces.
 class SpeedConverter final {
  public:
   // Initialize this converter with the current state of the device. |bytes|
@@ -73,4 +76,4 @@ class SpeedConverter final {
 
 }  // namespace profiler
 
-#endif  // PERFD_NETWORK_SPEED_CONVERTER_H_
+#endif  // UTILS_SPEED_CONVERTER_H_

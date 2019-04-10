@@ -13,7 +13,6 @@ cc_library(
         "network_cache.cc",
         "network_collector.cc",
         "network_service.cc",
-        "speed_converter.cc",
         "speed_sampler.cc",
     ],
     hdrs = [
@@ -31,7 +30,6 @@ cc_library(
         "network_sampler.h",
         "network_service.h",
         "network_type_provider.h",
-        "speed_converter.h",
         "speed_sampler.h",
     ],
     copts = ANDROID_COPTS + [
@@ -57,7 +55,6 @@ cc_test(
         "connectivity_sampler_test.cc",
         "net_stats_file_reader_test.cc",
         "network_collector_test.cc",
-        "speed_converter_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",
