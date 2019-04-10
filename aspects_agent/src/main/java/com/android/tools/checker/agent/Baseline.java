@@ -16,6 +16,9 @@
 
 package com.android.tools.checker.agent;
 
+import static com.android.tools.checker.util.StacktraceParser.formattedCallstack;
+import static com.android.tools.checker.util.StacktraceParser.stackTraceToString;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -39,36 +42,11 @@ import java.util.logging.Logger;
  * matching aspect. That helps to enable rules currently currently disrespected in a few places to
  * make sure we don't introduce more occurrences in the future.
  *
- * <p>The baseline files are made by one whitelisted callstack per line, in the format:
- * method1|method2|...|methodN, where N is defined by {@link #SUBSTACK_SIZE}
- *
- * <p>For N = 2, we could have the following lines as example:
- * com.example.LaunchCompatibilityCheckerImpl.validate|com.other.pkg.Device.<init>
- * sun.configurations.Configuration.computeBestDevice|com.tools.Configuration.getDevice
- * com.example.Configuration.getDevice|com.nele.NlPreviewForm.lambda$initNeleModelWhenSmart$8
- *
+ * <p>The baseline files are made by one whitelisted callstack per line, in the format defined by
+ * {@link com.android.tools.checker.util.StacktraceParser}.
  */
 public class Baseline {
     private static final Logger LOGGER = Logger.getLogger(Baseline.class.getName());
-
-    private static final String SEPARATOR = "|";
-
-    private static final String SEPARATOR_REGEX = "\\|";
-
-    /**
-     * Size of the subcallstack relevant to the whitelist. Generally, we don't need to whitelist the
-     * full callstack as it would be a waste of resources. The top couple/few calls should be enough
-     * to make each whitelisted flow unique.
-     */
-    private static final int SUBSTACK_SIZE = 2;
-
-    /**
-     * Index of a {@link StackTraceElement} array representing the current thread's callstack. This
-     * index should skip the first element (Thread.currentThread().getStackTrace()) and the
-     * following methods irrelevant to the callstack (e.g. the method called when intercepting an
-     * instrumented call).
-     */
-    private static final int STACKTRACE_START_INDEX = 2;
 
     private static Baseline instance;
 
@@ -145,35 +123,6 @@ public class Baseline {
             }
         }
         return isGeneratingBaseline;
-    }
-
-    @NonNull
-    private static String formattedCallstack(@NonNull String callstack) {
-        String[] toFormat = callstack.split(SEPARATOR_REGEX);
-        StringBuilder output = new StringBuilder();
-        for (int i = 0; i < toFormat.length; i++) {
-            for (int j = 0; j < i; j++) {
-                // Indentation
-                output.append("  ");
-            }
-            output.append(toFormat[i]).append("\n");
-        }
-        return output.toString();
-    }
-
-    private static String stackTraceToString(@NonNull StackTraceElement[] stackTrace) {
-        StringBuilder callstack = new StringBuilder();
-        for (int i = 0; i < SUBSTACK_SIZE; i++) {
-            if (i > 0) {
-                callstack.append(SEPARATOR);
-            }
-            callstack.append(
-                    String.format(
-                            "%s.%s",
-                            stackTrace[STACKTRACE_START_INDEX + i].getClassName(),
-                            stackTrace[STACKTRACE_START_INDEX + i].getMethodName()));
-        }
-        return callstack.toString();
     }
 
     private void exportBaselineOnShutdown() {
