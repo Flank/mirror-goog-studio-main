@@ -27,12 +27,12 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::CpuProfilerMode;
-using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuProfilingAppStartRequest;
 using profiler::proto::CpuProfilingAppStartResponse;
 using profiler::proto::CpuProfilingAppStopRequest;
 using profiler::proto::CpuProfilingAppStopResponse;
+using profiler::proto::CpuTraceMode;
+using profiler::proto::CpuTraceType;
 
 using std::string;
 using testing::HasSubstr;
@@ -112,10 +112,9 @@ struct CpuServiceTest : testing::Test {
     CpuProfilingAppStartRequest start_request;
     start_request.mutable_session()->set_session_id(kSessionId);
     start_request.mutable_session()->set_pid(kPid);
-    start_request.mutable_configuration()->set_profiler_mode(
-        CpuProfilerMode::SAMPLED);
-    start_request.mutable_configuration()->set_profiler_type(
-        CpuProfilerType::ATRACE);
+    start_request.mutable_configuration()->set_trace_mode(
+        CpuTraceMode::SAMPLED);
+    start_request.mutable_configuration()->set_trace_type(CpuTraceType::ATRACE);
     start_request.mutable_configuration()->set_buffer_size_in_mb(8);
     CpuProfilingAppStartResponse start_response;
 
@@ -133,7 +132,7 @@ struct CpuServiceTest : testing::Test {
     CpuProfilingAppStopRequest stop_request;
     stop_request.mutable_session()->set_session_id(kSessionId);
     stop_request.mutable_session()->set_pid(kPid);
-    stop_request.set_profiler_type(CpuProfilerType::ATRACE);
+    stop_request.set_trace_type(CpuTraceType::ATRACE);
 
     // Stop profiling.
     // nullptr for response tells cpu_service this is a test and does not
@@ -173,10 +172,9 @@ TEST_F(CpuServiceTest, StopSimpleperfTraceWhenPerfdTerminated) {
   CpuProfilingAppStartRequest start_request;
   start_request.mutable_session()->set_session_id(kSessionId);
   start_request.mutable_session()->set_pid(kPid);
-  start_request.mutable_configuration()->set_profiler_mode(
-      CpuProfilerMode::SAMPLED);
-  start_request.mutable_configuration()->set_profiler_type(
-      CpuProfilerType::SIMPLEPERF);
+  start_request.mutable_configuration()->set_trace_mode(CpuTraceMode::SAMPLED);
+  start_request.mutable_configuration()->set_trace_type(
+      CpuTraceType::SIMPLEPERF);
   CpuProfilingAppStartResponse start_response;
   cpu_service->StartProfilingApp(&context, &start_request, &start_response);
   // Now, verify that no command has been issued to kill simpleperf.
@@ -231,10 +229,8 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
   CpuProfilingAppStartRequest start_request;
   start_request.mutable_session()->set_session_id(kSessionId);
   start_request.mutable_session()->set_pid(kPid);
-  start_request.mutable_configuration()->set_profiler_mode(
-      CpuProfilerMode::SAMPLED);
-  start_request.mutable_configuration()->set_profiler_type(
-      CpuProfilerType::ART);
+  start_request.mutable_configuration()->set_trace_mode(CpuTraceMode::SAMPLED);
+  start_request.mutable_configuration()->set_trace_type(CpuTraceType::ART);
   CpuProfilingAppStartResponse start_response;
   cpu_service.StartProfilingApp(&context, &start_request, &start_response);
   EXPECT_THAT(cmd_1, StartsWith(kAmExecutable));

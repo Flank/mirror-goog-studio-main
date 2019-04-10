@@ -20,10 +20,10 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::CpuProfilerMode;
-using profiler::proto::CpuProfilerType;
+using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
+using profiler::proto::CpuTraceType;
 using profiler::proto::TraceInitiationType;
 
 namespace profiler {
@@ -49,8 +49,8 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     capture.trace_path = request->start().arg_trace_path();
     capture.start_timestamp = request->timestamp();
     capture.end_timestamp = -1;
-    capture.configuration.set_profiler_type(CpuProfilerType::ART);
-    capture.configuration.set_profiler_mode(CpuProfilerMode::INSTRUMENTED);
+    capture.configuration.set_trace_type(CpuTraceType::ART);
+    capture.configuration.set_trace_mode(CpuTraceMode::INSTRUMENTED);
     capture.initiation_type = TraceInitiationType::INITIATED_BY_API;
     if (!cache_.AddProfilingStart(pid, capture)) {
       std::cout << " START request ignored (no app cache)" << std::endl;

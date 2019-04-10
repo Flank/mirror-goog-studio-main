@@ -89,3 +89,45 @@ message CpuThreadData {
   // The current thread state in this activity.
   State state = 3;
 }
+
+enum CpuTraceType {
+  UNSPECIFIED_TYPE = 0;
+  ART = 1;
+  SIMPLEPERF = 2;
+  ATRACE = 3;
+}
+
+enum CpuTraceMode {
+  UNSPECIFIED_MODE = 0;
+  SAMPLED = 1;
+  INSTRUMENTED = 2;
+}
+
+enum TraceInitiationType {
+  UNSPECIFIED_INITIATION = 0;
+  INITIATED_BY_UI = 1;  // specifically means non-startup UI operations.
+  INITIATED_BY_API = 2;
+  INITIATED_BY_STARTUP = 3;
+}
+
+// A CpuTraceInfo contains the information regarding a trace
+// and should be returned if its time overlaps with the request time range.
+message CpuTraceInfo {
+  int64 trace_id = 1;
+  CpuTraceType trace_type = 2;
+  CpuTraceMode trace_mode = 3;
+  TraceInitiationType initiation_type = 4;
+  int64 from_timestamp = 5;  // inclusive
+  int64 to_timestamp = 6;    // inclusive
+  // Path to the binary file containing the trace content.
+  string trace_file_path = 7;
+  // These thread ids are those having data captured by the designated trace.
+  // TODO this is currently updated by Studio back into the database after
+  // a capture has been parsed. This information is used strictly to highlight
+  // the items in the Thread view that has captured data.
+  // In the new pipeline, we don't support that type of workflow yet (aka
+  // updating existing data). Potential option would be to have this as a
+  // separate data kind, or remove this feature (just highlight all threads
+  // within the capture) or implement it differently (caching on Studio-side).
+  repeated int32 tids = 8;
+}
