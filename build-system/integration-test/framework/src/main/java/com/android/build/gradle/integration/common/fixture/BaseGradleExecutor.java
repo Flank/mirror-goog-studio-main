@@ -24,7 +24,9 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
+import com.android.testutils.TestUtils;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -233,6 +235,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         List<String> jvmArguments = new ArrayList<>(this.memoryRequirement.getJvmArgs());
 
         jvmArguments.add("-XX:+HeapDumpOnOutOfMemoryError");
+        jvmArguments.add("-XX:HeapDumpPath=" + jvmLogDir.resolve("heapdump.hprof").toString());
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");
         if (!Strings.isNullOrEmpty(debugIntegrationTest)) {
@@ -271,7 +274,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         }
     }
 
-    private static void printJvmLogs() throws IOException {
+    private void printJvmLogs() throws IOException {
+
         List<Path> files;
         try (Stream<Path> walk = Files.walk(jvmLogDir)) {
             files = walk.filter(Files::isRegularFile).collect(Collectors.toList());
@@ -279,27 +283,36 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (files.isEmpty()) {
             return;
         }
+
+        Path outputs;
+        if (TestUtils.runningFromBazel()) {
+            // Put in test undeclared output directory.
+            outputs =
+                    TestUtils.getTestOutputDir()
+                            .toPath()
+                            .resolve(projectDirectory.getParent().getParent().getFileName())
+                            .resolve(projectDirectory.getParent().getFileName())
+                            .resolve(projectDirectory.getFileName());
+        } else {
+            outputs = projectDirectory.resolve("jvm_logs_outputs");
+        }
+        Files.createDirectories(outputs);
+
         System.err.println("----------- JVM Log start -----------");
+        System.err.println("----- JVM log files being put in " + outputs.toString() + " ----");
         for (Path path : files) {
-            System.err.print("---- Log file: ");
-            System.err.print(path);
-            System.err.println("----");
-            for (String line : Files.readAllLines(path)) {
-                System.err.println(line);
-            }
-            System.err.println("----");
-            System.err.println();
+            System.err.print("---- Copying Log file: ");
+            System.err.println(path.getFileName());
+            Files.move(path, outputs.resolve(path.getFileName()));
         }
         System.err.println("------------ JVM Log end ------------");
     }
 
-
-    protected static void maybePrintJvmLogs(GradleConnectionException failure) throws IOException {
-        Throwable cause = failure.getCause();
-        if (cause != null
-                && cause.getClass()
-                        .getName()
-                        .equals("org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
+    protected void maybePrintJvmLogs(@NonNull GradleConnectionException failure)
+            throws IOException {
+        String stacktrace = Throwables.getStackTraceAsString(failure);
+        if (stacktrace.contains("org.gradle.launcher.daemon.client.DaemonDisappearedException")
+                || stacktrace.contains("java.lang.OutOfMemoryError")) {
                     printJvmLogs();
         }
     }
