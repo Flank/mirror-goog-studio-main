@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestUtils;
@@ -54,6 +55,15 @@ public class PatchTest {
                         .build();
 
         PatchGenerator.Patch patch = new PatchGenerator().generate(remoteApk, localApk);
+
+        // Check that the patch is small than the remote apk
+        long remoteApkSize = Files.size(Paths.get(remoteApkPath));
+        assertTrue(
+                "Patch is smaller than apk",
+                patch.data.capacity() + patch.instructions.capacity() < remoteApkSize);
+
+        // Hard-coded value is specific to this test.
+        assertEquals("Patch size", patch.data.capacity() + patch.instructions.capacity(), 1458384);
 
         // Apply patch.
         Patcher patcher = new Patcher();

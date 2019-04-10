@@ -111,7 +111,8 @@ public class ZipUtils {
             // Keep track of boundaries of the entry in the zip archive since those are used while
             // deltaPushing.
             long payloadStart = start + LOCAL_DIRECTORY_FILE_HEADER_SIZE + pathLength + extraLength;
-            long end = payloadStart - 1 + compressedSize;
+            long payloadSize = compression == 0 ? decompressedSize : compressedSize;
+            long end = payloadStart - 1 + payloadSize;
             ZipEntry entry =
                     new ZipEntry(crc, name, start, end, payloadStart, extraLength, localFileHeader);
             entries.put(entry.name, entry);
