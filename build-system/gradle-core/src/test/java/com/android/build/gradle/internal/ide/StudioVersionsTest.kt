@@ -32,6 +32,11 @@ class StudioVersionsTest {
     }
 
     @Test
+    fun testDevBuild() {
+        verifyStudioIsNotOld("0.0.0.0", oldVersion)
+    }
+
+    @Test
     fun testInvalidVersionsInjected() {
         assertFailsWith<InvalidUserDataException> {
             verifyStudioIsNotOld("", oldVersion)

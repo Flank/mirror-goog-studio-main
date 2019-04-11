@@ -42,8 +42,8 @@ internal fun verifyStudioIsNotOld(
     injectedVersion: String?,
     androidGradlePluginVersion: MajorMinorVersion
 ) {
-    if (injectedVersion == null) {
-        // Be lenient when the version is not injected.
+    if (injectedVersion == null || injectedVersion == "0.0.0.0") {
+        // Be lenient when the version is not injected or it's a dev build.
         return
     }
 
