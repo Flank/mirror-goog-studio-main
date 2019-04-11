@@ -200,12 +200,15 @@ class DeprecationReporterImpl(
         if (suppressedOptionWarnings.contains(option)) {
             return
         }
-        issueReporter.reportIssue(
+        if (!checkAndSet(option, value)) {
+            issueReporter.reportIssue(
                 Type.UNSUPPORTED_PROJECT_OPTION_USE,
                 Severity.WARNING,
                 "The option '$option' is deprecated and should not be used anymore.\n" +
-                        (if (value !=null) "Use '$option=$value' to remove this warning.\n" else "") +
-                        "It will be removed ${deprecationTarget.removalTime}.")
+                        (if (value != null) "Use '$option=$value' to remove this warning.\n" else "") +
+                        "It will be removed ${deprecationTarget.removalTime}."
+            )
+        }
     }
 
 
@@ -213,13 +216,16 @@ class DeprecationReporterImpl(
         if (suppressedOptionWarnings.contains(option.propertyName)) {
             return
         }
-        issueReporter.reportIssue(
-            Type.UNSUPPORTED_PROJECT_OPTION_USE,
-            Severity.WARNING,
-            "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
-                    (if (option.defaultValue != null)"The current default is '${option.defaultValue.toString()}'.\n" else "") +
-                    option.additionalInfo,
-            option.propertyName)
+        if (!checkAndSet(option, value)) {
+            issueReporter.reportIssue(
+                Type.UNSUPPORTED_PROJECT_OPTION_USE,
+                Severity.WARNING,
+                "The option setting '${option.propertyName}=$value' is experimental and unsupported.\n" +
+                        (if (option.defaultValue != null) "The current default is '${option.defaultValue.toString()}'.\n" else "") +
+                        option.additionalInfo,
+                option.propertyName
+            )
+        }
     }
 
     companion object {
@@ -227,6 +233,7 @@ class DeprecationReporterImpl(
          * Set of obsolete APIs that have been warned already.
          */
         private val obsoleteApis = mutableSetOf<String>()
+        private val options = mutableSetOf<OptionInfo>()
 
         /**
          * Checks if the given API is part of the set already and adds it if not.
@@ -242,10 +249,34 @@ class DeprecationReporterImpl(
             }
         }
 
+        /**
+         * Checks if the given Option has already been warned about, and adds it if not.
+         *
+         * @return true if the Option is already part of the set.
+         */
+        fun checkAndSet(option: Any, value: String?): Boolean = synchronized(options) {
+            val info = OptionInfo(option, value)
+            return if (options.contains(info)) {
+                true
+            } else {
+                options.add(info)
+                false
+            }
+        }
+
+
         fun clean() {
             synchronized(obsoleteApis) {
                 obsoleteApis.clear()
             }
+            synchronized(options) {
+                options.clear()
+            }
         }
     }
 }
+
+data class OptionInfo(
+    val option: Any,
+    val value: String?
+)
