@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
-import com.google.common.base.Preconditions
 import com.google.common.base.Preconditions.checkArgument
 import com.google.common.base.Preconditions.checkState
 import java.io.File
@@ -41,7 +40,7 @@ class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
             Abi.MIPS64
         } else abi
     }
-    
+
     override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {
         checkArgument(
             stl == Stl.LIBCXX_SHARED,
@@ -65,6 +64,10 @@ class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
         checkState(file.isFile, "Expected NDK STL shared object file at $file")
         return file
     }
+
+    override fun getStripExecutable(abi: Abi) = rootDirectory.resolve(
+        "toolchains/llvm/prebuilt/$hostTag/bin/${getToolchainAbi(abi).gccExecutablePrefix}-strip"
+    )
 
     override fun validate(): String? {
         // Intentionally not calling super's validate. NDK r19 does not require many of the paths
