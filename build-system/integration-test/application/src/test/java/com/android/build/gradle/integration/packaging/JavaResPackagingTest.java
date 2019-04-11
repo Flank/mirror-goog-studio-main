@@ -205,6 +205,22 @@ public class JavaResPackagingTest {
     }
 
     @Test
+    public void testAppProjectWithRenamedResFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    project.removeFile("src/main/resources/com/foo/app.txt");
+                    project.addFile("src/main/resources/com/foo/moved_app.txt", "app:abcd");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "app.txt", null);
+                    checkApk(appProject, "moved_app.txt", "app:abcd");
+                });
+    }
+
+    @Test
     public void testAppProjectWithModifiedResFile() throws Exception {
         execute("app:clean", "app:assembleDebug");
 
