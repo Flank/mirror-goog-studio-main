@@ -17,6 +17,7 @@
 package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.TestException;
 import com.android.utils.ILogger;
@@ -35,6 +36,9 @@ public interface TestRunner {
      *
      * @param timeoutInMs time out in milliseconds
      * @param installOptions parameters passed to the pm install command.
+     * @param additionalTestOutputEnabled `true` if file from [additionalTestOutputDir] should be
+     *     copied to host after the test completes.
+     * @param additionalTestOutputDir output dir for additional instrumented device test data
      * @return true if the test succeed
      */
     boolean runTests(
@@ -46,6 +50,8 @@ public interface TestRunner {
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
+            boolean additionalTestOutputEnabled,
+            @Nullable File additionalTestOutputDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger)
             throws TestException, NoAuthorizedDeviceFoundException, InterruptedException;

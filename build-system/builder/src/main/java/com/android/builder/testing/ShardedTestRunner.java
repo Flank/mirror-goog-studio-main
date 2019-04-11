@@ -57,6 +57,8 @@ public class ShardedTestRunner extends BaseTestRunner {
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
+            boolean additionalTestOutputEnabled,
+            @Nullable File additionalTestOutputDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
         int numShards;

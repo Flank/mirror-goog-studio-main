@@ -126,6 +126,8 @@ public abstract class BaseTestRunner implements TestRunner {
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
+            boolean additionalTestOutputEnabled,
+            @Nullable File additionalTestOutputDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger)
             throws TestException {
@@ -193,6 +195,8 @@ public abstract class BaseTestRunner implements TestRunner {
                             timeoutInMs,
                             installOptions,
                             resultsDir,
+                            additionalTestOutputEnabled,
+                            additionalTestOutputDir,
                             coverageDir,
                             logger);
 
@@ -225,6 +229,8 @@ public abstract class BaseTestRunner implements TestRunner {
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
+            boolean additionalTestOutputEnabled,
+            @Nullable File additionalTestOutputDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger);
 

@@ -173,6 +173,12 @@ public interface IRemoteAndroidTestRunner {
     void setDebug(boolean debug);
 
     /**
+     * Sets the location of the additional test output to be copied to host before the test app is
+     * uninstalled. E.g., generated benchmark reports.
+     */
+    void setAdditionalTestOutputLocation(String additionalTestDataPath);
+
+    /**
      * Sets this code coverage mode of this test run.
      */
     void setCoverage(boolean coverage);

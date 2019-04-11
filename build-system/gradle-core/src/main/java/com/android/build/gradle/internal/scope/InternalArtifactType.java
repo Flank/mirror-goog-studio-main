@@ -100,6 +100,10 @@ public enum InternalArtifactType implements ArtifactType {
     CODE_COVERAGE(Category.OUTPUTS),
     // The jacoco code coverage from the device provider tasks.
     DEVICE_PROVIDER_CODE_COVERAGE(Category.OUTPUTS),
+    // Additional test output data from the connected task
+    CONNECTED_ANDROID_TEST_ADDITIONAL_OUTPUT(Category.OUTPUTS),
+    // Additional test output data from the device provider tasks.
+    DEVICE_PROVIDER_ANDROID_TEST_ADDITIONAL_OUTPUT(Category.OUTPUTS),
 
     // --- android res ---
     // output of the resource merger ready for aapt.

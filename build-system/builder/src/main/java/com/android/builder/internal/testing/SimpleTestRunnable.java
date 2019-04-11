@@ -42,6 +42,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,6 +71,7 @@ public class SimpleTestRunnable implements Runnable {
     @NonNull private final String flavorName;
     @NonNull private final TestData testData;
     @NonNull private final File resultsDir;
+    @Nullable private final File additionalTestOutputDir;
     @NonNull private final File coverageDir;
     @NonNull private final List<File> testedApks;
     @NonNull private final Collection<String> installOptions;
@@ -77,6 +80,7 @@ public class SimpleTestRunnable implements Runnable {
     @NonNull private final BaseTestRunner.TestResult testResult;
 
     private final int timeoutInMs;
+    private final boolean additionalTestOutputEnabled;
 
     @Inject
     public SimpleTestRunnable(SimpleTestParams params) {
@@ -86,6 +90,7 @@ public class SimpleTestRunnable implements Runnable {
         this.flavorName = params.flavorName;
         this.helperApks = params.helperApks;
         this.resultsDir = params.resultsDir;
+        this.additionalTestOutputDir = params.additionalTestOutputDir;
         this.coverageDir = params.coverageDir;
         this.testedApks = params.testedApks;
         this.testData = params.testData;
@@ -93,6 +98,7 @@ public class SimpleTestRunnable implements Runnable {
         this.installOptions = params.installOptions;
         this.logger = params.logger;
         this.testResult = params.testResult;
+        this.additionalTestOutputEnabled = params.additionalTestOutputEnabled;
     }
 
     @Override
@@ -122,6 +128,8 @@ public class SimpleTestRunnable implements Runnable {
             default:
                 throw new AssertionError("Unknown coverage type.");
         }
+
+        String additionalTestOutputDir = null;
 
         try {
             device.connect(timeoutInMs, logger);
@@ -155,6 +163,17 @@ public class SimpleTestRunnable implements Runnable {
             for (Map.Entry<String, String> argument :
                     testData.getInstrumentationRunnerArguments().entrySet()) {
                 runner.addInstrumentationArg(argument.getKey(), argument.getValue());
+            }
+
+            if (additionalTestOutputEnabled) {
+                additionalTestOutputDir = queryAdditionalTestOutputLocation().toString();
+
+                MultiLineReceiver receiver = getOutputReceiver();
+                String mkdirp = "mkdir -p " + additionalTestOutputDir;
+                executeShellCommand(mkdirp, receiver);
+
+                setUpDirectories(additionalTestOutputDir);
+                runner.setAdditionalTestOutputLocation(additionalTestOutputDir);
             }
 
             if (testData.isTestCoverageEnabled()) {
@@ -226,6 +245,15 @@ public class SimpleTestRunnable implements Runnable {
             throw new RuntimeException(e);
         } finally {
             if (isInstalled) {
+                // Pull test data output to host.
+                if (success && additionalTestOutputEnabled && additionalTestOutputDir != null) {
+                    try {
+                        pullTestData(deviceName, additionalTestOutputDir);
+                    } catch (Throwable e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
                 // Get the coverage if needed.
                 if (success && testData.isTestCoverageEnabled()) {
                     try {
@@ -280,6 +308,45 @@ public class SimpleTestRunnable implements Runnable {
         return String.format("if [ -d %s ]; then rm -r %s; fi && mkdir %s", path, path, path);
     }
 
+    private Path queryAdditionalTestOutputLocation()
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException, InstallException {
+        if (device.getApiLevel() < 16) {
+            throw new InstallException(
+                    "additionTestOutput is not supported on devices running API level < 16");
+        }
+
+        final String[] result = new String[1];
+        MultiLineReceiver receiver =
+                new MultiLineReceiver() {
+                    @Override
+                    public void processNewLines(@NonNull String[] lines) {
+                        for (String row : lines) {
+                            if (row.isEmpty()) break;
+                            // Ignore any lines to stdout which aren't results of the content
+                            // provider query.
+                            if (!row.startsWith("Row:")) break;
+
+                            result[0] = row.split("_data=")[1].trim();
+                        }
+                    }
+
+                    @Override
+                    public boolean isCancelled() {
+                        return false;
+                    }
+                };
+
+        executeShellCommand(
+                "content query --uri content://media/external/file"
+                        + " --projection _data --where \"_data LIKE '%Android/data'\"",
+                receiver);
+
+        receiver.flush();
+
+        return Paths.get(result[0], testData.getTestedApplicationId(), "files/test_data");
+    }
+
     private void setUpDirectories(@NonNull String userCoverageDir)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
                     IOException {
@@ -314,6 +381,53 @@ public class SimpleTestRunnable implements Runnable {
                         .map(s -> "run-as " + testData.getTestedApplicationId() + " " + s)
                         .iterator();
         return Joiner.on(" && ").join(iterator);
+    }
+
+    private void pullTestData(String deviceName, String additionalTestOutputDir)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        if (this.additionalTestOutputDir == null) {
+            throw new RuntimeException(
+                    "Attempt to pull additional test output without an output directory set");
+        }
+
+        final File hostDir = new File(this.additionalTestOutputDir, deviceName);
+        FileUtils.cleanOutputDir(hostDir);
+        MultiLineReceiver reportPathReceiver =
+                new MultiLineReceiver() {
+                    @Override
+                    public void processNewLines(@NonNull String[] lines) {
+                        for (String report : lines) {
+                            if (report.isEmpty()) break;
+                            if (report.startsWith("ls")) break; // Ignore first line of stdout.
+
+                            logger.verbose(
+                                    "DeviceConnector '%s': fetching test data %s",
+                                    deviceName, report);
+                            File hostSingleReport = new File(hostDir, report);
+                            try {
+                                device.pullFile(
+                                        Paths.get(additionalTestOutputDir, report).toString(),
+                                        hostSingleReport.getPath());
+                            } catch (IOException e) {
+                                logger.error(e, "Error while pulling test data from device.");
+                            }
+                        }
+                    }
+
+                    @Override
+                    public boolean isCancelled() {
+                        return false;
+                    }
+                };
+
+        logger.verbose(
+                "DeviceConnector '%s': fetching additional test data from %s",
+                deviceName, additionalTestOutputDir);
+
+        // List all files in additionalTestOutputDir with one file per line.
+        executeShellCommand("ls -1 " + additionalTestOutputDir, reportPathReceiver);
+        reportPathReceiver.flush();
     }
 
     private void pullCoverageData(
@@ -422,6 +536,8 @@ public class SimpleTestRunnable implements Runnable {
         @NonNull private final String flavorName;
         @NonNull private final TestData testData;
         @NonNull private final File resultsDir;
+        private final boolean additionalTestOutputEnabled;
+        @Nullable private final File additionalTestOutputDir;
         @NonNull private final File coverageDir;
         @NonNull private final List<File> testedApks;
         @NonNull private final Collection<String> installOptions;
@@ -440,6 +556,8 @@ public class SimpleTestRunnable implements Runnable {
                 @NonNull TestData testData,
                 @NonNull Set<File> helperApks,
                 @NonNull File resultsDir,
+                boolean additionalTestOutputEnabled,
+                @Nullable File additionalTestOutputDir,
                 @NonNull File coverageDir,
                 int timeoutInMs,
                 @NonNull Collection<String> installOptions,
@@ -451,6 +569,7 @@ public class SimpleTestRunnable implements Runnable {
             this.flavorName = flavorName;
             this.helperApks = helperApks;
             this.resultsDir = resultsDir;
+            this.additionalTestOutputDir = additionalTestOutputDir;
             this.coverageDir = coverageDir;
             this.testedApks = testedApks;
             this.testData = testData;
@@ -458,6 +577,7 @@ public class SimpleTestRunnable implements Runnable {
             this.installOptions = installOptions;
             this.logger = logger;
             this.testResult = testResult;
+            this.additionalTestOutputEnabled = additionalTestOutputEnabled;
         }
     }
 }

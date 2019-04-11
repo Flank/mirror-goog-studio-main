@@ -53,6 +53,8 @@ public class SimpleTestRunner extends BaseTestRunner {
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
+            boolean additionalTestOutputEnabled,
+            @Nullable File additionalTestOutputDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
         List<TestResult> results = new ArrayList<>();
@@ -70,6 +72,8 @@ public class SimpleTestRunner extends BaseTestRunner {
                             testData,
                             helperApks,
                             resultsDir,
+                            additionalTestOutputEnabled,
+                            additionalTestOutputDir,
                             coverageDir,
                             timeoutInMs,
                             installOptions,

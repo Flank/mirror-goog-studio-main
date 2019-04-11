@@ -177,6 +177,11 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
     }
 
     @Override
+    public void setAdditionalTestOutputLocation(String additionalTestDataPath) {
+        addInstrumentationArg("additionalTestOutputDir", additionalTestDataPath);
+    }
+
+    @Override
     public void setCoverage(boolean coverage) {
         addBooleanArg(COVERAGE_ARG_NAME, coverage);
     }

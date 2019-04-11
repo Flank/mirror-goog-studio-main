@@ -18,11 +18,15 @@ package com.android.builder.internal.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -31,11 +35,13 @@ import com.android.builder.testing.BaseTestRunner;
 import com.android.builder.testing.StubTestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.InstallException;
+import com.android.ddmlib.MultiLineReceiver;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -44,6 +50,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 public class SimpleTestRunnableTest {
     private static final int TIMEOUT = 4000;
@@ -103,6 +110,112 @@ public class SimpleTestRunnableTest {
         verifyNoMoreInteractions(deviceConnector);
     }
 
+    @Test
+    public void checkAdditionalTestOutputWith16() throws Exception {
+        testData.setTestedApplicationId("com.example.app.test");
+
+        when(deviceConnector.getApiLevel()).thenReturn(16);
+        when(deviceConnector.getName()).thenReturn("FakeDevice");
+
+        Answer<Void> contentQueryAnswer =
+                invocation -> {
+                    MultiLineReceiver receiver = invocation.getArgument(1);
+                    receiver.processNewLines(new String[] {"Row: 0 _data=/fake_path/Android/data"});
+                    receiver.flush();
+                    return null;
+                };
+        doAnswer(contentQueryAnswer)
+                .when(deviceConnector)
+                .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
+
+        Answer<Void> lsAnswer =
+                invocation -> {
+                    MultiLineReceiver receiver = invocation.getArgument(1);
+                    receiver.processNewLines(
+                            new String[] {
+                                testData.getTestedApplicationId() + "-benchmarkData.json"
+                            });
+                    receiver.flush();
+                    return null;
+                };
+        doAnswer(lsAnswer)
+                .when(deviceConnector)
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+
+        File prodApks = temporaryFolder.newFolder();
+        testedApks = new ArrayList<>();
+        testedApks.add(new File(prodApks, "app" + 1 + ".apk"));
+        File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
+        File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
+        File coverageDir = temporaryFolder.newFile();
+        SimpleTestRunnable runnable =
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        true,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        ImmutableList.of());
+
+        Answer<Void> verifyPullFileAnswer =
+                invocation -> {
+                    String remote = invocation.getArgument(0);
+                    String expectedRemote =
+                            Paths.get(
+                                            "/fake_path/Android/data/com.example.app.test/files/test_data/com.example.app.test-benchmarkData.json")
+                                    .toString();
+                    assertThat(remote).isEqualTo(expectedRemote);
+
+                    String local = invocation.getArgument(1);
+                    String expectedLocal =
+                            Paths.get(
+                                            additionalTestOutputDir.getAbsolutePath(),
+                                            "FakeDevice/com.example.app.test-benchmarkData.json")
+                                    .toString();
+                    assertThat(local).isEqualTo(expectedLocal);
+                    return null;
+                };
+        doAnswer(verifyPullFileAnswer).when(deviceConnector).pullFile(anyString(), anyString());
+
+        runnable.run();
+
+        verify(deviceConnector, times(1))
+                .executeShellCommand(startsWith("content query"), any(), anyLong(), any());
+        verify(deviceConnector, times(1))
+                .executeShellCommand(startsWith("ls"), any(), anyLong(), any());
+    }
+
+    private SimpleTestRunnable getSimpleTestRunnable(
+            File buddyApk,
+            File resultsDir,
+            boolean additionalTestOutputEnabled,
+            File additionalTestOutputDir,
+            File coverageDir,
+            List<String> installOptions) {
+        SimpleTestRunnable.SimpleTestParams params =
+                new SimpleTestRunnable.SimpleTestParams(
+                        deviceConnector,
+                        "project",
+                        new RemoteAndroidTestRunner(
+                                testData.getApplicationId(),
+                                testData.getInstrumentationRunner(),
+                                deviceConnector),
+                        "flavor",
+                        testedApks,
+                        testData,
+                        Collections.singleton(buddyApk),
+                        resultsDir,
+                        additionalTestOutputEnabled,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        TIMEOUT,
+                        installOptions,
+                        logger,
+                        new BaseTestRunner.TestResult());
+        return new SimpleTestRunnable(params);
+    }
+
     private void call(int apkCount) throws Exception {
         File prodApks = temporaryFolder.newFolder();
         testedApks = new ArrayList<>();
@@ -113,27 +226,17 @@ public class SimpleTestRunnableTest {
         File buddyApk = new File(temporaryFolder.newFolder(), "buddy.apk");
 
         File resultsDir = temporaryFolder.newFile();
+        File additionalTestOutputDir = temporaryFolder.newFolder();
         File coverageDir = temporaryFolder.newFile();
         List<String> installOptions = ImmutableList.of();
         SimpleTestRunnable runnable =
-                new SimpleTestRunnable(
-                        new SimpleTestRunnable.SimpleTestParams(
-                                deviceConnector,
-                                "project",
-                                new RemoteAndroidTestRunner(
-                                        testData.getApplicationId(),
-                                        testData.getInstrumentationRunner(),
-                                        deviceConnector),
-                                "flavor",
-                                testedApks,
-                                testData,
-                                Collections.singleton(buddyApk),
-                                resultsDir,
-                                coverageDir,
-                                TIMEOUT,
-                                installOptions,
-                                logger,
-                                new BaseTestRunner.TestResult()));
+                getSimpleTestRunnable(
+                        buddyApk,
+                        resultsDir,
+                        false,
+                        additionalTestOutputDir,
+                        coverageDir,
+                        installOptions);
         runnable.run();
 
         verify(deviceConnector, atLeastOnce()).getName();
