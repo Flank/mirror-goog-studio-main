@@ -17,6 +17,9 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
+import com.google.common.base.Preconditions
+import com.google.common.base.Preconditions.checkArgument
+import com.google.common.base.Preconditions.checkState
 import java.io.File
 
 /**
@@ -24,10 +27,43 @@ import java.io.File
  */
 class NdkR19Info(val root: File) : DefaultNdkInfo(root) {
 
+    // TODO: Add metadata to the NDK to populate this list?
+    // https://github.com/android-ndk/ndk/issues/966
+    override val supportedStls = listOf(
+        Stl.LIBCXX_SHARED,
+        Stl.LIBCXX_STATIC,
+        Stl.NONE,
+        Stl.SYSTEM
+    )
+
     override fun getToolchainAbi(abi: Abi): Abi {
         return if (abi == Abi.MIPS) {
             Abi.MIPS64
         } else abi
+    }
+    
+    override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {
+        checkArgument(
+            stl == Stl.LIBCXX_SHARED,
+            "Only c++_shared is valid for packaging as of NDK r19"
+        )
+        checkArgument(abi in supportedAbis, "Unsupported ABI for NDK r19+: $abi")
+
+        // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#architectures
+        val sysrootTriple = when (abi) {
+            Abi.ARM64_V8A -> "aarch64-linux-android"
+            Abi.ARMEABI_V7A -> "arm-linux-androideabi"
+            Abi.X86 -> "i686-linux-android"
+            Abi.X86_64 -> "x86_64-linux-android"
+            else -> throw RuntimeException("Unsupported ABI for NDK r19+: $abi")
+        }
+
+        // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#stl
+        val file = rootDirectory.resolve(
+            "toolchains/llvm/prebuilt/$hostTag/sysroot/usr/lib/$sysrootTriple/${stl.libraryName}"
+        )
+        checkState(file.isFile, "Expected NDK STL shared object file at $file")
+        return file
     }
 
     override fun validate(): String? {

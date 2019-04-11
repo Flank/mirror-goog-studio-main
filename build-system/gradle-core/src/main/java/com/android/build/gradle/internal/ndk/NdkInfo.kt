@@ -33,6 +33,8 @@ interface NdkInfo {
 
     val supportedAbis: Collection<Abi>
 
+    val supportedStls: Collection<Stl>
+
     fun findSuitablePlatformVersion(
         abi: String,
         androidVersion: AndroidVersion?
@@ -40,6 +42,25 @@ interface NdkInfo {
 
     /** Return the executable for removing debug symbols from a shared object.  */
     fun getStripExecutable(abi: Abi): File
+
+    /** Returns the STL shared object file matching the given STL/ABI pair. */
+    fun getStlSharedObjectFile(stl: Stl, abi: Abi): File
+
+    /**
+     * Returns a list of shared STL libraries to be included in the APK for the given configuration.
+     *
+     * @param stl A nullable string matching the APP_STL argument to ndk-build (or ANDROID_STL for
+     *            CMake). If null, the default STL for the given NDK is used.
+     * @param abis The collection of ABIs to return libraries for.
+     */
+    fun getStlSharedObjectFiles(stl: Stl, abis: Collection<Abi>): Map<Abi, File> {
+        // Static STLs, system STLs, and non-STLs do not need to be packaged.
+        if (!stl.requiresPackaging) {
+            return emptyMap()
+        }
+
+        return abis.map { it to getStlSharedObjectFile(stl, it) }.toMap()
+    }
 
     /**
      * Validates that the described NDK is valid.

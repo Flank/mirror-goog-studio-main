@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
@@ -154,5 +155,14 @@ interface CxxModuleModel {
      * there.
      */
     val services: CxxServiceRegistry
+
+    /**
+     * Map describing the locations of STL shared objects for each STL/ABI pair.
+     *
+     * Note that no entry will be present for STLs that do not support packaging (static STLs, the
+     * system STL, and the "none" STL) or for STLs that are not supported by the given NDK. ABIs not
+     * supported by the given NDK will also not be present in the map.
+     */
+    val stlSharedObjectMap: Map<Stl, Map<Abi, File>>
 }
 

@@ -51,7 +51,8 @@ private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     Set::class.java,
     String::class.java,
     File::class.java,
-    Revision::class.java
+    Revision::class.java,
+    Map::class.java
 )
 
 class CxxModuleModelTest {
@@ -205,6 +206,13 @@ class CxxModuleModelTest {
             Set::class.java -> {
                 assertThat(method.name.endsWith("Set"))
                     .named("vals with Set type must end with 'Set': " +
+                            method.toGenericString()
+                    )
+                    .isTrue()
+            }
+            Map::class.java -> {
+                assertThat(method.name.endsWith("Map"))
+                    .named("vals with Map type must end with 'Map': " +
                             method.toGenericString()
                     )
                     .isTrue()

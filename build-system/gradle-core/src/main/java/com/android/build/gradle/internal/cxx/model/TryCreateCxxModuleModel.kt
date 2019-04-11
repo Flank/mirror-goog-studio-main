@@ -21,6 +21,7 @@ import com.android.SdkConstants.CURRENT_PLATFORM
 import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.external.cmake.CmakeUtils
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
@@ -37,6 +38,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
+import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
@@ -198,6 +200,14 @@ fun tryCreateCxxModuleModel(global : GlobalScope, cmakeLocator : CmakeLocator) :
                 moduleRootFolder,
                 buildStagingDirectory,
                 global.project.buildDir)
+        }
+        override val stlSharedObjectMap by lazy {
+            val map: MutableMap<Stl, Map<Abi, File>> = mutableMapOf()
+            val ndkInfo = ndkHandler.ndkPlatform.getOrThrow().ndkInfo
+            for (stl in ndkInfo.supportedStls) {
+                map[stl] = ndkInfo.getStlSharedObjectFiles(stl, ndkInfo.supportedAbis)
+            }
+            map.toMap()
         }
     }
 }

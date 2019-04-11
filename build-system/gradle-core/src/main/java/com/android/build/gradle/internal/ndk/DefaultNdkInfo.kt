@@ -24,6 +24,7 @@ import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
+import com.google.common.base.Preconditions.checkState
 import com.google.common.collect.Maps
 import java.io.File
 import java.nio.file.Files
@@ -53,6 +54,28 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
         return abi.gccToolchainPrefix
     }
 
+    protected val hostTag: String by lazy {
+        val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
+        val osType = when {
+            osName.contains("windows") -> "windows"
+            osName.contains("mac") -> "darwin"
+            else -> "linux"
+        }
+
+        val checkTags = mutableListOf("$osType-x86_64")
+        if (osType == "windows") {
+            // 64-bit should be preferred, but check for 32-bit if it is not found.
+            checkTags.add("windows")
+        }
+
+        val prebuiltBase = rootDirectory.resolve("prebuilt")
+        val checkDirs = checkTags.map { prebuiltBase.resolve(it) }
+        checkTags.find { prebuiltBase.resolve(it).isDirectory } ?: throw InvalidUserDataException(
+            "Could not determine NDK host architecture. None of the following directories " +
+                    "exist: ${checkDirs.joinToString(",")}"
+        )
+    }
+
     /**
      * Return the directory containing the toolchain.
      *
@@ -61,45 +84,22 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
      */
     private fun getToolchainPath(abi: Abi): File {
         val toolchainAbi = getToolchainAbi(abi)
-        var version = getDefaultToolchainVersion(toolchainAbi)
-        version = if (version.isEmpty()) "" else "-$version"  // prepend '-' if non-empty.
+        val version = getDefaultToolchainVersion(toolchainAbi).let {
+            // TODO: Why would this ever be empty?
+            // AIUI this will only ever be the GCC toolchain version (which is not the correct
+            // result for r19+, but historically is correct), and that should never be empty.
+            if (it.isEmpty()) "" else "-$it"
+        }
 
-        val prebuiltFolder = File(
-            rootDirectory,
-            "toolchains/" + getToolchainPrefix(toolchainAbi) + version + "/prebuilt"
+        val prebuiltFolder = rootDirectory.resolve(
+            "toolchains/${getToolchainPrefix(toolchainAbi)}$version/prebuilt/$hostTag"
         )
 
-        val osName = System.getProperty("os.name").toLowerCase(Locale.ENGLISH)
-        val hostOs: String
-        hostOs = when {
-            osName.contains("windows") -> "windows"
-            osName.contains("mac") -> "darwin"
-            else -> "linux"
+        if (!prebuiltFolder.isDirectory) {
+            throw InvalidUserDataException("Toolchain directory does not exist: $prebuiltFolder")
         }
 
-        // There should only be one directory in the prebuilt folder.  If there are more than one
-        // attempt to determine the right one based on the operating system.
-        val toolchainPaths = prebuiltFolder.listFiles(FileFilter { it.isDirectory })
-            ?: throw InvalidUserDataException("Unable to find toolchain: $prebuiltFolder")
-
-        if (toolchainPaths.size == 1) {
-            return toolchainPaths[0]
-        }
-
-        // Use 64-bit toolchain if available.
-        var toolchainPath = File(prebuiltFolder, "$hostOs-x86_64")
-        if (toolchainPath.isDirectory) {
-            return toolchainPath
-        }
-
-        // Fallback to 32-bit if we can't find the 64-bit toolchain.
-        val osString = if (osName == "windows") hostOs else "$hostOs-x86"
-        toolchainPath = File(prebuiltFolder, osString)
-        return if (toolchainPath.isDirectory) {
-            toolchainPath
-        } else {
-            throw InvalidUserDataException("Unable to find toolchain prebuilt folder in: $prebuiltFolder")
-        }
+        return prebuiltFolder
     }
 
     protected open fun getToolchainAbi(abi: Abi): Abi {
@@ -191,6 +191,21 @@ open class DefaultNdkInfo(protected val rootDirectory: File) : NdkInfo {
             .stream()
             .map{ it.abi }
             .toList()
+
+    override val supportedStls = Stl.values().toList()
+
+    override fun getStlSharedObjectFile(stl: Stl, abi: Abi): File {
+        val stlBasePath = rootDirectory.resolve(when (stl) {
+            Stl.LIBCXX_SHARED -> "sources/cxx-stl/llvm-libc++"
+            Stl.GNUSTL_SHARED -> "sources/cxx-stl/gnu-libstdc++/4.9"
+            Stl.STLPORT_SHARED -> "sources/cxx-stl/stlport"
+            else -> throw RuntimeException("Unexpected STL for packaging: $stl")
+        })
+
+        val file = stlBasePath.resolve("libs/${abi.tag}/${stl.libraryName}")
+        checkState(file.isFile, "Expected NDK STL shared object file at $file")
+        return file
+    }
 
     override fun validate(): String? {
         val platformsDir = rootDirectory.resolve("platforms")

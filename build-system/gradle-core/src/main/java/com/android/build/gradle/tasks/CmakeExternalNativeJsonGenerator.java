@@ -20,16 +20,15 @@ import static com.android.build.gradle.internal.cxx.cmake.MakeCmakeMessagePathsA
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
+import com.android.build.gradle.internal.ndk.Stl;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
-import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -41,6 +40,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import org.gradle.api.InvalidUserDataException;
 
 /**
  * CMake JSON generation logic. This is separated from the corresponding CMake task so that JSON can
@@ -176,44 +177,35 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     @NonNull
     @Override
-    Map<Abi, File> getStlSharedObjectFiles() {
-        // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
-        String stl = null;
-        File ndkBasePath = null;
+    Map<Abi, File>
+            getStlSharedObjectFiles() { // Search for ANDROID_STL build argument. Process in order / later flags take precedent.
+        Stl stl = null;
         for (String argument : getBuildArguments()) {
             argument = argument.replace(" ", "");
-            switch (argument) {
-                case "-DANDROID_STL=stlport_shared":
-                    stl = "stlport";
-                    ndkBasePath = FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "stlport");
-                    break;
-                case "-DANDROID_STL=gnustl_shared":
-                    stl = "gnustl";
-                    ndkBasePath =
-                            FileUtils.join(
-                                    getNdkFolder(), "sources", "cxx-stl", "gnu-libstdc++", "4.9");
-                    break;
-                case "-DANDROID_STL=c++_shared":
-                    stl = "c++";
-                    ndkBasePath =
-                            FileUtils.join(getNdkFolder(), "sources", "cxx-stl", "llvm-libc++");
-                    break;
+            if (argument.startsWith("-DANDROID_STL=")) {
+                String stlName = argument.split("=", 2)[1];
+                stl = Stl.fromArgumentName(stlName);
+                if (stl == null) {
+                    errorln("Unrecognized STL in arguments: %s", stlName);
+                }
             }
         }
-        Map<Abi, File> result = Maps.newHashMap();
+
+        // TODO: Query the default from the NDK.
+        // We currently assume the default to not require packaging for the default STL. This is
+        // currently safe because the default for ndk-build has always been system (which doesn't
+        // require packaging because it's a system library) and gnustl_static or c++_static for
+        // CMake (which also doesn't require packaging).
+        //
+        // https://github.com/android-ndk/ndk/issues/744 wants to change the default for both to
+        // c++_shared, but that can't happen until we stop assuming the default does not need to be
+        // packaged.
         if (stl == null) {
-            return result;
+            return Maps.newHashMap();
         }
-        for (Abi abi : getAbis()) {
-            File file =
-                    FileUtils.join(
-                            ndkBasePath,
-                            "libs",
-                            abi.getTag(),
-                            String.format("lib%s_shared.so", stl));
-            checkState(file.isFile(), "Expected NDK STL shared object file at %s", file.toString());
-            result.put(abi, file);
-        }
-        return result;
+
+        return variant.getModule().getStlSharedObjectMap().get(stl).entrySet().stream()
+                .filter(e -> getAbis().contains(e.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 }
