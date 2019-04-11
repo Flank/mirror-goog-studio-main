@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
@@ -91,7 +90,7 @@ public class ModelTest {
         ImmutableList.Builder<File> expectedGeneratedSourceFolders = ImmutableList.builder();
         expectedGeneratedSourceFolders.add(
                 project.file("build/generated/aidl_source_output_dir/debug/compileDebugAidl/out"),
-                project.file("build/generated/source/apt/debug"),
+                project.file("build/generated/ap_generated_sources/debug/out"),
                 project.file("build/generated/source/buildConfig/debug"),
                 project.file(
                         "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
@@ -110,7 +109,7 @@ public class ModelTest {
         expectedGeneratedTestSourceFolders.add(
                 project.file(
                         "build/generated/aidl_source_output_dir/debugAndroidTest/compileDebugAndroidTestAidl/out"),
-                project.file("build/generated/source/apt/androidTest/debug"),
+                project.file("build/generated/ap_generated_sources/debugAndroidTest/out"),
                 project.file("build/generated/source/buildConfig/androidTest/debug"),
                 project.file(
                         "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
@@ -126,7 +125,8 @@ public class ModelTest {
         JavaArtifact unitTestArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
 
         assertThat(unitTestArtifact.getGeneratedSourceFolders())
-                .containsExactly(project.file("build/generated/source/apt/test/debug"));
+                .containsExactly(
+                        project.file("build/generated/ap_generated_sources/debugUnitTest/out"));
     }
 
     @Test

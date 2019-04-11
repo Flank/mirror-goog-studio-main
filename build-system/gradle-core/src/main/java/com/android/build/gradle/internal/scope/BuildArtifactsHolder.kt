@@ -336,7 +336,7 @@ abstract class BuildArtifactsHolder(
         // note that this configuration block may be called immediately in case the task has
         // already been initialized.
         taskProvider.configure {
-
+            
             product.get().set(settableFileLocation)
 
             // add a new configuration action to make sure the producers are configured even

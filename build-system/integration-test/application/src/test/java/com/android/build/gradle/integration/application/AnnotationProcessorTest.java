@@ -52,6 +52,9 @@ import org.junit.experimental.categories.Category;
  */
 public class AnnotationProcessorTest {
 
+    private static final String ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER =
+            "build/generated/ap_generated_sources/";
+
     @Rule
     public GradleTestProject project;
 
@@ -189,7 +192,9 @@ public class AnnotationProcessorTest {
                         + "}\n");
 
         project.executor().run("assembleDebug");
-        File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
+        File aptOutputFolder =
+                project.getSubproject(":app")
+                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debug/out");
         assertThat(new File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
                 .exists();
 
@@ -203,7 +208,8 @@ public class AnnotationProcessorTest {
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
         File testAptOutputFolder =
-                project.getSubproject(":app").file("build/generated/source/apt/test/debug");
+                project.getSubproject(":app")
+                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugUnitTest/out");
         JavaArtifact testArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
         assertThat(testArtifact.getGeneratedSourceFolders()).contains(testAptOutputFolder);
 
@@ -211,7 +217,8 @@ public class AnnotationProcessorTest {
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
         File androidTestAptOutputFolder =
-                project.getSubproject(":app").file("build/generated/source/apt/androidTest/debug");
+                project.getSubproject(":app")
+                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugAndroidTest/out");
         AndroidArtifact androidTest = VariantUtils.getAndroidTestArtifact(debugVariant);
         assertThat(androidTest.getGeneratedSourceFolders()).contains(androidTestAptOutputFolder);
 
@@ -234,16 +241,17 @@ public class AnnotationProcessorTest {
                 Charsets.UTF_8);
 
         project.executor().run("assembleDebugAndroidTest", "testDebug");
-        File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt");
+        File aptOutputFolder =
+                project.getSubproject(":app").file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER);
         assertThat(
                         new File(
                                 aptOutputFolder,
-                                "androidTest/debug/com/example/helloworld/HelloWorldAndroidTestStringValue.java"))
+                                "debugAndroidTest/out/com/example/helloworld/HelloWorldAndroidTestStringValue.java"))
                 .exists();
         assertThat(
                         new File(
                                 aptOutputFolder,
-                                "test/debug/com/example/helloworld/HelloWorldTestStringValue.java"))
+                                "debugUnitTest/out/com/example/helloworld/HelloWorldTestStringValue.java"))
                 .exists();
     }
 

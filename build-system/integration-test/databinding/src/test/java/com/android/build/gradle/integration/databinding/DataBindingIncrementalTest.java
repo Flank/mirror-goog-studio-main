@@ -126,15 +126,25 @@ public class DataBindingIncrementalTest {
     }
 
     private File getGeneratedSourceFile() {
-        return project.getGeneratedSourceFile(
-                "source",
-                withKotlin ? "kapt" : "apt",
-                "debug",
-                "android",
-                "databinding",
-                "testapp",
-                "databinding",
-                "ActivityMainBindingImpl.java");
+        return withKotlin
+                ? project.getGeneratedSourceFile(
+                        "source",
+                        "kapt",
+                        "debug",
+                        "android",
+                        "databinding",
+                        "testapp",
+                        "databinding",
+                        "ActivityMainBindingImpl.java")
+                : project.getGeneratedSourceFile(
+                        "ap_generated_sources",
+                        "debug",
+                        "out",
+                        "android",
+                        "databinding",
+                        "testapp",
+                        "databinding",
+                        "ActivityMainBindingImpl.java");
     }
 
     private File getInfoIntermediate(String fileName) {

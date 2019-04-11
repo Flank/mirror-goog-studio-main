@@ -46,7 +46,6 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
-import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
 import com.android.build.gradle.internal.TaskManager;
@@ -94,7 +93,6 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -137,7 +135,6 @@ import org.gradle.api.specs.Spec;
 /** A scope containing data for a specific variant. */
 public class VariantScopeImpl implements VariantScope {
 
-    private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
     private static final String PUBLISH_ERROR_MSG =
             "Publishing to %1$s with no %1$s configuration object. VariantType: %2$s";
 
@@ -524,7 +521,7 @@ public class VariantScopeImpl implements VariantScope {
         AndroidVersion version =
                 AndroidTargetHash.getVersionFromHash(
                         globalScope.getExtension().getCompileSdkVersion());
-        return version.isPreview();
+        return version != null && version.isPreview();
     }
 
     @NonNull
@@ -1230,12 +1227,6 @@ public class VariantScopeImpl implements VariantScope {
         return FileUtils.join(globalScope.getOutputsDir(), BuilderConstants.EXT_LIB_ARCHIVE);
     }
 
-    @NonNull
-    @Override
-    public File getAnnotationProcessorOutputDir() {
-        return FileUtils.join(globalScope.getGeneratedDir(), "source", "apt", getDirName());
-    }
-
     @FunctionalInterface
     public interface TriFunction<T, U, V, R> {
         R apply(T t, U u, V v);
@@ -1421,11 +1412,7 @@ public class VariantScopeImpl implements VariantScope {
             String template =
                     "Java 8 language support, as requested by '%s= true' in your "
                             + "gradle.properties file, is not supported when %s.";
-            String msg =
-                    String.format(
-                            template,
-                            flag.getPropertyName(),
-                            invalid.stream().collect(Collectors.joining(",")));
+            String msg = String.format(template, flag.getPropertyName(), String.join(",", invalid));
             globalScope
                     .getErrorHandler()
                     .reportError(
@@ -1499,10 +1486,11 @@ public class VariantScopeImpl implements VariantScope {
             // Only androidTest APKs need a signing config
             Preconditions.checkState(
                     variantType.isApk(), "Unexpected variant type: " + variantType);
-            if (this.getTestedVariantData()
-                    .getVariantConfiguration()
-                    .getType()
-                    .isDynamicFeature()) {
+            if (getTestedVariantData() != null
+                    && getTestedVariantData()
+                            .getVariantConfiguration()
+                            .getType()
+                            .isDynamicFeature()) {
                 return getArtifactFileCollection(
                         ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.PROJECT,

@@ -76,7 +76,7 @@ class IncrementalJavaCompileWithAPsTest(
         private const val PROCESSOR_MODULE = ":processor"
 
         private const val SOURCE_DIR = "src/main/java"
-        private const val GENERATED_SOURCE_DIR = "build/generated/source/apt/debug"
+        private const val GENERATED_SOURCE_DIR = "build/generated/ap_generated_sources/debug/out"
         private const val GENERATED_SOURCE_KAPT_DIR = "build/generated/source/kapt/debug"
         private const val COMPILED_CLASSES_DIR =
             "build/intermediates/javac/debug/classes"

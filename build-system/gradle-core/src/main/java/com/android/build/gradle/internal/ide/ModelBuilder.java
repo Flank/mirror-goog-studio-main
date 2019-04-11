@@ -1142,7 +1142,13 @@ public class ModelBuilder<Extension extends AndroidConfig>
         }
 
         List<File> folders = Lists.newArrayList(variantData.getExtraGeneratedSourceFolders());
-        folders.add(variantData.getScope().getAnnotationProcessorOutputDir());
+        folders.add(
+                variantData
+                        .getScope()
+                        .getArtifacts()
+                        .getFinalProduct(InternalArtifactType.AP_GENERATED_SOURCES)
+                        .get()
+                        .getAsFile());
         return folders;
     }
 

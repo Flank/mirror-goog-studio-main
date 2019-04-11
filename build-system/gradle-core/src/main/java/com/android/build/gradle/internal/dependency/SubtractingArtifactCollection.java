@@ -53,11 +53,13 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
         fileCollection = mainArtifact.getArtifactFiles().minus(removedArtifact.getArtifactFiles());
     }
 
+    @NonNull
     @Override
     public FileCollection getArtifactFiles() {
         return fileCollection;
     }
 
+    @NonNull
     @Override
     public Set<ResolvedArtifactResult> getArtifacts() {
         if (artifactResults == null) {
@@ -81,6 +83,7 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
         return artifactResults;
     }
 
+    @NonNull
     @Override
     public Collection<Throwable> getFailures() {
         ImmutableList.Builder<Throwable> builder = ImmutableList.builder();

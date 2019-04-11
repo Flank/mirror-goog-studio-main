@@ -262,9 +262,6 @@ public interface VariantScope extends TransformVariantScope {
     File getAarLocation();
 
     @NonNull
-    File getAnnotationProcessorOutputDir();
-
-    @NonNull
     File getManifestOutputDirectory();
 
     @NonNull

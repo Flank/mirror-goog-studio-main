@@ -18,9 +18,8 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
-import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PUBLIC_USE
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
+import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
@@ -33,18 +32,15 @@ import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -53,7 +49,6 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Task to perform compilation for Java source code, without or with annotation processing depending
@@ -80,7 +75,7 @@ import javax.inject.Inject
  *     annotation processing and compilation.
  */
 @CacheableTask
-open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
+abstract class AndroidJavaCompile: JavaCompile(), VariantAwareTask {
 
     @get:Internal
     override lateinit var variantName: String
@@ -115,7 +110,18 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
     }
 
     @get:OutputDirectory
-    val outputDirectory: DirectoryProperty = objects.directoryProperty()
+    abstract val outputDirectory: DirectoryProperty
+
+    // Annotation processors generated sources when separate annotation processing is enabled.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val separateTaskAnnotationProcessorsGeneratedSourcesDirectory: DirectoryProperty
+
+    // Annotation processors generated sources when separate annotation processing is disabled.
+    @get:OutputDirectory
+    @get:Optional
+    abstract val annotationProcessorSourcesDirectory: DirectoryProperty
 
     /**
      * Overrides the stock Gradle JavaCompile task output directory as we use instead the
@@ -251,19 +257,6 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
 
-            // Register annotation processing output.
-            // Note that the annotation processing output may be generated before AndroidJavaCompile
-            // is executed if annotation processing is done by another task (ProcessAnnotationTask
-            // or KaptTask). Since consumers of the annotation processing output does not need to
-            // know what task generates it, for simplicity, we still register AndroidJavaCompile as
-            // the generating task.
-            variantScope.artifacts.createBuildableArtifact(
-                ANNOTATION_PROCESSOR_GENERATED_SOURCES_PUBLIC_USE,
-                APPEND,
-                listOf(variantScope.annotationProcessorOutputDir),
-                taskName
-            )
-
             // Data binding artifact is one of the annotation processing outputs
             if (variantScope.globalScope.extension.dataBinding.isEnabled) {
                 variantScope.artifacts.createBuildableArtifact(
@@ -281,11 +274,21 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
             variantScope.taskContainer.javacTask = taskProvider
 
             variantScope.artifacts.producesDir(JAVAC,
-                BuildArtifactsHolder.OperationType.APPEND,
+                APPEND,
                 taskProvider,
                 taskProvider.map { it.outputDirectory },
                 "classes"
                 )
+
+            // When doing annotation processing, register its output
+            if (!processAnnotationsTaskCreated) {
+                variantScope.artifacts.producesDir(
+                    AP_GENERATED_SOURCES,
+                    INITIAL,
+                    taskProvider,
+                    taskProvider.map { it.annotationProcessorSourcesDirectory }
+                )
+            }
         }
 
         override fun configure(task: AndroidJavaCompile) {
@@ -313,7 +316,7 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
             // Configure properties for annotation processing, but only if it is not done by
             // ProcessAnnotationsTask
             if (!processAnnotationsTaskCreated) {
-                task.configurePropertiesForAnnotationProcessing(variantScope)
+                task.configurePropertiesForAnnotationProcessing(variantScope, task.annotationProcessorSourcesDirectory)
             } else {
                 // Otherwise, disable annotation processing
                 task.options.compilerArgs.add(PROC_NONE)
@@ -322,12 +325,14 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
             // Collect the list of source files to process/compile, which includes the annotation
             // processing output if annotation processing is done by ProcessAnnotationsTask
             if (processAnnotationsTaskCreated) {
+                // we are not generating sources but we will need to set it.
+                task.annotationProcessorSourcesDirectory.set(null as Directory?)
                 val generatedSourcesArtifact = variantScope.artifacts
-                    .getFinalArtifactFiles(ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE)
-                val generatedSources =
-                    project.fileTree(generatedSourcesArtifact.get().singleFile).builtBy(
-                        generatedSourcesArtifact
-                    )
+                    .getFinalProduct<Directory>(AP_GENERATED_SOURCES)
+                task.separateTaskAnnotationProcessorsGeneratedSourcesDirectory.set(generatedSourcesArtifact)
+
+                val generatedSources = project.fileTree(task.separateTaskAnnotationProcessorsGeneratedSourcesDirectory)
+                    .builtBy(task.separateTaskAnnotationProcessorsGeneratedSourcesDirectory)
                 task.sourceFileTrees = {
                     val sources = mutableListOf<FileTree>()
                     sources.addAll(variantScope.variantData.javaSources)
@@ -335,8 +340,10 @@ open class AndroidJavaCompile @Inject constructor(val objects: ObjectFactory) : 
                     sources.toList()
                 }
             } else {
+                task.separateTaskAnnotationProcessorsGeneratedSourcesDirectory.set(null as Directory?)
                 task.sourceFileTrees = { variantScope.variantData.javaSources }
             }
+
         }
     }
 }

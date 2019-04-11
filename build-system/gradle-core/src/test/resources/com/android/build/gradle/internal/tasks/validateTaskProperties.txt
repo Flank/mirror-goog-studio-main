@@ -86,7 +86,6 @@ Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleRes
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'resourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'sourceDir' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask': property 'uncompressedResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.tasks.AndroidJavaCompile': property 'objects' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.BinaryFileProviderTask': property 'artifact' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.BundleInstantApp': property 'apkDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.BundleInstantApp': property 'applicationId' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

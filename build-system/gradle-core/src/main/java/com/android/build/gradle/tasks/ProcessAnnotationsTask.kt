@@ -16,24 +16,29 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
-import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.tasks.CacheableTask
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import javax.inject.Inject
 
 /**
  * Task to perform annotation processing only, without compiling.
@@ -42,7 +47,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs
  * [AndroidJavaCompile] for more details.
  */
 @CacheableTask
-open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
+open class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
 
     @get:Internal
     override lateinit var variantName: String
@@ -62,6 +67,9 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
     fun getSources(): FileTree {
         return this.project.files(this.sourceFileTrees()).asFileTree
     }
+
+    @get:OutputDirectory
+    val outputFolder: DirectoryProperty= objects.directoryProperty()
 
     override fun compile(inputs: IncrementalTaskInputs) {
         // Disable incremental mode as Gradle's JavaCompile currently does not work correctly in
@@ -99,15 +107,14 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
         override val type: Class<ProcessAnnotationsTask>
             get() = ProcessAnnotationsTask::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out ProcessAnnotationsTask>) {
+            super.handleProvider(taskProvider)
 
-            // Register annotation processing output
-            variantScope.artifacts.createBuildableArtifact(
-                ANNOTATION_PROCESSOR_GENERATED_SOURCES_PRIVATE_USE,
-                APPEND,
-                listOf(variantScope.annotationProcessorOutputDir),
-                taskName
+            variantScope.artifacts.producesDir(
+                AP_GENERATED_SOURCES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                taskProvider.map { it.outputFolder }
             )
         }
 
@@ -123,9 +130,9 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
                     variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
 
             // Configure properties for annotation processing
-            task.configurePropertiesForAnnotationProcessing(variantScope)
+            task.configurePropertiesForAnnotationProcessing(variantScope, task.outputFolder)
 
-            // Perform annotation processing only
+            // Perform annotation processing onNly
             task.options.compilerArgs.add(PROC_ONLY)
 
             // Collect the list of source files to process
@@ -134,7 +141,7 @@ open class ProcessAnnotationsTask : JavaCompile(), VariantAwareTask {
             // Since this task does not output compiled classes, destinationDir will not be used.
             // However, Gradle requires this property to be set, so let's just set it to the
             // annotation processor output directory for convenience.
-            task.destinationDir = variantScope.annotationProcessorOutputDir
+            task.setDestinationDir(task.outputFolder.asFile)
         }
     }
 

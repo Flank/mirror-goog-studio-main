@@ -54,7 +54,7 @@ import java.io.File
  *           - com.example.app
  *               - MainActivity.java
  *       - src/main/res/layout (empty)
- *       - build/generated/source/apt/debug
+ *       - build/generated/ap_generated_sources/debug/out
  *           - com.example.app
  *               - BR.java
  *               - DataBinderMapperImpl.java
@@ -75,7 +75,7 @@ import java.io.File
  *       - src/main/res/layout
  *           - layout1.xml [*** changed ***]
  *           - layout2.xml
- *       - build/generated/source/apt/debug
+ *       - build/generated/ap_generated_sources/debug/out
  *           - com.example.lib
  *               - DataBinderMapperImpl.java
  *           - com.example.lib.databinding
@@ -112,7 +112,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         // Paths to different kinds of files
         private const val SOURCE_DIR = "src/main/java"
         private const val LAYOUT_DIR = "src/main/res/layout"
-        private const val GENERATED_SOURCE_DIR = "build/generated/source/apt/debug"
+        private const val GENERATED_SOURCE_DIR = "build/generated/ap_generated_sources/debug/out"
         private const val COMPILED_CLASSES_DIR =
             "build/intermediates/javac/debug/classes"
 
@@ -131,14 +131,14 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         private const val LIB_LAYOUT_1 = "layout1"
         private const val LIB_LAYOUT_2 = "layout2"
 
-        // Generated source files in app/build/generated/source/apt
+        // Generated source files in app/build/generated/ap_generated_sources
         private const val APP_GENERATED_BR_CLASS = "com.example.app.BR"
         private const val APP_GENERATED_DATA_BINDER_MAPPER_CLASS =
             "com.example.app.DataBinderMapperImpl"
         private const val APP_GENERATED_ANDROIDX_DATA_BINDER_MAPPER_CLASS =
             "androidx.databinding.DataBinderMapperImpl"
 
-        // Generated source files in lib/build/generated/source/apt
+        // Generated source files in lib/build/generated/ap_generated_sources
         private const val LIB_GENERATED_DATA_BINDER_MAPPER_CLASS =
             "com.example.lib.DataBinderMapperImpl"
         private const val LIB_GENERATED_LAYOUT_1_BINDING_CLASS =
@@ -148,7 +148,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
         private const val LIB_GENERATED_ON_CLICK_LISTENER_CLASS =
             "com.example.lib.generated.callback.OnClickListener"
 
-        // Generated source files in (app and lib)/build/generated/source/apt
+        // Generated source files in (app and lib)/build/generated/ap_generated_sources
         private const val GENERATED_BR_FROM_LIB_CLASS = "com.example.lib.BR"
         private const val GENERATED_BASE_ADAPTERS_BR_CLASS =
             "androidx.databinding.library.baseAdapters.BR"
@@ -443,7 +443,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
     private lateinit var libLoner1JavaFile: File
     private lateinit var libLayout1LayoutFile: File
 
-    // Generated source files in app/build/generated/source/apt
+    // Generated source files in app/build/generated/ap_generated_sources
     private lateinit var appGeneratedBrJavaFile: File
     private lateinit var appGeneratedDataBinderMapperJavaFile: File
     private lateinit var appGeneratedAndroidXDataBinderMapperJavaFile: File
@@ -451,7 +451,7 @@ class DataBindingIncrementalityTest(private val withIncrementalDB: Boolean) {
     private lateinit var appGeneratedBaseAdaptersBrJavaFile: File
     private lateinit var appGeneratedDataBindingComponentJavaFile: File
 
-    // Generated source files in lib/build/generated/source/apt
+    // Generated source files in lib/build/generated/ap_generated_sources
     private lateinit var libGeneratedDataBinderMapperJavaFile: File
     private lateinit var libGeneratedLayout1BindingJavaFile: File
     private lateinit var libGeneratedLayout2BindingJavaFile: File
