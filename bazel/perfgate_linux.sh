@@ -26,7 +26,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \
   --profile=${dist_dir}/prof \
-  --runs_per_test=10 \
+  --runs_per_test=3 \
   -- \
   $(< "${script_dir}/targets")
 
