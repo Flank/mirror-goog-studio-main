@@ -226,6 +226,12 @@ public class Gradle implements Closeable {
                         + repoDir.toURI().toString()
                         + "'}\n"
                         + "  }\n"
+                        + "}\n"
+                        + "rootProject {\n"
+                        + "    task cleanLocalCaches(type: Delete) {\n"
+                        + "       delete gradle.gradleUserHomeDir.toString() + '/caches/transforms-2'\n"
+                        + "       delete System.env['ANDROID_SDK_HOME'] + '/build-cache'\n"
+                        + "    }\n"
                         + "}\n";
 
         try (FileWriter writer = new FileWriter(initScript)) {
