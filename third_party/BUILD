@@ -126,7 +126,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.auto.value_auto-value",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.5.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.5.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -137,6 +137,14 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value-annotations/1.6.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.auto_auto-common",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.10:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.google.guava_guava"],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
@@ -174,7 +182,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.1-jre:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -269,6 +277,20 @@ maven_java_library(
         ":com.google.code.gson_gson",
         ":com.google.guava_guava",
         ":com.google.protobuf_protobuf-java",
+    ],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
+    name = "com.google.testing.compile_compile-testing",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/testing/compile/compile-testing/0.16:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.auto.value_auto-value",
+        ":com.google.auto_auto-common",
+        ":com.google.guava_guava",
+        ":com.google.truth_truth",
+        ":junit_junit",
     ],
 )
 

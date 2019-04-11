@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="compile-testing">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/testing/compile/compile-testing/0.16/compile-testing-0.16.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

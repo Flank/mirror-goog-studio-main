@@ -60,6 +60,11 @@ kotlin_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
+        # Note: This auto-value dependency is not actually used. Bundletool depends on an
+        # older version of auto-value which is then not copied into a maven_repo for building
+        # data binding's runtime libraries. This forces the newer version until bundletool
+        # can be updated once https://github.com/google/bundletool/pull/76 is released.
+        "//tools/base/third_party:com.google.auto.value_auto-value",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-core",
         "//tools/base/third_party:com.android.tools.build.jetifier_jetifier-processor",
         "//tools/base/third_party:com.android.tools.build_bundletool",
