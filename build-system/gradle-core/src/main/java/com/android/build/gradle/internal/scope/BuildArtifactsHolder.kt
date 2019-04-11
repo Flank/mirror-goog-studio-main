@@ -404,6 +404,31 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
+     * Sets a [Property] value to the final producer for the given artifact type.
+     *
+     * If there are more than one producer appending artifacts for the passed type, calling this
+     * method will generate an error and [getFinalProducts] should be used instead.
+     *
+     * The simplest way to use the mechanism is as follow :
+     * <pre>
+     *     abstract class MyTask: Task() {
+     *          val inputFile: RegularFileProperty
+     *     }
+     *
+     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
+     *          scope.artifacts.setTaskInputToFinalProduct(InternalArtifactTYpe.SOME_ID, it.inputFile)
+     *     }
+     * </pre>
+     *
+     * @param artifactType requested artifact type
+     * @param taskInputProperty the [Property] to set the final producer on.
+     */
+    fun <T: FileSystemLocation> setTaskInputToFinalProduct(artifactType: ArtifactType, taskInputProperty: Property<T>) {
+        val finalProduct = getFinalProduct<T>(artifactType)
+        taskInputProperty.set(finalProduct)
+    }
+
+    /**
      * See [getFinalProducts] API.
      *
      * On top of returning the [Provider] of [Directory] or [RegularFile], also returns a

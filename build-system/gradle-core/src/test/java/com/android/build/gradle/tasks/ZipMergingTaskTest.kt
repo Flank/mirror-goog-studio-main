@@ -50,9 +50,9 @@ class ZipMergingTaskTest {
         val output = File(temporaryFolder.newFolder(), "output.zip")
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
-        task.init(BuildableArtifactImpl(project.files(zip1)),
-                BuildableArtifactImpl(project.files(zip2)),
-                output)
+        task.libraryInputFile.set(zip1)
+        task.javaResInputFiles = BuildableArtifactImpl(project.files(zip2))
+        task.outputFile = output
         task.doTaskAction()
 
         assertThat(output).exists()
@@ -75,9 +75,9 @@ class ZipMergingTaskTest {
         val output = File(temporaryFolder.newFolder(), "output.zip")
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
-        task.init(BuildableArtifactImpl(project.files(zip1)),
-            BuildableArtifactImpl(project.files(zip2)),
-            output)
+        task.libraryInputFile.set(zip1)
+        task.javaResInputFiles= BuildableArtifactImpl(project.files(zip2))
+        task.outputFile = output
         task.doTaskAction()
 
         assertThat(output).exists()

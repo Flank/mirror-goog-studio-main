@@ -30,12 +30,14 @@ import com.android.builder.packaging.JarMerger
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -52,15 +54,14 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  * Bundle all library classes in a jar. Additional filters can be specified, in addition to ones
  * defined in [LibraryAarJarsTransform.getDefaultExcludes].
  */
-open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
     private lateinit var toIgnoreRegExps: Supplier<List<String>>
 
     @get:OutputFile
-    var output: Provider<RegularFile>? = null
-        private set
+    abstract val output: RegularFileProperty
 
     @get:Internal
     lateinit var packageName: Lazy<String>
@@ -119,8 +120,6 @@ open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecut
             }
         }
 
-        private lateinit var output: Provider<RegularFile>
-
         override val name: String =
             scope.getTaskName(
                 if (publishedType == PublishedConfigType.API_ELEMENTS)
@@ -131,29 +130,22 @@ open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecut
 
         override val type: Class<BundleLibraryClasses> = BundleLibraryClasses::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            output = if (publishedType == PublishedConfigType.API_ELEMENTS) {
-                variantScope.artifacts.createArtifactFile(
-                    InternalArtifactType.COMPILE_LIBRARY_CLASSES,
-                    BuildArtifactsHolder.OperationType.APPEND,
-                    taskName,
-                    FN_CLASSES_JAR
-                )
-            } else {
-                variantScope.artifacts.createArtifactFile(
-                    InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
-                    BuildArtifactsHolder.OperationType.APPEND,
-                    taskName,
-                    FN_CLASSES_JAR
-                )
-            }
+        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryClasses>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                if (publishedType == PublishedConfigType.API_ELEMENTS)
+                    InternalArtifactType.COMPILE_LIBRARY_CLASSES
+                else InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                taskProvider.map { it.output },
+                FN_CLASSES_JAR
+            )
         }
 
         override fun configure(task: BundleLibraryClasses) {
             super.configure(task)
 
-            task.output = output
             task.packageName = lazy { variantScope.variantConfiguration.packageFromManifest }
             task.classes = inputs
             // FIXME pass this as List<TextResources>

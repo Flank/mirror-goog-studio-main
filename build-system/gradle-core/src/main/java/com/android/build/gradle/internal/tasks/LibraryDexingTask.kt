@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.Workers.preferWorkers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
@@ -30,17 +28,17 @@ import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.Directory
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -51,17 +49,16 @@ import javax.inject.Inject
  * android test variant for library projects. Once http://b/115334911 is fixed, this can be removed.
  */
 @CacheableTask
-open class LibraryDexingTask @Inject constructor(
+abstract class LibraryDexingTask @Inject constructor(
     objectFactory: ObjectFactory,
     executor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade =
         preferWorkers(project.name, path, executor, MoreExecutors.newDirectExecutorService())
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var classes: BuildableArtifact
-        private set
+    abstract val classes: RegularFileProperty
 
     @get:OutputDirectory
     var output: Provider<Directory> = objectFactory.directoryProperty()
@@ -82,7 +79,7 @@ open class LibraryDexingTask @Inject constructor(
                 DexParams(
                     minSdkVersion,
                     errorFormatMode,
-                    classes.single(),
+                    classes.get().asFile,
                     output.get().asFile
                 )
             )
@@ -102,8 +99,7 @@ open class LibraryDexingTask @Inject constructor(
 
         override fun configure(task: LibraryDexingTask) {
             super.configure(task)
-            task.classes =
-                    scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_LIBRARY_CLASSES)
+            scope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES, task.classes)
             task.minSdkVersion = scope.minSdkVersion.featureLevel
             task.output = output
             task.errorFormatMode =

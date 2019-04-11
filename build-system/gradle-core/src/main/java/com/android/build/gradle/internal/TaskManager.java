@@ -666,11 +666,18 @@ public abstract class TaskManager {
             com.android.build.api.artifact.ArtifactType testedOutputType =
                     taskOutputSpec.getOutputType();
 
-            FileCollection testedCodeClasses =
-                    testedVariantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(testedOutputType)
-                            .get();
+            FileCollection testedCodeClasses;
+            if (testedVariantScope.getArtifacts().hasArtifact(testedOutputType)) {
+                testedCodeClasses =
+                        testedVariantScope
+                                .getArtifacts()
+                                .getFinalArtifactFiles(testedOutputType)
+                                .get();
+            } else {
+                Provider<FileSystemLocation> finalProduct =
+                        testedVariantScope.getArtifacts().getFinalProduct(testedOutputType);
+                testedCodeClasses = project.files(finalProduct);
+            }
 
             variantScope.getArtifacts().createBuildableArtifact(
                     InternalArtifactType.TESTED_CODE_CLASSES,
