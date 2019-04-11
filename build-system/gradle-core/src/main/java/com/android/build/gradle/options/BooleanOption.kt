@@ -80,7 +80,7 @@ enum class BooleanOption(
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", false),
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", false, Option.Status.STABLE),
     KEEP_SERVICES_BETWEEN_BUILDS("android.keepWorkerActionServicesBetweenBuilds", false),
-    USE_NON_FINAL_RES_IDS_IN_TESTS("android.androidTest.nonFinalResIds", false),
+    USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
     PRECOMPILE_REMOTE_RESOURCES("android.precompileRemoteResources", false),
 

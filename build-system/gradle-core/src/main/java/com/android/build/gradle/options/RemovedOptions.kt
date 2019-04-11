@@ -95,6 +95,10 @@ enum class RemovedOptions(
         "android.injectSdkMavenRepos",
         "The ability to inject the Android SDK maven repos is removed in AGP 3.5"
     ),
+    USE_NON_FINAL_RES_IDS_IN_TESTS(
+        "android.androidTest.nonFinalResIds",
+        "This property has been replaced by android.nonFinalResIds"
+    ),
     ;
 
     override val status: Option.Status

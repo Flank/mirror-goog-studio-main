@@ -552,9 +552,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(workerExecuto
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
-            if (variantScope.type.isForTesting) {
-                task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS_IN_TESTS)
-            }
+            task.useFinalIds = !projectOptions.get(BooleanOption.USE_NON_FINAL_RES_IDS)
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
