@@ -30,6 +30,7 @@ java_library(
 java_binary(
     name = "combine_notices",
     main_class = "com.android.tools.utils.CombineNotices",
+    visibility = ["//visibility:public"],
     runtime_deps = [":combine_notices_lib"],
 )
 

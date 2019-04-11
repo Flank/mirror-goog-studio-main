@@ -240,13 +240,44 @@ def maven_java_library(
         export_pom = explicit_target(export_artifact) + "_maven" if export_artifact else None,
     )
 
+def _import_with_license_impl(ctx):
+    names = []
+    for jar in ctx.attr.dep[DefaultInfo].files:
+        name = jar.basename
+        if jar.extension:
+            name = jar.basename[:-len(jar.extension) - 1]
+        names.append(name)
+    return struct(
+        providers = [ctx.attr.dep[JavaInfo], ctx.attr.dep[DefaultInfo]],
+        java = ctx.attr.dep.java,
+        notice = struct(
+            file = ctx.attr.notice,
+            name = ",".join(names),
+        ),
+    )
+
+import_with_license = rule(
+    implementation = _import_with_license_impl,
+    attrs = {
+        "dep": attr.label(),
+        "notice": attr.label(allow_files = True),
+    },
+)
+
 # A java_import rule extended with pom and parent attributes for maven libraries.
 def maven_java_import(name, pom, classifiers = [], visibility = None, jars = [], **kwargs):
     native.java_import(
-        name = name,
-        visibility = visibility,
+        name = name + "_import",
         jars = jars,
         **kwargs
+    )
+
+    import_with_license(
+        name = name,
+        visibility = visibility,
+        dep = name + "_import",
+        notice = "NOTICE",
+        tags = ["require_license"],
     )
 
     classified_libraries = []

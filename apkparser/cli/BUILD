@@ -1,4 +1,5 @@
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 
 java_library(
     name = "tools.analyzer-cli",
@@ -31,4 +32,11 @@ coverage_java_test(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
+)
+
+sdk_java_binary(
+    name = "apkanalyzer",
+    main_class = "com.android.tools.apk.analyzer.ApkAnalyzerCli",
+    visibility = ["//visibility:public"],
+    runtime_deps = ["tools.analyzer-cli"],
 )

@@ -52,13 +52,13 @@ public class CombineNoticesTest {
         Configuration config = Configuration.unix();
         config = config.toBuilder().setWorkingDirectory("/").setAttributeViews("posix").build();
         fileSystem = Jimfs.newFileSystem(config);
-        input1 = fileSystem.getPath("/inDir1/foo/input1");
+        input1 = fileSystem.getPath("/inDir1/foo.NOTICE");
         Files.createDirectories(input1.getParent());
         Files.write(input1, licenseText1.getBytes(), CREATE);
-        input2 = fileSystem.getPath("/inDir2/bar/input2");
+        input2 = fileSystem.getPath("/inDir2/bar.NOTICE");
         Files.createDirectories(input2.getParent());
         Files.write(input2, licenseText2.getBytes(), CREATE);
-        input2a = fileSystem.getPath("/inDir2a/baz/input2a");
+        input2a = fileSystem.getPath("/inDir2a/baz.NOTICE");
         Files.createDirectories(input2a.getParent());
         Files.write(input2a, licenseText2.getBytes(), CREATE);
         output = fileSystem.getPath("/outDir/subOutDir/output");
@@ -95,15 +95,15 @@ public class CombineNoticesTest {
                 outputString.contains(
                         "============================================================\n"
                                 + "Notices for file(s):\n"
-                                + "bar\n"
-                                + "baz\n"
+                                + "bar.NOTICE\n"
+                                + "baz.NOTICE\n"
                                 + "------------------------------------------------------------\n"
                                 + licenseText2));
         assertTrue(
                 outputString.contains(
                         "============================================================\n"
                                 + "Notices for file(s):\n"
-                                + "foo\n"
+                                + "foo.NOTICE\n"
                                 + "------------------------------------------------------------\n"
                                 + licenseText1));
     }

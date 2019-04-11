@@ -64,13 +64,14 @@ expand_template = rule(
     },
 )
 
-def tool_start_script(name, platform, command_name, main_class_name, jars, default_jvm_opts):
+def tool_start_script(name, platform, command_name, main_class_name, jars, default_jvm_opts, visibility):
     is_windows = platform == "win"
     sep = ";" if is_windows else ":"
     lib_path = "%APP_HOME%\\lib\\" if is_windows else "$APP_HOME/lib/"
     jar_names = [jar[jar.find(":") + 1:] for jar in jars]
     expand_template(
         name = name,
+        visibility = visibility,
         template = "//tools/base/bazel/sdk/resources:" + platform + "_start_script",
         out = platform + "/" + command_name + (".bat" if is_windows else ""),
         substitutions = {

@@ -96,7 +96,7 @@ public class CombineNotices {
                 writer.write("============================================================\n");
                 writer.write("Notices for file(s):\n");
                 for (Path file : digestToFiles.get(digest)) {
-                    writer.write(file.getParent().getFileName().toString() + "\n");
+                    writer.write(file.getFileName().toString() + "\n");
                 }
                 writer.write("------------------------------------------------------------\n");
                 writer.write(digestToLicense.get(digest));
