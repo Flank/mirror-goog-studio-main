@@ -139,6 +139,61 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertArrayEquals(expected, actual.toArray(new String[] {}));
     }
 
+    @Test
+    public void testSkipInstall() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", "base.apk", file);
+        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        device.getShell().clearHistory();
+
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+
+        assertInstalled("com.example.simpleapp", "base.apk", file);
+
+        if (device.getApi() < 24) {
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+        } else {
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
+                    "am force-stop com.example.simpleapp");
+            assertMetrics(runner.getMetrics(), "INSTALL:SKIPPED_INSTALL");
+        }
+    }
+
     public File prepareInstaller() throws IOException {
         File root = TestUtils.getWorkspaceRoot();
         String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";

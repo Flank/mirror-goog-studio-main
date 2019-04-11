@@ -50,6 +50,7 @@ struct Parameters {
   const char* version = nullptr;
   const char* shell = nullptr;
   const char* shell_arg = nullptr;
+  const char* root_directory = nullptr;
   int consumed = 0;
 };
 
@@ -70,6 +71,8 @@ std::string GetStringUsage(const char* invoked_path) {
          << std::endl
          << "  -shell-arg=X : An argument to the custom shell before the "
             "command (to mock android)."
+         << std::endl
+         << "  -root=X : The root directory to use (to mock android)."
          << std::endl
          << "  -version=X : Program will fail if version != X." << std::endl
          << "Commands available:" << std::endl
@@ -97,6 +100,8 @@ bool ParseParameters(int argc, char** argv, Parameters* parameters) {
       parameters->shell = strtok(nullptr, "=");
     } else if (!strncmp("-version", argv[index], 8)) {
       parameters->version = strtok(nullptr, "=");
+    } else if (!strncmp("-root", argv[index], 5)) {
+      parameters->root_directory = strtok(nullptr, "=");
     } else {
       std::cerr << "environment parameter unknown:" << argv[index] << std::endl;
       return false;
@@ -188,6 +193,9 @@ int main(int argc, char** argv) {
   RedirectExecutor redirect(shell, shell_arg, executor);
   if (parameters.shell != nullptr && parameters.shell_arg != nullptr) {
     workspace.SetExecutor(&redirect);
+  }
+  if (parameters.root_directory != nullptr) {
+    workspace.SetRoot(parameters.root_directory);
   }
 
   // Verify that this program is the version the called expected.

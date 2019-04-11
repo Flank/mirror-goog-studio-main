@@ -46,6 +46,7 @@ public class ExternalCommand extends ShellCommand {
             List<String> command = new ArrayList<>();
             File exe = new File(device.getStorage(), executable);
             command.add(exe.getAbsolutePath());
+            command.add("-root=" + device.getStorage().getAbsolutePath());
             command.add("-shell=" + device.getShellBridge().getAbsolutePath());
             command.add("-shell-arg=" + serverSocket.getLocalPort());
             command.addAll(Arrays.asList(args));

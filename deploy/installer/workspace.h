@@ -39,6 +39,10 @@ class Workspace {
 
   bool Valid() const { return base_ != ""; }
 
+  const std::string GetRoot() const noexcept { return root_; }
+
+  void SetRoot(const std::string& root) { root_ = root; }
+
   const std::string GetBase() const noexcept { return base_; }
 
   const std::string GetTmpFolder() const noexcept { return tmp_; }
@@ -58,6 +62,7 @@ class Workspace {
 
   std::string base_;
   std::string tmp_;
+  std::string root_;
 
   Executor* executor_;
 

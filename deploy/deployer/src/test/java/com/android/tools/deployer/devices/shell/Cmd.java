@@ -127,7 +127,7 @@ public class Cmd extends ShellCommand {
                             }
                             String path = device.getAppPath(pkg);
                             if (path != null) {
-                                stdout.println("package:/" + path + "/base.apk");
+                                stdout.println("package:" + path + "/base.apk");
                                 return true;
                             } else {
                                 return false;

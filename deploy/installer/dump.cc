@@ -85,7 +85,7 @@ bool DumpCommand::GetApks(const std::string& package_name,
   // Extract all apks.
   for (std::string& apk_path : apks_path) {
     Phase p2("processing APK");
-    ApkArchive archive(apk_path);
+    ApkArchive archive(workspace_.GetRoot() + apk_path);
     Dump dump = archive.ExtractMetadata();
 
     proto::ApkDump* apk_dump = package_dump->add_apks();
