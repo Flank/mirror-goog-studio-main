@@ -64,9 +64,9 @@ class AtraceManager {
   // Only one instance of Atrace should be running at a time.
   // TODO: Investigate if running atrace with two different application
   // names keeps the profiling unique.
-  bool StartProfiling(const std::string &app_name, int sampling_interval_us,
-                      int buffer_size_in_mb, int *acquired_buffer_size_kb,
-                      std::string *trace_path, std::string *error);
+  bool StartProfiling(const std::string &app_name, int buffer_size_in_mb,
+                      int *acquired_buffer_size_kb, std::string *trace_path,
+                      std::string *error);
   profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
       const std::string &app_name, bool need_result, std::string *error);
   void Shutdown();

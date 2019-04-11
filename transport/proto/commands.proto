@@ -35,8 +35,16 @@ message Command {
     BEGIN_SESSION = 100;
     END_SESSION = 101;
 
+    // Network Profiler Prefix = 200
+
     // Cpu Profiler Prefix = 300
+    START_CPU_TRACE = 301;
+    STOP_CPU_TRACE = 302;
     GET_CPU_CORE_CONFIG = 303;
+
+    // Memory Profiler Prefix = 400
+    // Energy Profiler Prefix = 500
+    // Event Profiler Prefix = 600
 
     // Sample echo Command
     ECHO = 1000;
@@ -64,8 +72,17 @@ message Command {
     BeginSession begin_session = 100;
     EndSession end_session = 101;
 
+    // Network Profiler Prefix = 200
+
     // Cpu Profiler Prefix = 300
+    StartCpuTrace start_cpu_trace = 301;
+    StopCpuTrace stop_cpu_trace = 302;
     GetCpuCoreConfig get_cpu_core_config = 303;
+
+    // Memory Profiler Prefix = 400
+    // Energy Profiler Prefix = 500
+    // Event Profiler Prefix = 600
+
 
     // Sample Echo Command starts at 1000;
     echo.EchoData echo_data = 1000;

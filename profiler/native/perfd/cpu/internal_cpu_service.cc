@@ -46,20 +46,21 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     ProcessManager process_manager;
     SteadyClock clock;
 
-    capture.app_pkg_name = process_manager.GetCmdlineForPid(pid);
     capture.trace_id = clock.GetCurrentTime();
     capture.trace_path = request->start().arg_trace_path();
     capture.start_timestamp = request->timestamp();
     capture.end_timestamp = -1;
-    capture.configuration.set_trace_type(CpuTraceType::ART);
-    capture.configuration.set_trace_mode(CpuTraceMode::INSTRUMENTED);
-    capture.initiation_type = TraceInitiationType::INITIATED_BY_API;
+    capture.configuration.set_app_name(process_manager.GetCmdlineForPid(pid));
+    capture.configuration.set_initiation_type(
+        TraceInitiationType::INITIATED_BY_API);
+    auto* user_options = capture.configuration.mutable_user_options();
+    user_options->set_trace_type(CpuTraceType::ART);
+    user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
     if (!cache_.AddProfilingStart(pid, capture)) {
       std::cout << " START request ignored (no app cache)" << std::endl;
       return Status::OK;
     }
 
-    response->set_trace_id(capture.trace_id);
     response->set_start_operation_allowed(true);
     std::cout << " START " << request->start().method_name() << " "
               << request->start().method_signature() << " '"
@@ -69,20 +70,17 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     const ProfilingApp* ongoing = cache_.GetOngoingCapture(pid);
     if (ongoing == nullptr) {
       Log::E("No running trace when Debug.stopMethodTracing() is called");
-    } else if (ongoing->initiation_type !=
+    } else if (ongoing->configuration.initiation_type() !=
                TraceInitiationType::INITIATED_BY_API) {
       Log::E(
           "Debug.stopMethodTracing() is called but the running trace is not "
           "initiated by startMetghodTracing* APIs");
-    } else if (ongoing->trace_id != request->stop().trace_id()) {
-      Log::E(
-          "Inconsistent Studio data when Debug.stopMethodTracing() is called");
     } else {
       cache_.AddProfilingStop(pid);
-      cache_.AddTraceContent(request->pid(), request->stop().trace_id(),
+      cache_.AddTraceContent(request->pid(), ongoing->trace_id,
                              request->stop().trace_content());
     }
-    std::cout << " STOP trace_id=" << request->stop().trace_id()
+    std::cout << " STOP trace_id=" << ongoing->trace_id
               << " size=" << request->stop().trace_content().size()
               << std::endl;
   }

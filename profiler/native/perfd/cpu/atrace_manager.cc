@@ -62,7 +62,6 @@ AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
       atrace_(std::move(atrace)) {}
 
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
-                                   int sampling_interval_us,
                                    int buffer_size_in_mb,
                                    int *acquired_buffer_size_kb,
                                    std::string *trace_path,

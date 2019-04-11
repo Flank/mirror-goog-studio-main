@@ -15,6 +15,7 @@
  */
 #include <jni.h>
 #include <unistd.h>
+#include <string>
 
 #include "agent/agent.h"
 #include "agent/jni_wrappers.h"
@@ -29,9 +30,17 @@ using profiler::Agent;
 using profiler::JStringWrapper;
 using profiler::Log;
 using profiler::SteadyClock;
+using profiler::proto::AgentService;
+using profiler::proto::Command;
+using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
+using profiler::proto::CpuTraceType;
+using profiler::proto::EmptyResponse;
 using profiler::proto::InternalCpuService;
+using profiler::proto::SendBytesRequest;
+using profiler::proto::SendCommandRequest;
+using profiler::proto::TraceInitiationType;
 using std::string;
 
 namespace {
@@ -66,24 +75,28 @@ class TraceMonitor {
 
  private:
   // Use TraceMonitor::Instance() to initialize.
-  explicit TraceMonitor() { Reset(); }
+  explicit TraceMonitor() {
+    profiler::ProcessManager process_manager;
+    app_name_ = process_manager.GetCmdlineForPid(getpid());
+    Reset();
+  }
   ~TraceMonitor() = delete;  // TODO: Support destroying the agent
 
   void Reset() {
     api_initiated_trace_in_progress_ = false;
-    ongoing_trace_id_ = -1;
-    unconfirmed_start_request_.Clear();
+    ongoing_start_request_.Clear();
     confirmed_trace_path_.clear();
   }
 
+  // Helper method to read the trace content located at |trace_path| into
+  // |trace_content|. Returns true if successful.
+  bool ReadTraceContent(const string& trace_path, string* trace_content);
+
   SteadyClock clock_;
-  // Absolute path of the file being created and written by the app.
+  string app_name_;
   bool api_initiated_trace_in_progress_;
-  int64_t ongoing_trace_id_ = -1;
   // Represents argument values as seen from the last start tracing API call.
-  // If the call is invalid (e.g., starting trace when there is already an
-  // ongoing one), those fields will be thrown away.
-  CpuTraceOperationRequest unconfirmed_start_request_;
+  CpuTraceOperationRequest ongoing_start_request_;
   // Absolute path to the trace file with the correct extension. It is return
   // value of Debug.fixTracePath().
   string confirmed_trace_path_;
@@ -91,98 +104,157 @@ class TraceMonitor {
 
 void TraceMonitor::RecordStartArguments(
     const CpuTraceOperationRequest& input_request) {
-  unconfirmed_start_request_ = input_request;
+  ongoing_start_request_ = input_request;
 }
 
 void TraceMonitor::CheckFixTracePathCall(int32_t tid,
                                          const string& path_as_seen) {
-  if (tid != unconfirmed_start_request_.thread_id()) {
+  // This is a check for an Android framework assumption that fixTracePath is
+  // called on the same thread as startMethodTracing.
+  if (tid != ongoing_start_request_.thread_id()) {
     Log::E(
         "startMethodTracing called from thread %d but fixTracePath enters from "
         "thread %d",
-        unconfirmed_start_request_.thread_id(), tid);
+        ongoing_start_request_.thread_id(), tid);
   }
-  if (path_as_seen != unconfirmed_start_request_.start().arg_trace_path()) {
+  if (path_as_seen != ongoing_start_request_.start().arg_trace_path()) {
     Log::E(
         "startMethodTracing called with '%s' but fixTracePath called with '%s'",
-        unconfirmed_start_request_.start().arg_trace_path().c_str(),
+        ongoing_start_request_.start().arg_trace_path().c_str(),
         path_as_seen.c_str());
   }
 }
 
 void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
-  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+  if (api_initiated_trace_in_progress_) {
+    Log::W(
+        "API-initiated tracing is already in progress; the call is ignored.");
   }
 
-  if (tid != unconfirmed_start_request_.thread_id()) {
+  // This is a check for an Android framework assumption that fixTracePath is
+  // called on the same thread as startMethodTracing.
+  if (tid != ongoing_start_request_.thread_id()) {
     Log::E(
         "startMethodTracing called from thread %d but fixTracePath exits from "
         "thread %d",
-        unconfirmed_start_request_.thread_id(), tid);
+        ongoing_start_request_.thread_id(), tid);
   }
 
   int64_t timestamp = clock_.GetCurrentTime();
-  Agent::Instance().SubmitCpuTasks({[this, fixed_path, timestamp](
-                                        InternalCpuService::Stub& stub,
-                                        ClientContext& ctx) {
-    int pid = getpid();
-    CpuTraceOperationRequest request;
-    request.CopyFrom(unconfirmed_start_request_);
-    request.set_pid(pid);
-    request.set_timestamp(timestamp);
-    CpuTraceOperationResponse response;
-    Status status = stub.SendTraceEvent(&ctx, request, &response);
-    if (status.ok()) {
-      if (response.start_operation_allowed()) {
-        api_initiated_trace_in_progress_ = true;
-        ongoing_trace_id_ = response.trace_id();
-        confirmed_trace_path_ = fixed_path;
-      } else {
-        // This start operation isn't allowed. Ignore it.
-        unconfirmed_start_request_.Clear();
-        Log::W(
-            "Debug.startMethodTracing(String) called while tracing is already "
-            "in progress; the call is ignored.");
-      }
-    } else {
-      // Not receiving a response from perfd. Since the profiling state is
-      // unknown, ignore this start operation.
-    }
-    return status;
-  }});
+  api_initiated_trace_in_progress_ = true;
+  confirmed_trace_path_ = fixed_path;
+
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
+    Agent::Instance().SubmitAgentTasks(
+        {[this, timestamp](AgentService::Stub& stub, ClientContext& ctx) {
+          SendCommandRequest request;
+          auto* command = request.mutable_command();
+          command->set_type(Command::START_CPU_TRACE);
+          command->set_pid(getpid());
+
+          auto* start = command->mutable_start_cpu_trace();
+          auto* metadata = start->mutable_api_start_metadata();
+          metadata->set_start_timestamp(timestamp);
+
+          auto* config = start->mutable_configuration();
+          config->set_app_name(app_name_);
+          config->set_initiation_type(TraceInitiationType::INITIATED_BY_API);
+
+          auto* user_option = config->mutable_user_options();
+          user_option->set_trace_type(CpuTraceType::ART);
+          user_option->set_trace_mode(CpuTraceMode::INSTRUMENTED);
+
+          EmptyResponse response;
+          return stub.SendCommand(&ctx, request, &response);
+        }});
+  } else {
+    Agent::Instance().SubmitCpuTasks(
+        {[this, timestamp](InternalCpuService::Stub& stub, ClientContext& ctx) {
+          int pid = getpid();
+          CpuTraceOperationRequest request;
+          request.CopyFrom(ongoing_start_request_);
+          request.set_pid(pid);
+          request.set_timestamp(timestamp);
+          CpuTraceOperationResponse response;
+          Status status = stub.SendTraceEvent(&ctx, request, &response);
+          if (status.ok()) {
+            if (!response.start_operation_allowed()) {
+              // This start operation isn't allowed. Ignore it.
+              Reset();
+              Log::W(
+                  "Debug.startMethodTracing(String) called while tracing is "
+                  "already in progress; the call is ignored.");
+            }
+          } else {
+            // Not receiving a response from daemon. This task will be retried
+            // so no-op here.
+          }
+          return status;
+        }});
+  }
+}
+
+bool TraceMonitor::ReadTraceContent(const string& trace_path,
+                                    string* trace_content) {
+  if (trace_path.empty()) {
+    Log::E(
+        "Trace path not processed by fixTracePath() when "
+        "stopMethodTracing() is called");
+    return false;
+  }
+
+  profiler::FileReader::Read(trace_path, trace_content);
+  return true;
 }
 
 void TraceMonitor::SubmitStopEvent(int tid) {
-  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
-  }
-
   if (!api_initiated_trace_in_progress_) return;
+
   int64_t timestamp = clock_.GetCurrentTime();
-  Agent::Instance().SubmitCpuTasks(
-      {[this, tid, timestamp](InternalCpuService::Stub& stub,
-                              ClientContext& ctx) {
-        CpuTraceOperationRequest request;
-        int pid = getpid();
-        request.set_pid(pid);
-        request.set_thread_id(tid);
-        request.set_timestamp(timestamp);
-        string trace_content;
-        if (confirmed_trace_path_.empty()) {
-          Log::E(
-              "Trace path not processed by fixTracePath() when "
-              "stopMethodTracing() is called");
-        } else {
-          profiler::FileReader::Read(confirmed_trace_path_, &trace_content);
-        }
-        request.mutable_stop()->set_trace_id(ongoing_trace_id_);
-        request.mutable_stop()->set_trace_content(trace_content);
-        CpuTraceOperationResponse response;
-        Status status = stub.SendTraceEvent(&ctx, request, &response);
-        Reset();
-        return status;
-      }});
+  int32_t pid = getpid();
+  string trace_content;
+  ReadTraceContent(confirmed_trace_path_, &trace_content);
+  // We are done with the cached data. Reset so that the next API tracing call
+  // proceeds as normal while the tasks below run asynchonrously.
+  Reset();
+
+  if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
+    Agent::Instance().SubmitAgentTasks(
+        {[this, pid, timestamp, trace_content](AgentService::Stub& stub,
+                                               ClientContext& ctx) mutable {
+          SendCommandRequest request;
+          auto* command = request.mutable_command();
+          command->set_type(Command::STOP_CPU_TRACE);
+          command->set_pid(pid);
+          auto* stop = command->mutable_stop_cpu_trace();
+          auto* metadata = stop->mutable_api_stop_metadata();
+          metadata->set_stop_timestamp(timestamp);
+          metadata->set_trace_content(trace_content);
+
+          auto* config = stop->mutable_configuration();
+          config->set_app_name(app_name_);
+          config->set_initiation_type(TraceInitiationType::INITIATED_BY_API);
+
+          auto* user_option = config->mutable_user_options();
+          user_option->set_trace_type(CpuTraceType::ART);
+          user_option->set_trace_mode(CpuTraceMode::INSTRUMENTED);
+
+          EmptyResponse response;
+          return stub.SendCommand(&ctx, request, &response);
+        }});
+  } else {
+    Agent::Instance().SubmitCpuTasks(
+        {[pid, tid, timestamp, trace_content](InternalCpuService::Stub& stub,
+                                              ClientContext& ctx) {
+          CpuTraceOperationRequest request;
+          request.set_pid(pid);
+          request.set_thread_id(tid);
+          request.set_timestamp(timestamp);
+          request.mutable_stop()->set_trace_content(trace_content);
+          CpuTraceOperationResponse response;
+          return stub.SendTraceEvent(&ctx, request, &response);
+        }});
+  }
 }
 
 }  // namespace

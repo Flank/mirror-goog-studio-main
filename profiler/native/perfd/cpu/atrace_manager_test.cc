@@ -71,7 +71,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
                         true);
   EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
   int dump_count = 2;
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 8,
                                      &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_TRUE(manager.IsProfiling());
@@ -98,9 +98,9 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
     EnqueueExpectedParams(test_data, manager, "1", "--async_dump", "-b 8192",
                           true);
     EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
-    EXPECT_TRUE(manager.StartProfiling(
-        test_data.app_name, 1000, 8, &allocated_buffer_size_kb,
-        &test_data.trace_path, &test_data.error));
+    EXPECT_TRUE(
+        manager.StartProfiling(test_data.app_name, 8, &allocated_buffer_size_kb,
+                               &test_data.trace_path, &test_data.error));
     EXPECT_TRUE(manager.IsProfiling());
     test_data.atrace->WaitUntilParamsSize(1);
     EXPECT_EQ(manager.GetDumpCount(), dump_count);
@@ -122,13 +122,13 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
   EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 8192",
                         true);
   EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 8,
                                      &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   test_data.atrace->WaitUntilParamsSize(1);
   EXPECT_EQ(manager.GetDumpCount(), 1);
   EXPECT_TRUE(manager.IsProfiling());
-  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 8,
                                       &allocated_buffer_size_kb,
                                       &test_data.trace_path, &test_data.error));
   EXPECT_EQ(manager.GetDumpCount(), 1);
@@ -156,12 +156,12 @@ TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
   EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
   EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
   EnqueueExpectedParams(test_data, manager, "0", "--async_stop", "", true);
-  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 8,
                                       &allocated_buffer_size_kb,
                                       &test_data.trace_path, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Failed to run atrace start."));
   test_data.error.clear();
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 8,
                                      &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_EQ(CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP,
@@ -189,7 +189,7 @@ TEST(AtraceManagerTest, BufferAutoDownSamples) {
   EnqueueExpectedParams(test_data, manager, "0", "--async_dump", "-b 4096",
                         true);
   EnqueueExpectedParams(test_data, manager, "1", "--async_stop", "", false);
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 24,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 24,
                                      &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_EQ(allocated_buffer_size_kb, 4096);
@@ -229,7 +229,7 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   EnqueueExpectedParams(test_data, manager, "1", "--async_dump", "-b 8192",
                         true);
   EnqueueExpectedParams(test_data, manager, "2", "--async_stop", "", false);
-  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 1000, 8,
+  EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 8,
                                      &allocated_buffer_size_kb,
                                      &test_data.trace_path, &test_data.error));
   EXPECT_EQ(allocated_buffer_size_kb, 8192);
@@ -255,7 +255,7 @@ TEST(AtraceManagerTest, BufferSizeTooSmallReturnsError) {
                         std::unique_ptr<Atrace>(test_data.atrace));
   // Async start fails, so the manager retries
   EnqueueExpectedParams(test_data, manager, "", "--async_start", "-b 0", true);
-  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 1000, 0,
+  EXPECT_FALSE(manager.StartProfiling(test_data.app_name, 0,
                                       &allocated_buffer_size_kb,
                                       &test_data.trace_path, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Requested buffer size is too small"));

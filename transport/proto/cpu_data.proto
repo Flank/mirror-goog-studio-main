@@ -132,6 +132,67 @@ message CpuTraceInfo {
   repeated int32 tids = 8;
 }
 
+message StartCpuTrace {
+  // Agent is responsible for providing these additional info for API-
+  // initiated tracing.
+  message ApiStartTracingMetaData {
+    int64 start_timestamp = 1;
+  }
+  CpuTraceConfiguration configuration = 1;
+  // Set only if configuration's initiation_type is |INITIATED_BY_API|.
+  ApiStartTracingMetaData api_start_metadata = 2;
+}
+
+message StopCpuTrace {
+  // Agent is responsible for providing these additional info for API-
+  // initiated tracing.
+  message ApiStopTracingMetaData {
+    int64 stop_timestamp = 1;
+    // The raw bytes of the trace. The daemon is responsible for storing
+    // this in the generic cache that can be referenced via the trace's id.
+    string trace_content = 2;
+  }
+  CpuTraceConfiguration configuration = 1;
+    // Set only if configuration's initiation_type is |INITIATED_BY_API|.
+  ApiStopTracingMetaData api_stop_metadata = 2;
+}
+
+message CpuTraceConfiguration {
+  message UserOptions {
+    // Name of the configuration. For Studio-side display only.
+    string name = 1;
+
+    CpuTraceMode trace_mode = 2;
+
+    CpuTraceType trace_type = 3;
+
+    // Whether to disable live allocation tracking during tracing.
+    // This is primarily used to reduce app performance overhead from live
+    // allocation tracking. For Studio-side only.
+    bool disable_live_allocation = 4;
+
+    // When using ATrace/Perfetto, the size of the buffer that holds tracing data.
+    int32 buffer_size_in_mb = 5;
+
+    // When using sampling, the sampling interval in microseconds.
+    int32 sampling_interval_us = 6;
+  }
+
+  UserOptions user_options = 1;
+
+  // The name of the app to be traced. Most if not all trace modes supports the
+  // app_name as the input instead pid. In the case of startup profiling, we don't
+  // know the pid anyway, so we use the app's name for all scenarios instead.
+  string app_name = 2;
+
+  TraceInitiationType initiation_type = 3;
+
+  // ABI CPU architecture of the simpleperf/perfetto binary to use. This
+  // should match the arch of the process and should be one the
+  // values defined by SdkConstants.CPU_ARCH_*, e.g. 'arm', 'arm64', 'x86'.
+  string abi_cpu_arch = 4;
+}
+
 // Data for the CpuCoreConfig command.
 message CpuCoreConfigData {
   repeated CpuCoreConfig core_configs = 1;

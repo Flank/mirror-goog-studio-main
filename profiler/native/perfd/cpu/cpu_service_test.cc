@@ -112,10 +112,11 @@ struct CpuServiceTest : testing::Test {
     CpuProfilingAppStartRequest start_request;
     start_request.mutable_session()->set_session_id(kSessionId);
     start_request.mutable_session()->set_pid(kPid);
-    start_request.mutable_configuration()->set_trace_mode(
-        CpuTraceMode::SAMPLED);
-    start_request.mutable_configuration()->set_trace_type(CpuTraceType::ATRACE);
-    start_request.mutable_configuration()->set_buffer_size_in_mb(8);
+    auto user_options =
+        start_request.mutable_configuration()->mutable_user_options();
+    user_options->set_trace_mode(CpuTraceMode::SAMPLED);
+    user_options->set_trace_type(CpuTraceType::ATRACE);
+    user_options->set_buffer_size_in_mb(8);
     CpuProfilingAppStartResponse start_response;
 
     // Expect a success result.
@@ -172,9 +173,10 @@ TEST_F(CpuServiceTest, StopSimpleperfTraceWhenPerfdTerminated) {
   CpuProfilingAppStartRequest start_request;
   start_request.mutable_session()->set_session_id(kSessionId);
   start_request.mutable_session()->set_pid(kPid);
-  start_request.mutable_configuration()->set_trace_mode(CpuTraceMode::SAMPLED);
-  start_request.mutable_configuration()->set_trace_type(
-      CpuTraceType::SIMPLEPERF);
+  auto* user_options =
+      start_request.mutable_configuration()->mutable_user_options();
+  user_options->set_trace_mode(CpuTraceMode::SAMPLED);
+  user_options->set_trace_type(CpuTraceType::SIMPLEPERF);
   CpuProfilingAppStartResponse start_response;
   cpu_service->StartProfilingApp(&context, &start_request, &start_response);
   // Now, verify that no command has been issued to kill simpleperf.
@@ -229,8 +231,10 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
   CpuProfilingAppStartRequest start_request;
   start_request.mutable_session()->set_session_id(kSessionId);
   start_request.mutable_session()->set_pid(kPid);
-  start_request.mutable_configuration()->set_trace_mode(CpuTraceMode::SAMPLED);
-  start_request.mutable_configuration()->set_trace_type(CpuTraceType::ART);
+  auto* user_options =
+      start_request.mutable_configuration()->mutable_user_options();
+  user_options->set_trace_mode(CpuTraceMode::SAMPLED);
+  user_options->set_trace_type(CpuTraceType::ART);
   CpuProfilingAppStartResponse start_response;
   cpu_service.StartProfilingApp(&context, &start_request, &start_response);
   EXPECT_THAT(cmd_1, StartsWith(kAmExecutable));

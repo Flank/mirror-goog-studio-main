@@ -152,10 +152,8 @@ message CpuStartResponse {
 }
 
 message StartupProfilingRequest {
-  string app_package = 1;
-  int64 device_id = 2;
-  CpuProfilerConfiguration configuration = 3;
-  string abi_cpu_arch = 4;
+  int64 device_id = 1;
+  CpuTraceConfiguration configuration = 2;
 }
 
 message StartupProfilingResponse {
@@ -189,12 +187,7 @@ message CpuStopResponse {
 // INSTRUMENTED is support only when ART is the profiler.
 message CpuProfilingAppStartRequest {
   Session session = 1;
-  CpuProfilerConfiguration configuration = 2;
-  // ABI CPU architecture of the app to be profiled. It should be one the
-  // values defined by SdkConstants.CPU_ARCH_*, e.g. 'arm', 'arm64', 'x86'.
-  // This field is required to invoke the correct simpleperf binary; not used
-  // by other profiling technologies.
-  string abi_cpu_arch = 3;
+  CpuTraceConfiguration configuration = 2;
 }
 
 // Returns the status and absolute path location (on device) where the trace
@@ -209,21 +202,6 @@ message CpuProfilingAppStartResponse {
   string error_message = 2;
   // Buffer size (in KB) acquired by Atrace trace configs.
   int32 buffer_size_acquired_kb = 3;
-}
-
-message CpuProfilerConfiguration {
-  // Name of the configuration. For Studio-side display only.
-  string name = 1;
-  CpuTraceMode trace_mode = 2;
-  CpuTraceType trace_type = 3;
-  // When using ART, the size of the in-memory buffer that holds tracing data.
-  int32 buffer_size_in_mb = 4;
-  // When using sampling, the sampling interval in microseconds.
-  int32 sampling_interval_us = 5;
-  // Whether to disable live allocation tracking during CPU recording.
-  // This is primarily used to reduce app performance overhead from live
-  // allocation tracking. For Studio-side only.
-  bool disable_live_allocation = 6;
 }
 
 // Request profiling of app (identified by its |session|) to stop.
@@ -268,15 +246,11 @@ message ProfilingStateResponse {
   // StartProfilingApp call that's successful, and a subsequent StopProfilingApp
   // call hasn't happened.
   bool being_profiled = 1;
-  CpuProfilerConfiguration configuration = 2;
+  CpuTraceConfiguration configuration = 2;
   // The timestamp when the profiling started if the app is being profiled.
   int64 start_timestamp = 3;
   // The timestamp when the profiling state was checked.
   int64 check_timestamp = 4;
-  TraceInitiationType initiation_type = 5;
-  // Whether the app in the request is being profiled by a startup profiling.
-  // TODO: Remove this field. Use |initiation_type|.
-  bool is_startup_profiling = 6;
 }
 
 message CpuCoreConfigRequest {
