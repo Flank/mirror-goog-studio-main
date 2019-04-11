@@ -114,8 +114,7 @@ public class RGeneration {
          * symbol table.
          */
         for (String pkg : new HashSet<>(toWrite.keySet())) {
-            SymbolTable st = toWrite.get(pkg);
-            st = allSymbols.filter(st).rename(st.getTablePackage());
+            SymbolTable st = toWrite.get(pkg).withValuesFrom(allSymbols);
             toWrite.put(pkg, st);
 
             /*

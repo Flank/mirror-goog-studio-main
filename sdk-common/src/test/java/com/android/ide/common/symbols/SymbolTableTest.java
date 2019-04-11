@@ -331,4 +331,59 @@ public class SymbolTableTest {
         assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s3_android:color")).isTrue();
         assertThat(table.containsSymbol(ResourceType.STYLEABLE, "s3_android_name")).isFalse();
     }
+
+    @Test
+    public void testWithValuesFrom() {
+        SymbolTable table =
+                SymbolTable.builder()
+                        .add(createSymbol("string", "s1", "int", "0"))
+                        .add(createSymbol("integer", "s2", "int", "0"))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s3",
+                                        "int[]",
+                                        "{ 0, 0}",
+                                        ImmutableList.of("android_name", "type")))
+                        .build();
+
+        SymbolTable mainTable =
+                SymbolTable.builder()
+                        .add(createSymbol("string", "s1", "int", "1"))
+                        .add(createSymbol("string", "s3", "int", "5"))
+                        .add(createSymbol("integer", "s2", "int", "2"))
+                        .add(createSymbol("integer", "s4", "int", "6"))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s3",
+                                        "int[]",
+                                        "{3, 4}",
+                                        ImmutableList.of("android_name", "type")))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s6",
+                                        "int[]",
+                                        "{7, 8}",
+                                        ImmutableList.of("android:color", "android:image")))
+                        .build();
+
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(createSymbol("string", "s1", "int", "1"))
+                        .add(createSymbol("integer", "s2", "int", "2"))
+                        .add(
+                                createSymbol(
+                                        "styleable",
+                                        "s3",
+                                        "int[]",
+                                        "{3, 4}",
+                                        ImmutableList.of("android_name", "type")))
+                        .build();
+
+        SymbolTable newTable = table.withValuesFrom(mainTable);
+
+        assertThat(newTable).isEqualTo(expected);
+    }
 }

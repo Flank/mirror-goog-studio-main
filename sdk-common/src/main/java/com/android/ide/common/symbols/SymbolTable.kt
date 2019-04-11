@@ -192,6 +192,13 @@ abstract class SymbolTable protected constructor() {
         return found
     }
 
+    /**
+     * Creates a table with all the symbols taken from [this] table, but the values are from
+     * [mainSymbolTable]
+     */
+    fun withValuesFrom(mainSymbolTable: SymbolTable): SymbolTable
+            = mainSymbolTable.filter(this).rename(this.tablePackage)
+
     /** [ResourceType]s present in the table. */
     val resourceTypes: Set<ResourceType> get() = symbols.rowKeySet()
 
@@ -396,6 +403,9 @@ abstract class SymbolTable protected constructor() {
          *  the first table in `tables`, or the default one if there are no tables in `tables`
          */
         @JvmStatic fun merge(tables: List<SymbolTable>): SymbolTable {
+            if (tables.size == 1) {
+                return tables.first()
+            }
             val builder = ImmutableTable.builder<ResourceType, String, Symbol>()
 
             val present = HashSet<String>()
@@ -418,8 +428,7 @@ abstract class SymbolTable protected constructor() {
 
             val packageName = if (tables.isEmpty()) "" else tables[0].tablePackage
 
-            return SymbolTableImpl(packageName,
-                    builder.build())
+            return SymbolTableImpl(packageName, builder.build())
         }
 
         /**

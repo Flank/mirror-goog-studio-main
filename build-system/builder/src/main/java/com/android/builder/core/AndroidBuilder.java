@@ -69,6 +69,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * This is the main builder class. It is given all the data to process the build (such as {@link
@@ -570,6 +571,13 @@ public class AndroidBuilder {
 
             boolean finalIds = aaptConfig.getUseFinalIds();
             if (rJar != null) { // not yet used, will be used in non-namespaced case
+                // replace the default values from the dependency table with the allocated values
+                // from the main table
+                depSymbolTables =
+                        depSymbolTables
+                                .stream()
+                                .map(t -> t.withValuesFrom(mainSymbols))
+                                .collect(Collectors.toSet());
                 BytecodeRClassWriterKt.exportToCompiledJava(
                         Iterables.concat(Collections.singleton(mainSymbols), depSymbolTables),
                         rJar.toPath(),
