@@ -309,14 +309,6 @@
         id="NewForkJoinPool"
         message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/transforms/ExternalLibsMergerTransform.kt"
-            line="54"/>
-    </issue>
-
-    <issue
-        id="NewForkJoinPool"
-        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
-        <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
             line="166"/>
     </issue>
