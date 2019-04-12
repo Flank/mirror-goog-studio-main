@@ -39,6 +39,16 @@ bool PerfettoManager::StartProfiling(
   // TODO: Add check if atrace is running, if so perfetto with our current
   // config will fail.
   if (IsProfiling()) {
+    error->append(
+        "Profiling session already started unable to start a second one.");
+    return false;
+  }
+  if (perfetto_->IsPerfettoRunning()) {
+    error->append("Perfetto is already running unable to start new trace.");
+    return false;
+  }
+  if (perfetto_->IsTracerRunning()) {
+    error->append("Tracer is already running unable to run perfetto.");
     return false;
   }
   Trace trace("CPU: StartProfiling perfetto");
@@ -46,7 +56,16 @@ bool PerfettoManager::StartProfiling(
   *trace_path =
       CurrentProcess::dir() + GetFileBaseName(app_name) + ".perfetto.trace";
   perfetto_->Run({config, abi_arch, *trace_path});
-  is_profiling_ = perfetto_->IsPerfettoRunning();
+  is_profiling_ =
+      perfetto_->IsPerfettoRunning() && perfetto_->IsTracerRunning();
+  if (!is_profiling_) {
+    if (!perfetto_->IsPerfettoRunning()) {
+      error->append("Failed to launch perfetto.");
+    }
+    if (!perfetto_->IsTracerRunning()) {
+      error->append("Failed to launch tracer.");
+    }
+  }
   return is_profiling_;
 }
 
@@ -65,7 +84,8 @@ void PerfettoManager::Shutdown() {
   Trace trace("CPU:Shutdown perfetto");
   if (is_profiling_) {
     perfetto_->Shutdown();
-    is_profiling_ = perfetto_->IsPerfettoRunning();
+    is_profiling_ =
+        perfetto_->IsPerfettoRunning() || perfetto_->IsTracerRunning();
   }
 }
 

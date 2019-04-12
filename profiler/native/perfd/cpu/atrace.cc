@@ -34,6 +34,7 @@
 #include "utils/process_manager.h"
 #include "utils/tokenizer.h"
 #include "utils/trace.h"
+#include "utils/tracing_utils.h"
 
 using profiler::proto::Device;
 using std::string;
@@ -41,14 +42,6 @@ using std::string;
 namespace profiler {
 
 const char *kAtraceExecutable = "/system/bin/atrace";
-const char *kTracingFileNames[] = {"/sys/kernel/debug/tracing/tracing_on",
-                                   // Legacy tracing file name.
-                                   "/sys/kernel/tracing/tracing_on"};
-
-const char *kTracingBufferFileNames[] = {
-    "/sys/kernel/debug/tracing/buffer_size_kb",
-    // Legacy tracing file name.
-    "/sys/kernel/tracing/buffer_size_kb"};
 const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
                              "sm",  "camera", "hal",  "app",  "res",
                              "pm",  "sched",  "freq", "idle", "load"};
@@ -72,30 +65,9 @@ void Atrace::HardStop() {
   atrace.Run("--async_stop", nullptr);
 }
 
-int Atrace::GetBufferSizeKb() {
-  return ReadIntFromConfigFile(
-      kTracingBufferFileNames,
-      sizeof(kTracingBufferFileNames) / sizeof(kTracingBufferFileNames[0]));
-}
+int Atrace::GetBufferSizeKb() { return TracingUtils::GetTracingBufferSize(); }
 
-bool Atrace::IsAtraceRunning() {
-  return ReadIntFromConfigFile(
-             kTracingFileNames,
-             sizeof(kTracingFileNames) / sizeof(kTracingFileNames[0])) == 1;
-}
-
-int Atrace::ReadIntFromConfigFile(const char *files[], uint32_t count) {
-  DiskFileSystem fs;
-  for (uint32_t i = 0; i < count; i++) {
-    string contents = fs.GetFileContents(files[i]);
-    // Only need to return the value of the first file with a value.
-    // The second file is assumed to be for older versions of android.
-    if (!contents.empty()) {
-      return atoi(contents.c_str());
-    }
-  }
-  return -1;
-}
+bool Atrace::IsAtraceRunning() { return TracingUtils::IsTracerRunning(); }
 
 void Atrace::WriteClockSyncMarker() {
   const std::string debugfs_path = "/sys/kernel/debug/tracing/";

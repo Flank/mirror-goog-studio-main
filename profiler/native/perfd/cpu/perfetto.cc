@@ -17,11 +17,13 @@
 #include "perfetto.h"
 #include "utils/current_process.h"
 
+#include <unistd.h>
 #include <memory>
 
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
 #include "utils/log.h"
+#include "utils/tracing_utils.h"
 
 using std::string;
 
@@ -30,7 +32,8 @@ namespace profiler {
 const char *kPerfettoExecutable = "perfetto";
 const char *kTracedExecutable = "traced";
 const char *kTracedProbesExecutable = "traced_probes";
-
+const int kRetryCount = 20;
+const int kSleepMsPerRetry = 100;
 Perfetto::Perfetto() {}
 
 void Perfetto::Run(const PerfettoArgs &run_args) {
@@ -86,6 +89,16 @@ void Perfetto::Run(const PerfettoArgs &run_args) {
                         nullptr};
 
   command_->Run(args, binary_config.str(), env_args);
+
+  // A sleep is needed to block until perfetto can start tracer.
+  // Sometimes this can fail in the event it fails its better to
+  // inform the user ASAP instead of when the trace is stopped.
+  for (int i = 0; i < kRetryCount && !IsTracerRunning(); i++) {
+    usleep(Clock::ms_to_us(kSleepMsPerRetry));
+  }
+  if (!IsTracerRunning()) {
+    Stop();
+  }
 }
 
 void Perfetto::Shutdown() {
@@ -106,5 +119,13 @@ string Perfetto::GetPath(const char *executable, const string &abi_arch) const {
   path << executable << "_" << abi_arch;
   return path.str();
 }
+
+bool Perfetto::IsPerfettoRunning() {
+  return command_.get() != nullptr && command_->IsRunning() &&
+         traced_.get() != nullptr && traced_->IsRunning() &&
+         traced_probes_.get() != nullptr && traced_probes_->IsRunning();
+}
+
+bool Perfetto::IsTracerRunning() { return TracingUtils::IsTracerRunning(); }
 
 }  // namespace profiler

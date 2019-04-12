@@ -17,6 +17,7 @@ cc_library(
         "simpleperf_manager.cc",
         "thread_monitor.cc",
         "thread_parser.cc",
+        "utils/tracing_utils.cc",
     ],
     hdrs = [
         "atrace.h",
@@ -36,6 +37,7 @@ cc_library(
         "thread_monitor.h",
         "thread_parser.h",
         "threads_sample.h",
+        "utils/tracing_utils.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",

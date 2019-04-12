@@ -70,12 +70,6 @@ class Atrace {
   // atrace.
   virtual std::string BuildSupportedCategoriesString();
 
-  // Helper function to read int values from Atrace files. This function will
-  // enumerate all |files| returning the first int value read from a file. The
-  // array is expected to contain the paths to the config files for current and
-  // past versions of android.
-  int ReadIntFromConfigFile(const char* files[], uint32_t count);
-
  protected:
   // Takes the output from atrace --list_categories parses the output and
   // returns the set of supported categories.

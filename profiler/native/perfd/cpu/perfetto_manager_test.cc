@@ -33,6 +33,7 @@ TEST(PerfettoManagerTest, ProfilingStartStop) {
   EXPECT_TRUE(
       manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
   EXPECT_TRUE(perfetto->IsPerfettoRunning());
+  EXPECT_TRUE(perfetto->IsTracerRunning());
   EXPECT_TRUE(manager.StopProfiling(&error));
   EXPECT_FALSE(perfetto->IsPerfettoRunning());
 }
@@ -90,7 +91,8 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   EXPECT_EQ(ftrace_config.atrace_apps()[0], "*");
   // The minimal set of atrace categories needed is sched.
   const char* expected_atrace_categories[] = {"sched"};
-  const int categories_size = sizeof(expected_atrace_categories) / sizeof(expected_atrace_categories[0]);
+  const int categories_size = sizeof(expected_atrace_categories) /
+                              sizeof(expected_atrace_categories[0]);
   int categories_found = 0;
   for (const auto& category : ftrace_config.atrace_categories()) {
     for (int i = 0; i < categories_size; i++) {
@@ -101,6 +103,48 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   }
   EXPECT_EQ(categories_found, categories_size);
   EXPECT_EQ(config.buffers()[0].size_kb(), buffer_size_kb);
+}
+
+TEST(PerfettoManagerTest, ValidateErrorsToRun) {
+  FakeClock fake_clock;
+  std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
+  perfetto->SetRunStateTo(false, true);
+  PerfettoManager manager{&fake_clock, perfetto};
+  perfetto::protos::TraceConfig config;
+  string trace_path;
+  string error;
+  // Fail to launch perfetto
+  EXPECT_FALSE(
+      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+  EXPECT_FALSE(perfetto->IsPerfettoRunning());
+  EXPECT_EQ(error, "Failed to launch perfetto.");
+
+  // Fail to launch tracer
+  perfetto->SetRunStateTo(true, false);
+  perfetto->SetPerfettoState(false);
+  perfetto->SetTracerState(false);
+  error = "";
+  EXPECT_FALSE(
+      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+  EXPECT_EQ(error, "Failed to launch tracer.");
+
+  // Attempt to record with tracer already running.
+  perfetto->SetRunStateTo(true, true);
+  perfetto->SetPerfettoState(false);
+  perfetto->SetTracerState(true);
+  error = "";
+  EXPECT_FALSE(
+      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+  EXPECT_EQ(error, "Tracer is already running unable to run perfetto.");
+
+  // Attempt to record with perfetto already running.
+  perfetto->SetRunStateTo(true, true);
+  perfetto->SetPerfettoState(true);
+  perfetto->SetTracerState(false);
+  error = "";
+  EXPECT_FALSE(
+      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+  EXPECT_EQ(error, "Perfetto is already running unable to start new trace.");
 }
 
 }  // namespace profiler
