@@ -200,7 +200,7 @@ class GradleDetectorTest : AbstractCheckTest() {
 
     fun testVersionsFromGradleCache() {
         val expected = "" +
-                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.2.0-alpha03 [GradleDependency]\n" +
+                "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 3.5.0-alpha10 [GradleDependency]\n" +
                 "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n" +
@@ -237,10 +237,10 @@ class GradleDetectorTest : AbstractCheckTest() {
             .expect(expected)
             .expectFixDiffs(
                 "" +
-                        "Fix for build.gradle line 5: Change to 3.2.0-alpha03:\n" +
+                        "Fix for build.gradle line 5: Change to 3.5.0-alpha10:\n" +
                         "@@ -6 +6\n" +
                         "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n" +
-                        "+         classpath 'com.android.tools.build:gradle:3.2.0-alpha03'\n" +
+                        "+         classpath 'com.android.tools.build:gradle:3.5.0-alpha10'\n" +
                         "Fix for build.gradle line 9: Change to 4.4:\n" +
                         "@@ -10 +10\n" +
                         "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n" +
@@ -1129,7 +1129,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                 " [GradleDependency]\n" +
                 "        classpath 'com.android.tools.build:gradle:1.0.0'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.2.0-alpha03 [GradleDependency]\n" +
+                "build.gradle:8: Warning: A newer version of com.android.tools.build:gradle than 2.0.0-alpha4 is available: 3.5.0-alpha10 [GradleDependency]\n" +
                 "        classpath 'com.android.tools.build:gradle:2.0.0-alpha4'\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
                 "1 errors, 2 warnings\n"
@@ -2530,7 +2530,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "        jcenter()\n" +
                         "    }\n" +
                         "    dependencies {\n" +
-                        "        classpath 'com.android.tools.build:gradle:3.2.0-alpha15'\n" +
+                        "        classpath 'com.android.tools.build:gradle:3.5.0-alpha10'\n" +
                         "    }\n" +
                         "}\n" +
                         "dependencies {\n" +
@@ -2562,7 +2562,7 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "        jcenter()\n" +
                         "    }\n" +
                         "    dependencies {\n" +
-                        "        classpath 'com.android.tools.build:gradle:3.2.0-alpha15'\n" +
+                        "        classpath 'com.android.tools.build:gradle:3.5.0-alpha10'\n" +
                         "    }\n" +
                         "}\n" +
                         "dependencies {\n" +
@@ -3077,7 +3077,10 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "<com.android.tools.build>\n" +
                         "  <gradle versions=\"3.0.0-alpha1,3.0.0-alpha2,3.0.0-alpha3,3.0.0-alpha4,3.0.0-alpha5,3.0.0-alpha6,3.0.0-alpha7,3.0.0-alpha8,3.0.0-alpha9,3.0.0-beta1,3.0.0-beta2,3.0.0-beta3,3.0.0-beta4,3.0.0-beta5,3.0.0-beta6,3.0.0-beta7,3.0.0-rc1,3.0.0-rc2,3.0.0," +
                         "3.1.0-alpha01,3.1.0-alpha02,3.1.0-alpha03,3.1.0-alpha04,3.1.0-alpha05,3.1.0-alpha06,3.1.0-alpha07,3.1.0-alpha08,3.1.0-alpha09,3.1.0-beta1,3.1.0-beta2,3.1.0-beta3,3.1.0-beta4,3.1.0-rc1,3.1.0," +
-                        "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03\"/>\n" +
+                        "3.2.0-alpha01,3.2.0-alpha02,3.2.0-alpha03,3.2.0-alpha04,3.2.0-alpha05,3.2.0-alpha06,3.2.0-alpha07,3.2.0-alpha08,3.2.0-alpha09,3.2.0-alpha10,3.2.0-alpha11,3.2.0-alpha12,3.2.0-alpha13,3.2.0-alpha14,3.2.0-alpha15,3.2.0-alpha16,3.2.0-alpha17,3.2.0-alpha18,3.2.0-beta01,3.2.0-beta02,3.2.0-beta03,3.2.0-beta04,3.2.0-beta05,3.2.0-rc01,3.2.0-rc02,3.2.0-rc03,3.2.0,3.2.1," +
+                        "3.3.0-alpha01,3.3.0-alpha02,3.3.0-alpha03,3.3.0-alpha04,3.3.0-alpha05,3.3.0-alpha06,3.3.0-alpha07,3.3.0-alpha08,3.3.0-alpha09,3.3.0-alpha10,3.3.0-alpha11,3.3.0-alpha12,3.3.0-alpha13,3.3.0-beta01,3.3.0-beta02,3.3.0-beta03,3.3.0-beta04,3.3.0-rc01,3.3.0-rc02,3.3.0-rc03,3.3.0,3.3.1,3.3.2," +
+                        "3.4.0-alpha01,3.4.0-alpha02,3.4.0-alpha03,3.4.0-alpha04,3.4.0-alpha05,3.4.0-alpha06,3.4.0-alpha07,3.4.0-alpha08,3.4.0-alpha09,3.4.0-alpha10,3.4.0-beta01,3.4.0-beta02,3.4.0-beta03,3.4.0-beta04,3.4.0-beta05,3.4.0-rc01,3.4.0-rc02,3.4.0-rc03," +
+                        "3.5.0-alpha01,3.5.0-alpha02,3.5.0-alpha03,3.5.0-alpha04,3.5.0-alpha05,3.5.0-alpha06,3.5.0-alpha07,3.5.0-alpha08,3.5.0-alpha09,3.5.0-alpha10\"/>\n" +
                         "</com.android.tools.build>"
             )
             task.networkData(
