@@ -1,0 +1,23 @@
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+
+maven_pom(
+    name = "pom",
+    artifact = "aapt2-proto",
+    group = "com.android.tools.build",
+    properties_files = [
+        "//tools/buildSrc/base:version.properties",
+        "//prebuilts/tools/common/aapt:aapt2_version.properties",
+    ],
+    version_property = "${buildVersion}-${aapt2Version}",
+    visibility = ["//visibility:public"],
+)
+
+kotlin_library(
+    name = "aapt2-proto",
+    srcs = ["src/main/java"],
+    bundled_deps = ["//prebuilts/tools/common/aapt/protos"],
+    pom = ":pom",
+    resource_strip_prefix = "tools/base/build-system/aapt2-proto",
+    visibility = ["//visibility:public"],
+)

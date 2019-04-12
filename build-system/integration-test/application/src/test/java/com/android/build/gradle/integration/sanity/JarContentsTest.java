@@ -173,6 +173,14 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
+                "com/android/tools/build/aapt2-proto",
+                "com/",
+                "com/android/",
+                "com/android/aapt/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
                 "com/android/tools/build/builder",
                 "com/",
                 "com/android/",
