@@ -16,6 +16,7 @@
 package com.android.ide.common.gradle.model;
 
 import com.android.annotations.NonNull;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -23,14 +24,25 @@ import java.util.function.Function;
 public class ModelCache {
     @NonNull private final Map<Object, Object> myData = new HashMap<>();
 
+    /**
+     * Conceptually the same as {@link Map#computeIfAbsent(Object, Function)} except that this
+     * method is synchronized and re-entrant.
+     */
     @SuppressWarnings("unchecked")
     @NonNull
-    public <K, V> V computeIfAbsent(@NonNull K key, @NonNull Function<K, V> mappingFunction) {
-        Object result = myData.computeIfAbsent(key, o -> mappingFunction.apply((K) o));
-        return (V) result;
+    public synchronized <K, V> V computeIfAbsent(
+            @NonNull K key, @NonNull Function<K, V> mappingFunction) {
+        if (myData.containsKey(key)) {
+            return (V) myData.get(key);
+        } else {
+            V result = mappingFunction.apply(key);
+            myData.put(key, result);
+            return result;
+        }
     }
 
     @NonNull
+    @VisibleForTesting
     Map<Object, Object> getData() {
         return myData;
     }

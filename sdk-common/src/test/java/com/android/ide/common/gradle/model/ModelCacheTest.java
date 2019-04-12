@@ -47,6 +47,20 @@ public class ModelCacheTest {
                 person1, myModelCache.getData().get("firstPerson")); // data should not be removed.
     }
 
+    @Test
+    public void computeIfAbsentReentrant() {
+        Person person1;
+        person1 =
+                myModelCache.computeIfAbsent(
+                        "firstPerson",
+                        o -> {
+                            myModelCache.computeIfAbsent("secondPerson", p -> new Person("2", "b"));
+                            return new Person("1", "a");
+                        });
+        assertSame(person1, myModelCache.getData().get("firstPerson"));
+        assertEquals("b", ((Person) myModelCache.getData().get("secondPerson")).name);
+    }
+
     private static class Person {
         @NonNull final String id;
         @NonNull final String name;
