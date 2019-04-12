@@ -8,7 +8,7 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
-set TESTTAGFILTERS=perfgate_multi_run,perfgate_only,-no_windows,-no_test_windows
+set TESTTAGFILTERS=perfgate_multi_run,perfgate_only,-no_perfgate,-no_windows,-no_test_windows
 
 set CONFIGOPTIONS=--config=postsubmit
 
