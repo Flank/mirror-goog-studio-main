@@ -107,11 +107,14 @@ open class PerModuleBundleTask : AndroidVariantTask() {
         FileUtils.cleanOutputDir(outputDir)
         val jarMerger = JarMerger(File(outputDir, fileName).toPath())
 
+        // Disable compression for module zips, since this will only be used in bundletool and it
+        // will need to uncompress them anyway.
+        jarMerger.setCompressionLevel(0)
+
         val filters = abiFilters
         val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
 
-        jarMerger.use { it ->
-
+        jarMerger.use {
             it.addDirectory(
                 assetsFiles.get().asFile.toPath(),
                 null,

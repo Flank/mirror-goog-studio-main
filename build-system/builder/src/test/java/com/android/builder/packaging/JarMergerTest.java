@@ -31,6 +31,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -212,6 +213,66 @@ public class JarMergerTest {
         assertThat(getEntries(out))
                 .containsExactly(
                         "stored.txt[stored]", RESOURCE_CONTENT, "deflated.txt", RESOURCE_CONTENT_2);
+    }
+
+    @Test
+    public void setCompressionLevel_addDirectory() throws IOException {
+        FileSystem jimfs = Jimfs.newFileSystem(Configuration.unix());
+        Path contentDir = createDirectoryWithClassAndResource(jimfs.getPath("testContent"));
+
+        Path outCompressed = jimfs.getPath("/out/output_compressed.jar");
+        try (JarMerger merger = new JarMerger(outCompressed)) {
+            merger.setCompressionLevel(9);
+            merger.addDirectory(contentDir);
+        }
+
+        Path outUncompressed = jimfs.getPath("/out/output_uncompressed.jar");
+        try (JarMerger merger = new JarMerger(outUncompressed)) {
+            merger.setCompressionLevel(0);
+            merger.addDirectory(contentDir);
+        }
+
+        assertThat(Files.size(outCompressed)).isLessThan(Files.size(outUncompressed));
+    }
+
+    @Test
+    public void setCompressionLevel_addJar() throws IOException {
+        FileSystem jimfs = Jimfs.newFileSystem(Configuration.unix());
+        Path contentJar = createJarWithClass();
+
+        Path outCompressed = jimfs.getPath("/out/output_compressed.jar");
+        try (JarMerger merger = new JarMerger(outCompressed)) {
+            merger.setCompressionLevel(9);
+            merger.addDirectory(contentJar);
+        }
+
+        Path outUncompressed = jimfs.getPath("/out/output_uncompressed.jar");
+        try (JarMerger merger = new JarMerger(outUncompressed)) {
+            merger.setCompressionLevel(0);
+            merger.addDirectory(contentJar);
+        }
+
+        assertThat(Files.size(outCompressed)).isLessThan(Files.size(outUncompressed));
+    }
+
+    @Test
+    public void setCompressionLevel_addFile() throws IOException {
+        FileSystem jimfs = Jimfs.newFileSystem(Configuration.unix());
+        Path contentJar = createJarWithClass();
+
+        Path outCompressed = jimfs.getPath("/out/output_compressed.jar");
+        try (JarMerger merger = new JarMerger(outCompressed)) {
+            merger.setCompressionLevel(9);
+            merger.addFile("file.jar", contentJar);
+        }
+
+        Path outUncompressed = jimfs.getPath("/out/output_uncompressed.jar");
+        try (JarMerger merger = new JarMerger(outUncompressed)) {
+            merger.setCompressionLevel(0);
+            merger.addFile("file.jar", contentJar);
+        }
+
+        assertThat(Files.size(outCompressed)).isLessThan(Files.size(outUncompressed));
     }
 
     private static Path createDirectoryWithClassAndResource() throws IOException {

@@ -42,6 +42,7 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /** Jar Merger class. */
 public class JarMerger implements Closeable {
@@ -176,7 +177,7 @@ public class JarMerger implements Closeable {
                     newEntry.setCompressedSize(entry.getCompressedSize());
                     newEntry.setCrc(entry.getCrc());
                 }
-                newEntry.setLastModifiedTime(FileTime.fromMillis(0));
+                newEntry.setLastModifiedTime(ZERO_TIME);
 
                 // read the content of the entry from the input stream, and write it into the
                 // archive.
@@ -195,6 +196,18 @@ public class JarMerger implements Closeable {
         try (InputStream is = new BufferedInputStream(input)) {
             write(new JarEntry(entryPath), is);
         }
+    }
+
+    /**
+     * Change the compression level for the next entries added to this jar. See {@link
+     * ZipOutputStream#setLevel(int)} for more details.
+     *
+     * <p>Use 0 for no compression.
+     *
+     * @param level the compression level (0-9)
+     */
+    public void setCompressionLevel(int level) {
+        jarOutputStream.setLevel(level);
     }
 
     @Override
