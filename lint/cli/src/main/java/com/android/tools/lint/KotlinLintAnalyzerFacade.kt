@@ -38,7 +38,6 @@ import org.jetbrains.kotlin.cli.common.CliModuleVisibilityManagerImpl
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
-import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.ClasspathRootsResolver
 import org.jetbrains.kotlin.cli.jvm.compiler.CliVirtualFileFinderFactory
 import org.jetbrains.kotlin.cli.jvm.compiler.JvmPackagePartProvider
@@ -72,8 +71,8 @@ import org.jetbrains.kotlin.resolve.jvm.modules.JavaModuleResolver
 import org.jetbrains.kotlin.resolve.lazy.declarations.CliDeclarationProviderFactoryService
 import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactoryService
 import org.jetbrains.kotlin.script.ScriptDefinitionProvider
-import org.jetbrains.kotlin.script.ScriptDependenciesProvider
 import org.jetbrains.kotlin.script.StandardScriptDefinition
+import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.CliKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
@@ -169,6 +168,13 @@ class KotlinLintAnalyzerFacade {
             javaSourceRoots
         )
 
+        // Add support for Kotlin script files (.kts) if not already there.
+        if (ScriptDefinitionProvider.getInstance(project) == null) {
+            compilerConfiguration.add(
+                ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS,
+                ScriptingCompilerConfigurationComponentRegistrar())
+        }
+
         for (registrar in compilerConfiguration.getList(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS)) {
             registrar.registerProjectComponents(project, compilerConfiguration)
         }
@@ -192,21 +198,6 @@ class KotlinLintAnalyzerFacade {
         PersistentFSConstants::class.java.getDeclaredField("ourMaxIntellisenseFileSize")
             .apply { isAccessible = true }
             .setInt(null, FileUtilRt.LARGE_FOR_CONTENT_LOADING)
-
-        val scriptDefinitionProvider =
-            ScriptDefinitionProvider.getInstance(project) as? CliScriptDefinitionProvider
-        if (scriptDefinitionProvider != null) {
-            scriptDefinitionProvider.setScriptDefinitions(
-                compilerConfiguration.getList(JVMConfigurationKeys.SCRIPT_DEFINITIONS)
-            )
-
-            ScriptDependenciesProvider.getInstance(project).let { importsProvider ->
-                compilerConfiguration.addJvmClasspathRoots(
-                    ktFiles.mapNotNull(importsProvider::getScriptDependencies)
-                        .flatMap { it.classpath }
-                        .distinctBy { it.absolutePath })
-            }
-        }
 
         val jdkHome = compilerConfiguration.get(JVMConfigurationKeys.JDK_HOME)
         val jrtFileSystem =
@@ -286,7 +277,7 @@ class KotlinLintAnalyzerFacade {
 
         AnalysisHandlerExtension.registerExtension(project, UastAnalysisHandlerExtension())
 
-        KotlinCoreEnvironment.registerProjectServices(project, null)
+        KotlinCoreEnvironment.registerProjectServices(project)
     }
 
     private fun findJarRoot(file: File): VirtualFile? {

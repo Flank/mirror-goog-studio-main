@@ -110,7 +110,7 @@ class UastTest : TestCase() {
             }
 
             class BaseImpl(val x: Int) : Base {
-                override fun print() { print(x) }
+                override fun print() { println(x) }
             }
 
             fun createBase(i: Int): Base {
@@ -122,63 +122,73 @@ class UastTest : TestCase() {
         ).indented()
 
         check(source, { file ->
-            assertEquals("" +
-                    "public final class BaseKt {\n" +
-                    "    public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {\n" +
-                    "        return <init>(i)\n" +
-                    "    }\n" +
-                    "}\n" +
-                    "\n" +
-                    "public abstract interface Base {\n" +
-                    "    public abstract fun print() : void = UastEmptyExpression\n" +
-                    "}\n" +
-                    "\n" +
-                    "public final class BaseImpl : Base {\n" +
-                    "    @org.jetbrains.annotations.NotNull private final var x: int\n" +
-                    "    public fun print() : void {\n" +
-                    "        print(x)\n" +
-                    "    }\n" +
-                    "    public final fun getX() : int = UastEmptyExpression\n" +
-                    "    public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression\n" +
-                    "}\n" +
-                    "\n" +
-                    "public final class Derived : Base {\n" +
-                    // Note: This isn't right; once we get an updated/fixed UAST we should update
-                    // this
-                    "    public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression\n" +
-                    "}\n", file.asSourceString())
+            assertEquals(
+                """
+                public final class BaseKt {
+                    public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {
+                        return <init>(i)
+                    }
+                }
+
+                public abstract interface Base {
+                    public abstract fun print() : void = UastEmptyExpression
+                }
+
+                public final class BaseImpl : Base {
+                    @org.jetbrains.annotations.NotNull private final var x: int
+                    public fun print() : void {
+                        println(x)
+                    }
+                    public final fun getX() : int = UastEmptyExpression
+                    public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression
+                }
+
+                public final class Derived : Base {
+                    public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression
+                }
+
+                """.trimIndent(), file.asSourceString())
 
             assertEquals(
-                        "UFile (package = ) [public final class BaseKt {...]\n" +
-                                "    UClass (name = BaseKt) [public final class BaseKt {...}]\n" +
-                                "        UAnnotationMethod (name = createBase) [public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {...}]\n" +
-                                "            UParameter (name = i) [@org.jetbrains.annotations.NotNull var i: int]\n" +
-                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                                "            UBlockExpression [{...}] : PsiType:Void\n" +
-                                "                UReturnExpression [return <init>(i)] : PsiType:Void\n" +
-                                "                    UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(i)] : PsiType:BaseImpl\n" +
-                                "                        UIdentifier (Identifier (BaseImpl)) [UIdentifier (Identifier (BaseImpl))]\n" +
-                                "                        USimpleNameReferenceExpression (identifier = <init>) [<init>] : PsiType:BaseImpl\n" +
-                                "                        USimpleNameReferenceExpression (identifier = i) [i] : PsiType:int\n" +
-                                "    UClass (name = Base) [public abstract interface Base {...}]\n" +
-                                "        UAnnotationMethod (name = print) [public abstract fun print() : void = UastEmptyExpression]\n" +
-                                "    UClass (name = BaseImpl) [public final class BaseImpl : Base {...}]\n" +
-                                "        UField (name = x) [@org.jetbrains.annotations.NotNull private final var x: int]\n" +
-                                "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                                "        UAnnotationMethod (name = print) [public fun print() : void {...}]\n" +
-                                "            UBlockExpression [{...}] : PsiType:void\n" +
-                                "                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [print(x)] : PsiType:void\n" +
-                                "                    UIdentifier (Identifier (print)) [UIdentifier (Identifier (print))]\n" +
-                                "                    USimpleNameReferenceExpression (identifier = print) [print] : PsiType:void\n" +
-                                "                    USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int\n" +
-                                "        UAnnotationMethod (name = getX) [public final fun getX() : int = UastEmptyExpression]\n" +
-                                "        UAnnotationMethod (name = BaseImpl) [public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression]\n" +
-                                "            UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]\n" +
-                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                                "    UClass (name = Derived) [public final class Derived : Base {...}]\n" +
-                                "        UAnnotationMethod (name = Derived) [public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression]\n" +
-                                "            UParameter (name = b) [@org.jetbrains.annotations.NotNull var b: Base]\n" +
-                                "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n",
+                """
+                UFile (package = ) [public final class BaseKt {...]
+                    UClass (name = BaseKt) [public final class BaseKt {...}]
+                        UAnnotationMethod (name = createBase) [public static final fun createBase(@org.jetbrains.annotations.NotNull i: int) : Base {...}]
+                            UParameter (name = i) [@org.jetbrains.annotations.NotNull var i: int]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UBlockExpression [{...}] : PsiType:Void
+                                UReturnExpression [return <init>(i)] : PsiType:Void
+                                    UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(i)] : PsiType:BaseImpl
+                                        UIdentifier (Identifier (BaseImpl)) [UIdentifier (Identifier (BaseImpl))]
+                                        USimpleNameReferenceExpression (identifier = <init>, resolvesTo = BaseImpl) [<init>] : PsiType:BaseImpl
+                                        USimpleNameReferenceExpression (identifier = i) [i] : PsiType:int
+                    UClass (name = Base) [public abstract interface Base {...}]
+                        UAnnotationMethod (name = print) [public abstract fun print() : void = UastEmptyExpression]
+                    UClass (name = BaseImpl) [public final class BaseImpl : Base {...}]
+                        UField (name = x) [@org.jetbrains.annotations.NotNull private final var x: int]
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                        UAnnotationMethod (name = print) [public fun print() : void {...}]
+                            UBlockExpression [{...}] : PsiType:void
+                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(x)] : PsiType:void
+                                    UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                    USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                    USimpleNameReferenceExpression (identifier = x) [x] : PsiType:int
+                        UAnnotationMethod (name = getX) [public final fun getX() : int = UastEmptyExpression]
+                        UAnnotationMethod (name = BaseImpl) [public fun BaseImpl(@org.jetbrains.annotations.NotNull x: int) = UastEmptyExpression]
+                            UParameter (name = x) [@org.jetbrains.annotations.NotNull var x: int]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                    UClass (name = Derived) [public final class Derived : Base {...}]
+                        UExpressionList (super_delegation) [super_delegation Base : createBase(10)]
+                            UTypeReferenceExpression (name = Base) [Base]
+                            UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [createBase(10)] : PsiType:Base
+                                UIdentifier (Identifier (createBase)) [UIdentifier (Identifier (createBase))]
+                                USimpleNameReferenceExpression (identifier = createBase, resolvesTo = null) [createBase] : PsiType:Base
+                                ULiteralExpression (value = 10) [10] : PsiType:int
+                        UAnnotationMethod (name = Derived) [public fun Derived(@org.jetbrains.annotations.NotNull b: Base) = UastEmptyExpression]
+                            UParameter (name = b) [@org.jetbrains.annotations.NotNull var b: Base]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+
+                """.trimIndent(),
                 file.asLogTypes()
             )
         })
@@ -241,134 +251,136 @@ class UastTest : TestCase() {
             ).indented(),
             { file ->
                 assertEquals(
-                    "" +
-                            "UFile (package = test.pkg) [package test.pkg...]\n" +
-                            "    UClass (name = FooInterfaceKt) [public final class FooInterfaceKt {...}]\n" +
-                            "        UField (name = uint) [@org.jetbrains.annotations.NotNull private static final var uint: int = 42]\n" +
-                            "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            ULiteralExpression (value = 42) [42] : PsiType:int\n" +
-                            "        UField (name = ulong) [@org.jetbrains.annotations.NotNull private static final var ulong: long = 42]\n" +
-                            "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            ULiteralExpression (value = 42) [42] : PsiType:long\n" +
-                            "        UField (name = ubyte) [@org.jetbrains.annotations.NotNull private static final var ubyte: byte = -1]\n" +
-                            "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            ULiteralExpression (value = -1) [-1] : PsiType:byte\n" +
-                            "        UAnnotationMethod (name = test) [public static final fun test(@org.jetbrains.annotations.NotNull s: java.lang.String) : java.lang.Object {...}]\n" +
-                            "            UParameter (name = s) [@org.jetbrains.annotations.NotNull var s: java.lang.String]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            UBlockExpression [{...}]\n" +
-                            "                UReturnExpression [return switch (var something: int = s.hashCode())  {...]\n" +
-                            "                    USwitchExpression [switch (var something: int = s.hashCode())  {...] : PsiType:Object\n" +
-                            "                        UDeclarationsExpression [var something: int = s.hashCode()]\n" +
-                            "                            ULocalVariable (name = something) [var something: int = s.hashCode()]\n" +
-                            "                                UQualifiedReferenceExpression [s.hashCode()] : PsiType:int\n" +
-                            "                                    USimpleNameReferenceExpression (identifier = s) [s] : PsiType:String\n" +
-                            "                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [hashCode()] : PsiType:int\n" +
-                            "                                        UIdentifier (Identifier (hashCode)) [UIdentifier (Identifier (hashCode))]\n" +
-                            "                                        USimpleNameReferenceExpression (identifier = hashCode) [hashCode] : PsiType:int\n" +
-                            "                        UExpressionList (when) [    it is java.lang.Integer -> {...    ] : PsiType:Object\n" +
-                            "                            USwitchClauseExpressionWithBody [it is java.lang.Integer -> {...]\n" +
-                            "                                UBinaryExpressionWithType [it is java.lang.Integer]\n" +
-                            "                                    USimpleNameReferenceExpression (identifier = it) [it]\n" +
-                            "                                    UTypeReferenceExpression (name = java.lang.Integer) [java.lang.Integer]\n" +
-                            "                                UExpressionList (when_entry) [{...]\n" +
-                            "                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void\n" +
-                            "                                        UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]\n" +
-                            "                                        USimpleNameReferenceExpression (identifier = println) [println] : PsiType:void\n" +
-                            "                                        USimpleNameReferenceExpression (identifier = something) [something] : PsiType:int\n" +
-                            "                                    UBreakExpression (label = null) [break]\n" +
-                            "                            USwitchClauseExpressionWithBody [ -> {...]\n" +
-                            "                                UExpressionList (when_entry) [{...]\n" +
-                            "                                    ULiteralExpression (value = \"\") [\"\"] : PsiType:String\n" +
-                            "                                    UBreakExpression (label = null) [break]\n" +
-                            "        UAnnotationMethod (name = getUint) [public static final fun getUint() : int = UastEmptyExpression]\n" +
-                            "        UAnnotationMethod (name = getUlong) [public static final fun getUlong() : long = UastEmptyExpression]\n" +
-                            "        UAnnotationMethod (name = getUbyte) [public static final fun getUbyte() : byte = UastEmptyExpression]\n" +
-                            "    UClass (name = FooInterface) [public abstract interface FooInterface {...}]\n" +
-                            "        UField (name = answer) [@org.jetbrains.annotations.NotNull @kotlin.jvm.JvmField public static final var answer: int = 42]\n" +
-                            "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            UAnnotation (fqName = kotlin.jvm.JvmField) [@kotlin.jvm.JvmField]\n" +
-                            "            ULiteralExpression (value = 42) [42] : PsiType:int\n" +
-                            "        UField (name = Companion) [@null public static final var Companion: test.pkg.FooInterface.Companion]\n" +
-                            "            UAnnotation (fqName = null) [@null]\n" +
-                            "        UAnnotationMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]\n" +
-                            "            UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]\n" +
-                            "            UBlockExpression [{...}] : PsiType:void\n" +
-                            "                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(\"Hello, world!\")] : PsiType:void\n" +
-                            "                    UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]\n" +
-                            "                    USimpleNameReferenceExpression (identifier = println) [println] : PsiType:void\n" +
-                            "                    ULiteralExpression (value = \"Hello, world!\") [\"Hello, world!\"] : PsiType:String\n" +
-                            "        UClass (name = Companion) [public static final class Companion {...}]\n" +
-                            "            UAnnotationMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]\n" +
-                            "                UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]\n" +
-                            "                UBlockExpression [{...}] : PsiType:void\n" +
-                            "                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(\"Hello, world!\")] : PsiType:void\n" +
-                            "                        UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]\n" +
-                            "                        USimpleNameReferenceExpression (identifier = println) [println] : PsiType:void\n" +
-                            "                        ULiteralExpression (value = \"Hello, world!\") [\"Hello, world!\"] : PsiType:String\n" +
-                            "            UAnnotationMethod (name = Companion) [private fun Companion() = UastEmptyExpression]\n" +
-                            "    UClass (name = FooAnnotation) [public abstract annotation FooAnnotation {...}]\n" +
-                            "        UField (name = Companion) [@null public static final var Companion: test.pkg.FooAnnotation.Companion]\n" +
-                            "            UAnnotation (fqName = null) [@null]\n" +
-                            "        UClass (name = Direction) [public static enum Direction {...}]\n" +
-                            "            UEnumConstant (name = UP) [@null UP]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "                USimpleNameReferenceExpression (identifier = Direction) [Direction]\n" +
-                            "            UEnumConstant (name = DOWN) [@null DOWN]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "                USimpleNameReferenceExpression (identifier = Direction) [Direction]\n" +
-                            "            UEnumConstant (name = LEFT) [@null LEFT]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "                USimpleNameReferenceExpression (identifier = Direction) [Direction]\n" +
-                            "            UEnumConstant (name = RIGHT) [@null RIGHT]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "                USimpleNameReferenceExpression (identifier = Direction) [Direction]\n" +
-                            "            UAnnotationMethod (name = Direction) [private fun Direction() = UastEmptyExpression]\n" +
-                            "        UClass (name = Bar) [public static abstract annotation Bar {...}]\n" +
-                            "        UClass (name = Companion) [public static final class Companion {...}]\n" +
-                            "            UField (name = bar) [@org.jetbrains.annotations.NotNull private static final var bar: int = 42]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "                ULiteralExpression (value = 42) [42] : PsiType:int\n" +
-                            "            UAnnotationMethod (name = foo) [public final fun foo() : int {...}]\n" +
-                            "                UBlockExpression [{...}]\n" +
-                            "                    UReturnExpression [return 42]\n" +
-                            "                        ULiteralExpression (value = 42) [42] : PsiType:int\n" +
-                            "            UAnnotationMethod (name = getBar) [public final fun getBar() : int = UastEmptyExpression]\n" +
-                            "            UAnnotationMethod (name = Companion) [private fun Companion() = UastEmptyExpression]\n" +
-                            "    UClass (name = Name) [public final class Name {...}]\n" +
-                            "        UField (name = s) [@org.jetbrains.annotations.NotNull private final var s: java.lang.String]\n" +
-                            "            UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "        UAnnotationMethod (name = getS) [public final fun getS() : java.lang.String = UastEmptyExpression]\n" +
-                            "        UAnnotationMethod (name = constructor-impl) [public static fun constructor-impl(@org.jetbrains.annotations.NotNull s: java.lang.String) : java.lang.String = UastEmptyExpression]\n" +
-                            "            UParameter (name = s) [@org.jetbrains.annotations.NotNull var s: java.lang.String]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "        UAnnotationMethod (name = toString-impl) [public static fun toString-impl(@null p: java.lang.String) : java.lang.String = UastEmptyExpression]\n" +
-                            "            UParameter (name = p) [@null var p: java.lang.String]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "        UAnnotationMethod (name = hashCode-impl) [public static fun hashCode-impl(@null p: java.lang.String) : int = UastEmptyExpression]\n" +
-                            "            UParameter (name = p) [@null var p: java.lang.String]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "        UAnnotationMethod (name = equals-impl) [public static fun equals-impl(@null p: java.lang.String, @org.jetbrains.annotations.Nullable p1: java.lang.Object) : boolean = UastEmptyExpression]\n" +
-                            "            UParameter (name = p) [@null var p: java.lang.String]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "            UParameter (name = p1) [@org.jetbrains.annotations.Nullable var p1: java.lang.Object]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
-                            "        UAnnotationMethod (name = equals-impl0) [public static final fun equals-impl0(@org.jetbrains.annotations.NotNull p1: java.lang.String, @org.jetbrains.annotations.NotNull p2: java.lang.String) : boolean = UastEmptyExpression]\n" +
-                            "            UParameter (name = p1) [@org.jetbrains.annotations.NotNull var p1: java.lang.String]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "            UParameter (name = p2) [@org.jetbrains.annotations.NotNull var p2: java.lang.String]\n" +
-                            "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
-                            "        UAnnotationMethod (name = toString) [public fun toString() : java.lang.String = UastEmptyExpression]\n" +
-                            "        UAnnotationMethod (name = hashCode) [public fun hashCode() : int = UastEmptyExpression]\n" +
-                            "        UAnnotationMethod (name = equals) [public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression]\n" +
-                            "            UParameter (name = p) [@null var p: java.lang.Object]\n" +
-                            "                UAnnotation (fqName = null) [@null]\n" +
-                            "    UClass (name = FooInterface2) [public abstract interface FooInterface2 {...}]\n" +
-                            "        UAnnotationMethod (name = foo) [@kotlin.jvm.JvmDefault...}]\n" +
-                            "            UAnnotation (fqName = kotlin.jvm.JvmDefault) [@kotlin.jvm.JvmDefault]\n" +
-                            "            UBlockExpression [{...}]\n" +
-                            "                UReturnExpression [return 42]\n" +
-                            "                    ULiteralExpression (value = 42) [42] : PsiType:int\n",
+                    """
+                    UFile (package = test.pkg) [package test.pkg...]
+                        UClass (name = FooInterfaceKt) [public final class FooInterfaceKt {...}]
+                            UField (name = uint) [@org.jetbrains.annotations.NotNull private static final var uint: int = 42]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                ULiteralExpression (value = 42) [42] : PsiType:int
+                            UField (name = ulong) [@org.jetbrains.annotations.NotNull private static final var ulong: long = 42]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                ULiteralExpression (value = 42) [42] : PsiType:long
+                            UField (name = ubyte) [@org.jetbrains.annotations.NotNull private static final var ubyte: byte = -1]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                ULiteralExpression (value = -1) [-1] : PsiType:byte
+                            UAnnotationMethod (name = test) [public static final fun test(@org.jetbrains.annotations.NotNull s: java.lang.String) : java.lang.Object {...}]
+                                UParameter (name = s) [@org.jetbrains.annotations.NotNull var s: java.lang.String]
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                UBlockExpression [{...}]
+                                    UReturnExpression [return switch (var something: int = s.hashCode())  {...]
+                                        USwitchExpression [switch (var something: int = s.hashCode())  {...] : PsiType:Object
+                                            UDeclarationsExpression [var something: int = s.hashCode()]
+                                                ULocalVariable (name = something) [var something: int = s.hashCode()]
+                                                    UQualifiedReferenceExpression [s.hashCode()] : PsiType:int
+                                                        USimpleNameReferenceExpression (identifier = s) [s] : PsiType:String
+                                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [hashCode()] : PsiType:int
+                                                            UIdentifier (Identifier (hashCode)) [UIdentifier (Identifier (hashCode))]
+                                                            USimpleNameReferenceExpression (identifier = hashCode, resolvesTo = null) [hashCode] : PsiType:int
+                                            UExpressionList (when) [    it is java.lang.Integer -> {...    ] : PsiType:Object
+                                                USwitchClauseExpressionWithBody [it is java.lang.Integer -> {...]
+                                                    UBinaryExpressionWithType [it is java.lang.Integer]
+                                                        USimpleNameReferenceExpression (identifier = it) [it]
+                                                        UTypeReferenceExpression (name = java.lang.Integer) [java.lang.Integer]
+                                                    UExpressionList (when_entry) [{...]
+                                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println(something)] : PsiType:void
+                                                            UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                                            USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                                            USimpleNameReferenceExpression (identifier = something) [something] : PsiType:int
+                                                        UBreakExpression (label = null) [break]
+                                                USwitchClauseExpressionWithBody [ -> {...]
+                                                    UExpressionList (when_entry) [{...]
+                                                        ULiteralExpression (value = "") [""] : PsiType:String
+                                                        UBreakExpression (label = null) [break]
+                            UAnnotationMethod (name = getUint) [public static final fun getUint() : int = UastEmptyExpression]
+                            UAnnotationMethod (name = getUlong) [public static final fun getUlong() : long = UastEmptyExpression]
+                            UAnnotationMethod (name = getUbyte) [public static final fun getUbyte() : byte = UastEmptyExpression]
+                        UClass (name = FooInterface) [public abstract interface FooInterface {...}]
+                            UField (name = answer) [@org.jetbrains.annotations.NotNull @kotlin.jvm.JvmField public static final var answer: int = 42]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                UAnnotation (fqName = kotlin.jvm.JvmField) [@kotlin.jvm.JvmField]
+                                ULiteralExpression (value = 42) [42] : PsiType:int
+                            UField (name = Companion) [@null public static final var Companion: test.pkg.FooInterface.Companion]
+                                UAnnotation (fqName = null) [@null]
+                            UAnnotationMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]
+                                UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
+                                UBlockExpression [{...}] : PsiType:void
+                                    UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:void
+                                        UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                        USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                        ULiteralExpression (value = "Hello, world!") ["Hello, world!"] : PsiType:String
+                            UClass (name = Companion) [public static final class Companion {...}]
+                                UAnnotationMethod (name = sayHello) [@kotlin.jvm.JvmStatic...}]
+                                    UAnnotation (fqName = kotlin.jvm.JvmStatic) [@kotlin.jvm.JvmStatic]
+                                    UBlockExpression [{...}] : PsiType:void
+                                        UCallExpression (kind = UastCallKind(name='method_call'), argCount = 1)) [println("Hello, world!")] : PsiType:void
+                                            UIdentifier (Identifier (println)) [UIdentifier (Identifier (println))]
+                                            USimpleNameReferenceExpression (identifier = println, resolvesTo = null) [println] : PsiType:void
+                                            ULiteralExpression (value = "Hello, world!") ["Hello, world!"] : PsiType:String
+                                UAnnotationMethod (name = Companion) [private fun Companion() = UastEmptyExpression]
+                        UClass (name = FooAnnotation) [public abstract annotation FooAnnotation {...}]
+                            UField (name = Companion) [@null public static final var Companion: test.pkg.FooAnnotation.Companion]
+                                UAnnotation (fqName = null) [@null]
+                            UClass (name = Direction) [public static enum Direction {...}]
+                                UEnumConstant (name = UP) [@null UP]
+                                    UAnnotation (fqName = null) [@null]
+                                    USimpleNameReferenceExpression (identifier = Direction) [Direction]
+                                UEnumConstant (name = DOWN) [@null DOWN]
+                                    UAnnotation (fqName = null) [@null]
+                                    USimpleNameReferenceExpression (identifier = Direction) [Direction]
+                                UEnumConstant (name = LEFT) [@null LEFT]
+                                    UAnnotation (fqName = null) [@null]
+                                    USimpleNameReferenceExpression (identifier = Direction) [Direction]
+                                UEnumConstant (name = RIGHT) [@null RIGHT]
+                                    UAnnotation (fqName = null) [@null]
+                                    USimpleNameReferenceExpression (identifier = Direction) [Direction]
+                                UAnnotationMethod (name = Direction) [private fun Direction() = UastEmptyExpression]
+                            UClass (name = Bar) [public static abstract annotation Bar {...}]
+                            UClass (name = Companion) [public static final class Companion {...}]
+                                UField (name = bar) [@org.jetbrains.annotations.NotNull private static final var bar: int = 42]
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                    ULiteralExpression (value = 42) [42] : PsiType:int
+                                UAnnotationMethod (name = foo) [public final fun foo() : int {...}]
+                                    UBlockExpression [{...}]
+                                        UReturnExpression [return 42]
+                                            ULiteralExpression (value = 42) [42] : PsiType:int
+                                UAnnotationMethod (name = getBar) [public final fun getBar() : int = UastEmptyExpression]
+                                UAnnotationMethod (name = Companion) [private fun Companion() = UastEmptyExpression]
+                        UClass (name = Name) [public final class Name {...}]
+                            UField (name = s) [@org.jetbrains.annotations.NotNull private final var s: java.lang.String]
+                                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UAnnotationMethod (name = getS) [public final fun getS() : java.lang.String = UastEmptyExpression]
+                            UAnnotationMethod (name = constructor-impl) [public static fun constructor-impl(@org.jetbrains.annotations.NotNull s: java.lang.String) : java.lang.String = UastEmptyExpression]
+                                UParameter (name = s) [@org.jetbrains.annotations.NotNull var s: java.lang.String]
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UAnnotationMethod (name = toString-impl) [public static fun toString-impl(@null p: java.lang.String) : java.lang.String = UastEmptyExpression]
+                                UParameter (name = p) [@null var p: java.lang.String]
+                                    UAnnotation (fqName = null) [@null]
+                            UAnnotationMethod (name = hashCode-impl) [public static fun hashCode-impl(@null p: java.lang.String) : int = UastEmptyExpression]
+                                UParameter (name = p) [@null var p: java.lang.String]
+                                    UAnnotation (fqName = null) [@null]
+                            UAnnotationMethod (name = equals-impl) [public static fun equals-impl(@null p: java.lang.String, @org.jetbrains.annotations.Nullable p1: java.lang.Object) : boolean = UastEmptyExpression]
+                                UParameter (name = p) [@null var p: java.lang.String]
+                                    UAnnotation (fqName = null) [@null]
+                                UParameter (name = p1) [@org.jetbrains.annotations.Nullable var p1: java.lang.Object]
+                                    UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]
+                            UAnnotationMethod (name = equals-impl0) [public static final fun equals-impl0(@org.jetbrains.annotations.NotNull p1: java.lang.String, @org.jetbrains.annotations.NotNull p2: java.lang.String) : boolean = UastEmptyExpression]
+                                UParameter (name = p1) [@org.jetbrains.annotations.NotNull var p1: java.lang.String]
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                                UParameter (name = p2) [@org.jetbrains.annotations.NotNull var p2: java.lang.String]
+                                    UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]
+                            UAnnotationMethod (name = toString) [public fun toString() : java.lang.String = UastEmptyExpression]
+                            UAnnotationMethod (name = hashCode) [public fun hashCode() : int = UastEmptyExpression]
+                            UAnnotationMethod (name = equals) [public fun equals(@null p: java.lang.Object) : boolean = UastEmptyExpression]
+                                UParameter (name = p) [@null var p: java.lang.Object]
+                                    UAnnotation (fqName = null) [@null]
+                        UClass (name = FooInterface2) [public abstract interface FooInterface2 {...}]
+                            UAnnotationMethod (name = foo) [@kotlin.jvm.JvmDefault...}]
+                                UAnnotation (fqName = kotlin.jvm.JvmDefault) [@kotlin.jvm.JvmDefault]
+                                UBlockExpression [{...}]
+                                    UReturnExpression [return 42]
+                                        ULiteralExpression (value = 42) [42] : PsiType:int
+
+                    """.trimIndent(),
                     file.asLogTypes()
                 )
             })

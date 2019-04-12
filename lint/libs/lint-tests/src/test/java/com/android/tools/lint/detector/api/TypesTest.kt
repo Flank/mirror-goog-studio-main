@@ -92,7 +92,7 @@ class TypesTest : TestCase() {
                     "            UBlockExpression [{...}]\n" +
                     "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0)) [<init>()]\n" +
                     "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
-                    "                    USimpleNameReferenceExpression (identifier = <init>) [<init>]\n" +
+                    "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent) [<init>]\n" +
                     "    UClass (name = Parent) [public class Parent {...}]\n" +
                     "        UAnnotationMethod (name = method) [public fun method() : java.lang.String {...}]\n" +
                     "            UBlockExpression [{...}]\n" +
@@ -119,70 +119,72 @@ class TypesTest : TestCase() {
         )
 
         assertEquals(
-            "" +
-                    "UFile (package = )\n" +
-                    "    UClass (name = Kotlin)\n" +
-                    "        UField (name = property2)\n" +
-                    "            UAnnotation (fqName = org.jetbrains.annotations.Nullable)\n" +
-                    "            ULiteralExpression (value = null)\n" +
-                    "        UField (name = someField)\n" +
-                    "            UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            ULiteralExpression (value = 42)\n" +
-                    "        UField (name = someField2)\n" +
-                    "            UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UAnnotation (fqName = kotlin.jvm.JvmField)\n" +
-                    "            ULiteralExpression (value = 42)\n" +
-                    "        UField (name = property1)\n" +
-                    "            UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            ULiteralExpression (value = \"Default Value\")\n" +
-                    "        UAnnotationMethod (name = method)\n" +
-                    "            UBlockExpression\n" +
-                    "                UReturnExpression\n" +
-                    "                    ULiteralExpression (value = \"Hello World\")\n" +
-                    "        UAnnotationMethod (name = otherMethod)\n" +
-                    "            UParameter (name = ok)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UParameter (name = times)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UBlockExpression\n" +
-                    "        UAnnotationMethod (name = getProperty2)\n" +
-                    "        UAnnotationMethod (name = setProperty2)\n" +
-                    "            UParameter (name = p)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.Nullable)\n" +
-                    "        UAnnotationMethod (name = getProperty1)\n" +
-                    "            ULiteralExpression (value = \"Default Value\")\n" +
-                    "        UAnnotationMethod (name = Kotlin)\n" +
-                    "            UParameter (name = property1)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "                ULiteralExpression (value = \"Default Value\")\n" +
-                    "            UParameter (name = arg2)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UBlockExpression\n" +
-                    "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0))\n" +
-                    "                    UIdentifier (Identifier (Parent))\n" +
-                    "                    USimpleNameReferenceExpression (identifier = <init>)\n" +
-                    "    UClass (name = Parent)\n" +
-                    "        UAnnotationMethod (name = method)\n" +
-                    "            UBlockExpression\n" +
-                    "                UReturnExpression\n" +
-                    "                    ULiteralExpression (value = null)\n" +
-                    "        UAnnotationMethod (name = method2)\n" +
-                    "            UParameter (name = value)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UParameter (name = value)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.Nullable)\n" +
-                    "            UBlockExpression\n" +
-                    "                UReturnExpression\n" +
-                    "                    ULiteralExpression (value = null)\n" +
-                    "        UAnnotationMethod (name = method3)\n" +
-                    "            UParameter (name = value)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.Nullable)\n" +
-                    "            UParameter (name = value2)\n" +
-                    "                UAnnotation (fqName = org.jetbrains.annotations.NotNull)\n" +
-                    "            UBlockExpression\n" +
-                    "                UReturnExpression\n" +
-                    "                    ULiteralExpression (value = null)\n" +
-                    "        UAnnotationMethod (name = Parent)\n",
+            """
+            UFile (package = )
+                UClass (name = Kotlin)
+                    UField (name = property2)
+                        UAnnotation (fqName = org.jetbrains.annotations.Nullable)
+                        ULiteralExpression (value = null)
+                    UField (name = someField)
+                        UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        ULiteralExpression (value = 42)
+                    UField (name = someField2)
+                        UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UAnnotation (fqName = kotlin.jvm.JvmField)
+                        ULiteralExpression (value = 42)
+                    UField (name = property1)
+                        UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        ULiteralExpression (value = "Default Value")
+                    UAnnotationMethod (name = method)
+                        UBlockExpression
+                            UReturnExpression
+                                ULiteralExpression (value = "Hello World")
+                    UAnnotationMethod (name = otherMethod)
+                        UParameter (name = ok)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UParameter (name = times)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UBlockExpression
+                    UAnnotationMethod (name = getProperty2)
+                    UAnnotationMethod (name = setProperty2)
+                        UParameter (name = p)
+                            UAnnotation (fqName = org.jetbrains.annotations.Nullable)
+                    UAnnotationMethod (name = getProperty1)
+                        ULiteralExpression (value = "Default Value")
+                    UAnnotationMethod (name = Kotlin)
+                        UParameter (name = property1)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                            ULiteralExpression (value = "Default Value")
+                        UParameter (name = arg2)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UBlockExpression
+                            UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0))
+                                UIdentifier (Identifier (Parent))
+                                USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent)
+                UClass (name = Parent)
+                    UAnnotationMethod (name = method)
+                        UBlockExpression
+                            UReturnExpression
+                                ULiteralExpression (value = null)
+                    UAnnotationMethod (name = method2)
+                        UParameter (name = value)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UParameter (name = value)
+                            UAnnotation (fqName = org.jetbrains.annotations.Nullable)
+                        UBlockExpression
+                            UReturnExpression
+                                ULiteralExpression (value = null)
+                    UAnnotationMethod (name = method3)
+                        UParameter (name = value)
+                            UAnnotation (fqName = org.jetbrains.annotations.Nullable)
+                        UParameter (name = value2)
+                            UAnnotation (fqName = org.jetbrains.annotations.NotNull)
+                        UBlockExpression
+                            UReturnExpression
+                                ULiteralExpression (value = null)
+                    UAnnotationMethod (name = Parent)
+
+            """.trimIndent(),
             file?.asRecursiveLogString()?.replace("\r", "")
         )
         Disposer.dispose(pair.second)
@@ -297,7 +299,7 @@ class TypesTest : TestCase() {
                     "            UBlockExpression [{...}]\n" +
                     "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(5)]\n" +
                     "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
-                    "                    USimpleNameReferenceExpression (identifier = <init>) [<init>]\n" +
+                    "                    USimpleNameReferenceExpression (identifier = <init>, resolvesTo = Parent) [<init>]\n" +
                     "                    ULiteralExpression (value = 5) [5] : PsiType:int\n",
             file?.asLogTypes()
         )
