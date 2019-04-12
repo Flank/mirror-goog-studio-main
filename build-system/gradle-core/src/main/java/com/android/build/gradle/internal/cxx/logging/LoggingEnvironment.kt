@@ -83,18 +83,24 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
 }
 
 /**
+ * Interface for logging environment.
+ */
+private interface LoggingEnvironment : AutoCloseable {
+    fun error(message : String)
+    fun warn(message : String)
+    fun info(message : String)
+}
+
+/**
  * Logger base class. When used from Java try-with-resources or Kotlin use() function it will
  * automatically register and deregister with the thread-local stack of loggers.
  */
-abstract class ThreadLoggingEnvironment : AutoCloseable {
+abstract class ThreadLoggingEnvironment : LoggingEnvironment {
     init {
         // Okay to suppress because push doesn't have knowledge of derived classes.
         @Suppress("LeakingThis")
         push(this)
     }
-    abstract fun error(message : String)
-    abstract fun warn(message : String)
-    abstract fun info(message : String)
     override fun close() {
         pop()
     }
@@ -108,16 +114,33 @@ abstract class ThreadLoggingEnvironment : AutoCloseable {
 
         /**
          * The logger environment to use if there is no other environment. There should always be an
-         * intentional logging environment so throw print a callstack to the console and throw a
-         * RuntimeException.
+         * intentional logging environment. This logging environment does not register itself on
+         * with a thread-local (to avoid leaking class loader). It is stateless the call to close()
+         * is a no-op.
          */
-        private val BOTTOM_LOGGING_ENVIRONMENT = GradleBuildLoggingEnvironment(
-            Logging.getLogger(GradleBuildLoggingEnvironment::class.java))
+        private val BOTTOM_LOGGING_ENVIRONMENT = object : LoggingEnvironment {
+            private val logger = Logging.getLogger(GradleBuildLoggingEnvironment::class.java)
+
+            override fun error(message: String) {
+                logger.error(message)
+            }
+
+            override fun warn(message: String) {
+                logger.warn(message)
+            }
+
+            override fun info(message: String) {
+                logger.info(message)
+            }
+
+            override fun close() {
+            }
+        }
 
         /**
          * The current logger.
          */
-        private val logger : ThreadLoggingEnvironment
+        private val logger : LoggingEnvironment
             get() = loggerStack.get().firstOrNull() ?: BOTTOM_LOGGING_ENVIRONMENT
 
         /**
