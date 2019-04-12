@@ -85,7 +85,7 @@ class SvgTree {
     // information of that style class.
     private final Map<String, String> mStyleClassAttributeMap = new HashMap<>();
 
-    public enum SvgLogLevel {
+    enum SvgLogLevel {
         ERROR,
         WARNING
     }
@@ -188,7 +188,15 @@ class SvgTree {
         return mRoot;
     }
 
-    public void logErrorLine(@NonNull String s, @Nullable Node node, @NonNull SvgLogLevel level) {
+    public void logError(@NonNull String s, @Nullable Node node) {
+        logErrorLine(s, node, SvgLogLevel.ERROR);
+    }
+
+    public void logWarning(@NonNull String s, @Nullable Node node) {
+        logErrorLine(s, node, SvgLogLevel.WARNING);
+    }
+
+    void logErrorLine(@NonNull String s, @Nullable Node node, @NonNull SvgLogLevel level) {
         Preconditions.checkArgument(!s.isEmpty());
         int line = node == null ? 0 : getStartLine(node);
         mLogMessages.add(new LogMessage(level, line, s));

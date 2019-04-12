@@ -22,7 +22,7 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 /**
  * Represents a SVG group element that contains a clip-path. SvgClipPathNode's mChildren will
@@ -33,14 +33,14 @@ import org.w3c.dom.Node;
 class SvgClipPathNode extends SvgGroupNode {
     private final ArrayList<SvgNode> mAffectedNodes = new ArrayList<>();
 
-    SvgClipPathNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
-        super(svgTree, docNode, name);
+    SvgClipPathNode(@NonNull SvgTree svgTree, @NonNull Element element, @Nullable String name) {
+        super(svgTree, element, name);
     }
 
     @Override
     @NonNull
     public SvgClipPathNode deepCopy() {
-        SvgClipPathNode newInstance = new SvgClipPathNode(getTree(), getDocumentNode(), getName());
+        SvgClipPathNode newInstance = new SvgClipPathNode(getTree(), mDocumentElement, getName());
         newInstance.copyFrom(this);
         return newInstance;
     }
@@ -82,11 +82,7 @@ class SvgClipPathNode extends SvgGroupNode {
 
         if (mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
                 && ((mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0)) {
-            getTree()
-                    .logErrorLine(
-                            "Scaling of the stroke width is ignored",
-                            getDocumentNode(),
-                            SvgTree.SvgLogLevel.WARNING);
+            logWarning("Scaling of the stroke width is ignored");
         }
     }
 

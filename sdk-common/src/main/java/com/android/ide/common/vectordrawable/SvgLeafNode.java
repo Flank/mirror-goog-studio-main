@@ -19,7 +19,6 @@ import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
 import static com.android.ide.common.vectordrawable.Svg2Vector.presentationMap;
-import static com.android.ide.common.vectordrawable.SvgColor.colorSvg2Vd;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,7 +29,7 @@ import java.io.OutputStreamWriter;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 /** Represents an SVG file's leaf element. */
 class SvgLeafNode extends SvgNode {
@@ -40,16 +39,16 @@ class SvgLeafNode extends SvgNode {
     @Nullable private SvgGradientNode mFillGradientNode;
     @Nullable private SvgGradientNode mStrokeGradientNode;
 
-    SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String nodeName) {
-        super(svgTree, node, nodeName);
+    SvgLeafNode(@NonNull SvgTree svgTree, @NonNull Element element, @Nullable String nodeName) {
+        super(svgTree, element, nodeName);
     }
 
     @Override
     @NonNull
     public SvgLeafNode deepCopy() {
-        SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
-        newInstance.copyFrom(this);
-        return newInstance;
+        SvgLeafNode newNode = new SvgLeafNode(getTree(), mDocumentElement, getName());
+        newNode.copyFrom(this);
+        return newNode;
     }
 
     protected void copyFrom(@NonNull SvgLeafNode from) {
@@ -69,7 +68,7 @@ class SvgLeafNode extends SvgNode {
             String attribute = presentationMap.get(key);
             String svgValue = entry.getValue().trim();
             String vdValue;
-            vdValue = colorSvg2Vd(svgValue, "#000000", this);
+            vdValue = colorSvg2Vd(svgValue, "#000000");
 
             if (vdValue == null) {
                 if (svgValue.endsWith("px")) {
@@ -193,8 +192,7 @@ class SvgLeafNode extends SvgNode {
 
         if (mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
                 && ((mStackedTransform.getType() & AffineTransform.TYPE_MASK_SCALE) != 0)) {
-            getTree().logErrorLine("Scaling of the stroke width is ignored",
-                                   getDocumentNode(), SvgTree.SvgLogLevel.WARNING);
+            logWarning("Scaling of the stroke width is ignored");
         }
     }
 

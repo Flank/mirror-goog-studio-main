@@ -23,7 +23,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 
 /**
  * Represents an SVG file's group element.
@@ -33,14 +33,14 @@ class SvgGroupNode extends SvgNode {
 
     protected final ArrayList<SvgNode> mChildren = new ArrayList<>();
 
-    SvgGroupNode(@NonNull SvgTree svgTree, @NonNull Node docNode, @Nullable String name) {
+    SvgGroupNode(@NonNull SvgTree svgTree, @NonNull Element docNode, @Nullable String name) {
         super(svgTree, docNode, name);
     }
 
     @Override
     @NonNull
     public SvgGroupNode deepCopy() {
-        SvgGroupNode newInstance = new SvgGroupNode(getTree(), getDocumentNode(), getName());
+        SvgGroupNode newInstance = new SvgGroupNode(getTree(), mDocumentElement, getName());
         newInstance.copyFrom(this);
         return newInstance;
     }

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -48,8 +49,8 @@ abstract class SvgNode {
     protected final String mName;
     // Keep a reference to the tree in order to dump the error log.
     protected final SvgTree mSvgTree;
-    // Use document node to get the line number for error reporting.
-    private final Node mDocumentNode;
+    // Use document element to get the line number for error reporting.
+    protected final Element mDocumentElement;
 
     // Key is the attributes for vector drawable, and the value is the converted from SVG.
     protected final Map<String, String> mVdAttributesMap = new HashMap<>();
@@ -61,12 +62,12 @@ abstract class SvgNode {
     protected AffineTransform mStackedTransform = new AffineTransform();
 
     /** While parsing the translate() rotate() ..., update the {@code mLocalTransform}. */
-    SvgNode(@NonNull SvgTree svgTree, @NonNull Node node, @Nullable String name) {
+    SvgNode(@NonNull SvgTree svgTree, @NonNull Element element, @Nullable String name) {
         mName = name;
         mSvgTree = svgTree;
-        mDocumentNode = node;
+        mDocumentElement = element;
         // Parse and generate a presentation map.
-        NamedNodeMap a = node.getAttributes();
+        NamedNodeMap a = element.getAttributes();
         int len = a.getLength();
 
         for (int itemIndex = 0; itemIndex < len; itemIndex++) {
@@ -92,7 +93,7 @@ abstract class SvgNode {
         String[] matrices = nodeValue.split("[()]");
         AffineTransform parsedTransform;
         for (int i = 0; i < matrices.length - 1; i += 2) {
-            parsedTransform = parseOneTransform(matrices[i].trim(), matrices[i+1].trim());
+            parsedTransform = parseOneTransform(matrices[i].trim(), matrices[i + 1].trim());
             if (parsedTransform != null) {
                 mLocalTransform.concatenate(parsedTransform);
             }
@@ -159,7 +160,7 @@ abstract class SvgNode {
         }
 
         float[] results = new float[len];
-        for (int i = 0; i < len; i ++) {
+        for (int i = 0; i < len; i++) {
             results[i] = Float.parseFloat(numbers[i]);
         }
         return results;
@@ -176,13 +177,11 @@ abstract class SvgNode {
     }
 
     @NonNull
-    public Node getDocumentNode() {
-        return mDocumentNode;
+    public Element getDocumentNode() {
+        return mDocumentElement;
     }
 
-    /**
-     * Dumps the current node's debug info.
-     */
+    /** Dumps the current node's debug info. */
     public abstract void dumpNode(@NonNull String indent);
 
     /**
@@ -190,20 +189,16 @@ abstract class SvgNode {
      *
      * @param writer the writer to write the group XML element to
      * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
-     * @param indent whitespace used for indending output XML
+     * @param indent whitespace used for indenting output XML
      */
     public abstract void writeXml(
             @NonNull OutputStreamWriter writer, boolean inClipPath, @NonNull String indent)
             throws IOException;
 
-    /**
-     * Returns true the node is a group node.
-     */
+    /** Returns true the node is a group node. */
     public abstract boolean isGroupNode();
 
-    /**
-     * Transforms the current Node with the transformation matrix.
-     */
+    /** Transforms the current Node with the transformation matrix. */
     public abstract void transformIfNeeded(@NonNull AffineTransform finalTransform);
 
     private void fillPresentationAttributesInternal(String name, String value) {
@@ -215,13 +210,9 @@ abstract class SvgNode {
             }
         }
         logger.log(Level.FINE, ">>>> PROP " + name + " = " + value);
-        if (value.startsWith("url("))  {
+        if (value.startsWith("url(")) {
             if (!name.equals("fill") && !name.equals("stroke")) {
-                getTree()
-                        .logErrorLine(
-                                "Unsupported URL value: " + value,
-                                getDocumentNode(),
-                                SvgTree.SvgLogLevel.ERROR);
+                logError("Unsupported URL value: " + value);
                 return;
             }
         }
@@ -252,7 +243,7 @@ abstract class SvgNode {
      * the attribute does not exist.
      */
     public String getAttributeValue(@NonNull String attribute) {
-        NamedNodeMap a = mDocumentNode.getAttributes();
+        NamedNodeMap a = mDocumentElement.getAttributes();
         String value = "";
         int len = a.getLength();
         for (int j = 0; j < len; j++) {
@@ -272,5 +263,33 @@ abstract class SvgNode {
     protected <T extends SvgNode> void copyFrom(@NonNull T from) {
         fillEmptyAttributes(from.mVdAttributesMap);
         mLocalTransform = (AffineTransform) from.mLocalTransform.clone();
+    }
+
+    /**
+     * Converts an SVG color value to "#RRGGBB" or "#RGB" format used by vector drawables. The input
+     * color value can be "none" and RGB value, e.g. "rgb(255, 0, 0)", or a color name defined in
+     * https://www.w3.org/TR/SVG11/types.html#ColorKeywords.
+     *
+     * @param svgColor the SVG color value to convert
+     * @param errorFallbackColor the value returned if the supplied SVG color value has invalid or
+     *     unsupported format
+     * @return the converted value, or null if the given value cannot be interpreted as color
+     */
+    @Nullable
+    protected String colorSvg2Vd(@NonNull String svgColor, @NonNull String errorFallbackColor) {
+        try {
+            return SvgColor.colorSvg2Vd(svgColor);
+        } catch (IllegalArgumentException e) {
+            logError("Unsupported color format \"" + svgColor + "\"");
+            return errorFallbackColor;
+        }
+    }
+
+    protected void logError(@NonNull String s) {
+        mSvgTree.logError(s, mDocumentElement);
+    }
+
+    protected void logWarning(@NonNull String s) {
+        mSvgTree.logWarning(s, mDocumentElement);
     }
 }
