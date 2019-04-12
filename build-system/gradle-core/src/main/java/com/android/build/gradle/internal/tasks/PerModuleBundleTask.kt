@@ -33,6 +33,7 @@ import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -54,7 +55,7 @@ import java.util.function.Supplier
  * so that the base app can package into the bundle.
  *
  */
-open class PerModuleBundleTask : NonIncrementalTask() {
+abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -83,8 +84,7 @@ open class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var assetsFiles: Provider<Directory>
-        private set
+    abstract val assetsFiles: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -207,7 +207,8 @@ open class PerModuleBundleTask : NonIncrementalTask() {
 
             task.outputDir = outputDir
 
-            task.assetsFiles = artifacts.getFinalProduct(InternalArtifactType.MERGED_ASSETS)
+             artifacts.setTaskInputToFinalProduct(
+                 InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
             task.resFiles = artifacts.getFinalArtifactFiles(
                     if (variantScope.useResourceShrinker()) {
                         InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE

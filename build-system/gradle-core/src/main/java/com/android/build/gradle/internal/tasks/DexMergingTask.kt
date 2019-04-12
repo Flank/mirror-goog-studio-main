@@ -48,6 +48,7 @@ import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Throwables
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
@@ -91,7 +92,7 @@ import javax.inject.Inject
  * performance regression.
  */
 @CacheableTask
-open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
@@ -130,8 +131,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
     @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    var fileDependencyDexFiles: Provider<Directory>? = null
-        private set
+    abstract val fileDependencyDexFiles: DirectoryProperty
 
     // Dummy folder, used as a way to set up dependency
     @get:Optional
@@ -160,7 +160,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
                     mergingThreshold,
                     mainDexListFile?.singleFile(),
                     dexFiles.files,
-                    fileDependencyDexFiles?.get()?.asFile,
+                    fileDependencyDexFiles.orNull?.asFile,
                     outputDir
                 )
             )
@@ -215,9 +215,12 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
                 )
             }
             if (separateFileDependenciesDexingTask) {
-                task.fileDependencyDexFiles = variantScope.artifacts.getFinalProduct(
-                    InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.EXTERNAL_FILE_LIB_DEX_ARCHIVES,
+                    task.fileDependencyDexFiles
                 )
+            } else {
+                task.fileDependencyDexFiles.set(null as Directory?)
             }
             task.outputDir = output
         }

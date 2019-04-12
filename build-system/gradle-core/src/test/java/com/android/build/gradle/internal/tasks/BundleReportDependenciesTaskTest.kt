@@ -38,7 +38,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
+import org.gradle.api.file.RegularFileProperty
 
 class BundleReportDependenciesTaskTest {
 
@@ -55,8 +55,6 @@ class BundleReportDependenciesTaskTest {
     lateinit var featureDepsFiles : Set<File>
     lateinit var baseDepsFiles : Set<File>
 
-    @Mock private lateinit var provider: Provider<RegularFile>
-    @Mock private lateinit var baseDeps: RegularFile
     @Mock private lateinit var featureDeps: FileCollection
 
     @Before
@@ -70,8 +68,6 @@ class BundleReportDependenciesTaskTest {
         featureDepsFiles = ImmutableSet.of(feature1File, feature2File)
         baseDepsFiles = ImmutableSet.of(baseDepsFile)
 
-        Mockito.`when`(provider.get()).thenReturn(baseDeps)
-        Mockito.`when`(baseDeps.asFile).thenReturn(baseDepsFile)
         Mockito.`when`(featureDeps.files).thenReturn(featureDepsFiles)
 
         val testDir = temporaryFolder.newFolder()
@@ -190,7 +186,7 @@ class BundleReportDependenciesTaskTest {
                     .build())
             .build()
 
-        task.baseDeps = provider
+        task.baseDeps.set(baseDepsFile)
         task.featureDeps = featureDeps
 
         task.doTaskAction()

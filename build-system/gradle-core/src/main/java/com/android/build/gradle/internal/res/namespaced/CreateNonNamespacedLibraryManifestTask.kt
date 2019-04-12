@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
@@ -39,7 +40,7 @@ import javax.inject.Inject
  * non-namespaced projects.
  */
 @CacheableTask
-open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
+abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
     : NonIncrementalTask() {
 
     @get:OutputFile
@@ -48,8 +49,7 @@ open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExec
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var libraryManifest: Provider<RegularFile>
-    private set
+    abstract val libraryManifest: RegularFileProperty
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -86,8 +86,8 @@ open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExec
         override fun configure(task: CreateNonNamespacedLibraryManifestTask) {
             super.configure(task)
             task.outputStrippedManifestFile = outputStrippedManifestFile
-            task.libraryManifest =
-                    variantScope.artifacts.getFinalProduct(InternalArtifactType.LIBRARY_MANIFEST)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }
     }
 }

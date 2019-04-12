@@ -94,7 +94,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 @CacheableTask
-open class LinkApplicationAndroidResourcesTask @Inject constructor(
+abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     objects: ObjectFactory,
     workerExecutor: WorkerExecutor) :
     ProcessAndroidResources() {
@@ -521,9 +521,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
                 InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS
             else
                 variantScope.manifestArtifactType
-            task.setManifestFiles(
-                variantScope.artifacts.getFinalProduct(task.taskInputType)
-            )
+            variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.setType(config.type)
             task.setDebuggable(config.buildType.isDebuggable)

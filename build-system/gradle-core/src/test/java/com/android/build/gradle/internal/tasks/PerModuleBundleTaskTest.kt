@@ -37,6 +37,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFile
@@ -47,6 +48,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
@@ -56,8 +58,6 @@ import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
 
-    @Mock private lateinit var assetsFilesProvider: Provider<Directory>
-    @Mock private lateinit var assetsFiles: Directory
     @Mock private lateinit var resFiles: BuildableArtifact
     @Mock private lateinit var dexFiles: FileCollection
     @Mock private lateinit var javaResProvider: Provider<RegularFile>
@@ -91,12 +91,6 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         Mockito.`when`(variantConfiguration.supportedAbis).thenReturn(setOf())
 
-        Mockito.`when`(artifacts.getFinalProduct<Directory>(InternalArtifactType.MERGED_ASSETS))
-            .thenReturn(assetsFilesProvider)
-
-        Mockito.`when`(assetsFilesProvider.get()).thenReturn(assetsFiles)
-        Mockito.`when`(assetsFiles.asFile).thenReturn(
-            testFolder.newFolder("assets"))
         Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.LINKED_RES_FOR_BUNDLE))
             .thenReturn(resFiles)
         Mockito.`when`(resFiles.iterator()).thenReturn(
@@ -144,7 +138,9 @@ class PerModuleBundleTaskTest {
                     "{\"modulePath\":\":feature1\",\"featureName\":\"feature1\",\"resOffset\":128}]")
 
         val project = ProjectBuilder.builder().withProjectDir(testFolder.newFolder()).build()
-        task = project.tasks.create("test", PerModuleBundleTask::class.java)
+        task = project.tasks.create("test", PerModuleBundleTask::class.java) {
+            task -> task.assetsFiles.set(testFolder.newFolder("assets"))
+        }
 
         Mockito.`when`(featureSetMetadata.singleFile).thenReturn(featureMetadata)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.MODULE_BUNDLE, task.name))

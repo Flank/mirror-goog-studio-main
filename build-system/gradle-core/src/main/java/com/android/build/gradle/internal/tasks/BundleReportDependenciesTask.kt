@@ -31,7 +31,9 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.FileOutputStream
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -42,12 +44,11 @@ import java.util.LinkedList
 /**
  * Task that generates the final bundle dependencies, combining all the module dependencies.
  */
-open class BundleReportDependenciesTask : NonIncrementalTask() {
+abstract class BundleReportDependenciesTask : NonIncrementalTask() {
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var baseDeps: Provider<RegularFile>
-        internal set
+    abstract val baseDeps: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -148,7 +149,8 @@ open class BundleReportDependenciesTask : NonIncrementalTask() {
 
         override fun configure(task: BundleReportDependenciesTask) {
             super.configure(task)
-            task.baseDeps = variantScope.artifacts.getFinalProduct(InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT, task.baseDeps)
             task.featureDeps = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.ALL,

@@ -407,12 +407,13 @@ abstract class BuildArtifactsHolder(
      * Sets a [Property] value to the final producer for the given artifact type.
      *
      * If there are more than one producer appending artifacts for the passed type, calling this
-     * method will generate an error and [getFinalProducts] should be used instead.
+     * method will generate an error and [setFinalProducts] should be used instead.
      *
      * The simplest way to use the mechanism is as follow :
      * <pre>
      *     abstract class MyTask: Task() {
-     *          val inputFile: RegularFileProperty
+     *          @InputFile
+     *          abstract val inputFile: RegularFileProperty
      *     }
      *
      *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
@@ -426,6 +427,28 @@ abstract class BuildArtifactsHolder(
     fun <T: FileSystemLocation> setTaskInputToFinalProduct(artifactType: ArtifactType, taskInputProperty: Property<T>) {
         val finalProduct = getFinalProduct<T>(artifactType)
         taskInputProperty.set(finalProduct)
+    }
+    /**
+     * Sets a [ListProperty] value to all the produces for the given artifact type.
+     *
+     * The simplest way to use the mechanism is as follow :
+     * <pre>
+     *     abstract class MyTask: Task() {
+     *          @InputFiles
+     *          abstract val inputFiles: ListProperty<RegularFile>
+     *     }
+     *
+     *     val myTaskProvider = taskFactory.register("myTask", MyTask::class.java) {
+     *          scope.artifacts.setFinalProducts(InternalArtifactTYpe.SOME_ID, it.inputFiles)
+     *     }
+     * </pre>
+     *
+     * @param artifactType requested artifact type
+     * @param receiver the [ListProperty] to set the producers on.
+     */
+    fun <T: FileSystemLocation> setFinalProducts(artifactType: ArtifactType, receiver: ListProperty<T>) {
+        val finalProduct = getFinalProducts<T>(artifactType)
+        receiver.set(finalProduct)
     }
 
     /**

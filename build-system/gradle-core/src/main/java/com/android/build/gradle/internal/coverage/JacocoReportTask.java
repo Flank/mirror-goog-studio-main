@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.coverage;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -42,11 +41,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -69,11 +67,10 @@ import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
 
 /** Simple Jacoco report task that calls the Ant version. */
-public class JacocoReportTask extends NonIncrementalTask {
+public abstract class JacocoReportTask extends NonIncrementalTask {
 
     private FileCollection jacocoClasspath;
 
-    private Provider<Directory> coverageDirectories;
     private BuildableArtifact classFileCollection;
     private Supplier<FileCollection> sourceFolders;
 
@@ -96,10 +93,7 @@ public class JacocoReportTask extends NonIncrementalTask {
 
     @InputFiles
     @Optional
-    @Nullable
-    public Provider<Directory> getCoverageDirectories() {
-        return coverageDirectories;
-    }
+    public abstract DirectoryProperty getCoverageDirectories();
 
     @OutputDirectory
     public File getReportDir() {
@@ -150,7 +144,7 @@ public class JacocoReportTask extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws IOException {
         Set<File> coverageFiles =
-                coverageDirectories
+                getCoverageDirectories()
                         .get()
                         .getAsFileTree()
                         .getFiles()
@@ -162,7 +156,7 @@ public class JacocoReportTask extends NonIncrementalTask {
             throw new IOException(
                     String.format(
                             "No coverage data to process in directories [%1$s]",
-                            coverageDirectories.get().getAsFile().getAbsolutePath()));
+                            getCoverageDirectories().get().getAsFile().getAbsolutePath()));
         }
         executor.submit(
                 JacocoReportWorkerAction.class,
@@ -221,8 +215,9 @@ public class JacocoReportTask extends NonIncrementalTask {
 
             task.jacocoClasspath = jacocoAntConfiguration;
 
-            task.coverageDirectories =
-                    scope.getArtifacts().getFinalProduct(InternalArtifactType.CODE_COVERAGE);
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.CODE_COVERAGE, task.getCoverageDirectories());
 
             task.classFileCollection =
                     testedScope

@@ -27,8 +27,10 @@ import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -47,15 +49,14 @@ import javax.inject.Inject
  * [AndroidJavaCompile] for more details.
  */
 @CacheableTask
-open class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
+abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
 
     @get:Internal
     override lateinit var variantName: String
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var processorListFile: Provider<RegularFile>
-        private set
+    abstract val processorListFile: RegularFileProperty
 
     @get:Internal
     lateinit var sourceFileTrees: () -> List<FileTree>
@@ -126,8 +127,8 @@ open class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : 
             task.configureProperties(variantScope)
 
             // Configure properties that are specific to ProcessAnnotationTask
-            task.processorListFile =
-                    variantScope.artifacts.getFinalProduct(ANNOTATION_PROCESSOR_LIST)
+             variantScope.artifacts.setTaskInputToFinalProduct(
+                 ANNOTATION_PROCESSOR_LIST, task.processorListFile)
 
             // Configure properties for annotation processing
             task.configurePropertiesForAnnotationProcessing(variantScope, task.outputFolder)

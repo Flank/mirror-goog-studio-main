@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -46,12 +46,11 @@ import javax.inject.Inject
  * Class generating the R.jar and res-ids.txt files for a resource namespace aware library.
  */
 @CacheableTask
-open class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) : NonIncrementalTask() {
+abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var partialRFiles: Provider<List<Directory>>
-        private set
+    abstract val partialRFiles: ListProperty<Directory>
 
     @get:Internal
     lateinit var packageForRSupplier: Supplier<String>
@@ -101,8 +100,8 @@ open class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: Obje
         override fun configure(task: GenerateNamespacedLibraryRFilesTask) {
             super.configure(task)
 
-            task.partialRFiles = variantScope.artifacts.getFinalProducts(
-                InternalArtifactType.PARTIAL_R_FILES)
+            variantScope.artifacts.setFinalProducts(
+                InternalArtifactType.PARTIAL_R_FILES, task.partialRFiles)
             task.packageForRSupplier =
                     Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
         }

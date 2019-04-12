@@ -48,6 +48,7 @@ import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -65,7 +66,7 @@ import javax.inject.Inject
 import java.util.function.Function as JavaFunction
 
 @CacheableTask
-open class VerifyLibraryResourcesTask @Inject
+abstract class VerifyLibraryResourcesTask @Inject
 constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     @get:OutputDirectory
@@ -85,8 +86,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var manifestFiles: Provider<Directory>
-        private set
+    abstract val manifestFiles: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -212,8 +212,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 else ->
                     InternalArtifactType.MERGED_MANIFESTS
             }
-            task.manifestFiles = variantScope.artifacts
-                    .getFinalProduct(task.taskInputType)
+            variantScope.artifacts.setTaskInputToFinalProduct(task.taskInputType, task.manifestFiles)
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 

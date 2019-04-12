@@ -26,6 +26,7 @@ import com.android.ide.common.symbols.generateMinifyKeepRules
 import com.android.ide.common.symbols.parseManifest
 import com.google.common.collect.Iterables
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -48,7 +49,7 @@ import javax.inject.Inject
  * collects information from them and generates the keep rules file.
  */
 @CacheableTask
-open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: WorkerExecutor)
+abstract class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: WorkerExecutor)
     : NonIncrementalTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -58,8 +59,7 @@ open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: 
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var manifestFiles: Provider<Directory>
-        private set
+    abstract val manifestFiles: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -131,8 +131,8 @@ open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: 
             task.inputResourcesDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.PACKAGED_RES)
 
-            task.manifestFiles = variantScope.artifacts.getFinalProduct(
-                InternalArtifactType.MERGED_MANIFESTS)
+             variantScope.artifacts.setTaskInputToFinalProduct(
+                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
         }
     }
 }

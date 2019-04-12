@@ -44,7 +44,6 @@ class BundleAllClassesTest {
 
     @Mock private lateinit var scope: VariantScope
     @Mock private lateinit var artifacts: BuildArtifactsHolder
-    @Mock private lateinit var javacClasses: Directory
     @Mock private lateinit var fileTree: FileTree
     @Mock private lateinit var globalScope: GlobalScope
     @Mock private lateinit var variantData: BaseVariantData
@@ -73,7 +72,6 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.extension).thenReturn(extension)
         Mockito.`when`(extension.aaptOptions).thenReturn(aaptOptions)
         Mockito.`when`(aaptOptions.namespaced).thenReturn(false)
-        Mockito.`when`(javacClasses.asFileTree).thenReturn(fileTree)
         Mockito.`when`(preJavacClasses.asFileTree).thenReturn(fileTree)
         Mockito.`when`(postJavacClasses.asFileTree).thenReturn(fileTree)
 
@@ -90,12 +88,11 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APP_CLASSES,
             task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
-        Mockito.`when`(artifacts.getFinalProduct<Directory>(InternalArtifactType.JAVAC))
-            .thenReturn(Providers.of(javacClasses))
 
         val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)
         configAction.configure(task)
+        task.javacClasses.set(testFolder.newFolder())
     }
 
     @After

@@ -43,7 +43,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -56,7 +56,7 @@ import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile Shaders */
 @CacheableTask
-public class ShaderCompile extends NonIncrementalTask {
+public abstract class ShaderCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()
             .include("**/*." + ShaderProcessor.EXT_VERT)
@@ -91,13 +91,10 @@ public class ShaderCompile extends NonIncrementalTask {
     }
 
     private Provider<File> ndkLocation;
-    private Provider<Directory> sourceDir;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public Provider<Directory> getSourceDir() {
-        return sourceDir;
-    }
+    public abstract DirectoryProperty getSourceDir();
 
     @NonNull
     private List<String> defaultArgs = ImmutableList.of();
@@ -107,7 +104,7 @@ public class ShaderCompile extends NonIncrementalTask {
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileTree getSourceFiles() {
-        File sourceDirFile = sourceDir.get().getAsFile();
+        File sourceDirFile = getSourceDir().get().getAsFile();
         FileTree src = null;
         if (sourceDirFile.isDirectory()) {
             src = getProject().files(sourceDirFile).getAsFileTree().matching(PATTERN_SET);
@@ -123,7 +120,7 @@ public class ShaderCompile extends NonIncrementalTask {
 
         try (WorkerExecutorFacade workers = this.workers) {
             compileAllShaderFiles(
-                    sourceDir.get().getAsFile(),
+                    getSourceDir().get().getAsFile(),
                     getOutputDir(),
                     defaultArgs,
                     scopedArgs,
@@ -245,8 +242,7 @@ public class ShaderCompile extends NonIncrementalTask {
             final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
 
             task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
-
-            task.sourceDir = scope.getArtifacts().getFinalProduct(MERGED_SHADERS);
+            scope.getArtifacts().setTaskInputToFinalProduct(MERGED_SHADERS, task.getSourceDir());
             task.setOutputDir(outputDir);
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());

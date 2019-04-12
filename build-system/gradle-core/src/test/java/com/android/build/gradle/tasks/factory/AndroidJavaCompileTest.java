@@ -26,6 +26,7 @@ import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
@@ -58,11 +59,11 @@ public class AndroidJavaCompileTest {
         AndroidJavaCompile task = project.getTasks().create("test", AndroidJavaCompile.class);
 
         File inputFile = temporaryFolder.newFile();
-        Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
+        Files.write(inputFile.toPath(), "[]".getBytes(StandardCharsets.UTF_8));
         task.variantName = VARIANT_NAME;
 
-        task.processorListFile =
-                project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath());
+        task.getProcessorListFile()
+                .set(project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath()));
 
         Set<String> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();
@@ -79,10 +80,11 @@ public class AndroidJavaCompileTest {
 
         File inputFile = temporaryFolder.newFile();
         Files.write(
-                inputFile.toPath(), "{\"processor1\":false,\"processor2\":true}".getBytes("utf-8"));
+                inputFile.toPath(),
+                "{\"processor1\":false,\"processor2\":true}".getBytes(StandardCharsets.UTF_8));
         task.variantName = VARIANT_NAME;
-        task.processorListFile =
-                project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath());
+        task.getProcessorListFile()
+                .set(project.getLayout().getBuildDirectory().file(inputFile.getAbsolutePath()));
 
         Set<String> annotationProcessors =
                 JavaCompileUtils.readAnnotationProcessorsFromJsonFile(inputFile).keySet();

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.Provider
@@ -42,7 +43,7 @@ import javax.xml.parsers.ParserConfigurationException
 /**
  * Task to shrink resources for the android app bundle
  */
-open class ShrinkBundleResourcesTask : NonIncrementalTask() {
+abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile
     lateinit var compressedResourceFile: File
@@ -58,8 +59,7 @@ open class ShrinkBundleResourcesTask : NonIncrementalTask() {
         private set
 
     @get:InputFiles
-    lateinit var sourceDir: Provider<Directory>
-        private set
+    abstract val sourceDir: DirectoryProperty
 
     @get:InputFiles
     lateinit var resourceDir: BuildableArtifact
@@ -184,8 +184,9 @@ open class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
             task.dex = variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
 
-            task.sourceDir = variantScope.artifacts.getFinalProduct(
-                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                task.sourceDir
             )
             task.resourceDir = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES

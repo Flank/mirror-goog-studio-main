@@ -28,12 +28,15 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -49,7 +52,7 @@ import javax.inject.Inject
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
  */
-open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -58,8 +61,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
         private set
 
     @get:InputFiles
-    lateinit var javacClasses: Provider<Directory>
-        private set
+    abstract val javacClasses: DirectoryProperty
 
     @get:InputFiles
     lateinit var preJavacClasses: FileCollection
@@ -69,10 +71,9 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
     lateinit var postJavacClasses: FileCollection
         private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:Optional
-    var thisRClassClasses: Provider<RegularFile>? = null
-        private set
+    abstract val thisRClassClasses: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
@@ -96,7 +97,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
         javacClasses.get().asFileTree.visit(collector)
         preJavacClasses.asFileTree.visit(collector)
         postJavacClasses.asFileTree.visit(collector)
-        val rRClassJarFile = thisRClassClasses?.get()?.asFile
+        val rRClassJarFile = thisRClassClasses.orNull?.asFile
         if (rRClassJarFile!=null) {
             project.fileTree(rRClassJarFile).visit(collector)
         }
@@ -130,14 +131,15 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
             task.outputJar = outputJar
-            task.javacClasses = variantScope.artifacts.getFinalProduct(InternalArtifactType.JAVAC)
+            variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.JAVAC, task.javacClasses)
             task.preJavacClasses = variantScope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode
             val globalScope = variantScope.globalScope
             task.modulePath = globalScope.project.path
             if (globalScope.extension.aaptOptions.namespaced) {
-                task.thisRClassClasses = variantScope.artifacts
-                    .getFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                    task.thisRClassClasses)
                 task.dependencyRClassClasses = variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
