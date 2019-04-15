@@ -1441,11 +1441,6 @@ public abstract class TaskManager {
 
         ProjectOptions projectOptions = globalScope.getProjectOptions();
 
-        String targetAbi =
-                projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
-                        ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
-                        : null;
-
         // Set up build tasks
         TaskProvider<ExternalNativeBuildTask> buildTask =
                 taskFactory.register(

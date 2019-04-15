@@ -49,6 +49,13 @@ interface CxxAbiModel {
         get() = join(cxxBuildFolder,"android_gradle_build.json")
 
     /**
+     * The ninja log file
+     *   ex, $moduleRootFolder/.cxx/cmake/debug/x86/.ninja_log
+     */
+    val ninjaLogFile: File
+        get() = join(cxxBuildFolder, ".ninja_log")
+
+    /**
      * The gradle build output folder
      *   ex, $moduleRootFolder/.cxx/cxx/debug/armeabi-v7a
      */
