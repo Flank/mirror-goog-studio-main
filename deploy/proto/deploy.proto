@@ -123,6 +123,10 @@ message Event {
     TRC_END = 2; // Used for tracing. Mark end of a section.
     LOG_OUT = 3;
     LOG_ERR = 4;
+
+    // Used for tracing. Marks the beginning of a section that should
+    // be reported as a DeployMetric in studio.
+    TRC_METRIC = 5;
   }
   Type type = 1;
   int64 pid = 2;

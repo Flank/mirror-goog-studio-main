@@ -25,7 +25,6 @@ import com.android.tools.deployer.tasks.TaskRunner.Task;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ public class Deployer {
     private final Installer installer;
     private final TaskRunner runner;
     private final UIService service;
+    private final Collection<DeployMetric> metrics;
     private final ILogger logger;
 
     public Deployer(
@@ -49,12 +49,14 @@ public class Deployer {
             TaskRunner runner,
             Installer installer,
             UIService service,
+            Collection<DeployMetric> metrics,
             ILogger logger) {
         this.adb = adb;
         this.db = db;
         this.runner = runner;
         this.installer = installer;
         this.service = service;
+        this.metrics = metrics;
         this.logger = logger;
     }
 
@@ -81,7 +83,6 @@ public class Deployer {
      * by {@link DeployerException} thus this object is created only on successful deployments.
      */
     public class Result {
-        public Collection<DeployMetric> metrics = Lists.newArrayList();
         public boolean skippedInstall = false;
     }
 
@@ -96,7 +97,7 @@ public class Deployer {
         try (Trace ignored = Trace.begin("install")) {
             ApkInstaller apkInstaller = new ApkInstaller(adb, service, installer, logger);
             result.skippedInstall =
-                    !apkInstaller.install(packageName, apks, options, installMode, result.metrics);
+                    !apkInstaller.install(packageName, apks, options, installMode, metrics);
 
             // Inputs
             Task<List<String>> paths = runner.create(apks);
@@ -183,12 +184,13 @@ public class Deployer {
         // Wait only for swap to finish
         runner.runAsync();
 
-        Result result = new Result();
         // null metrics are from tasks that are not started.
         tasks.stream()
                 .map(task -> task.getMetric())
                 .filter(Objects::nonNull)
-                .forEach(metric -> result.metrics.add(metric));
+                .forEach(metric -> metrics.add(metric));
+
+        Result result = new Result();
         result.skippedInstall = sessionId.get().equals("<SKIPPED-INSTALLATION>");
         return result;
     }

@@ -27,7 +27,7 @@ namespace deploy {
 
 struct Event {
   uint64_t timestamp_ns;
-  enum Type { Logging, Error, Begin, End };
+  enum Type { Logging, Error, Begin, BeginMetric, End };
   Type type;
   int64_t pid;
   int64_t tid;
@@ -42,6 +42,7 @@ uint64_t GetTime() noexcept;
 void LogEvent(const std::string& text);
 void ErrEvent(const std::string& text);
 void BeginPhase(const std::string& text);
+void BeginMetric(const std::string& text);
 void EndPhase();
 void AddRawEvent(const Event& event);
 std::unique_ptr<std::vector<Event>> ConsumeEvents();
@@ -52,6 +53,13 @@ class Phase {
   Phase(const std::string& name) { BeginPhase(name); }
   ~Phase() { EndPhase(); }
 };
+
+class Metric {
+ public:
+  Metric(const std::string& name) { BeginMetric(name); }
+  ~Metric() { EndPhase(); }
+};
+
 }  // namespace deploy
 
 #endif

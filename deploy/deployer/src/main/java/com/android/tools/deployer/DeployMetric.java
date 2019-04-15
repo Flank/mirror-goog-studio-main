@@ -24,21 +24,26 @@ public class DeployMetric {
     private final String name;
     private String status = null;
     private final long threadId;
-    private final long startMs;
-    private long endMs = UNFINISHED;
+    private final long startNs;
+    private long endNs;
 
     public DeployMetric(String name) {
-        this(name, System.currentTimeMillis(), Thread.currentThread().getId());
+        this(name, System.nanoTime());
     }
 
-    public DeployMetric(String name, long startMs) {
-        this(name, startMs, Thread.currentThread().getId());
+    public DeployMetric(String name, long startNs) {
+        this(name, startNs, UNFINISHED);
     }
 
-    private DeployMetric(String name, long startMs, long threadId) {
+    public DeployMetric(String name, long startNs, long endNs) {
+        this(name, startNs, endNs, Thread.currentThread().getId());
+    }
+
+    private DeployMetric(String name, long startNs, long endNs, long threadId) {
         this.name = name;
         this.threadId = threadId;
-        this.startMs = startMs;
+        this.startNs = startNs;
+        this.endNs = endNs;
     }
 
     public void finish(String status, Collection<DeployMetric> metrics) {
@@ -47,9 +52,9 @@ public class DeployMetric {
     }
 
     public void finish(String status) {
-        assert endMs == UNFINISHED;
+        assert endNs == UNFINISHED;
         this.status = status;
-        endMs = System.currentTimeMillis();
+        endNs = System.nanoTime();
     }
 
     public String getName() {
@@ -68,12 +73,12 @@ public class DeployMetric {
         return threadId;
     }
 
-    public long getStartTimeMs() {
-        return startMs;
+    public long getStartTimeNs() {
+        return startNs;
     }
 
-    public long getEndTimeMs() {
-        assert endMs != UNFINISHED;
-        return endMs;
+    public long getEndTimeNs() {
+        assert endNs != UNFINISHED;
+        return endNs;
     }
 }

@@ -16,13 +16,13 @@
 
 #include "tools/base/deploy/installer/delta_preinstall.h"
 
-#include <algorithm>
-
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <algorithm>
 
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/trace.h"
@@ -38,7 +38,7 @@ void DeltaPreinstallCommand::ParseParameters(int argc, char** argv) {
   deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
   std::string data;
 
-  BeginPhase("Reading stdin");
+  BeginMetric("DELTAPREINSTALL::PUSH");
   if (!wrapper.Read(&data)) {
     ErrEvent("Unable to read data on stdin.");
     EndPhase();
@@ -98,7 +98,7 @@ bool DeltaPreinstallCommand::SendApkToPackageManager(
 }
 
 void DeltaPreinstallCommand::Run() {
-  Phase p("Command DeltaPreinstall");
+  Metric m("DELTAPREINSTALL::WRITE");
 
   proto::DeltaPreinstallResponse* response =
       new proto::DeltaPreinstallResponse();

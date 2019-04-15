@@ -91,10 +91,12 @@ public class DeployerRunner implements UIService {
 
         // Run
         AdbClient adb = new AdbClient(device, logger);
-        Installer installer = new AdbInstaller(parameters.getInstallersPath(), adb, logger);
+        Installer installer =
+                new AdbInstaller(parameters.getInstallersPath(), adb, new ArrayList<>(), logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        Deployer deployer = new Deployer(adb, db, runner, installer, this, logger);
+        Deployer deployer =
+                new Deployer(adb, db, runner, installer, this, new ArrayList<>(), logger);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();

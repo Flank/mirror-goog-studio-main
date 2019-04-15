@@ -50,7 +50,7 @@ void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
   deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
   std::string data;
 
-  BeginPhase("Reading stdin");
+  BeginMetric("DELTAINSTALL::PUSH");
   if (!wrapper.Read(&data)) {
     ErrEvent("Unable to read data on stdin.");
     EndPhase();
@@ -70,7 +70,7 @@ void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
 }
 
 void DeltaInstallCommand::Run() {
-  Phase p("Command DeltaInstall");
+  Metric m("DELTAINSTALL::INSTALL");
 
   proto::DeltaInstallResponse* response = new proto::DeltaInstallResponse();
   workspace_.GetResponse().set_allocated_deltainstall_response(response);

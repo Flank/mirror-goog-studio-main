@@ -16,11 +16,11 @@
 
 #include "tools/base/deploy/common/event.h"
 
-#include <vector>
-
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#include <vector>
 
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/utils.h"
@@ -66,6 +66,11 @@ void ErrEvent(const std::string& text) {
 
 void BeginPhase(const std::string& text) {
   AddEvent(Event::Type::Begin, text);
+  Trace::Begin(text.c_str());
+}
+
+void BeginMetric(const std::string& text) {
+  AddEvent(Event::Type::BeginMetric, text);
   Trace::Begin(text.c_str());
 }
 

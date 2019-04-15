@@ -34,6 +34,7 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,7 +60,8 @@ public class ApkInstallerTest extends FakeAdbTestBase {
         File installers = Files.createTempDirectory("installers").toFile();
         FileUtils.writeToFile(new File(installers, "x86/installer"), "INSTALLER");
         AdbClient client = new AdbClient(iDevice, logger);
-        AdbInstaller adbInstaller = new AdbInstaller(installers.getAbsolutePath(), client, logger);
+        AdbInstaller adbInstaller =
+                new AdbInstaller(installers.getAbsolutePath(), client, new ArrayList<>(), logger);
         ApkInstaller apkInstaller =
                 new ApkInstaller(client, new EmptyUiService(), adbInstaller, logger);
 

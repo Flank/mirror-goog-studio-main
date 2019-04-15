@@ -72,7 +72,7 @@ public class ApkInstaller {
 
         // First attempt to delta install.
         boolean allowReinstall = true;
-        long deltaInstallStart = System.currentTimeMillis();
+        long deltaInstallStart = System.nanoTime();
         try {
             deltaInstallResult =
                     deltaInstall(apks, options, allowReinstall, installMode, packageName);
@@ -101,7 +101,7 @@ public class ApkInstaller {
 
                 // Fallback
                 result = adb.install(apks, options.getFlags(), allowReinstall);
-                long installStartTime = System.currentTimeMillis();
+                long installStartTime = System.nanoTime();
                 DeployMetric installResult = new DeployMetric("INSTALL", installStartTime);
                 installResult.finish(result.name(), metrics);
                 break;
@@ -117,7 +117,7 @@ public class ApkInstaller {
                             new DeployMetric("DELTAINSTALL", deltaInstallStart);
                     deltaNotPatchableMetric.finish(deltaInstallResult.status.name(), metrics);
 
-                    long installStarted = System.currentTimeMillis();
+                    long installStarted = System.nanoTime();
                     result = adb.install(apks, options.getFlags(), allowReinstall);
                     DeployMetric installMetric = new DeployMetric("INSTALL", installStarted);
                     installMetric.finish(result.name(), metrics);

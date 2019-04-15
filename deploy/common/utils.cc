@@ -41,6 +41,9 @@ deploy::Event ConvertProtoEventToEvent(
     case proto::Event::TRC_BEG:
       type = Event::Type::Begin;
       break;
+    case proto::Event::TRC_METRIC:
+      type = Event::Type::BeginMetric;
+      break;
     case proto::Event::TRC_END:
       type = Event::Type::End;
       break;
@@ -55,6 +58,9 @@ void ConvertEventToProtoEvent(deploy::Event& event,
   switch (event.type) {
     case deploy::Event::Type::Begin:
       proto_type = proto::Event_Type_TRC_BEG;
+      break;
+    case deploy::Event::Type::BeginMetric:
+      proto_type = proto::Event_Type_TRC_METRIC;
       break;
     case deploy::Event::Type::End:
       proto_type = proto::Event_Type_TRC_END;

@@ -35,7 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 
 public class AdbInstaller implements Installer {
     public static final String INSTALLER_BINARY_NAME = "installer";
@@ -45,6 +47,7 @@ public class AdbInstaller implements Installer {
             "/tools/base/deploy/installer/android-installer";
     private final AdbClient adb;
     private final String installersFolder;
+    private final Collection<DeployMetric> metrics;
     private final ILogger logger;
 
     private enum OnFail {
@@ -54,9 +57,14 @@ public class AdbInstaller implements Installer {
 
     private static final int HEX_LINE_SIZE = 10;
 
-    public AdbInstaller(String installersFolder, AdbClient adb, ILogger logger) {
+    public AdbInstaller(
+            String installersFolder,
+            AdbClient adb,
+            Collection<DeployMetric> metrics,
+            ILogger logger) {
         this.adb = adb;
         this.installersFolder = installersFolder;
+        this.metrics = metrics;
         this.logger = logger;
     }
 
@@ -135,17 +143,34 @@ public class AdbInstaller implements Installer {
             minNs = Math.min(minNs, event.getTimestampNs());
         }
         long delta = ((maxNs + minNs) - (end + start)) / 2;
+        Stack<Deploy.Event> eventStack = new Stack<>();
         for (Deploy.Event event : response.getEventsList()) {
             switch (event.getType()) {
                 case TRC_BEG:
+                case TRC_METRIC:
                     Trace.begin(
                             event.getPid(),
                             event.getTid(),
                             event.getTimestampNs() - delta,
                             event.getText());
+                    eventStack.push(event);
                     break;
                 case TRC_END:
                     Trace.end(event.getPid(), event.getTid(), event.getTimestampNs() - delta);
+
+                    // If the trace is somehow broken, we don't want to crash studio.
+                    if (eventStack.empty()) {
+                        break;
+                    }
+
+                    Deploy.Event begin = eventStack.pop();
+
+                    // If the trace should be reported as a metric, convert it to a DeployMetric.
+                    if (begin.getType() == Deploy.Event.Type.TRC_METRIC) {
+                        long startMs = begin.getTimestampNs() - delta;
+                        long endMs = event.getTimestampNs() - delta;
+                        metrics.add(new DeployMetric(begin.getText(), startMs, endMs));
+                    }
                     break;
                 default:
                     break;

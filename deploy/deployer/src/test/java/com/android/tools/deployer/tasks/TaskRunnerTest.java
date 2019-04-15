@@ -55,7 +55,7 @@ public class TaskRunnerTest {
 
         Assert.assertNotNull(start.getMetric());
         Assert.assertEquals(Tasks.TASK1.name(), add.getMetric().getName());
-        Assert.assertTrue(add.getMetric().getEndTimeMs() >= add.getMetric().getStartTimeMs());
+        Assert.assertTrue(add.getMetric().getEndTimeNs() >= add.getMetric().getStartTimeNs());
     }
 
     @Test
