@@ -38,6 +38,7 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.CharMatcher;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -53,6 +54,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -108,6 +110,8 @@ public class XmlUtils {
 
     /** The first byte of a proto XML file is always 0x0A. */
     private static final byte PROTO_XML_LEAD_BYTE = 0x0A;
+
+    private static final int MAXIMUM_XML_DEPTH = 500;
 
     /**
      * Returns the namespace prefix matching the requested namespace URI.
@@ -653,7 +657,8 @@ public class XmlUtils {
             @NonNull Node node,
             @Nullable Map<SourcePosition, SourceFilePosition> blame) {
         PositionAwareStringBuilder sb = new PositionAwareStringBuilder(1000);
-        append(sb, node, blame);
+        Set<Node> nodesInPath = Sets.newHashSet();
+        append(sb, node, blame, nodesInPath);
         return sb.toString();
     }
 
@@ -661,21 +666,30 @@ public class XmlUtils {
     private static void append(
             @NonNull PositionAwareStringBuilder sb,
             @NonNull Node node,
-            @Nullable Map<SourcePosition, SourceFilePosition> blame) {
+            @Nullable Map<SourcePosition, SourceFilePosition> blame,
+            @NonNull Set<Node> nodesInPath) {
+        if (!nodesInPath.add(node)) {
+            throw new RuntimeException("Circular dependency in XML " + sb.toString());
+        }
+        if (nodesInPath.size() > MAXIMUM_XML_DEPTH) {
+            throw new RuntimeException("Maximum XML depth reached " + sb.toString());
+        }
         short nodeType = node.getNodeType();
         int currentLine = sb.line;
         int currentColumn = sb.column;
         int currentOffset = sb.getOffset();
         switch (nodeType) {
             case Node.DOCUMENT_NODE:
-            case Node.DOCUMENT_FRAGMENT_NODE: {
-                sb.append(XML_PROLOG);
-                NodeList children = node.getChildNodes();
-                for (int i = 0, n = children.getLength(); i < n; i++) {
-                    append(sb, children.item(i), blame);
+            case Node.DOCUMENT_FRAGMENT_NODE:
+                {
+                    sb.append(XML_PROLOG);
+                    NodeList children = node.getChildNodes();
+                    for (int i = 0, n = children.getLength(); i < n; i++) {
+                        Node child = children.item(i);
+                        append(sb, child, blame, nodesInPath);
+                    }
+                    break;
                 }
-                break;
-            }
             case Node.COMMENT_NODE:
                 sb.append(XML_COMMENT_BEGIN);
                 sb.append(node.getNodeValue());
@@ -691,58 +705,64 @@ public class XmlUtils {
                 sb.append("]]>");       //$NON-NLS-1$
                 break;
             }
-            case Node.ELEMENT_NODE: {
-                sb.append('<');
-                Element element = (Element) node;
-                sb.append(element.getTagName());
-
-                NamedNodeMap attributes = element.getAttributes();
-                NodeList children = element.getChildNodes();
-                int childCount = children.getLength();
-                int attributeCount = attributes.getLength();
-
-                if (attributeCount > 0) {
-                    for (int i = 0; i < attributeCount; i++) {
-                        Node attribute = attributes.item(i);
-                        sb.append(' ');
-                        sb.append(attribute.getNodeName());
-                        sb.append('=').append('"');
-                        sb.append(toXmlAttributeValue(attribute.getNodeValue()));
-                        sb.append('"');
-                    }
-                }
-
-                if (childCount == 0) {
-                    sb.append('/');
-                }
-                sb.append('>');
-                if (childCount > 0) {
-                    for (int i = 0; i < childCount; i++) {
-                        Node child = children.item(i);
-                        append(sb, child, blame);
-                    }
-                    sb.append('<').append('/');
+            case Node.ELEMENT_NODE:
+                {
+                    sb.append('<');
+                    Element element = (Element) node;
                     sb.append(element.getTagName());
-                    sb.append('>');
-                }
 
-                if (blame != null) {
-                    SourceFilePosition position = getSourceFilePosition(node);
-                    if (!position.equals(SourceFilePosition.UNKNOWN)) {
-                        blame.put(
-                                new SourcePosition(
-                                        currentLine, currentColumn, currentOffset,
-                                        sb.line, sb.column, sb.getOffset()),
-                                position);
+                    NamedNodeMap attributes = element.getAttributes();
+                    NodeList children = element.getChildNodes();
+                    int childCount = children.getLength();
+                    int attributeCount = attributes.getLength();
+
+                    if (attributeCount > 0) {
+                        for (int i = 0; i < attributeCount; i++) {
+                            Node attribute = attributes.item(i);
+                            sb.append(' ');
+                            sb.append(attribute.getNodeName());
+                            sb.append('=').append('"');
+                            sb.append(toXmlAttributeValue(attribute.getNodeValue()));
+                            sb.append('"');
+                        }
                     }
+
+                    if (childCount == 0) {
+                        sb.append('/');
+                    }
+                    sb.append('>');
+                    if (childCount > 0) {
+                        for (int i = 0; i < childCount; i++) {
+                            Node child = children.item(i);
+                            append(sb, child, blame, nodesInPath);
+                        }
+                        sb.append('<').append('/');
+                        sb.append(element.getTagName());
+                        sb.append('>');
+                    }
+
+                    if (blame != null) {
+                        SourceFilePosition position = getSourceFilePosition(node);
+                        if (!position.equals(SourceFilePosition.UNKNOWN)) {
+                            blame.put(
+                                    new SourcePosition(
+                                            currentLine,
+                                            currentColumn,
+                                            currentOffset,
+                                            sb.line,
+                                            sb.column,
+                                            sb.getOffset()),
+                                    position);
+                        }
+                    }
+                    break;
                 }
-                break;
-            }
 
             default:
                 throw new UnsupportedOperationException(
                         "Unsupported node type " + nodeType + ": not yet implemented");
         }
+        nodesInPath.remove(node);
     }
 
     /**
