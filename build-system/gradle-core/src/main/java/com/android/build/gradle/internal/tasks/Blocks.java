@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.build.gradle.internal.profile.TaskProfilingRecord;
+import com.android.ide.common.workers.GradlePluginMBeans;
 import com.android.ide.common.workers.ProfileMBean;
-import com.android.ide.common.workers.ProfileMBeans;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.time.Clock;
 import java.time.Duration;
@@ -53,7 +53,7 @@ public class Blocks {
             ThrowingBlock<E> block)
             throws E {
 
-        ProfileMBean profileMBean = ProfileMBeans.INSTANCE.getProfileMBean(projectName);
+        ProfileMBean profileMBean = GradlePluginMBeans.INSTANCE.getProfileMBean(projectName);
         Instant before = TaskProfilingRecord.Companion.getClock().instant();
         block.invoke();
         Instant after = TaskProfilingRecord.Companion.getClock().instant();
@@ -85,7 +85,7 @@ public class Blocks {
             ThrowingBlockWithReturn<T, E> block)
             throws E {
 
-        ProfileMBean profileMBean = ProfileMBeans.INSTANCE.getProfileMBean(projectName);
+        ProfileMBean profileMBean = GradlePluginMBeans.INSTANCE.getProfileMBean(projectName);
         Instant before = Clock.systemDefaultZone().instant();
         T t = block.invoke();
         Instant after = TaskProfilingRecord.Companion.getClock().instant();

@@ -64,9 +64,9 @@ open class ExecutorServiceAdapter(
             val constructor = actionClass.getDeclaredConstructor(parameter.javaClass)
             constructor.isAccessible = true
             val action = constructor.newInstance(parameter)
-            ProfileMBeans.getProfileMBean(projectName)?.workerStarted(owner, key)
+            GradlePluginMBeans.getProfileMBean(projectName)?.workerStarted(owner, key)
             action.run()
-            ProfileMBeans.getProfileMBean(projectName)?.workerFinished(owner, key)
+            GradlePluginMBeans.getProfileMBean(projectName)?.workerFinished(owner, key)
         }
         synchronized(this) {
             futures.add(submission)

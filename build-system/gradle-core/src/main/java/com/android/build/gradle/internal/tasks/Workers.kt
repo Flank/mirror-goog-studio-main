@@ -23,7 +23,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.ProjectOptions
 import com.android.ide.common.workers.ExecutorServiceAdapter
-import com.android.ide.common.workers.ProfileMBeans
+import com.android.ide.common.workers.GradlePluginMBeans
 import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.annotations.VisibleForTesting
@@ -332,9 +332,9 @@ object Workers {
                 ?: throw RuntimeException("Cannot find constructor with @Inject in ${params.delegateAction.name}")
 
             val delegate = constructor.newInstance(params.delegateParameters) as Runnable
-            ProfileMBeans.getProfileMBean(params.projectName)?.workerStarted(params.taskOwner, params.workerKey)
+            GradlePluginMBeans.getProfileMBean(params.projectName)?.workerStarted(params.taskOwner, params.workerKey)
             delegate.run()
-            ProfileMBeans.getProfileMBean(params.projectName)?.workerFinished(params.taskOwner, params.workerKey)
+            GradlePluginMBeans.getProfileMBean(params.projectName)?.workerFinished(params.taskOwner, params.workerKey)
         }
 
         private fun findAppropriateConstructor(): Constructor<*>? {

@@ -16,11 +16,11 @@
 
 package com.android.build.gradle.internal.profile
 
+import com.android.ide.common.workers.BuildMBean
 import com.android.ide.common.workers.ProfileMBean
-import com.android.ide.common.workers.ProfileMBeans
+import com.android.ide.common.workers.GradlePluginMBeans
 import java.lang.management.ManagementFactory
 import java.util.logging.Logger
-import javax.management.MBeanServerInvocationHandler
 import javax.management.ObjectName
 import javax.management.StandardMBean
 
@@ -36,21 +36,34 @@ object ProfileAgent {
     @Synchronized
     fun register(projectName: String, buildListener: RecordingBuildListener) {
         try {
-            val objectNameForProject = ProfileMBeans.composeObjectName(projectName)
-            val mbeans = mbs.queryMBeans(objectNameForProject, null)
-            if (mbeans.isEmpty()) {
-                val bean = ProfileMBeanImpl(buildListener)
-                val mbean = StandardMBean(bean, ProfileMBean::class.java, false)
-                mbs.registerMBean(mbean, objectNameForProject)
-            }
+            register(
+                GradlePluginMBeans.MBeanName.BUILD.objectName,
+                BuildMBean::class.java,
+                BuildMBeanImpl())
+            register(
+                GradlePluginMBeans.MBeanName.PROFILING.getProjectSpecificObjectName(projectName),
+                ProfileMBean::class.java,
+                ProfileMBeanImpl(buildListener))
         } catch (t: Throwable) {
             logger.warning("Profiling not available : $t")
         }
     }
 
+    private fun <T> register(objectName: ObjectName, beanInterface: Class<T>, bean: T) {
+        try {
+            val mbeans = mbs.queryMBeans(objectName, null)
+            if (mbeans.isEmpty()) {
+                val mbean = StandardMBean(bean, beanInterface, false)
+                mbs.registerMBean(mbean, objectName)
+            }
+        } catch (t: Throwable) {
+            ProfileAgent.logger.warning("Profiling not available : $t")
+        }
+    }
+
     @Synchronized
     fun unregister() {
-        for (queryMBean in mbs.queryMBeans(ObjectName("${ProfileMBeans.rootObjectName},*"), null)) {
+        for (queryMBean in mbs.queryMBeans(ObjectName("${GradlePluginMBeans.domainName},*"), null)) {
             mbs.unregisterMBean(queryMBean.objectName)
         }
     }
