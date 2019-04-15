@@ -8,7 +8,7 @@ readonly build_number="$3"
 
 readonly script_dir="$(dirname "$0")"
 
-config_options="--config=postsubmit"
+config_options="--config=postsubmit --config=remote"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
