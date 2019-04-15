@@ -601,9 +601,9 @@ class IncrementalJavaCompileWithAPsTest(
         // changed original source file
         if (incrementalMode) {
             if (annotationProcessingByAndroidJavaCompile) {
-                // EXPECTATION-NOT-MET: This is a limitation of Gradle, documented at
+                // EXPECTATION-NOT-MET: As documented at
                 // https://docs.gradle.org/current/userguide/java_plugin.html
-                // #sec:incremental_annotation_processing: "Gradle will always recompile any files
+                // #sec:incremental_annotation_processing, "Gradle will always recompile any files
                 // the processor generates".
                 assertFileHasChanged(annotation1GeneratedClass)
                 assertFileHasChanged(annotation2GeneratedClass)
@@ -691,9 +691,9 @@ class IncrementalJavaCompileWithAPsTest(
         // deleted generated source file
         if (incrementalMode) {
             if (annotationProcessingByAndroidJavaCompile) {
-                // EXPECTATION-NOT-MET: This is a limitation of Gradle, documented at
+                // EXPECTATION-NOT-MET: As documented at
                 // https://docs.gradle.org/current/userguide/java_plugin.html
-                // #sec:incremental_annotation_processing: "Gradle will always recompile any files
+                // #sec:incremental_annotation_processing, "Gradle will always recompile any files
                 // the processor generates".
                 assertFileHasChanged(annotation1GeneratedClass)
                 assertFileHasChanged(annotation2GeneratedClass)

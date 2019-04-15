@@ -44,6 +44,9 @@ import java.util.jar.JarFile
 
 const val KOTLIN_KAPT_PLUGIN_ID = "org.jetbrains.kotlin.kapt"
 const val LOMBOK = "lombok"
+// See https://projectlombok.org/contributing/lombok-execution-path
+const val LOMBOK_ANNOTATION_PROCESSOR =
+    "lombok.launch.AnnotationProcessorHider\$AnnotationProcessor"
 
 const val ANNOTATION_PROCESSORS_INDICATOR_FILE =
     "META-INF/services/javax.annotation.processing.Processor"
@@ -52,6 +55,7 @@ const val INCREMENTAL_ANNOTATION_PROCESSORS_INDICATOR_FILE =
 
 const val PROC_ONLY = "-proc:only"
 const val PROC_NONE = "-proc:none"
+const val PROCESSOR = "-processor"
 
 /** Whether incremental compilation is enabled or disabled by default. */
 const val DEFAULT_INCREMENTAL_COMPILATION = true
@@ -82,13 +86,7 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(scope: VariantScope, 
     val processorOptions = scope.variantConfiguration.javaCompileOptions.annotationProcessorOptions
     val compileOptions = this.options
 
-    var processorPath = scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
-    if (java.lang.Boolean.TRUE == processorOptions.includeCompileClasspath) {
-        // We need to query for PROCESSED_JAR instead of CLASSES because annotation processors
-        // require both classes and resources
-        processorPath = processorPath.plus(scope.getJavaClasspath(COMPILE_CLASSPATH, PROCESSED_JAR))
-    }
-    compileOptions.annotationProcessorPath = processorPath
+    configureAnnotationProcessorPath(scope)
 
     if (!processorOptions.classNames.isEmpty()) {
         compileOptions.compilerArgs.add("-processor")
@@ -104,6 +102,23 @@ fun JavaCompile.configurePropertiesForAnnotationProcessing(scope: VariantScope, 
     compileOptions.compilerArgumentProviders.addAll(processorOptions.compilerArgumentProviders)
 
     compileOptions.setAnnotationProcessorGeneratedSourcesDirectory(sourcesOutputFolder.asFile)
+}
+
+/**
+ * Configures the annotation processor path for a [JavaCompile] task.
+ *
+ * @see [JavaCompile.configurePropertiesForAnnotationProcessing]
+ */
+fun JavaCompile.configureAnnotationProcessorPath(scope: VariantScope) {
+    val processorOptions = scope.variantConfiguration.javaCompileOptions.annotationProcessorOptions
+
+    var processorPath = scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, PROCESSED_JAR)
+    if (java.lang.Boolean.TRUE == processorOptions.includeCompileClasspath) {
+        // We need to query for PROCESSED_JAR instead of CLASSES because annotation processors
+        // require both classes and resources
+        processorPath = processorPath.plus(scope.getJavaClasspath(COMPILE_CLASSPATH, PROCESSED_JAR))
+    }
+    this.options.annotationProcessorPath = processorPath
 }
 
 data class SerializableArtifact(

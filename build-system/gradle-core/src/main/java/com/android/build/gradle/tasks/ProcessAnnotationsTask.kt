@@ -47,7 +47,8 @@ import javax.inject.Inject
  * [AndroidJavaCompile] for more details.
  */
 @CacheableTask
-abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(), VariantAwareTask {
+abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(),
+    VariantAwareTask {
 
     @get:Internal
     override lateinit var variantName: String
@@ -68,16 +69,24 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
     }
 
     @get:OutputDirectory
-    val outputFolder: DirectoryProperty= objects.directoryProperty()
+    val annotationProcessorOutputDirectory: DirectoryProperty = objects.directoryProperty()
 
     override fun compile(inputs: IncrementalTaskInputs) {
+        // Perform annotation processing only (but only if the user did not request -proc:none)
+        if (options.compilerArgs.contains(PROC_NONE)) {
+            return
+        } else {
+            options.compilerArgs.add(PROC_ONLY)
+        }
+
         // Disable incremental mode as Gradle's JavaCompile currently does not work correctly in
         // incremental mode when -proc:only is used. We will revisit this issue later and
         // investigate what it means for an annotation-processing-only task to be incremental.
-        this.options.isIncremental = false
+        options.isIncremental = false
 
-        // Add individual sources instead of adding all at once due to a Gradle bug that happened
-        // late 2015 (see commit 830450), not sure if it has been fixed or not
+        // For incremental compile to work, Gradle requires individual sources to be added one by
+        // one, rather than adding one single composite FileTree aggregated from the individual
+        // sources (method getSources() above).
         for (source in sourceFileTrees()) {
             this.source(source)
         }
@@ -113,7 +122,7 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
                 AP_GENERATED_SOURCES,
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
-                ProcessAnnotationsTask::outputFolder
+                ProcessAnnotationsTask::annotationProcessorOutputDirectory
             )
         }
 
@@ -125,14 +134,16 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
             task.configureProperties(variantScope)
 
             // Configure properties that are specific to ProcessAnnotationTask
-             variantScope.artifacts.setTaskInputToFinalProduct(
-                 ANNOTATION_PROCESSOR_LIST, task.processorListFile)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                ANNOTATION_PROCESSOR_LIST,
+                task.processorListFile
+            )
 
             // Configure properties for annotation processing
-            task.configurePropertiesForAnnotationProcessing(variantScope, task.outputFolder)
-
-            // Perform annotation processing onNly
-            task.options.compilerArgs.add(PROC_ONLY)
+            task.configurePropertiesForAnnotationProcessing(
+                variantScope,
+                task.annotationProcessorOutputDirectory
+            )
 
             // Collect the list of source files to process
             task.sourceFileTrees = { variantScope.variantData.javaSources }
@@ -140,7 +151,7 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
             // Since this task does not output compiled classes, destinationDir will not be used.
             // However, Gradle requires this property to be set, so let's just set it to the
             // annotation processor output directory for convenience.
-            task.setDestinationDir(task.outputFolder.asFile)
+            task.setDestinationDir(task.annotationProcessorOutputDirectory.asFile)
         }
     }
 
