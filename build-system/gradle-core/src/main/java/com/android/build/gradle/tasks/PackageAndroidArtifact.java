@@ -55,6 +55,8 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalChanges;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -93,7 +95,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -315,14 +316,15 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
                             if (manifest.isFile()
                                     && manifest.getName()
                                             .equals(SdkConstants.ANDROID_MANIFEST_XML)) {
+                                ManifestAttributeSupplier parser =
+                                        new DefaultManifestParser(manifest, () -> true, null);
                                 String extractNativeLibs =
                                         PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                                        manifest, () -> true, null)
+                                                        parser)
                                                 .toString();
                                 listBuilder.add(extractNativeLibs);
                                 String useEmbeddedDex =
-                                        PackagingUtils.getUseEmbeddedDex(manifest, () -> true, null)
-                                                .toString();
+                                        PackagingUtils.getUseEmbeddedDex(parser).toString();
                                 listBuilder.add(useEmbeddedDex);
                             }
                         });
@@ -660,8 +662,10 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
                             + " associated manifest file");
         }
         FileUtils.mkdirs(outputFile.getParentFile());
-        // we are executing a task right now, so we can parse the manifest.
-        BooleanSupplier isInExecutionPhase = () -> true;
+
+        // In execution phase, so can parse the manifest.
+        ManifestAttributeSupplier manifest =
+                new DefaultManifestParser(manifestForSplit.getOutputFile(), () -> true, null);
 
         try (IncrementalPackager packager =
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)
@@ -675,14 +679,10 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
                         // reparsing
                         // these manifest files.
                         .withNativeLibraryPackagingMode(
-                                PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                        manifestForSplit.getOutputFile(), isInExecutionPhase, null))
+                                PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        params.aaptOptionsNoCompress,
-                                        manifestForSplit.getOutputFile(),
-                                        isInExecutionPhase,
-                                        null))
+                                        params.aaptOptionsNoCompress, manifest))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withKeepTimestampsInApk(params.keepTimestampsInApk)
                         .withDebuggableBuild(params.isDebuggableBuild)
@@ -719,7 +719,6 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
                             }
                         });
     }
-
 
 
     private static class IncrementalSplitterRunnable extends BuildElementsTransformRunnable {

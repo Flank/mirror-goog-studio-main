@@ -20,7 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.core.DefaultManifestParser;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
 /**
@@ -149,17 +149,12 @@ public class IncrementalPackagerBuilder {
     @NonNull
     private Set<String> abiFilters;
 
-    /**
-     * Manifest.
-     */
-    @Nullable
-    private File manifest;
+    /** Manifest. */
+    @Nullable private File manifestFile;
 
     /** aapt options no compress config. */
     @Nullable private Collection<String> aaptOptionsNoCompress;
 
-    @Nullable private EvalIssueReporter issueReporter;
-    @Nullable private BooleanSupplier canParseManifest;
     @NonNull private BuildType buildType;
 
     /** Creates a new builder. */
@@ -300,7 +295,7 @@ public class IncrementalPackagerBuilder {
      * @return {@code this} for use with fluent-style notation
      */
     public IncrementalPackagerBuilder withManifest(@NonNull File manifest) {
-        this.manifest = manifest;
+        this.manifestFile = manifest;
         return this;
     }
 
@@ -403,17 +398,6 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the issueReporter to report errors/warnings.
-     *
-     * @param issueReporter the EvalIssueReporter to use.
-     * @return {@code this} for use with fluent-style notation
-     */
-    public IncrementalPackagerBuilder withIssueReporter(@NonNull EvalIssueReporter issueReporter) {
-        this.issueReporter = issueReporter;
-        return this;
-    }
-
-    /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
      *
@@ -429,11 +413,15 @@ public class IncrementalPackagerBuilder {
         Preconditions.checkState(keepTimestampsInApk != null, "keepTimestampsInApk == null");
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
+        ManifestAttributeSupplier manifest =
+                this.manifestFile != null
+                        ? new DefaultManifestParser(this.manifestFile, () -> true, null)
+                        : null;
+
         if (noCompressPredicate == null) {
             if (manifest != null) {
                 noCompressPredicate =
-                        PackagingUtils.getNoCompressPredicate(
-                                aaptOptionsNoCompress, manifest, () -> true, issueReporter);
+                        PackagingUtils.getNoCompressPredicate(aaptOptionsNoCompress, manifest);
             } else {
                 noCompressPredicate = path -> false;
             }
@@ -442,8 +430,7 @@ public class IncrementalPackagerBuilder {
         if (nativeLibrariesPackagingMode == null) {
             if (manifest != null) {
                 nativeLibrariesPackagingMode =
-                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
-                                manifest, canParseManifest, issueReporter);
+                        PackagingUtils.getNativeLibrariesLibrariesPackagingMode(manifest);
             } else {
                 nativeLibrariesPackagingMode = NativeLibrariesPackagingMode.COMPRESSED;
             }

@@ -16,27 +16,20 @@
 
 package com.android.builder.packaging;
 
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BooleanSupplier;
+import java.util.Locale;
 import java.util.function.Predicate;
 
 /**
@@ -127,50 +120,6 @@ public class PackagingUtils {
     public static final ImmutableList<String> SIGNING_EXTENSIONS =
             ImmutableList.of("SF", "RSA", "DSA", "EC");
 
-    /**
-     * Computes an "application hash", a reasonably unique identifier for an app.
-     * <p>
-     * This is currently used by Instant Run to prevent apps on a device from guessing
-     * the authentication token associated with an instant run developed app on the same
-     * device.
-     * <p>
-     * This method creates the "secret", the field in the AppInfo class which is used as a simple
-     * authentication token between the IDE and the app server.
-     * <p>
-     * This is not a cryptographically strong unique id; we could attempt to make a truly random
-     * number here, but we'd need to store that id somewhere such that subsequent builds
-     * will use the same secret, to avoid having the IDE and the app getting out of sync,
-     * and there isn't really a natural place for us to store the key to make it survive across
-     * a clean build. (One possibility is putting it into local.properties).
-     * <p>
-     * However, we have much simpler needs: we just need a key that can't be guessed from
-     * a hostile app on the developer's device, and it only has a few guesses (after providing
-     * the wrong secret to the server a few times, the server will shut down.) We can't
-     * rely on the package name alone, since the port number is known, and the package name is
-     * discoverable by the hostile app (by querying the contents of /data/data/*). Therefore
-     * we also include facts that the hostile app can't know, such as as the path on the
-     * developer's machine to the app project and the name of the developer's machine, etc.
-     * The goal is for this secret to be reasonably stable (e.g. the same from build to build)
-     * yet not something an app could guess if it only has a couple of tries.
-     */
-    public static long computeApplicationHash(@NonNull File projectDir) {
-        HashFunction hashFunction = Hashing.md5();
-        Hasher hasher = hashFunction.newHasher();
-        try {
-            projectDir = projectDir.getCanonicalFile();
-        } catch (IOException ignore) {
-            // If this throws an exception the assignment won't
-            // be done and we'll stick with the regular project dir
-        }
-        String path = projectDir.getPath();
-        hasher.putBytes(path.getBytes(Charsets.UTF_8));
-        String user = System.getProperty("user.name");
-        if (user != null) {
-            hasher.putBytes(user.getBytes(Charsets.UTF_8));
-        }
-        return hasher.hash().asLong();
-    }
-
     @NonNull
     public static Predicate<String> getDefaultNoCompressPredicate() {
         return getNoCompressPredicateForExtensions(DEFAULT_DONT_COMPRESS_EXTENSIONS);
@@ -179,17 +128,10 @@ public class PackagingUtils {
     @NonNull
     public static Predicate<String> getNoCompressPredicate(
             @Nullable Collection<String> aaptOptionsNoCompress,
-            @NonNull File manifest,
-            @NonNull BooleanSupplier isInExecutionPhase,
-            @Nullable EvalIssueReporter issueReporter) {
-        checkState(manifest.exists());
-
+            @NonNull ManifestAttributeSupplier manifest) {
         NativeLibrariesPackagingMode packagingMode =
-                getNativeLibrariesLibrariesPackagingMode(
-                        manifest, isInExecutionPhase, issueReporter);
-
-        PackageEmbeddedDex useEmbeddedDex =
-                getUseEmbeddedDex(manifest, isInExecutionPhase, issueReporter);
+                getNativeLibrariesLibrariesPackagingMode(manifest);
+        PackageEmbeddedDex useEmbeddedDex = getUseEmbeddedDex(manifest);
 
         return getNoCompressPredicateForExtensions(
                 getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode, useEmbeddedDex));
@@ -210,13 +152,8 @@ public class PackagingUtils {
 
     @NonNull
     public static NativeLibrariesPackagingMode getNativeLibrariesLibrariesPackagingMode(
-            @NonNull File manifest,
-            @NonNull BooleanSupplier isInExecutionPhase,
-            @Nullable EvalIssueReporter issueReporter) {
-        checkState(manifest.exists());
-        DefaultManifestParser parser =
-                new DefaultManifestParser(manifest, isInExecutionPhase, issueReporter);
-        Boolean extractNativeLibs = parser.getExtractNativeLibs();
+            @NonNull ManifestAttributeSupplier manifest) {
+        Boolean extractNativeLibs = manifest.getExtractNativeLibs();
 
         // The default is "true", so we only package *.so files differently if the user explicitly
         // set this to "false".
@@ -229,13 +166,8 @@ public class PackagingUtils {
 
     @NonNull
     public static PackageEmbeddedDex getUseEmbeddedDex(
-            @NonNull File manifest,
-            @NonNull BooleanSupplier isInExecutionPhase,
-            @Nullable EvalIssueReporter issueReporter) {
-        checkState(manifest.exists());
-        DefaultManifestParser parser =
-                new DefaultManifestParser(manifest, isInExecutionPhase, issueReporter);
-        Boolean useEmbeddedDex = parser.getUseEmbeddedDex();
+            @NonNull ManifestAttributeSupplier manifest) {
+        Boolean useEmbeddedDex = manifest.getUseEmbeddedDex();
 
         if (useEmbeddedDex == null) {
             return PackageEmbeddedDex.DEFAULT;
@@ -251,9 +183,7 @@ public class PackagingUtils {
             @NonNull Iterable<String> noCompressExtensions) {
         return name -> {
             for (String extension : noCompressExtensions) {
-
-                //noinspection StringToUpperCaseOrToLowerCaseWithoutLocale - extensions are ASCII
-                if (name.toLowerCase().endsWith(extension)) {
+                if (name.toLowerCase(Locale.US).endsWith(extension)) {
                     return true;
                 }
             }
