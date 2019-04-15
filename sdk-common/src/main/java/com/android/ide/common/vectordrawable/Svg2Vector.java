@@ -231,7 +231,7 @@ public class Svg2Vector {
         // Fill in all the <use> nodes in the svgTree.
         Set<SvgGroupNode> nodes = svgTree.getPendingUseSet();
         while (!nodes.isEmpty()) {
-            if (!nodes.removeIf(node -> extractUseNode(svgTree, node, node.getDocumentNode()))) {
+            if (!nodes.removeIf(node -> extractUseNode(svgTree, node, node.getDocumentElement()))) {
                 // Not able to make progress because of cyclic references.
                 reportCycles(svgTree, nodes);
                 break;
@@ -269,7 +269,7 @@ public class Svg2Vector {
         Map<String, String> edges = new HashMap<>();
         Map<String, Node> nodesById = new HashMap<>();
         for (SvgGroupNode svgNode : svgNodes) {
-            Element element = svgNode.getDocumentNode();
+            Element element = svgNode.getDocumentElement();
             String id = element.getAttribute("id");
             if (!id.isEmpty()) {
                 String targetId = element.getAttribute(SVG_HREF);
@@ -400,7 +400,7 @@ public class Svg2Vector {
      * SvgGradientNode.
      */
     private static void extractGradientNode(@NonNull SvgGradientNode gradientNode) {
-        Element element = gradientNode.getDocumentNode();
+        Element element = gradientNode.getDocumentElement();
         NamedNodeMap a = element.getAttributes();
         int len = a.getLength();
         for (int j = 0; j < len; j++) {
@@ -506,7 +506,7 @@ public class Svg2Vector {
             @NonNull SvgTree svgTree,
             @NonNull SvgGroupNode childGroup,
             @NonNull SvgGroupNode currentGroup) {
-        NamedNodeMap a = childGroup.getDocumentNode().getAttributes();
+        NamedNodeMap a = childGroup.getDocumentElement().getAttributes();
         int len = a.getLength();
         for (int j = 0; j < len; j++) {
             Node n = a.item(j);

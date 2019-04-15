@@ -177,7 +177,7 @@ abstract class SvgNode {
     }
 
     @NonNull
-    public Element getDocumentNode() {
+    public Element getDocumentElement() {
         return mDocumentElement;
     }
 
