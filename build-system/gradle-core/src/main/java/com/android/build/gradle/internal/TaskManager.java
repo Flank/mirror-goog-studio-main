@@ -1077,11 +1077,6 @@ public abstract class TaskManager {
         artifacts.appendArtifact(
                 InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
 
-        // Needed for the IDE
-        if (!projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-            TaskFactoryUtils.dependsOn(scope.getTaskContainer().getSourceGenTask(), task);
-        }
-
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
         artifacts.appendArtifact(

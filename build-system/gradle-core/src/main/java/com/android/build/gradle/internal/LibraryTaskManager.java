@@ -364,11 +364,6 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void registerRClassTransformStream(@NonNull VariantScope variantScope) {
-        if (!projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
-            return;
-        }
-
-
         InternalArtifactType rClassJar;
 
         if (globalScope.getExtension().getAaptOptions().getNamespaced()) {

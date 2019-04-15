@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -51,16 +50,11 @@ public class MinifyLibTest {
     public static List<Object[]> data() {
         return Arrays.asList(
                 new Object[][] {
-                    {CodeShrinker.PROGUARD, false},
-                    {CodeShrinker.PROGUARD, true},
-                    {CodeShrinker.R8, false},
-                    {CodeShrinker.R8, true},
+                    {CodeShrinker.PROGUARD}, {CodeShrinker.R8},
                 });
     }
 
     @Parameterized.Parameter public CodeShrinker codeShrinker;
-    @Parameterized.Parameter(1)
-    public boolean separateRClass;
 
     @Rule
     public GradleTestProject project =
@@ -202,7 +196,6 @@ public class MinifyLibTest {
     @NonNull
     private GradleTaskExecutor getExecutor() {
         return project.executor()
-                .with(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION, separateRClass)
                 .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8);
     }
 }

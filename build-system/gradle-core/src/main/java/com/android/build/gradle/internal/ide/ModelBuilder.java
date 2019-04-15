@@ -1173,14 +1173,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 Lists.newArrayListWithExpectedSize(additionalFolders + extraFolders.size());
         folders.addAll(extraFolders);
 
-        if (!globalScope.getProjectOptions().get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)
-                && !globalScope.getExtension().getAaptOptions().getNamespaced()) {
-            folders.add(
-                    artifacts
-                            .getFinalProduct(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES)
-                            .get()
-                            .getAsFile());
-        }
         folders.add(
                 scope.getArtifacts()
                         .getFinalArtifactFiles(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)

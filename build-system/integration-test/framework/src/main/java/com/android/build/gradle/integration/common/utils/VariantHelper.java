@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.common.utils;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.OutputFile;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
@@ -54,9 +53,7 @@ public class VariantHelper {
         File apk = new File(build, "outputs/apk/" + outputFileName);
 
         Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
-        int expectedCount =
-                BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.getDefaultValue() ? 4 : 5;
-        assertThat(sourceFolders).named("Gen src Folder count").hasSize(expectedCount);
+        assertThat(sourceFolders).named("Gen src Folder count").hasSize(4);
 
         Collection<OutputFile> outputs = variantOutput.getOutputs();
         assertThat(outputs).named("artifact output").isNotNull();

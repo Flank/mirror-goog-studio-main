@@ -95,11 +95,6 @@ public class ModelTest {
                 project.file("build/generated/source/buildConfig/debug"),
                 project.file(
                         "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
-        if (!BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.getDefaultValue()) {
-            expectedGeneratedSourceFolders.add(
-                    project.file(
-                            "build/generated/not_namespaced_r_class_sources/debug/processDebugResources/r"));
-        }
 
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
@@ -119,12 +114,6 @@ public class ModelTest {
                 project.file("build/generated/source/buildConfig/androidTest/debug"),
                 project.file(
                         "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
-
-        if (!BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION.getDefaultValue()) {
-            expectedGeneratedTestSourceFolders.add(
-                    project.file(
-                            "build/generated/not_namespaced_r_class_sources/debugAndroidTest/processDebugAndroidTestResources/r"));
-        }
 
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedTestSourceFolders.build());

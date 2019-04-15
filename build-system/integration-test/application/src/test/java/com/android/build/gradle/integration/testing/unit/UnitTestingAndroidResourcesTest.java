@@ -86,21 +86,16 @@ public class UnitTestingAndroidResourcesTest {
     @Parameterized.Parameters(name = "plugin={0}, rClassStrategy={1}, resourcesMode={2}")
     public static Object[][] data() {
         return new Object[][] {
-            {Plugin.APPLICATION, null, ResourcesMode.RAW},
-            {Plugin.APPLICATION, null, ResourcesMode.COMPILED},
-            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES, ResourcesMode.RAW},
-            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES, ResourcesMode.COMPILED},
-            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR, ResourcesMode.RAW},
-            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR, ResourcesMode.COMPILED},
+            {Plugin.APPLICATION, ResourcesMode.RAW},
+            {Plugin.APPLICATION, ResourcesMode.COMPILED},
+            {Plugin.LIBRARY, ResourcesMode.RAW},
+            {Plugin.LIBRARY, ResourcesMode.COMPILED},
         };
     }
 
     @Parameterized.Parameter public Plugin plugin;
 
     @Parameterized.Parameter(value = 1)
-    public RClassStrategy rClassStrategy;
-
-    @Parameterized.Parameter(value = 2)
     public ResourcesMode resourcesMode;
 
     @Before
@@ -140,11 +135,7 @@ public class UnitTestingAndroidResourcesTest {
     @Test
     public void runUnitTests() throws Exception {
         GradleTaskExecutor runGradleTasks =
-                project.executor()
-                        .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
-                        .with(
-                                BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
-                                rClassStrategy == RClassStrategy.GENERATE_JAR);
+                project.executor().with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true);
 
         runGradleTasks.with(
                 BooleanOption.ENABLE_UNIT_TEST_BINARY_RESOURCES,
@@ -170,9 +161,6 @@ public class UnitTestingAndroidResourcesTest {
         AndroidProject model =
                 project.model()
                         .with(BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG, true)
-                        .with(
-                                BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
-                                rClassStrategy == RClassStrategy.GENERATE_JAR)
                         .fetchAndroidProjects()
                         .getOnlyModelMap()
                         .get(":");
