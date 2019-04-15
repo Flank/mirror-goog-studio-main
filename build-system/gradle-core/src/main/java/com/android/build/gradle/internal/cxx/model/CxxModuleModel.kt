@@ -26,11 +26,18 @@ import java.io.File
  * Holds immutable module-level information for C/C++ build and sync, see README.md
  */
 interface CxxModuleModel {
+
     /**
      * Folder of project-level build.gradle file
      *   ex, source-root/
      */
     val rootBuildGradleFolder: File
+
+    /**
+     * Folder storing build attribution data for the entire project
+     *   ex, source-root/.cxx/attribution
+     */
+    val buildAttributionFolder: File get() = join(rootBuildGradleFolder, ".cxx", "attribution")
 
     /**
      * Install folder of SDK
