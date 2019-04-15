@@ -121,6 +121,15 @@ class AbiConfigurator(
             }
         } else {
             validAbis = configurationAbis
+
+            // Warn if validAbis does not include at least one 64-bit ABI.
+            // See: https://android-developers.googleblog.com/2019/01/get-your-apps-ready-for-64-bit.html
+            if (!validAbis.isEmpty() && !validAbis.any { it.supports64Bits() }) {
+                warnln("This app only has 32-bit [${validAbis.joinToString(",") { it.tag }}] " +
+                        "native libraries. Beginning August 1, 2019 Google Play store requires " +
+                        "that all apps that include native libraries must provide 64-bit versions. " +
+                        "For more information, visit https://g.co/64-bit-requirement")
+            }
         }
     }
 }

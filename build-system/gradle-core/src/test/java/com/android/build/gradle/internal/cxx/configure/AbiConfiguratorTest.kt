@@ -38,7 +38,7 @@ class AbiConfiguratorTest {
         externalNativeBuildAbiFilters: Set<String> = setOf(),
         ndkConfigAbiFilters: Set<String> = setOf(),
         splitsFilterAbis: Set<String> = Abi.getDefaultValues()
-            .map { abi: Abi -> abi.getTag() }
+            .map { abi: Abi -> abi.tag }
             .toSet(),
         ideBuildOnlyTargetAbi: Boolean = false,
         ideBuildTargetAbi: String? = null): AbiConfigurator {
@@ -64,6 +64,28 @@ class AbiConfiguratorTest {
         // Should be no messages reported
         assertThat(configurator.validAbis).containsExactlyElementsIn(ALL_ABI)
         assertThat(configurator.allAbis).containsExactlyElementsIn(ALL_ABI_AS_STRING)
+    }
+
+    @Test
+    fun testNon64BitWarning() {
+        configure(
+            externalNativeBuildAbiFilters = setOf("x86"))
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings.first()).isEqualTo(
+            "This app only has 32-bit [x86] native libraries. Beginning August 1, " +
+                    "2019 Google Play store requires that all apps that include native " +
+                    "libraries must provide 64-bit versions. For more information, " +
+                    "visit https://g.co/64-bit-requirement")
+    }
+
+    @Test
+    fun testNoNon64BitWarningForInjectedAbi() {
+        configure(
+            externalNativeBuildAbiFilters = setOf("x86", "armeabi-v7a"),
+            ideBuildOnlyTargetAbi = true,
+            ideBuildTargetAbi = "x86")
+        assertThat(logger.errors).isEmpty()
+        assertThat(logger.warnings).isEmpty()
     }
 
     @Test
