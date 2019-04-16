@@ -211,6 +211,9 @@ public class ChromeTracingProfileConverter {
                     case THREAD_EXECUTION:
                         args.put("type", "thread");
                         break;
+                    case ARTIFACT_TRANSFORM:
+                        args.put("type", "artifact");
+                        break;
                 }
 
                 writer.name("args").beginObject();

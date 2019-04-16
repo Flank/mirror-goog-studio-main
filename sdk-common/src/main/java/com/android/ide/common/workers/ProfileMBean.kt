@@ -43,11 +43,12 @@ interface ProfileMBean {
      * Task/worker/thread span registration. Will use the current
      * parent as the anchor.
      *
-     * @param taskPath spawning task path identification.
+     * @param taskPath spawning task path identification or null if the span is not attached
+     * to any task in particular.
      * @param type the [GradleBuildProfileSpan.ExecutionType] identification
      * @param threadId the thread identification the span is running on.
      * @param startTime the span absolute start time
      * @param duration the span duration.
      */
-    fun registerSpan(taskPath: String, type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration)
+    fun registerSpan(taskPath: String?, type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration)
 }

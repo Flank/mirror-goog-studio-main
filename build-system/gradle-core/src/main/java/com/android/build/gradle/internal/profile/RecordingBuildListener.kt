@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.tasks.TaskState
+import java.time.Duration
+import java.time.Instant
 
 /**
  * Implementation of the [TaskExecutionListener] that records the execution span of
@@ -92,6 +94,18 @@ class RecordingBuildListener internal constructor(
 
     fun getWorkerRecord(taskPath: String, worker: String): WorkerProfilingRecord? =
         getTaskRecord(taskPath)?.get(worker)
+
+    fun recordAnonymousSpan(type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration) {
+        recordWriter.writeRecord(":$projectName", null,
+            GradleBuildProfileSpan.newBuilder()
+                .setId(recordWriter.allocateRecordId())
+                .setType(type)
+                .setThreadId(threadId)
+                .setStartTimeInMs(startTime.toEpochMilli())
+                .setDurationInMs(duration.toMillis()),
+            listOf())
+
+    }
 
     companion object {
         private val logger = LoggerWrapper.getLogger(RecordingBuildListener::class.java)

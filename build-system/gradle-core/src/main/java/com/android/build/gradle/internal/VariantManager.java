@@ -816,7 +816,9 @@ public class VariantManager implements VariantModel {
             for (DexingArtifactConfiguration artifactConfiguration :
                     getDexingArtifactConfigurations(variantScopes)) {
                 artifactConfiguration.registerTransform(
-                        dependencies, globalScope.getBootClasspath());
+                        globalScope.getProject().getName(),
+                        dependencies,
+                        globalScope.getBootClasspath());
             }
         }
     }

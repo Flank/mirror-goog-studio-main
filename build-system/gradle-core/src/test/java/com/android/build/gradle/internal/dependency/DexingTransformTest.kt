@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.build.gradle.internal.transforms.testdata.Animal
@@ -166,6 +167,7 @@ class DexingTransformTest {
             debuggable: Boolean,
             bootClasspath: List<File> = listOf()
         ) : BaseDexingTransform.Parameters {
+            override var projectName = FakeGradleProperty(":test")
             override var debuggable = FakeGradleProperty(debuggable)
             override val minSdkVersion = FakeGradleProperty(minSdkVersion)
             override val bootClasspath = FakeConfigurableFileCollection(bootClasspath)
