@@ -109,7 +109,7 @@ final class ConnectionHandler implements Runnable {
                 }
             }
         } catch (RuntimeException e) {
-            sendFailWithReason("Bad request received: " + e.toString());
+            e.printStackTrace();
         } catch (IOException ignored) {
             sendFailWithReason("IOException occurred when processing request.");
         } finally {

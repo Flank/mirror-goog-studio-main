@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
@@ -21,14 +20,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-public abstract class ShellCommand {
-    public abstract boolean execute(
-            FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
-            throws IOException;
+public class Mkdir extends ShellCommand {
+    @Override
+    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
+        if (args.length == 0) {
+            stdout.println("Usage mkdir...");
+        } else {
+            boolean parents = false;
+            for (int i = 0; i < args.length; i++) {
+                if (i == 0 && args[0].equals("-p")) {
+                    parents = true;
+                } else {
+                    device.mkdir(args[i], parents);
+                }
+            }
+        }
+        return true;
+    }
 
-    public abstract String getExecutable();
-
-    public String getLocation() {
-        return "";
+    @Override
+    public String getExecutable() {
+        return "mkdir";
     }
 }

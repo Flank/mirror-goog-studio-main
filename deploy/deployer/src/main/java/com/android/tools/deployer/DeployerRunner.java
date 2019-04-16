@@ -33,6 +33,7 @@ public class DeployerRunner implements UIService {
 
     private static final String DB_PATH = "/tmp/studio.db";
     private final ApkFileDatabase db;
+    private final ArrayList<DeployMetric> metrics;
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
@@ -55,6 +56,7 @@ public class DeployerRunner implements UIService {
 
     public DeployerRunner(ApkFileDatabase db) {
         this.db = db;
+        metrics = new ArrayList<>();
     }
 
     public int run(String[] args, ILogger logger) {
@@ -95,8 +97,8 @@ public class DeployerRunner implements UIService {
                 new AdbInstaller(parameters.getInstallersPath(), adb, new ArrayList<>(), logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        Deployer deployer =
-                new Deployer(adb, db, runner, installer, this, new ArrayList<>(), logger);
+        metrics.clear();
+        Deployer deployer = new Deployer(adb, db, runner, installer, this, metrics, logger);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
@@ -104,9 +106,9 @@ public class DeployerRunner implements UIService {
                     options.setGrantAllPermissions();
                 }
 
-                Deployer.InstallMode installMode = Deployer.InstallMode.FULL;
-                if (parameters.isDeltaInstall()) {
-                    installMode = Deployer.InstallMode.DELTA;
+                Deployer.InstallMode installMode = Deployer.InstallMode.DELTA;
+                if (parameters.isForceFullInstall()) {
+                    installMode = Deployer.InstallMode.FULL;
                 }
                 deployer.install(packageName, apks, options.build(), installMode);
             } else if (parameters.getCommand() == DeployRunnerParameters.Command.FULLSWAP) {
@@ -126,6 +128,10 @@ public class DeployerRunner implements UIService {
             service.shutdown();
         }
         return 0;
+    }
+
+    public ArrayList<DeployMetric> getMetrics() {
+        return metrics;
     }
 
     private IDevice getDevice(AndroidDebugBridge bridge) {

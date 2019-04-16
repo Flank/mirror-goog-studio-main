@@ -19,39 +19,30 @@ import com.android.tools.deployer.devices.FakeDevice;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 
-public class BasicPm extends ShellCommand {
+public class RunAs extends ShellCommand {
     @Override
     public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
-        Arguments arguments = new Arguments(args);
-        String action = arguments.nextArgument();
-        if ("install".equals(action)) {
-            while (arguments.nextOption() != null) {
-                // Do nothing
-            }
-            String pkg = arguments.nextArgument();
-            if (pkg == null) {
-                stdout.print("\tpkg: null\nError: no package specified\n");
-                return false;
-            }
-            byte[] file = device.readFile(pkg);
-            if (file == null) {
-                stdout.print(
-                        "\tpkg: /data/local/tmp/sample.apk2\nFailure [INSTALL_FAILED_INVALID_URI]\n");
-                return false;
-            }
-            device.install(file);
-            stdout.println("Success");
-            return true;
-        } else {
-            stdout.println("pm usage:\n...");
+        if (args.length == 0) {
+            stdout.println(
+                    "run-as: usage: run-as <package-name> [--user <uid>] <command> [<args>]");
             return false;
+        } else {
+            String pkg = args[0];
+            if (!device.getApps().contains(pkg)) {
+                stdout.printf("run-as: Package '%s' is unknown\n", pkg);
+                return false;
+            }
+            String cmd = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+            device.getShell().execute(cmd, stdout, stdin, device);
+            return true;
         }
     }
 
     @Override
     public String getExecutable() {
-        return "pm";
+        return "/system/bin/run-as";
     }
 }

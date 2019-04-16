@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
@@ -21,14 +20,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-public abstract class ShellCommand {
-    public abstract boolean execute(
-            FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
-            throws IOException;
+public class Chmod extends ShellCommand {
+    @Override
+    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
+        if (args.length < 2 || !args[0].equals("+x")) {
+            stdout.println("Usage chmod ...");
+            return false;
+        }
+        if (!device.hasFile(args[1])) {
+            stdout.printf("chmod: %s: No such file or directory\n", args[1]);
+            return false;
+        }
+        device.makeExecutable(args[1]);
+        return true;
+    }
 
-    public abstract String getExecutable();
-
-    public String getLocation() {
-        return "";
+    @Override
+    public String getExecutable() {
+        return "chmod";
     }
 }

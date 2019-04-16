@@ -16,8 +16,11 @@
 package com.android.tools.deployer.devices.shell.interpreter;
 
 import com.android.annotations.NonNull;
+import com.android.tools.deployer.devices.shell.ExternalCommand;
 import com.android.tools.deployer.devices.shell.ShellCommand;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -197,24 +200,34 @@ public interface Expression {
             try {
                 ExecutionResult result = commandExpression.execute(env);
                 String commandName = result.text;
-                ShellCommand command = env.getCommand(commandName);
-                if (command == null) {
-                    env.getPrintStdout()
-                            .format(String.format("/system/bin/sh: %s: not found\n", commandName));
-                    return new ExecutionResult(false);
-                }
-
                 List<String> paramResults = new ArrayList<>();
                 for (Expression expression : params) {
                     result = expression.execute(env);
                     paramResults.add(result.text);
                 }
-                return new ExecutionResult(
-                        command.execute(
-                                env.getDevice(),
-                                paramResults.toArray(new String[] {}),
-                                env.takeStdin(),
-                                env.getPrintStdout()));
+                String[] cmdArgs = paramResults.toArray(new String[] {});
+                InputStream stdin = env.takeStdin();
+                PrintStream stdout = env.getPrintStdout();
+
+                ShellCommand command = env.getCommand(commandName);
+                boolean success = false;
+                if (command == null) {
+                    if (env.getDevice().hasFile(commandName)) {
+                        if (env.getDevice().isExecutable(commandName)) {
+                            command = new ExternalCommand(commandName);
+                        } else {
+                            stdout.format(
+                                    "/system/bin/sh: cmd: can't execute: Permission denied\n");
+                        }
+                    } else {
+                        stdout.format(
+                                String.format("/system/bin/sh: %s: not found\n", commandName));
+                    }
+                }
+                if (command != null) {
+                    success = command.execute(env.getDevice(), cmdArgs, stdin, stdout);
+                }
+                return new ExecutionResult(success);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

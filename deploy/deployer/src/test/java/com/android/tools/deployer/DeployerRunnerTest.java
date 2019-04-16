@@ -17,8 +17,10 @@ package com.android.tools.deployer;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.protobuf.ByteString;
@@ -38,6 +40,8 @@ import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -55,17 +59,124 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
     }
 
     @Test
-    public void testInstallSuccessful() throws Exception {
+    public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
         DeployerRunner runner = new DeployerRunner(db);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
-        String[] args = {"install", "com.example.helloworld", file.getAbsolutePath()};
+        String[] args = {
+            "install", "com.example.helloworld", file.getAbsolutePath(), "--force-full-install"
+        };
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.helloworld", "base.apk", file);
+        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
+    }
+
+    @Test
+    public void testAttemptDeltaInstallWithoutPreviousInstallation() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db);
+        File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
+        File installersPath = prepareInstaller();
+        String[] args = {
+            "install",
+            "com.example.helloworld",
+            file.getAbsolutePath(),
+            "--installers-path=" + installersPath.getAbsolutePath()
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+
+        assertInstalled("com.example.helloworld", "base.apk", file);
+
+        if (device.getApi() < 21) {
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertHistory(
+                    device,
+                    "getprop",
+                    "pm install -r -t \"/data/local/tmp/sample.apk\"",
+                    "rm \"/data/local/tmp/sample.apk\"");
+        } else if (device.getApi() < 24) {
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertHistory(
+                    device,
+                    "getprop",
+                    "pm install-create -r -t -S 5047",
+                    "pm install-write -S 5047 1 0_sample -",
+                    "pm install-commit 1");
+        } else {
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE", "INSTALL:OK");
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.helloworld",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.helloworld",
+                    "/system/bin/run-as com.example.helloworld id -u",
+                    "/system/bin/cmd package path com.example.helloworld",
+                    "/system/bin/pm path com.example.helloworld", // TODO: we should not always attempt both paths
+                    "cmd package install-create -r -t -S 5047",
+                    "cmd package install-write -S 5047 1 0_sample -",
+                    "cmd package install-commit 1");
+        }
+    }
+
+    private static void assertHistory(FakeDevice device, String... expected) {
+        List<String> actual = device.getShell().getHistory();
+        assertArrayEquals(expected, actual.toArray(new String[] {}));
+    }
+
+    public File prepareInstaller() throws IOException {
+        File root = TestUtils.getWorkspaceRoot();
+        String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";
+        File installer = new File(root, testInstaller);
+        if (!installer.exists()) {
+            // Running from IJ
+            File devRoot = new File(root, "bazel-genfiles/");
+            installer = new File(devRoot, testInstaller);
+        }
+        File installers = Files.createTempDirectory("installers").toFile();
+        File x86 = new File(installers, "x86");
+        x86.mkdirs();
+        FileUtils.copyFile(installer, new File(x86, "installer"));
+        return installers;
+    }
+
+    public File getShell() {
+        File root = TestUtils.getWorkspaceRoot();
+        String path = "tools/base/deploy/installer/bash_bridge";
+        File file = new File(root, path);
+        if (!file.exists()) {
+            // Running from IJ
+            file = new File(root, "bazel-bin/" + path);
+        }
+        return file;
+    }
+
+    public void assertInstalled(String packageName, String fileName, File file) throws IOException {
+        assertArrayEquals(new String[] {packageName}, device.getApps().toArray());
         byte[] expected = Files.readAllBytes(file.toPath());
-        assertArrayEquals(expected, device.getApps().get(0));
+        assertArrayEquals(
+                expected, device.readFile(device.getAppPath(packageName) + "/" + fileName));
+    }
+
+    private void assertMetrics(ArrayList<DeployMetric> metrics, String... expected) {
+        String[] actual =
+                metrics.stream().map(m -> m.getName() + ":" + m.getStatus()).toArray(String[]::new);
+        assertArrayEquals(actual, expected);
     }
 
     @Test
@@ -79,8 +190,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         int retcode = runner.run(args, logger);
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
-        byte[] expected = Files.readAllBytes(file.toPath());
-        assertArrayEquals(expected, device.getApps().get(0));
+        assertInstalled("com.android.test.uibench", "base.apk", file);
 
         File installers = Files.createTempDirectory("installers").toFile();
         FileUtils.writeToFile(new File(installers, "x86/installer"), "INSTALLER");

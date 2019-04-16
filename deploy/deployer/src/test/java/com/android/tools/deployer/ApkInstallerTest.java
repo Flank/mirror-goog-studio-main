@@ -80,10 +80,10 @@ public class ApkInstallerTest extends FakeAdbTestBase {
 
         List<String> history = device.getShell().getHistory();
         String lastCmd = history.get(history.size() - 1);
-        if (device.apiLevelAtLeast(24)) {
+        if (device.getApi() >= 24) {
             Assert.assertFalse(installed);
             Assert.assertEquals("am force-stop com.android.test.uibench", lastCmd);
-        } else if (device.apiLevelAtLeast(20)) {
+        } else if (device.getApi() >= 20) {
             Assert.assertTrue(lastCmd.startsWith("pm install-commit"));
         } else {
             Assert.assertTrue(history.stream().anyMatch(command -> command.contains("pm install")));

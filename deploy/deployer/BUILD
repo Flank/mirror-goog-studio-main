@@ -10,7 +10,13 @@ iml_module(
     ],
     iml_files = ["android.sdktools.deployer.iml"],
     test_coverage = True,
-    test_data = glob(["src/test/resource/**"]),
+    test_data = glob(["src/test/resource/**"]) + select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [
+            "//tools/base/deploy/installer:test-installer",
+            "//tools/base/deploy/installer:bash_bridge",
+        ],
+    }),
     test_resources = ["src/test/resource"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -88,7 +94,14 @@ coverage_java_test(
     name = "deployer.tests",
     size = "small",
     srcs = glob(["src/test/java/**/*.java"]),
-    data = glob(["src/test/resource/**"]),
+    data = glob(["src/test/resource/**"]) +
+           select({
+               "//tools/base/bazel:windows": [],
+               "//conditions:default": [
+                   "//tools/base/deploy/installer:test-installer",
+                   "//tools/base/deploy/installer:bash_bridge",
+               ],
+           }),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
     tags = [
         "no_rbe_windows",
@@ -96,6 +109,7 @@ coverage_java_test(
     ],  # b/116693861
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
+        ":java_version",
         ":tools.deployer",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",

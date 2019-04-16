@@ -95,6 +95,40 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+cc_binary(
+    name = "bash_bridge",
+    srcs = ["tests/bash_bridge.cc"],
+    tags = ["no_windows"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "test-installer",
+    srcs = [
+        ":installer",
+        "//tools/base/deploy/agent/native:libswap.so",
+        "//tools/base/deploy/agent/native:agent_server",
+        ":version.raw",
+    ],
+    outs = [
+        "android-installer/test-installer",
+    ],
+    cmd = """
+       $(location //tools/base/bazel:matryoshka) \
+           -i $(location :installer) \
+           -o $(location android-installer/test-installer) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:agent_server) \
+           -p version=$(location :version.raw);
+    """,
+    tags = ["no_windows"],
+    tools = [
+        "//tools/base/bazel:bin2c",
+        "//tools/base/bazel:matryoshka",
+    ],
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "installer_lib",
     srcs = [
@@ -108,6 +142,7 @@ cc_library(
         "executor_impl.cc",
         "package_manager.cc",
         "patch_applier.cc",
+        "redirect_executor.cc",
         "swap.cc",
         "workspace.cc",
     ],
@@ -122,6 +157,8 @@ cc_library(
         "executor_impl.h",
         "package_manager.h",
         "patch_applier.h",
+        "redirect_executor.h",
+        "runas_executor.h",
         "swap.h",
         "workspace.h",
     ],

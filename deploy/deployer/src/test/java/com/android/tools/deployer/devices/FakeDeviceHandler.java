@@ -84,7 +84,7 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
                     chunkId = readString(input, 4);
                 }
                 int modtime = readLength(input);
-                device.writeFile(name, data.toByteArray());
+                device.writeFile(name, data.toByteArray(), mode);
                 CommandHandler.writeOkay(output);
                 output.write(new byte[] {0, 0, 0, 0});
         }

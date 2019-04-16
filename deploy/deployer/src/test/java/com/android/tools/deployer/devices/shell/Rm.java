@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
@@ -21,14 +20,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-public abstract class ShellCommand {
-    public abstract boolean execute(
-            FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
-            throws IOException;
+public class Rm extends ShellCommand {
+    @Override
+    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+            throws IOException {
+        for (String arg : args) {
+            device.removeFile(arg);
+        }
+        return true;
+    }
 
-    public abstract String getExecutable();
-
-    public String getLocation() {
-        return "";
+    @Override
+    public String getExecutable() {
+        return "rm";
     }
 }

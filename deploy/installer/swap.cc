@@ -36,6 +36,7 @@
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor.h"
+#include "tools/base/deploy/installer/runas_executor.h"
 
 // Defined in main.cc
 std::string GetVersion();
@@ -368,9 +369,9 @@ bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,
   LogEvent(parameters.back());
 
   int err_fd = -1;
-  bool success = workspace_.GetExecutor().ForkAndExecAs(
-      target_dir_ + kServerFilename, request_.package_name(), parameters,
-      write_fd, read_fd, &err_fd, server_pid);
+  RunasExecutor run_as(request_.package_name(), workspace_.GetExecutor());
+  bool success = run_as.ForkAndExec(target_dir_ + kServerFilename, parameters,
+                                    write_fd, read_fd, &err_fd, server_pid);
   close(sync_write_fd);
   close(err_fd);
 
@@ -419,12 +420,12 @@ bool SwapCommand::RunCmd(const std::string& shell_cmd, User run_as,
                          const std::vector<std::string>& args,
                          std::string* output) const {
   std::string err;
+  Executor* executor = &workspace_.GetExecutor();
+  RunasExecutor alt(request_.package_name(), workspace_.GetExecutor());
   if (run_as == User::APP_PACKAGE) {
-    return workspace_.GetExecutor().RunAs(shell_cmd, request_.package_name(),
-                                          args, output, &err);
-  } else {
-    return workspace_.GetExecutor().Run(shell_cmd, args, output, &err);
+    executor = &alt;
   }
+  return executor->Run(shell_cmd, args, output, &err);
 }
 
 }  // namespace deploy

@@ -88,7 +88,7 @@ public class InterpreterTest {
     @Test
     public void pipeWithFileTest() throws IOException {
         final String content = "asdf";
-        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8));
+        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
         assertTrue(Parser.parse("echo foo | cat /bar.txt").execute(env).success);
         assertEquals(content, env.readStringFromPipe());
     }
@@ -96,7 +96,7 @@ public class InterpreterTest {
     @Test
     public void pipeWithQuotedFileNameTest() throws IOException {
         final String content = "asdf";
-        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8));
+        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
         assertTrue(Parser.parse("echo foo | cat '/bar.txt'").execute(env).success);
         assertEquals(content, env.readStringFromPipe());
     }
@@ -104,7 +104,7 @@ public class InterpreterTest {
     @Test
     public void pipeWithDoubleQuotedFileNameTest() throws IOException {
         final String content = "asdf";
-        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8));
+        env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
         assertTrue(Parser.parse("echo foo | cat \"/bar.txt\"").execute(env).success);
         assertEquals(content, env.readStringFromPipe());
     }

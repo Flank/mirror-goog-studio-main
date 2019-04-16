@@ -30,11 +30,6 @@ class Executor {
                    const std::vector<std::string>& args, std::string* output,
                    std::string* error) const = 0;
 
-  virtual bool RunAs(const std::string& executable_path,
-                     const std::string& package_name,
-                     const std::vector<std::string>& args, std::string* output,
-                     std::string* error) const = 0;
-
   virtual bool RunWithInput(const std::string& executable_path,
                             const std::vector<std::string>& args,
                             std::string* output, std::string* error,
@@ -44,12 +39,6 @@ class Executor {
                            const std::vector<std::string>& parameters,
                            int* child_stdin_fd, int* child_stdout_fd,
                            int* child_stderr_fd, int* fork_pid) const = 0;
-
-  virtual bool ForkAndExecAs(const std::string& executable_path,
-                             const std::string& package_name,
-                             const std::vector<std::string>& parameters,
-                             int* child_stdin_fd, int* child_stdout_fd,
-                             int* child_stderr_fd, int* fork_pid) const = 0;
 };
 
 }  // namespace deploy

@@ -16,8 +16,12 @@
 package com.android.tools.deployer.devices;
 
 import com.android.tools.deployer.devices.shell.BasicPm;
+import com.android.tools.deployer.devices.shell.Chmod;
 import com.android.tools.deployer.devices.shell.Cmd;
 import com.android.tools.deployer.devices.shell.GetProp;
+import com.android.tools.deployer.devices.shell.Mkdir;
+import com.android.tools.deployer.devices.shell.Rm;
+import com.android.tools.deployer.devices.shell.RunAs;
 import com.android.tools.deployer.devices.shell.SessionPm;
 
 public class FakeDeviceLibrary {
@@ -35,71 +39,71 @@ public class FakeDeviceLibrary {
     }
 
     public FakeDevice build(DeviceId id) {
+        FakeDevice device = null;
         switch (id) {
             case API_19:
                 {
-                    FakeDevice device = new FakeDevice("4.4", "19");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("4.4", 19);
                     device.getShell().addCommand(new BasicPm());
-                    return device;
+                    break;
                 }
             case API_21:
                 {
-                    FakeDevice device = new FakeDevice("5.0", "21");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("5.0", 21);
                     device.getShell().addCommand(new SessionPm());
-                    return device;
+                    break;
                 }
             case API_22:
                 {
-                    FakeDevice device = new FakeDevice("5.1", "22");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("5.1", 22);
                     device.getShell().addCommand(new SessionPm());
-                    return device;
+                    break;
                 }
             case API_23:
                 {
-                    FakeDevice device = new FakeDevice("6.0", "23");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("6.0", 23);
                     device.getShell().addCommand(new SessionPm());
-                    return device;
+                    break;
                 }
             case API_24:
                 {
-                    FakeDevice device = new FakeDevice("7.0", "24");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("7.0", 24);
                     device.getShell().addCommand(new Cmd(false));
-                    return device;
+                    break;
                 }
             case API_25:
                 {
-                    FakeDevice device = new FakeDevice("7.1", "25");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("7.1", 25);
                     device.getShell().addCommand(new Cmd());
-                    return device;
+                    break;
                 }
             case API_26:
                 {
-                    FakeDevice device = new FakeDevice("8.0", "26");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("8.0", 26);
                     device.getShell().addCommand(new Cmd());
-                    return device;
+                    break;
                 }
             case API_27:
                 {
-                    FakeDevice device = new FakeDevice("8.1", "27");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("8.1", 27);
                     device.getShell().addCommand(new Cmd());
-                    return device;
+                    break;
                 }
             case API_28:
                 {
-                    FakeDevice device = new FakeDevice("9.0", "28");
-                    device.getShell().addCommand(new GetProp());
+                    device = new FakeDevice("9.0", 28);
                     device.getShell().addCommand(new Cmd());
-                    return device;
+                    break;
                 }
         }
-        return null;
+        if (device != null) {
+            device.getShell().addCommand(new GetProp());
+            device.getShell().addCommand(new Mkdir());
+            device.getShell().addCommand(new Chmod());
+            device.getShell().addCommand(new Rm());
+            device.getShell().addCommand(new RunAs());
+        }
+
+        return device;
     }
 }

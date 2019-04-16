@@ -45,10 +45,10 @@ public class ApkParser {
         long signatureBlockSize = UNINITIALIZED;
     }
 
-    private static class ApkDetails {
-        private final String fileName;
-        private final String packageName;
-        private final List<String> targetPackages;
+    public static class ApkDetails {
+        public final String fileName;
+        public final String packageName;
+        public final List<String> targetPackages;
 
         private ApkDetails(
                 String fileName,
@@ -75,6 +75,16 @@ public class ApkParser {
         }
     }
 
+    public ApkDetails getApkDetails(String path) throws IOException {
+        ApkDetails apkDetails;
+        try (ZipFile zipFile = new ZipFile(path)) {
+            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
+            InputStream stream = zipFile.getInputStream(manifestEntry);
+            apkDetails = parseManifest(stream);
+        }
+        return apkDetails;
+    }
+
     private List<ApkEntry> parse(String apkPath) throws IOException, DeployerException {
         File file = new File(apkPath);
         String absolutePath = file.getAbsolutePath();
@@ -88,12 +98,7 @@ public class ApkParser {
             digest = generateDigest(raf, map);
             zipEntries = readZipEntries(raf, map);
         }
-        ApkDetails apkDetails;
-        try (ZipFile zipFile = new ZipFile(absolutePath)) {
-            ZipEntry manifestEntry = zipFile.getEntry("AndroidManifest.xml");
-            InputStream stream = zipFile.getInputStream(manifestEntry);
-            apkDetails = parseManifest(stream);
-        }
+        ApkDetails apkDetails = getApkDetails(absolutePath);
 
         List<ApkEntry> files = new ArrayList<>();
         Apk apk =

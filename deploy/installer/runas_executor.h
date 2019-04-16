@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.tools.deployer.devices.shell;
+#ifndef RUNAS_EXECUTOR_H
+#define RUNAS_EXECUTOR_H
 
-import com.android.tools.deployer.devices.FakeDevice;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+#include "tools/base/deploy/installer/redirect_executor.h"
 
-public abstract class ShellCommand {
-    public abstract boolean execute(
-            FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
-            throws IOException;
+namespace deploy {
 
-    public abstract String getExecutable();
+const std::string kRunAsExecutable = "/system/bin/run-as";
 
-    public String getLocation() {
-        return "";
-    }
-}
+class RunasExecutor : public RedirectExecutor {
+ public:
+  RunasExecutor(const std::string& package, Executor& executor)
+      : RedirectExecutor(kRunAsExecutable, package, executor) {}
+};
+
+}  // namespace deploy
+
+#endif  // RUNAS_EXECUTOR_H

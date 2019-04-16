@@ -28,15 +28,15 @@ public class DeployRunnerParameters {
     }
 
     private Command command = Command.UNKNOWN;
-    private boolean deltaInstall = false;
+    private boolean forceFullInstall = false;
     private String installersPath = null;
     private List<String> parameters = new ArrayList<>();
 
     private DeployRunnerParameters() {}
 
     private void parseFlag(String arg) {
-        if ("--deltainstall".equals(arg)) {
-            deltaInstall = true;
+        if ("--force-full-install".equals(arg)) {
+            forceFullInstall = true;
         } else if (arg.startsWith("--installers-path=")) {
             installersPath = arg.substring(18);
         } else {
@@ -87,8 +87,8 @@ public class DeployRunnerParameters {
         return command;
     }
 
-    public boolean isDeltaInstall() {
-        return deltaInstall;
+    public boolean isForceFullInstall() {
+        return forceFullInstall;
     }
 
     public String getInstallersPath() {

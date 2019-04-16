@@ -136,7 +136,13 @@ public class ShellEnv implements AutoCloseable {
     }
 
     ShellCommand getCommand(@NonNull String commandName) {
-        return commands.get(commandName);
+        for (ShellCommand cmd : commands.values()) {
+            if (cmd.getExecutable().equals(commandName)
+                    || commandName.equals(cmd.getLocation() + "/" + cmd.getExecutable())) {
+                return cmd;
+            }
+        }
+        return null;
     }
 
     void setScope(@NonNull String varName, String value) {

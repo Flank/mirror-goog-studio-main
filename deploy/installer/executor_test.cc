@@ -48,7 +48,7 @@ TEST_F(ShellCommandRunnerTest, TestSimpleRun) {
   string error;
   std::vector<std::string> args;
   args.emplace_back("-c");
-  ExecutorImpl executor("");
+  ExecutorImpl executor;
   args.emplace_back("echo \"Hello\"");
   executor.Run("sh", args, &output, &error);
   ASSERT_EQ("Hello\n", output);
@@ -78,7 +78,7 @@ TEST_F(ShellCommandRunnerTest, TestPiped) {
   std::stringstream string_size;
   string_size << size;
   args.push_back(string_size.str());
-  ExecutorImpl executor("");
+  ExecutorImpl executor;
   executor.RunWithInput(helper_path, args, &output, &error, tmp);
   ASSERT_EQ(size * 3 + 3, output.size());
   EXPECT_EQ(0, strncmp(output.data(), buffer0, size));
@@ -102,7 +102,7 @@ TEST_F(ShellCommandRunnerTest, TestForkExitIfExecFails) {
   pipe(fds);
 
   std::string output, error;
-  ExecutorImpl executor("");
+  ExecutorImpl executor;
   executor.Run("missing_executable", {}, &output, &error);
   close(fds[1]);
 

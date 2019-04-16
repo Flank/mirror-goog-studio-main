@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef EXECUTOR_IMPL_H
-#define EXECUTOR_IMPL_H
+#ifndef REDIRECT_EXECUTOR_H
+#define REDIRECT_EXECUTOR_H
 
 #include <string>
 #include <vector>
@@ -24,18 +24,21 @@
 
 namespace deploy {
 
-class ExecutorImpl : public Executor {
+class RedirectExecutor : public Executor {
  public:
-  ExecutorImpl() {}
+  RedirectExecutor(const std::string& executable,
+                   const std::vector<std::string>& args, Executor& executor)
+      : executor_(executor), executable_(executable), args_(args) {}
+
+  RedirectExecutor(const std::string& executable, const std::string& arg,
+                   Executor& executor)
+      : executor_(executor), executable_(executable) {
+    args_.push_back(arg);
+  }
 
   bool Run(const std::string& executable_path,
            const std::vector<std::string>& args, std::string* output,
            std::string* error) const;
-
-  bool RunAs(const std::string& executable_path,
-             const std::string& package_name,
-             const std::vector<std::string>& args, std::string* output,
-             std::string* error) const;
 
   bool RunWithInput(const std::string& executable_path,
                     const std::vector<std::string>& args, std::string* output,
@@ -46,21 +49,12 @@ class ExecutorImpl : public Executor {
                    int* child_stdin_fd, int* child_stdout_fd,
                    int* child_stderr_fd, int* fork_pid) const;
 
-  bool ForkAndExecAs(const std::string& executable_path,
-                     const std::string& package_name,
-                     const std::vector<std::string>& parameters,
-                     int* child_stdin_fd, int* child_stdout_fd,
-                     int* child_stderr_fd, int* fork_pid) const;
-
  private:
-  void Pump(int stdin_source, int child_stdin, int child_stdout,
-            std::string* output, int child_stderr, std::string* error) const;
-
-  bool PrivateRun(const std::string& executable_path,
-                  const std::vector<std::string>& args, std::string* output,
-                  std::string* error, int input_file_fd) const;
+  Executor& executor_;
+  std::string executable_;
+  std::vector<std::string> args_;
 };
 
 }  // namespace deploy
 
-#endif  // EXECUTOR_IMPL_H
+#endif  // REDIRECT_EXECUTOR_H

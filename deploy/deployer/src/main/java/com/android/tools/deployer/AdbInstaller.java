@@ -192,7 +192,6 @@ public class AdbInstaller implements Installer {
         // shell invocation will return something that is not parsable by protobuffer. Most
         // likely something like "Command not found.".
         if (response == null) {
-            printHexEditorStyle(output);
             if (onFail == OnFail.DO_NO_RETRY) {
                 // This is the second time this error happens. Aborting.
                 throw new IOException("Invalid installer response");
@@ -307,57 +306,5 @@ public class AdbInstaller implements Installer {
             throw new IllegalStateException(e);
         }
         return new ByteArrayInputStream(buffer);
-    }
-
-    private char printableChar(char c) {
-        Character.UnicodeBlock block = Character.UnicodeBlock.of(c);
-        if (!Character.isISOControl(c)
-                && block != null
-                && block != Character.UnicodeBlock.SPECIALS) {
-            return c;
-        } else {
-            return '.';
-        }
-    }
-
-    // Print an hex editor styled line from a buffer. Example (with line size = 10):
-    // [Ox22,Ox10,Ox53,Ox74,Ox61,Ox72,Ox74,Ox69,Ox6E,Ox67] ".Starting
-    private void printHexEditorStyleLine(byte[] buffer, int offset) {
-        // First print the hex version of the line Something line:
-        // [Ox22,Ox10,Ox53,Ox74,Ox61,Ox72,Ox74,Ox69,Ox6E,Ox67]
-        System.out.print("[");
-        int i = 0;
-        for (; offset + i < buffer.length && i < HEX_LINE_SIZE; i++) {
-            System.out.print(String.format("Ox%02X", buffer[offset + i]));
-            if (i < HEX_LINE_SIZE - 1) {
-                System.out.print(",");
-            }
-        }
-        // Pad line if smaller than line size.
-        for (; i < HEX_LINE_SIZE; i++) {
-            System.out.print("    ");
-            if (i < HEX_LINE_SIZE - 1) {
-                System.out.print(" ");
-            }
-        }
-        System.out.print("] ");
-
-        // Now write the ASCII version of the line. Something like:
-        // ..Starting
-        i = 0;
-        for (i = 0; offset + i < buffer.length && i < HEX_LINE_SIZE; i++) {
-            System.out.print(printableChar((char) buffer[offset + i]));
-        }
-        System.out.println();
-    }
-
-    private void printHexEditorStyle(byte[] buffer) {
-        logger.info("Hex dump of buffer: " + buffer.length + " bytes.");
-        for (int line = 0; line < buffer.length / HEX_LINE_SIZE; line++) {
-            printHexEditorStyleLine(buffer, line * HEX_LINE_SIZE);
-        }
-        if (buffer.length % HEX_LINE_SIZE != 0) {
-            printHexEditorStyleLine(buffer, (buffer.length / HEX_LINE_SIZE + 1) * HEX_LINE_SIZE);
-        }
     }
 }

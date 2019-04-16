@@ -111,9 +111,28 @@ public class Cmd extends ShellCommand {
                             return true;
                         }
                     case "install-abandon":
-                        device.abandonSession(parseSession(device, args));
-                        stdout.println("Success");
-                        return true;
+                        {
+                            device.abandonSession(parseSession(device, args));
+                            stdout.println("Success");
+                            return true;
+                        }
+                    case "path":
+                        {
+                            String pkg = args.nextArgument();
+                            if (pkg == null) {
+                                stdout.println(
+                                        "\nException occurred while executing:\n"
+                                                + "java.lang.IllegalArgumentException: Argument expected after \"path\"\n\tat com...");
+                                return false;
+                            }
+                            String path = device.getAppPath(pkg);
+                            if (path != null) {
+                                stdout.println("package:/" + path + "/base.apk");
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
                 }
                 break;
         }
@@ -154,5 +173,10 @@ public class Cmd extends ShellCommand {
     @Override
     public String getExecutable() {
         return "cmd";
+    }
+
+    @Override
+    public String getLocation() {
+        return "/system/bin";
     }
 }

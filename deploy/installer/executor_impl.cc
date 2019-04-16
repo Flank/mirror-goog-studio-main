@@ -160,40 +160,10 @@ bool ExecutorImpl::Run(const std::string& executable_path,
   return result;
 }
 
-bool ExecutorImpl::RunAs(const std::string& executable_path,
-                         const std::string& package_name,
-                         const std::vector<std::string>& parameters,
-                         std::string* output, std::string* error) const {
-  std::vector<std::string> args;
-  args.push_back(package_name);
-  args.push_back(executable_path);
-  args.insert(args.end(), parameters.begin(), parameters.end());
-  return Run(run_as_exec_, args, output, error);
-}
-
-bool ExecutorImpl::ForkAndExecAs(const std::string& executable_path,
-                                 const std::string& package_name,
-                                 const std::vector<std::string>& parameters,
-                                 int* child_stdin_fd, int* child_stdout_fd,
-                                 int* child_stderr_fd, int* fork_pid) const {
-  std::vector<std::string> args;
-  args.push_back(package_name);
-  args.push_back(executable_path);
-  args.insert(args.end(), parameters.begin(), parameters.end());
-  return ForkAndExec(run_as_exec_, args, child_stdin_fd, child_stdout_fd,
-                     child_stderr_fd, fork_pid);
-}
-
 bool ExecutorImpl::ForkAndExec(const std::string& executable_path,
                                const std::vector<std::string>& args,
                                int* child_stdin_fd, int* child_stdout_fd,
                                int* child_stderr_fd, int* fork_pid) const {
-  //  std::string cmd = executable_path;
-  //  for (const std::string& arg : args) {
-  //    cmd.append(" ");
-  //    cmd.append(arg);
-  //  }
-  //  LogEvent(cmd);
   int stdin_pipe[2], stdout_pipe[2], stderr_pipe[2];
   if (pipe(stdin_pipe) || pipe(stdout_pipe) || pipe(stderr_pipe)) {
     return false;

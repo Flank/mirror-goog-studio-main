@@ -38,6 +38,7 @@ public class ApkInstaller {
         DUMP_FAILED,
         PATCH_SIZE_EXCEEDED,
         NO_CHANGES,
+        DUMP_UNKNOWN_PACKAGE,
     }
 
     private enum DeltaInstallFailureReasons {}
@@ -109,6 +110,7 @@ public class ApkInstaller {
             case CANNOT_GENERATE_DELTA:
             case API_NOT_SUPPORTED:
             case DUMP_FAILED:
+            case DUMP_UNKNOWN_PACKAGE:
             case PATCH_SIZE_EXCEEDED:
                 {
                     // Delta install could not be attempted (app not install or delta above limit or API
@@ -197,6 +199,9 @@ public class ApkInstaller {
             dump = new ApplicationDumper(installer).dump(localEntries);
         } catch (DeployerException e) {
             deltaInstallResult.status = DeltaInstallStatus.DUMP_FAILED;
+            if (e.getError() == DeployerException.Error.DUMP_UNKNOWN_PACKAGE) {
+                deltaInstallResult.status = DeltaInstallStatus.DUMP_UNKNOWN_PACKAGE;
+            }
             return deltaInstallResult;
         }
 

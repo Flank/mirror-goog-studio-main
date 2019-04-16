@@ -33,6 +33,7 @@
 #include "tools/base/deploy/installer/command_cmd.h"
 #include "tools/base/deploy/installer/executor.h"
 #include "tools/base/deploy/installer/package_manager.h"
+#include "tools/base/deploy/installer/runas_executor.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
@@ -111,8 +112,8 @@ bool DumpCommand::GetProcessIds(const std::string& package_name,
 
   std::string output;
   std::string error;
-  if (!workspace_.GetExecutor().RunAs("id", package_name, {"-u"}, &output,
-                                      &error)) {
+  RunasExecutor run_as(package_name, workspace_.GetExecutor());
+  if (!run_as.Run("id", {"-u"}, &output, &error)) {
     ErrEvent("Could not get package user id: " + error);
     return false;
   }

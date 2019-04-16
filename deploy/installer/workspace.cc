@@ -26,7 +26,7 @@ namespace {
 constexpr int kDirectoryMode = (S_IRWXG | S_IRWXU | S_IRWXO);
 }
 
-Workspace::Workspace(const std::string& executable_path, Executor& executor)
+Workspace::Workspace(const std::string& executable_path, Executor* executor)
     : executor_(executor), output_pipe_(dup(STDOUT_FILENO)) {
   base_ = RetrieveBase(executable_path) + "/";
 
