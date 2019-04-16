@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
@@ -139,13 +138,5 @@ interface CxxModuleModel {
      * Information relevant only to CMake. Null if not CMake build.
      */
     val cmake: CxxCmakeModuleModel?
-
-    /**
-     * Service provider entry for module-level services. These are services naturally
-     * scoped at the module level. If there are services that are more naturally
-     * applicable to variant or ABI levels then a service provider should be added
-     * there.
-     */
-    val services: CxxServiceRegistry
 }
 

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
-import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.google.gson.GsonBuilder
@@ -98,10 +97,7 @@ private data class CxxModuleModelData(
     override val ndkDefaultAbiList: List<Abi> = listOf(),
     override val cmake: CxxCmakeModuleModel? = null,
     override val cmakeToolchainFile: File = File(".")
-) : CxxModuleModel {
-    override val services: CxxServiceRegistry
-        get() = throw RuntimeException("Cannot use services from deserialized CxxModuleModel")
-}
+) : CxxModuleModel
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
     rootBuildGradleFolder = rootBuildGradleFolder,

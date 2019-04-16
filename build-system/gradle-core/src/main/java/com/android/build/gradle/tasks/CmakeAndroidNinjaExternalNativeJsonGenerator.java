@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.build.gradle.internal.cxx.services.CxxProcessServiceKt.createProcessOutputJunction;
+import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
@@ -63,10 +63,10 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
             throws ProcessException, IOException {
         String logPrefix = variant.getVariantName() + "|" + abi.getAbi().getTag() + " :";
         return createProcessOutputJunction(
-                        abi.getVariant().getModule(),
                         abi.getCxxBuildFolder(),
                         "android_gradle_generate_cmake_ninja_json_" + abi.getAbi().getTag(),
                         getProcessBuilder(abi),
+                        androidBuilder,
                         logPrefix)
                 .logStderrToInfo()
                 .logStdoutToInfo()
