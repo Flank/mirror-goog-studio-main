@@ -1331,7 +1331,8 @@ public class VariantScopeImpl implements VariantScope {
                 ArtifactCollection testedArtifactCollection =
                         testedScope.getArtifactCollection(
                                 configType, artifactScope, artifactType, attributeMap);
-                if (artifactType == ArtifactType.ANDROID_RES) {
+                if (artifactType == ArtifactType.ANDROID_RES
+                        || artifactType == ArtifactType.COMPILED_REMOTE_RESOURCES) {
                     result = resourceMinusFunction.apply(result, testedArtifactCollection);
                 } else {
                     result = minusFunction.apply(result, testedArtifactCollection);
