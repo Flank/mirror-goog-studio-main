@@ -46,17 +46,14 @@ import java.util.Arrays
 class LocaleDetector : Detector(), SourceCodeScanner {
 
     override fun getApplicableMethodNames(): List<String>? {
-        return if (LintClient.isStudio) {
-            // In the IDE, don't flag toUpperCase/toLowerCase; these
-            // are already flagged by built-in IDE inspections, so we don't
-            // want duplicate warnings.
-            Arrays.asList(FORMAT_METHOD, GET_DEFAULT)
-        } else {
-            Arrays.asList(
-                // Only when not running in the IDE
-                "toLowerCase", "toUpperCase", FORMAT_METHOD, GET_DEFAULT
-            )
-        }
+        return Arrays.asList(
+            TO_LOWER_CASE,
+            TO_UPPER_CASE,
+            FORMAT_METHOD,
+            GET_DEFAULT,
+            CAPITALIZE,
+            DECAPITALIZE
+        )
     }
 
     override fun visitMethodCall(
@@ -72,19 +69,68 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         }
 
         if (context.evaluator.isMemberInClass(method, TYPE_STRING)) {
-            if (method.name == FORMAT_METHOD) {
-                checkFormat(context, method, node)
-            } else if (method.parameterList.parametersCount == 0) {
-                val location = context.getNameLocation(node)
-                val message = String.format(
-                    "Implicitly using the default locale is a common source of bugs: " +
-                            "Use `%1\$s(Locale)` instead. For strings meant to be internal " +
-                            "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
-                    method.name
-                )
-                context.report(STRING_LOCALE, node, location, message)
+            when (method.name) {
+                FORMAT_METHOD -> checkFormat(context, method, node)
+                TO_LOWER_CASE, TO_UPPER_CASE -> checkJavaToUpperLowerCase(context, method, node)
             }
         }
+
+        if (context.evaluator.isMemberInClass(method, KOTLIN_STRINGS_JVM_KT)) {
+            when (method.name) {
+                CAPITALIZE, DECAPITALIZE -> checkCapitalize(context, method, node)
+                TO_LOWER_CASE, TO_UPPER_CASE -> checkStringsKtToUpperLowerCase(context, method, node)
+            }
+        }
+    }
+
+    private fun checkJavaToUpperLowerCase(
+        context: JavaContext,
+        method: PsiMethod,
+        node: UCallExpression
+    ) {
+        // In the IDE, don't flag java toUpperCase/toLowerCase; these
+        // are already flagged by built-in IDE inspections, so we don't
+        // want duplicate warnings.
+        if (LintClient.isStudio) return
+        if (method.parameterList.parametersCount != 0) return
+        reportToUpperLoweCase(context,method,node)
+    }
+
+    private fun checkStringsKtToUpperLowerCase(
+        context: JavaContext,
+        method: PsiMethod,
+        node: UCallExpression
+    ) {
+        if (method.parameterList.parametersCount > 1) return
+        reportToUpperLoweCase(context,method,node)
+    }
+
+    private fun reportToUpperLoweCase(
+        context: JavaContext,
+        method: PsiMethod,
+        node: UCallExpression
+    ) {
+        val location = context.getNameLocation(node)
+        val message = String.format(
+            "Implicitly using the default locale is a common source of bugs: " +
+                    "Use `%1\$s(Locale)` instead. For strings meant to be internal " +
+                    "use `Locale.ROOT`, otherwise `Locale.getDefault()`.",
+            method.name
+        )
+        context.report(STRING_LOCALE, node, location, message)
+    }
+
+    private fun checkCapitalize(
+        context: JavaContext,
+        method: PsiMethod,
+        node: UCallExpression
+    ) {
+        val location = context.getNameLocation(node)
+        val message = String.format(
+            "Implicitly using the default locale is a common source of bugs.",
+            method.name
+        )
+        context.report(STRING_LOCALE, node, location, message)
     }
 
     private fun checkFormat(
@@ -178,7 +224,12 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         private val IMPLEMENTATION =
             Implementation(LocaleDetector::class.java, Scope.JAVA_FILE_SCOPE)
 
+        const val TO_UPPER_CASE = "toUpperCase"
+        const val TO_LOWER_CASE = "toLowerCase"
         const val GET_DEFAULT = "getDefault"
+        const val KOTLIN_STRINGS_JVM_KT = "kotlin.text.StringsKt__StringsJVMKt"
+        const val CAPITALIZE = "capitalize"
+        const val DECAPITALIZE = "decapitalize"
 
         /** Calling risky convenience methods  */
         @JvmField

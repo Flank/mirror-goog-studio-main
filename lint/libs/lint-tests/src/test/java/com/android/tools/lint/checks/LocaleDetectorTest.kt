@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.TestLintClient
+import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.detector.api.Detector
 
 class LocaleDetectorTest : AbstractCheckTest() {
@@ -95,6 +97,67 @@ class LocaleDetectorTest : AbstractCheckTest() {
                             new SimpleDateFormat("yyyy-MM-dd", DateFormatSymbols.getInstance()); // WRONG
                             new SimpleDateFormat("yyyy-MM-dd", Locale.US); // OK
                         }
+                    }
+                    """
+            ).indented()
+        ).run().expect(expected)
+    }
+
+    fun testStudio() {
+        val expected =
+            """
+            src/test/pkg/LocaleTest.java:8: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    String.format("WRONG: %f", 1.0f); // Implies locale
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 1 warnings
+            """
+
+        lint().files(
+            java(
+                "src/test/pkg/LocaleTest.java", """
+                    package test.pkg;
+
+                    @SuppressWarnings({"ResultOfMethodCallIgnored", "MalformedFormatString", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored", "SimpleDateFormatWithoutLocale", "StringToUpperCaseOrToLowerCaseWithoutLocale", "ClassNameDiffersFromFileName"})
+                    public class LocaleTest {
+                        public void testStrings() {
+                            System.out.println("WRONG BUT HANDLED SEPARATELY".toUpperCase());
+                            System.out.println("WRONG BUT HANDLED SEPARATELY".toLowerCase());
+                            String.format("WRONG: %f", 1.0f); // Implies locale
+                        }
+                    }
+                    """
+            ).indented()
+        ).client(TestLintClient(LintClient.CLIENT_STUDIO)).run().expect(expected)
+    }
+
+    fun testKotlinCapitalize() {
+        val expected =
+            """
+            src/test/pkg/LocaleTest.kt:2: Warning: Implicitly using the default locale is a common source of bugs. [DefaultLocale]
+                "wrong".capitalize()
+                        ~~~~~~~~~~
+            src/test/pkg/LocaleTest.kt:3: Warning: Implicitly using the default locale is a common source of bugs. [DefaultLocale]
+                "Wrong".decapitalize()
+                        ~~~~~~~~~~~~
+            src/test/pkg/LocaleTest.kt:4: Warning: Implicitly using the default locale is a common source of bugs: Use toUpperCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+                "wrong".toUpperCase()
+                        ~~~~~~~~~~~
+            src/test/pkg/LocaleTest.kt:6: Warning: Implicitly using the default locale is a common source of bugs: Use toLowerCase(Locale) instead. For strings meant to be internal use Locale.ROOT, otherwise Locale.getDefault(). [DefaultLocale]
+                "WRONG".toLowerCase()
+                        ~~~~~~~~~~~
+            0 errors, 4 warnings
+            """
+
+        lint().files(
+            kotlin(
+                "src/test/pkg/LocaleTest.kt", """
+                    fun useMethods() {
+                        "wrong".capitalize()
+                        "Wrong".decapitalize()
+                        "wrong".toUpperCase()
+                        "ok".toUpperCase(Locale.US)
+                        "WRONG".toLowerCase()
+                        "ok".toLowerCase(Locale.US)
                     }
                     """
             ).indented()
