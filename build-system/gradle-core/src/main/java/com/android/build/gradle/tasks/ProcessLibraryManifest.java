@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
-import com.android.builder.core.AndroidBuilder;
+import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -205,7 +205,7 @@ public class ProcessLibraryManifest extends ManifestProcessorTask {
                                     ManifestMerger2.Invoker.Feature.FULLY_NAMESPACE_LOCAL_RESOURCES)
                             : Collections.emptyList();
             MergingReport mergingReport =
-                    AndroidBuilder.mergeManifestsForApplication(
+                    ManifestHelperKt.mergeManifestsForApplication(
                             params.mainManifest,
                             params.manifestOverlays,
                             Collections.emptyList(),

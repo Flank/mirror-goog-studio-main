@@ -17,8 +17,10 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_SHADERS;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -26,8 +28,10 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
@@ -37,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -117,17 +122,62 @@ public class ShaderCompile extends AndroidBuilderTask {
         FileUtils.cleanOutputDir(destinationDir);
 
         try (WorkerExecutorFacade workers = this.workers) {
-            getBuilder()
-                    .compileAllShaderFiles(
-                            sourceDir.get().getAsFile(),
-                            getOutputDir(),
-                            defaultArgs,
-                            scopedArgs,
-                            () -> ndkLocation.get(),
-                            new LoggedProcessOutputHandler(getILogger()),
-                            workers);
+            compileAllShaderFiles(
+                    sourceDir.get().getAsFile(),
+                    getOutputDir(),
+                    defaultArgs,
+                    scopedArgs,
+                    () -> ndkLocation.get(),
+                    new LoggedProcessOutputHandler(getILogger()),
+                    workers);
         }
     }
+
+    /**
+     * Compiles all the shader files found in the given source folders.
+     *
+     * @param sourceFolder the source folder with the merged shaders
+     * @param outputDir the output dir in which to generate the output
+     * @throws IOException failed
+     */
+    private void compileAllShaderFiles(
+            @NonNull File sourceFolder,
+            @NonNull File outputDir,
+            @NonNull List<String> defaultArgs,
+            @NonNull Map<String, List<String>> scopedArgs,
+            @Nullable Supplier<File> ndkLocation,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull WorkerExecutorFacade workers)
+            throws IOException {
+        checkNotNull(sourceFolder, "sourceFolder cannot be null.");
+        checkNotNull(outputDir, "outputDir cannot be null.");
+
+        Supplier<ShaderProcessor> processor =
+                () ->
+                        new ShaderProcessor(
+                                ndkLocation,
+                                sourceFolder,
+                                outputDir,
+                                defaultArgs,
+                                scopedArgs,
+                                new GradleProcessExecutor(getProject()),
+                                processOutputHandler,
+                                workers);
+
+        DirectoryWalker.builder()
+                .root(sourceFolder.toPath())
+                .extensions(
+                        ShaderProcessor.EXT_VERT,
+                        ShaderProcessor.EXT_TESC,
+                        ShaderProcessor.EXT_TESE,
+                        ShaderProcessor.EXT_GEOM,
+                        ShaderProcessor.EXT_FRAG,
+                        ShaderProcessor.EXT_COMP)
+                .action(processor)
+                .build()
+                .walk();
+    }
+
 
     @OutputDirectory
     public File getOutputDir() {

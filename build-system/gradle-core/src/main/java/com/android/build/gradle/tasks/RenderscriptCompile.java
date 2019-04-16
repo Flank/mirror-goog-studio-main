@@ -21,9 +21,13 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -31,8 +35,10 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.internal.compiler.DirectoryWalker;
+import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -208,24 +214,93 @@ public class RenderscriptCompile extends NdkTask {
 
         Set<File> sourceDirectories = sourceDirs.getFiles();
 
-        getBuilder()
-                .compileAllRenderscriptFiles(
-                        sourceDirectories,
-                        getImportFolders(),
-                        sourceDestDir,
-                        resDestDir,
-                        objDestDir,
-                        libDestDir,
-                        getTargetApi(),
-                        isDebugBuild(),
-                        getOptimLevel(),
-                        isNdkMode(),
-                        isSupportMode(),
-                        useAndroidX(),
-                        getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
-                        new LoggedProcessOutputHandler(getILogger()),
-                        buildToolInfoProvider.get());
+        compileAllRenderscriptFiles(
+                sourceDirectories,
+                getImportFolders(),
+                sourceDestDir,
+                resDestDir,
+                objDestDir,
+                libDestDir,
+                getTargetApi(),
+                isDebugBuild(),
+                getOptimLevel(),
+                isNdkMode(),
+                isSupportMode(),
+                useAndroidX(),
+                getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
+                new LoggedProcessOutputHandler(getILogger()),
+                buildToolInfoProvider.get());
     }
+
+    /**
+     * Compiles all the renderscript files found in the given source folders.
+     *
+     * <p>Right now this is the only way to compile them as the renderscript compiler requires all
+     * renderscript files to be passed for all compilation.
+     *
+     * <p>Therefore whenever a renderscript file or header changes, all must be recompiled.
+     *
+     * @param sourceFolders all the source folders to find files to compile
+     * @param importFolders all the import folders.
+     * @param sourceOutputDir the output dir in which to generate the source code
+     * @param resOutputDir the output dir in which to generate the bitcode file
+     * @param targetApi the target api
+     * @param debugBuild whether the build is debug
+     * @param optimLevel the optimization level
+     * @param ndkMode whether the renderscript code should be compiled to generate C/C++ bindings
+     * @param supportMode support mode flag to generate .so files.
+     * @param useAndroidX whether to use AndroidX dependencies
+     * @param abiFilters ABI filters in case of support mode
+     * @throws IOException failed
+     * @throws InterruptedException failed
+     */
+    public void compileAllRenderscriptFiles(
+            @NonNull Collection<File> sourceFolders,
+            @NonNull Collection<File> importFolders,
+            @NonNull File sourceOutputDir,
+            @NonNull File resOutputDir,
+            @NonNull File objOutputDir,
+            @NonNull File libOutputDir,
+            int targetApi,
+            boolean debugBuild,
+            int optimLevel,
+            boolean ndkMode,
+            boolean supportMode,
+            boolean useAndroidX,
+            @Nullable Set<String> abiFilters,
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @NonNull BuildToolInfo buildToolInfo)
+            throws InterruptedException, ProcessException, IOException {
+        checkNotNull(sourceFolders, "sourceFolders cannot be null.");
+        checkNotNull(importFolders, "importFolders cannot be null.");
+        checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
+        checkNotNull(resOutputDir, "resOutputDir cannot be null.");
+
+        String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
+        if (renderscript == null || !new File(renderscript).isFile()) {
+            throw new IllegalStateException("llvm-rs-cc is missing");
+        }
+
+        RenderScriptProcessor processor =
+                new RenderScriptProcessor(
+                        sourceFolders,
+                        importFolders,
+                        sourceOutputDir,
+                        resOutputDir,
+                        objOutputDir,
+                        libOutputDir,
+                        buildToolInfo,
+                        targetApi,
+                        debugBuild,
+                        optimLevel,
+                        ndkMode,
+                        supportMode,
+                        useAndroidX,
+                        abiFilters,
+                        new LoggerWrapper(getLogger()));
+        processor.build(new GradleProcessExecutor(getProject()), processOutputHandler);
+    }
+
 
     // get the import folders. If the .rsh files are not directly under the import folders,
     // we need to get the leaf folders, as this is what llvm-rs-cc expects.

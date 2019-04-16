@@ -397,6 +397,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/tasks/databinding/",
                 "com/android/build/gradle/internal/tasks/factory/",
                 "com/android/build/gradle/internal/tasks/featuresplit/",
+                "com/android/build/gradle/internal/tasks/manifest/",
                 "com/android/build/gradle/internal/tasks/structureplugin/",
                 "com/android/build/gradle/internal/test/",
                 "com/android/build/gradle/internal/test/report/",

@@ -53,7 +53,6 @@ import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.build.gradle.tasks.ProcessAndroidResources
-import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantType
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -825,7 +824,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
                     try {
                         getAaptDaemon(params.aapt2ServiceKey!!).use { aaptDaemon ->
 
-                            AndroidBuilder.processResources(
+                            processResources(
                                 aaptDaemon,
                                 configBuilder.build(),
                                 null,

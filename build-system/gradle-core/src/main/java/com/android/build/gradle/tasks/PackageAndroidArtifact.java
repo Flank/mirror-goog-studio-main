@@ -950,9 +950,7 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
 
             packageAndroidArtifact.targetApi =
                     projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
-            packageAndroidArtifact
-                    .getCreatedBy()
-                    .set(globalScope.getAndroidBuilder().getCreatedBy());
+            packageAndroidArtifact.getCreatedBy().set(globalScope.getCreatedBy());
             finalConfigure(packageAndroidArtifact);
         }
 

@@ -17,13 +17,17 @@
 package com.android.build.gradle.internal.tasks;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.SdkConstants.FD_RES_XML;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.APK;
+import static com.android.builder.core.BuilderConstants.ANDROID_WEAR;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -32,8 +36,10 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ApkInfoParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
@@ -122,21 +128,95 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            builder.generateApkData(
-                    apk,
-                    outDir,
-                    getMainPkgName(),
-                    ANDROID_WEAR_MICRO_APK,
-                    aapt2Executable.getSingleFile());
+            generateApkData(apk, outDir, getMainPkgName(), aapt2Executable.getSingleFile());
         } else {
-            AndroidBuilder.generateUnbundledWearApkData(outDir, getMainPkgName());
+            generateUnbundledWearApkData(outDir, getMainPkgName());
         }
 
-        AndroidBuilder.generateApkDataEntryInManifest(
-                minSdkVersion,
-                targetSdkVersion,
-                manifestFile);
+        generateApkDataEntryInManifest(minSdkVersion, targetSdkVersion, manifestFile);
     }
+
+    private void generateApkData(
+            @NonNull File apkFile,
+            @NonNull File outResFolder,
+            @NonNull String mainPkgName,
+            @NonNull File aapt2Executable)
+            throws ProcessException, IOException {
+
+        ApkInfoParser parser =
+                new ApkInfoParser(aapt2Executable, new GradleProcessExecutor(getProject()));
+        ApkInfoParser.ApkInfo apkInfo = parser.parseApk(apkFile);
+
+        if (!apkInfo.getPackageName().equals(mainPkgName)) {
+            throw new RuntimeException(
+                    "The main and the micro apps do not have the same package name.");
+        }
+
+        String content =
+                String.format(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<wearableApp package=\"%1$s\">\n"
+                                + "    <versionCode>%2$s</versionCode>\n"
+                                + "    <versionName>%3$s</versionName>\n"
+                                + "    <rawPathResId>%4$s</rawPathResId>\n"
+                                + "</wearableApp>",
+                        apkInfo.getPackageName(),
+                        apkInfo.getVersionCode(),
+                        apkInfo.getVersionName(),
+                        ANDROID_WEAR_MICRO_APK);
+
+        // xml folder
+        File resXmlFile = new File(outResFolder, FD_RES_XML);
+        FileUtils.mkdirs(resXmlFile);
+
+        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+                .write(content);
+    }
+
+    private static void generateUnbundledWearApkData(
+            @NonNull File outResFolder, @NonNull String mainPkgName) throws IOException {
+
+        String content =
+                String.format(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<wearableApp package=\"%1$s\">\n"
+                                + "    <unbundled />\n"
+                                + "</wearableApp>",
+                        mainPkgName);
+
+        // xml folder
+        File resXmlFile = new File(outResFolder, FD_RES_XML);
+        FileUtils.mkdirs(resXmlFile);
+
+        Files.asCharSink(new File(resXmlFile, ANDROID_WEAR_MICRO_APK + DOT_XML), Charsets.UTF_8)
+                .write(content);
+    }
+
+    private static void generateApkDataEntryInManifest(
+            int minSdkVersion, int targetSdkVersion, @NonNull File manifestFile)
+            throws IOException {
+
+        StringBuilder content = new StringBuilder();
+        content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+                .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                .append("    package=\"${packageName}\">\n")
+                .append("    <uses-sdk android:minSdkVersion=\"")
+                .append(minSdkVersion)
+                .append("\"");
+        if (targetSdkVersion != -1) {
+            content.append(" android:targetSdkVersion=\"").append(targetSdkVersion).append("\"");
+        }
+        content.append("/>\n");
+        content.append("    <application>\n")
+                .append("        <meta-data android:name=\"" + ANDROID_WEAR + "\"\n")
+                .append("                   android:resource=\"@xml/" + ANDROID_WEAR_MICRO_APK)
+                .append("\" />\n")
+                .append("   </application>\n")
+                .append("</manifest>\n");
+
+        Files.asCharSink(manifestFile, Charsets.UTF_8).write(content);
+    }
+
 
     @OutputDirectory
     public File getResOutputDir() {

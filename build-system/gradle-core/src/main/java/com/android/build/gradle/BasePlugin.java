@@ -340,7 +340,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         AndroidBuilder androidBuilder =
                 new AndroidBuilder(
-                        creator,
                         new GradleProcessExecutor(project),
                         new GradleJavaProcessExecutor(project),
                         extraModelInfo.getSyncIssueHandler(),
@@ -387,6 +386,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         globalScope =
                 new GlobalScope(
                         project,
+                        creator,
                         new ProjectWrapper(project),
                         projectOptions,
                         dslScope,

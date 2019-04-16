@@ -66,6 +66,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
 
+    @NonNull private final String createdBy;
     @NonNull private final DslScope dslScope;
 
     @NonNull private Configuration lintChecks;
@@ -79,6 +80,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     public GlobalScope(
             @NonNull Project project,
+            @NonNull String createdBy,
             @NonNull FilesProvider filesProvider,
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
@@ -89,6 +91,7 @@ public class GlobalScope implements TransformGlobalScope {
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
+        this.createdBy = createdBy;
         this.dslScope = checkNotNull(dslScope);
         this.filesProvider = filesProvider;
         this.androidBuilder = checkNotNull(androidBuilder);
@@ -111,6 +114,11 @@ public class GlobalScope implements TransformGlobalScope {
     @Override
     public Project getProject() {
         return project;
+    }
+
+    @NonNull
+    public String getCreatedBy() {
+        return createdBy;
     }
 
     @NonNull
