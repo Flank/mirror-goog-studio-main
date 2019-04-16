@@ -17,11 +17,12 @@ package com.android.build.gradle.internal
 
 import com.android.SdkConstants.FD_RES_LAYOUT
 import com.android.SdkConstants.FD_RES_VALUES
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessApplicationManifest
@@ -43,7 +44,9 @@ class DependencyResourcesComputer {
     var resources: Map<String, BuildableArtifact>? = null
 
     @set:VisibleForTesting
-    var libraries: ArtifactCollection? = null
+    var localLibraries: ArtifactCollection? = null
+
+    var remoteLibraries: ArtifactCollection? = null
 
     @set:VisibleForTesting
     var renderscriptResOutputDir: FileCollection? = null
@@ -60,21 +63,11 @@ class DependencyResourcesComputer {
     var validateEnabled: Boolean = false
         private set
 
-    /**
-     * Computes resource sets for merging, if precompileRemoteResources flag is enabled we filter
-     * out the non-values and non-layout resources as it's precompiled and is consumed directly in
-     * the linking step.
-     */
-    @JvmOverloads
-    fun compute(precompileRemoteResources: Boolean = false): List<ResourceSet> {
-        val sourceFolderSets = getResSet()
-        var size = sourceFolderSets.size
-        libraries?.let {
-            size += it.artifacts.size
-        }
-
-        val resourceSetList = ArrayList<ResourceSet>(size)
-
+    private fun addLibraryResources(
+        libraries: ArtifactCollection?,
+        resourceSetList: MutableList<ResourceSet>,
+        resourceArePrecompiled: Boolean
+    ) {
         // add at the beginning since the libraries are less important than the folder based
         // resource sets.
         // get the dependencies first
@@ -98,7 +91,7 @@ class DependencyResourcesComputer {
                 resourceSet.isFromDependency = true
                 resourceSet.addSource(artifact.file)
 
-                if (precompileRemoteResources) {
+                if (resourceArePrecompiled) {
                     resourceSet.setFolderFilter(folderFilter)
                 }
 
@@ -106,6 +99,28 @@ class DependencyResourcesComputer {
                 resourceSetList.add(0, resourceSet)
             }
         }
+    }
+
+    /**
+     * Computes resource sets for merging, if precompileRemoteResources flag is enabled we filter
+     * out the non-values and non-layout resources as it's precompiled and is consumed directly in
+     * the linking step.
+     */
+    @JvmOverloads
+    fun compute(precompileRemoteResources: Boolean = false): List<ResourceSet> {
+        val sourceFolderSets = getResSet()
+        var size = sourceFolderSets.size
+        localLibraries?.let {
+            size += it.artifacts.size
+        }
+        remoteLibraries?.let {
+            size += it.artifacts.size
+        }
+
+        val resourceSetList = ArrayList<ResourceSet>(size)
+
+        addLibraryResources(localLibraries, resourceSetList, false)
+        addLibraryResources(remoteLibraries, resourceSetList, precompileRemoteResources)
 
         // add the folder based next
         resourceSetList.addAll(sourceFolderSets)
@@ -159,8 +174,10 @@ class DependencyResourcesComputer {
         validateEnabled = !globalScope.projectOptions.get(BooleanOption.DISABLE_RESOURCE_VALIDATION)
 
         if (includeDependencies) {
-            libraries =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+            this.localLibraries =
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, PROJECT, ANDROID_RES)
+            this.remoteLibraries =
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, ANDROID_RES)
         }
 
         resources = variantData.androidResources
@@ -177,7 +194,10 @@ class DependencyResourcesComputer {
     }
 
     fun initForNavigation(variantScope: VariantScope) {
-        this.libraries = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, ANDROID_RES)
+        this.localLibraries =
+            variantScope.getArtifactCollection(RUNTIME_CLASSPATH, PROJECT, ANDROID_RES)
+        this.remoteLibraries =
+            variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, ANDROID_RES)
         this.resources = variantScope.variantData.androidResources
     }
 
