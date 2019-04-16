@@ -17,13 +17,13 @@ def coverage_java_test(name, coverage = True, data = [], jvm_flags = [], tags = 
     else:
         native.java_test(
             name = name,
-            data = select({
-                "//tools/base/bazel:agent_coverage": data + [jacoco_jvm_agent],
-                "//conditions:default": data,
+            data = data + select({
+                "//tools/base/bazel:agent_coverage": [jacoco_jvm_agent],
+                "//conditions:default": [],
             }),
-            jvm_flags = select({
-                "//tools/base/bazel:agent_coverage": jvm_flags + [jacoco_jvm_flag],
-                "//conditions:default": jvm_flags,
+            jvm_flags = jvm_flags + select({
+                "//tools/base/bazel:agent_coverage": [jacoco_jvm_flag],
+                "//conditions:default": [],
             }),
             tags = tags + ["coverage-test"],
             **kwargs
