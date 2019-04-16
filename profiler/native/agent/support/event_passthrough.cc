@@ -67,7 +67,7 @@ Status SendViewEvent(AgentService::Stub& stub, ClientContext& ctx,
 
 Status SendSystemEvent(AgentService::Stub& stub, ClientContext& ctx,
                        InteractionData* data, int32_t pid, int64_t timestamp,
-                       long downtime, bool is_end) {
+                       int64_t downtime, bool is_end) {
   SendEventRequest request;
   auto* event = request.mutable_event();
   event->set_pid(pid);
@@ -83,7 +83,7 @@ Status SendSystemEvent(AgentService::Stub& stub, ClientContext& ctx,
 
 Status SendLegacySystemEvent(InternalEventService::Stub& stub,
                              ClientContext& ctx, SystemData* event, int32_t pid,
-                             int64_t timestamp, long jdownTime) {
+                             int64_t timestamp, int64_t jdownTime) {
   event->set_start_timestamp(timestamp);
   event->set_end_timestamp(0);
   event->set_event_id(jdownTime);
