@@ -564,14 +564,6 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
             )
-
-            if (variantScope.globalScope.projectOptions.get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
-                task.compiledRemoteResources =
-                    variantScope.getArtifactCollection(
-                        RUNTIME_CLASSPATH, ALL,
-                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
-                    )
-            }
         }
     }
 
@@ -624,6 +616,14 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
             @Suppress("UNCHECKED_CAST")
             task.textSymbolOutputDir = symbolLocation as Supplier<File?>
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
+
+            if (variantScope.globalScope.projectOptions.get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
+                task.compiledRemoteResources =
+                    variantScope.getArtifactCollection(
+                        RUNTIME_CLASSPATH, ALL,
+                        AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
+                    )
+            }
         }
     }
 
