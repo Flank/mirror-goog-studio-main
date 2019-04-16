@@ -16,6 +16,7 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -23,20 +24,24 @@ import java.util.Arrays;
 
 public class RunAs extends ShellCommand {
     @Override
-    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
+        FakeDevice device = context.getDevice();
         if (args.length == 0) {
             stdout.println(
                     "run-as: usage: run-as <package-name> [--user <uid>] <command> [<args>]");
             return false;
         } else {
             String pkg = args[0];
-            if (!device.getApps().contains(pkg)) {
+
+            FakeDevice.Application app = device.getApplication(pkg);
+            if (app == null) {
                 stdout.printf("run-as: Package '%s' is unknown\n", pkg);
                 return false;
             }
             String cmd = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            device.getShell().execute(cmd, stdout, stdin, device);
+            device.getShell().execute(cmd, app.user, stdout, stdin, device);
             return true;
         }
     }

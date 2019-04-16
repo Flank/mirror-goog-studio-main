@@ -114,7 +114,7 @@ bool DeltaInstallCommand::SendApkToPackageManager(
   workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
                                        &pm_stderr, &pid);
 
-  PatchApplier patchApplier;
+  PatchApplier patchApplier(workspace_.GetRoot());
   patchApplier.ApplyPatchToFD(patch, pm_stdin);
 
   // Clean up
@@ -146,7 +146,7 @@ void DeltaInstallCommand::Install() {
   int dst_fd = open(tmp_apk_path.c_str(), O_CREAT, O_WRONLY);
 
   // Write content of the tmp apk
-  PatchApplier patchApplier;
+  PatchApplier patchApplier(workspace_.GetRoot());
   bool patch_result =
       patchApplier.ApplyPatchToFD(request_.patchinstructions()[0], dst_fd);
   if (!patch_result) {

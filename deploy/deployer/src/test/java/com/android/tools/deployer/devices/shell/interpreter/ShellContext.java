@@ -17,7 +17,6 @@ package com.android.tools.deployer.devices.shell.interpreter;
 
 import com.android.annotations.NonNull;
 import com.android.tools.deployer.devices.FakeDevice;
-import com.android.tools.deployer.devices.shell.ShellCommand;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,11 +29,10 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ShellEnv implements AutoCloseable {
+public class ShellContext implements AutoCloseable {
     private static final int PIPE_SIZE = 1024 * 1024;
 
     private FakeDevice device;
-    private Map<String, ShellCommand> commands;
     private Map<String, String> scope;
     private InputStream inputStream;
     private PrintStream outputStream;
@@ -43,15 +41,16 @@ public class ShellEnv implements AutoCloseable {
     private PipedOutputStream pipeOut;
     private PrintStream pipeOutPrintStream;
     private Path cwd;
+    private FakeDevice.User user;
 
-    public ShellEnv(
+    public ShellContext(
             @NonNull FakeDevice device,
-            @NonNull Map<String, ShellCommand> commands,
+            @NonNull FakeDevice.User user,
             @NonNull InputStream inputStream,
             @NonNull OutputStream outputStream)
             throws IOException {
         this.device = device;
-        this.commands = commands;
+        this.user = user;
         this.inputStream = inputStream;
         this.outputStream = new PrintStream(outputStream);
         pipeMux = inputStream; // Initialize the mux to the network input.
@@ -131,18 +130,8 @@ public class ShellEnv implements AutoCloseable {
     }
 
     @NonNull
-    FakeDevice getDevice() {
+    public FakeDevice getDevice() {
         return device;
-    }
-
-    ShellCommand getCommand(@NonNull String commandName) {
-        for (ShellCommand cmd : commands.values()) {
-            if (cmd.getExecutable().equals(commandName)
-                    || commandName.equals(cmd.getLocation() + "/" + cmd.getExecutable())) {
-                return cmd;
-            }
-        }
-        return null;
     }
 
     void setScope(@NonNull String varName, String value) {
@@ -158,5 +147,9 @@ public class ShellEnv implements AutoCloseable {
     @NonNull
     Path getCwd() {
         return cwd;
+    }
+
+    public FakeDevice.User getUser() {
+        return user;
     }
 }

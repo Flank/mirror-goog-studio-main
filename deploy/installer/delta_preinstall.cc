@@ -84,7 +84,7 @@ bool DeltaPreinstallCommand::SendApkToPackageManager(
   workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
                                        &pm_stderr, &pid);
 
-  PatchApplier patchApplier;
+  PatchApplier patchApplier(workspace_.GetRoot());
   patchApplier.ApplyPatchToFD(patch, pm_stdin);
 
   // Clean up

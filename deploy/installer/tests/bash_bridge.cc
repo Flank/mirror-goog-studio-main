@@ -71,7 +71,8 @@ int main(int argc, char* argv[]) {
         break;
       }
       write(sockfd, buffer, r);
-    } else if (fds[1].revents & POLLIN) {
+    }
+    if (fds[1].revents & POLLIN) {
       int r = read(sockfd, buffer, 8192);
       if (r <= 0) {
         break;

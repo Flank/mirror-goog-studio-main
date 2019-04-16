@@ -21,10 +21,10 @@ import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.protobuf.ByteString;
 import com.android.tools.deploy.protobuf.CodedOutputStream;
-import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.shell.Arguments;
 import com.android.tools.deployer.devices.shell.ShellCommand;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -93,7 +93,7 @@ public class ApkInstallerTest extends FakeAdbTestBase {
     private class SkipInstallCommand extends ShellCommand {
         @Override
         public boolean execute(
-                FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+                ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
                 throws IOException {
             Arguments arguments = new Arguments(args);
             String version = arguments.nextOption();

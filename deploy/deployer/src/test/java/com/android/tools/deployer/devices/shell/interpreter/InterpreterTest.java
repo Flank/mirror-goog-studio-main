@@ -28,8 +28,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,22 +35,16 @@ import org.junit.Test;
 public class InterpreterTest {
     private ByteArrayInputStream inputStream;
     private ByteArrayOutputStream outputStream;
-    private Map<String, ShellCommand> commands;
-    private ShellEnv env;
+    private ShellContext env;
 
     @Before
     public void before() throws IOException {
         inputStream = new ByteArrayInputStream(new byte[] {});
         outputStream = new ByteArrayOutputStream(1024);
-        commands = new HashMap<>();
-        commands.put("echo", new EchoCommand());
-        commands.put("cat", new CatCommand());
-        env =
-                new ShellEnv(
-                        new FakeDeviceLibrary().build(FakeDeviceLibrary.DeviceId.API_28),
-                        commands,
-                        inputStream,
-                        outputStream);
+        FakeDevice device = new FakeDeviceLibrary().build(FakeDeviceLibrary.DeviceId.API_28);
+        device.getShell().addCommand(new EchoCommand());
+        device.getShell().addCommand(new CatCommand());
+        env = new ShellContext(device, device.getShellUser(), inputStream, outputStream);
     }
 
     @After
@@ -159,7 +151,7 @@ public class InterpreterTest {
     private static class EchoCommand extends ShellCommand {
         @Override
         public boolean execute(
-                FakeDevice device, String[] args, InputStream stdin, PrintStream stdout) {
+                ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
             stdout.println(args[0]); // echo prints a newline after the param.
             return true;
         }
@@ -173,7 +165,7 @@ public class InterpreterTest {
     private static class CatCommand extends ShellCommand {
         @Override
         public boolean execute(
-                FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+                ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
                 throws IOException {
             // Always read all from stdin.
             int available = stdin.available();
@@ -190,7 +182,7 @@ public class InterpreterTest {
 
             // If an argument was supplied, print the contents of that file instead and ignore stdin.
             if (args.length > 0) {
-                buffer = device.readFile(args[0]);
+                buffer = context.getDevice().readFile(args[0]);
                 if (buffer == null) {
                     return false;
                 }

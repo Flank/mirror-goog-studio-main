@@ -16,6 +16,7 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,10 +35,11 @@ public class Cmd extends ShellCommand {
     }
 
     @Override
-    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         try {
-            return run(device, new Arguments(args), stdin, stdout);
+            return run(context.getDevice(), new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
             stdout.println(e.getMessage());
             return false;

@@ -16,14 +16,17 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
 public class Chmod extends ShellCommand {
     @Override
-    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
+        FakeDevice device = context.getDevice();
         if (args.length < 2 || !args[0].equals("+x")) {
             stdout.println("Usage chmod ...");
             return false;

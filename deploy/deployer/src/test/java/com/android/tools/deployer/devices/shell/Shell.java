@@ -18,7 +18,7 @@ package com.android.tools.deployer.devices.shell;
 import com.android.annotations.NonNull;
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.shell.interpreter.Parser;
-import com.android.tools.deployer.devices.shell.interpreter.ShellEnv;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,14 +40,25 @@ public class Shell {
         commands.put(command.getExecutable(), command);
     }
 
+    public ShellCommand getCommand(@NonNull String commandName) {
+        for (ShellCommand cmd : commands.values()) {
+            if (cmd.getExecutable().equals(commandName)
+                    || commandName.equals(cmd.getLocation() + "/" + cmd.getExecutable())) {
+                return cmd;
+            }
+        }
+        return null;
+    }
+
     public void execute(
             @NonNull String script,
+            @NonNull FakeDevice.User user,
             @NonNull OutputStream output,
             @NonNull InputStream input,
             @NonNull FakeDevice device)
             throws IOException {
         history.add(script);
-        ShellEnv env = new ShellEnv(device, commands, input, output);
+        ShellContext env = new ShellContext(device, user, input, output);
         Parser.parse(script).execute(env);
         output.write(env.readAllBytesFromPipe());
     }

@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer.devices;
 
+import com.android.annotations.Nullable;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
 import com.android.tools.deployer.ApkParser;
@@ -45,7 +46,9 @@ public class FakeDevice {
     private final Shell shell;
     private final Map<String, String> props;
     private final Map<String, String> env;
-    private final Map<String, String> apps;
+    private final Map<String, Application> apps;
+    private final User shellUser;
+    private List<User> users;
 
     private final Map<Integer, List<byte[]>> sessions;
     private File storage;
@@ -64,7 +67,9 @@ public class FakeDevice {
         this.env = new HashMap<>();
         this.sessions = new HashMap<>();
         this.apps = new HashMap<>();
+        this.users = new ArrayList<>();
         this.storage = null;
+        this.shellUser = addUser(2000, "shell");
     }
 
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
@@ -143,8 +148,10 @@ public class FakeDevice {
         return apps.keySet();
     }
 
+    @Nullable
     public String getAppPath(String pkg) {
-        return apps.get(pkg);
+        Application app = apps.get(pkg);
+        return app == null ? null : app.path;
     }
 
     public int createSession() {
@@ -179,13 +186,25 @@ public class FakeDevice {
             Files.move(apk, new File(appDir, details.fileName).toPath());
         }
         if (pkg != null) {
-            String previous = apps.get(pkg);
+            Application previous = apps.get(pkg);
             if (previous != null) {
-                FileUtils.deleteRecursivelyIfExists(new File(getStorage(), previous));
+                FileUtils.deleteRecursivelyIfExists(new File(getStorage(), previous.path));
             }
-            apps.put(pkg, appPath);
+
+            int id = apps.keySet().size() + 1;
+            // Using a similar numbering and naming scheme as android:
+            // See https://android.googlesource.com/platform/system/core/+/master/libcutils/include/private/android_filesystem_config.h
+            User user = addUser(10000 + id, "u0_a" + id);
+            Application app = new Application(pkg, appPath, user);
+            apps.put(pkg, app);
         }
         sessions.put(session, null);
+    }
+
+    private User addUser(int uid, String name) {
+        User user = new User(uid, name);
+        users.add(user);
+        return user;
     }
 
     public void abandonSession(int session) {
@@ -230,5 +249,35 @@ public class FakeDevice {
 
     public File getShellBridge() {
         return bridge;
+    }
+
+    public User getShellUser() {
+        return shellUser;
+    }
+
+    public Application getApplication(String pkg) {
+        return apps.get(pkg);
+    }
+
+    public static class Application {
+        public final String id;
+        public final String path;
+        public final User user;
+
+        public Application(String id, String path, User user) {
+            this.id = id;
+            this.path = path;
+            this.user = user;
+        }
+    }
+
+    public static class User {
+        public final String name;
+        public final int uid;
+
+        public User(int uid, String name) {
+            this.name = name;
+            this.uid = uid;
+        }
     }
 }

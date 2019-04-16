@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "tools/base/deploy/installer/apk_archive.h"
+#include "tools/base/deploy/installer/executor_impl.h"
 #include "tools/base/deploy/installer/patch_applier.h"
 #include "tools/base/deploy/proto/deploy.pb.h"
 
@@ -64,9 +65,7 @@ TEST_F(InstallerTest, TestArchiveParser) {
   ASSERT_EQ(sigLoc.size, 4088);
 }
 
-class PatcherTest : public ::testing::Test {};
-
-TEST_F(PatcherTest, TestFileNoOpPatching) {
+TEST_F(InstallerTest, TestFileNoOpPatching) {
   proto::PatchInstruction patchInstruction;
   patchInstruction.set_src_absolute_path(
       "tools/base/deploy/installer/tests/data/patchTest.txt");
@@ -78,7 +77,7 @@ TEST_F(PatcherTest, TestFileNoOpPatching) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   bool patchSucceeded =
       patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   EXPECT_TRUE(patchSucceeded == true);
@@ -93,7 +92,7 @@ TEST_F(PatcherTest, TestFileNoOpPatching) {
   EXPECT_TRUE(patchedContent[2] == 'a');
 }
 
-TEST_F(PatcherTest, TestFilePatchingDirtyBeginning) {
+TEST_F(InstallerTest, TestFilePatchingDirtyBeginning) {
   proto::PatchInstruction patchInstruction;
   patchInstruction.set_src_absolute_path(
       "tools/base/deploy/installer/tests/data/patchTest.txt");
@@ -106,7 +105,7 @@ TEST_F(PatcherTest, TestFilePatchingDirtyBeginning) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   close(pipeBuffer[1]);
 
@@ -119,7 +118,7 @@ TEST_F(PatcherTest, TestFilePatchingDirtyBeginning) {
   EXPECT_TRUE(patchedContent[2] == 'a');
 }
 
-TEST_F(PatcherTest, TestFilePatching) {
+TEST_F(InstallerTest, TestFilePatching) {
   proto::PatchInstruction patchInstruction;
   patchInstruction.set_src_absolute_path(
       "tools/base/deploy/installer/tests/data/patchTest.txt");
@@ -133,7 +132,7 @@ TEST_F(PatcherTest, TestFilePatching) {
 
   int pipeBuffer[2];
   pipe(pipeBuffer);
-  PatchApplier patchApplier;
+  PatchApplier patchApplier("");
   patchApplier.ApplyPatchToFD(patchInstruction, pipeBuffer[1]);
   close(pipeBuffer[1]);
 

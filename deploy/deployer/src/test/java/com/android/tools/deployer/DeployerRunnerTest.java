@@ -31,6 +31,7 @@ import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.tools.deployer.devices.shell.Arguments;
 import com.android.tools.deployer.devices.shell.ShellCommand;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import com.android.utils.FileUtils;
 import com.google.common.io.ByteStreams;
 import java.io.File;
@@ -194,6 +195,67 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         }
     }
 
+    @Test
+    public void testDeltaInstall() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", "base.apk", file);
+        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        device.getShell().clearHistory();
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+
+        assertInstalled("com.example.simpleapp", "base.apk", file);
+
+        if (device.getApi() < 24) {
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+        } else {
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " deltainstall",
+                    "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
+                    "cmd package install-write -S 12789 2 base.apk",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:SUCCESS");
+        }
+    }
+
     public File prepareInstaller() throws IOException {
         File root = TestUtils.getWorkspaceRoot();
         String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";
@@ -272,7 +334,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
     private class InstallerCommand extends ShellCommand {
         @Override
         public boolean execute(
-                FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+                ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
                 throws IOException {
             Arguments arguments = new Arguments(args);
             String version = arguments.nextOption();

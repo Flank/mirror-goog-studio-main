@@ -19,16 +19,20 @@
 
 #include "tools/base/deploy/proto/deploy.pb.h"
 
+#include <string>
+
 namespace deploy {
 
 class PatchApplier {
  public:
-  PatchApplier() = default;
+  PatchApplier(const std::string& root_directory)
+      : root_directory_(root_directory) {}
   ~PatchApplier() = default;
   bool ApplyPatchToFD(const proto::PatchInstruction& patch, int dst_fd) const
       noexcept;
 
  private:
+  std::string root_directory_;
 };
 
 }  // namespace deploy

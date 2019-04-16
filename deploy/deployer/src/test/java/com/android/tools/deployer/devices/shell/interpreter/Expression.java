@@ -27,7 +27,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public interface Expression {
-    ExecutionResult execute(@NonNull ShellEnv env);
+    ExecutionResult execute(@NonNull ShellContext env);
 
     class ExecutionResult {
         public String text;
@@ -46,7 +46,7 @@ public interface Expression {
 
     class EmptyExpression implements Expression {
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             // do nothing
             return new ExecutionResult(true);
         }
@@ -74,7 +74,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             firstExpression.execute(env);
             return secondExpression.execute(env);
         }
@@ -86,7 +86,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             if (firstExpression.execute(env).success) {
                 try {
                     // Print out the pipe, since we're not piping.
@@ -106,7 +106,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             // Note we're not implementing a full process forking mechanism, and are just buffering everything in RAM.
             boolean success = firstExpression.execute(env).success;
             if (success) {
@@ -132,7 +132,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             ExecutionResult result = firstExpression.execute(env);
             String firstResult = result.text;
 
@@ -173,7 +173,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             ExecutionResult result = expression.execute(env);
             if (result.success) {
                 env.setScope(variableName, result.text);
@@ -196,7 +196,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             try {
                 ExecutionResult result = commandExpression.execute(env);
                 String commandName = result.text;
@@ -209,7 +209,7 @@ public interface Expression {
                 InputStream stdin = env.takeStdin();
                 PrintStream stdout = env.getPrintStdout();
 
-                ShellCommand command = env.getCommand(commandName);
+                ShellCommand command = env.getDevice().getShell().getCommand(commandName);
                 boolean success = false;
                 if (command == null) {
                     if (env.getDevice().hasFile(commandName)) {
@@ -225,7 +225,7 @@ public interface Expression {
                     }
                 }
                 if (command != null) {
-                    success = command.execute(env.getDevice(), cmdArgs, stdin, stdout);
+                    success = command.execute(env, cmdArgs, stdin, stdout);
                 }
                 return new ExecutionResult(success);
             } catch (IOException e) {
@@ -245,7 +245,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             Matcher matcher = VAR_PATTERN.matcher(expressionString);
             StringBuffer buffer = new StringBuffer();
             while (matcher.find()) {
@@ -272,7 +272,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             ExecutionResult result = listExpression.execute(env);
             if (!result.success) {
                 throw new RuntimeException("List in for loop failed to materialize.");
@@ -304,7 +304,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             if (conditionalExpression.execute(env).success) {
                 return new ExecutionResult(body.execute(env).success);
             }
@@ -320,7 +320,7 @@ public interface Expression {
         }
 
         @Override
-        public ExecutionResult execute(@NonNull ShellEnv env) {
+        public ExecutionResult execute(@NonNull ShellContext env) {
             try {
                 StringBuilder builder = new StringBuilder();
                 for (Expression expression : expressionsList) {

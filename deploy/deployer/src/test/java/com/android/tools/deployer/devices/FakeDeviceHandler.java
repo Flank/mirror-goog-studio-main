@@ -108,7 +108,7 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
         OutputStream output = socket.getOutputStream();
         InputStream input = socket.getInputStream();
         CommandHandler.writeOkay(output);
-        device.getShell().execute(args, output, input, device);
+        device.getShell().execute(args, device.getShellUser(), output, input, device);
         return true;
     }
 }

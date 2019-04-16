@@ -16,6 +16,7 @@
 package com.android.tools.deployer.devices.shell;
 
 import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import java.io.DataInputStream;
@@ -40,8 +41,10 @@ public class ExternalCommand extends ShellCommand {
     }
 
     @Override
-    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
+        FakeDevice device = context.getDevice();
         try (ServerSocket serverSocket = new ServerSocket(0)) {
             List<String> command = new ArrayList<>();
             File exe = new File(device.getStorage(), executable);
@@ -81,7 +84,7 @@ public class ExternalCommand extends ShellCommand {
                         byte[] buffer = new byte[size];
                         ByteStreams.readFully(data, buffer);
                         String script = new String(buffer, Charsets.UTF_8);
-                        device.getShell().execute(script, out, inp, device);
+                        device.getShell().execute(script, context.getUser(), out, inp, device);
                     }
                 }
                 try {

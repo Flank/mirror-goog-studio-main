@@ -15,33 +15,31 @@
  */
 package com.android.tools.deployer.devices.shell;
 
+import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-public class Mkdir extends ShellCommand {
+public class Id extends ShellCommand {
     @Override
     public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
-            throws IOException {
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
+        FakeDevice.User user = context.getUser();
         if (args.length == 0) {
-            stdout.println("Usage mkdir...");
+            stdout.printf(
+                    "uid=%d(%s) gid=%d(%s) groups=%d(%s),1004(input)\n",
+                    user.uid, user.name, user.uid, user.name, user.uid, user.name);
+        } else if (args.length == 1 && args[0].equals("-u")) {
+            stdout.println(user.uid);
         } else {
-            boolean parents = false;
-            for (int i = 0; i < args.length; i++) {
-                if (i == 0 && args[0].equals("-p")) {
-                    parents = true;
-                } else {
-                    context.getDevice().mkdir(args[i], parents);
-                }
-            }
+            stdout.println("id: unknown option " + String.join(" ", args));
+            return false;
         }
         return true;
     }
 
     @Override
     public String getExecutable() {
-        return "mkdir";
+        return "id";
     }
 }

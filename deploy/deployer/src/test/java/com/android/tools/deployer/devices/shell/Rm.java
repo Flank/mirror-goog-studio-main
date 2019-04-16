@@ -15,17 +15,18 @@
  */
 package com.android.tools.deployer.devices.shell;
 
-import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
 public class Rm extends ShellCommand {
     @Override
-    public boolean execute(FakeDevice device, String[] args, InputStream stdin, PrintStream stdout)
+    public boolean execute(
+            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         for (String arg : args) {
-            device.removeFile(arg);
+            context.getDevice().removeFile(arg);
         }
         return true;
     }
