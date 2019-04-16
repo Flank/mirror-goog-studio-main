@@ -132,7 +132,7 @@ public class ApkInstaller {
                         adb.shell(new String[] {"am", "force-stop", packageName});
                     } catch (IOException e) {
                         throw DeployerException.installFailed(
-                                SKIPPED_INSTALL.name(), "Failure to kill " + packageName);
+                                SKIPPED_INSTALL, "Failure to kill " + packageName);
                     }
                     break;
                 }
@@ -164,7 +164,7 @@ public class ApkInstaller {
         if (result == SKIPPED_INSTALL) {
             installed = false;
         } else if (result != OK) {
-            throw DeployerException.installFailed(result.name(), message);
+            throw DeployerException.installFailed(result, message);
         }
         return installed;
     }

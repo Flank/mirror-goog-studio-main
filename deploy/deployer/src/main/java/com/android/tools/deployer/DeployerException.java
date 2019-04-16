@@ -176,8 +176,7 @@ public class DeployerException extends Exception {
                 "The application could not be installed.", "%s", "Retry", ResolutionAction.RETRY),
 
         INSTALL_FAILED(
-                "The application could not be installed: %s",
-                "%s", "Retry", ResolutionAction.RETRY),
+                "The application could not be installed%s", "%s", "Retry", ResolutionAction.RETRY),
 
         SWAP_FAILED(
                 "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
@@ -330,8 +329,15 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.PREINSTALL_FAILED, NO_ARGS, reason);
     }
 
-    public static DeployerException installFailed(String code, String reason) {
-        return new DeployerException(Error.INSTALL_FAILED, new String[] {code}, reason);
+    public static DeployerException installFailed(AdbClient.InstallResult code, String reason) {
+        if (code != AdbClient.InstallResult.UNKNOWN_ERROR) {
+            return new DeployerException(
+                    Error.INSTALL_FAILED, new String[] {": " + code.name()}, reason);
+        } else {
+            // If the error is unknown, rather than including "UNKNOWN_ERROR" in the error
+            // string, omit the error code entirely.
+            return new DeployerException(Error.INSTALL_FAILED, new String[] {"."}, reason);
+        }
     }
 
     public static DeployerException swapFailed(String reason) {
