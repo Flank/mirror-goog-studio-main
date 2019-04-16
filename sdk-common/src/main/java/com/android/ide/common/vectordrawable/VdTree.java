@@ -15,6 +15,10 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.SdkConstants.TAG_CLIP_PATH;
+import static com.android.SdkConstants.TAG_GROUP;
+import static com.android.SdkConstants.TAG_PATH;
+import static com.android.SdkConstants.TAG_VECTOR;
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
 
 import com.android.annotations.NonNull;
@@ -37,10 +41,6 @@ import org.w3c.dom.NodeList;
  * Represents the whole VectorDrawable XML file's tree.
  */
 class VdTree {
-    private static final String SHAPE_VECTOR = "vector";
-    private static final String SHAPE_PATH = "path";
-    private static final String SHAPE_GROUP = "group";
-    private static final String SHAPE_CLIP_PATH = "clip-path";
     private static final Pattern ATTRIBUTE_PATTERN =
             Pattern.compile("^\\s*(\\d+(\\.\\d+)*)\\s*([a-zA-Z]+)\\s*$");
 
@@ -121,7 +121,7 @@ class VdTree {
     }
 
     public void parse(@NonNull Document doc) {
-        NodeList rootNodeList = doc.getElementsByTagName(SHAPE_VECTOR);
+        NodeList rootNodeList = doc.getElementsByTagName(TAG_VECTOR);
         assert rootNodeList.getLength() == 1;
         Node rootNode = rootNodeList.item(0);
 
@@ -139,15 +139,16 @@ class VdTree {
         for (int i = 0; i < length; i++) {
             Node child = childrenNodes.item(i);
             if (child.getNodeType() == Node.ELEMENT_NODE) {
-                if (SHAPE_GROUP.equals(child.getNodeName())) {
+                String name = child.getNodeName();
+                if (TAG_GROUP.equals(name)) {
                     VdGroup newGroup = parseGroupAttributes(child.getAttributes());
                     currentGroup.add(newGroup);
                     parseTree(child, newGroup);
-                } else if (SHAPE_PATH.equals(child.getNodeName())) {
+                } else if (TAG_PATH.equals(name)) {
                     VdPath newPath = parsePathAttributes(child.getAttributes());
                     newPath.addGradientIfExists(child);
                     currentGroup.add(newPath);
-                } else if (SHAPE_CLIP_PATH.equals(child.getNodeName())) {
+                } else if (TAG_CLIP_PATH.equals(name)) {
                     VdPath newClipPath = parsePathAttributes(child.getAttributes());
                     newClipPath.setClipPath(true);
                     currentGroup.add(newClipPath);
