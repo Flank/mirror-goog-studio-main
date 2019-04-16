@@ -1429,6 +1429,9 @@ public abstract class TaskManager {
                 // Add a task to process the Android Resources and generate source files
                 createApkProcessResTask(variantScope, FEATURE_RESOURCE_PKG);
                 taskFactory.register(new PackageForUnitTest.CreationAction(variantScope));
+
+                // Add data binding tasks if enabled
+                createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
             } else if (testedVariantScope.getType().isApk()) {
                 // The IDs will have been inlined for an non-namespaced application
                 // so just re-export the artifacts here.
@@ -3426,12 +3429,13 @@ public abstract class TaskManager {
             if (dataBindingOptions.isEnabledForTests()
                     || this instanceof LibraryTaskManager
                     || this instanceof MultiTypeTaskManager) {
+                String dataBindingArtifact =
+                        SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version;
                 project.getDependencies()
-                        .add(
-                                "androidTestAnnotationProcessor",
-                                SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT
-                                        + ":"
-                                        + version);
+                        .add("androidTestAnnotationProcessor", dataBindingArtifact);
+                if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+                    project.getDependencies().add("testAnnotationProcessor", dataBindingArtifact);
+                }
             }
             if (dataBindingOptions.getAddDefaultAdapters()) {
                 String libArtifact =
