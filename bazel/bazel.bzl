@@ -49,7 +49,7 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
         outputs = [resources_jar],
         executable = ctx.executable._zipper,
         arguments = zipper_args,
-        progress_message = "Creating zip...",
+        progress_message = "Creating resources zip...",
         mnemonic = "zipper",
     )
 
@@ -68,6 +68,7 @@ def _iml_module_jar_impl(
         groovy_srcs,
         form_srcs,
         resources,
+        res_zips,
         output_jar,
         java_deps,
         form_deps,
@@ -153,6 +154,8 @@ def _iml_module_jar_impl(
         resources_jar = ctx.actions.declare_file(name + ".res.jar")
         resources_impl(ctx, name, roots, resources, resources_jar)
         jars += [resources_jar]
+    if res_zips:
+        jars += res_zips
 
     ctx.action(
         inputs = jars,
@@ -241,6 +244,7 @@ def _iml_module_impl(ctx):
         ctx.files.groovy_srcs,
         ctx.files.form_srcs,
         ctx.files.resources,
+        ctx.files.res_zips,
         ctx.outputs.production_jar,
         java_deps,
         form_deps,
@@ -259,6 +263,7 @@ def _iml_module_impl(ctx):
         ctx.files.groovy_test_srcs,
         ctx.files.form_test_srcs,
         ctx.files.test_resources,
+        [],
         ctx.outputs.test_jar,
         [main_provider] + test_java_deps,
         test_form_deps,
@@ -300,6 +305,7 @@ _iml_module_ = rule(
         "form_test_srcs": attr.label_list(allow_files = True),
         "javacopts": attr.string_list(),
         "resources": attr.label_list(allow_files = True),
+        "res_zips": attr.label_list(allow_files = True),
         "test_resources": attr.label_list(allow_files = True),
         "package_prefixes": attr.string_dict(),
         "test_class": attr.string(),
@@ -508,6 +514,7 @@ def iml_module(
         groovy_srcs = srcs.groovies,
         form_srcs = srcs.forms,
         resources = srcs.resources,
+        res_zips = res_zips,
         roots = srcs.roots,
         java_test_srcs = split_test_srcs.javas,
         kotlin_test_srcs = split_test_srcs.kotlins,

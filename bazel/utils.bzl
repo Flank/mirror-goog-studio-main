@@ -190,7 +190,7 @@ def _dir_archive_impl(ctx):
         if not file.short_path.startswith(prefix):
             fail(file.short_path + "is not in " + prefix)
         else:
-            zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.short_path))
+            zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.path))
 
     ctx.action(
         inputs = ctx.files.files,
