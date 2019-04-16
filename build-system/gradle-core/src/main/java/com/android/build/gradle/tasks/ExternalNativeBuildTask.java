@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.cxx.logging.GradleBuildLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -99,8 +99,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
     @TaskAction
     void build() throws BuildCommandException, IOException {
-        try (GradleBuildLoggingEnvironment ignore =
-                new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
+        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
+                new ErrorsAreFatalThreadLoggingEnvironment()) {
             buildImpl();
         }
     }

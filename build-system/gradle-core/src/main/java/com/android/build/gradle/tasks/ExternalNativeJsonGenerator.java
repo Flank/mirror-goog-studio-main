@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidatio
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.cxx.logging.GradleSyncLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
@@ -47,7 +47,6 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.repository.Revision;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
@@ -61,11 +60,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -81,19 +78,16 @@ import org.gradle.api.tasks.OutputFiles;
 public abstract class ExternalNativeJsonGenerator {
     @NonNull protected final CxxVariantModel variant;
     @NonNull protected final List<CxxAbiModel> abis;
-    @NonNull protected final Set<String> configurationFailures;
     @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
 
     ExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
         this.variant = variant;
         this.abis = abis;
-        this.configurationFailures = configurationFailures;
         this.androidBuilder = androidBuilder;
         this.stats = stats;
 
@@ -159,13 +153,8 @@ public abstract class ExternalNativeJsonGenerator {
     @Nullable
     private Void buildForOneConfigurationConvertExceptions(
             boolean forceJsonGeneration, CxxAbiModel abi) {
-        try (GradleSyncLoggingEnvironment ignore =
-                new GradleSyncLoggingEnvironment(
-                        getVariantName(),
-                        abi.getAbi().getTag(),
-                        configurationFailures,
-                        androidBuilder.getIssueReporter(),
-                        androidBuilder.getLogger())) {
+        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
+                new ErrorsAreFatalThreadLoggingEnvironment()) {
             try {
                 buildForOneConfiguration(forceJsonGeneration, abi);
             } catch (@NonNull IOException | GradleException e) {
@@ -225,17 +214,10 @@ public abstract class ExternalNativeJsonGenerator {
         assert (built == 1);
     }
 
-    private void checkForConfigurationErrors() {
-        if (!configurationFailures.isEmpty()) {
-            throw new GradleException(Joiner.on("\r\n").join(configurationFailures));
-        }
-    }
-
     private void buildForOneConfiguration(boolean forceJsonGeneration, CxxAbiModel abi)
             throws GradleException, IOException, ProcessException {
         try (PassThroughRecordingLoggingEnvironment recorder =
                 new PassThroughRecordingLoggingEnvironment()) {
-            checkForConfigurationErrors();
 
             GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
                     GradleBuildVariant.NativeBuildConfigInfo.newBuilder();
@@ -441,22 +423,14 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull CxxModuleModel module,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
-        // TODO: Shouldn't send mutable state like configurationFailures through construction
-        Set<String> configurationFailures = new HashSet<>();
-        try (GradleSyncLoggingEnvironment ignore =
-                new GradleSyncLoggingEnvironment(
-                        scope.getFullVariantName(),
-                        "native",
-                        configurationFailures,
-                        androidBuilder.getIssueReporter(),
-                        androidBuilder.getLogger())) {
-            return createImpl(configurationFailures, module, androidBuilder, scope);
+        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
+                new ErrorsAreFatalThreadLoggingEnvironment()) {
+            return createImpl(module, androidBuilder, scope);
         }
     }
 
     @NonNull
     public static ExternalNativeJsonGenerator createImpl(
-            @NonNull Set<String> configurationFailures,
             @NonNull CxxModuleModel module,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
@@ -476,7 +450,7 @@ public abstract class ExternalNativeJsonGenerator {
         switch (module.getBuildSystem()) {
             case NDK_BUILD:
                 return new NdkBuildExternalNativeJsonGenerator(
-                        variant, abis, configurationFailures, androidBuilder, stats);
+                        variant, abis, androidBuilder, stats);
             case CMAKE:
                 CxxCmakeModuleModel cmake = Objects.requireNonNull(variant.getModule().getCmake());
 
@@ -492,7 +466,7 @@ public abstract class ExternalNativeJsonGenerator {
                                 ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
                                 Revision.Precision.MICRO))) {
                     return new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                            variant, abis, configurationFailures, androidBuilder, stats);
+                            variant, abis, androidBuilder, stats);
                 }
 
                 if (cmakeRevision.getMajor() < 3
@@ -504,7 +478,7 @@ public abstract class ExternalNativeJsonGenerator {
                 }
 
                 return new CmakeServerExternalNativeJsonGenerator(
-                        variant, abis, configurationFailures, androidBuilder, stats);
+                        variant, abis, androidBuilder, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }
@@ -513,13 +487,8 @@ public abstract class ExternalNativeJsonGenerator {
 
     public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)
             throws IOException {
-        try (GradleSyncLoggingEnvironment ignore =
-                new GradleSyncLoggingEnvironment(
-                        getVariantName(),
-                        "native",
-                        configurationFailures,
-                        androidBuilder.getIssueReporter(),
-                        androidBuilder.getLogger())) {
+        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
+                new ErrorsAreFatalThreadLoggingEnvironment()) {
             List<File> files = getNativeBuildConfigurationsJsons();
             infoln("streaming %s JSON files", files.size());
             for (File file : getNativeBuildConfigurationsJsons()) {

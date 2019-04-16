@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_NDK_SIDE_BY_SIDE_VERSION;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -33,6 +34,7 @@ public class RsEnabledAnnotationTest {
                     .fromTestProject("extractRsEnabledAnnotations")
                     .setCmakeVersion("3.10.4819442")
                     .setWithCmakeDirInLocalProp(true)
+                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
                     .create();
 
     @BeforeClass

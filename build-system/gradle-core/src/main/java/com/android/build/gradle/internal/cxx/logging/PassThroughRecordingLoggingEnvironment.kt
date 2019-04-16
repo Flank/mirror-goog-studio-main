@@ -26,7 +26,7 @@ import java.io.File
  */
 open class PassThroughRecordingLoggingEnvironment : ThreadLoggingEnvironment() {
     private val messages = mutableListOf<LoggingRecord>()
-    private val parent : ThreadLoggingEnvironment = parentLogger()
+    private val parent : LoggingEnvironment = parentLogger()
 
     override fun error(message: String) {
         parent.error(message)
@@ -53,4 +53,4 @@ fun List<LoggingRecord>.toJsonString() = GsonBuilder()
     .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
     .setPrettyPrinting()
     .create()
-    .toJson(this)
+    .toJson(this)!!

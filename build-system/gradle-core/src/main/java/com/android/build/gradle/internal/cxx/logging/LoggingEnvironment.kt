@@ -16,12 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
-import com.android.builder.errors.EvalIssueException
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
 import com.android.utils.ILogger
-import org.gradle.api.GradleException
-import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
 /**
@@ -30,15 +25,12 @@ import org.gradle.api.logging.Logging
  *
  * Example usage,
  *
- *      GradleSyncLoggingEnvironment(...).use {
- *          warn("falling rocks")
+ *      MyThreadLoggingEnvironment(...).use {
+ *          warnln("falling rocks")
  *       }
  *
  * The purpose is to separate the concerns of other classes and functions from the need to log
  * and warn.
- *
- * You can make your own logger by inheriting from ThreadLoggingEnvironment. This can be useful
- * for testing.
  */
 
 /**
@@ -85,7 +77,7 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
 /**
  * Interface for logging environment.
  */
-private interface LoggingEnvironment : AutoCloseable {
+interface LoggingEnvironment : AutoCloseable {
     fun error(message : String)
     fun warn(message : String)
     fun info(message : String)
@@ -110,7 +102,7 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          * Stack of logger environments.
          */
         private val loggerStack = ThreadLocal.withInitial {
-            mutableListOf<ThreadLoggingEnvironment>() }
+            mutableListOf<LoggingEnvironment>(BOTTOM_LOGGING_ENVIRONMENT) }
 
         /**
          * The logger environment to use if there is no other environment. There should always be an
@@ -118,8 +110,10 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          * with a thread-local (to avoid leaking class loader). It is stateless the call to close()
          * is a no-op.
          */
-        private val BOTTOM_LOGGING_ENVIRONMENT = object : LoggingEnvironment {
-            private val logger = Logging.getLogger(GradleBuildLoggingEnvironment::class.java)
+        private val BOTTOM_LOGGING_ENVIRONMENT = BottomLoggingEnvironment()
+
+        private class BottomLoggingEnvironment : LoggingEnvironment {
+            private val logger = Logging.getLogger(BottomLoggingEnvironment::class.java)
 
             override fun error(message: String) {
                 logger.error(message)
@@ -141,7 +135,7 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          * The current logger.
          */
         private val logger : LoggingEnvironment
-            get() = loggerStack.get().firstOrNull() ?: BOTTOM_LOGGING_ENVIRONMENT
+            get() = loggerStack.get().first()
 
         /**
          * Push a new logging environment onto the stack of environments.
@@ -195,65 +189,4 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         }
     }
 }
-
-/**
- * A logger suitable for the gradle sync environment. Warnings and errors are reported so that they
- * can be seen in Android Studio.
- *
- * Configuration errors are also recorded in a set. The purpose is to be able to replay errors at
- * sync time if Android Studio requests the model multiple times.
- */
-class GradleSyncLoggingEnvironment(
-    private val variantName: String,
-    private val tag: String,
-    private val errors: MutableSet<String>,
-    private val issueReporter: EvalIssueReporter,
-    private val logger: ILogger
-) : ThreadLoggingEnvironment() {
-
-    override fun error(message: String) {
-        errors += message
-        val e = GradleException(message)
-        issueReporter
-            .reportError(
-                EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                EvalIssueException(e, message)
-            )
-    }
-
-    override fun warn(message: String) {
-        logger.warning(message)
-    }
-
-    override fun info(message: String) {
-        logger.info("$variantName|$tag $message")
-    }
-}
-
-/**
- * A logger suitable for the gradle build environment. This just forwards to Logger which is what
- * decides to show at command-line and in Android Studio.
- */
-class GradleBuildLoggingEnvironment(
-    private val logger: Logger,
-    private val variantName: String = ""
-) : ThreadLoggingEnvironment() {
-
-    override fun error(message: String) {
-        logger.error(message)
-    }
-
-    override fun warn(message: String) {
-        logger.warn(message)
-    }
-
-    override fun info(message: String) {
-        if (variantName.isEmpty()) {
-            logger.info(message)
-        } else {
-            logger.info("$variantName $message")
-        }
-    }
-}
-
 

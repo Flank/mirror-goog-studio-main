@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.cxx.logging.GradleBuildLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -34,8 +34,8 @@ public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
 
     @TaskAction
     public void build() throws ProcessException, IOException {
-        try (GradleBuildLoggingEnvironment ignore =
-                new GradleBuildLoggingEnvironment(getLogger(), getVariantName())) {
+        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
+                new ErrorsAreFatalThreadLoggingEnvironment()) {
             generator.get().build();
         }
     }

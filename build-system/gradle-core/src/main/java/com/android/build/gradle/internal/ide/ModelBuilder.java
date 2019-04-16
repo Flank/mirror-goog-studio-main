@@ -353,7 +353,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         extension.getLintOptions());
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
-        
+
         // For modules that have C/C++, construct the JSON generators to get sync errors.
         // This doesn't do the slow work of actually generating the JSON.
         for (VariantScope variantScope : variantManager.getVariantScopes()) {

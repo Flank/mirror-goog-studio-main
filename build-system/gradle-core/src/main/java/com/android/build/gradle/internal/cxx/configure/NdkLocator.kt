@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_DIR_LOCA
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_VERSIONED_FOLDER_LOCATION
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
 
-import com.android.build.gradle.internal.cxx.logging.BatchLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.LoggingRecord
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment
 
@@ -77,6 +77,11 @@ private fun findNdkPathImpl(
                 (androidNdkHomeEnvironmentVariable ?: "not set")
     )
     infoln("sdkFolder is ${sdkFolder ?: "not set"}")
+
+    // ANDROID_NDK_HOME is deprectated
+    if (androidNdkHomeEnvironmentVariable != null) {
+        warnln("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
+    }
 
     // Record that a location was consider and rejected and for what reason
     fun considerAndReject(location: Location, reason: String) {
@@ -292,7 +297,7 @@ fun findNdkPathWithRecord(
     getNdkVersionedFolderNames: (File) -> List<String>,
     getNdkSourceProperties: (File) -> SdkSourceProperties?
 ): NdkLocatorRecord {
-    BatchLoggingEnvironment().use {
+    ErrorsAreFatalThreadLoggingEnvironment().use {
         PassThroughRecordingLoggingEnvironment().use { loggingEnvironment ->
             val ndkFolder = findNdkPathImpl(
                 ndkDirProperty,

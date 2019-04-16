@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * ndk-build JSON generation logic. This is separated from the corresponding ndk-build task so that
@@ -57,10 +56,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     NdkBuildExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull Set<String> configurationFailures,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, configurationFailures, androidBuilder, stats);
+        super(variant, abis, androidBuilder, stats);
         this.stats.setNativeBuildSystemType(
                 GradleNativeAndroidModule.NativeBuildSystemType.NDK_BUILD);
 

@@ -329,7 +329,7 @@ single_gradle_integration_test(
 single_gradle_integration_test(
     name = "RsSupportModeTest",
     srcs = "src/test/java/com/android/build/gradle/integration/nativebuild/",
-    data = DATA + CMAKE + NDK_LEGACY,
+    data = DATA + CMAKE + NDK,
     maven_repos = MAVEN_REPOS,
     tags = MAC_DISABLED_TAG,
     deps = DEPS,
