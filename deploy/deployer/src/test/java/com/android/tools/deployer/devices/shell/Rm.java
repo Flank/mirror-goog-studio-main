@@ -22,13 +22,12 @@ import java.io.PrintStream;
 
 public class Rm extends ShellCommand {
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         for (String arg : args) {
             context.getDevice().removeFile(arg);
         }
-        return true;
+        return 0;
     }
 
     @Override

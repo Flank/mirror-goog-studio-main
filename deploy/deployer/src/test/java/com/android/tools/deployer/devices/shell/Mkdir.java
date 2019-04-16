@@ -22,8 +22,7 @@ import java.io.PrintStream;
 
 public class Mkdir extends ShellCommand {
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         if (args.length == 0) {
             stdout.println("Usage mkdir...");
@@ -37,7 +36,7 @@ public class Mkdir extends ShellCommand {
                 }
             }
         }
-        return true;
+        return 0;
     }
 
     @Override

@@ -22,8 +22,7 @@ import java.io.PrintStream;
 
 public class Id extends ShellCommand {
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
         FakeDevice.User user = context.getUser();
         if (args.length == 0) {
             stdout.printf(
@@ -33,9 +32,9 @@ public class Id extends ShellCommand {
             stdout.println(user.uid);
         } else {
             stdout.println("id: unknown option " + String.join(" ", args));
-            return false;
+            return 1;
         }
-        return true;
+        return 0;
     }
 
     @Override

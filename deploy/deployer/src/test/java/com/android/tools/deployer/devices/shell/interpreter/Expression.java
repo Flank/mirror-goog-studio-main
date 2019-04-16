@@ -31,16 +31,16 @@ public interface Expression {
 
     class ExecutionResult {
         public String text;
-        boolean success;
+        public int code;
 
-        private ExecutionResult(boolean success) {
+        private ExecutionResult(int code) {
             this.text = null;
-            this.success = success;
+            this.code = code;
         }
 
         private ExecutionResult(String result) {
             this.text = result;
-            this.success = true;
+            this.code = 0;
         }
     }
 
@@ -48,7 +48,7 @@ public interface Expression {
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
             // do nothing
-            return new ExecutionResult(true);
+            return new ExecutionResult(0);
         }
     }
 
@@ -87,7 +87,8 @@ public interface Expression {
 
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
-            if (firstExpression.execute(env).success) {
+            ExecutionResult result = firstExpression.execute(env);
+            if (result.code == 0) {
                 try {
                     // Print out the pipe, since we're not piping.
                     env.getOutputStream().print(env.readStringFromPipe());
@@ -96,7 +97,7 @@ public interface Expression {
                 }
                 return secondExpression.execute(env);
             }
-            return new ExecutionResult(false);
+            return new ExecutionResult(result.code);
         }
     }
 
@@ -108,12 +109,12 @@ public interface Expression {
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
             // Note we're not implementing a full process forking mechanism, and are just buffering everything in RAM.
-            boolean success = firstExpression.execute(env).success;
-            if (success) {
+            int code = firstExpression.execute(env).code;
+            if (code == 0) {
                 env.preparePipe();
-                success = secondExpression.execute(env).success;
+                code = secondExpression.execute(env).code;
             }
-            return new ExecutionResult(success);
+            return new ExecutionResult(code);
         }
     }
 
@@ -136,30 +137,30 @@ public interface Expression {
             ExecutionResult result = firstExpression.execute(env);
             String firstResult = result.text;
 
-            if (!result.success) {
-                return new ExecutionResult(false);
-            }
 
             switch (operator) {
                 case "&&":
+                    if (result.code != 0) {
+                        return result;
+                    }
                     result = secondExpression.execute(env);
                     break;
                 case "||":
-                    if (result.success) {
-                        return new ExecutionResult(true);
+                    if (result.code == 0) {
+                        return result;
                     }
                     result = secondExpression.execute(env);
                     break;
                 case "==":
-                    if (!result.success) {
+                    if (result.code != 0) {
                         break;
                     }
                     result = secondExpression.execute(env);
                     String secondResult = result.text;
                     // We only handle path comparisons right now.
-                    return new ExecutionResult(secondResult.startsWith(firstResult));
+                    return new ExecutionResult(secondResult.startsWith(firstResult) ? 0 : 1);
             }
-            return new ExecutionResult(result.success); // Clear out the text.
+            return new ExecutionResult(result.code); // Clear out the text.
         }
     }
 
@@ -175,10 +176,10 @@ public interface Expression {
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
             ExecutionResult result = expression.execute(env);
-            if (result.success) {
+            if (result.code == 0) {
                 env.setScope(variableName, result.text);
             }
-            return new ExecutionResult(result.success);
+            return new ExecutionResult(result.code);
         }
     }
 
@@ -210,7 +211,7 @@ public interface Expression {
                 PrintStream stdout = env.getPrintStdout();
 
                 ShellCommand command = env.getDevice().getShell().getCommand(commandName);
-                boolean success = false;
+                int code = 0;
                 if (command == null) {
                     if (env.getDevice().hasFile(commandName)) {
                         if (env.getDevice().isExecutable(commandName)) {
@@ -218,16 +219,18 @@ public interface Expression {
                         } else {
                             stdout.format(
                                     "/system/bin/sh: cmd: can't execute: Permission denied\n");
+                            code = 126;
                         }
                     } else {
                         stdout.format(
                                 String.format("/system/bin/sh: %s: not found\n", commandName));
+                        code = 127;
                     }
                 }
                 if (command != null) {
-                    success = command.execute(env, cmdArgs, stdin, stdout);
+                    code = command.execute(env, cmdArgs, stdin, stdout);
                 }
-                return new ExecutionResult(success);
+                return new ExecutionResult(code);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -274,7 +277,7 @@ public interface Expression {
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
             ExecutionResult result = listExpression.execute(env);
-            if (!result.success) {
+            if (result.code != 0) {
                 throw new RuntimeException("List in for loop failed to materialize.");
             }
             try {
@@ -282,11 +285,11 @@ public interface Expression {
                 for (String listItem : listString.split("\\s+")) {
                     env.setScope(varName, listItem);
                     result = bodyExpression.execute(env);
-                    if (!result.success) {
-                        return new ExecutionResult(false);
+                    if (result.code != 0) {
+                        return new ExecutionResult(result.code);
                     }
                 }
-                return new ExecutionResult(true);
+                return new ExecutionResult(0);
             } finally {
                 // We're not handling nested scopes right now, including global.
                 env.setScope(varName, null);
@@ -305,10 +308,10 @@ public interface Expression {
 
         @Override
         public ExecutionResult execute(@NonNull ShellContext env) {
-            if (conditionalExpression.execute(env).success) {
-                return new ExecutionResult(body.execute(env).success);
+            if (conditionalExpression.execute(env).code == 0) {
+                return new ExecutionResult(body.execute(env).code);
             }
-            return new ExecutionResult(true);
+            return new ExecutionResult(0);
         }
     }
 
@@ -325,8 +328,8 @@ public interface Expression {
                 StringBuilder builder = new StringBuilder();
                 for (Expression expression : expressionsList) {
                     ExecutionResult result = expression.execute(env);
-                    if (!result.success) {
-                        return new ExecutionResult(false);
+                    if (result.code != 0) {
+                        return new ExecutionResult(result.code);
                     }
                     String resolution = result.text;
                     if (resolution != null) {

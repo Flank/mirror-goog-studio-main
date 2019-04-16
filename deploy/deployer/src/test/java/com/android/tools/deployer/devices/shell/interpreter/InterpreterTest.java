@@ -16,8 +16,7 @@
 package com.android.tools.deployer.devices.shell.interpreter;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotEquals;
 
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
@@ -55,25 +54,25 @@ public class InterpreterTest {
 
     @Test
     public void echoTest() throws IOException {
-        assertTrue(Parser.parse("echo foo").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void echoSemicolonTest() throws IOException {
-        assertTrue(Parser.parse("echo foo;").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo;").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void quotedCommandTest() throws IOException {
-        assertTrue(Parser.parse("\"echo\" foo").execute(env).success);
+        assertEquals(0, Parser.parse("\"echo\" foo").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void pipeTest() throws IOException {
-        assertTrue(Parser.parse("echo foo | cat").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo | cat").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
@@ -81,7 +80,7 @@ public class InterpreterTest {
     public void pipeWithFileTest() throws IOException {
         final String content = "asdf";
         env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
-        assertTrue(Parser.parse("echo foo | cat /bar.txt").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo | cat /bar.txt").execute(env).code);
         assertEquals(content, env.readStringFromPipe());
     }
 
@@ -89,7 +88,7 @@ public class InterpreterTest {
     public void pipeWithQuotedFileNameTest() throws IOException {
         final String content = "asdf";
         env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
-        assertTrue(Parser.parse("echo foo | cat '/bar.txt'").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo | cat '/bar.txt'").execute(env).code);
         assertEquals(content, env.readStringFromPipe());
     }
 
@@ -97,31 +96,32 @@ public class InterpreterTest {
     public void pipeWithDoubleQuotedFileNameTest() throws IOException {
         final String content = "asdf";
         env.getDevice().writeFile("/bar.txt", content.getBytes(Charsets.UTF_8), "420");
-        assertTrue(Parser.parse("echo foo | cat \"/bar.txt\"").execute(env).success);
+        assertEquals(0, Parser.parse("echo foo | cat \"/bar.txt\"").execute(env).code);
         assertEquals(content, env.readStringFromPipe());
     }
 
     @Test
     public void varTest() throws IOException {
-        assertTrue(Parser.parse("foo= asdf; echo $foo").execute(env).success);
+        assertEquals(0, Parser.parse("foo= asdf; echo $foo").execute(env).code);
         assertEquals(String.format("asdf%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void ifTest() throws IOException {
-        assertTrue(Parser.parse("if [[ a == a* ]]; then echo foo; fi").execute(env).success);
+        assertEquals(0, Parser.parse("if [[ a == a* ]]; then echo foo; fi").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void forTest() throws IOException {
-        assertTrue(Parser.parse("for pid in 123 456; do echo $pid; done").execute(env).success);
+        assertEquals(0, Parser.parse("for pid in 123 456; do echo $pid; done").execute(env).code);
         assertEquals(String.format("123%s456%s", System.lineSeparator(), System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void compoundForIfTest() throws IOException {
-        assertTrue(
+        assertEquals(
+                0,
                 Parser.parse(
                                 "for path in /foo /bar; do "
                                         + "    if [[ $path == /foo* ]]; then "
@@ -129,13 +129,13 @@ public class InterpreterTest {
                                         + "    fi; "
                                         + "done")
                         .execute(env)
-                        .success);
+                        .code);
         assertEquals(String.format("/foo%s", System.lineSeparator()), env.readStringFromPipe());
     }
 
     @Test
     public void invalidCommand() {
-        assertFalse(Parser.parse("aaaa foo").execute(env).success);
+        assertNotEquals(0, Parser.parse("aaaa foo").execute(env).code);
     }
 
     @Test(expected = RuntimeException.class)
@@ -150,10 +150,10 @@ public class InterpreterTest {
 
     private static class EchoCommand extends ShellCommand {
         @Override
-        public boolean execute(
+        public int execute(
                 ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
             stdout.println(args[0]); // echo prints a newline after the param.
-            return true;
+            return 0;
         }
 
         @Override
@@ -164,7 +164,7 @@ public class InterpreterTest {
 
     private static class CatCommand extends ShellCommand {
         @Override
-        public boolean execute(
+        public int execute(
                 ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
                 throws IOException {
             // Always read all from stdin.
@@ -184,11 +184,11 @@ public class InterpreterTest {
             if (args.length > 0) {
                 buffer = context.getDevice().readFile(args[0]);
                 if (buffer == null) {
-                    return false;
+                    return 1;
                 }
             }
             stdout.print(new String(buffer, Charsets.UTF_8));
-            return true;
+            return 0;
         }
 
         @Override

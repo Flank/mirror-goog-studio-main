@@ -92,7 +92,7 @@ public class ApkInstallerTest extends FakeAdbTestBase {
 
     private class SkipInstallCommand extends ShellCommand {
         @Override
-        public boolean execute(
+        public int execute(
                 ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
                 throws IOException {
             Arguments arguments = new Arguments(args);
@@ -135,7 +135,7 @@ public class ApkInstallerTest extends FakeAdbTestBase {
             CodedOutputStream cos = CodedOutputStream.newInstance(bytes, Integer.BYTES, size);
             response.writeTo(cos);
             stdout.write(bytes);
-            return true;
+            return 0;
         }
 
         @Override

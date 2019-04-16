@@ -41,10 +41,10 @@ public class ExternalCommand extends ShellCommand {
     }
 
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         FakeDevice device = context.getDevice();
+        int code = 255;
         try (ServerSocket serverSocket = new ServerSocket(0)) {
             List<String> command = new ArrayList<>();
             File exe = new File(device.getStorage(), executable);
@@ -88,7 +88,7 @@ public class ExternalCommand extends ShellCommand {
                     }
                 }
                 try {
-                    process.waitFor();
+                    code = process.waitFor();
                 } catch (InterruptedException e) {
                 }
             }
@@ -98,7 +98,7 @@ public class ExternalCommand extends ShellCommand {
             } catch (InterruptedException e) {
             }
         }
-        return true;
+        return code;
     }
 
     private static class PipeConnector extends Thread {

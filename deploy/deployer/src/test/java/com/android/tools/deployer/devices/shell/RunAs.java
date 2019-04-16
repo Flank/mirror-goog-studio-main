@@ -24,25 +24,24 @@ import java.util.Arrays;
 
 public class RunAs extends ShellCommand {
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         FakeDevice device = context.getDevice();
         if (args.length == 0) {
             stdout.println(
                     "run-as: usage: run-as <package-name> [--user <uid>] <command> [<args>]");
-            return false;
+            return 1;
         } else {
             String pkg = args[0];
 
             FakeDevice.Application app = device.getApplication(pkg);
             if (app == null) {
                 stdout.printf("run-as: Package '%s' is unknown\n", pkg);
-                return false;
+                return 1;
             }
             String cmd = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
             device.getShell().execute(cmd, app.user, stdout, stdin, device);
-            return true;
+            return 0;
         }
     }
 

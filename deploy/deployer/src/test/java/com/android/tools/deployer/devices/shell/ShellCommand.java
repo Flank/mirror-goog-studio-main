@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 public abstract class ShellCommand {
-    public abstract boolean execute(
+    public abstract int execute(
             ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException;
 

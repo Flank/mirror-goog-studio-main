@@ -25,23 +25,22 @@ import java.io.PrintStream;
 public class SessionPm extends ShellCommand {
 
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         try {
             return run(context.getDevice(), new Arguments(args), stdin, stdout);
         } catch (IllegalArgumentException e) {
             stdout.println(e.getMessage());
-            return false;
+            return 0;
         }
     }
 
-    public boolean run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
+    public int run(FakeDevice device, Arguments args, InputStream stdin, PrintStream stdout)
             throws IOException {
         String action = args.nextArgument();
         if (action == null) {
             stdout.println("Usage\n...message...");
-            return false;
+            return 0;
         }
 
         switch (action) {
@@ -50,7 +49,7 @@ public class SessionPm extends ShellCommand {
                 {
                     stdout.format(
                             "Success: created install session [%d]\n", device.createSession());
-                    return true;
+                    return 0;
                 }
                 // eg: install-write -S 5047 100000000 0_sample -
             case "install-write":
@@ -65,7 +64,7 @@ public class SessionPm extends ShellCommand {
                     if (args.nextArgument() == null) {
                         stdout.println(
                                 "Error: java.lang.IllegalArgumentException: Invalid name: null");
-                        return false;
+                        return 0;
                     }
 
                     String path = args.nextArgument();
@@ -78,23 +77,23 @@ public class SessionPm extends ShellCommand {
                     }
                     device.writeToSession(session, apk);
                     stdout.format("Success: streamed %d bytes\n", size);
-                    return true;
+                    return 0;
                 }
             case "install-commit":
                 {
                     device.commitSession(parseSession(device, args));
                     stdout.println("Success");
-                    return true;
+                    return 0;
                 }
             case "install-abandon":
                 {
                     device.abandonSession(parseSession(device, args));
                     stdout.println("Success");
-                    return true;
+                    return 0;
                 }
         }
         stdout.println("Usage\n...message...");
-        return false;
+        return 0;
     }
 
     public int parseSession(FakeDevice device, Arguments args) {

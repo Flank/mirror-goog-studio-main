@@ -23,20 +23,19 @@ import java.io.PrintStream;
 
 public class Chmod extends ShellCommand {
     @Override
-    public boolean execute(
-            ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
+    public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
         FakeDevice device = context.getDevice();
         if (args.length < 2 || !args[0].equals("+x")) {
             stdout.println("Usage chmod ...");
-            return false;
+            return 1;
         }
         if (!device.hasFile(args[1])) {
             stdout.printf("chmod: %s: No such file or directory\n", args[1]);
-            return false;
+            return 1;
         }
         device.makeExecutable(args[1]);
-        return true;
+        return 0;
     }
 
     @Override
