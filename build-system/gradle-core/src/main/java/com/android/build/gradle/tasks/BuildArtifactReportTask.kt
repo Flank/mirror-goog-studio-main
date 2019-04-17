@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.Report
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.StringOption
+import com.android.utils.appendCapitalized
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import org.gradle.api.DefaultTask
@@ -75,7 +76,7 @@ open class BuildArtifactReportTask : DefaultTask() {
         TaskCreationAction<BuildArtifactReportTask>() {
 
         override val name: String
-            get() = "reportSourceSetTransform" + sourceSet.name.capitalize()
+            get() = "reportSourceSetTransform".appendCapitalized(sourceSet.name)
         override val type: Class<BuildArtifactReportTask>
             get() = BuildArtifactReportTask::class.java
 

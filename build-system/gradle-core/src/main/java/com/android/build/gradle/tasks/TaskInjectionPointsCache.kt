@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.utils.usLocaleDecapitalize
 import com.google.common.base.Joiner
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
@@ -255,7 +256,7 @@ class TaskInjectionPointsCache {
                             if (requestedId != null) {
                                 val propertyDefinition = findProperty<Provider<FileSystemLocation>>(
                                     type.kotlin,
-                                    it.name.substring(3).decapitalize()
+                                    it.name.substring(3).usLocaleDecapitalize()
                                 ) ?: throw RuntimeException("Cannot find property for ${it.name}")
 
                                 if (requestedId.kind() != injectionPointModel.fileType) {

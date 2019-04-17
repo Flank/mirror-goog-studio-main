@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.android.build.gradle.options.BooleanOption
+import com.android.utils.appendCapitalized
 
 /**
  * Responsible for the creation of tasks to build namespaced resources.
@@ -125,8 +126,8 @@ class NamespacedResourcesTaskManager(
 
     private fun createCompileResourcesTask() {
         for((sourceSetName, artifacts) in variantScope.variantData.androidResources) {
-            val name = "compile${sourceSetName.capitalize()}" +
-                    "ResourcesFor${variantScope.fullVariantName.capitalize()}"
+            val name = "compile".appendCapitalized(sourceSetName) +
+                    "ResourcesFor".appendCapitalized(variantScope.fullVariantName)
             // TODO : figure out when we need explicit task dependency and potentially remove it.
             taskFactory.register(CompileSourceSetResources.CreationAction(
                     name = name,

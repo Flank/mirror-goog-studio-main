@@ -99,6 +99,8 @@ import com.android.tools.lint.detector.api.isString
 import com.android.tools.lint.detector.api.skipParentheses
 import com.android.utils.SdkUtils.getResourceFieldName
 import com.android.utils.XmlUtils
+import com.android.utils.usLocaleCapitalize
+import com.android.utils.usLocaleDecapitalize
 import com.intellij.psi.CommonClassNames
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiAnonymousClass
@@ -246,7 +248,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                                 val message =
                                     if (buildTools != null) {
                                         val version = buildTools.toShortString()
-                                        val lowCased = messagePart.decapitalize()
+                                        val lowCased = messagePart.usLocaleDecapitalize()
                                         "Upgrade `buildToolsVersion` from `$version` to at least `23.0.1`; if not, $lowCased"
                                     } else {
                                         messagePart
@@ -702,7 +704,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 SdkVersionInfo.getCodeName(requires) ?: requires.toString()
             }
 
-            val message = "${type.capitalize()} requires API level $apiLevel (current min is $min): `$sig`"
+            val message = "${type.usLocaleCapitalize()} requires API level $apiLevel (current min is $min): `$sig`"
             report(issue, node, location, message, fix, owner, name, desc)
         }
 

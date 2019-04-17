@@ -652,7 +652,7 @@ private fun computeVariantName(
         testedType: VariantType?) = buildString {
     if (multiFlavorName?.isEmpty() == false) {
         append(multiFlavorName)
-        append(buildTypeName.capitalize())
+        appendCapitalized(buildTypeName)
     } else {
         append(buildTypeName)
     }

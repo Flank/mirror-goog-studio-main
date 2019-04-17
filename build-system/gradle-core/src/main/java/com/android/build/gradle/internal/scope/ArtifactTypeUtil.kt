@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
 import java.io.File
+import java.util.Locale
 
 /**
  * Returns a suitable output directory for this receiving artifact type.
@@ -34,7 +35,7 @@ fun ArtifactType.getOutputDir(parentFile: File)=
         } else {
             InternalArtifactType.Category.INTERMEDIATES.getOutputDir(parentFile)
         },
-        name().toLowerCase()
+        name().toLowerCase(Locale.US)
     )
 
 /**

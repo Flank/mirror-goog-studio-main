@@ -77,8 +77,8 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
 
     override fun transform(aarOrJarFile: File): List<File> {
         Preconditions.checkArgument(
-            aarOrJarFile.name.toLowerCase().endsWith(".aar")
-                    || aarOrJarFile.name.toLowerCase().endsWith(".jar")
+            aarOrJarFile.name.endsWith(".aar", ignoreCase = true)
+                    || aarOrJarFile.name.endsWith(".jar", ignoreCase = true)
         )
 
         /*

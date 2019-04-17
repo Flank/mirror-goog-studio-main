@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
+import com.android.utils.appendCapitalized
 import com.google.common.base.Joiner
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
@@ -433,7 +434,7 @@ abstract class BuildArtifactsHolder(
      * Returns an appropriate task name for the variant with the given prefix.
      */
     fun getTaskName(prefix : String) : String {
-        return prefix + getIdentifier().capitalize()
+        return prefix.appendCapitalized(getIdentifier())
     }
 
     /**
@@ -660,7 +661,7 @@ abstract class BuildArtifactsHolder(
             File(
                 FileUtils.join(
                     artifactType.getOutputPath(),
-                    artifactType.name().toLowerCase(),
+                    artifactType.name().toLowerCase(Locale.US),
                     getIdentifier(),
                     fileName
                 )
@@ -712,7 +713,7 @@ abstract class BuildArtifactsHolder(
             taskName,
             File(FileUtils.join(
                 artifactType.getOutputPath(),
-                artifactType.name().toLowerCase(),
+                artifactType.name().toLowerCase(Locale.US),
                 getIdentifier(),
                 fileName)))
     /**
@@ -730,7 +731,7 @@ abstract class BuildArtifactsHolder(
 
         createDirectory(artifactType, operationType, taskName, File(FileUtils.join(
             artifactType.getOutputPath(),
-            artifactType.name().toLowerCase(),
+            artifactType.name().toLowerCase(Locale.US),
             getIdentifier(),
             fileName)))
 
@@ -778,7 +779,7 @@ abstract class BuildArtifactsHolder(
             } else {
                 FileUtils.join(
                     intermediatesOutput,
-                    artifactType.name().toLowerCase(),
+                    artifactType.name().toLowerCase(Locale.US),
                     getIdentifier(),
                     taskName,
                     requestedFileLocation.name)
@@ -814,7 +815,7 @@ abstract class BuildArtifactsHolder(
         if (lastProducer != null) {
             val lastProducerNewLocation = FileUtils.join(
                 intermediatesOutput,
-                artifactType.name().toLowerCase(),
+                artifactType.name().toLowerCase(Locale.US),
                 getIdentifier(),
                 lastProducer.name,
                 lastProducer.fileName

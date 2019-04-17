@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
+import com.android.utils.usLocaleCapitalize
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import com.google.common.io.ByteStreams
@@ -756,7 +757,7 @@ private class ProjectInitializer(
                 for (root in typeSourceRoots) {
                     if (sourceRoots.contains(root)) {
                         reportError(
-                            "${type.capitalize()} sources cannot be in the same " +
+                            "${type.usLocaleCapitalize()} sources cannot be in the same " +
                                     "source root as production files; " +
                                     "source root $root is also a test root"
                         )

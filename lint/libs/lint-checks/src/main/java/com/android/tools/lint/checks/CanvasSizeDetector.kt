@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.getMethodName
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.utils.usLocaleDecapitalize
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -144,7 +145,7 @@ class CanvasSizeDetector : Detector(), SourceCodeScanner {
                 append("()")
             }
             append("` is usually wrong; you should be ")
-            append(verb.decapitalize())
+            append(verb.usLocaleDecapitalize())
             append(" `")
             append(replacement)
             if (calling) {

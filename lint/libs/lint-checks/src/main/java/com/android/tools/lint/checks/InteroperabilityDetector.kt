@@ -29,6 +29,8 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.android.tools.lint.detector.api.isKotlin
+import com.android.utils.usLocaleCapitalize
+import com.android.utils.usLocaleDecapitalize
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiCompiledElement
 import com.intellij.psi.PsiDocCommentOwner
@@ -269,7 +271,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         private fun ensureValidProperty(setter: UMethod, methodName: String) {
             val cls = setter.getContainingUClass() ?: return
             val propertySuffix = methodName.substring(3)
-            val propertyName = propertySuffix.decapitalize()
+            val propertyName = propertySuffix.usLocaleDecapitalize()
             val getterName1 = "get$propertySuffix"
             val getterName2 = "is$propertySuffix"
             val badGetterName = "has$propertySuffix"
@@ -380,7 +382,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                                         " is not the same as the setter return type " +
                                         "(`${superReturnType.presentableText}`); they should have " +
                                         "exactly the same type to allow " +
-                                        "`${propertySuffix.decapitalize()}` " +
+                                        "`${propertySuffix.usLocaleDecapitalize()}` " +
                                         "be accessed as a property from Kotlin; see " +
                                         "https://android.github.io/kotlin-guides/interop.html#property-prefixes"
                             val location = getPropertyLocation(getter, setter)
@@ -410,7 +412,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 ) {
                     val newProperty = name1[2].toLowerCase() + name1.substring(3)
                     val message =
-                        "This method should be called `set${newProperty.capitalize()}` such " +
+                        "This method should be called `set${newProperty.usLocaleCapitalize()}` such " +
                                 "that (along with the `$name1` getter) Kotlin code can access it " +
                                 "as a property (`$newProperty`); see " +
                                 "https://android.github.io/kotlin-guides/interop.html#property-prefixes"

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import java.io.File
+import java.util.Locale
 
 // The file extensions CMake recognizes as header files.
 private val cmakeHeaderFileExtensions = setOf("h", "hh", "h++", "hm", "hpp")
@@ -26,6 +27,6 @@ private val cmakeHeaderFileExtensions = setOf("h", "hh", "h++", "hm", "hpp")
  */
 fun hasCmakeHeaderFileExtensions(file : File) : Boolean {
     return cmakeHeaderFileExtensions.contains(
-        file.path!!.substringAfterLast(".").toLowerCase()
+        file.path!!.substringAfterLast(".").toLowerCase(Locale.US)
     )
 }

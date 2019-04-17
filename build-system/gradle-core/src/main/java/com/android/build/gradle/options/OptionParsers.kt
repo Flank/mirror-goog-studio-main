@@ -17,11 +17,13 @@
 
 package com.android.build.gradle.options
 
+import java.util.Locale
+
 fun parseBoolean(propertyName: String, value: Any): Boolean {
     return when (value) {
         is Boolean -> value
         is CharSequence ->
-            when (value.toString().toLowerCase()) {
+            when (value.toString().toLowerCase(Locale.US)) {
                 "true" -> true
                 "false" -> false
                 else -> parseBooleanFailure(propertyName, value)

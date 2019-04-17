@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.structureplugin
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
+import java.util.Locale
 
 class ASPoetInfoJsonAdapter : TypeAdapter<ASPoetInfo>() {
     override fun write(output: JsonWriter, data: ASPoetInfo) {
@@ -64,7 +65,7 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
         output.beginObject()
 
         output.name("moduleName").value(data.name)
-        output.name("moduleType").value(data.type.toString().toLowerCase())
+        output.name("moduleType").value(data.type.toString().toLowerCase(Locale.US))
 
         writeSourceFilesInfo(output, "java", data.javaSourceInfo)
         if (data.useKotlin) output.name("useKotlin").value(data.useKotlin)
@@ -121,7 +122,7 @@ class JavaModuleInfoJsonAdapter : TypeAdapter<ModuleInfo>() {
         input.readObjectProperties {
             when (it) {
                 "moduleName" -> data.name = nextString()
-                "moduleType" -> data.type = ModuleType.valueOf(nextString().toUpperCase())
+                "moduleType" -> data.type = ModuleType.valueOf(nextString().toUpperCase(Locale.US))
                 "java" -> data.javaSourceInfo = readSourceFilesInfo(input)
                 "useKotlin" -> data.useKotlin = nextBoolean()
                 "kotlin" -> data.kotlinSourceInfo = readSourceFilesInfo(input)

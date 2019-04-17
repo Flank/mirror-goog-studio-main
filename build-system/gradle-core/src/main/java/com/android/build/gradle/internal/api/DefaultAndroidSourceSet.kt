@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.builder.model.SourceProvider
 import com.android.utils.FileUtils
+import com.android.utils.appendCapitalized
 import groovy.lang.Closure
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -144,7 +145,7 @@ open class DefaultAndroidSourceSet @Inject constructor(
         return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
             config
         } else {
-            name + config.capitalize()
+            name.appendCapitalized(config)
         }
     }
 
