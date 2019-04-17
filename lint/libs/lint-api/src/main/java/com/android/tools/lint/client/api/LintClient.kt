@@ -462,9 +462,25 @@ abstract class LintClient {
             }
         }
 
-        val home = System.getenv(SdkConstants.ANDROID_SDK_ROOT_ENV)
-            ?: System.getenv(SdkConstants.ANDROID_HOME_ENV) ?: return null
-        return File(home)
+        @Suppress("DEPRECATION")
+        return getFileFromEnvVar(SdkConstants.ANDROID_SDK_ROOT_ENV)
+            ?: getFileFromEnvVar(SdkConstants.ANDROID_HOME_ENV)
+    }
+
+    private fun getFileFromEnvVar(name: String): File? {
+        val home = System.getenv(name) ?: return null
+        val file = File(home)
+        if (!file.isDirectory) {
+            val message = "`\$$name` points to non-existent directory $file"
+            report(
+                client = this, issue = IssueRegistry.LINT_ERROR, message = message,
+                location = Location.create(file),
+                file = file
+            )
+            return null
+        }
+
+        return file
     }
 
     /**
