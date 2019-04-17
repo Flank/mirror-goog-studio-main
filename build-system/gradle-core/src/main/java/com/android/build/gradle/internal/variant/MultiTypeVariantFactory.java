@@ -102,7 +102,7 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
             return;
         }
 
-        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
+        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {

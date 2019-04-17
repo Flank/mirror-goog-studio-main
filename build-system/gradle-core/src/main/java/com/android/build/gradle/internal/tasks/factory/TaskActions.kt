@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.factory
 
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import org.gradle.api.Task
@@ -57,8 +56,6 @@ abstract class TaskCreationAction<T : Task> : TaskInformation<T>, PreConfigActio
  * Tasks must implement [VariantAwareTask]. The simplest way to do this is to extend
  * [AndroidVariantTask].
  *
- * Optionally they can also extends [AndroidBuilderTask].
- *
  * This contains both meta-data to create the task ([name], [type])
  * and actions to configure the task ([preConfigure], [configure], [handleProvider])
  */
@@ -72,9 +69,6 @@ abstract class VariantTaskCreationAction<T>(
 
         task.variantName = variantScope.fullVariantName
 
-        if (task is AndroidBuilderTask) {
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
-        }
     }
 }
 

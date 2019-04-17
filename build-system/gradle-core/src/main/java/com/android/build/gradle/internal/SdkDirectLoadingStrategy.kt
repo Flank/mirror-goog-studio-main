@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal
 
 import com.android.SdkConstants
-import com.android.builder.core.AndroidBuilder
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.builder.model.Version
@@ -107,7 +107,7 @@ class SdkDirectLoadingStrategy(
     }
 
     private fun checkBuildToolsRevision(revision: Revision): Revision {
-        if (revision < AndroidBuilder.MIN_BUILD_TOOLS_REV) {
+        if (revision < ToolsRevisionUtils.MIN_BUILD_TOOLS_REV) {
             evalIssueReporter
                 .reportWarning(
                     EvalIssueReporter.Type.BUILD_TOOLS_TOO_LOW,
@@ -122,12 +122,12 @@ class SdkDirectLoadingStrategy(
                                 + "version of the Android Gradle Plugin now has a "
                                 + "default version of the build tools.",
                         revision,
-                        AndroidBuilder.MIN_BUILD_TOOLS_REV,
+                        ToolsRevisionUtils.MIN_BUILD_TOOLS_REV,
                         Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                        AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION),
-                    AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString())
+                        ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION),
+                    ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString())
 
-            return AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION
+            return ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
         }
         return revision
     }

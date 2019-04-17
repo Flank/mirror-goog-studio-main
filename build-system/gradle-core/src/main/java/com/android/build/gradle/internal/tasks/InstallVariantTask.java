@@ -63,7 +63,7 @@ import org.gradle.api.tasks.TaskProvider;
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-public class InstallVariantTask extends AndroidBuilderTask {
+public class InstallVariantTask extends AndroidVariantTask {
 
     private Provider<File> adbExecutableProvider;
     private Provider<File> splitSelectExeProvider;
@@ -89,7 +89,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
 
     @TaskAction
     public void install() throws DeviceException, ProcessException {
-        final ILogger iLogger = getILogger();
+        final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
         deviceProvider.init();
@@ -287,8 +287,7 @@ public class InstallVariantTask extends AndroidBuilderTask {
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
-            task.setProcessExecutor(
-                    scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
+            task.setProcessExecutor(scope.getGlobalScope().getProcessExecutor());
             task.adbExecutableProvider =
                     scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
             task.splitSelectExeProvider =

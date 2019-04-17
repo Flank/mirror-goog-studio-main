@@ -24,7 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -117,26 +117,25 @@ public class SdkHandler {
             return null;
         }
 
-        if (buildToolRevision.compareTo(AndroidBuilder.MIN_BUILD_TOOLS_REV) < 0) {
-            evalIssueReporter
-                    .reportWarning(
-                            Type.BUILD_TOOLS_TOO_LOW,
-                            String.format(
-                                    "The specified Android SDK Build Tools version (%1$s) is "
-                                            + "ignored, as it is below the minimum supported "
-                                            + "version (%2$s) for Android Gradle Plugin %3$s.\n"
-                                            + "Android SDK Build Tools %4$s will be used.\n"
-                                            + "To suppress this warning, "
-                                            + "remove \"buildToolsVersion '%1$s'\" "
-                                            + "from your build.gradle file, as each "
-                                            + "version of the Android Gradle Plugin now has a "
-                                            + "default version of the build tools.",
-                                    buildToolRevision,
-                                    AndroidBuilder.MIN_BUILD_TOOLS_REV,
-                                    Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                                    AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION),
-                            AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString());
-            buildToolRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
+        if (buildToolRevision.compareTo(ToolsRevisionUtils.MIN_BUILD_TOOLS_REV) < 0) {
+            evalIssueReporter.reportWarning(
+                    Type.BUILD_TOOLS_TOO_LOW,
+                    String.format(
+                            "The specified Android SDK Build Tools version (%1$s) is "
+                                    + "ignored, as it is below the minimum supported "
+                                    + "version (%2$s) for Android Gradle Plugin %3$s.\n"
+                                    + "Android SDK Build Tools %4$s will be used.\n"
+                                    + "To suppress this warning, "
+                                    + "remove \"buildToolsVersion '%1$s'\" "
+                                    + "from your build.gradle file, as each "
+                                    + "version of the Android Gradle Plugin now has a "
+                                    + "default version of the build tools.",
+                            buildToolRevision,
+                            ToolsRevisionUtils.MIN_BUILD_TOOLS_REV,
+                            Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                            ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION),
+                    ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION.toString());
+            buildToolRevision = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION;
         }
 
         Stopwatch stopwatch = Stopwatch.createStarted();

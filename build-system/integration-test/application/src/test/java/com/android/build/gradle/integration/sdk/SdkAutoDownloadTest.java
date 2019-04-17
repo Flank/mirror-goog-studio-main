@@ -30,7 +30,7 @@ import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.repository.GradleCoordinate;
@@ -678,7 +678,7 @@ public class SdkAutoDownloadTest {
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                .contains("Build-Tools " + ToolsRevisionUtils.MIN_BUILD_TOOLS_REV.toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("Android SDK Platform 23");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())

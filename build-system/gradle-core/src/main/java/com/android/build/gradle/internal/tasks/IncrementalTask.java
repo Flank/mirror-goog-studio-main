@@ -61,7 +61,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
  *
  * }</pre>
  */
-public abstract class IncrementalTask extends AndroidBuilderTask {
+public abstract class IncrementalTask extends AndroidVariantTask {
 
     private File incrementalFolder;
 

@@ -17,25 +17,26 @@
 package com.android.build.gradle.internal.res
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.options.StringOption
-import com.android.builder.core.VariantTypeImpl
-import com.android.builder.internal.aapt.AaptPackageConfig
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.options.SyncOptions
+import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
+import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
@@ -64,7 +65,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class LinkAndroidResForBundleTask
-@Inject constructor(workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+@Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -163,7 +164,7 @@ open class LinkAndroidResForBundleTask
 
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
-            logger = builder.logger
+            logger = LoggerWrapper(logger)
         )
         workers.use {
             it.submit(

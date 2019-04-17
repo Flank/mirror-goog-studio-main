@@ -23,7 +23,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.builder.core.AndroidBuilder;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -52,10 +51,9 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
             @NonNull TestVariantData variantData,
             @NonNull BaseVariant testedVariantData,
             @NonNull ObjectFactory objectFactory,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, androidBuilder, readOnlyObjectProvider, outputs);
+        super(objectFactory, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
         this.testedVariantData = testedVariantData;
     }

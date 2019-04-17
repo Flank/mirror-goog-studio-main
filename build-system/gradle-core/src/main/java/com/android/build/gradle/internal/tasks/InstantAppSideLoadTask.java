@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -53,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
  * Task side loading an instant app variant. It looks at connected device, checks if preO or postO
  * and either multi-install the feature APKs or upload the bundle.
  */
-public class InstantAppSideLoadTask extends AndroidBuilderTask {
+public class InstantAppSideLoadTask extends AndroidVariantTask {
 
     private Provider<File> adbExecutableProvider;
 
@@ -85,7 +86,8 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
         }
 
         DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(adbExecutableProvider.get(), 0, getILogger());
+                new ConnectedDeviceProvider(
+                        adbExecutableProvider.get(), 0, new LoggerWrapper(getLogger()));
 
         RunListener runListener =
                 new RunListener() {

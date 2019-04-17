@@ -21,11 +21,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.DirectoryWalker;
@@ -56,7 +57,7 @@ import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile Shaders */
 @CacheableTask
-public class ShaderCompile extends AndroidBuilderTask {
+public class ShaderCompile extends AndroidVariantTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()
             .include("**/*." + ShaderProcessor.EXT_VERT)
@@ -128,7 +129,7 @@ public class ShaderCompile extends AndroidBuilderTask {
                     defaultArgs,
                     scopedArgs,
                     () -> ndkLocation.get(),
-                    new LoggedProcessOutputHandler(getILogger()),
+                    new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
                     workers);
         }
     }

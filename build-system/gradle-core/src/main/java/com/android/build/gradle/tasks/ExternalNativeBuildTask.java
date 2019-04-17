@@ -37,10 +37,10 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.services.CxxBuildSessionService;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.BuildCommandException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -60,6 +60,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
+import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
@@ -71,7 +72,7 @@ import org.gradle.api.tasks.TaskProvider;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeBuildTask extends AndroidBuilderTask {
+public class ExternalNativeBuildTask extends AndroidVariantTask {
 
     private Provider<ExternalNativeJsonGenerator> generator;
 
@@ -406,6 +407,9 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
      */
     private void executeProcessBatch(@NonNull List<BuildStep> buildSteps)
             throws BuildCommandException, IOException {
+        final Logger logger = getLogger();
+        final GradleProcessExecutor processExecutor = new GradleProcessExecutor(getProject());
+
         for (BuildStep buildStep : buildSteps) {
             List<String> tokens = StringHelper.tokenizeCommandLineToEscaped(buildStep.buildCommand);
             ProcessInfoBuilder processBuilder = new ProcessInfoBuilder();
@@ -425,11 +429,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                                 .stream()
                                 .map(library -> library.artifactName + "_" + library.abi)
                                 .collect(Collectors.toList());
-                getLogger()
-                        .lifecycle(
-                                String.format(
-                                        "Build multiple targets %s",
-                                        String.join(" ", targetNames)));
+                logger.lifecycle(
+                        String.format("Build multiple targets %s", String.join(" ", targetNames)));
             } else {
                 checkElementIndex(0, buildStep.libraries.size());
                 logFileSuffix = buildStep.libraries.get(0).artifactName + "_" + abiName;
@@ -466,7 +467,8 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                             buildStep.outputFolder,
                             "android_gradle_build_" + logFileSuffix,
                             processBuilder,
-                            getBuilder(),
+                            logger,
+                            processExecutor,
                             "")
                     .logStderrToInfo()
                     .logStdoutToInfo()
@@ -487,17 +489,14 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
     public static class CreationAction extends VariantTaskCreationAction<ExternalNativeBuildTask> {
         @NonNull private final Provider<ExternalNativeJsonGenerator> generator;
         @NonNull private final TaskProvider<? extends Task> generateTask;
-        @NonNull private final AndroidBuilder androidBuilder;
 
         public CreationAction(
                 @NonNull Provider<ExternalNativeJsonGenerator> generator,
                 @NonNull TaskProvider<? extends Task> generateTask,
-                @NonNull VariantScope scope,
-                @NonNull AndroidBuilder androidBuilder) {
+                @NonNull VariantScope scope) {
             super(scope);
             this.generator = generator;
             this.generateTask = generateTask;
-            this.androidBuilder = androidBuilder;
         }
 
         @NonNull
@@ -526,7 +525,6 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
 
             VariantScope scope = getVariantScope();
 
-            task.setAndroidBuilder(androidBuilder);
             task.dependsOn(
                     generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
 

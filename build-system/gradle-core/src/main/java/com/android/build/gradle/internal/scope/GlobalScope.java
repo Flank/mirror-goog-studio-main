@@ -34,9 +34,10 @@ import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
+import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
@@ -58,13 +59,15 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final Project project;
     @NonNull private final FilesProvider filesProvider;
-    @NonNull private final AndroidBuilder androidBuilder;
+    @NonNull private final GradleProcessExecutor processExecutor;
+    @NonNull private final GradleJavaProcessExecutor javaProcessExecutor;
     @NonNull private AndroidConfig extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
+    @NonNull private final MessageReceiver messageReceiver;
 
     @NonNull private final String createdBy;
     @NonNull private final DslScope dslScope;
@@ -84,26 +87,30 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull FilesProvider filesProvider,
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
-            @Nullable FileCache buildCache) {
+            @Nullable FileCache buildCache,
+            @NonNull MessageReceiver messageReceiver) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
         this.createdBy = createdBy;
         this.dslScope = checkNotNull(dslScope);
         this.filesProvider = filesProvider;
-        this.androidBuilder = checkNotNull(androidBuilder);
         this.sdkComponents = checkNotNull(sdkComponents);
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
         this.buildCache = buildCache;
+        this.messageReceiver = messageReceiver;
         this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir, dslScope);
 
         // Create empty configurations before these have been set.
         this.lintChecks = project.getConfigurations().detachedConfiguration();
+
+        processExecutor = new GradleProcessExecutor(project);
+        javaProcessExecutor = new GradleJavaProcessExecutor(project);
+
     }
 
     public void setExtension(@NonNull AndroidConfig extension) {
@@ -132,15 +139,13 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    public AndroidBuilder getAndroidBuilder() {
-        return androidBuilder;
+    public ProcessExecutor getProcessExecutor() {
+        return processExecutor;
     }
 
     @NonNull
-    public ProcessExecutor getProcessExecutor() {
-        // Workaround to give access to task that they need without knowing about the
-        // androidbuilder which will be removed in the long term.
-        return androidBuilder.getProcessExecutor();
+    public GradleJavaProcessExecutor getJavaProcessExecutor() {
+        return javaProcessExecutor;
     }
 
     @NonNull
@@ -279,7 +284,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public SyncIssueHandler getErrorHandler() {
-        return (SyncIssueHandler) androidBuilder.getIssueReporter();
+        return (SyncIssueHandler) dslScope.getIssueReporter();
     }
 
     @NonNull
@@ -289,7 +294,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     @NonNull
     public MessageReceiver getMessageReceiver() {
-        return androidBuilder.getMessageReceiver();
+        return messageReceiver;
     }
 
     /**

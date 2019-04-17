@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.process.ProcessOutputHandler
+import org.gradle.api.logging.Logging
 import java.io.File
 
 /**
@@ -61,18 +62,14 @@ internal fun createProcessJunctionService(
                 process: ProcessInfoBuilder,
                 logPrefix: String
             ): ProcessOutputJunction {
-                val androidBuilder = global.androidBuilder
                 return ProcessOutputJunction(
                     process,
                     outputFolder,
                     outputBaseName,
                     logPrefix,
-                    { message -> androidBuilder.logger.lifecycle(message) },
+                    { message -> Logging.getLogger(CxxProcessService::class.java).lifecycle(message) },
                     { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler ->
-                        androidBuilder.executeProcess(
-                            processInfo,
-                            outputHandler
-                        )
+                        global.processExecutor.execute(processInfo, outputHandler)
                     })
             }
         }

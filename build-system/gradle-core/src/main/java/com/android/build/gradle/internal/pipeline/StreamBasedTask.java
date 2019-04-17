@@ -18,13 +18,10 @@ package com.android.build.gradle.internal.pipeline;
 
 import android.databinding.tool.util.Preconditions;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.google.common.collect.Iterables;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitivity;
@@ -33,7 +30,7 @@ import org.gradle.api.tasks.PathSensitivity;
  * A base task with stream fields that properly use Gradle's input/output annotations to return the
  * stream's content as input/output.
  */
-public abstract class StreamBasedTask extends AndroidBuilderTask {
+public abstract class StreamBasedTask extends AndroidVariantTask {
 
     /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */
     protected Collection<TransformStream> consumedInputStreams;

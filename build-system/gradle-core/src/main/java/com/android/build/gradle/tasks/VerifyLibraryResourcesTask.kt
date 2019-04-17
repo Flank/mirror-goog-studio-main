@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
@@ -139,7 +140,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         val manifestsOutputs = ExistingBuildElements.from(taskInputType, manifestFiles.get().asFile)
         val manifestFile = Iterables.getOnlyElement(manifestsOutputs).outputFile
 
-        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, iLogger)
+        val aapt2ServiceKey = registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
         // If we're using AAPT2 we need to compile the resources into the compiled directory
         // first as we need the .flat files for linking.
         workers.use { facade ->

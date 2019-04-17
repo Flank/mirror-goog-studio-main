@@ -228,7 +228,7 @@ public class RenderscriptCompile extends NdkTask {
                 isSupportMode(),
                 useAndroidX(),
                 getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
-                new LoggedProcessOutputHandler(getILogger()),
+                new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
                 buildToolInfoProvider.get());
     }
 

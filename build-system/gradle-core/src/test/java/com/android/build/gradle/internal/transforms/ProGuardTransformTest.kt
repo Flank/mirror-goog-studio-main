@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -302,7 +301,6 @@ class ProGuardTransformTest {
     }
 
     private fun createScope(configFiles: Set<File> = setOf()) : VariantScope {
-        val androidBuilder = Mockito.mock(AndroidBuilder::class.java)
         val bootClassPath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
 
         val project = Mockito.mock(Project::class.java)
@@ -310,7 +308,6 @@ class ProGuardTransformTest {
         Mockito.`when`(project.files()).thenReturn(configFilesCollection)
 
         val globalScope = Mockito.mock(GlobalScope::class.java)
-        Mockito.`when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(globalScope.buildDir).thenReturn(outputDir.toFile())
         Mockito.`when`(globalScope.fullBootClasspath).thenReturn(bootClassPath)

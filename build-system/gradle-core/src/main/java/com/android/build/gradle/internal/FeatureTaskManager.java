@@ -71,8 +71,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
             globalScope
-                    .getAndroidBuilder()
-                    .getIssueReporter()
+                    .getErrorHandler()
                     .reportError(Type.GENERIC, new EvalIssueException(message));
         }
 
@@ -82,8 +81,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
                     BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING.getPropertyName();
             if (projectOptions.get(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING)) {
                 globalScope
-                        .getAndroidBuilder()
-                        .getIssueReporter()
+                        .getErrorHandler()
                         .reportWarning(
                                 Type.GENERIC,
                                 "Data binding support for non-base features is experimental "
@@ -91,8 +89,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
 
             } else {
                 globalScope
-                        .getAndroidBuilder()
-                        .getIssueReporter()
+                        .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
                                 new EvalIssueException(
@@ -108,8 +105,7 @@ public class FeatureTaskManager extends ApplicationTaskManager {
 
         // add a warning that the feature module is deprecated and will be removed in the future.
         globalScope
-                .getAndroidBuilder()
-                .getIssueReporter()
+                .getErrorHandler()
                 .reportWarning(
                         Type.PLUGIN_OBSOLETE,
                         "The com.android.feature plugin is deprecated and will be removed in a future"

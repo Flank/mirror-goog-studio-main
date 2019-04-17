@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ApkInfoParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
@@ -59,7 +58,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Task to generate micro app data res file. */
-public class GenerateApkDataTask extends AndroidBuilderTask {
+public class GenerateApkDataTask extends AndroidVariantTask {
 
     @Nullable private FileCollection apkDirectoryFileCollection;
 
@@ -97,8 +96,6 @@ public class GenerateApkDataTask extends AndroidBuilderTask {
                         "Wear App dependency does not resolve to a directory: " + files);
             }
         }
-
-        AndroidBuilder builder = getBuilder();
 
         // always empty output dir.
         File outDir = getResOutputDir();

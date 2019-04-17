@@ -16,12 +16,13 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
@@ -54,7 +55,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
-        AndroidBuilderTask() {
+    AndroidVariantTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: BuildableArtifact private set
@@ -112,7 +113,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
 
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
-            logger = iLogger
+            logger = LoggerWrapper(logger)
         )
         workers.use {
             it.submit(
@@ -176,7 +177,6 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
             task.staticLibApk = staticLibApk
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.packageForRSupplier = Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
 

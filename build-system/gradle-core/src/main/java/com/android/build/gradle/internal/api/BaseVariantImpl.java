@@ -39,7 +39,6 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.BuildType;
@@ -82,7 +81,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
             "https://d.android.com/r/tools/task-configuration-avoidance";
 
     @NonNull private final ObjectFactory objectFactory;
-    @NonNull protected final AndroidBuilder androidBuilder;
 
     @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
 
@@ -90,11 +88,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     BaseVariantImpl(
             @NonNull ObjectFactory objectFactory,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.objectFactory = objectFactory;
-        this.androidBuilder = androidBuilder;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
         this.outputs = outputs;
     }
@@ -182,8 +178,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
             case JAVA:
                 return getVariantData().getJavaSources();
             default:
-                androidBuilder
-                        .getIssueReporter()
+                getVariantData()
+                        .getScope()
+                        .getGlobalScope()
+                        .getErrorHandler()
                         .reportError(
                                 EvalIssueReporter.Type.GENERIC,
                                 new EvalIssueException("Unknown SourceKind value: " + folderType));

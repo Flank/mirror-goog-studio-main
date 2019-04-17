@@ -226,7 +226,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         }
 
         // if we have any ABI splits, whether it's a full or pure ABI splits, it's an error.
-        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
+        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
         issueReporter.reportError(
                 EvalIssueReporter.Type.GENERIC,
                 new EvalIssueException(
@@ -269,8 +269,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList());
             globalScope
-                    .getAndroidBuilder()
-                    .getIssueReporter()
+                    .getErrorHandler()
                     .reportWarning(
                             EvalIssueReporter.Type.GENERIC,
                             String.format(
@@ -325,7 +324,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             return;
         }
 
-        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
+        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().isMinifyEnabled()) {
                 issueReporter.reportError(
@@ -354,7 +353,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     private void validateVersionCodes(@NonNull VariantModel model) {
 
-        EvalIssueReporter issueReporter = globalScope.getAndroidBuilder().getIssueReporter();
+        EvalIssueReporter issueReporter = globalScope.getErrorHandler();
 
         Integer versionCode = model.getDefaultConfig().getProductFlavor().getVersionCode();
         if (versionCode != null && versionCode < 1) {

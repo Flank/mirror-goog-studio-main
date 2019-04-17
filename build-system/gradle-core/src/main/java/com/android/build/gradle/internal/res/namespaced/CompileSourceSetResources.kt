@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -169,7 +170,7 @@ open class CompileSourceSetResources
         }
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven,
-            logger = iLogger
+            logger = LoggerWrapper(logger)
         )
         for (request in requests) {
             workers.submit(

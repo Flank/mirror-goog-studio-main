@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
@@ -37,13 +38,12 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -77,7 +77,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
-public class GenerateSplitAbiRes extends AndroidBuilderTask {
+public class GenerateSplitAbiRes extends AndroidVariantTask {
 
     @NonNull private final WorkerExecutorFacade workers;
 
@@ -184,7 +184,6 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
                 File resPackageFile = getOutputFileForSplit(split);
                 File manifestFile = generateSplitManifest(split, splits.get(split));
 
-                AndroidBuilder builder = getBuilder();
                 AaptPackageConfig aaptConfig =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(manifestFile)
@@ -197,7 +196,7 @@ public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
                 Aapt2ServiceKey aapt2ServiceKey =
                         Aapt2DaemonManagerService.registerAaptService(
-                                aapt2FromMaven, builder.getLogger());
+                                aapt2FromMaven, new LoggerWrapper(getLogger()));
                 Aapt2ProcessResourcesRunnable.Params params =
                         new Aapt2ProcessResourcesRunnable.Params(
                                 aapt2ServiceKey,

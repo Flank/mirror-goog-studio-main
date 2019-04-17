@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.ArtifactType;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.errors.MessageReceiverImpl;
@@ -127,10 +128,11 @@ public class MergeSourceSetFolders extends IncrementalTask {
         // create a new merger and populate it with the sets.
         AssetMerger merger = new AssetMerger();
 
+        final LoggerWrapper logger = new LoggerWrapper(getLogger());
         try (WorkerExecutorFacade workerExecutor = this.workerExecutor) {
             for (AssetSet assetSet : assetSets) {
                 // set needs to be loaded.
-                assetSet.loadFromFiles(getILogger());
+                assetSet.loadFromFiles(logger);
                 merger.addDataSet(assetSet);
             }
 
@@ -175,6 +177,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             }
 
+            final LoggerWrapper logger = new LoggerWrapper(getLogger());
+
             // The incremental process is the following:
             // Loop on all the changed files, find which ResourceSet it belongs to, then ask
             // the resource set to update itself with the new file.
@@ -192,11 +196,13 @@ public class MergeSourceSetFolders extends IncrementalTask {
                     return;
 
                 } else if (fileValidity.getStatus() == FileValidity.FileStatus.VALID_FILE) {
-                    if (!fileValidity.getDataSet().updateWith(
-                            fileValidity.getSourceFile(),
-                            changedFile,
-                            entry.getValue(),
-                            getILogger())) {
+                    if (!fileValidity
+                            .getDataSet()
+                            .updateWith(
+                                    fileValidity.getSourceFile(),
+                                    changedFile,
+                                    entry.getValue(),
+                                    logger)) {
                         getLogger().info(
                                 "Failed to process {} event! Full task run", entry.getValue());
                         doFullTaskAction();

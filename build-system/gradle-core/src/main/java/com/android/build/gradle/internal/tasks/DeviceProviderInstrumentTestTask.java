@@ -28,6 +28,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -95,7 +96,7 @@ import org.gradle.internal.logging.ConsoleRenderer;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
-public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
+public class DeviceProviderInstrumentTestTask extends AndroidVariantTask
         implements AndroidTestTask {
 
     private static final Predicate<File> IS_APK =
@@ -192,7 +193,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
                                 extraArgs,
                                 resultsOutDir,
                                 coverageOutDir,
-                                getILogger());
+                                new LoggerWrapper(getLogger()));
             } catch (Exception e) {
                 InstrumentationTestAnalytics.recordCrashedTestRun(
                         dependencies, testExecution, codeCoverageEnabled);
@@ -490,8 +491,7 @@ public class DeviceProviderInstrumentTestTask extends AndroidBuilderTask
             task.testTargetManifests = testTargetManifests;
             task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
-            task.setProcessExecutor(
-                    scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
+            task.setProcessExecutor(scope.getGlobalScope().getProcessExecutor());
 
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 

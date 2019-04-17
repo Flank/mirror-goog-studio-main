@@ -23,7 +23,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
-import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.TaskProvider;
@@ -38,10 +37,9 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
 
     protected ApkVariantImpl(
             @NonNull ObjectFactory objectFactory,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(objectFactory, androidBuilder, immutableObjectProvider, outputs);
+        super(objectFactory, immutableObjectProvider, outputs);
     }
 
     @Nullable

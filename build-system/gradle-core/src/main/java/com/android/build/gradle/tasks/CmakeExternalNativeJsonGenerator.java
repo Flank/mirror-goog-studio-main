@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
-import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -57,9 +56,8 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     CmakeExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, androidBuilder, stats);
+        super(variant, abis, stats);
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
         this.cmake = Objects.requireNonNull(variant.getModule().getCmake());
 

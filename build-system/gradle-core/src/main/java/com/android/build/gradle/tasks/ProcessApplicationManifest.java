@@ -182,7 +182,8 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         ImmutableList.Builder<BuildOutput> bundleManifestOutputs = ImmutableList.builder();
         ImmutableList.Builder<BuildOutput> instantAppManifestOutputs = ImmutableList.builder();
 
-        List<File> navigationXmls = resourcesComputer.getNavigationXmlsList(getILogger());
+        List<File> navigationXmls =
+                resourcesComputer.getNavigationXmlsList(new LoggerWrapper(getLogger()));
         // FIX ME : multi threading.
         // TODO : LOAD the APK_LIST FILE .....
         for (ApkData apkData : outputScope.getApkDatas()) {

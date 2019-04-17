@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.FeatureVariantData
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.AndroidBuilder
 import com.android.builder.core.VariantTypeImpl
 import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
@@ -64,7 +63,6 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var mockedVariantScope: VariantScope
     @Mock private lateinit var mockedArtifacts: BuildArtifactsHolder
     @Mock private lateinit var mockedOutputScope: OutputScope
-    @Mock private lateinit var mockedAndroidBuilder: AndroidBuilder
     @Mock private lateinit var mockedVariantConfiguration: GradleVariantConfiguration
     @Mock private lateinit var mockedAndroidConfig: AndroidConfig
     @Mock private lateinit var mockedSplits: Splits
@@ -95,7 +93,6 @@ class GenerateSplitAbiResTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         with(mockedGlobalScope) {
-            `when`(androidBuilder).thenReturn(mockedAndroidBuilder)
             `when`(extension).thenReturn(mockedAndroidConfig)
             `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
             `when`(projectOptions).thenReturn(projectOptionsMock)

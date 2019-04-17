@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.api.artifact.singlePath
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
@@ -24,7 +25,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -64,7 +65,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
-@Inject constructor(objects: ObjectFactory, workerExecutor: WorkerExecutor) : AndroidBuilderTask() {
+@Inject constructor(objects: ObjectFactory, workerExecutor: WorkerExecutor) : AndroidVariantTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -114,7 +115,7 @@ open class ProcessAndroidAppResourcesTask
                 intermediateDir = aaptIntermediateDir)
 
         val aapt2ServiceKey = registerAaptService(
-            aapt2FromMaven = aapt2FromMaven, logger = iLogger
+            aapt2FromMaven = aapt2FromMaven, logger = LoggerWrapper(logger)
         )
         workers.use {
             it.submit(
@@ -196,7 +197,6 @@ open class ProcessAndroidAppResourcesTask
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-process-intermediate", variantScope.variantConfiguration.dirName)
             task.resourceApUnderscore = resourceApUnderscore
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
             task.errorFormatMode = SyncOptions.getErrorFormatMode(

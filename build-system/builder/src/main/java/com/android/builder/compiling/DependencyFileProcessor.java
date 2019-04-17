@@ -34,8 +34,6 @@ import java.util.List;
  *
  * <p>The instance will be called for each dependency file that is created during compilation.
  *
- * @see com.android.builder.core.AndroidBuilder#compileAidlFile(File, File, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)
- * @see com.android.builder.core.AndroidBuilder#compileAllAidlFiles(List, File, File, Collection, List, DependencyFileProcessor, ProcessOutputHandler)
  */
 public interface DependencyFileProcessor {
 

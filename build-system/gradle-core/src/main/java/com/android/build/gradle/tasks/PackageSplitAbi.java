@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
@@ -61,7 +61,7 @@ import org.gradle.tooling.BuildException;
 import org.gradle.workers.WorkerExecutor;
 
 /** Package a abi dimension specific split APK */
-public class PackageSplitAbi extends AndroidBuilderTask {
+public class PackageSplitAbi extends AndroidVariantTask {
 
     private BuildableArtifact processedAbiResources;
 

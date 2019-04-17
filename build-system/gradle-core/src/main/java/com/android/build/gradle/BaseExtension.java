@@ -44,9 +44,9 @@ import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SourceProvider;
@@ -242,7 +242,7 @@ public abstract class BaseExtension implements AndroidConfig {
         createAndroidTestUtilConfiguration();
 
         sourceSetManager.setUpSourceSet(defaultConfig.getName());
-        buildToolsRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
+        buildToolsRevision = ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION;
         setDefaultConfigValues();
     }
 

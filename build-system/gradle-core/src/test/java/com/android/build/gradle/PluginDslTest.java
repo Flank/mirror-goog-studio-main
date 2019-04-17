@@ -22,7 +22,6 @@ import com.android.SdkConstants;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -31,7 +30,7 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.AndroidJavaCompile;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.model.Version;
@@ -685,10 +684,10 @@ public class PluginDslTest {
         android.setBuildToolsVersion("19.0.0");
         plugin.createAndroidTasks();
         assertThat(android.globalScope.getSdkComponents().getBuildToolsRevisionProvider().get())
-                .isEqualTo(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
+                .isEqualTo(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION);
         // FIXME once we get rid of the component model, we can make this better.
         Collection<SyncIssue> syncIssues =
-                ((SyncIssueHandler) plugin.getAndroidBuilder().getIssueReporter()).getSyncIssues();
+                plugin.extraModelInfo.getSyncIssueHandler().getSyncIssues();
         assertThat(syncIssues).hasSize(1);
         SyncIssue issue = Iterables.getOnlyElement(syncIssues);
         assertThat(issue.getType()).isEqualTo(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
@@ -697,12 +696,12 @@ public class PluginDslTest {
                 .isEqualTo(
                         "The specified Android SDK Build Tools version (19.0.0) is "
                                 + "ignored, as it is below the minimum supported version ("
-                                + AndroidBuilder.MIN_BUILD_TOOLS_REV
+                                + ToolsRevisionUtils.MIN_BUILD_TOOLS_REV
                                 + ") for Android Gradle Plugin "
                                 + Version.ANDROID_GRADLE_PLUGIN_VERSION
                                 + ".\n"
                                 + "Android SDK Build Tools "
-                                + AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION
+                                + ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
                                 + " will be used.\n"
                                 + "To suppress this warning, remove \"buildToolsVersion '19.0.0'\" from your build.gradle file, "
                                 + "as each version of the Android Gradle Plugin now has a default version of the build tools.");

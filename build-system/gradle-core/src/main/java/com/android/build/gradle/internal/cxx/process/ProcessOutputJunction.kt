@@ -17,13 +17,14 @@
 package com.android.build.gradle.internal.cxx.process
 
 import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.builder.core.AndroidBuilder
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessException
+import com.android.ide.common.process.ProcessExecutor
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.ide.common.process.ProcessOutputHandler
 import com.android.ide.common.process.ProcessResult
+import org.gradle.api.logging.Logger
 import java.io.File
 import java.io.IOException
 
@@ -121,13 +122,14 @@ class ProcessOutputJunction(
 }
 
 /**
- * Create a ProcessOutputJunction from a ProcessInfoBuilder and an AndroidBuilder.
+ * Create a ProcessOutputJunction from a ProcessInfoBuilder.
  */
 fun createProcessOutputJunction(
     outputFolder: File,
     outputBaseName: String,
     process: ProcessInfoBuilder,
-    androidBuilder: AndroidBuilder,
+    logger: Logger,
+    processExecutor: ProcessExecutor,
     logPrefix: String
 ): ProcessOutputJunction {
     if (outputFolder.toString().contains(".json")) {
@@ -138,9 +140,9 @@ fun createProcessOutputJunction(
         outputFolder,
         outputBaseName,
         logPrefix,
-        { message -> androidBuilder.logger.lifecycle(message) },
+        { message -> logger.lifecycle(message) },
         { processInfo: ProcessInfo, outputHandler: ProcessOutputHandler ->
-            androidBuilder.executeProcess(
+            processExecutor.execute(
                 processInfo,
                 outputHandler
             )

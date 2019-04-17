@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.builder.core.AndroidBuilder
 import com.android.build.gradle.internal.scope.ApkData
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
@@ -66,7 +65,6 @@ class ProcessLibraryManifestTest {
     @Mock lateinit var androidManifest: RegularFile
     @Mock lateinit var variantData : BaseVariantData
     @Mock lateinit var mainSplit: ApkData
-    @Mock lateinit var androidBuilder: AndroidBuilder
     @Mock lateinit var mergedFlavor: ProductFlavor
     @Mock lateinit var extension: AndroidConfig
     @Mock lateinit var aaptOptions: AaptOptions
@@ -91,7 +89,6 @@ class ProcessLibraryManifestTest {
 
         `when`(extension.aaptOptions).thenReturn(aaptOptions)
 
-        `when`(globalScope.androidBuilder).thenReturn(androidBuilder)
         `when`(globalScope.extension).thenReturn(extension)
         `when`(outputScope.mainSplit).thenReturn(mainSplit)
         `when`(variantConfiguration.mergedFlavor).thenReturn(mergedFlavor)

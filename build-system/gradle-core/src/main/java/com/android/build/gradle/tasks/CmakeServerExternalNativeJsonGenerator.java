@@ -56,7 +56,6 @@ import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
-import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -94,9 +93,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, androidBuilder, stats);
+        super(variant, abis, stats);
     }
 
     /**

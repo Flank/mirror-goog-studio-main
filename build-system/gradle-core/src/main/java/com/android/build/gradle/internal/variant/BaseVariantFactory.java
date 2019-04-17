@@ -21,7 +21,6 @@ import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROI
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import org.gradle.api.Project;
@@ -43,8 +42,7 @@ public abstract class BaseVariantFactory implements VariantFactory {
     public void preVariantWork(Project project) {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
             globalScope
-                    .getAndroidBuilder()
-                    .getIssueReporter()
+                    .getErrorHandler()
                     .reportError(
                             Type.INCOMPATIBLE_PLUGIN,
                             new EvalIssueException(

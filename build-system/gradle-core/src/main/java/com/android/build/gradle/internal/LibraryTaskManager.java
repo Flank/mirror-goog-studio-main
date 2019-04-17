@@ -213,8 +213,7 @@ public class LibraryTaskManager extends TaskManager {
             if (!difference.isEmpty()) {
                 String scopes = difference.toString();
                 globalScope
-                        .getAndroidBuilder()
-                        .getIssueReporter()
+                        .getErrorHandler()
                         .reportError(
                                 Type.GENERIC,
                                 new EvalIssueException(

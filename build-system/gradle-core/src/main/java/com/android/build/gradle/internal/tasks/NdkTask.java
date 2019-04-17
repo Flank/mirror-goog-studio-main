@@ -24,7 +24,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
 /** Base task for tasks that require an NdkConfig */
-public abstract class NdkTask extends AndroidBuilderTask {
+public abstract class NdkTask extends AndroidVariantTask {
 
     @Nullable
     private CoreNdkOptions ndkConfig;

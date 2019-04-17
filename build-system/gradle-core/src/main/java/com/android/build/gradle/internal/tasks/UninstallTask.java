@@ -16,6 +16,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -24,6 +25,7 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
+import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import java.io.File;
 import java.util.List;
@@ -34,7 +36,7 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
-public class UninstallTask extends AndroidBuilderTask {
+public class UninstallTask extends AndroidVariantTask {
 
     private BaseVariantData variant;
 
@@ -56,9 +58,9 @@ public class UninstallTask extends AndroidBuilderTask {
 
         logger.info("Uninstalling app: {}", applicationId);
 
+        final ILogger iLogger = new LoggerWrapper(getLogger());
         final DeviceProvider deviceProvider =
-                new ConnectedDeviceProvider(
-                        adbExecutableProvider.get(), getTimeOutInMs(), getILogger());
+                new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
 
         deviceProvider.init();
 
@@ -66,7 +68,7 @@ public class UninstallTask extends AndroidBuilderTask {
             final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
 
             for (DeviceConnector device : devices) {
-                device.uninstallPackage(applicationId, getTimeOutInMs(), getILogger());
+                device.uninstallPackage(applicationId, getTimeOutInMs(), iLogger);
                 logger.lifecycle(
                         "Uninstalling {} (from {}:{}) from device '{}' ({}).",
                         applicationId,

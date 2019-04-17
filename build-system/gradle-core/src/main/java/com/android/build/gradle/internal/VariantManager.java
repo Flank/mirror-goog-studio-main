@@ -970,8 +970,7 @@ public class VariantManager implements VariantModel {
             // ensure that there is always a dimension
             if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
                 globalScope
-                        .getAndroidBuilder()
-                        .getIssueReporter()
+                        .getErrorHandler()
                         .reportError(
                                 EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
                                 new EvalIssueException(
@@ -1473,9 +1472,7 @@ public class VariantManager implements VariantModel {
                 file,
                 f ->
                         new DefaultManifestParser(
-                                f,
-                                this::canParseManifest,
-                                globalScope.getAndroidBuilder().getIssueReporter()));
+                                f, this::canParseManifest, globalScope.getErrorHandler()));
     }
 
     private boolean canParseManifest() {

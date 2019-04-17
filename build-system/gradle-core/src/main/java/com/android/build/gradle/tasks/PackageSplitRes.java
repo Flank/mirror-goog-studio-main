@@ -27,11 +27,10 @@ import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -50,7 +49,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /** Package each split resources into a specific signed apk file. */
-public class PackageSplitRes extends AndroidBuilderTask {
+public class PackageSplitRes extends AndroidVariantTask {
 
     private FileCollection signingConfig;
     private File incrementalDir;
@@ -223,8 +222,6 @@ public class PackageSplitRes extends AndroidBuilderTask {
         public void configure(@NonNull PackageSplitRes task) {
             super.configure(task);
             VariantScope scope = getVariantScope();
-
-            BaseVariantData variantData = scope.getVariantData();
 
             task.processedResources =
                     scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES);

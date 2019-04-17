@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.cxx.services.CxxProcessServiceKt
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
-import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.IOException;
@@ -36,9 +35,8 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
     CmakeAndroidNinjaExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, androidBuilder, stats);
+        super(variant, abis, stats);
     }
 
     @NonNull

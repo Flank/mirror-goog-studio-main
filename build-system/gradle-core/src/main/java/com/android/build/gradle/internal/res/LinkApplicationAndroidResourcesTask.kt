@@ -263,7 +263,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
         else
             emptySet()
         val aapt2ServiceKey = registerAaptService(
-            aapt2FromMaven, iLogger
+            aapt2FromMaven, LoggerWrapper(logger)
         )
 
         workers.use {

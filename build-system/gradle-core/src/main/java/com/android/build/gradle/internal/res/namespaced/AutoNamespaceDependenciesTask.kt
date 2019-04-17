@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import android.databinding.tool.util.Preconditions
-import com.google.common.annotations.VisibleForTesting
+import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
@@ -37,6 +37,7 @@ import com.android.tools.build.apkzlib.zip.StoredEntryType
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.tools.build.apkzlib.zip.ZFileOptions
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
@@ -74,7 +75,7 @@ import java.util.concurrent.ForkJoinTask
  *    them in to a static library.
  */
 @CacheableTask
-open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
+open class AutoNamespaceDependenciesTask : AndroidVariantTask() {
 
     private lateinit var rFiles: ArtifactCollection
     private lateinit var nonNamespacedManifests: ArtifactCollection
@@ -201,7 +202,7 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             jarOutputs(outputClassesJar, rewrittenClasses)
             jarOutputs(outputRClassesJar, rewrittenRClasses)
 
-            val aapt2ServiceKey = registerAaptService(aapt2FromMaven, logger = iLogger)
+            val aapt2ServiceKey = registerAaptService(aapt2FromMaven, logger = LoggerWrapper(logger))
 
             val outputCompiledResources = File(intermediateDirectory, "compiled_namespaced_res")
             // compile the rewritten resources
@@ -493,7 +494,6 @@ open class AutoNamespaceDependenciesTask : AndroidBuilderTask() {
             task.intermediateDirectory = variantScope.getIncrementalDir(name)
 
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
-            task.setAndroidBuilder(variantScope.globalScope.androidBuilder)
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(

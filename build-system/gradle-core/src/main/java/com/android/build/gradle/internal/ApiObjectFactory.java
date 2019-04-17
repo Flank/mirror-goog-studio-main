@@ -37,14 +37,12 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.model.ObjectFactory;
 
 /**
  * Factory to create ApiObject from VariantData.
  */
 public class ApiObjectFactory {
-    @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull private final ObjectFactory objectFactory;
@@ -53,11 +51,9 @@ public class ApiObjectFactory {
     private final ReadOnlyObjectProvider readOnlyObjectProvider = new ReadOnlyObjectProvider();
 
     public ApiObjectFactory(
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ObjectFactory objectFactory) {
-        this.androidBuilder = androidBuilder;
         this.extension = extension;
         this.variantFactory = variantFactory;
         this.objectFactory = objectFactory;
@@ -73,7 +69,6 @@ public class ApiObjectFactory {
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
                         objectFactory,
-                        androidBuilder,
                         variantData,
                         readOnlyObjectProvider);
         if (variantApi == null) {
@@ -91,7 +86,6 @@ public class ApiObjectFactory {
                                 androidTestVariantData,
                                 variantApi,
                                 objectFactory,
-                                androidBuilder,
                                 readOnlyObjectProvider,
                                 variantData
                                         .getScope()
@@ -113,7 +107,6 @@ public class ApiObjectFactory {
                                 unitTestVariantData,
                                 variantApi,
                                 objectFactory,
-                                androidBuilder,
                                 readOnlyObjectProvider,
                                 variantData
                                         .getScope()

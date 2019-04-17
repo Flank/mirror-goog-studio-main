@@ -49,14 +49,13 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.errors.DeprecationReporterImpl;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
 import com.android.build.gradle.internal.plugin.ProjectWrapper;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
-import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfileAgent;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
@@ -77,7 +76,6 @@ import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -204,11 +202,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
         return extension;
     }
 
-    @VisibleForTesting
-    AndroidBuilder getAndroidBuilder() {
-        return globalScope.getAndroidBuilder();
-    }
-
     private ILogger getLogger() {
         if (loggerWrapper == null) {
             loggerWrapper = new LoggerWrapper(project.getLogger());
@@ -329,6 +322,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
 
+        final SyncIssueHandler syncIssueHandler = extraModelInfo.getSyncIssueHandler();
+
         SdkComponents sdkComponents =
                 SdkComponents.Companion.createSdkComponents(
                         project,
@@ -336,23 +331,15 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         // We pass a supplier here because extension will only be set later.
                         this::getExtension,
                         getLogger(),
-                        extraModelInfo.getSyncIssueHandler());
+                        syncIssueHandler);
 
-        AndroidBuilder androidBuilder =
-                new AndroidBuilder(
-                        new GradleProcessExecutor(project),
-                        new GradleJavaProcessExecutor(project),
-                        extraModelInfo.getSyncIssueHandler(),
-                        extraModelInfo.getMessageReceiver(),
-                        getLogger());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
         if (projectOptions.hasRemovedOptions()) {
-            androidBuilder
-                    .getIssueReporter()
-                    .reportWarning(Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
+            syncIssueHandler.reportWarning(
+                    Type.GENERIC, projectOptions.getRemovedOptionsErrorMessage());
         }
 
         if (projectOptions.hasDeprecatedOptions()) {
@@ -368,17 +355,14 @@ public abstract class BasePlugin<E extends BaseExtension2>
         }
 
         // Enforce minimum versions of certain plugins
-        GradlePluginUtils.enforceMinimumVersionsOfPlugins(
-                project, androidBuilder.getIssueReporter());
+        GradlePluginUtils.enforceMinimumVersionsOfPlugins(project, syncIssueHandler);
 
         // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
 
         DslScopeImpl dslScope =
                 new DslScopeImpl(
-                        extraModelInfo.getSyncIssueHandler(),
-                        extraModelInfo.getDeprecationReporter(),
-                        objectFactory);
+                        syncIssueHandler, extraModelInfo.getDeprecationReporter(), objectFactory);
 
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
@@ -390,10 +374,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         new ProjectWrapper(project),
                         projectOptions,
                         dslScope,
-                        androidBuilder,
                         sdkComponents,
                         registry,
-                        buildCache);
+                        buildCache,
+                        extraModelInfo.getMessageReceiver());
 
         project.getTasks()
                 .named("assemble")
@@ -732,7 +716,6 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         ApiObjectFactory apiObjectFactory =
                 new ApiObjectFactory(
-                        globalScope.getAndroidBuilder(),
                         extension,
                         variantFactory,
                         project.getObjects());

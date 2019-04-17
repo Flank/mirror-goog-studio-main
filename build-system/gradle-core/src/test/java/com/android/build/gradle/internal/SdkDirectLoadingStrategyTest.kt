@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.google.common.truth.Truth.assertThat
 
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
-import com.android.builder.core.AndroidBuilder
+import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
@@ -92,9 +92,9 @@ class SdkDirectLoadingStrategyTest {
             <localPackage path="build-tools;${SdkConstants.CURRENT_BUILD_TOOLS_VERSION}" obsolete="false">
                 <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns3:genericDetailsType"/>
                 <revision>
-                    <major>${AndroidBuilder.MIN_BUILD_TOOLS_REV.major}</major>
-                    <minor>${AndroidBuilder.MIN_BUILD_TOOLS_REV.minor}</minor>
-                    <micro>${AndroidBuilder.MIN_BUILD_TOOLS_REV.micro}</micro>
+                    <major>${ToolsRevisionUtils.MIN_BUILD_TOOLS_REV.major}</major>
+                    <minor>${ToolsRevisionUtils.MIN_BUILD_TOOLS_REV.minor}</minor>
+                    <micro>${ToolsRevisionUtils.MIN_BUILD_TOOLS_REV.micro}</micro>
                 </revision>
                 <display-name>Android SDK Build-Tools ${SdkConstants.CURRENT_BUILD_TOOLS_VERSION}</display-name>
                 <uses-license ref="android-sdk-license"/>
@@ -227,7 +227,7 @@ class SdkDirectLoadingStrategyTest {
     @Test
     fun load_oldBuildTools() {
         // Even if we request an older version, it should bump to the one in
-        // AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION and look for it.
+        // ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION and look for it.
         val sdkDirectory = configureSdkDirectory()
         val directLoader = getDirectLoader(sdkDirectory, buildTools = "27.0.0")
 
@@ -365,7 +365,7 @@ class SdkDirectLoadingStrategyTest {
 
         val buildToolDirectory = sdkRoot.resolve("build-tools/28.0.3")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
-            AndroidBuilder.MIN_BUILD_TOOLS_REV)
+            ToolsRevisionUtils.MIN_BUILD_TOOLS_REV)
         assertThat(sdkDirectLoadingStrategy.getAidlExecutable()).isEqualTo(
             buildToolDirectory.resolve(SdkConstants.FN_AIDL))
         assertThat(sdkDirectLoadingStrategy.getCoreLambaStubs()).isEqualTo(

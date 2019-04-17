@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -78,17 +77,14 @@ import org.gradle.api.tasks.OutputFiles;
 public abstract class ExternalNativeJsonGenerator {
     @NonNull protected final CxxVariantModel variant;
     @NonNull protected final List<CxxAbiModel> abis;
-    @NonNull protected final AndroidBuilder androidBuilder;
     @NonNull protected final GradleBuildVariant.Builder stats;
 
     ExternalNativeJsonGenerator(
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull GradleBuildVariant.Builder stats) {
         this.variant = variant;
         this.abis = abis;
-        this.androidBuilder = androidBuilder;
         this.stats = stats;
 
         // Check some basic configuration information at sync time.
@@ -421,18 +417,16 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     public static ExternalNativeJsonGenerator create(
             @NonNull CxxModuleModel module,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
         try (ErrorsAreFatalThreadLoggingEnvironment ignore =
                 new ErrorsAreFatalThreadLoggingEnvironment()) {
-            return createImpl(module, androidBuilder, scope);
+            return createImpl(module, scope);
         }
     }
 
     @NonNull
     public static ExternalNativeJsonGenerator createImpl(
             @NonNull CxxModuleModel module,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantScope scope) {
         CxxVariantModel variant = createCxxVariantModel(module, scope.getVariantData());
         List<CxxAbiModel> abis = Lists.newArrayList();
@@ -446,11 +440,9 @@ public abstract class ExternalNativeJsonGenerator {
                 ProcessProfileWriter.getOrCreateVariant(
                         module.getGradleModulePathName(), scope.getFullVariantName());
 
-
         switch (module.getBuildSystem()) {
             case NDK_BUILD:
-                return new NdkBuildExternalNativeJsonGenerator(
-                        variant, abis, androidBuilder, stats);
+                return new NdkBuildExternalNativeJsonGenerator(variant, abis, stats);
             case CMAKE:
                 CxxCmakeModuleModel cmake = Objects.requireNonNull(variant.getModule().getCmake());
 
@@ -465,8 +457,7 @@ public abstract class ExternalNativeJsonGenerator {
                         Revision.parseRevision(
                                 ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
                                 Revision.Precision.MICRO))) {
-                    return new CmakeAndroidNinjaExternalNativeJsonGenerator(
-                            variant, abis, androidBuilder, stats);
+                    return new CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, stats);
                 }
 
                 if (cmakeRevision.getMajor() < 3
@@ -477,8 +468,7 @@ public abstract class ExternalNativeJsonGenerator {
                                     + ". Try 3.7.0 or later.");
                 }
 
-                return new CmakeServerExternalNativeJsonGenerator(
-                        variant, abis, androidBuilder, stats);
+                return new CmakeServerExternalNativeJsonGenerator(variant, abis, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }

@@ -66,8 +66,7 @@ public class InstantAppTaskManager extends TaskManager {
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         // add a warning that the instantapp module is deprecated and will be removed in the future.
         globalScope
-                .getAndroidBuilder()
-                .getIssueReporter()
+                .getErrorHandler()
                 .reportWarning(
                         EvalIssueReporter.Type.PLUGIN_OBSOLETE,
                         "The com.android.instantapp plugin is deprecated and will be removed in a future"

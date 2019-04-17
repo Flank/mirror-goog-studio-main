@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import java.util.Collection;
@@ -58,7 +57,6 @@ public interface VariantFactory {
     @Nullable
     default BaseVariantImpl createVariantApi(
             @NonNull ObjectFactory objectFactory,
-            @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
         Class<? extends BaseVariantImpl> implementationClass =
@@ -71,7 +69,6 @@ public interface VariantFactory {
                 implementationClass,
                 variantData,
                 objectFactory,
-                androidBuilder,
                 readOnlyObjectProvider,
                 variantData
                         .getScope()
