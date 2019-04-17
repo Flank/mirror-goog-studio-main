@@ -900,7 +900,7 @@ open class LinkApplicationAndroidResourcesTask @Inject constructor(
         val variantType: VariantType = task.type
         val debuggable: Boolean = task.getDebuggable()
         val packageId: Int? = task.getResOffset()
-        val incrementalFolder: File = task.incrementalFolder
+        val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =
             task.androidJar.get().absolutePath
         val convertedLibraryDependenciesFile: File? =

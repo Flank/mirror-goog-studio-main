@@ -56,9 +56,8 @@ constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): Incre
 
     private lateinit var delegate: DataBindingMergeBaseClassLogDelegate
 
-    override fun isIncremental(): Boolean {
-        return true
-    }
+    override val incremental: Boolean
+        get() = true
 
     override fun doFullTaskAction() {
         delegate.doFullRun(workers)

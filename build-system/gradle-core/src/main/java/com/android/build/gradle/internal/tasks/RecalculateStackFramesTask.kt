@@ -61,9 +61,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         bootClasspath.files, classesToFix.files, referencedClasses.files, outFolder!!.get().asFile, userCache
     )
 
-    override fun isIncremental(): Boolean {
-        return true
-    }
+    override val incremental: Boolean = true
 
     override fun doFullTaskAction() {
         createDelegate().doFullRun(workers)

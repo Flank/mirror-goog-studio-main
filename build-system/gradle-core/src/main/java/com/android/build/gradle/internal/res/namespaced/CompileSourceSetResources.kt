@@ -79,7 +79,8 @@ open class CompileSourceSetResources
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    override fun isIncremental() = true
+    override val incremental: Boolean
+        get() = true
 
     override fun doFullTaskAction() {
         FileUtils.cleanOutputDir(outputDirectory)
@@ -121,7 +122,7 @@ open class CompileSourceSetResources
         }
     }
 
-    override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
+    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
         val requests = mutableListOf<CompileResourceRequest>()
         val deletes = mutableListOf<File>()
         /** Only consider at files in first level subdirectories of the input directory */

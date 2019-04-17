@@ -106,9 +106,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    override fun isIncremental(): Boolean {
-        return true
-    }
+    override val incremental: Boolean
+        get() = true
 
     override fun doFullTaskAction() {
         // Mark all files as NEW and continue with the verification.

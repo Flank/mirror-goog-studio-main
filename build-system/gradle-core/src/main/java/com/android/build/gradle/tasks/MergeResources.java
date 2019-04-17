@@ -171,7 +171,7 @@ public class MergeResources extends ResourceAwareTask {
     }
 
     @Override
-    protected boolean isIncremental() {
+    protected boolean getIncremental() {
         return true;
     }
 
@@ -286,7 +286,7 @@ public class MergeResources extends ResourceAwareTask {
     }
 
     @Override
-    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
+    protected void doIncrementalTaskAction(@NonNull Map<File, ? extends FileStatus> changedInputs)
             throws IOException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
@@ -316,7 +316,7 @@ public class MergeResources extends ResourceAwareTask {
             // The incremental process is the following:
             // Loop on all the changed files, find which ResourceSet it belongs to, then ask
             // the resource set to update itself with the new file.
-            for (Map.Entry<File, FileStatus> entry : changedInputs.entrySet()) {
+            for (Map.Entry<File, ? extends FileStatus> entry : changedInputs.entrySet()) {
                 File changedFile = entry.getKey();
 
                 merger.findDataSetContaining(changedFile, fileValidity);

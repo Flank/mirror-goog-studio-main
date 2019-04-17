@@ -84,7 +84,8 @@ open class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory) :
      */
     private val workers = Workers.withThreads(project.name, path)
 
-    override fun isIncremental() = true
+    override val incremental: Boolean
+        get() = true
 
     override fun doFullTaskAction() {
         StripDebugSymbolsDelegate(
@@ -98,11 +99,7 @@ open class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory) :
         ).run()
     }
 
-    override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
-        if (!isIncremental) {
-            doFullTaskAction()
-            return
-        }
+    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
         StripDebugSymbolsDelegate(
             workers,
             inputDir.get().asFile,

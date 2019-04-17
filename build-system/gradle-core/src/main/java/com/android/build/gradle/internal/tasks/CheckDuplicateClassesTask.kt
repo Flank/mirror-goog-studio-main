@@ -44,7 +44,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private lateinit var classesArtifacts: ArtifactCollection
 
@@ -57,12 +57,7 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
 
     private val workers: WorkerExecutorFacade = Workers.preferThreads(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun taskAction() {
-        super.recordTaskAction<RuntimeException>()
-    }
-
-    override fun recordedTaskAction() {
+    override fun doWork() {
         CheckDuplicateClassesDelegate(classesArtifacts).run(workers)
     }
 

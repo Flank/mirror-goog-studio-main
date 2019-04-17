@@ -94,7 +94,8 @@ open class MergeJavaResourceTask
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    override fun isIncremental() = true
+    override val incremental: Boolean
+        get() = true
 
     override fun doFullTaskAction() {
         workers.use {
@@ -117,7 +118,7 @@ open class MergeJavaResourceTask
         }
     }
 
-    override fun doIncrementalTaskAction(changedInputs: MutableMap<File, FileStatus>) {
+    override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
         if (!incrementalStateFile.isFile) {
             doFullTaskAction()
             return

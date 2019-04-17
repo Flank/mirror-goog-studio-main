@@ -113,7 +113,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     @Override
     @Internal
-    protected boolean isIncremental() {
+    protected boolean getIncremental() {
         return true;
     }
 
@@ -156,7 +156,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
     }
 
     @Override
-    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
+    protected void doIncrementalTaskAction(Map<File, ? extends FileStatus> changedInputs)
+            throws IOException {
         // create a merger and load the known state.
         AssetMerger merger = new AssetMerger();
         try (WorkerExecutorFacade workerExecutor = this.workerExecutor) {
@@ -182,7 +183,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             // The incremental process is the following:
             // Loop on all the changed files, find which ResourceSet it belongs to, then ask
             // the resource set to update itself with the new file.
-            for (Map.Entry<File, FileStatus> entry : changedInputs.entrySet()) {
+            for (Map.Entry<File, ? extends FileStatus> entry : changedInputs.entrySet()) {
                 File changedFile = entry.getKey();
 
                 // Ignore directories.
