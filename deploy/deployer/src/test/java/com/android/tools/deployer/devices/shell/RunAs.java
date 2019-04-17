@@ -40,8 +40,7 @@ public class RunAs extends ShellCommand {
                 return 1;
             }
             String cmd = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            device.getShell().execute(cmd, app.user, stdout, stdin, device);
-            return 0;
+            return device.getShell().execute(cmd, app.user, stdout, stdin, device);
         }
     }
 

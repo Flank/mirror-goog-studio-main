@@ -19,6 +19,16 @@ int writeInt(int fd, int value) {
   buffer[3] = value & 0xff;
   return write(fd, &buffer, 4);
 }
+int readInt(int fd) {
+  // Reads an int written by Java's ByteBuffer
+  unsigned char buffer[4];
+  int r = 0;
+  while (r < 4) {
+    r += read(fd, buffer + r, 4 - r);
+  }
+
+  return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | (buffer[3]);
+}
 
 // This program acts as a bridge between its stdin/stdout and a socket:
 //   - Input pipe (stdin) is read and written to socket input.
@@ -62,22 +72,24 @@ int main(int argc, char* argv[]) {
   fds[1].fd = sockfd;
   fds[1].events = POLLIN;
 
-  int fdix;
   char buffer[8192];
-  while ((fdix = poll(fds, 2, -1)) > 0) {
+  int chunk = 0;
+  while (poll(fds, 2, -1) > 0) {
     if (fds[0].revents & POLLIN) {
       int r = read(STDIN_FILENO, buffer, 8192);
-      if (r <= 0) {
-        break;
-      }
       write(sockfd, buffer, r);
     }
     if (fds[1].revents & POLLIN) {
-      int r = read(sockfd, buffer, 8192);
-      if (r <= 0) {
-        break;
+      if (chunk == 0) {
+        chunk = readInt(sockfd);
+        if (chunk == 0) {
+          int ret = readInt(sockfd);
+          return ret;
+        }
       }
+      int r = read(sockfd, buffer, chunk > 8192 ? 8192 : chunk);
       write(STDOUT_FILENO, buffer, r);
+      chunk -= r;
     }
     if (fds[1].revents & (POLLHUP | POLLERR | POLLNVAL)) {
       break;

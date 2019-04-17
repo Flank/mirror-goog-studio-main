@@ -20,6 +20,7 @@ import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -78,13 +79,19 @@ public class ExternalCommand extends ShellCommand {
                 if (!commands.isEmpty()) {
                     try (Socket clientSocket = commands.poll()) {
                         InputStream inp = clientSocket.getInputStream();
-                        OutputStream out = clientSocket.getOutputStream();
+                        ChunkedOutputStream out =
+                                new ChunkedOutputStream(clientSocket.getOutputStream());
                         DataInputStream data = new DataInputStream(inp);
                         int size = data.readInt();
                         byte[] buffer = new byte[size];
                         ByteStreams.readFully(data, buffer);
                         String script = new String(buffer, Charsets.UTF_8);
-                        device.getShell().execute(script, context.getUser(), out, inp, device);
+                        int subCode =
+                                device.getShell()
+                                        .execute(script, context.getUser(), out, inp, device);
+                        out.data.writeInt(0);
+                        out.data.writeInt(subCode);
+                        out.data.flush();
                     }
                 }
                 try {
@@ -122,6 +129,27 @@ public class ExternalCommand extends ShellCommand {
             } catch (IOException e) {
                 // Ignore and exit the thread
             }
+        }
+    }
+
+    private static class ChunkedOutputStream extends OutputStream {
+
+        private final DataOutputStream data;
+
+        private ChunkedOutputStream(OutputStream data) {
+            this.data = new DataOutputStream(data);
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            data.writeInt(1);
+            data.write(b);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            data.writeInt(len);
+            data.write(b, off, len);
         }
     }
 
