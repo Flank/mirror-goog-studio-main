@@ -281,6 +281,8 @@ public class ApkInstaller {
                 return "Multi-APK app installation is not supported on devices with API level < 21.";
             case INSTALL_PARSE_FAILED_NO_CERTIFICATES:
                 return "APK signature verification failed.";
+            case INSTALL_FAILED_USER_RESTRICTED:
+                return "Installation via USB is disabled.";
             default:
                 return "Installation failed due to: '" + result.getReason() + "'";
         }
