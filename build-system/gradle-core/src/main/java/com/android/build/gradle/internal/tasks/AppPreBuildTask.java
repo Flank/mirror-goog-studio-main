@@ -43,12 +43,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** Pre build task that does some checks for application variants */
 @CacheableTask
-public class AppPreBuildTask extends AndroidVariantTask {
+public class AppPreBuildTask extends NonIncrementalTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection compileManifests;
@@ -86,8 +85,8 @@ public class AppPreBuildTask extends AndroidVariantTask {
         return fakeOutputDirectory;
     }
 
-    @TaskAction
-    void run() {
+    @Override
+    protected void doTaskAction() {
         Set<ResolvedArtifactResult> compileArtifacts = new HashSet<>();
         compileArtifacts.addAll(compileManifests.getArtifacts());
         compileArtifacts.addAll(compileNonNamespacedManifests.getArtifacts());

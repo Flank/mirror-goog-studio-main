@@ -17,13 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
@@ -45,7 +43,7 @@ class AndroidVariantTaskTest {
             recordTaskAction { actualAction() }
         }
 
-        fun actualAction() {
+        private fun actualAction() {
             called.set(true)
         }
     }

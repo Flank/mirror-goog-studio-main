@@ -21,7 +21,7 @@ import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
@@ -30,13 +30,10 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.io.IOException
 import java.io.Serializable
 import java.util.function.Supplier
-
 import javax.inject.Inject
 
 /**
@@ -53,7 +50,7 @@ import javax.inject.Inject
  * generated)
  */
 open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : AndroidVariantTask() {
+    : NonIncrementalTask() {
     @get:OutputDirectory lateinit var outFolder: File
         private set
 
@@ -73,9 +70,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
     @get:InputFiles lateinit var directDependencies: FileCollection
         private set
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun fullTaskAction() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 ExportFeatureInfoRunnable::class.java, ExportFeatureInfoParams(

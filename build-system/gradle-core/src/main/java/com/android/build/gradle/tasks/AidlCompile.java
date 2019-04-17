@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.DependencyFileProcessor;
@@ -59,13 +59,12 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile aidl files. Supports incremental update. */
 @CacheableTask
-public class AidlCompile extends AndroidVariantTask {
+public class AidlCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet().include("**/*.aidl");
 
@@ -125,8 +124,8 @@ public class AidlCompile extends AndroidVariantTask {
         }
     }
 
-    @TaskAction
-    public void doFullTaskAction() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         // this is full run, clean the previous output
         File destinationDir = getSourceOutputDir();
         File parcelableDir = getPackagedDir();

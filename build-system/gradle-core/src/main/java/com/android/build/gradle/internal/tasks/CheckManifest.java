@@ -24,11 +24,10 @@ import java.io.File;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Class that checks the presence of the manifest. */
-public class CheckManifest extends AndroidVariantTask {
+public class CheckManifest extends NonIncrementalTask {
 
     private File manifest;
     private Boolean isOptional;
@@ -63,8 +62,8 @@ public class CheckManifest extends AndroidVariantTask {
         return fakeOutputDir;
     }
 
-    @TaskAction
-    void check() {
+    @Override
+    protected void doTaskAction() {
         if (!isOptional && manifest != null && !manifest.isFile()) {
             throw new IllegalArgumentException(
                     String.format(

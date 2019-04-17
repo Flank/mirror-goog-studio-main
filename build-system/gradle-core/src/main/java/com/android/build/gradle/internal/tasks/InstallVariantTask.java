@@ -56,14 +56,13 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-public class InstallVariantTask extends AndroidVariantTask {
+public class InstallVariantTask extends NonIncrementalTask {
 
     private Provider<File> adbExecutableProvider;
     private Provider<File> splitSelectExeProvider;
@@ -87,8 +86,8 @@ public class InstallVariantTask extends AndroidVariantTask {
         });
     }
 
-    @TaskAction
-    public void install() throws DeviceException, ProcessException {
+    @Override
+    protected void doTaskAction() throws DeviceException, ProcessException {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);

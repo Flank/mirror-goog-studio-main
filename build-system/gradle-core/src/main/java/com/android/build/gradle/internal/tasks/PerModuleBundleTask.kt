@@ -54,7 +54,7 @@ import java.util.function.Supplier
  * so that the base app can package into the bundle.
  *
  */
-open class PerModuleBundleTask : AndroidVariantTask() {
+open class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -102,8 +102,7 @@ open class PerModuleBundleTask : AndroidVariantTask() {
     val fileName: String
         get() = fileNameSupplier.get()
 
-    @TaskAction
-    fun zip() {
+    public override fun doTaskAction() {
         FileUtils.cleanOutputDir(outputDir)
         val jarMerger = JarMerger(File(outputDir, fileName).toPath())
 

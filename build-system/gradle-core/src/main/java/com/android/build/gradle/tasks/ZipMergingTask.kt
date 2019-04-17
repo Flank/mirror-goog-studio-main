@@ -17,27 +17,25 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
-import com.google.common.annotations.VisibleForTesting
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.packaging.JarMerger
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.io.IOException
 import java.util.function.Predicate
 
 /** Task to merge the res/classes intermediate jars from a library into a single one  */
 @CacheableTask
-open class ZipMergingTask : AndroidVariantTask() {
+open class ZipMergingTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -63,9 +61,7 @@ open class ZipMergingTask : AndroidVariantTask() {
         this.outputFile = outputFile
     }
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun merge() {
+    public override fun doTaskAction() {
         FileUtils.cleanOutputDir(outputFile.parentFile)
         val usedNamesPredicate = object:Predicate<String> {
             val usedNames = mutableSetOf<String>()

@@ -49,7 +49,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : AndroidVariantTask() {
+    : NonIncrementalTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
@@ -66,9 +66,7 @@ open class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: 
     lateinit var inputResourcesDir: BuildableArtifact
         private set
 
-
-    @TaskAction
-    fun generateProguardRules() {
+    override fun doTaskAction() {
         val manifest = Iterables.getOnlyElement(
             ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
             .outputFile

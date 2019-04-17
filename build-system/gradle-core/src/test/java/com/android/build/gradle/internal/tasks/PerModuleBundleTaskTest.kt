@@ -161,7 +161,7 @@ class PerModuleBundleTaskTest {
         val dexFolder = testFolder.newFolder("dex_files")
         Mockito.`when`(dexFiles.files).thenReturn(
             setOf(createDex(dexFolder, "classes.dex")))
-        task.zip()
+        task.doTaskAction()
         verifyOutputZip(task.outputDir.listFiles().single(), 1)
     }
 
@@ -173,7 +173,7 @@ class PerModuleBundleTaskTest {
                 createDex(dexFolder, "classes.dex"),
                 createDex(dexFolder, "classes2.dex"),
                 createDex(dexFolder, "classes3.dex")))
-        task.zip()
+        task.doTaskAction()
         verifyOutputZip(task.outputDir.listFiles().single(), 3)
     }
 
@@ -188,7 +188,7 @@ class PerModuleBundleTaskTest {
                 createDex(dexFolder0, "classes3.dex"),
                 createDex(dexFolder1, "classes.dex"),
                 createDex(dexFolder1, "classes2.dex")))
-        task.zip()
+        task.doTaskAction()
 
         // verify naming and shuffling of names.
         verifyOutputZip(task.outputDir.listFiles().single(), 5)
@@ -202,7 +202,7 @@ class PerModuleBundleTaskTest {
                 createDex(dexFolder0, "classes2.dex"),
                 createDex(dexFolder0, "classes.dex"),
                 createDex(dexFolder0, "classes3.dex")))
-        task.zip()
+        task.doTaskAction()
 
         // verify classes.dex has not been renamed.
         verifyOutputZip(task.outputDir.listFiles().single(), 3)

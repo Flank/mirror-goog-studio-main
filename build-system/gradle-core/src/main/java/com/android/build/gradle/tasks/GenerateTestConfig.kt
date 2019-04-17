@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSET
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -46,7 +46,6 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -66,7 +65,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     @get:Nested
     lateinit var testConfigInputs: TestConfigInputs
@@ -77,8 +76,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun generateTestConfig() {
+    override fun doTaskAction() {
         workers.submit(
             GenerateTestConfigRunnable::class.java,
             GenerateTestConfigParams(testConfigInputs.computeProperties(project.projectDir),

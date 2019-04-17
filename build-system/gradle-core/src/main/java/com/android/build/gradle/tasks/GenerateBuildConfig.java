@@ -20,7 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -41,11 +41,10 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 @CacheableTask
-public class GenerateBuildConfig extends AndroidVariantTask {
+public class GenerateBuildConfig extends NonIncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
@@ -169,8 +168,8 @@ public class GenerateBuildConfig extends AndroidVariantTask {
         return checkManifestResult;
     }
 
-    @TaskAction
-    void generate() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         // must clear the folder in case the packagename changed, otherwise,
         // there'll be two classes.
         File destinationDir = getSourceOutputDir();

@@ -23,7 +23,7 @@ import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.model.Version;
 import com.google.common.annotations.VisibleForTesting;
@@ -51,7 +51,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.IsolationMode;
 import org.gradle.workers.WorkerExecutor;
@@ -70,7 +69,7 @@ import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
 
 /** Simple Jacoco report task that calls the Ant version. */
-public class JacocoReportTask extends AndroidVariantTask {
+public class JacocoReportTask extends NonIncrementalTask {
 
     private FileCollection jacocoClasspath;
 
@@ -148,8 +147,8 @@ public class JacocoReportTask extends AndroidVariantTask {
         this.tabWidth = tabWidth;
     }
 
-    @TaskAction
-    public void generateReport() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         Set<File> coverageFiles =
                 coverageDirectories
                         .get()

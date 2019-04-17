@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does clean steps with them.
@@ -51,12 +50,12 @@ import org.gradle.api.tasks.TaskAction;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeCleanTask extends AndroidVariantTask {
+public class ExternalNativeCleanTask extends NonIncrementalTask {
 
     @NonNull private Provider<ExternalNativeJsonGenerator> generator;
 
-    @TaskAction
-    void clean() throws ProcessException, IOException {
+    @Override
+    protected void doTaskAction() throws ProcessException, IOException {
         try (ErrorsAreFatalThreadLoggingEnvironment ignore =
                 new ErrorsAreFatalThreadLoggingEnvironment()) {
             infoln("starting clean");

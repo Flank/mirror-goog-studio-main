@@ -100,7 +100,7 @@ open class MainApkListPersistenceTest {
         assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
         assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
-        task.fullTaskAction()
+        task.doTaskAction()
 
         // assert persistence.
         val apkList = ExistingBuildElements.loadApkList(task.outputFile)
@@ -128,7 +128,7 @@ open class MainApkListPersistenceTest {
         assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
         assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
-        task.fullTaskAction()
+        task.doTaskAction()
 
         // assert persistence.
         val apkList = ExistingBuildElements.loadApkList(task.outputFile)

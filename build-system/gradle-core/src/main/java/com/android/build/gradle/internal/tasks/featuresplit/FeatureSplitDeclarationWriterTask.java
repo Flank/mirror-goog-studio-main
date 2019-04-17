@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -27,12 +27,11 @@ import java.io.IOException;
 import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task that writes the FeatureSplitDeclaration file and publish it for other modules to consume.
  */
-public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
+public class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;
     @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
@@ -53,8 +52,8 @@ public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
         return outputDirectory;
     }
 
-    @TaskAction
-    public void fullTaskAction() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
                 new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId());
         declaration.save(outputDirectory);

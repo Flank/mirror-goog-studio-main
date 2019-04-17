@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
@@ -48,7 +48,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -65,7 +64,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class ProcessAndroidAppResourcesTask
-@Inject constructor(objects: ObjectFactory, workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+@Inject constructor(objects: ObjectFactory, workerExecutor: WorkerExecutor) : NonIncrementalTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -93,8 +92,7 @@ open class ProcessAndroidAppResourcesTask
 
     @get:Internal lateinit var outputScope: OutputScope private set
 
-    @TaskAction
-    fun taskAction() {
+    override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
         convertedLibraryDependencies?.singlePath()?.let { convertedDir ->

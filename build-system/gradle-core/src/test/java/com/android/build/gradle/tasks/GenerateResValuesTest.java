@@ -48,7 +48,7 @@ public class GenerateResValuesTest {
         task.setItems(ImmutableList.of(new ClassFieldImpl("string", "VALUE_DEFAULT", "1")));
         task.setResOutputDir(testDir);
 
-        task.generate();
+        task.doTaskAction();
 
         File output = new File(testDir, "values/" + ResValueGenerator.RES_VALUE_FILENAME_XML);
         assertThat(output).contentWithUnixLineSeparatorsIsExactly(

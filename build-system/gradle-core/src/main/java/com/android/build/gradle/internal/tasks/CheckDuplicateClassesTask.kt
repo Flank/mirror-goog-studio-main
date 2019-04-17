@@ -57,7 +57,7 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
 
     private val workers: WorkerExecutorFacade = Workers.preferThreads(project.name, path, workerExecutor)
 
-    override fun doWork() {
+    override fun doTaskAction() {
         CheckDuplicateClassesDelegate(classesArtifacts).run(workers)
     }
 

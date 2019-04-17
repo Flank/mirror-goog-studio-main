@@ -48,13 +48,12 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task side loading an instant app variant. It looks at connected device, checks if preO or postO
  * and either multi-install the feature APKs or upload the bundle.
  */
-public class InstantAppSideLoadTask extends AndroidVariantTask {
+public class InstantAppSideLoadTask extends NonIncrementalTask {
 
     private Provider<File> adbExecutableProvider;
 
@@ -69,8 +68,8 @@ public class InstantAppSideLoadTask extends AndroidVariantTask {
                         });
     }
 
-    @TaskAction
-    public void sideLoad() throws DeviceException, InstantAppRunException, IOException {
+    @Override
+    protected void doTaskAction() throws DeviceException, InstantAppRunException, IOException {
         if (!adbExecutableProvider.isPresent()) {
             throw new GradleException("No adb file found.");
         }

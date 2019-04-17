@@ -21,7 +21,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.symbols.IdProvider
@@ -34,7 +34,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -51,7 +50,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class ParseLibraryResourcesTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : AndroidVariantTask() {
+    : NonIncrementalTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:InputFiles
@@ -68,8 +67,7 @@ open class ParseLibraryResourcesTask @Inject constructor(workerExecutor: WorkerE
     lateinit var librarySymbolsFile: File
         private set
 
-    @TaskAction
-    fun parseResources() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 ParseResourcesRunnable::class.java,

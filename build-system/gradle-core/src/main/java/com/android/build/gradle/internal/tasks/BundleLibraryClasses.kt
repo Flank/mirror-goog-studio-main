@@ -53,7 +53,7 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  * defined in [LibraryAarJarsTransform.getDefaultExcludes].
  */
 open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
     private lateinit var toIgnoreRegExps: Supplier<List<String>>
@@ -77,8 +77,7 @@ open class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecut
     @Input
     fun getToIgnore() = toIgnoreRegExps.get()
 
-    @TaskAction
-    fun bundleClasses() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 BundleLibraryClassesRunnable::class.java,

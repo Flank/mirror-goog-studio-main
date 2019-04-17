@@ -27,6 +27,7 @@ import com.android.builder.dexing.DexerTool;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import javax.inject.Inject;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -83,12 +84,19 @@ public class JacocoTask extends AndroidVariantTask {
     }
 
     @TaskAction
-    public void run(@NonNull IncrementalTaskInputs inputs) throws IOException {
-        try {
-            delegate.run(workers, inputs);
-        } finally {
-            workers.close();
-        }
+    public void run(@NonNull IncrementalTaskInputs inputs) {
+        // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual call to recordTaskAction
+        recordTaskAction(
+                () -> {
+                    try {
+                        delegate.run(workers, inputs);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    } finally {
+                        workers.close();
+                    }
+                    return null;
+                });
     }
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoTask> {

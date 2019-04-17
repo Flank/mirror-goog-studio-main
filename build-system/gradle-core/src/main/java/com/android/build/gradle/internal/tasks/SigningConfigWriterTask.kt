@@ -24,20 +24,18 @@ import com.android.build.gradle.tasks.AnnotationProcessingTaskCreationAction
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
-import java.io.IOException
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 
 /**
  * Task that writes the SigningConfig information and publish it for dynamic-feature modules.
  */
 @CacheableTask
-open class SigningConfigWriterTask : AndroidVariantTask() {
+open class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     var outputDirectory: Provider<Directory>? = null
@@ -53,9 +51,8 @@ open class SigningConfigWriterTask : AndroidVariantTask() {
     var signingConfig: SigningConfig? = null
         internal set
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun fullTaskAction() {
+
+    public override fun doTaskAction() {
         val out = outputDirectory
             ?: throw RuntimeException("OutputDirectory not set.")
         SigningConfigMetadata.save(out.get().asFile, signingConfig)

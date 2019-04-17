@@ -51,11 +51,6 @@ public class TestPreBuildTask extends ClasspathComparisionTask {
                         group, module, getProject().getPath(), compileVersion, runtimeVersion));
     }
 
-    @TaskAction
-    void run() {
-        compareClasspaths();
-    }
-
     public static class CreationAction
             extends TaskManager.AbstractPreBuildCreationAction<TestPreBuildTask> {
 

@@ -39,7 +39,6 @@ import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
 
 /** Configuration action for a merge-Proguard-files task. */
 public class MergeConsumerProguardFilesTask extends MergeFileTask {
@@ -50,8 +49,7 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
     private List<File> consumerProguardFiles;
 
     @Override
-    @TaskAction
-    public void mergeFiles() throws IOException {
+    public void doTaskAction() throws IOException {
         final Project project = getProject();
 
         // We check for default files unless it's a base feature, which can include default files.
@@ -65,7 +63,7 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
                         throw exception;
                     });
         }
-        super.mergeFiles();
+        super.doTaskAction();
     }
 
     public static void checkProguardFiles(

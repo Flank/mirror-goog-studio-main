@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
@@ -50,11 +50,10 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkerExecutor;
 
 /** Task to bundle a bundle of feature APKs. */
-public class BundleInstantApp extends AndroidVariantTask {
+public class BundleInstantApp extends NonIncrementalTask {
     private final WorkerExecutorFacade workers;
 
     @Inject
@@ -63,8 +62,8 @@ public class BundleInstantApp extends AndroidVariantTask {
                 Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
     }
 
-    @TaskAction
-    public void taskAction() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         // FIXME: Make this task incremental.
         try (WorkerExecutorFacade workers = this.workers) {
             workers.submit(

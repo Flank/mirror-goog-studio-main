@@ -20,9 +20,7 @@ import com.android.ide.common.resources.FileStatus.NEW
 import com.android.ide.common.resources.FileStatus.REMOVED
 import com.android.ide.common.resources.FileStatus
 import com.google.common.collect.Maps
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import java.io.File
-import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory

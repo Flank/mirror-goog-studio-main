@@ -47,16 +47,15 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 
 @CacheableTask
-public class PackageForUnitTest extends AndroidVariantTask {
+public class PackageForUnitTest extends NonIncrementalTask {
     BuildableArtifact resApk;
     ListProperty<Directory> mergedAssets;
     File apkForUnitTest;
 
-    @TaskAction
-    public void generateApkForUnitTest() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         // this can certainly be optimized by making it incremental...
 
         FileUtils.copyFile(apkFrom(resApk), apkForUnitTest);

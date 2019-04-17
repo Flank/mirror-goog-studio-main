@@ -21,7 +21,7 @@ package com.android.build.gradle.internal.tasks.featuresplit
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
@@ -30,12 +30,10 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.tooling.BuildException
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.IOException
 import java.io.Serializable
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -43,7 +41,7 @@ import javax.inject.Inject
 /** Task to write the FeatureSetMetadata file.  */
 @CacheableTask
 open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -63,10 +61,7 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
     var maxNumberOfFeaturesBeforeOreo: Int = FeatureSetMetadata.MAX_NUMBER_OF_SPLITS_BEFORE_O
         internal set
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun fullTaskAction() {
-
+    public override fun doTaskAction() {
         workers.use {
             it.submit(
                 FeatureSetRunnable::class.java,

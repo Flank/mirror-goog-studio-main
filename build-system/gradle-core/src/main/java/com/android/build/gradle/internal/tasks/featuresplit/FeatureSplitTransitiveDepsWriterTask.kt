@@ -20,9 +20,8 @@ import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -35,14 +34,12 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.io.IOException
 import java.util.stream.Collectors
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
-open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
+open class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
 
     // list of runtime classpath.
     private lateinit var runtimeJars: ArtifactCollection
@@ -57,9 +54,7 @@ open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
     @CompileClasspath
     fun getInputJars() : FileCollection = runtimeJars.artifactFiles
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun write() {
+    override fun doTaskAction() {
 
         val content: Set<String> = runtimeJars.artifacts
                 .stream()

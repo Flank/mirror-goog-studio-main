@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -43,7 +43,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkerExecutor;
 
 /**
@@ -52,7 +51,7 @@ import org.gradle.workers.WorkerExecutor;
  * <p>This is useful when having configuration or feature splits which are located in different
  * folders since they are produced by different tasks.
  */
-public class CopyOutputs extends AndroidVariantTask {
+public class CopyOutputs extends NonIncrementalTask {
 
     private BuildableArtifact fullApks;
     private BuildableArtifact abiSplits;
@@ -89,8 +88,8 @@ public class CopyOutputs extends AndroidVariantTask {
     }
 
     // FIX ME : add incrementality
-    @TaskAction
-    protected void copy() throws IOException, ExecutionException {
+    @Override
+    protected void doTaskAction() throws IOException, ExecutionException {
         FileUtils.cleanOutputDir(getDestinationDir());
 
         List<Callable<BuildElements>> buildElementsCallables = new ArrayList<>();

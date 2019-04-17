@@ -92,7 +92,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -148,8 +148,7 @@ open class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
-    @TaskAction
-    fun taskAction() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 DexMergingTaskRunnable::class.java, DexMergingParams(

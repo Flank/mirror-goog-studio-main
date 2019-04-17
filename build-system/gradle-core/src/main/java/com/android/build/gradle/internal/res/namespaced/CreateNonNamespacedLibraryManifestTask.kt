@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFile
@@ -29,7 +29,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -41,7 +40,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : AndroidVariantTask() {
+    : NonIncrementalTask() {
 
     @get:OutputFile
     lateinit var outputStrippedManifestFile: File
@@ -54,8 +53,7 @@ open class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExec
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun createManifest() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 CreateNonNamespacedLibraryManifestRunnable::class.java,

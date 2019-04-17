@@ -28,7 +28,7 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.workers.WorkerExecutorFacade;
@@ -51,13 +51,12 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
-public class JavaPreCompileTask extends AndroidVariantTask {
+public class JavaPreCompileTask extends NonIncrementalTask {
 
     @NonNull private RegularFileProperty processorListFile;
 
@@ -109,8 +108,8 @@ public class JavaPreCompileTask extends AndroidVariantTask {
         return compileClasspaths.getArtifactFiles();
     }
 
-    @TaskAction
-    public void preCompile() {
+    @Override
+    protected void doTaskAction() {
         try (WorkerExecutorFacade workerExecutor = this.workers) {
             workerExecutor.submit(
                     PreCompileRunnable.class,

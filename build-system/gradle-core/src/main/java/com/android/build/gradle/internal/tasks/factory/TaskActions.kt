@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks.factory
 
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.TaskProvider

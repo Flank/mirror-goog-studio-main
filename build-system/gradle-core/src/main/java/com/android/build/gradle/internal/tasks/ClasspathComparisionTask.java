@@ -38,7 +38,7 @@ import org.gradle.api.tasks.PathSensitivity;
  * differences. E.g. for application, differences in runtime and compile classpath could result in
  * runtime failure.
  */
-abstract class ClasspathComparisionTask extends AndroidVariantTask {
+abstract class ClasspathComparisionTask extends NonIncrementalTask {
 
     protected ArtifactCollection runtimeClasspath;
     protected ArtifactCollection compileClasspath;
@@ -72,7 +72,8 @@ abstract class ClasspathComparisionTask extends AndroidVariantTask {
             @NonNull String runtimeVersion,
             @NonNull String compileVersion);
 
-    void compareClasspaths() {
+    @Override
+    protected void doTaskAction() {
         Set<ResolvedArtifactResult> runtimeArtifacts = runtimeClasspath.getArtifacts();
         Set<ResolvedArtifactResult> compileArtifacts = compileClasspath.getArtifacts();
 

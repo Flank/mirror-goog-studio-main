@@ -30,9 +30,7 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import java.io.File
-import java.io.IOException
 
 /**
  * Task responsible for publishing the application Id.
@@ -44,7 +42,7 @@ import java.io.IOException
  *
  * This task is currently used to publish the output as a text resource for others to consume.
  */
-open class ApplicationIdWriterTask : AndroidVariantTask() {
+open class ApplicationIdWriterTask : NonIncrementalTask() {
 
     private var applicationIdSupplier: () -> String? = { null }
 
@@ -61,9 +59,7 @@ open class ApplicationIdWriterTask : AndroidVariantTask() {
     lateinit var outputFile: File
         private set
 
-    @TaskAction
-    @Throws(IOException::class)
-    fun fullTaskAction() {
+    override fun doTaskAction() {
         val resolvedApplicationId = appMetadata?.let {
             ModuleMetadata.load(it.singleFile).applicationId
         } ?: applicationId

@@ -40,7 +40,7 @@ import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
 open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -52,8 +52,7 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
     lateinit var resources: FileCollection
         private set
 
-    @TaskAction
-    fun bundleClasses() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 BundleLibraryJavaResRunnable::class.java,

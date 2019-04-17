@@ -26,20 +26,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Extracts jar containing classes necessary for try-with-resources support that will be packages in
  * the final APK.
  */
-public class ExtractTryWithResourcesSupportJar extends AndroidVariantTask {
+public class ExtractTryWithResourcesSupportJar extends NonIncrementalTask {
 
     public static final String TASK_NAME = "extractTryWithResourcesSupportJar";
 
     private ConfigurableFileCollection outputLocation;
 
-    @TaskAction
-    public void run() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         try (InputStream in =
                 DesugarProcessBuilder.class
                         .getClassLoader()

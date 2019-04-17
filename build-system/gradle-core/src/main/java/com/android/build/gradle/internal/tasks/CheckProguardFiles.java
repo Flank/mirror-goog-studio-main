@@ -27,14 +27,13 @@ import java.util.List;
 import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.TaskAction;
 
-public class CheckProguardFiles extends AndroidVariantTask {
+public class CheckProguardFiles extends NonIncrementalTask {
 
     private List<File> proguardFiles;
 
-    @TaskAction
-    public void run() {
+    @Override
+    protected void doTaskAction() {
         // Below we assume new postprocessing DSL is used, since otherwise TaskManager does not
         // create this task.
 

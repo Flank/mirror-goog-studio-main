@@ -17,14 +17,12 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThatZip
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -55,7 +53,7 @@ class ZipMergingTaskTest {
         task.init(BuildableArtifactImpl(project.files(zip1)),
                 BuildableArtifactImpl(project.files(zip2)),
                 output)
-        task.merge()
+        task.doTaskAction()
 
         assertThat(output).exists()
 
@@ -80,7 +78,7 @@ class ZipMergingTaskTest {
         task.init(BuildableArtifactImpl(project.files(zip1)),
             BuildableArtifactImpl(project.files(zip2)),
             output)
-        task.merge()
+        task.doTaskAction()
 
         assertThat(output).exists()
 

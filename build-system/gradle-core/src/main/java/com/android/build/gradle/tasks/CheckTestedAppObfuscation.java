@@ -19,17 +19,16 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
 
 /** Task to check if Proguard needs to be enabled for test plugin. */
-public class CheckTestedAppObfuscation extends AndroidVariantTask {
+public class CheckTestedAppObfuscation extends NonIncrementalTask {
     FileCollection mappingFile;
 
     @InputFiles
@@ -45,8 +44,8 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
         return null;
     }
 
-    @TaskAction
-    void checkIfAppIsObfuscated() {
+    @Override
+    protected void doTaskAction() {
         if (!mappingFile.isEmpty()) {
             throw new RuntimeException(
                     "Mapping file found in tested application. Code shrinker must also be enabled in "

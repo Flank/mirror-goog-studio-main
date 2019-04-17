@@ -90,13 +90,12 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.internal.logging.ConsoleRenderer;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
-public class DeviceProviderInstrumentTestTask extends AndroidVariantTask
+public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
         implements AndroidTestTask {
 
     private static final Predicate<File> IS_APK =
@@ -140,10 +139,11 @@ public class DeviceProviderInstrumentTestTask extends AndroidVariantTask
         coverageDir = objectFactory.directoryProperty();
     }
 
-    @TaskAction
-    protected void runTests() throws DeviceException, IOException, InterruptedException,
-            TestRunner.NoAuthorizedDeviceFoundException, TestException,
-            ParserConfigurationException, SAXException {
+    @Override
+    protected void doTaskAction()
+            throws DeviceException, IOException, InterruptedException,
+                    TestRunner.NoAuthorizedDeviceFoundException, TestException,
+                    ParserConfigurationException, SAXException {
         checkForNonApks(
                 buddyApks.getFiles(),
                 message -> {

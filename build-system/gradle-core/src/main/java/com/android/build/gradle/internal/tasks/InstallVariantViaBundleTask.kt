@@ -51,7 +51,7 @@ import javax.inject.Inject
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -77,8 +77,7 @@ open class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: Work
         this.outputs.upToDateWhen { false }
     }
 
-    @TaskAction
-    fun install() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 InstallRunnable::class.java,

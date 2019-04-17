@@ -42,7 +42,7 @@ import javax.inject.Inject
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
-open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -66,8 +66,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun generateApk() {
+    override fun doTaskAction() {
         val config = SigningConfigMetadata.load(signingConfig)
         workers.use {
             it.submit(

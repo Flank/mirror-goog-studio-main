@@ -23,20 +23,19 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.tools.build.libraries.metadata.AppDependencies
-import com.android.tools.build.libraries.metadata.ModuleDependencies
-import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.Library
+import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.MavenLibrary
-import org.gradle.api.artifacts.component.ModuleComponentSelector
-import org.gradle.api.tasks.OutputFile
+import com.android.tools.build.libraries.metadata.ModuleDependencies
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.component.ModuleComponentSelector
 import org.gradle.api.artifacts.result.ComponentSelectionCause
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.artifacts.result.DefaultResolvedDependencyResult
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import java.io.FileOutputStream
 import java.util.Dictionary
@@ -48,8 +47,8 @@ import javax.inject.Inject
 /**
  * Task that publishes the app dependencies proto for each module.
  */
-open class PerModuleReportDependenciesTask public @Inject constructor(objectFactory: ObjectFactory) :
-    AndroidVariantTask() {
+open class PerModuleReportDependenciesTask @Inject constructor(objectFactory: ObjectFactory) :
+    NonIncrementalTask() {
 
     private lateinit var runtimeClasspath: Configuration
 
@@ -86,8 +85,7 @@ open class PerModuleReportDependenciesTask public @Inject constructor(objectFact
         return null
     }
 
-    @TaskAction
-    fun writeFile() {
+    override fun doTaskAction() {
 
         val librariesToIndexMap: Dictionary<Library, Integer> = Hashtable()
         val libraries = LinkedList<Library>()

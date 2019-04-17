@@ -20,13 +20,12 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 /**
@@ -36,7 +35,7 @@ import java.io.File
  * produced and which ones are enabled.
  */
 @CacheableTask
-open class MainApkListPersistence : AndroidVariantTask() {
+open class MainApkListPersistence : NonIncrementalTask() {
 
     @get:OutputFile
     lateinit var outputFile: File
@@ -46,8 +45,7 @@ open class MainApkListPersistence : AndroidVariantTask() {
     lateinit var apkDataListJson : String
         private set
 
-    @TaskAction
-    fun fullTaskAction() {
+    public override fun doTaskAction() {
         FileUtils.deleteIfExists(outputFile)
         FileUtils.createFile(outputFile, apkDataListJson)
     }

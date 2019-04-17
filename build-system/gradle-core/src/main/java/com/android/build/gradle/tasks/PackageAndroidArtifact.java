@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -119,14 +119,13 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.FileChange;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
 import org.gradle.workers.WorkerExecutor;
 
 /** Abstract task to package an Android artifact. */
-public abstract class PackageAndroidArtifact extends AndroidVariantTask {
+public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @InputFiles
     @Incremental
@@ -406,8 +405,8 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
     @Internal
     protected abstract InternalArtifactType getInternalArtifactType();
 
-    @TaskAction
-    public void packageApplication(@NonNull InputChanges changes) throws IOException {
+    @Override
+    public void doTaskAction(@NonNull InputChanges changes) {
         if (!changes.isIncremental()) {
             checkFileNameUniqueness();
         }
@@ -431,8 +430,8 @@ public abstract class PackageAndroidArtifact extends AndroidVariantTask {
                                         changes,
                                         this))
                 .into(getInternalArtifactType(), outputDirectory);
-
     }
+
 
     private void checkFileNameUniqueness() {
         BuildElements buildElements = ExistingBuildElements.from(taskInputType, getResourceFiles());

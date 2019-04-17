@@ -83,11 +83,6 @@ public class AppClasspathCheckTask extends ClasspathComparisionTask {
         reporter.reportError(EvalIssueReporter.Type.GENERIC, new EvalIssueException(message));
     }
 
-    @TaskAction
-    void run() {
-        compareClasspaths();
-    }
-
     public static class CreationAction extends TaskCreationAction<AppClasspathCheckTask> {
 
         @NonNull private final VariantScope variantScope;

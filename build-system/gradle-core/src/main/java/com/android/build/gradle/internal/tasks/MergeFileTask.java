@@ -28,17 +28,16 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
 
 /** Task to merge files. This appends all the files together into an output file. */
-public class MergeFileTask extends AndroidVariantTask {
+public class MergeFileTask extends NonIncrementalTask {
 
     private FileCollection mInputFiles;
 
     private Provider<RegularFile> mOutputFile;
 
-    @TaskAction
-    public void mergeFiles() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
 
         Set<File> inputFiles = getInputFiles().getFiles();
         File output = getOutputFile().get().getAsFile();

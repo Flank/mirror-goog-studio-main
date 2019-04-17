@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.BaseExtension
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -106,7 +105,7 @@ class BundleAllClassesTest {
 
     @Test
     fun testBasic() {
-        task.merge()
+        task.doTaskAction()
         FileSubject.assertThat(task.outputJar).exists()
     }
 }

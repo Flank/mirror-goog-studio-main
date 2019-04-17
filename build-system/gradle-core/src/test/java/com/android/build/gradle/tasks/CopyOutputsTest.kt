@@ -20,9 +20,6 @@ import com.android.build.FilterData
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
-import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
-import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
@@ -31,7 +28,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers
-import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.collect.ImmutableList
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -176,7 +172,7 @@ class CopyOutputsTest {
         val task = project.tasks.create("copyOutputs", CopyOutputs::class.java)
 
         creationAction.configure(task)
-        task.copy()
+        task.doTaskAction()
 
         assertThat(outputDir.listFiles()).hasLength(7)
         assertThat(outputDir.listFiles().map { it.name }.toSet()).containsExactlyElementsIn(fileSet)

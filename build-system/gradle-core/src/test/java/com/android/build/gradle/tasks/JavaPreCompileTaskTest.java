@@ -112,7 +112,7 @@ public class JavaPreCompileTaskTest {
                 new AnnotationProcessorOptions(),
                 false);
 
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames()).isEmpty();
     }
@@ -136,7 +136,7 @@ public class JavaPreCompileTaskTest {
                 new AnnotationProcessorOptions(),
                 false);
 
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames())
                 .containsExactly(
@@ -158,7 +158,7 @@ public class JavaPreCompileTaskTest {
                 new AnnotationProcessorOptions(),
                 false);
         try {
-            task.preCompile();
+            task.doTaskAction();
             fail("Expected to fail");
         } catch (RuntimeException e) {
             assertThat(e.getMessage()).contains(jarWithAnnotationProcessor.getName());
@@ -178,7 +178,7 @@ public class JavaPreCompileTaskTest {
                 options,
                 false);
 
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames()).isEmpty();
     }
@@ -195,7 +195,7 @@ public class JavaPreCompileTaskTest {
                 options,
                 false);
 
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
     }
@@ -211,7 +211,7 @@ public class JavaPreCompileTaskTest {
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
                 false);
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
     }
@@ -226,7 +226,7 @@ public class JavaPreCompileTaskTest {
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
                 false);
-        task.preCompile();
+        task.doTaskAction();
 
         assertThat(getProcessorNames()).containsExactly(testProcessorName);
     }
@@ -244,7 +244,7 @@ public class JavaPreCompileTaskTest {
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
                 false);
-        task.preCompile();
+        task.doTaskAction();
 
         // Since the processor name is explicitly specified via
         // AnnotationProcessorOptions.getClassNames(), only the annotation processor with that name
@@ -264,7 +264,7 @@ public class JavaPreCompileTaskTest {
                 compileConfiguration.getIncoming().getArtifacts(),
                 options,
                 false);
-        task.preCompile();
+        task.doTaskAction();
 
         // Since the processor names are not explicitly specified via
         // AnnotationProcessorOptions.getClassNames(), any annotation processors on the annotation

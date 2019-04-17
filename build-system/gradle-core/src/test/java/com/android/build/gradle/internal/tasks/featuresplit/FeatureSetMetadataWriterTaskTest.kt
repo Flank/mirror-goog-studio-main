@@ -96,7 +96,7 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         }
         files.addAll(inputDirs.build())
 
-        task.fullTaskAction()
+        task.doTaskAction()
         FileSubject.assertThat(task.outputFile).isFile()
 
         val loaded = FeatureSetMetadata.load(task.outputFile)

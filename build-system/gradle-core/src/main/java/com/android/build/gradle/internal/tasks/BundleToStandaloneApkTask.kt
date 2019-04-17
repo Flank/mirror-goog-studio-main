@@ -52,7 +52,7 @@ import javax.inject.Inject
 /**
  * Task that generates the standalone from a bundle.
  */
-open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -84,8 +84,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun generateApk() {
+    override fun doTaskAction() {
         val config = SigningConfigMetadata.load(signingConfig)
         workers.use {
             it.submit(

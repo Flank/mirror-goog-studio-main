@@ -54,7 +54,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     @get:Input
     abstract var errorFormat: SyncOptions.ErrorFormatMode
@@ -95,8 +95,7 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
 
     private val workers = Workers.preferWorkers(project.name, path, executor)
 
-    @TaskAction
-    fun computeMainDexList() {
+    override fun doTaskAction() {
 
         val programClasses = inputClasses.files
         val libraryFilesNotInInputs =

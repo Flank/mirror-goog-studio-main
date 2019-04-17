@@ -48,7 +48,7 @@ import javax.inject.Inject
  * </ul>
  */
 open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -74,8 +74,7 @@ open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor
 
     private lateinit var finalBundleFile: Provider<RegularFile>
 
-    @TaskAction
-    fun copyAndFinalizeBundle() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 BundleToolRunnable::class.java,

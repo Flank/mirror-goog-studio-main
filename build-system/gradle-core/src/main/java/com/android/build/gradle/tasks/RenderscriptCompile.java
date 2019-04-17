@@ -59,7 +59,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Task to compile Renderscript files. Supports incremental update. */
@@ -197,8 +196,8 @@ public class RenderscriptCompile extends NdkTask {
         this.ndkMode = ndkMode;
     }
 
-    @TaskAction
-    void taskAction() throws IOException, InterruptedException, ProcessException {
+    @Override
+    protected void doTaskAction() throws IOException, InterruptedException, ProcessException {
         // this is full run (always), clean the previous outputs
         File sourceDestDir = getSourceOutputDir();
         FileUtils.cleanOutputDir(sourceDestDir);

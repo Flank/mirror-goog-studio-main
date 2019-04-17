@@ -39,7 +39,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.services.CxxBuildSessionService;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.process.BuildCommandException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -62,7 +62,6 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
@@ -72,7 +71,7 @@ import org.gradle.api.tasks.TaskProvider;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeBuildTask extends AndroidVariantTask {
+public class ExternalNativeBuildTask extends NonIncrementalTask {
 
     private Provider<ExternalNativeJsonGenerator> generator;
 
@@ -105,8 +104,8 @@ public class ExternalNativeBuildTask extends AndroidVariantTask {
         }
     }
 
-    @TaskAction
-    void build() throws BuildCommandException, IOException {
+    @Override
+    protected void doTaskAction() throws BuildCommandException, IOException {
         try (ErrorsAreFatalThreadLoggingEnvironment ignore =
                 new ErrorsAreFatalThreadLoggingEnvironment()) {
             buildImpl();

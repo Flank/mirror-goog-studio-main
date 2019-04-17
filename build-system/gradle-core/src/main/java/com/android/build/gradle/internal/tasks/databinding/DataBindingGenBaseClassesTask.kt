@@ -99,12 +99,16 @@ open class DataBindingGenBaseClassesTask : AndroidVariantTask() {
 
     @TaskAction
     fun writeBaseClasses(inputs: IncrementalTaskInputs) {
-        // TODO figure out why worker execution makes the task flake.
-        // Some files cannot be accessed even though they show up when directory listing is
-        // invoked.
-        // b/69652332
-        val args = buildInputArgs(inputs)
-        CodeGenerator(args, sourceOutFolder, project.logger, encodeErrors).run()
+        // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual call to recordTaskAction
+
+        recordTaskAction {
+            // TODO figure out why worker execution makes the task flake.
+            // Some files cannot be accessed even though they show up when directory listing is
+            // invoked.
+            // b/69652332
+            val args = buildInputArgs(inputs)
+            CodeGenerator(args, sourceOutFolder, project.logger, encodeErrors).run()
+        }
     }
 
     private fun buildInputArgs(inputs: IncrementalTaskInputs): LayoutInfoInput.Args {

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.feature
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
@@ -24,7 +23,7 @@ import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -38,7 +37,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -51,7 +49,7 @@ import javax.inject.Inject
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
  */
-open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -85,8 +83,7 @@ open class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) 
     lateinit var modulePath: String
         private set
 
-    @TaskAction
-    fun merge() {
+    public override fun doTaskAction() {
         val files = HashMap<String, File>()
         val collector = object: ReproducibleFileVisitor {
             override fun isReproducibleFileOrder() = true

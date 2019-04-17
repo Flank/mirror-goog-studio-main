@@ -53,7 +53,7 @@ import javax.inject.Inject
 @CacheableTask
 open class LibraryDexingTask @Inject constructor(
     objectFactory: ObjectFactory,
-    executor: WorkerExecutor) : AndroidVariantTask() {
+    executor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade =
         preferWorkers(project.name, path, executor, MoreExecutors.newDirectExecutorService())
@@ -75,8 +75,7 @@ open class LibraryDexingTask @Inject constructor(
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
 
-    @TaskAction
-    fun doAction() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 DexingRunnable::class.java,

@@ -20,7 +20,7 @@ import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
@@ -30,7 +30,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -44,7 +43,7 @@ import javax.inject.Inject
 @CacheableTask
 open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
     workerExecutor: WorkerExecutor
-) : AndroidVariantTask() {
+) : NonIncrementalTask() {
     /**
      * Classes available at Runtime. We extract BR files from there so that even if there is no
      * compile time dependency on a particular artifact, we can still generate the BR file for it.
@@ -70,8 +69,7 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    @TaskAction
-    fun fullTaskAction() {
+    override fun doTaskAction() {
         workers.use {
             it.submit(
                 MergeArtifactsRunnable::class.java,

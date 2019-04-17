@@ -35,10 +35,9 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskAction;
 
 /** Task sending APKs out to a {@link TestServer} */
-public class TestServerTask extends AndroidVariantTask {
+public class TestServerTask extends NonIncrementalTask {
 
     private BuildableArtifact testApks;
 
@@ -46,8 +45,8 @@ public class TestServerTask extends AndroidVariantTask {
 
     TestServer testServer;
 
-    @TaskAction
-    public void sendToServer() {
+    @Override
+    protected void doTaskAction() {
 
         List<File> testedApkFiles =
                 testedApks != null

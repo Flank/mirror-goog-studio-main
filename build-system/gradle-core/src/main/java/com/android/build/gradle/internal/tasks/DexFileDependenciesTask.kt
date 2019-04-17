@@ -48,7 +48,7 @@ import javax.inject.Inject
 
 open class DexFileDependenciesTask
 @Inject constructor(objectFactory: ObjectFactory, private val workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+    NonIncrementalTask() {
 
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
@@ -72,8 +72,7 @@ open class DexFileDependenciesTask
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     // TODO: make incremental
-    @TaskAction
-    fun desugarExternalFiles() {
+    override fun doTaskAction() {
        Workers.preferWorkers(project.name, path, workerExecutor).use { workerExecutorFacade->
            val inputs = classes.files.toList()
            val totalClasspath = inputs + classpath.files

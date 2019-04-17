@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
 import com.android.build.gradle.internal.tasks.Workers;
@@ -55,13 +55,12 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.WorkerExecutor;
 
 /** Package a abi dimension specific split APK */
-public class PackageSplitAbi extends AndroidVariantTask {
+public class PackageSplitAbi extends NonIncrementalTask {
 
     private BuildableArtifact processedAbiResources;
 
@@ -142,8 +141,8 @@ public class PackageSplitAbi extends AndroidVariantTask {
         return createdBy;
     }
 
-    @TaskAction
-    protected void doFullTaskAction() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         FileUtils.cleanOutputDir(incrementalDir);
 
         ExistingBuildElements.from(

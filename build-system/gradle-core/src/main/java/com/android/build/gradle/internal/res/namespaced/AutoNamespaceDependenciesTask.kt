@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.utils.toImmutableMap
@@ -58,7 +58,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -75,7 +74,7 @@ import java.util.concurrent.ForkJoinTask
  *    them in to a static library.
  */
 @CacheableTask
-open class AutoNamespaceDependenciesTask : AndroidVariantTask() {
+open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
     private lateinit var rFiles: ArtifactCollection
     private lateinit var nonNamespacedManifests: ArtifactCollection
@@ -149,8 +148,7 @@ open class AutoNamespaceDependenciesTask : AndroidVariantTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    @TaskAction
-    fun taskAction() = autoNamespaceDependencies()
+    override fun doTaskAction() = autoNamespaceDependencies()
 
     private fun autoNamespaceDependencies(
         forkJoinPool: ForkJoinPool = sharedForkJoinPool,

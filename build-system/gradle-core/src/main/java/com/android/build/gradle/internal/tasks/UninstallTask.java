@@ -33,10 +33,9 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
-public class UninstallTask extends AndroidVariantTask {
+public class UninstallTask extends NonIncrementalTask {
 
     private BaseVariantData variant;
 
@@ -51,8 +50,8 @@ public class UninstallTask extends AndroidVariantTask {
         });
     }
 
-    @TaskAction
-    public void uninstall() throws DeviceException {
+    @Override
+    protected void doTaskAction() throws DeviceException {
         final Logger logger = getLogger();
         final String applicationId = variant.getApplicationId();
 

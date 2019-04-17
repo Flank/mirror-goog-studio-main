@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.DirectoryWalker;
@@ -52,12 +52,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile Shaders */
 @CacheableTask
-public class ShaderCompile extends AndroidVariantTask {
+public class ShaderCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()
             .include("**/*." + ShaderProcessor.EXT_VERT)
@@ -116,8 +115,8 @@ public class ShaderCompile extends AndroidVariantTask {
         return src == null ? getProject().files().getAsFileTree() : src;
     }
 
-    @TaskAction
-    protected void compileShaders() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
         // this is full run, clean the previous output
         File destinationDir = getOutputDir();
         FileUtils.cleanOutputDir(destinationDir);

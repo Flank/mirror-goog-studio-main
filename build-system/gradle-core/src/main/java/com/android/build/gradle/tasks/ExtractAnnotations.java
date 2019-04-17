@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.utils.AndroidXDependency;
 import com.android.builder.packaging.TypedefRemover;
@@ -68,7 +68,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
@@ -86,7 +85,7 @@ import org.gradle.api.tasks.TaskProvider;
  * where ProGuarding is enabled.
  */
 @CacheableTask
-public class ExtractAnnotations extends AndroidVariantTask {
+public class ExtractAnnotations extends NonIncrementalTask {
 
     @NonNull
     private static final AndroidXDependency ANDROIDX_ANNOTATIONS =
@@ -201,8 +200,8 @@ public class ExtractAnnotations extends AndroidVariantTask {
         this.classDir = classDir;
     }
 
-    @TaskAction
-    protected void compile() {
+    @Override
+    protected void doTaskAction() {
         SourceFileVisitor fileVisitor = new SourceFileVisitor();
         getSource().visit(fileVisitor);
         List<File> sourceFiles = fileVisitor.sourceUnits;

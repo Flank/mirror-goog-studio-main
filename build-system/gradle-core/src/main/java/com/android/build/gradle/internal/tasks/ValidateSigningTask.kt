@@ -47,7 +47,7 @@ import java.util.concurrent.ExecutionException
  * not present.
  */
 @CacheableTask
-open class ValidateSigningTask : AndroidVariantTask() {
+open class ValidateSigningTask : NonIncrementalTask() {
 
     /**
      * Output directory to allow this task to be up-to-date, despite the the signing config file
@@ -60,9 +60,7 @@ open class ValidateSigningTask : AndroidVariantTask() {
     private lateinit var signingConfig: SigningConfig
     private lateinit var defaultDebugKeystoreLocation: File
 
-    @TaskAction
-    @Throws(ExecutionException::class, IOException::class)
-    fun validate() = when {
+    override fun doTaskAction() = when {
         signingConfig.storeFile == null -> throw InvalidUserDataException(
                 """Keystore file not set for signing config ${signingConfig.name}""")
         isSigningConfigUsingTheDefaultDebugKeystore() ->

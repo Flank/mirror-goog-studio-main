@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.utils.ILogger;
@@ -30,13 +30,12 @@ import org.apache.tools.ant.BuildException;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
  * or overlay manifests
  */
-public class InvokeManifestMerger extends AndroidVariantTask implements Supplier<File> {
+public class InvokeManifestMerger extends NonIncrementalTask implements Supplier<File> {
 
     private File mMainManifestFile;
 
@@ -71,8 +70,8 @@ public class InvokeManifestMerger extends AndroidVariantTask implements Supplier
         this.mOutputFile = outputFile;
     }
 
-    @TaskAction
-    protected void doFullTaskAction() throws ManifestMerger2.MergeFailureException, IOException {
+    @Override
+    protected void doTaskAction() throws ManifestMerger2.MergeFailureException, IOException {
         ILogger iLogger = new LoggerWrapper(getLogger());
         ManifestMerger2.Invoker mergerInvoker = ManifestMerger2.
                 newMerger(getMainManifestFile(), iLogger, ManifestMerger2.MergeType.APPLICATION);

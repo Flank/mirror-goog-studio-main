@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.google.common.truth.Truth.assertThat
-import com.google.gson.GsonBuilder
 
 import com.android.build.gradle.internal.dsl.SigningConfig
 import java.io.File
@@ -33,7 +32,6 @@ import org.gradle.api.provider.Provider
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import java.io.FileReader
 
 /** Tests for the [SigningConfigWriterTask]  */
 class SigningConfigWriterTaskTest {
@@ -70,7 +68,7 @@ class SigningConfigWriterTaskTest {
         signingConfig.isV1SigningEnabled = true
         task.signingConfig = signingConfig
 
-        task.fullTaskAction()
+        task.doTaskAction()
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 

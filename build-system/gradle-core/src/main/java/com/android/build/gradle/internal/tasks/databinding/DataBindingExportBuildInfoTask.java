@@ -20,7 +20,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
@@ -28,7 +28,6 @@ import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
@@ -39,7 +38,7 @@ import org.gradle.api.tasks.TaskProvider;
  * that contained the build environment information needed for data binding, but it is now no longer
  * the case. We'll rename it later.
  */
-public class DataBindingExportBuildInfoTask extends AndroidVariantTask {
+public class DataBindingExportBuildInfoTask extends NonIncrementalTask {
 
     @Internal private Supplier<LayoutXmlProcessor> xmlProcessor;
 
@@ -57,8 +56,8 @@ public class DataBindingExportBuildInfoTask extends AndroidVariantTask {
         return emptyClassOutDir;
     }
 
-    @TaskAction
-    public void run() {
+    @Override
+    protected void doTaskAction() {
         xmlProcessor.get().writeEmptyInfoClass(useAndroidX);
         Scope.assertNoError();
     }

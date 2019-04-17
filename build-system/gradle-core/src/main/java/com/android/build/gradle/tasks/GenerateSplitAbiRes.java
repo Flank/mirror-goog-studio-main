@@ -38,8 +38,8 @@ import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
@@ -73,11 +73,10 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
-public class GenerateSplitAbiRes extends AndroidVariantTask {
+public class GenerateSplitAbiRes extends NonIncrementalTask {
 
     @NonNull private final WorkerExecutorFacade workers;
 
@@ -174,8 +173,8 @@ public class GenerateSplitAbiRes extends AndroidVariantTask {
         return aapt2FromMaven;
     }
 
-    @TaskAction
-    protected void doFullTaskAction() throws IOException {
+    @Override
+    protected void doTaskAction() throws IOException {
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
 

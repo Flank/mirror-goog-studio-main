@@ -17,7 +17,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.AndroidVariantTask;
+import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.compiling.ResValueGenerator;
@@ -33,11 +33,10 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 @CacheableTask
-public class GenerateResValues extends AndroidVariantTask {
+public class GenerateResValues extends NonIncrementalTask {
 
     // ----- PUBLIC TASK API -----
 
@@ -84,8 +83,8 @@ public class GenerateResValues extends AndroidVariantTask {
         return list;
     }
 
-    @TaskAction
-    void generate() throws IOException, ParserConfigurationException {
+    @Override
+    protected void doTaskAction() throws IOException, ParserConfigurationException {
         File folder = getResOutputDir();
         List<Object> resolvedItems = getItems();
 

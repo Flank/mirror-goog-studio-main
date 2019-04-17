@@ -24,10 +24,10 @@ import org.gradle.work.InputChanges
  */
 abstract class NewIncrementalTask: AndroidVariantTask() {
 
-    abstract fun doWork(inputChanges: InputChanges)
+    abstract fun doTaskAction(inputChanges: InputChanges)
 
     @TaskAction
     fun taskAction(inputChanges: InputChanges) {
-        recordTaskAction { doWork(inputChanges) }
+        recordTaskAction { doTaskAction(inputChanges) }
     }
 }

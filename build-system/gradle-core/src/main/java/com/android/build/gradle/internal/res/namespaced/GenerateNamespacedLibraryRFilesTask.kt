@@ -16,23 +16,19 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.symbols.exportToCompiledJava
 import com.android.ide.common.symbols.SymbolTable
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -41,7 +37,6 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.function.Supplier
@@ -51,7 +46,7 @@ import javax.inject.Inject
  * Class generating the R.jar and res-ids.txt files for a resource namespace aware library.
  */
 @CacheableTask
-open class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) : AndroidVariantTask() {
+open class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: ObjectFactory) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -68,8 +63,7 @@ open class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: Obje
     @get:OutputFile
     val rJarFile: RegularFileProperty= objects.fileProperty()
 
-    @TaskAction
-    fun taskAction() {
+    override fun doTaskAction() {
         // Keeping the order is important.
         val partialRFiles = ImmutableList.builder<File>()
         this.partialRFiles.get().forEach { directory ->

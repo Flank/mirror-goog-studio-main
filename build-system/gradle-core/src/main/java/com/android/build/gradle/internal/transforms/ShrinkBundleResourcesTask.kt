@@ -19,13 +19,13 @@ package com.android.build.gradle.internal.transforms
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.StreamFilter
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
-import com.android.build.gradle.internal.scope.ApkData
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -34,8 +34,6 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.TaskProvider
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -44,7 +42,7 @@ import javax.xml.parsers.ParserConfigurationException
 /**
  * Task to shrink resources for the android app bundle
  */
-open class ShrinkBundleResourcesTask : AndroidVariantTask() {
+open class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile
     lateinit var compressedResourceFile: File
@@ -78,8 +76,7 @@ open class ShrinkBundleResourcesTask : AndroidVariantTask() {
 
     private lateinit var mainSplit: ApkData
 
-    @TaskAction
-    fun shrink() {
+    override fun doTaskAction() {
         val uncompressedResourceFile = uncompressedResources.singleFile()
 
         val classes = dex.files

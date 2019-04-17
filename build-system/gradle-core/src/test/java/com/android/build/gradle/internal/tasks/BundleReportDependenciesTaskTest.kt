@@ -193,7 +193,7 @@ class BundleReportDependenciesTaskTest {
         task.baseDeps = provider
         task.featureDeps = featureDeps
 
-        task.writeFile()
+        task.doTaskAction()
         val allDeps = AppDependencies.parseDelimitedFrom(FileInputStream(task.dependenciesList))
         assertThat(allDeps).isEqualTo(expected)
     }

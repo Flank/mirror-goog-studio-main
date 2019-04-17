@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidVariantTask
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -53,7 +53,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -65,7 +64,7 @@ import javax.inject.Inject
  */
 @CacheableTask
 open class LinkAndroidResForBundleTask
-@Inject constructor(workerExecutor: WorkerExecutor) : AndroidVariantTask() {
+@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -123,8 +122,7 @@ open class LinkAndroidResForBundleTask
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    @TaskAction
-    fun taskAction() {
+    override fun doTaskAction() {
 
         val manifestFile = ExistingBuildElements.from(InternalArtifactType.BUNDLE_MANIFEST, manifestFiles)
                 .element(mainSplit)

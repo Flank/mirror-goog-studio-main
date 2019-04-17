@@ -54,11 +54,10 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Task to generate micro app data res file. */
-public class GenerateApkDataTask extends AndroidVariantTask {
+public class GenerateApkDataTask extends NonIncrementalTask {
 
     @Nullable private FileCollection apkDirectoryFileCollection;
 
@@ -74,8 +73,8 @@ public class GenerateApkDataTask extends AndroidVariantTask {
 
     private FileCollection aapt2Executable;
 
-    @TaskAction
-    void generate() throws IOException, ProcessException {
+    @Override
+    protected void doTaskAction() throws IOException, ProcessException {
         // if the FileCollection contains no file, then there's nothing to do just abort.
         File apkDirectory = null;
         if (apkDirectoryFileCollection != null) {

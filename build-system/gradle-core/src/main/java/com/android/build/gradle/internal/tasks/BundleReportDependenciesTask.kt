@@ -42,8 +42,7 @@ import java.util.LinkedList
 /**
  * Task that generates the final bundle dependencies, combining all the module dependencies.
  */
-open class BundleReportDependenciesTask :
-    AndroidVariantTask() {
+open class BundleReportDependenciesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -59,8 +58,7 @@ open class BundleReportDependenciesTask :
     lateinit var dependenciesList: File
         internal set
 
-    @TaskAction
-    fun writeFile() {
+    public override fun doTaskAction() {
 
         val baseAppDeps =  BufferedInputStream(FileInputStream(baseDeps.get().asFile)).use {
             AppDependencies.parseDelimitedFrom(it)
