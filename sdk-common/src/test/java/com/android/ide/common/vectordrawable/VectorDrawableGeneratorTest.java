@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.util.GeneratorTester;
@@ -27,7 +29,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
@@ -94,7 +95,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
             }
             if (dumpXml) {
                 File tempXmlFile = new File(parentDirFile, imageName + ".xml");
-                try (PrintWriter writer = new PrintWriter(tempXmlFile)) {
+                try (PrintWriter writer = new PrintWriter(tempXmlFile, UTF_8.name())) {
                     writer.println(xmlContent);
                 }
             }
@@ -102,7 +103,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 fail("Invalid VectorDrawable produced");
             }
         } else {
-            xmlContent = Files.asCharSource(incomingFile, StandardCharsets.UTF_8).read();
+            xmlContent = Files.asCharSource(incomingFile, UTF_8).read();
         }
 
         VdPreview.TargetSize imageTargetSize =
@@ -574,6 +575,15 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgClipPathOrdering() throws Exception {
         checkSvgConversion("test_clip_path_ordering");
+    }
+
+    public void testSvgMask() throws Exception {
+        checkSvgConversion("test_mask");
+    }
+
+    public void testSvgMaskUnsupported() throws Exception {
+        checkVectorConversion("test_mask_unsupported", FileType.SVG, false,
+                              "Semitransparent mask cannot be represented by a vector drawable");
     }
 
     // Style tests start here

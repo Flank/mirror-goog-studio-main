@@ -239,6 +239,11 @@ abstract class SvgNode {
     public abstract void flatten(@NonNull AffineTransform transform);
 
     /**
+     * Checks validity of the node and logs any issues associated with it. Subclasses may override.
+     */
+    public void validate() {}
+
+    /**
      * Returns a string containing the value of the given attribute. Returns an empty string if
      * the attribute does not exist.
      */

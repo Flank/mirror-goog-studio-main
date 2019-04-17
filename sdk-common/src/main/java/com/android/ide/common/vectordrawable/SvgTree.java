@@ -157,6 +157,11 @@ class SvgTree {
         mRoot.flatten(new AffineTransform());
     }
 
+    /** Validates all nodes and logs any encountered issues. */
+    public void validate() {
+        mRoot.validate();
+    }
+
     public Document parse(@NonNull File f) throws Exception {
         mFileName = f.getName();
         return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
@@ -174,9 +179,9 @@ class SvgTree {
         mRoot.transformIfNeeded(rootTransform);
     }
 
-    public void dump(@NonNull SvgGroupNode root) {
-        logger.log(Level.FINE, "current file is :" + mFileName);
-        root.dumpNode("");
+    public void dump() {
+        logger.log(Level.FINE, "file: " + mFileName);
+        mRoot.dumpNode("");
     }
 
     public void setRoot(SvgGroupNode root) {

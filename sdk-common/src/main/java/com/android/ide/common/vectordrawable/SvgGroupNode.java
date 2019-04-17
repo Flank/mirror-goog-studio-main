@@ -79,7 +79,7 @@ class SvgGroupNode extends SvgNode {
     @Override
     public void dumpNode(@NonNull String indent) {
         // Print the current group.
-        logger.log(Level.FINE, indent + "current group is :" + getName());
+        logger.log(Level.FINE, indent + "group: " + getName());
 
         // Then print all the children.
         for (SvgNode node : mChildren) {
@@ -97,7 +97,8 @@ class SvgGroupNode extends SvgNode {
         for (SvgNode n : mChildren) {
             if (n == node) {
                 return this;
-            } else if (n.isGroupNode()) {
+            }
+            if (n.isGroupNode()) {
                 SvgGroupNode parent = ((SvgGroupNode) n).findParent(node);
                 if (parent != null) {
                     return parent;
@@ -121,10 +122,17 @@ class SvgGroupNode extends SvgNode {
 
     @Override
     public void flatten(@NonNull AffineTransform transform) {
-        for (SvgNode n : mChildren) {
+        for (SvgNode node : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
-            n.flatten(mStackedTransform);
+            node.flatten(mStackedTransform);
+        }
+    }
+
+    @Override
+    public void validate() {
+        for (SvgNode node : mChildren) {
+            node.validate();
         }
     }
 

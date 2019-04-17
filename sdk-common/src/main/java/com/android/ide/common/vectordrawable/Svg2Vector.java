@@ -87,6 +87,7 @@ public class Svg2Vector {
     public static final String SVG_OPACITY = "opacity";
     public static final String SVG_CLIP = "clip";
     public static final String SVG_CLIP_PATH = "clip-path";
+    public static final String SVG_MASK = "mask";
     public static final String SVG_POINTS = "points";
 
     public static final ImmutableMap<String, String> presentationMap =
@@ -131,7 +132,6 @@ public class Svg2Vector {
             "a",
             "glyph",
             "marker",
-            "mask",
             "missing-glyph",
             "pattern",
             "switch",
@@ -259,7 +259,8 @@ public class Svg2Vector {
         }
 
         svgTree.flatten();
-        svgTree.dump(root);
+        svgTree.validate();
+        svgTree.dump();
 
         return svgTree;
     }
@@ -335,64 +336,90 @@ public class Svg2Vector {
             Element childElement = (Element) childNode;
             String tagName = childElement.getTagName();
 
-            if (SVG_PATH.equals(tagName)
-                    || SVG_RECT.equals(tagName)
-                    || SVG_CIRCLE.equals(tagName)
-                    || SVG_ELLIPSE.equals(tagName)
-                    || SVG_POLYGON.equals(tagName)
-                    || SVG_POLYLINE.equals(tagName)
-                    || SVG_LINE.equals(tagName)) {
-                SvgLeafNode child = new SvgLeafNode(svgTree, childElement, tagName + i);
-                processIdName(svgTree, child);
-                currentGroup.addChild(child);
-                extractAllItemsAs(svgTree, child, childElement, currentGroup);
-                svgTree.setHasLeafNode(true);
-            } else if (SVG_GROUP.equals(tagName)) {
-                SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
-                currentGroup.addChild(childGroup);
-                processIdName(svgTree, childGroup);
-                extractGroupNode(svgTree, childGroup, currentGroup);
-                traverseSvgAndExtract(svgTree, childGroup, childElement);
-            } else if (SVG_USE.equals(tagName)) {
-                SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
-                processIdName(svgTree, childGroup);
-                currentGroup.addChild(childGroup);
-                svgTree.addToPendingUseSet(childGroup);
-            } else if (SVG_DEFS.equals(tagName)) {
-                SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
-                traverseSvgAndExtract(svgTree, childGroup, childElement);
-            } else if ("clipPath".equals(tagName)) {
-                SvgClipPathNode clipPath = new SvgClipPathNode(svgTree, childElement, tagName + i);
-                processIdName(svgTree, clipPath);
-                traverseSvgAndExtract(svgTree, clipPath, childElement);
-            } else if (SVG_STYLE.equals(tagName)) {
-                extractStyleNode(svgTree, childElement);
-            } else if ("linearGradient".equals(tagName)) {
-                SvgGradientNode gradientNode =
-                        new SvgGradientNode(svgTree, childElement, tagName + i);
-                processIdName(svgTree, gradientNode);
-                extractGradientNode(gradientNode);
-                gradientNode.fillPresentationAttributes("gradientType", "linear");
-                svgTree.setHasGradient(true);
-            } else if ("radialGradient".equals(tagName)) {
-                SvgGradientNode gradientNode =
-                        new SvgGradientNode(svgTree, childElement, tagName + i);
-                processIdName(svgTree, gradientNode);
-                extractGradientNode(gradientNode);
-                gradientNode.fillPresentationAttributes("gradientType", "radial");
-                svgTree.setHasGradient(true);
-            } else {
-                // For other fancy tags, like <switch>, they can contain children too.
-                // Report the unsupported nodes.
-                if (unsupportedSvgNodes.contains(tagName)) {
-                    svgTree.logError("<" + tagName + "> is not supported", childElement);
+            switch (tagName) {
+                case SVG_PATH:
+                case SVG_RECT:
+                case SVG_CIRCLE:
+                case SVG_ELLIPSE:
+                case SVG_POLYGON:
+                case SVG_POLYLINE:
+                case SVG_LINE: {
+                    SvgLeafNode child = new SvgLeafNode(svgTree, childElement, tagName + i);
+                    processIdName(svgTree, child);
+                    currentGroup.addChild(child);
+                    extractAllItemsAs(svgTree, child, childElement, currentGroup);
+                    svgTree.setHasLeafNode(true);
+                    break;
                 }
-                // This is a workaround for the cases using defs to define a full icon size clip
-                // path, which is redundant information anyway.
-                traverseSvgAndExtract(svgTree, currentGroup, childElement);
+
+                case SVG_GROUP: {
+                    SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
+                    currentGroup.addChild(childGroup);
+                    processIdName(svgTree, childGroup);
+                    extractGroupNode(svgTree, childGroup, currentGroup);
+                    traverseSvgAndExtract(svgTree, childGroup, childElement);
+                    break;
+                }
+
+                case SVG_USE: {
+                    SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
+                    processIdName(svgTree, childGroup);
+                    currentGroup.addChild(childGroup);
+                    svgTree.addToPendingUseSet(childGroup);
+                    break;
+                }
+
+                case SVG_DEFS: {
+                    SvgGroupNode childGroup = new SvgGroupNode(svgTree, childElement, "child" + i);
+                    traverseSvgAndExtract(svgTree, childGroup, childElement);
+                    break;
+                }
+
+                case "clipPath":
+                case SVG_MASK: {
+                    SvgClipPathNode clipPath =
+                            new SvgClipPathNode(svgTree, childElement, tagName + i);
+                    processIdName(svgTree, clipPath);
+                    traverseSvgAndExtract(svgTree, clipPath, childElement);
+                    break;
+                }
+
+                case SVG_STYLE:
+                    extractStyleNode(svgTree, childElement);
+                    break;
+
+                case "linearGradient": {
+                    SvgGradientNode gradientNode =
+                            new SvgGradientNode(svgTree, childElement, tagName + i);
+                    processIdName(svgTree, gradientNode);
+                    extractGradientNode(gradientNode);
+                    gradientNode.fillPresentationAttributes("gradientType", "linear");
+                    svgTree.setHasGradient(true);
+                    break;
+                }
+
+                case "radialGradient": {
+                    SvgGradientNode gradientNode =
+                            new SvgGradientNode(svgTree, childElement, tagName + i);
+                    processIdName(svgTree, gradientNode);
+                    extractGradientNode(gradientNode);
+                    gradientNode.fillPresentationAttributes("gradientType", "radial");
+                    svgTree.setHasGradient(true);
+                    break;
+                }
+
+                default:
+                    // For other fancy tags, like <switch>, they can contain children too.
+                    // Report the unsupported nodes.
+                    if (unsupportedSvgNodes.contains(tagName)) {
+                        svgTree.logError("<" + tagName + "> is not supported", childElement);
+                    }
+                    // This is a workaround for the cases using defs to define a full icon size clip
+                    // path, which is redundant information anyway.
+                    traverseSvgAndExtract(svgTree, currentGroup, childElement);
+                    break;
             }
         }
-
     }
 
     /**
@@ -512,7 +539,7 @@ public class Svg2Vector {
             Node n = a.item(j);
             String name = n.getNodeName();
             String value = n.getNodeValue();
-            if (name.equals("clip-path")) {
+            if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                 if (!value.isEmpty()) {
                     svgTree.addClipPathAffectedNode(childGroup, currentGroup, value);
                 }
@@ -824,7 +851,7 @@ public class Svg2Vector {
                         addStyleToPath(child, value);
                     } else if (presentationMap.containsKey(name)) {
                         child.fillPresentationAttributes(name, value);
-                    } else if (name.equals(SVG_CLIP_PATH)) {
+                    } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                         svgTree.addClipPathAffectedNode(child, currentGroup, value);
                     } else if (name.equals(SVG_POINTS)) {
                         PathBuilder builder = new PathBuilder();
@@ -885,7 +912,7 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path")) {
+                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                     svg.addClipPathAffectedNode(child, currentGroup, value);
                 } else if (name.equals("x")) {
                     x = Float.parseFloat(value);
@@ -973,7 +1000,7 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path")) {
+                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                     svg.addClipPathAffectedNode(child, currentGroup, value);
                 } else if (name.equals("cx")) {
                     cx = Float.parseFloat(value);
@@ -1028,7 +1055,7 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path")) {
+                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                     svg.addClipPathAffectedNode(child, currentGroup, value);
                 } else if (name.equals("cx")) {
                     cx = Float.parseFloat(value);
@@ -1084,7 +1111,7 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path")) {
+                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                     svg.addClipPathAffectedNode(child, currentGroup, value);
                 } else if (name.equals("x1")) {
                     x1 = Float.parseFloat(value);
@@ -1133,7 +1160,7 @@ public class Svg2Vector {
                     addStyleToPath(child, value);
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if ("clip-path".equals(name)) {
+                } else if (name.equals(SVG_CLIP_PATH) || name.equals(SVG_MASK)) {
                     svg.addClipPathAffectedNode(child, currentGroup, value);
                 } else if (name.equals(SVG_D)) {
                     String pathData = Pattern.compile("(\\d)-").matcher(value).replaceAll("$1,-");
@@ -1165,9 +1192,9 @@ public class Svg2Vector {
                         path.fillPresentationAttributes(SVG_FILL_OPACITY, nameValue[1]);
                     }
 
-                    // We need to handle the clip path within the style in a different way than
-                    // other styles. We treat it as an attribute as clip-path = "#url(name)".
-                    if (attr.equals("clip-path")) {
+                    // We need to handle a clip-path or a mask within the style in a different way
+                    // than other styles. We treat it as an attribute clip-path = "#url(name)".
+                    if (attr.equals(SVG_CLIP_PATH) || attr.equals(SVG_MASK)) {
                         SvgGroupNode parentNode = path.getTree().findParent(path);
                         if (parentNode != null) {
                             path.getTree().addClipPathAffectedNode(path, parentNode, val);
