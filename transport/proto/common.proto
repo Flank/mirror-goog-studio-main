@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Common";
 
 import "cpu_data.proto";
+import "energy_data.proto";
 import "interaction_data.proto";
 import "layout_inspector.proto";
 import "network_data.proto";
@@ -63,6 +64,8 @@ message Event {
     MEMORY_USAGE = 401;
 
     // Energy Profiler Prefix = 500
+    // no specified group id.
+    ENERGY_USAGE = 501;
 
     // Event Profiler Prefix = 600
     INTERACTION = 601;
@@ -149,6 +152,8 @@ message Event {
     MemoryUsageData memory_usage = 401;
 
     // Energy Profiler Prefix = 500
+    EnergyUsageData energy_usage = 501;
+
     // Event Profiler Prefix = 600
     InteractionData interaction = 601;
     ViewData view = 602;

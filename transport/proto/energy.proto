@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "EnergyProfiler";
 
 import "common.proto";
+import "energy_data.proto";
 
 service EnergyService {
   // Starts collecting execution metrics of a running app, such as energy
@@ -74,20 +75,16 @@ message EnergyEventGroupRequest {
   int32 event_id = 2;
 }
 
-message EnergySample {
-  // Time when the energy sample usages occurred.
-  int64 timestamp = 1;
-  // Sample usage data by cpu in mA.
-  int32 cpu_usage = 2;
-  // Sample usage data by network in mA.
-  int32 network_usage = 3;
-  // Sample usage data by location in mA.
-  int32 location_usage = 4;
-}
-
 message EnergySamplesResponse {
   // List of Energy usage sample data.
   repeated EnergySample samples = 1;
+}
+
+message EnergySample {
+  // Time when the energy sample usages occurred.
+  int64 timestamp = 1;
+  // Detailed energy usage data, e.g. CPU, network.
+  EnergyUsageData energy_usage = 2;
 }
 
 message EnergyEventsResponse {
@@ -318,7 +315,7 @@ message JobInfo {
 
   enum NetworkType {
     UNDEFINED_NETWORK_TYPE = 0;
-    NETWORK_TYPE_NONE =1;
+    NETWORK_TYPE_NONE = 1;
     NETWORK_TYPE_ANY = 2;
     NETWORK_TYPE_UNMETERED = 3;
     NETWORK_TYPE_NOT_ROAMING = 4;
@@ -439,9 +436,9 @@ message LocationListener {
 }
 
 message LocationRequest {
-  // Priority of the location request. This is an abstraction of the accuracy and
-  // power useage defined by two location APIs (criteria in LocationManager and
-  // priority in FusedLocationProviderClient).
+  // Priority of the location request. This is an abstraction of the accuracy
+  // and power useage defined by two location APIs (criteria in LocationManager
+  // and priority in FusedLocationProviderClient).
   enum Priority {
     UNDEFINED_PRIORITY = 0;
     // Requests the best accuracy possible with zero additional power
