@@ -16,42 +16,65 @@
 
 package com.android.utils
 
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class StringHelperTest {
 
     @Test
     fun testBasicCapitalize() {
-        Truth.assertThat("foo".capitalize()).isEqualTo("Foo")
+        assertThat("foo".usLocaleCapitalize()).isEqualTo("Foo")
     }
 
     @Test
     fun testNonLetterCapitalize() {
-        Truth.assertThat("1-Foo".capitalize()).isEqualTo("1-Foo")
+        assertThat("1-Foo".usLocaleCapitalize()).isEqualTo("1-Foo")
     }
 
     @Test
     fun testUnicodeCapitalize() {
-        Truth.assertThat("ê-foo".capitalize()).isEqualTo("Ê-foo")
+        assertThat("ê-foo".usLocaleCapitalize()).isEqualTo("Ê-foo")
     }
 
     @Test
     fun testSurrogateValuesCapitalize() {
         // this double characters is apparently not capitalizable.
         // FIXME find a better example...
-        Truth.assertThat("\uD801\uDC00-foo".capitalize()).isEqualTo("\uD801\uDC00-foo")
+        assertThat("\uD801\uDC00-foo".usLocaleCapitalize()).isEqualTo("\uD801\uDC00-foo")
     }
 
     @Test
     fun testAppendCapitalized() {
-        Truth.assertThat("assemble".appendCapitalized("foo"))
+        assertThat("assemble".appendCapitalized("foo"))
             .isEqualTo("assembleFoo")
     }
 
     @Test
     fun testAppendCapitalizedVarArgs() {
-        Truth.assertThat("assemble".appendCapitalized("foo", "bar", "foo"))
+        assertThat("assemble".appendCapitalized("foo", "bar", "foo"))
             .isEqualTo("assembleFooBarFoo")
+    }
+
+    @Test
+    fun testDecapitalizeEmpty() {
+        assertThat("".usLocaleDecapitalize()).isEqualTo("")
+    }
+
+
+    @Test
+    fun testDecapitalizeNonLetter() {
+        assertThat("1-Foo".usLocaleDecapitalize()).isEqualTo("1-Foo")
+    }
+
+
+    @Test
+    fun testDecapitalizeUnicode() {
+        assertThat("Ê-foo".usLocaleDecapitalize()).isEqualTo("ê-foo")
+    }
+
+
+    @Test
+    fun testSurrogateValuesDecapitalize() {
+        assertThat("\uD801\uDC00-foo".usLocaleDecapitalize()).isEqualTo("\uD801\uDC00-foo")
     }
 }
