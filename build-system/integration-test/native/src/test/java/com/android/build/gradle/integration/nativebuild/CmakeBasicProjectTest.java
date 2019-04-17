@@ -31,17 +31,12 @@ import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.testutils.apk.Apk;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -214,26 +209,6 @@ public class CmakeBasicProjectTest {
         // All build outputs should no longer exist, even the non-x86 outputs
         for (File output : allBuildOutputs) {
             assertThat(output).doesNotExist();
-        }
-    }
-
-    @Test
-    public void generateAttributionFile() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
-        File[] files = FileUtils.join(project.getTestDir(), ".cxx", "attribution").listFiles();
-        assertThat(files.length).isEqualTo(1);
-        File attributionFile = files[0];
-        assertThat(attributionFile.getName()).matches("ninja_build_log_\\d+\\.zip");
-        try (ZipFile z = new ZipFile(attributionFile)) {
-            assertThat(
-                            Collections.list(z.entries())
-                                    .stream()
-                                    .map(ZipEntry::getName)
-                                    .collect(Collectors.toList()))
-                    // It's expected that there is no module name because the Gradle test fixture
-                    // sets up project in non-standard manner: there is only one top level nameless
-                    // module
-                    .containsExactly("/debug/armeabi-v7a", "/debug/x86");
         }
     }
 }

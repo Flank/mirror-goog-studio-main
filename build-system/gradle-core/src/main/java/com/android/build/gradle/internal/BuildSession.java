@@ -23,7 +23,7 @@ import org.gradle.api.invocation.Gradle;
  * Interface to access the actual {@link BuildSessionImpl} singleton object, which might have been
  * created by a different class loader.
  */
-public interface BuildSession {
+interface BuildSession {
 
     /**
      * Notifies the {@link BuildSessionImpl} singleton object when a new build starts.
