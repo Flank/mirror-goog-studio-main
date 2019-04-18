@@ -194,6 +194,11 @@ public interface SyncIssue {
     /** Indicates that the compileSdkVersion is missing */
     int TYPE_COMPILE_SDK_VERSION_NOT_SET = 39;
 
+    /**
+     * Indicates that the `android.useAndroidX` property must be enabled but is currently disabled.
+     */
+    int TYPE_ANDROID_X_PROPERTY_NOT_ENABLED = 40;
+
     // ATTENTION: When adding a new type here, increment the index by 1 and also increment TYPE_MAX
     // below.
 
@@ -203,7 +208,7 @@ public interface SyncIssue {
      *
      * <p>This variable is not used in tools/base but is currently used in tools/adt/idea.
      */
-    int TYPE_MAX = 40; // increment by 1 when adding a new type
+    int TYPE_MAX = 41; // increment by 1 when adding a new type
 
     /** Returns the severity of the issue. */
     int getSeverity();

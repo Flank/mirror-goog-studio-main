@@ -295,6 +295,17 @@ public class VariantDependencies {
                 }
             }
 
+            if (!variantScope
+                    .getGlobalScope()
+                    .getProjectOptions()
+                    .get(BooleanOption.USE_ANDROID_X)) {
+                AndroidXDependencyCheck androidXDependencyCheck =
+                        new AndroidXDependencyCheck(
+                                variantScope.getGlobalScope().getErrorHandler());
+                compileClasspath.getIncoming().afterResolve(androidXDependencyCheck);
+                runtimeClasspath.getIncoming().afterResolve(androidXDependencyCheck);
+            }
+
             Configuration globalTestedApks = configurations.findByName(CONFIG_NAME_TESTED_APKS);
             if (variantType.isApk() && globalTestedApks != null) {
                 // this configuration is created only for test-only project

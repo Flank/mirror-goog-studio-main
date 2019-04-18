@@ -75,6 +75,7 @@ abstract class EvalIssueReporter {
         AMBIGUOUS_BUILD_TYPE_DEFAULT(SyncIssue.TYPE_AMBIGUOUS_BUILD_TYPE_DEFAULT),
         AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT(SyncIssue.TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT),
         COMPILE_SDK_VERSION_NOT_SET(SyncIssue.TYPE_COMPILE_SDK_VERSION_NOT_SET),
+        ANDROID_X_PROPERTY_NOT_ENABLED(SyncIssue.TYPE_ANDROID_X_PROPERTY_NOT_ENABLED),
     }
 
     protected abstract fun reportIssue(type: Type, severity: Severity, exception: EvalIssueException)

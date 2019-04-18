@@ -1560,4 +1560,14 @@ public final class GradleTestProject implements TestRule {
     public File getAndroidNdkHome() {
         return androidNdkHome;
     }
+
+    /**
+     * Adds `android.useAndroidX=true` to the gradle.properties file (for projects that use AndroidX
+     * dependencies, see bug 130286699).
+     */
+    public void addUseAndroidXProperty() throws IOException {
+        TestFileUtils.appendToFile(
+                this.getGradlePropertiesFile(),
+                BooleanOption.USE_ANDROID_X.getPropertyName() + "=true");
+    }
 }

@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.ANDROIDX_VERSION
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.TEST_CONSTRAINT_LAYOUT_VERSION
+import com.android.build.gradle.options.BooleanOption
 import java.io.File
 
 /**
@@ -64,6 +65,12 @@ class EmptyActivityProjectBuilder {
                     .build()
             )
             .withKotlinGradlePlugin(useKotlin)
+
+        if (useAndroidX) {
+            builder
+                .addGradleProperties(BooleanOption.USE_ANDROID_X.propertyName + "=true")
+                .addGradleProperties(BooleanOption.ENABLE_JETIFIER.propertyName + "=true")
+        }
 
         if (useGradleBuildCache) {
             builder.withGradleBuildCacheDirectory(gradleBuildCacheDir)

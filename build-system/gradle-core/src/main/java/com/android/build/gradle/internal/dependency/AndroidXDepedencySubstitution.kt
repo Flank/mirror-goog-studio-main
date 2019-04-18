@@ -153,4 +153,14 @@ object AndroidXDepedencySubstitution {
                     && dependency.name == "databinding-compiler"
         }
     }
+
+    /**
+     * Returns `true` if the given dependency (formatted as `group:name:version`) is an AndroidX
+     * dependency.
+     */
+    @JvmStatic
+    fun isAndroidXDependency(dependency: String): Boolean {
+        return dependency.startsWith("androidx")
+                || dependency.startsWith("com.google.android.material")
+    }
 }
