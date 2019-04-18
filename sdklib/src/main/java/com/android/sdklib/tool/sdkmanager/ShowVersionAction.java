@@ -15,9 +15,8 @@
  */
 package com.android.sdklib.tool.sdkmanager;
 
-import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import java.util.Map;
 import java.util.function.Function;
@@ -35,17 +34,8 @@ class ShowVersionAction extends SdkAction {
     }
 
     @Override
-    public void execute(@NonNull ProgressIndicator progress)
-            throws SdkManagerCli.CommandFailedException {
-        // only show warnings and errors
-        getRepoManager()
-                .loadSynchronously(0, new QuietProgressIndicator(progress), null, mSettings);
-        LocalPackage tools =
-                getRepoManager().getPackages().getLocalPackages().get(SdkConstants.FD_TOOLS);
-        if (tools != null) {
-            getOutputStream().println(tools.getVersion());
-        } else {
-            getOutputStream().println("Unknown version");
-        }
+    public void execute(@NonNull ProgressIndicator progress) {
+        String version = Version.TOOLS_VERSION;
+        getOutputStream().println(version == null ? "Unknown version" : version);
     }
 }

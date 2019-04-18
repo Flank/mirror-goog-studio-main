@@ -25,6 +25,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.repository.Revision;
 import com.android.repository.api.License;
@@ -38,7 +39,6 @@ import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
-import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
@@ -875,54 +875,19 @@ public class SdkManagerCliTest {
     }
 
     @Test
-    public void unknownVersion() throws Exception {
-        SdkManagerCliSettings settings =
-                SdkManagerCliSettings.createSettings(
-                        ImmutableList.of("--sdk_root=/sdk", "--version"), mFileOp.getFileSystem());
-        assertNotNull(settings);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        SdkManagerCli sdkmanager =
-                new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("y\nn\ny\n".getBytes()),
-                        mDownloader,
-                        mSdkHandler);
-
-        FakeProgressIndicator progress = new FakeProgressIndicator();
-        sdkmanager.run(progress);
-        assertEquals("Unknown version", out.toString().replaceAll("[\n\r]", ""));
-    }
-
-    @Test
     public void printVersion() throws Exception {
-        FakePackage.FakeRemotePackage tools = new FakePackage.FakeRemotePackage("tools");
-        tools.setRevision(Revision.parseRevision("1.2.3"));
-        File toolsDir = new File(SDK_LOCATION, "tools");
-        mFileOp.mkdirs(toolsDir);
-        InstallerUtil.writePackageXml(
-                tools,
-                toolsDir,
-                new RepoManagerImpl(mFileOp),
-                mFileOp,
-                new FakeProgressIndicator());
-
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "--version"), mFileOp.getFileSystem());
-        AndroidSdkHandler handler = new AndroidSdkHandler(new File(SDK_LOCATION), null, mFileOp);
 
+        AndroidSdkHandler handler = new AndroidSdkHandler(new File(SDK_LOCATION), null, mFileOp);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli sdkmanager =
-                new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("y\nn\ny\n".getBytes()),
-                        mDownloader,
-                        handler);
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, handler);
 
         sdkmanager.run(new FakeProgressIndicator());
-        assertEquals("1.2.3", out.toString().replaceAll("[\n\r]", ""));
+        assertNotNull(Version.TOOLS_VERSION);
+        assertEquals(Version.TOOLS_VERSION, out.toString().replaceAll("[\n\r]", ""));
     }
 
     @Test

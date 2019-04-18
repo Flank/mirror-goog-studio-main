@@ -931,8 +931,6 @@ public class JarContentsTest {
                 "com/android/sdklib/repository/sources/sdk-sites-list-2.xsd",
                 "com/android/sdklib/repository/sources/sdk-sites-list-3.xsd",
                 "com/android/sdklib/repository/targets/",
-                "com/android/sdklib/tool/",
-                "com/android/sdklib/tool/sdkmanager/",
                 "com/android/sdklib/util/",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",

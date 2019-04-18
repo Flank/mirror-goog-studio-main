@@ -59,7 +59,10 @@ fileset(
 
 maven_java_library(
     name = "tools.sdklib",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = glob(
+        ["src/main/java/**/*.java"],
+        exclude = ["src/main/java/**/tool/**/*.java"],
+    ),
     pom = ":pom",
     resource_strip_prefix = "tools/base/sdklib",
     resources = ["tools.resources"],
@@ -82,6 +85,13 @@ maven_java_library(
         # Include explicitly in order to depend on httpcore 4.4.5 instead of 4.4.4
         "//tools/base/third_party:org.apache.httpcomponents_httpcore",
     ],
+)
+
+maven_pom(
+    name = "tools_pom",
+    artifact = "sdklib",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:build_version",
 )
 
 maven_pom(
@@ -111,6 +121,8 @@ kotlin_test(
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
     deps = [
+        ":avdmanager_lib",
+        ":sdkmanager_lib",
         ":tools.sdklib",
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
@@ -124,6 +136,33 @@ kotlin_test(
     ],
 )
 
+maven_java_library(
+    name = "avdmanager_lib",
+    srcs = glob(["src/main/java/**/tool/AvdManagerCli.java"]),
+    pom = ":tools_pom",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+maven_java_library(
+    name = "sdkmanager_lib",
+    srcs = glob(["src/main/java/**/tool/sdkmanager/*.java"]),
+    pom = ":tools_pom",
+    deps = [
+        ":tools.sdklib",
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
 sdk_java_binary(
     name = "avdmanager",
     default_jvm_opts = {
@@ -132,7 +171,7 @@ sdk_java_binary(
         "win": "-Dcom.android.sdkmanager.toolsdir=%~dp0\..",
     },
     main_class = "com.android.sdklib.tool.AvdManagerCli",
-    runtime_deps = [":tools.sdklib"],
+    runtime_deps = [":avdmanager_lib"],
 )
 
 sdk_java_binary(
@@ -143,7 +182,7 @@ sdk_java_binary(
         "win": "-Dcom.android.sdklib.toolsdir=%~dp0\..",
     },
     main_class = "com.android.sdklib.tool.sdkmanager.SdkManagerCli",
-    runtime_deps = [":tools.sdklib"],
+    runtime_deps = [":sdkmanager_lib"],
 )
 
 sdk_package(

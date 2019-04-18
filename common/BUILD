@@ -11,8 +11,8 @@ iml_module(
         "src/main/java/com/android/SdkConstants.java",
     ],
     iml_files = ["android.sdktools.common.iml"],
-    resources = ["src/main/resources"],
     res_zips = [":extra_res"],
+    resources = ["src/main/resources"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
     exports = [
@@ -52,7 +52,10 @@ kotlin_library(
     srcs = ["src/main/java"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/common",
-    resources = [":tools.common.resources", ":version.properties"],
+    resources = [
+        ":tools.common.resources",
+        ":version.properties",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",

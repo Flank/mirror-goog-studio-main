@@ -412,7 +412,7 @@ public final class SdkConstants {
      * are installed inside a project.
      */
     public static final String FD_PKG_SOURCES = "sources"; //$NON-NLS-1$
-    /** Name of the SDK tools folder. */
+    /** Name of the legacy SDK tools folder. */
     public static final String FD_TOOLS = "tools"; //$NON-NLS-1$
     /** Name of the SDK command-line tools folder. */
     public static final String FD_CMDLINE_TOOLS = "cmdline-tools";

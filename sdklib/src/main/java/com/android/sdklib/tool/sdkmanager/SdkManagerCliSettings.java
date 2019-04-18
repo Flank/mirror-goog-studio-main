@@ -15,6 +15,7 @@
  */
 package com.android.sdklib.tool.sdkmanager;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.Channel;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-@VisibleForTesting
 class SdkManagerCliSettings implements SettingsController {
 
     private static final class ShowUsageException extends Exception {
@@ -343,9 +343,15 @@ class SdkManagerCliSettings implements SettingsController {
 
         String proxyHost = null;
         int proxyPort = -1;
-        String toolsDir = System.getProperty(TOOLSDIR);
-        if (toolsDir != null) {
-            mLocalPath = fileSystem.getPath(toolsDir).normalize().getParent();
+        String toolDir = System.getProperty(TOOLSDIR);
+        if (toolDir != null) {
+            // Assume we're in something similar to the expected place, "cmdline-tools/1.2.3". The parent of that should be the root.
+            Path toolRoot = fileSystem.getPath(toolDir).normalize().getParent();
+            if (toolRoot != null) {
+                if (toolRoot.getFileName().toString().equals(SdkConstants.FD_CMDLINE_TOOLS)) {
+                    mLocalPath = toolRoot.getParent();
+                }
+            }
         }
 
         args = new LinkedList<>(args);

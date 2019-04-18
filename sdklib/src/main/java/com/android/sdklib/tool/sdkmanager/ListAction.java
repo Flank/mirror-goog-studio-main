@@ -24,7 +24,6 @@ import com.android.repository.api.RepoPackage;
 import com.android.repository.api.UpdatablePackage;
 import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.impl.meta.RevisionType;
-import com.android.sdklib.tool.TableFormatter;
 import com.android.utils.FileUtils;
 import java.util.Collection;
 import java.util.Map;
