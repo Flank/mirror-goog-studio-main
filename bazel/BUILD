@@ -322,7 +322,7 @@ java_library(
 java_library(
     name = "gradle_benchmarks",
     testonly = 1,
-    srcs = glob(["testSrc/com/android/tools/gradle/*.java"]),
+    srcs = glob(["testSrc/com/android/tools/gradle/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",

@@ -19,12 +19,16 @@ package com.android.tools.gradle;
 import com.android.SdkConstants;
 import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.diff.UnifiedDiff;
+import com.android.tools.gradle.benchmarkassertions.BenchmarkProjectAssertion;
 import com.android.tools.perflogger.Benchmark;
 import com.android.tools.perflogger.PerfData;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -59,6 +63,8 @@ public class BenchmarkTest {
         List<String> cleanups = new ArrayList<>();
         List<File> mutations = new ArrayList<>();
         List<String> mutationDiffs = new ArrayList<>();
+        List<BenchmarkProjectAssertion> pre_mutate_assertions = new ArrayList<>();
+        List<BenchmarkProjectAssertion> post_mutate_assertions = new ArrayList<>();
         List<String> buildProperties = new ArrayList<>();
         List<BenchmarkListener> listeners = new ArrayList<>();
         boolean fromStudio = false;
@@ -116,6 +122,10 @@ public class BenchmarkTest {
                 benchmarkWithWorkers = Boolean.valueOf(it.next());
             } else if (arg.equals("--gradle-root") && it.hasNext()) {
                 testProjectGradleRootFromSourceRoot = it.next();
+            } else if (arg.equals("--pre_mutate_assertion") && it.hasNext()) {
+                pre_mutate_assertions.add(instantiateAssertion(it.next()));
+            } else if (arg.equals("--post_mutate_assertion") && it.hasNext()) {
+                post_mutate_assertions.add(instantiateAssertion(it.next()));
             } else {
                 throw new IllegalArgumentException("Unknown flag: " + arg);
             }
@@ -139,6 +149,8 @@ public class BenchmarkTest {
                         setupDiffs,
                         mutations,
                         mutationDiffs,
+                        pre_mutate_assertions,
+                        post_mutate_assertions,
                         startups,
                         cleanups,
                         tasks,
@@ -148,15 +160,45 @@ public class BenchmarkTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static Class<? extends BenchmarkListener> locateListener(String className)
+    private static <T> Class<? extends T> loadClass(Package relativeBase, String className)
             throws ClassNotFoundException {
         String fqcn =
-                className.indexOf('.') != -1
-                        ? className
-                        : BenchmarkTest.class.getPackage().getName() + "." + className;
+                className.indexOf('.') != -1 ? className : relativeBase.getName() + "." + className;
+        return (Class<? extends T>) BenchmarkTest.class.getClassLoader().loadClass(fqcn);
+    }
 
-        return (Class<? extends BenchmarkListener>)
-                BenchmarkTest.class.getClassLoader().loadClass(fqcn);
+    private static Class<? extends BenchmarkListener> locateListener(String className)
+            throws ClassNotFoundException {
+        return loadClass(BenchmarkTest.class.getPackage(), className);
+    }
+
+    private static BenchmarkProjectAssertion instantiateAssertion(String argString)
+            throws ClassNotFoundException, IllegalAccessException, InvocationTargetException,
+                    InstantiationException {
+        List<String> args = new ArrayList<>(Splitter.on(';').splitToList(argString));
+        Class<? extends BenchmarkProjectAssertion> assertionClass =
+                loadClass(BenchmarkProjectAssertion.class.getPackage(), args.remove(0));
+
+        Constructor<?>[] constructors = assertionClass.getConstructors();
+        if (constructors.length != 1) {
+            throw new RuntimeException(
+                    "Expected exactly one constructor in BenchmarkProjectAssertion class "
+                            + assertionClass);
+        }
+        if (constructors[0].getParameterCount() != args.size()) {
+            throw new RuntimeException(
+                    "Constructor in BenchmarkProjectAssertion class "
+                            + assertionClass
+                            + " has "
+                            + constructors[0].getParameterCount()
+                            + " parameters, but "
+                            + args.size()
+                            + " parameters passed ["
+                            + argString
+                            + "] (semi-colon separated)");
+        }
+        return (BenchmarkProjectAssertion) constructors[0].newInstance((Object[]) args.toArray());
+
     }
 
     private static String getLocalGradleVersion() throws IOException {
@@ -183,6 +225,8 @@ public class BenchmarkTest {
             List<String> setupDiffs,
             List<File> mutations,
             List<String> mutationDiffs,
+            List<BenchmarkProjectAssertion> pre_mutate_assertions,
+            List<BenchmarkProjectAssertion> post_mutate_assertions,
             List<String> startups,
             List<String> cleanups,
             List<String> tasks,
@@ -237,8 +281,8 @@ public class BenchmarkTest {
             diffs[i] = new UnifiedDiff(mutations.get(i));
         }
 
-        try (Gradle gradle =
-                new Gradle(new File(src, testProjectGradleRootFromSourceRoot), out, distribution)) {
+        File projectRoot = new File(src, testProjectGradleRootFromSourceRoot);
+        try (Gradle gradle = new Gradle(projectRoot, out, distribution)) {
             gradle.addRepo(repo);
             gradle.addRepo(new File(data, "repo.zip"));
             gradle.addArgument("-Dcom.android.gradle.version=" + getLocalGradleVersion());
@@ -275,6 +319,20 @@ public class BenchmarkTest {
                 if (i >= benchmarkRun.warmUps) {
                     listeners.forEach(BenchmarkListener::iterationDone);
                 }
+                try {
+                    checkResult(
+                            projectRoot,
+                            i % 2 == 0, // Even benchmarks have the diff and odd ones do not.
+                            pre_mutate_assertions,
+                            post_mutate_assertions);
+                } catch (AssertionError e) {
+                    throw new AssertionError(
+                            String.format(
+                                    "Benchmark %s$1 assertion failed at iteration %d$2",
+                                    benchmarkName, i),
+                            e);
+                }
+
             }
 
             listeners.forEach(BenchmarkListener::benchmarkDone);
@@ -295,5 +353,23 @@ public class BenchmarkTest {
         }
 
         throw new RuntimeException("Unexpected platform.");
+    }
+
+    private void checkResult(
+            File projectRoot,
+            boolean expectMutated,
+            List<BenchmarkProjectAssertion> pre_mutate_assertions,
+            List<BenchmarkProjectAssertion> post_mutate_assertions)
+            throws Exception {
+        List<BenchmarkProjectAssertion> assertions;
+        if (expectMutated) {
+
+            assertions = post_mutate_assertions;
+        } else {
+            assertions = pre_mutate_assertions;
+        }
+        for (BenchmarkProjectAssertion assertion : assertions) {
+            assertion.checkProject(projectRoot.toPath());
+        }
     }
 }

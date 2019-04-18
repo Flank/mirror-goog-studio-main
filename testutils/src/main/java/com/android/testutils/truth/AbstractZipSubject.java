@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Truth support for zip files. */
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -123,7 +124,27 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
 
     public final void exists() {
         if (!actual().exists()) {
-            fail("exists");
+            Path nearestParent = actual().getFile();
+            while (nearestParent != null && !Files.exists(nearestParent)) {
+                nearestParent = nearestParent.getParent();
+            }
+
+            StringBuilder failure = new StringBuilder("exists");
+            if (nearestParent != null) {
+                failure.append(" (Nearest ancestor that exists is ")
+                        .append(nearestParent)
+                        .append("\n");
+                try (Stream<Path> files = Files.list(nearestParent)) {
+                    files.forEach(
+                            path -> failure.append(" - ").append(path.getFileName()).append("\n"));
+                } catch (IOException e) {
+                    failure.append(e);
+                }
+                failure.append(")\n");
+            } else {
+                failure.append(" (no ancestor directories exist either)");
+            }
+            fail(failure.toString());
         }
     }
 
