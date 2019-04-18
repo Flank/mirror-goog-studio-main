@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
+    <@kt.addKotlinToBaseProject />
+
     <merge from="root/base_build.gradle.ftl"
            to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
 
