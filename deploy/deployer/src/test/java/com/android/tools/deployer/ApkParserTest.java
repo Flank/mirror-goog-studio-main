@@ -23,15 +23,13 @@ import com.android.testutils.TestUtils;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import org.junit.Test;
 
 public class ApkParserTest {
@@ -129,5 +127,42 @@ public class ApkParserTest {
         assertEquals("com.example.android.basicgesturedetect.test", apk.packageName);
         assertEquals(1, apk.targetPackages.size());
         assertEquals("com.example.android.basicgesturedetect", apk.targetPackages.get(0));
+    }
+
+    @Test
+    public void testFindCDSigned() throws Exception {
+        ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
+        try (RandomAccessFile file = new RandomAccessFile(BASE + "signed_app/base.apk", "r")) {
+            ApkParser.findCDLocation(file.getChannel(), map);
+            assertEquals(
+                    "CD of signed_app.apk found",
+                    true,
+                    map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+        }
+    }
+
+    @Test
+    public void testFindCDUnsigned() throws Exception {
+        ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
+        try (RandomAccessFile file = new RandomAccessFile(BASE + "nonsigned_app/base.apk", "r")) {
+            ApkParser.findCDLocation(file.getChannel(), map);
+            assertEquals(
+                    "CD of signed_app.apk found",
+                    true,
+                    map.cdOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+        }
+    }
+
+    @Test
+    public void testFindSignatureBlock() throws Exception {
+        ApkParser.ApkArchiveMap map = new ApkParser.ApkArchiveMap();
+        try (RandomAccessFile file = new RandomAccessFile(BASE + "signed_app/base.apk", "r")) {
+            ApkParser.findCDLocation(file.getChannel(), map);
+            ApkParser.findSignatureLocation(file.getChannel(), map);
+            assertEquals(
+                    "Signature block of signed_app.apk found",
+                    true,
+                    map.signatureBlockOffset != ApkParser.ApkArchiveMap.UNINITIALIZED);
+        }
     }
 }
