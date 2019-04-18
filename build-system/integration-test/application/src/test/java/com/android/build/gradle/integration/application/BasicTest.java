@@ -155,13 +155,6 @@ public class BasicTest {
     }
 
     @Test
-    public void generationInModel() {
-        assertThat(model.getPluginGeneration())
-                .named("Plugin Generation")
-                .isEqualTo(AndroidProject.GENERATION_ORIGINAL);
-    }
-
-    @Test
     public void testBuildOutputModel() throws Exception {
         // Execute build and get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi =

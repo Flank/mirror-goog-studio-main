@@ -39,16 +39,14 @@ class AppModelBuilder(
     taskManager: TaskManager,
     config: BaseAppModuleExtension,
     extraModelInfo: ExtraModelInfo,
-    projectType: Int,
-    generation: Int
+    projectType: Int
 ) : ModelBuilder<BaseAppModuleExtension>(
     globalScope,
     variantManager,
     taskManager,
     config,
     extraModelInfo,
-    projectType,
-    generation
+    projectType
 ) {
     override fun isBaseSplit(): Boolean {
         return true

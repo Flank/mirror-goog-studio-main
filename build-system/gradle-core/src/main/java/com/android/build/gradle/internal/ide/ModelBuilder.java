@@ -144,7 +144,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
     @NonNull private final VariantManager variantManager;
     @NonNull private final TaskManager taskManager;
     private final int projectType;
-    private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
 
@@ -162,15 +161,13 @@ public class ModelBuilder<Extension extends AndroidConfig>
             @NonNull TaskManager taskManager,
             @NonNull Extension extension,
             @NonNull ExtraModelInfo extraModelInfo,
-            int projectType,
-            int generation) {
+            int projectType) {
         this.globalScope = globalScope;
         this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
         this.taskManager = taskManager;
         this.projectType = projectType;
-        this.generation = generation;
     }
 
     public static void clearCaches() {
@@ -435,7 +432,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 extension.getBuildToolsVersion(),
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
-                generation,
                 isBaseSplit(),
                 getDynamicFeatures());
     }

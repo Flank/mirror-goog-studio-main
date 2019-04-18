@@ -117,8 +117,7 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull AndroidConfig config,
             @NonNull ExtraModelInfo extraModelInfo) {
         InstantAppModelBuilder instantAppModelBuilder =
-                new InstantAppModelBuilder(
-                        variantManager, config, extraModelInfo, AndroidProject.GENERATION_ORIGINAL);
+                new InstantAppModelBuilder(variantManager, config, extraModelInfo);
         registry.register(instantAppModelBuilder);
     }
 

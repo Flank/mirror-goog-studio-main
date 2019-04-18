@@ -72,7 +72,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
     @Nullable private final String myResourcePrefix;
-    @Nullable private final Integer myPluginGeneration;
+    @NonNull private final boolean mySupportsPluginGeneration;
     private final int myApiVersion;
     private final boolean myLibrary;
     private final int myProjectType;
@@ -175,7 +175,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myApiVersion = project.getApiVersion();
         myLibrary = project.isLibrary();
         myProjectType = getProjectType(project, myParsedModelVersion);
-        myPluginGeneration = copyNewProperty(project::getPluginGeneration, null);
+        mySupportsPluginGeneration = copyNewProperty(project::getPluginGeneration, null) != null;
         //noinspection ConstantConditions
         myBaseSplit = copyNewProperty(project::isBaseSplit, false);
         //noinspection ConstantConditions
@@ -390,11 +390,11 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
 
     @Override
     public int getPluginGeneration() {
-        if (myPluginGeneration != null) {
-            return myPluginGeneration;
+        if (!mySupportsPluginGeneration) {
+            throw new UnsupportedOperationException(
+                    "Unsupported method: AndroidProject.getPluginGeneration()");
         }
-        throw new UnsupportedOperationException(
-                "Unsupported method: AndroidProject.getPluginGeneration()");
+        return GENERATION_ORIGINAL;
     }
 
     @Override
@@ -450,7 +450,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && myLibrary == project.myLibrary
                 && myProjectType == project.myProjectType
                 && myBaseSplit == project.myBaseSplit
-                && Objects.equals(myPluginGeneration, project.myPluginGeneration)
+                && mySupportsPluginGeneration == project.mySupportsPluginGeneration
                 && Objects.equals(myModelVersion, project.myModelVersion)
                 && Objects.equals(myParsedModelVersion, project.myParsedModelVersion)
                 && Objects.equals(myName, project.myName)
@@ -507,7 +507,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myApiVersion,
                 myLibrary,
                 myProjectType,
-                myPluginGeneration,
+                mySupportsPluginGeneration,
                 myAaptOptions,
                 myBaseSplit,
                 myDynamicFeatures);
@@ -567,8 +567,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + myLibrary
                 + ", myProjectType="
                 + myProjectType
-                + ", myPluginGeneration="
-                + myPluginGeneration
+                + ", mySupportsPluginGeneration="
+                + mySupportsPluginGeneration
                 + ", myAaptOptions="
                 + myAaptOptions
                 + ", myBaseSplit="

@@ -122,7 +122,6 @@ public class FeaturePlugin extends LibraryPlugin {
                         taskManager,
                         (FeatureExtension) config,
                         extraModelInfo,
-                        getProjectType(),
-                        AndroidProject.GENERATION_ORIGINAL));
+                        getProjectType()));
     }
 }

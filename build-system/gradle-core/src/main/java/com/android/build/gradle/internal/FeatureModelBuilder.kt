@@ -33,16 +33,14 @@ class FeatureModelBuilder(
     taskManager: TaskManager,
     config: FeatureExtension,
     extraModelInfo: ExtraModelInfo,
-    projectType: Int,
-    generation: Int
+    projectType: Int
 ) : ModelBuilder<FeatureExtension>(
     globalScope,
     variantManager,
     taskManager,
     config,
     extraModelInfo,
-    projectType,
-    generation
+    projectType
 ) {
     override fun isBaseSplit(): Boolean {
         return extension.baseFeature!!

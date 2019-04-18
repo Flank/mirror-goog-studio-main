@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.model.AndroidProject;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -55,8 +54,7 @@ public class AppPlugin extends AbstractAppPlugin {
                         taskManager,
                         (BaseAppModuleExtension) config,
                         extraModelInfo,
-                        getProjectType(),
-                        AndroidProject.GENERATION_ORIGINAL));
+                        getProjectType()));
     }
 
     @Override

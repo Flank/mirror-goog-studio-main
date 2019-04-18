@@ -82,19 +82,16 @@ public class InstantAppModelBuilder
     @NonNull private final AndroidConfig config;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
-    private final int generation;
     private boolean modelWithFullDependency = false;
     private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
     public InstantAppModelBuilder(
             @NonNull VariantManager variantManager,
             @NonNull AndroidConfig config,
-            @NonNull ExtraModelInfo extraModelInfo,
-            int generation) {
+            @NonNull ExtraModelInfo extraModelInfo) {
         this.config = config;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
-        this.generation = generation;
     }
 
     @Override
@@ -233,7 +230,6 @@ public class InstantAppModelBuilder
                 "",
                 PROJECT_TYPE_INSTANTAPP,
                 Version.BUILDER_MODEL_API_VERSION,
-                generation,
                 false,
                 ImmutableList.of());
     }

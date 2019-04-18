@@ -79,7 +79,6 @@ import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -581,8 +580,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         taskManager,
                         config,
                         extraModelInfo,
-                        getProjectType(),
-                        AndroidProject.GENERATION_ORIGINAL));
+                        getProjectType()));
     }
 
     private static class UnsupportedAction implements Action<Object> {

@@ -234,7 +234,6 @@ public class IdeAndroidProjectImplTest {
                                 getApiVersion(),
                                 isLibrary(),
                                 getProjectType(),
-                                getPluginGeneration(),
                                 isBaseSplit());
                     }
                 };

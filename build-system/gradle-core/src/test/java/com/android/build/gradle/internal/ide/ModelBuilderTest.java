@@ -108,8 +108,7 @@ public class ModelBuilderTest {
                         taskManager,
                         androidConfig,
                         extraModelInfo,
-                        AndroidProject.PROJECT_TYPE_APP,
-                        AndroidProject.GENERATION_ORIGINAL);
+                        AndroidProject.PROJECT_TYPE_APP);
     }
 
     @Test

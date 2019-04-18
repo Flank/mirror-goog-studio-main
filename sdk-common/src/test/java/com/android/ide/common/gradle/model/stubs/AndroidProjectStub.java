@@ -51,7 +51,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     private final int myApiVersion;
     private final boolean myLibrary;
     private final int myProjectType;
-    private final int myPluginGeneration;
     private final boolean myBaseSplit;
 
     public AndroidProjectStub(@NonNull String modelVersion) {
@@ -80,7 +79,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 1,
                 true,
                 2,
-                3,
                 true);
     }
 
@@ -109,7 +107,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             int apiVersion,
             boolean library,
             int projectType,
-            int pluginGeneration,
             boolean baseSplit) {
         myModelVersion = modelVersion;
         myName = name;
@@ -135,7 +132,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myApiVersion = apiVersion;
         myLibrary = library;
         myProjectType = projectType;
-        myPluginGeneration = pluginGeneration;
         myBaseSplit = baseSplit;
     }
 
@@ -295,7 +291,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
 
     @Override
     public int getPluginGeneration() {
-        return myPluginGeneration;
+        return GENERATION_ORIGINAL;
     }
 
     @Override
@@ -321,7 +317,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return getApiVersion() == stub.getApiVersion()
                 && isLibrary() == stub.isLibrary()
                 && getProjectType() == stub.getProjectType()
-                && getPluginGeneration() == stub.getPluginGeneration()
                 && isBaseSplit() == stub.isBaseSplit()
                 && Objects.equals(getModelVersion(), stub.getModelVersion())
                 && Objects.equals(getName(), stub.getName())
@@ -369,7 +364,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 getApiVersion(),
                 isLibrary(),
                 getProjectType(),
-                getPluginGeneration(),
                 isBaseSplit());
     }
 
@@ -427,8 +421,6 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myLibrary
                 + ", myProjectType="
                 + myProjectType
-                + ", myPluginGeneration="
-                + myPluginGeneration
                 + ", myBaseSplit="
                 + myBaseSplit
                 + "}";

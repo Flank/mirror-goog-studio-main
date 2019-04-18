@@ -132,7 +132,7 @@ public interface AndroidProject {
     String FD_GENERATED = "generated";
 
     int GENERATION_ORIGINAL = 1;
-    int GENERATION_COMPONENT = 2;
+    int GENERATION_COMPONENT = 2; // component plugin is not supported since 3.5
 
     int MODEL_LEVEL_0_ORIGINAL = 0 ; // studio 1.0, no support for SyncIssue
     int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
@@ -378,8 +378,8 @@ public interface AndroidProject {
     /**
      * Returns the generation of the plugin.
      *
-     * 1: original plugin
-     * 2: component based plugin (AKA experimental)
+     * <p>1 is original plugin, 2 is component based plugin (AKA experimental, not used anymore)
+     *
      * @return the generation value
      */
     int getPluginGeneration();
