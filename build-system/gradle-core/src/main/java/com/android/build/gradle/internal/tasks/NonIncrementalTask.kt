@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks
 import org.gradle.api.tasks.TaskAction
 
 /**
- * Base incremental task using the new input details APIs.
+ * Base non-incremental task.
  */
 abstract class NonIncrementalTask: AndroidVariantTask() {
 

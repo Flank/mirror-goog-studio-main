@@ -63,6 +63,7 @@ class LibraryCacheabilityTest {
                 FROM_CACHE to setOf(
                     ":lib:compileReleaseShaders",
                     ":lib:compileReleaseJavaWithJavac",
+                    ":lib:copyReleaseJniLibsProjectAndLocalJars",
                     ":lib:extractReleaseAnnotations",
                     ":lib:generateReleaseBuildConfig",
                     ":lib:generateReleaseResValues",
@@ -91,8 +92,7 @@ class LibraryCacheabilityTest {
                     ":lib:mergeReleaseConsumerProguardFiles" /* Bug 121276920 */,
                     ":lib:mergeReleaseGeneratedProguardFiles" /* Bug 127247527 */,
                     ":lib:prepareLintJarForPublish" /* Bug 120413672 */,
-                    ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */,
-                    ":lib:transformNativeLibsWithSyncJniLibsForRelease" /* Bug 121275531 */
+                    ":lib:transformClassesAndResourcesWithSyncLibJarsForRelease" /* Bug 121275815 */
                 ),
                 SKIPPED to setOf(
                     ":lib:packageReleaseRenderscript",

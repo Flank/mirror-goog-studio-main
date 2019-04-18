@@ -14,7 +14,7 @@ tasks.create("noop", DefaultTask)
 
 // Try to force incorrect order.  Tests should check that correct order is maintained.
 afterEvaluate {
-    tasks.noop.shouldRunAfter tasks.transformNativeLibsWithSyncJniLibsForDebug
+    tasks.noop.shouldRunAfter tasks.copyDebugJniLibsProjectAndLocalJars
 }
 
 dependencies {

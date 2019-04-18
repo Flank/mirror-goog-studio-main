@@ -191,9 +191,6 @@ public interface VariantScope extends TransformVariantScope {
     FileCollection getProvidedOnlyClasspath();
 
     @NonNull
-    File getIntermediateJarOutputFolder();
-
-    @NonNull
     File getDefaultMergeResourcesOutputDir();
 
     @NonNull

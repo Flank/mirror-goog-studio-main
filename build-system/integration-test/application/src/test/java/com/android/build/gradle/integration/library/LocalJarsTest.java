@@ -64,7 +64,7 @@ public class LocalJarsTest {
     @Test
     public void checkBuildResult() {
         assertThat(result.getTask(":baseLibrary:noop"))
-                .ranBefore(":baseLibrary:transformNativeLibsWithSyncJniLibsForDebug");
+                .ranBefore(":baseLibrary:copyDebugJniLibsProjectAndLocalJars");
     }
 
     @Test

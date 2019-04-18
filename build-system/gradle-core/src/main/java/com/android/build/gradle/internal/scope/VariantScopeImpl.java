@@ -997,12 +997,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     @NonNull
-    public File getIntermediateJarOutputFolder() {
-        return new File(globalScope.getIntermediatesDir(), "/intermediate-jars/" + getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getDefaultMergeResourcesOutputDir() {
         return FileUtils.join(globalScope.getIntermediatesDir(), FD_RES, FD_MERGED, getDirName());
     }

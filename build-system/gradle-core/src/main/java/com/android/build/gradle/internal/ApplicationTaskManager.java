@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureApplicationIdsTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeatureInfoTask;
@@ -203,7 +204,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Add a compile task
         createCompileTask(variantScope);
 
-        createStripNativeLibraryTask(taskFactory, variantScope);
+        taskFactory.register(new StripDebugSymbolsTask.CreationAction(variantScope));
 
         if (variantScope.getVariantData().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {

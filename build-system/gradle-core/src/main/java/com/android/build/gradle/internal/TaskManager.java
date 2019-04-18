@@ -1467,26 +1467,6 @@ public abstract class TaskManager {
                 taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
     }
 
-    /** Create task for stripping debug symbols from native libraries before deploying. */
-    public void createStripNativeLibraryTask(
-            @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
-        taskFactory.register(new StripDebugSymbolsTask.CreationAction(scope));
-
-        // also add a new stripped native libs stream if an AAR
-        if (scope.getType().isAar()) {
-            Provider<Directory> nativeLibsProvider =
-                    scope.getArtifacts().getFinalProduct(STRIPPED_NATIVE_LIBS);
-            scope.getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "stripped-native-libs")
-                                    .addContentType(NATIVE_LIBS)
-                                    .addScopes(getJavaResMergingScopes(scope, NATIVE_LIBS))
-                                    .setFileCollection(
-                                            project.getLayout().files(nativeLibsProvider))
-                                    .build());
-        }
-    }
-
     /** Creates the tasks to build unit tests. */
     public void createUnitTestVariantTasks(@NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();

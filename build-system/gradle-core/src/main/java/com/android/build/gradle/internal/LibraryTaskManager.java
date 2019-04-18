@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
@@ -41,14 +40,15 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
+import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
+import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
-import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
@@ -174,7 +174,8 @@ public class LibraryTaskManager extends TaskManager {
         createExternalNativeBuildTasks(variantScope);
 
         createMergeJniLibFoldersTasks(variantScope);
-        createStripNativeLibraryTask(taskFactory, variantScope);
+
+        taskFactory.register(new StripDebugSymbolsTask.CreationAction(variantScope));
 
         taskFactory.register(new PackageRenderscriptTask.CreationAction(variantScope));
 
@@ -260,31 +261,12 @@ public class LibraryTaskManager extends TaskManager {
         // 'jar' artifact as API dependency.
         taskFactory.register(new ZipMergingTask.CreationAction(variantScope));
 
-        // now add a transform that will take all the native libs and package
+        // now add a task that will take all the native libs and package
         // them into an intermediary folder. This processes only the PROJECT
         // scope.
-        File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
-        final File intermediateJniLibsFolder = new File(jarOutputFolder, FD_JNI);
-
-        LibraryJniLibsTransform intermediateJniTransform =
-                new LibraryJniLibsTransform(
-                        "intermediateJniLibs",
-                        intermediateJniLibsFolder,
-                        TransformManager.PROJECT_ONLY);
-        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-        transformManager.addTransform(
-                taskFactory,
-                variantScope,
-                intermediateJniTransform,
-                taskName -> {
-                    // publish the jni folder as intermediate
-                    artifacts.appendArtifact(
-                            InternalArtifactType.LIBRARY_JNI,
-                            ImmutableList.of(intermediateJniLibsFolder),
-                            taskName);
-                },
-                null,
-                null);
+        taskFactory.register(
+                new LibraryJniLibsTask.ProjectOnlyCreationAction(
+                        variantScope, InternalArtifactType.LIBRARY_JNI));
 
         // Now go back to fill the pipeline with transforms used when
         // publishing the AAR
@@ -305,6 +287,7 @@ public class LibraryTaskManager extends TaskManager {
 
         File classesJar = variantScope.getAarClassesJar();
         File libsDirectory = variantScope.getAarLibsDirectory();
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
 
         LibraryAarJarsTransform transform =
                 new LibraryAarJarsTransform(
@@ -336,27 +319,12 @@ public class LibraryTaskManager extends TaskManager {
                 null,
                 null);
 
-        // now add a transform that will take all the native libs and package
+        // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT
         // and the LOCAL_PROJECT scopes
-        final File jniLibsFolder =
-                variantScope.getIntermediateDir(InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI);
-        LibraryJniLibsTransform jniTransform =
-                new LibraryJniLibsTransform(
-                        "syncJniLibs",
-                        jniLibsFolder,
-                        TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
-        transformManager.addTransform(
-                taskFactory,
-                variantScope,
-                jniTransform,
-                taskName ->
-                        artifacts.appendArtifact(
-                                InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI,
-                                ImmutableList.of(jniLibsFolder),
-                                taskName),
-                null,
-                null);
+        taskFactory.register(
+                new LibraryJniLibsTask.ProjectAndLocalJarsCreationAction(
+                        variantScope, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI));
 
         createLintTasks(variantScope);
         createBundleTask(variantScope);
@@ -426,15 +394,6 @@ public class LibraryTaskManager extends TaskManager {
                 .addStream(
                         OriginalStream.builder(project, "local-deps-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(InternalScope.LOCAL_DEPS)
-                                .setFileCollection(variantScope.getLocalPackagedJars())
-                                .build());
-
-        variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "local-deps-native")
-                                .addContentTypes(NATIVE_LIBS)
                                 .addScope(InternalScope.LOCAL_DEPS)
                                 .setFileCollection(variantScope.getLocalPackagedJars())
                                 .build());
