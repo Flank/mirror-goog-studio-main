@@ -73,8 +73,9 @@ class PlatformConfiguratorTest {
         return PlatformConfigurator(root)
     }
 
+    private val ndk17 = File("./17").absoluteFile
     private fun platformConfiguratorNdk17() : PlatformConfigurator {
-        val root = File("./17").absoluteFile
+        val root = ndk17
         root.deleteRecursively()
         File(root, "platforms/android-14/arch-x86").mkdirs()
         File(root, "platforms/android-15/arch-x86").mkdirs()
@@ -253,8 +254,9 @@ class PlatformConfiguratorTest {
             "O-MR2" // <- doesn't exist
            )
         assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'O-MR2' " +
-                "is not recognized.")
+        assertThat(logger.errors).containsExactly(
+            "API codeName 'O-MR2' is not supported by NDK '$ndk17'."
+        )
     }
 
     @Test
@@ -363,8 +365,8 @@ class PlatformConfiguratorTest {
             "O-MR2", // <- doesn't exist
             expectedNdkR17MetaPlatforms())
         assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'O-MR2' " +
-                "is not recognized.")
+        assertThat(logger.errors).containsExactly(
+            "API codeName 'O-MR2' is not supported by NDK '$ndk17'.")
     }
 
     @Test
@@ -460,7 +462,8 @@ class PlatformConfiguratorTest {
             defaultApiLevelFromDsl,
             "Z")
         assertThat(platform).isEqualTo(28)
-        assertThat(logger.errors).containsExactly("API codeName 'Z' is not recognized.")
+        assertThat(logger.errors).containsExactly(
+            "API codeName 'Z' is not supported by NDK '$ndk17'.")
     }
 
     @Test

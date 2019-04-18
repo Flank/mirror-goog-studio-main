@@ -173,7 +173,9 @@ class PlatformConfigurator(private val ndkRoot: File) {
                         // This version is not yet known (or is an error), choose a very high
                         // version number which will then be lowered to the maximum version
                         // actually installed in the referenced NDK.
-                        errorln("API codeName '$codeNameOrNull' is not recognized.")
+                        errorln(
+                            "API codeName '$codeNameOrNull' is not supported by NDK '$ndkRoot'."
+                        )
                         veryHighPlatformApiVersion
                     }
                 }
