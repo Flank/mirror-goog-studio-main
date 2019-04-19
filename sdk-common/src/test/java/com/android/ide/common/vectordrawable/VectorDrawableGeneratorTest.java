@@ -52,16 +52,20 @@ public class VectorDrawableGeneratorTest extends TestCase {
         XML
     }
 
-    private void checkVectorConversion(
+    /** Checks conversion and returns contents of the error log. */
+    @Nullable
+    private String checkVectorConversion(
             @NonNull String testFileName,
             @NonNull FileType type,
             boolean dumpXml,
             @Nullable String expectedError)
             throws Exception {
-        checkVectorConversion(testFileName, type, dumpXml, expectedError, IMAGE_SIZE);
+        return checkVectorConversion(testFileName, type, dumpXml, expectedError, IMAGE_SIZE);
     }
 
-    private void checkVectorConversion(
+    /** Checks conversion and returns contents of the error log. */
+    @Nullable
+    private String checkVectorConversion(
             @NonNull String testFileName,
             @NonNull FileType type,
             boolean dumpXml,
@@ -81,9 +85,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
         File incomingFile = new File(parentDirFile, incomingFileName);
         String xmlContent;
+        String errorLog = null;
         if (type == FileType.SVG) {
             OutputStream outStream = new ByteArrayOutputStream();
-            String errorLog = Svg2Vector.parseSvgToXml(incomingFile, outStream);
+            errorLog = Svg2Vector.parseSvgToXml(incomingFile, outStream);
             if (expectedError != null) {
                 assertNotNull(errorLog);
                 assertFalse(errorLog.isEmpty());
@@ -91,7 +96,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
             }
             xmlContent = outStream.toString();
             if (xmlContent == null || xmlContent.isEmpty()) {
-                fail("Empty Xml file.");
+                fail("Empty XML file.");
             }
             if (dumpXml) {
                 File tempXmlFile = new File(parentDirFile, imageName + ".xml");
@@ -130,10 +135,14 @@ public class VectorDrawableGeneratorTest extends TestCase {
             GeneratorTester.assertImageSimilar(
                     imageNameWithParent, goldenImage, image, DIFF_THRESHOLD_PERCENT);
         }
+
+        return errorLog;
     }
 
-    private void checkSvgConversion(@NonNull String filename) throws Exception {
-        checkVectorConversion(filename, FileType.SVG, false, null);
+    /** Checks SVG conversion and returns contents of the error log. */
+    @Nullable
+    private String checkSvgConversion(@NonNull String filename) throws Exception {
+        return checkVectorConversion(filename, FileType.SVG, false, null);
     }
 
     private void checkXmlConversion(@NonNull String filename) throws Exception {
@@ -141,13 +150,15 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     private void checkSvgConversionAndContainsError(
-            @NonNull String filename, @Nullable String errorLog) throws Exception {
-        checkVectorConversion(filename, FileType.SVG, false, errorLog);
+            @NonNull String filename, @Nullable String expectedError) throws Exception {
+        checkVectorConversion(filename, FileType.SVG, false, expectedError);
     }
 
+    /** Checks SVG conversion and returns contents of the error log. */
     @SuppressWarnings("unused") // Method intended for debugging.
-    private void checkSvgConversionDebug(@NonNull String filename) throws Exception {
-        checkVectorConversion(filename, FileType.SVG, true, null);
+    @Nullable
+    private String checkSvgConversionDebug(@NonNull String filename) throws Exception {
+        return checkVectorConversion(filename, FileType.SVG, true, null);
     }
 
     //////////////////////////////////////////////////////////
@@ -526,6 +537,13 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 "ERROR @ line 6: Circular dependency of <use> nodes: hhh -> hhh\n" +
                 "ERROR @ line 9: Circular dependency of <use> nodes: ccc -> ddd (line 11) -> eee (line 10) -> ccc\n" +
                 "ERROR @ line 12: Circular dependency of <use> nodes: ggg -> fff (line 8) -> ggg");
+    }
+
+    public void testSvgUnsupportedElement() throws Exception {
+        String errors = checkSvgConversion("test_unsupported_element");
+        assertEquals(
+                "In test_unsupported_element.svg:\n" + "ERROR @ line 4: <text> is not supported",
+                errors);
     }
 
     // Clip Path Tests

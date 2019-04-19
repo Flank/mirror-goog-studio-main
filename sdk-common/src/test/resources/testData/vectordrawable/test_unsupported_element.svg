@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24">
+  <use href="#id1" stroke-width="3" stroke-linejoin="round"/>
+  <defs>
+    <text id="id2">text</text>
+  </defs>
+  <defs>
+    <use id="id1" href="#id2" stroke="#090"/>
+  </defs>
+  <path d="M 2 2 h 20 v 20 h -20 v -20z" fill="#0e0"/>
+</svg>

@@ -409,6 +409,10 @@ public class Svg2Vector {
                 }
 
                 default:
+                    String id = childElement.getAttribute("id");
+                    if (id != null) {
+                        svgTree.addIgnoredId(id);
+                    }
                     // For other fancy tags, like <switch>, they can contain children too.
                     // Report the unsupported nodes.
                     if (unsupportedSvgNodes.contains(tagName)) {
@@ -599,10 +603,10 @@ public class Svg2Vector {
      * Checks if the id of a node exists and adds the id and SvgNode to the svgTree's idMap if it
      * exists.
      */
-    private static void processIdName(@NonNull SvgTree svgTree, @NonNull SvgNode child) {
-        String idName = child.getAttributeValue("id");
-        if (!idName.isEmpty()) {
-            svgTree.addIdToMap(idName, child);
+    private static void processIdName(@NonNull SvgTree svgTree, @NonNull SvgNode node) {
+        String id = node.getAttributeValue("id");
+        if (!id.isEmpty()) {
+            svgTree.addIdToMap(id, node);
         }
     }
 
@@ -641,7 +645,9 @@ public class Svg2Vector {
         AffineTransform useTransform = new AffineTransform(1, 0, 0, 1, x, y);
         SvgNode definedNode = id == null ? null : svgTree.getSvgNodeFromId(id);
         if (definedNode == null) {
-            svgTree.logError("Referenced id not found", currentNode);
+            if (id == null || !svgTree.isIdIgnored(id)) {
+                svgTree.logError("Referenced id not found", currentNode);
+            }
         } else {
             //noinspection SuspiciousMethodCalls
             if (svgTree.getPendingUseSet().contains(definedNode)) {

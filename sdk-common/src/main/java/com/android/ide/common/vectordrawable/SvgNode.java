@@ -248,18 +248,7 @@ abstract class SvgNode {
      * the attribute does not exist.
      */
     public String getAttributeValue(@NonNull String attribute) {
-        NamedNodeMap a = mDocumentElement.getAttributes();
-        String value = "";
-        int len = a.getLength();
-        for (int j = 0; j < len; j++) {
-            Node n = a.item(j);
-            String name = n.getNodeName();
-            if (name.equals(attribute)) {
-                value = n.getNodeValue();
-                break;
-            }
-        }
-        return value;
+        return mDocumentElement.getAttribute(attribute);
     }
 
     @NonNull

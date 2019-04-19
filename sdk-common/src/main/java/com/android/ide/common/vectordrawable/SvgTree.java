@@ -66,23 +66,32 @@ class SvgTree {
 
     private boolean mHasGradient;
 
-    // Map of SvgNode's id to the SvgNode.
+    /** Map of SvgNode's id to the SvgNode. */
     private final Map<String, SvgNode> mIdMap = new HashMap<>();
 
-    // Set of SvgGroupNodes that contain use elements.
+    /** IDs of ignored SVG nodes. */
+    private final Set<String> mIgnoredIds = new HashSet<>();
+
+    /** Set of SvgGroupNodes that contain use elements. */
     private final Set<SvgGroupNode> mPendingUseGroupSet = new HashSet<>();
 
-    // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the parent of that
-    // SvgNode.
+    /**
+     * Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the parent of that
+     * SvgNode.
+     */
     private final Map<SvgNode, Pair<SvgGroupNode, String>> mClipPathAffectedNodes =
             new LinkedHashMap<>();
 
-    // Key is String that is the id of a style class.
-    // Value is set of SvgNodes referencing that class.
+    /**
+     * Key is String that is the id of a style class. Value is set of SvgNodes referencing that
+     * class.
+     */
     private final Map<String, Set<SvgNode>> mStyleAffectedNodes = new HashMap<>();
 
-    // Key is String that is the id of a style class. Value is a String that contains attribute
-    // information of that style class.
+    /**
+     * Key is String that is the id of a style class. Value is a String that contains attribute
+     * information of that style class.
+     */
     private final Map<String, String> mStyleClassAttributeMap = new HashMap<>();
 
     enum SvgLogLevel {
@@ -321,6 +330,14 @@ class SvgTree {
     @NonNull
     public Set<SvgGroupNode> getPendingUseSet() {
         return mPendingUseGroupSet;
+    }
+
+    public void addIgnoredId(@NonNull String id) {
+        mIgnoredIds.add(id);
+    }
+
+    public boolean isIdIgnored(@NonNull String id) {
+        return mIgnoredIds.contains(id);
     }
 
     public void addClipPathAffectedNode(
