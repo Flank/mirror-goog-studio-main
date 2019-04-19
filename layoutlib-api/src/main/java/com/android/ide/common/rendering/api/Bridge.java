@@ -122,18 +122,18 @@ public abstract class Bridge {
 
     /**
      * Clears the resource cache for a specific project.
-     *
      * <p>This cache contains bitmaps and nine patches that are loaded from the disk and reused
      * until this method is called.
-     *
-     * <p>The cache is not configuration dependent and should only be cleared when a resource
-     * changes (at this time only bitmaps and 9 patches go into the cache).
-     *
-     * <p>The project key provided must be similar to the one passed in {@link RenderParams}.
+     * <p>The cache is not configuration dependent and should only be cleared when a
+     * resource changes (at this time only bitmaps and 9 patches go into the cache).
+     * <p>
+     * The project key provided must be similar to the one passed in {@link RenderParams}.
      *
      * @param projectKey the key for the project.
      */
-    public void clearResourceCaches(Object projectKey) {}
+    public void clearCaches(Object projectKey) {
+
+    }
 
     /**
      * Removes a font file from the Typeface cache.
@@ -141,13 +141,6 @@ public abstract class Bridge {
      * @param path path of the font file to remove from the cache
      */
     public void clearFontCache(String path) {}
-
-    /**
-     * Clears all caches for a specific project.
-     *
-     * @param projectKey the key for the project.
-     */
-    public void clearAllCaches(Object projectKey) {}
 
     /**
      * Utility method returning the parent of a given view object.
