@@ -44,6 +44,11 @@ class AtraceManager {
   // the allocated memory requested each attempt.
   // Visible for testing.
   static const int kRetryStartAttempts = 20;
+  // Number of millis to wait between atrace dumps when profiling.
+  // The average user will run a capture around 20 seconds, however to
+  // support longer captures we should dump the data (causing a
+  // hitch). This data dump enables us to have long captures.
+  static const int32_t kDefaultDumpDataInternalMs = 1000 * 30;
 
   explicit AtraceManager(std::unique_ptr<FileSystem> file_system, Clock *clock,
                          int dump_data_interval_ms)

@@ -17,6 +17,7 @@ cc_library(
         "simpleperf_manager.cc",
         "thread_monitor.cc",
         "thread_parser.cc",
+        "trace_manager.cc",
         "utils/tracing_utils.cc",
     ],
     hdrs = [
@@ -37,6 +38,7 @@ cc_library(
         "thread_monitor.h",
         "thread_parser.h",
         "threads_sample.h",
+        "trace_manager.h",
         "utils/tracing_utils.h",
     ],
     copts = ANDROID_COPTS + [
@@ -60,7 +62,6 @@ cc_test(
     srcs = [
         "atrace_manager_test.cc",
         "cpu_config_test.cc",
-        "cpu_service_test.cc",
         "cpu_usage_sampler_test.cc",
         "fake_atrace.h",
         "fake_perfetto.h",
@@ -68,6 +69,7 @@ cc_test(
         "perfetto_manager_test.cc",
         "simpleperf_manager_test.cc",
         "simpleperf_test.cc",
+        "trace_manager_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

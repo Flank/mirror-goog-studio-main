@@ -24,9 +24,8 @@ using std::string;
 namespace profiler {
 
 TEST(PerfettoManagerTest, ProfilingStartStop) {
-  FakeClock fake_clock;
   std::shared_ptr<Perfetto> perfetto(new FakePerfetto());
-  PerfettoManager manager{&fake_clock, perfetto};
+  PerfettoManager manager{perfetto};
   perfetto::protos::TraceConfig config;
   string trace_path;
   string error;
@@ -39,9 +38,8 @@ TEST(PerfettoManagerTest, ProfilingStartStop) {
 }
 
 TEST(PerfettoManagerTest, ValidateRunArgs) {
-  FakeClock fake_clock;
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
-  PerfettoManager manager{&fake_clock, perfetto};
+  PerfettoManager manager{perfetto};
   const char* app_name = "App Name";
   perfetto::protos::TraceConfig config =
       PerfettoManager::BuildConfig(app_name, 32000);
@@ -62,9 +60,8 @@ TEST(PerfettoManagerTest, ValidateRunArgs) {
 }
 
 TEST(PerfettoManagerTest, ValidateShutdown) {
-  FakeClock fake_clock;
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
-  PerfettoManager manager{&fake_clock, perfetto};
+  PerfettoManager manager{perfetto};
   perfetto::protos::TraceConfig config;
   string trace_path;
   string error;
@@ -106,10 +103,9 @@ TEST(PerfettoManagerTest, ValidateConfig) {
 }
 
 TEST(PerfettoManagerTest, ValidateShutdownErrors) {
-  FakeClock fake_clock;
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
   perfetto->SetRunStateTo(true, true);
-  PerfettoManager manager{&fake_clock, perfetto};
+  PerfettoManager manager{perfetto};
   perfetto::protos::TraceConfig config;
   string trace_path;
   string error;
@@ -133,10 +129,9 @@ TEST(PerfettoManagerTest, ValidateShutdownErrors) {
 }
 
 TEST(PerfettoManagerTest, ValidateErrorsToRun) {
-  FakeClock fake_clock;
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
   perfetto->SetRunStateTo(false, true);
-  PerfettoManager manager{&fake_clock, perfetto};
+  PerfettoManager manager{perfetto};
   perfetto::protos::TraceConfig config;
   string trace_path;
   string error;

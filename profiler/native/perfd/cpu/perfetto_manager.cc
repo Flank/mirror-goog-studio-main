@@ -26,9 +26,8 @@ using std::string;
 
 namespace profiler {
 
-PerfettoManager::PerfettoManager(Clock* clock,
-                                 std::shared_ptr<Perfetto> perfetto)
-    : perfetto_(std::move(perfetto)), clock_(clock) {}
+PerfettoManager::PerfettoManager(std::shared_ptr<Perfetto> perfetto)
+    : perfetto_(std::move(perfetto)) {}
 
 bool PerfettoManager::StartProfiling(
     const std::string& app_name, const std::string& abi_arch,

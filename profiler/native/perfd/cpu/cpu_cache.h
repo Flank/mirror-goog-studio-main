@@ -17,15 +17,11 @@
 #define PERFD_CPU_CPU_CACHE_H_
 
 #include <cstdint>
-#include <memory>
-#include <mutex>
 #include <vector>
 
-#include "perfd/cpu/profiling_app.h"
 #include "perfd/cpu/threads_sample.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu_data.pb.h"
-#include "utils/clock.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
@@ -41,8 +37,7 @@ class CpuCache {
 
   // Construct the main CPU cache holder. |capacity| is of every app's every
   // kind of cache (same size for all).
-  explicit CpuCache(int32_t capacity, Clock* clock)
-      : capacity_(capacity), clock_(clock) {}
+  explicit CpuCache(int32_t capacity) : capacity_(capacity) {}
 
   // Returns true if successfully allocating a cache for a given pid, or if
   // the cache is already allocated.
@@ -66,43 +61,15 @@ class CpuCache {
   // (|from|, |to|].
   ThreadSampleResponse GetThreads(int32_t pid, int64_t from, int64_t to);
 
-  // Adds start event for non-startup profiling. Returns true if succesfully
-  // added.
-  bool AddProfilingStart(int32_t pid, const ProfilingApp& record);
-  // Adds stop event for non-startup profiling.
-  bool AddProfilingStop(int32_t pid);
-  // Adds start event for startup profiling.
-  void AddStartupProfilingStart(const std::string& apk_pkg_name,
-                                const ProfilingApp& record);
-  // Adds stop event for startup profiling.
-  void AddStartupProfilingStop(int32_t pid, const std::string& apk_pkg_name);
-
-  // Returns the |ProfilingApp| of the app with the given |pid|.
-  ProfilingApp* GetOngoingCapture(int32_t pid);
-
-  // Returns the |ProfilingApp| of the app with the given |app_pkg_name| and
-  // which was started by startup profiling.
-  ProfilingApp* GetOngoingStartupProfiling(const std::string& app_pkg_name);
-
-  // Returns the captures from process of |pid| that overlap with the given
-  // interval [|from|, |to|], both inclusive.
-  std::vector<ProfilingApp> GetCaptures(int32_t pid, int64_t from, int64_t to);
-
  private:
   // Each app's cache held by CPU component in the on-device daemon.
   struct AppCpuCache {
     int32_t pid;
     TimeValueBuffer<profiler::proto::CpuUsageData> usage_cache;
     TimeValueBuffer<ThreadsSample> threads_cache;
-    CircularBuffer<ProfilingApp> capture_cache;
-    ProfilingApp* ongoing_capture;
 
     AppCpuCache(int32_t pid, int32_t capacity)
-        : pid(pid),
-          usage_cache(capacity, pid),
-          threads_cache(capacity, pid),
-          capture_cache(capacity),
-          ongoing_capture(nullptr) {}
+        : pid(pid), usage_cache(capacity, pid), threads_cache(capacity, pid) {}
   };
 
   // Returns the raw pointer to the cache for a given app. Returns null if
@@ -113,10 +80,6 @@ class CpuCache {
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
   // The capacity of every kind of cache.
   int32_t capacity_;
-  Clock* clock_;
-
-  // Map from app package name to the corresponding data of startup profiling.
-  std::map<std::string, ProfilingApp> startup_profiling_apps_;
 };
 
 }  // namespace profiler

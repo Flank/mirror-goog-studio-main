@@ -20,7 +20,6 @@
 #include "perfd/cpu/perfetto.h"
 #include "proto/cpu.grpc.pb.h"
 #include "protos/perfetto/config/perfetto_config.grpc.pb.h"
-#include "utils/clock.h"
 #include "utils/fs/file_system.h"
 
 namespace profiler {
@@ -32,9 +31,9 @@ namespace profiler {
 // a device, or the fake android framework.
 class PerfettoManager {
  public:
-  explicit PerfettoManager(Clock *clock)
-      : PerfettoManager(clock, std::shared_ptr<Perfetto>(new Perfetto())) {}
-  explicit PerfettoManager(Clock *clock, std::shared_ptr<Perfetto> perfetto);
+  PerfettoManager()
+      : PerfettoManager(std::shared_ptr<Perfetto>(new Perfetto())) {}
+  explicit PerfettoManager(std::shared_ptr<Perfetto> perfetto);
   virtual ~PerfettoManager() = default;
 
   // Buids a default perfetto config. The default config creates a memory buffer
@@ -68,7 +67,6 @@ class PerfettoManager {
 
  private:
   std::shared_ptr<Perfetto> perfetto_;
-  Clock *clock_;
 };
 }  // namespace profiler
 

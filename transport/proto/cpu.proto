@@ -145,6 +145,10 @@ message StartupProfilingResponse {
 
 message CpuStopRequest {
   Session session = 1;
+  // This is needed to stop any ongoing trace, since traces
+  // are mapped via the process's name in the daemon as part
+  // of the new pipeline change.
+  string app_name = 2;
 }
 
 message CpuStopResponse {
@@ -182,6 +186,10 @@ message CpuProfilingAppStopRequest {
   Session session = 1;
   CpuTraceType trace_type = 2;
   CpuTraceMode trace_mode = 3;
+  // This is needed to stop any ongoing trace, since traces
+  // are mapped via the process's name in the daemon as part
+  // of the new pipeline change.
+  string app_name = 4;
 }
 
 message CpuProfilingAppStopResponse {

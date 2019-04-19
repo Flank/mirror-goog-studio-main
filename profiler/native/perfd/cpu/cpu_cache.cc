@@ -17,8 +17,6 @@
 
 #include <cstdint>
 
-#include "utils/process_manager.h"
-
 using profiler::proto::CpuUsageData;
 using std::string;
 using std::vector;
@@ -97,104 +95,6 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t pid, int64_t from,
   }
 
   return response;
-}
-
-bool CpuCache::AddProfilingStart(int32_t pid, const ProfilingApp& record) {
-  auto* found = FindAppCache(pid);
-  if (found == nullptr) return false;
-  found->ongoing_capture = found->capture_cache.Add(record);
-  return true;
-}
-
-bool CpuCache::AddProfilingStop(int32_t pid) {
-  auto* found = FindAppCache(pid);
-  if (found == nullptr) return false;
-  if (found->ongoing_capture == nullptr) return false;
-  found->ongoing_capture->end_timestamp = clock_->GetCurrentTime();
-  found->ongoing_capture = nullptr;
-  return true;
-}
-
-void CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
-                                        const ProfilingApp& record) {
-  startup_profiling_apps_[apk_pkg_name] = record;
-}
-
-void CpuCache::AddStartupProfilingStop(int32_t pid,
-                                       const string& apk_pkg_name) {
-  auto* profiling_app = GetOngoingStartupProfiling(apk_pkg_name);
-  if (profiling_app != nullptr) {
-    // Move the capture data over to the normal cache
-    // TODO b/119261457 This is temporary.
-    // We should make all capture initiation types share the same cache.
-    profiling_app->end_timestamp = clock_->GetCurrentTime();
-    auto* found = FindAppCache(pid);
-    if (found != nullptr) {
-      found->capture_cache.Add(*profiling_app);
-    }
-
-    startup_profiling_apps_.erase(apk_pkg_name);
-  }
-}
-
-ProfilingApp* CpuCache::GetOngoingCapture(int32_t pid) {
-  // First, look into pid-associated |app_caches_|.
-  auto* found = FindAppCache(pid);
-  if (found == nullptr) return nullptr;
-  if (found->ongoing_capture != nullptr) return found->ongoing_capture;
-
-  // If there is no apps under startup profiling, there is no point in trying to
-  // find a package name corresponding to |pid|, so we return early to prevent a
-  // call to |ProcessManager::GetCmdlineForPid|, which can be quite expensive.
-  if (startup_profiling_apps_.empty()) {
-    return nullptr;
-  }
-
-  // Not in |app_caches_|, try to find in |startup_profiling_apps_|.
-  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  return GetOngoingStartupProfiling(app_pkg_name);
-}
-
-ProfilingApp* CpuCache::GetOngoingStartupProfiling(
-    const std::string& app_pkg_name) {
-  const auto& app_iterator = startup_profiling_apps_.find(app_pkg_name);
-  if (app_iterator != startup_profiling_apps_.end()) {
-    return &app_iterator->second;
-  }
-  return nullptr;
-}
-
-vector<ProfilingApp> CpuCache::GetCaptures(int32_t pid, int64_t from,
-                                           int64_t to) {
-  vector<ProfilingApp> captures;
-
-  auto* found = FindAppCache(pid);
-
-  if (found != nullptr) {
-    auto& cache = found->capture_cache;
-    for (size_t i = 0; i < cache.size(); i++) {
-      const auto& candidate = cache.Get(i);
-      // Skip completed captures that ends earlier than |from| and those
-      // (completed or not) that starts after |to|.
-      if ((candidate.end_timestamp != -1 && candidate.end_timestamp < from) ||
-          candidate.start_timestamp > to)
-        continue;
-      captures.push_back(candidate);
-    }
-  }
-
-  // TODO b/119261457 This is temporary.
-  // We should make all capture initiation types share the same cache.
-  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  auto* startup_profiling = GetOngoingStartupProfiling(app_pkg_name);
-  if (startup_profiling != nullptr) {
-    // Always return startup traces because if there is an entry, it has to
-    // to be ongoing and began when the app started, and therefore we don't
-    // need to check against timestamps.
-    captures.push_back(*startup_profiling);
-  }
-
-  return captures;
 }
 
 CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {

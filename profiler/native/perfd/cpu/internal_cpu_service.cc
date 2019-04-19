@@ -24,6 +24,8 @@
 
 using grpc::ServerContext;
 using grpc::Status;
+using profiler::proto::CpuProfilingAppStopResponse;
+using profiler::proto::CpuTraceConfiguration;
 using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
@@ -31,35 +33,28 @@ using profiler::proto::CpuTraceType;
 using profiler::proto::TraceInitiationType;
 
 namespace profiler {
-
 Status InternalCpuServiceImpl::SendTraceEvent(
     ServerContext* context, const CpuTraceOperationRequest* request,
     CpuTraceOperationResponse* response) {
   int pid = request->pid();
   std::cout << "CPU SendTraceEvent " << pid << " " << request->timestamp()
             << " " << request->detail_case();
+
+  ProcessManager process_manager;
+  std::string app_name(process_manager.GetCmdlineForPid(pid));
   if (request->has_start()) {
-    ProfilingApp* ongoing_capture = cache_.GetOngoingCapture(pid);
-    if (ongoing_capture != nullptr) {
-      std::cout << " START request ignored" << std::endl;
-      return Status::OK;
-    }
-
-    ProfilingApp capture;
-    ProcessManager process_manager;
-    SteadyClock clock;
-
-    capture.trace_id = clock.GetCurrentTime();
-    capture.start_timestamp = request->timestamp();
-    capture.end_timestamp = -1;
-    capture.configuration.set_app_name(process_manager.GetCmdlineForPid(pid));
-    capture.configuration.set_initiation_type(
-        TraceInitiationType::INITIATED_BY_API);
-    auto* user_options = capture.configuration.mutable_user_options();
+    CpuTraceConfiguration configuration;
+    configuration.set_app_name(app_name);
+    configuration.set_initiation_type(TraceInitiationType::INITIATED_BY_API);
+    auto* user_options = configuration.mutable_user_options();
     user_options->set_trace_type(CpuTraceType::ART);
     user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
-    if (!cache_.AddProfilingStart(pid, capture)) {
-      std::cout << " START request ignored (no app cache)" << std::endl;
+
+    std::string error_string;
+    auto* capture = trace_manager_->StartProfiling(
+        request->timestamp(), configuration, &error_string);
+    if (capture == nullptr) {
+      std::cout << " START request ignored. " << error_string << std::endl;
       return Status::OK;
     }
 
@@ -67,9 +62,9 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     std::cout << " START " << request->start().method_name() << " "
               << request->start().method_signature() << " '"
               << request->start().arg_trace_path() << "'"
-              << " trace_id=" << capture.trace_id << std::endl;
+              << " trace_id=" << capture->trace_id << std::endl;
   } else if (request->has_stop()) {
-    const ProfilingApp* ongoing = cache_.GetOngoingCapture(pid);
+    const auto* ongoing = trace_manager_->GetOngoingCapture(app_name);
     if (ongoing == nullptr) {
       Log::E("No running trace when Debug.stopMethodTracing() is called");
     } else if (ongoing->configuration.initiation_type() !=
@@ -78,10 +73,13 @@ Status InternalCpuServiceImpl::SendTraceEvent(
           "Debug.stopMethodTracing() is called but the running trace is not "
           "initiated by startMetghodTracing* APIs");
     } else {
-      cache_.AddProfilingStop(pid);
-
+      CpuProfilingAppStopResponse::Status status;
+      std::string error_string;
+      auto* capture = trace_manager_->StopProfiling(app_name, false, &status,
+                                                    &error_string);
+      assert(capture != nullptr);
       std::ostringstream oss;
-      oss << ongoing->trace_id;
+      oss << capture->trace_id;
       std::string file_name = oss.str();
       file_cache_->AddChunk(file_name, request->stop().trace_content());
       file_cache_->Complete(file_name);

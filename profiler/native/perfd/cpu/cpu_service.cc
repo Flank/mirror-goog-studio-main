@@ -19,9 +19,9 @@
 
 #include "perfd/cpu/cpu_config.h"
 #include "perfd/cpu/profiling_app.h"
-#include "perfd/cpu/simpleperf_manager.h"
 #include "proto/common.pb.h"
 #include "utils/activity_manager.h"
+#include "utils/current_process.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
@@ -125,9 +125,9 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
                                           const GetTraceInfoRequest* request,
                                           GetTraceInfoResponse* response) {
   Trace trace("CPU:GetTraceInfo");
-  const vector<ProfilingApp>& data =
-      cache_.GetCaptures(request->session().pid(), request->from_timestamp(),
-                         request->to_timestamp());
+  string app_name = ProcessManager::GetCmdlineForPid(request->session().pid());
+  const vector<ProfilingApp>& data = trace_manager_->GetCaptures(
+      app_name, request->from_timestamp(), request->to_timestamp());
   for (const auto& datum : data) {
     CpuTraceInfo* info = response->add_trace_info();
     info->set_trace_type(datum.configuration.user_options().trace_type());
@@ -165,7 +165,7 @@ grpc::Status CpuServiceImpl::StopMonitoringApp(ServerContext* context,
     status = thread_monitor_.RemoveProcess(pid);
   }
   response->set_status(status);
-  DoStopProfilingApp(pid, nullptr);
+  DoStopProfilingApp(request->app_name(), nullptr);
   // cache_.DeallocateAppCache(pid) must happen last because prior actions such
   // as DoStopProfilingApp() depends on data from the cache to act.
   cache_.DeallocateAppCache(pid);
@@ -176,111 +176,48 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
   Trace trace("CPU:StartProfilingApp");
-  int32_t pid = request->session().pid();
-  bool success = false;
   string error;
-  const CpuTraceConfiguration& configuration = request->configuration();
-  const auto& user_options = configuration.user_options();
-  if (user_options.trace_type() == CpuTraceType::SIMPLEPERF) {
-    success = simpleperf_manager_->StartProfiling(
-        configuration.app_name(), configuration.abi_cpu_arch(),
-        user_options.sampling_interval_us(), configuration.temp_path(), &error);
-  } else if (user_options.trace_type() == CpuTraceType::ATRACE) {
-    int acquired_buffer_size_kb = 0;
-    if (usePerfetto()) {
-      // Perfetto always acquires the proper buffer size.
-      acquired_buffer_size_kb = user_options.buffer_size_in_mb() * 1024;
-      // TODO: We may want to pass this in from studio for a more flexible
-      // config.
-      perfetto::protos::TraceConfig config = PerfettoManager::BuildConfig(
-          configuration.app_name(), acquired_buffer_size_kb);
-      success = perfetto_manager_->StartProfiling(
-          configuration.app_name(), configuration.abi_cpu_arch(), config,
-          configuration.temp_path(), &error);
-    } else {
-      success = atrace_manager_->StartProfiling(
-          configuration.app_name(), user_options.buffer_size_in_mb(),
-          &acquired_buffer_size_kb, configuration.temp_path(), &error);
-    }
-    response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
-  } else {
-    auto mode = ActivityManager::SAMPLING;
-    if (user_options.trace_mode() == CpuTraceMode::INSTRUMENTED) {
-      mode = ActivityManager::INSTRUMENTED;
-    }
-    success = activity_manager_->StartProfiling(
-        mode, configuration.app_name(), user_options.sampling_interval_us(),
-        configuration.temp_path(), &error);
-  }
-
-  if (success) {
+  auto* capture = trace_manager_->StartProfiling(
+      clock_->GetCurrentTime(), request->configuration(), &error);
+  if (capture != nullptr) {
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
-
-    int64_t timestampNs = clock_->GetCurrentTime();
-    ProfilingApp profiling_app;
-    profiling_app.trace_id = timestampNs;
-    profiling_app.start_timestamp = timestampNs;
-    profiling_app.end_timestamp = -1;  // -1 means not end yet (ongoing)
-    profiling_app.configuration = configuration;
-
-    cache_.AddProfilingStart(pid, profiling_app);
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
     response->set_error_message(error);
   }
+
   return Status::OK;
 }
 
 grpc::Status CpuServiceImpl::StopProfilingApp(
     ServerContext* context, const CpuProfilingAppStopRequest* request,
     CpuProfilingAppStopResponse* response) {
-  DoStopProfilingApp(request->session().pid(), response);
+  DoStopProfilingApp(request->app_name(), response);
   return Status::OK;
 }
 
-void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
+void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
                                         CpuProfilingAppStopResponse* response) {
-  ProfilingApp* app = cache_.GetOngoingCapture(pid);
-  if (app == nullptr) {
-    if (response != nullptr) {
-      response->set_status(CpuProfilingAppStopResponse::NO_ONGOING_PROFILING);
-    }
-    return;
-  }
-  CpuTraceType trace_type = app->configuration.user_options().trace_type();
+  proto::CpuProfilingAppStopResponse::Status status;
   string error;
-  CpuProfilingAppStopResponse::Status status =
-      CpuProfilingAppStopResponse::SUCCESS;
-  bool need_trace = response != nullptr;
-  if (trace_type == CpuTraceType::SIMPLEPERF) {
-    status = simpleperf_manager_->StopProfiling(
-        app->configuration.app_name(), need_trace,
-        cpu_config_.simpleperf_host(), &error);
-  } else if (trace_type == CpuTraceType::ATRACE) {
-    if (usePerfetto()) {
-      status = perfetto_manager_->StopProfiling(&error);
-    } else {
-      status = atrace_manager_->StopProfiling(app->configuration.app_name(),
-                                              need_trace, &error);
-    }
-  } else {  // Profiler is ART
-    status = activity_manager_->StopProfiling(
-        app->configuration.app_name(), need_trace, &error,
-        cpu_config_.art_stop_timeout_sec(),
-        app->configuration.initiation_type() == proto::INITIATED_BY_STARTUP);
-  }
+  bool need_response = response != nullptr;
+  ProfilingApp* capture =
+      trace_manager_->StopProfiling(app_name, need_response, &status, &error);
 
-  if (need_trace) {
+  if (need_response) {
     if (status == CpuProfilingAppStopResponse::SUCCESS) {
-      response->set_trace_id(app->trace_id);
+      assert(capture != nullptr);
+      response->set_trace_id(capture->trace_id);
       // Move over the file to the shared cached to be access via |GetBytes|
       std::ostringstream oss;
-      oss << "/data/local/tmp/perfd/cache/complete/" << app->trace_id;
+      // "cache/complete" is where the generic bytes rpc fetches contents from.
+      oss << CurrentProcess::dir() << "cache/complete/" << capture->trace_id;
       DiskFileSystem fs;
       // DiskFileSystem::MoveFile returns true when it fails.
       // TODO b/133321803 save this move by having Daemon generate a path in the
       // byte cache that traces can output contents to directly.
-      bool move_failed = fs.MoveFile(app->configuration.temp_path(), oss.str());
+      bool move_failed =
+          fs.MoveFile(capture->configuration.temp_path(), oss.str());
       if (move_failed) {
         status = CpuProfilingAppStopResponse::CANNOT_READ_FILE;
         error = "Failed to read trace from device";
@@ -291,17 +228,18 @@ void CpuServiceImpl::DoStopProfilingApp(int32_t pid,
     response->set_error_message(error);
   }
 
-  // No more use of this file. Delete it.
-  remove(app->configuration.temp_path().c_str());
-  cache_.AddProfilingStop(pid);
-  cache_.AddStartupProfilingStop(pid, app->configuration.app_name());
+  if (capture != nullptr) {
+    // No more use of this file. Delete it.
+    remove(capture->configuration.temp_path().c_str());
+  }
 }
 
 grpc::Status CpuServiceImpl::CheckAppProfilingState(
     ServerContext* context, const ProfilingStateRequest* request,
     ProfilingStateResponse* response) {
-  int32_t pid = request->session().pid();
-  ProfilingApp* app = cache_.GetOngoingCapture(pid);
+  string app_name = ProcessManager::GetCmdlineForPid(request->session().pid());
+  ProfilingApp* app = trace_manager_->GetOngoingCapture(app_name);
+
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
   response->set_check_timestamp(clock_->GetCurrentTime());
@@ -318,77 +256,27 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   return Status::OK;
 }
 
-bool CpuServiceImpl::usePerfetto() {
-  return DeviceInfo::feature_level() >= DeviceInfo::P &&
-         cpu_config_.use_perfetto();
-}
-
 grpc::Status CpuServiceImpl::StartStartupProfiling(
     grpc::ServerContext* context,
     const profiler::proto::StartupProfilingRequest* request,
     profiler::proto::StartupProfilingResponse* response) {
-  ProfilingApp app;
-  int64_t timestampNs = clock_->GetCurrentTime();
-  app.trace_id = timestampNs;
-  app.start_timestamp = timestampNs;
-  app.end_timestamp = -1;
-  app.configuration = request->configuration();
-
-  const auto& config = app.configuration;
-  CpuTraceType trace_type = config.user_options().trace_type();
   string error;
-  bool success = false;
-  // TODO: Art should be handled by Debug.startMethodTracing and
-  // Debug.stopMethodTracing APIs instrumentation instead. Once our codebase
-  // supports instrumenting them, this code should be removed.
-  if (trace_type == CpuTraceType::ART) {
-    auto mode = ActivityManager::SAMPLING;
-    if (config.user_options().trace_mode() == CpuTraceMode::INSTRUMENTED) {
-      mode = ActivityManager::INSTRUMENTED;
-    }
-    success = activity_manager_->StartProfiling(
-        mode, config.app_name(), config.user_options().sampling_interval_us(),
-        config.temp_path(), &error, true);
-  } else if (trace_type == CpuTraceType::SIMPLEPERF) {
-    success = simpleperf_manager_->StartProfiling(
-        config.app_name(), config.abi_cpu_arch(),
-        config.user_options().sampling_interval_us(), config.temp_path(),
-        &error, true);
-  } else if (trace_type == CpuTraceType::ATRACE) {
-    int acquired_buffer_size_kb = 0;
-    if (usePerfetto()) {
-      // Perfetto always acquires the proper buffer size.
-      acquired_buffer_size_kb =
-          config.user_options().buffer_size_in_mb() * 1024;
-      // TODO: We may want to pass this in from studio for a more flexible
-      // config.
-      perfetto::protos::TraceConfig perfetto_config =
-          PerfettoManager::BuildConfig(config.app_name(),
-                                       acquired_buffer_size_kb);
-      success = perfetto_manager_->StartProfiling(
-          config.app_name(), config.abi_cpu_arch(), perfetto_config,
-          config.temp_path(), &error);
-    } else {
-      success = atrace_manager_->StartProfiling(
-          config.app_name(), config.user_options().buffer_size_in_mb(),
-          &acquired_buffer_size_kb, config.temp_path(), &error);
-    }
-    response->set_buffer_size_acquired_kb(acquired_buffer_size_kb);
-  }
-  if (success) {
+  ProfilingApp* capture = trace_manager_->StartProfiling(
+      clock_->GetCurrentTime(), request->configuration(), &error);
+
+  if (capture != nullptr) {
     response->set_status(proto::StartupProfilingResponse::SUCCESS);
   } else {
     response->set_status(proto::StartupProfilingResponse::FAILURE);
     response->set_error_message(error);
   }
 
-  cache_.AddStartupProfilingStart(config.app_name(), app);
   return Status::OK;
 }
 
 int64_t CpuServiceImpl::GetEarliestDataTime(int32_t pid) {
   string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
-  ProfilingApp* app = cache_.GetOngoingStartupProfiling(app_pkg_name);
+  ProfilingApp* app = trace_manager_->GetOngoingCapture(app_pkg_name);
   return app != nullptr ? app->start_timestamp : LLONG_MAX;
 }
 

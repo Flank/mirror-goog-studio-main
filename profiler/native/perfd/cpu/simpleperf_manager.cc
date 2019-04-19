@@ -61,6 +61,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
   Log::D("Profiler:Received query to profile %s", app_name.c_str());
 
   if (IsProfiling(app_name)) {
+    error->append("Simpleperf is already running; start tracing failed.");
     return false;
   }
 

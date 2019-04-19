@@ -22,6 +22,7 @@
 #include "perfd/commands/get_cpu_core_config.h"
 #include "perfd/common_profiler_component.h"
 #include "perfd/cpu/cpu_profiler_component.h"
+#include "perfd/cpu/trace_manager.h"
 #include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
@@ -40,13 +41,17 @@ int Perfd::Initialize(Daemon* daemon) {
 
   auto* termination_service = TerminationService::Instance();
 
+  // Intended to be shared between legacy and new cpu tracing pipelines.
+  static TraceManager trace_manager(daemon->clock(), daemon_config.cpu(),
+                                    termination_service);
+
   // Register Components
   daemon->RegisterProfilerComponent(std::unique_ptr<CommonProfilerComponent>(
       new CommonProfilerComponent(daemon)));
 
   daemon->RegisterProfilerComponent(std::unique_ptr<CpuProfilerComponent>(
       new CpuProfilerComponent(daemon->clock(), daemon->file_cache(),
-                               daemon_config.cpu(), termination_service)));
+                               daemon_config.cpu(), &trace_manager)));
 
   daemon->RegisterProfilerComponent(std::unique_ptr<MemoryProfilerComponent>(
       new MemoryProfilerComponent(daemon->clock(), daemon->file_cache())));

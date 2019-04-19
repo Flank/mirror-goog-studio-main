@@ -17,17 +17,21 @@
 #define PERFD_CPU_INTERNAL_CPU_SERVICE_H_
 
 #include <grpc++/grpc++.h>
-#include "perfd/cpu/cpu_cache.h"
-#include "proto/internal_cpu.grpc.pb.h"
+
+#include "perfd/cpu/trace_manager.h"
 #include "utils/file_cache.h"
+
+#include "proto/cpu.grpc.pb.h"
+#include "proto/internal_cpu.grpc.pb.h"
 
 namespace profiler {
 
 class InternalCpuServiceImpl final
     : public profiler::proto::InternalCpuService::Service {
  public:
-  explicit InternalCpuServiceImpl(CpuCache* cpu_cache, FileCache* file_cache)
-      : cache_(*cpu_cache), file_cache_(file_cache) {}
+  explicit InternalCpuServiceImpl(TraceManager* trace_manager,
+                                  FileCache* file_cache)
+      : trace_manager_(trace_manager), file_cache_(file_cache) {}
 
   grpc::Status SendTraceEvent(
       grpc::ServerContext* context,
@@ -35,8 +39,7 @@ class InternalCpuServiceImpl final
       profiler::proto::CpuTraceOperationResponse* response) override;
 
  private:
-  // Data cache that will be queried to serve requests.
-  CpuCache& cache_;
+  TraceManager* trace_manager_;
   FileCache* file_cache_;
 };
 

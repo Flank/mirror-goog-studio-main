@@ -24,7 +24,6 @@
 
 #include "perfd/cpu/simpleperf.h"
 #include "proto/cpu.grpc.pb.h"
-#include "utils/clock.h"
 
 namespace profiler {
 
@@ -50,13 +49,11 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(Clock *clock)
-      : SimpleperfManager(clock,
-                          std::unique_ptr<Simpleperf>(new Simpleperf())) {}
+  SimpleperfManager()
+      : SimpleperfManager(std::unique_ptr<Simpleperf>(new Simpleperf())) {}
 
-  explicit SimpleperfManager(Clock *clock,
-                             std::unique_ptr<Simpleperf> simpleperf)
-      : clock_(clock), simpleperf_(std::move(simpleperf)) {}
+  explicit SimpleperfManager(std::unique_ptr<Simpleperf> simpleperf)
+      : simpleperf_(std::move(simpleperf)) {}
 
   ~SimpleperfManager();
 
@@ -90,7 +87,6 @@ class SimpleperfManager {
   Simpleperf *simpleperf() { return simpleperf_.get(); }
 
  private:
-  Clock *clock_;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
   std::unique_ptr<Simpleperf> simpleperf_;

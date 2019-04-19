@@ -23,8 +23,8 @@
 #include "perfd/cpu/cpu_service.h"
 #include "perfd/cpu/internal_cpu_service.h"
 #include "perfd/cpu/thread_monitor.h"
+#include "perfd/cpu/trace_manager.h"
 #include "proto/transport.grpc.pb.h"
-#include "utils/termination_service.h"
 
 namespace profiler {
 
@@ -46,13 +46,13 @@ class CpuProfilerComponent final : public ServiceComponent {
   explicit CpuProfilerComponent(
       Clock* clock, FileCache* file_cache,
       const proto::DaemonConfig::CpuConfig& cpu_config,
-      TerminationService* termination_service)
-      : cache_(kBufferCapacity, clock),
+      TraceManager* trace_manager)
+      : cache_(kBufferCapacity),
         usage_sampler_(clock, &cache_),
         thread_monitor_(clock, &cache_),
         public_service_(clock, &cache_, file_cache, &usage_sampler_,
-                        &thread_monitor_, cpu_config, termination_service),
-        internal_service_(&cache_, file_cache) {
+                        &thread_monitor_, cpu_config, trace_manager),
+        internal_service_(trace_manager, file_cache) {
     collector_.Start();
   }
 

@@ -20,21 +20,15 @@
 #include <map>
 #include <string>
 
-#include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
-#include "perfd/cpu/perfetto_manager.h"
-#include "perfd/cpu/simpleperf.h"
-#include "perfd/cpu/simpleperf_manager.h"
 #include "perfd/cpu/thread_monitor.h"
+#include "perfd/cpu/trace_manager.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/transport.grpc.pb.h"
-#include "utils/activity_manager.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
 #include "utils/file_cache.h"
-#include "utils/fs/disk_file_system.h"
-#include "utils/termination_service.h"
 
 namespace profiler {
 
@@ -44,45 +38,13 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuServiceImpl(Clock* clock, CpuCache* cpu_cache, FileCache* file_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
                  const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
-                 TerminationService* termination_service)
-      : CpuServiceImpl(
-            clock, cpu_cache, file_cache, usage_sampler, thread_monitor,
-            cpu_config, termination_service, ActivityManager::Instance(),
-            std::unique_ptr<SimpleperfManager>(new SimpleperfManager(clock)),
-            // Number of millis to wait between atrace dumps when profiling.
-            // The average user will run a capture around 20 seconds, however to
-            // support longer captures we should dump the data (causing a
-            // hitch). This data dump enables us to have long captures.
-            std::unique_ptr<AtraceManager>(new AtraceManager(
-                std::unique_ptr<FileSystem>(new DiskFileSystem()), clock,
-                1000 * 30)),
-            std::unique_ptr<PerfettoManager>(new PerfettoManager(clock))) {}
-
-  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache, FileCache* file_cache,
-                 CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
-                 const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
-                 TerminationService* termination_service,
-                 ActivityManager* activity_manager,
-                 std::unique_ptr<SimpleperfManager> simpleperf_manager,
-                 std::unique_ptr<AtraceManager> atrace_manager,
-                 std::unique_ptr<PerfettoManager> perfetto_manager)
+                 TraceManager* trace_manager)
       : cache_(*cpu_cache),
         clock_(clock),
-        file_cache_(file_cache),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         cpu_config_(cpu_config),
-        activity_manager_(activity_manager),
-        simpleperf_manager_(std::move(simpleperf_manager)),
-        atrace_manager_(std::move(atrace_manager)),
-        perfetto_manager_(std::move(perfetto_manager)) {
-    termination_service->RegisterShutdownCallback([this](int signal) {
-      this->activity_manager_->Shutdown();
-      this->simpleperf_manager_->Shutdown();
-      this->atrace_manager_->Shutdown();
-      this->perfetto_manager_->Shutdown();
-    });
-  }
+        trace_manager_(trace_manager) {}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -136,41 +98,25 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::CpuCoreConfigRequest* request,
       profiler::proto::CpuCoreConfigResponse* response) override;
 
-  // Visible for testing.
-  SimpleperfManager* simpleperf_manager() { return simpleperf_manager_.get(); }
-
-  // Visible for testing.
-  AtraceManager* atrace_manager() { return atrace_manager_.get(); }
-
-  // Visible for testing.
-  PerfettoManager* perfetto_manager() { return perfetto_manager_.get(); }
-
  private:
-  // Stops profiling process of |pid|, regardless of whether it is alive or
+  // Stops profiling |app_name|, regardless of whether it is alive or
   // dead. If |response| is not null, populate it with the capture data (trace);
   // otherwise, discard any capture result.
   void DoStopProfilingApp(
-      int32_t pid, profiler::proto::CpuProfilingAppStopResponse* response);
-
-  // Helper function for testing the config and device level to determine
-  // if we should use perfetto when capturing an atrace.
-  bool usePerfetto();
+      const std::string& app_name,
+      profiler::proto::CpuProfilingAppStopResponse* response);
 
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
   // Clock that timestamps start profiling requests.
   Clock* clock_;
-  FileCache* file_cache_;
   // The monitor that samples CPU usage data.
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
 
   const proto::DaemonConfig::CpuConfig cpu_config_;
-  ActivityManager* activity_manager_;
-  std::unique_ptr<SimpleperfManager> simpleperf_manager_;
-  std::unique_ptr<AtraceManager> atrace_manager_;
-  std::unique_ptr<PerfettoManager> perfetto_manager_;
+  TraceManager* trace_manager_;
 };
 
 }  // namespace profiler

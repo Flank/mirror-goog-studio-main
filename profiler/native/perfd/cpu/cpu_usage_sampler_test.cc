@@ -85,7 +85,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kElapsedTime = 1175801430;
 
   FakeClock clock;
-  CpuCache cache(100, &clock);
+  CpuCache cache(100);
   cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler(&clock, &cache);
   sampler.AddProcess(kMockAppPid);
@@ -124,7 +124,7 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_2 = 140;
 
   FakeClock clock;
-  CpuCache cache(100, &clock);
+  CpuCache cache(100);
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);
   CpuUsageSamplerToTest sampler(&clock, &cache);
