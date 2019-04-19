@@ -201,16 +201,9 @@ open class TaskProfilingRecord {
             else endTime
         )
 
-    fun addSpan(type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration) {
-
-        val taskSpanBuilder = GradleBuildProfileSpan.newBuilder()
-        taskSpanBuilder.parentId = spanBuilder.id
-        taskSpanBuilder.type = type
-        taskSpanBuilder.startTimeInMs = startTime.toEpochMilli()
-        taskSpanBuilder.durationInMs = duration.toMillis()
-        taskSpanBuilder.threadId = threadId
-
-        taskSpans.add(taskSpanBuilder.build())
+    fun addSpan(builder: GradleBuildProfileSpan.Builder) {
+        builder.parentId = spanBuilder.id
+        taskSpans.add(builder.build())
     }
 
     private constructor() {

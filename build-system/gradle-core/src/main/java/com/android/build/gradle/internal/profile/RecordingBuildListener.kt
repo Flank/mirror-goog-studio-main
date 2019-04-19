@@ -95,14 +95,9 @@ class RecordingBuildListener internal constructor(
     fun getWorkerRecord(taskPath: String, worker: String): WorkerProfilingRecord? =
         getTaskRecord(taskPath)?.get(worker)
 
-    fun recordAnonymousSpan(type: GradleBuildProfileSpan.ExecutionType, threadId: Long, startTime: Instant, duration: Duration) {
+    fun recordAnonymousSpan(builder: GradleBuildProfileSpan.Builder) {
         recordWriter.writeRecord(":$projectName", null,
-            GradleBuildProfileSpan.newBuilder()
-                .setId(recordWriter.allocateRecordId())
-                .setType(type)
-                .setThreadId(threadId)
-                .setStartTimeInMs(startTime.toEpochMilli())
-                .setDurationInMs(duration.toMillis()),
+            builder.setId(recordWriter.allocateRecordId()),
             listOf())
 
     }

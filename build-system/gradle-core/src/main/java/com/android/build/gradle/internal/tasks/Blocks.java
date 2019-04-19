@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.tasks;
 import com.android.build.gradle.internal.profile.TaskProfilingRecord;
 import com.android.ide.common.workers.GradlePluginMBeans;
 import com.android.ide.common.workers.ProfileMBean;
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -60,10 +62,11 @@ public class Blocks {
         if (profileMBean != null) {
             profileMBean.registerSpan(
                     taskPath,
-                    type,
-                    Thread.currentThread().getId(),
-                    before,
-                    Duration.between(before, after));
+                    GradleBuildProfileSpan.newBuilder()
+                        .setType(type)
+                        .setThreadId(Thread.currentThread().getId())
+                        .setStartTimeInMs(before.toEpochMilli())
+                        .setDurationInMs(Duration.between(before, after).toMillis()));
         }
     }
 
@@ -92,11 +95,48 @@ public class Blocks {
         if (profileMBean != null) {
             profileMBean.registerSpan(
                     taskPath,
-                    type,
-                    Thread.currentThread().getId(),
-                    before,
-                    Duration.between(before, after));
+                    GradleBuildProfileSpan.newBuilder()
+                            .setType(type)
+                            .setThreadId(Thread.currentThread().getId())
+                            .setStartTimeInMs(before.toEpochMilli())
+                            .setDurationInMs(Duration.between(before, after).toMillis()));
         }
         return t;
+    }
+
+    /**
+     * Record execution of an antifact transform.
+     *
+     * @param projectName the executing project name
+     * @param type the artifact transform type
+     * @param block the artifact transform execution block to record.
+     * @param <E> possible exception thrown by the block.
+     * @throws E the exception type.
+     */
+    public static <E extends Exception> void recordArtifactTransformSpan(
+            String projectName,
+            GradleTransformExecutionType type,
+            ThrowingBlock<E> block) throws E {
+
+        ProfileMBean profileMBean = GradlePluginMBeans.INSTANCE.getProfileMBean(projectName);
+        Instant timeStart = TaskProfilingRecord.Companion.getClock().instant();
+        try {
+            block.invoke();
+        } finally {
+            if (profileMBean!=null) {
+                profileMBean.registerSpan(null,
+                        GradleBuildProfileSpan.newBuilder()
+                                .setThreadId(Thread.currentThread().getId())
+                                .setType(GradleBuildProfileSpan.ExecutionType.ARTIFACT_TRANSFORM)
+                                .setTransform(GradleTransformExecution.newBuilder()
+                                        .setType(type.getNumber()))
+                                .setStartTimeInMs(timeStart.toEpochMilli())
+                                .setDurationInMs(
+                                        Duration.between(timeStart,
+                                                TaskProfilingRecord.Companion.getClock().instant())
+                                                .toMillis()));
+            }
+        }
+
     }
 }

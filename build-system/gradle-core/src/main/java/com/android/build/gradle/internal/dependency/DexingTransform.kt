@@ -17,17 +17,16 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
-import com.android.build.gradle.internal.profile.TaskProfilingRecord
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.Blocks
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
-import com.android.ide.common.workers.GradlePluginMBeans
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.google.common.io.Closer
 import com.google.common.io.Files
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.InputArtifactDependencies
@@ -46,7 +45,6 @@ import org.gradle.api.tasks.Internal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
-import java.time.Duration
 
 abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Parameters> {
     interface Parameters: TransformParameters {
@@ -69,39 +67,39 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
     protected abstract fun enableDesugaring(): Boolean
 
     override fun transform(outputs: TransformOutputs) {
-        val profileMBean = GradlePluginMBeans.getProfileMBean(parameters.projectName.get())
-        val timeStart = TaskProfilingRecord.clock.instant()
-        val name = Files.getNameWithoutExtension(primaryInput.name)
-        val outputDir = outputs.dir(name)
-        Closer.create().use { closer ->
+        Blocks.recordArtifactTransformSpan<Exception>(
+            parameters.projectName.get(),
+            GradleTransformExecutionType.DEX_ARTIFACT_TRANSFORM
+        ) {
 
-            val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-                parameters.minSdkVersion.get(),
-                parameters.debuggable.get(),
-                ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
-                    .also { closer.register(it) },
-                ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
-                enableDesugaring(),
-                MessageReceiverImpl(
-                    SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
-                    LoggerFactory.getLogger(DexingNoDesugarTransform::class.java)
-                )
-            )
+            val name = Files.getNameWithoutExtension(primaryInput.name)
+            val outputDir = outputs.dir(name)
+            Closer.create().use { closer ->
 
-            ClassFileInputs.fromPath(primaryInput.toPath()).use { classFileInput ->
-                classFileInput.entries { true }.use { classesInput ->
-                    d8DexBuilder.convert(
-                        classesInput,
-                        outputDir.toPath(),
-                        false
+                val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
+                    parameters.minSdkVersion.get(),
+                    parameters.debuggable.get(),
+                    ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
+                        .also { closer.register(it) },
+                    ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
+                    enableDesugaring(),
+                    MessageReceiverImpl(
+                        SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
+                        LoggerFactory.getLogger(DexingNoDesugarTransform::class.java)
                     )
+                )
+
+                ClassFileInputs.fromPath(primaryInput.toPath()).use { classFileInput ->
+                    classFileInput.entries { true }.use { classesInput ->
+                        d8DexBuilder.convert(
+                            classesInput,
+                            outputDir.toPath(),
+                            false
+                        )
+                    }
                 }
             }
         }
-        profileMBean?.registerSpan(null,
-            GradleBuildProfileSpan.ExecutionType.ARTIFACT_TRANSFORM,
-            Thread.currentThread().id, timeStart,
-            Duration.between(timeStart, TaskProfilingRecord.clock.instant()))
     }
 }
 
