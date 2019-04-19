@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.cmake.MakeCmakeMessagePathsAbsoluteKt.makeCmakeMessagePathsAbsolute;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
@@ -37,20 +38,15 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import com.google.wireless.android.sdk.stats.GradleNativeAndroidModule;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * CMake JSON generation logic. This is separated from the corresponding CMake task so that JSON can
  * be generated during configuration.
  */
 abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
-    private static final Pattern cmakeFileFinder =
-            Pattern.compile("^(.*CMake (Error|Warning).* at\\s+)([^:]+)(:.*)$", Pattern.DOTALL);
     @NonNull protected final CxxCmakeModuleModel cmake;
 
     CmakeExternalNativeJsonGenerator(
@@ -102,7 +98,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @Override
     public String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException {
         String output = executeProcessAndGetOutput(abi);
-        return correctMakefilePaths(output, getMakefile().getParentFile());
+        return makeCmakeMessagePathsAbsolute(output, getMakefile().getParentFile());
     }
 
     @Override
@@ -219,47 +215,5 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             result.put(abi, file);
         }
         return result;
-    }
-
-    @NonNull
-    @VisibleForTesting
-    static String correctMakefilePaths(@NonNull String input, @NonNull File makeFileDirectory) {
-        Matcher cmakeFinderMatcher = cmakeFileFinder.matcher(input);
-        if (cmakeFinderMatcher.matches()) {
-            // The whole multi-line output could contain multiple warnings/errors
-            // so we split it into lines, fix the filenames, then recombine it.
-            List<String> corrected = new ArrayList<>();
-            for (String entry : input.split(System.lineSeparator())) {
-                cmakeFinderMatcher = cmakeFileFinder.matcher(entry);
-                if (cmakeFinderMatcher.matches()) {
-                    String fileName = cmakeFinderMatcher.group(3);
-                    File makeFile = new File(fileName);
-                    // No need to update absolute paths.
-                    if (makeFile.isAbsolute()) {
-                        corrected.add(entry);
-                        continue;
-                    }
-
-                    // Don't point to a file that doesn't exist.
-                    makeFile = new File(makeFileDirectory, fileName);
-                    if (!makeFile.exists()) {
-                        corrected.add(entry);
-                        continue;
-                    }
-
-                    // We were able to update the makefile path.
-                    corrected.add(
-                            cmakeFinderMatcher.group(1)
-                                    + makeFile.getAbsolutePath()
-                                    + cmakeFinderMatcher.group(4));
-                } else {
-                    corrected.add(entry);
-                }
-            }
-
-            return Joiner.on(System.lineSeparator()).join(corrected);
-        }
-
-        return input;
     }
 }

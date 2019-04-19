@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.external.cmake.CmakeUtils.getObjectToString;
+import static com.android.build.gradle.internal.cxx.cmake.MakeCmakeMessagePathsAbsoluteKt.makeCmakeMessagePathsAbsolute;
 import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
 import static com.android.build.gradle.internal.cxx.configure.CmakeSourceFileNamingKt.hasCmakeHeaderFileExtensions;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseIndexingVisitorKt.indexCompilationDatabase;
@@ -276,11 +277,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // Note: This is not the same as a message with type "message" with error information, that
         // case is handled below.
         if (message.type != null && message.type.equals("error")) {
-            logger.error(null, correctMakefilePaths(message.errorMessage, makeFileDirectory));
+            logger.error(
+                    null, makeCmakeMessagePathsAbsolute(message.errorMessage, makeFileDirectory));
             return;
         }
 
-        String correctedMessage = correctMakefilePaths(message.message, makeFileDirectory);
+        String correctedMessage = makeCmakeMessagePathsAbsolute(message.message, makeFileDirectory);
 
         if ((message.title != null && message.title.equals("Error"))
                 || message.message.startsWith(CMAKE_ERROR_PREFIX)) {

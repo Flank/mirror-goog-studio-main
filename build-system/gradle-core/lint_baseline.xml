@@ -53,22 +53,6 @@
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
-            file="src/main/java/com/android/build/gradle/tasks/CmakeServerExternalNativeJsonGenerator.java"
-            line="294"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
-            file="src/main/java/com/android/build/gradle/tasks/CmakeServerExternalNativeJsonGenerator.java"
-            line="298"/>
-    </issue>
-
-    <issue
-        id="VisibleForTests"
-        message="This method should only be accessed from tests or within private scope">
-        <location
             file="src/main/java/com/android/build/gradle/internal/tasks/ExtractProguardFiles.java"
             line="38"/>
     </issue>

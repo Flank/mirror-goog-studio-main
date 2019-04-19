@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.cxx.cmake.MakeCmakeMessagePathsAbsoluteKt.makeCmakeMessagePathsAbsolute;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
@@ -37,9 +38,7 @@ public class CmakeExternalNativeJsonGeneratorTest {
         String input = String.format(Locale.getDefault(), ERROR_STRING, RELATIVE_FILE_NAME);
         String expected =
                 String.format(Locale.getDefault(), ERROR_STRING, makefile.getAbsolutePath());
-        String actual =
-                CmakeExternalNativeJsonGenerator.correctMakefilePaths(
-                        input, makefile.getParentFile());
+        String actual = makeCmakeMessagePathsAbsolute(input, makefile.getParentFile());
         assertEquals(expected, actual);
     }
 
@@ -47,18 +46,14 @@ public class CmakeExternalNativeJsonGeneratorTest {
     public void testMakefilePathCorrectionForAbsolutePath() throws IOException {
         File makefile = temporaryFolder.newFile(RELATIVE_FILE_NAME);
         String input = String.format(Locale.getDefault(), ERROR_STRING, makefile.getAbsolutePath());
-        String actual =
-                CmakeExternalNativeJsonGenerator.correctMakefilePaths(
-                        input, makefile.getParentFile());
+        String actual = makeCmakeMessagePathsAbsolute(input, makefile.getParentFile());
         assertEquals(input, actual);
     }
 
     @Test
     public void testMakefilePathCorrectionForNonexistentFile() {
         String input = String.format(Locale.getDefault(), ERROR_STRING, RELATIVE_FILE_NAME);
-        String actual =
-                CmakeExternalNativeJsonGenerator.correctMakefilePaths(
-                        input, temporaryFolder.getRoot());
+        String actual = makeCmakeMessagePathsAbsolute(input, temporaryFolder.getRoot());
         assertEquals(input, actual);
     }
 
@@ -87,9 +82,7 @@ public class CmakeExternalNativeJsonGeneratorTest {
                         base,
                         absoluteMakefile.getAbsolutePath(),
                         otherErrorFile);
-        String actual =
-                CmakeExternalNativeJsonGenerator.correctMakefilePaths(
-                        input, absoluteMakefile.getParentFile());
+        String actual = makeCmakeMessagePathsAbsolute(input, absoluteMakefile.getParentFile());
         assertEquals(expected, actual);
     }
 }
