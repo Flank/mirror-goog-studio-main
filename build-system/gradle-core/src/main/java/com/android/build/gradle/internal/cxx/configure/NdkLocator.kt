@@ -226,13 +226,21 @@ private fun findNdkPathImpl(
 
         if (matchingLocations.isEmpty()) {
             // No versions matched the requested revision
-            errorln("No version of NDK matched the requested version $ndkVersionFromDsl")
             versionedLocations.onEach { (location, version) ->
                 considerAndReject(
                     location,
                     "that NDK had version ${version.revision} which didn't " +
                             "match the requested version $ndkVersionFromDsl"
                 )
+            }
+            if (versionedLocations.isNotEmpty()) {
+                val available =
+                    versionedLocations
+                        .sortedBy { (_, version) -> version.revision }
+                        .joinToString(", ") { (_, version) -> version.revision.toString() }
+                errorln("No version of NDK matched the requested version $ndkVersionFromDsl. Versions available locally: $available")
+            } else {
+                errorln("No version of NDK matched the requested version $ndkVersionFromDsl")
             }
             return highest.first.ndkRoot
         }

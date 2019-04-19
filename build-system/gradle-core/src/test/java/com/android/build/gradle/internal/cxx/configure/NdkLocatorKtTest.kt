@@ -795,7 +795,7 @@ class NdkLocatorKtTest {
                 } })
         } catch (e : GradleException) {
             assertThat(e.message).isEqualTo("""
-            No version of NDK matched the requested version 17.1.23456
+            No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
             """.trimIndent())
             throw e
         }
@@ -817,7 +817,7 @@ class NdkLocatorKtTest {
                 } })
         } catch (e : GradleException) {
             assertThat(e.message).isEqualTo("""
-            No version of NDK matched the requested version 17.1.23456
+            No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
             """.trimIndent())
             throw e
         }
@@ -935,7 +935,7 @@ class NdkLocatorKtTest {
                } })
        } catch (e : GradleException) {
            assertThat(e.message).isEqualTo("""
-            No version of NDK matched the requested version 17.1.23456
+            No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
             """.trimIndent())
            throw e
        }
@@ -957,7 +957,7 @@ class NdkLocatorKtTest {
                 } })
         } catch (e : GradleException) {
             assertThat(e.message).isEqualTo("""
-            No version of NDK matched the requested version 17.1.23456
+            No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
             """.trimIndent())
             throw e
         }
