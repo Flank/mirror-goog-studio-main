@@ -92,7 +92,10 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
 
   // Profiler agent.
-  SetupPerfa(vm, jvmti_env, config);
+  // We are passing in the AgentConfig stored in the Agent::Instance() because
+  // it will be accessed beyond the lifetime of this function. The |config|
+  // instance created within this function will no longer be valid.
+  SetupPerfa(vm, jvmti_env, Agent::Instance().agent_config());
 
   Agent::Instance().AddDaemonConnectedCallback([] {
     Agent::Instance().StartHeartbeat();
