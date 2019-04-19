@@ -14,237 +14,210 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.google.common.truth.Truth.assertThat
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.builder.core.BuilderConstants
+import com.android.ide.common.resources.AssetSet
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Lists
+import java.io.File
+import java.io.IOException
+import java.util.Arrays
+import java.util.HashSet
+import java.util.LinkedHashSet
+import java.util.function.Consumer
+import org.gradle.api.Project
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
+import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.FileCollection
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.After
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import java.util.function.Supplier
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.builder.core.BuilderConstants;
-import com.android.ide.common.resources.AssetSet;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.FileCollection;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+class MergeSourceSetFoldersTest {
 
-public class MergeSourceSetFoldersTest {
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    public Project project;
-    public MergeSourceSetFolders task;
-    private List<AssetSet> folderSets;
+    private lateinit var project: Project
+    private lateinit var task: MergeSourceSetFolders
+    private lateinit var folderSets: MutableList<AssetSet>
 
     @Before
-    public void setUp() throws IOException {
-        File testDir = temporaryFolder.newFolder();
-        project = ProjectBuilder.builder().withProjectDir(testDir).build();
+    @Throws(IOException::class)
+    fun setUp() {
+        val testDir = temporaryFolder.newFolder()
+        project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
-        task = project.getTasks().create("test", MergeSourceSetFolders.class);
+        task = project.tasks.create("test", MergeSourceSetFolders::class.java)
 
-        folderSets = Lists.newArrayList();
-        task.setAssetSetSupplier(() -> folderSets);
-    }
-
-    @After
-    public void tearDown() {
-        project = null;
-        task = null;
+        folderSets = Lists.newArrayList()
+        task.assetSetSupplier = Supplier { folderSets }
     }
 
     @Test
-    public void singleSetWithSingleFile() throws Exception {
-        File file = new File("src/main");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
+    @Throws(Exception::class)
+    fun singleSetWithSingleFile() {
+        val file = File("src/main")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
 
-        assertThat(task.computeAssetSetList()).containsExactly(mainSet);
+        assertThat(task.computeAssetSetList()).containsExactly(mainSet)
     }
 
     @Test
-    public void singleSetWithMultiFiles() throws Exception {
-        File file = new File("src/main");
-        File file2 = new File("src/main2");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2);
+    @Throws(Exception::class)
+    fun singleSetWithMultiFiles() {
+        val file = File("src/main")
+        val file2 = File("src/main2")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2)
 
-        assertThat(task.computeAssetSetList()).containsExactly(mainSet);
+        assertThat(task.computeAssetSetList()).containsExactly(mainSet)
     }
 
     @Test
-    public void twoSetsWithSingleFile() throws Exception {
-        File file = new File("src/main");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
+    @Throws(Exception::class)
+    fun twoSetsWithSingleFile() {
+        val file = File("src/main")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
 
-        File file2 = new File("src/debug");
-        AssetSet debugSet = createAssetSet(folderSets, "debug", file2);
+        val file2 = File("src/debug")
+        val debugSet = createAssetSet(folderSets, "debug", file2)
 
-        assertThat(task.computeAssetSetList()).containsExactly(mainSet, debugSet);
+        assertThat(task.computeAssetSetList()).containsExactly(mainSet, debugSet)
     }
 
     @Test
-    public void singleSetWithDependency() throws Exception {
-        File file = new File("src/main");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
+    @Throws(Exception::class)
+    fun singleSetWithDependency() {
+        val file = File("src/main")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
 
-        File file2 = new File("foo/bar/1.0");
-        List<AssetSet> librarySets = setupLibraryDependencies(file2, ":path");
+        val file2 = File("foo/bar/1.0")
+        val librarySets = setupLibraryDependencies(file2, ":path")
 
-        assertThat(task.getLibraries().getFiles()).containsExactly(file2);
-        assertThat(task.computeAssetSetList()).containsExactly(librarySets.get(0), mainSet).inOrder();
+        assertThat(task.getLibraries()!!.files).containsExactly(file2)
+        assertThat(task.computeAssetSetList()).containsExactly(librarySets[0], mainSet).inOrder()
     }
 
     @Test
-    public void singleSetWithRenderscript() throws Exception {
-        File file = new File("src/main");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
+    @Throws(Exception::class)
+    fun singleSetWithRenderscript() {
+        val file = File("src/main")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
 
-        File shaderFile = new File("shader");
-        setBuildableArtifact(task::setShadersOutputDir, shaderFile);
+        val shaderFile = File("shader")
+        setBuildableArtifact({ task.shadersOutputDir = it }, shaderFile)
 
-        assertThat(task.computeAssetSetList()).containsExactly(mainSet);
+        assertThat(task.computeAssetSetList()).containsExactly(mainSet)
         // shader file should have been added to the main resource sets.
-        assertThat(mainSet.getSourceFiles()).containsExactly(file, shaderFile);
+        assertThat(mainSet.sourceFiles).containsExactly(file, shaderFile)
     }
 
     @Test
-    public void singleSetWithGeneratedRes() throws Exception {
-        File file = new File("src/main");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
+    @Throws(Exception::class)
+    fun everything() {
+        val file = File("src/main")
+        val file2 = File("src/main2")
+        val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2)
 
-        File copyApkFile = new File("copyApk");
-        setFileCollection(task::setCopyApk, copyApkFile);
+        val debugFile = File("src/debug")
+        val debugSet = createAssetSet(folderSets, "debug", debugFile)
 
-        assertThat(task.computeAssetSetList()).containsExactly(mainSet);
-        // copyApk file should have been added to the main resource sets.
-        assertThat(mainSet.getSourceFiles()).containsExactly(file, copyApkFile);
-    }
-
-    @Test
-    public void everything() throws Exception {
-        File file = new File("src/main");
-        File file2 = new File("src/main2");
-        AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2);
-
-        File debugFile = new File("src/debug");
-        AssetSet debugSet = createAssetSet(folderSets, "debug", debugFile);
-
-        File libFile = new File("foo/bar/1.0");
-        File libFile2 = new File("foo/bar/2.0");
+        val libFile = File("foo/bar/1.0")
+        val libFile2 = File("foo/bar/2.0")
 
         // the order returned by the dependency is meant to be in the wrong order (consumer first,
         // when we want dependent first for the merger), so the order in the asset set should be
         // the opposite order.
-        List<AssetSet> librarySets = setupLibraryDependencies(
-                libFile, "foo:bar:1.0",
-                libFile2, "foo:bar:2.0");
-        AssetSet librarySet = librarySets.get(0);
-        AssetSet librarySet2 = librarySets.get(1);
+        val librarySets = setupLibraryDependencies(
+            libFile, "foo:bar:1.0",
+            libFile2, "foo:bar:2.0"
+        )
+        val librarySet = librarySets[0]
+        val librarySet2 = librarySets[1]
 
-        File shaderFile = new File("shader");
-        setBuildableArtifact(task::setShadersOutputDir, shaderFile);
+        val shaderFile = File("shader")
+        setBuildableArtifact({ task.shadersOutputDir = it }, shaderFile)
 
-        File copyApkFile = new File("copyApk");
-        setFileCollection(task::setCopyApk, copyApkFile);
-
-        assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
+        assertThat(task.getLibraries()!!.files).containsExactly(libFile, libFile2)
         assertThat(task.computeAssetSetList())
-                .containsExactly(librarySet2, librarySet, mainSet, debugSet)
-                .inOrder();
-        // generated files should have been added to the main resource sets.
-        assertThat(mainSet.getSourceFiles())
-                .containsExactly(file, file2, shaderFile, copyApkFile);
+            .containsExactly(librarySet2, librarySet, mainSet, debugSet)
+            .inOrder()
     }
 
-    @NonNull
-    private static AssetSet createAssetSet(
-            @Nullable List<AssetSet> folderSets,
-            @NonNull String name,
-            @NonNull File... files) {
-        AssetSet mainSet = new AssetSet(name);
-        mainSet.addSources(Arrays.asList(files));
-        if (folderSets != null) {
-            folderSets.add(mainSet);
-        }
-        return mainSet;
+    private fun createAssetSet(
+        folderSets: MutableList<AssetSet>?,
+        name: String,
+        vararg files: File
+    ): AssetSet {
+        val mainSet = AssetSet(name)
+        mainSet.addSources(Arrays.asList(*files))
+        folderSets?.add(mainSet)
+        return mainSet
     }
 
-    private static void setFileCollection(Consumer<FileCollection> setter, File... files) {
-        FileCollection fileCollection = mock(FileCollection.class);
-        Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
-        when(fileCollection.getFiles()).thenReturn(fileSet);
-        setter.accept(fileCollection);
+    private fun setBuildableArtifact(setter: (BuildableArtifact) -> Unit, vararg files: File) {
+        val fileCollection = mock(BuildableArtifact::class.java)
+        val fileSet = ImmutableSet.copyOf(Arrays.asList(*files))
+        `when`(fileCollection.files).thenReturn(fileSet)
+        setter(fileCollection)
     }
 
+    private fun setupLibraryDependencies(vararg objects: Any): List<AssetSet> {
+        val libraries = mock(ArtifactCollection::class.java)
 
-    private static void setBuildableArtifact(Consumer<BuildableArtifact> setter, File... files) {
-        BuildableArtifact fileCollection = mock(BuildableArtifact.class);
-        Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
-        when(fileCollection.getFiles()).thenReturn(fileSet);
-        setter.accept(fileCollection);
-    }
+        val artifacts = LinkedHashSet<ResolvedArtifactResult>()
+        val files = HashSet<File>()
+        val assetSets = Lists.newArrayListWithCapacity<AssetSet>(objects.size / 2)
 
-    @NonNull
-    private List<AssetSet> setupLibraryDependencies(Object... objects) {
-        ArtifactCollection libraries = mock(ArtifactCollection.class);
+        var i = 0
+        val count = objects.size
+        while (i < count) {
+            assertThat(objects[i]).isInstanceOf(File::class.java)
+            assertThat(objects[i + 1]).isInstanceOf(String::class.java)
 
-        Set<ResolvedArtifactResult> artifacts = new LinkedHashSet<>();
-        Set<File> files = new HashSet<>();
-        List<AssetSet> assetSets = Lists.newArrayListWithCapacity(objects.length/2);
+            val file = objects[i] as File
+            val path = objects[i + 1] as String
 
-        for (int i = 0, count = objects.length; i < count ; i+=2) {
-            assertThat(objects[i]).isInstanceOf(File.class);
-            assertThat(objects[i+1]).isInstanceOf(String.class);
+            files.add(file)
 
-            File file = (File) objects[i];
-            String path = (String) objects[i+1];
+            val artifact = mock(ResolvedArtifactResult::class.java)
+            artifacts.add(artifact)
 
-            files.add(file);
+            val artifactId = mock(ComponentArtifactIdentifier::class.java)
+            val id = mock(ProjectComponentIdentifier::class.java)
 
-            ResolvedArtifactResult artifact = mock(ResolvedArtifactResult.class);
-            artifacts.add(artifact);
-
-            ComponentArtifactIdentifier artifactId = mock(ComponentArtifactIdentifier.class);
-            ProjectComponentIdentifier id = mock(ProjectComponentIdentifier.class);
-
-            when(id.getProjectPath()).thenReturn(path);
-            when(artifactId.getComponentIdentifier()).thenReturn(id);
-            when(artifact.getFile()).thenReturn(file);
-            when(artifact.getId()).thenReturn(artifactId);
+            `when`(id.projectPath).thenReturn(path)
+            `when`<ComponentIdentifier>(artifactId.componentIdentifier).thenReturn(id)
+            `when`(artifact.file).thenReturn(file)
+            `when`(artifact.id).thenReturn(artifactId)
 
             // create a resource set that must match the one returned by the computation
-            AssetSet set = new AssetSet(path);
-            set.addSource(file);
-            assetSets.add(set);
+            val set = AssetSet(path)
+            set.addSource(file)
+            assetSets.add(set)
+            i += 2
         }
 
-        FileCollection fileCollection = mock(FileCollection.class);
-        when(fileCollection.getFiles()).thenReturn(files);
+        val fileCollection = mock(FileCollection::class.java)
+        `when`(fileCollection.files).thenReturn(files)
 
-        when(libraries.getArtifacts()).thenReturn(artifacts);
-        when(libraries.getArtifactFiles()).thenReturn(fileCollection);
+        `when`(libraries.artifacts).thenReturn(artifacts)
+        `when`(libraries.artifactFiles).thenReturn(fileCollection)
 
-        task.setLibraries(libraries);
+        task.libraryCollection = libraries
 
-        return assetSets;
+        return assetSets
     }
 }

@@ -56,7 +56,7 @@ import org.w3c.dom.NodeList;
  * <p>Writing/Loading the blob is not done through this class directly, but instead through the
  * {@link DataMerger} which contains DataSet objects.
  */
-abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
+public abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>>
         implements SourceSet, DataMap<I> {
     static final String NODE_SOURCE = "source";
     static final String NODE_FILE = "file";

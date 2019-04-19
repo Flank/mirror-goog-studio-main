@@ -180,7 +180,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.MergeResources::setBlameLogFolder",
                 "com.android.build.gradle.tasks.MergeResources::setOutputDir",
                 "com.android.build.gradle.tasks.MergeResources::setPublicFile",
-                "com.android.build.gradle.tasks.MergeSourceSetFolders::setLibraries",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setAbiFilters",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
