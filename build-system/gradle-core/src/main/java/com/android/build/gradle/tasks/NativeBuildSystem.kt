@@ -14,36 +14,20 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_CMAKE;
-import static com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_GRADLE;
-import static com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_NDK_BUILD;
-import static com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_UNKNOWN;
-
-import com.android.annotations.NonNull;
+import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_CMAKE
+import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_GRADLE
+import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_NDK_BUILD
+import com.android.builder.model.NativeAndroidProject.BUILD_SYSTEM_UNKNOWN
 
 /**
  * Enumeration and descriptive metadata for the different external native build system types.
+ * The variable "name" is already taken in kotlin enums
  */
-public enum NativeBuildSystem {
+enum class NativeBuildSystem(val tag : String) {
     UNKNOWN(BUILD_SYSTEM_UNKNOWN),
     GRADLE(BUILD_SYSTEM_GRADLE),
     CMAKE(BUILD_SYSTEM_CMAKE),
     NDK_BUILD(BUILD_SYSTEM_NDK_BUILD);
-
-    private final String name;
-
-    NativeBuildSystem(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Returns name of the build system. Not called getName(...) because that conflicts confusingly
-     * with Kotlin's Enum::name.
-     */
-    @NonNull
-    public String getTag() {
-        return name;
-    }
 }
