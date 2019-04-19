@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.tasks
 
+import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
 import com.android.build.api.transform.QualifiedContent.Scope.EXTERNAL_LIBRARIES
 import com.android.build.api.transform.QualifiedContent.Scope.PROJECT
@@ -38,13 +39,17 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.util.function.Predicate
 import javax.inject.Inject
 
 /**
@@ -54,8 +59,15 @@ import javax.inject.Inject
 open class MergeJavaResourceTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var projectJavaRes: FileCollection? = null
+        private set
+
     @get:Classpath
-    lateinit var projectJavaRes: FileCollection
+    @get:Optional
+    var projectJavaResAsJars: FileCollection? = null
         private set
 
     @get:Classpath
@@ -97,12 +109,18 @@ open class MergeJavaResourceTask
     override val incremental: Boolean
         get() = true
 
+    // The runnable implementing the processing is not able to deal with fine-grained file but
+    // instead is expecting directories of files. Use the unfiltered collection (since the filtering
+    // changes the FileCollection of directories into a FileTree of files) to process, but don't
+    // use it as a jar input, it's covered by the [projectJavaRes] and [projectJavaResAsJars] above.
+    private lateinit var unfilteredProjectJavaRes: FileCollection
+
     override fun doFullTaskAction() {
         workers.use {
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
-                    projectJavaRes.files,
+                    unfilteredProjectJavaRes.files,
                     subProjectJavaRes?.files,
                     externalLibJavaRes?.files,
                     featureJavaRes?.files,
@@ -127,7 +145,7 @@ open class MergeJavaResourceTask
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
-                    projectJavaRes.files,
+                    unfilteredProjectJavaRes.files,
                     subProjectJavaRes?.files,
                     externalLibJavaRes?.files,
                     featureJavaRes?.files,
@@ -161,8 +179,8 @@ open class MergeJavaResourceTask
                 // Because ordering matters for Transform pipeline, we need to fetch the java res
                 // as soon as this creation action is instantiated, if needed.
                 projectJavaResFromStreams =
-                        variantScope.transformManager
-                            .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
+                    variantScope.transformManager
+                        .getPipelineOutputAsFileCollection(PROJECT_RESOURCES)
                 // We must also consume corresponding streams to avoid duplicates; any downstream
                 // transforms will use the merged-java-res stream instead.
                 variantScope.transformManager
@@ -187,7 +205,14 @@ open class MergeJavaResourceTask
         override fun configure(task: MergeJavaResourceTask) {
             super.configure(task)
 
-            task.projectJavaRes = projectJavaResFromStreams ?: getProjectJavaRes(variantScope)
+            if (projectJavaResFromStreams != null) {
+                task.projectJavaResAsJars = projectJavaResFromStreams
+                task.unfilteredProjectJavaRes = projectJavaResFromStreams
+            } else {
+                val projectJavaRes = getProjectJavaRes(variantScope)
+                task.unfilteredProjectJavaRes = projectJavaRes
+                task.projectJavaRes = projectJavaRes.asFileTree.filter(spec)
+            }
 
             if (mergeScopes.contains(SUB_PROJECTS)) {
                 task.subProjectJavaRes =
@@ -205,21 +230,33 @@ open class MergeJavaResourceTask
 
             if (mergeScopes.contains(FEATURES)) {
                 task.featureJavaRes =
-                        variantScope.getArtifactFileCollection(
-                            AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
-                            AndroidArtifacts.ArtifactScope.PROJECT,
-                            AndroidArtifacts.ArtifactType.METADATA_JAVA_RES
-                        )
+                    variantScope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
+                        AndroidArtifacts.ArtifactScope.PROJECT,
+                        AndroidArtifacts.ArtifactType.METADATA_JAVA_RES
+                    )
             }
 
             task.mergeScopes = mergeScopes
             task.packagingOptions =
-                    SerializablePackagingOptions(
-                        variantScope.globalScope.extension.packagingOptions)
+                SerializablePackagingOptions(
+                    variantScope.globalScope.extension.packagingOptions
+                )
             task.intermediateDir =
-                    variantScope.getIncrementalDir("${variantScope.fullVariantName}-mergeJavaRes")
+                variantScope.getIncrementalDir("${variantScope.fullVariantName}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
+        }
+    }
+
+    companion object {
+        val predicate= Predicate<String> { t ->
+            !t.endsWith(SdkConstants.DOT_CLASS) &&
+                    !t.endsWith(SdkConstants.DOT_NATIVE_LIBS)
+        }
+
+        val spec: (file: File) -> Boolean = {
+            predicate.test(it.absolutePath)
         }
     }
 }

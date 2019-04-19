@@ -28,7 +28,9 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
@@ -49,8 +51,20 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
         private set
 
     @get:InputFiles
-    lateinit var resources: FileCollection
+    @get:Optional
+    var resources: FileCollection? = null
         private set
+
+    @get:Classpath
+    @get:Optional
+    var resourcesAsJars: FileCollection? = null
+        private set
+
+    // The runnable implementing the processing is not able to deal with fine-grained file but
+    // instead is expecting directories of files. Use the unfiltered collection (since the filtering
+    // changes the FileCollection of directories into a FileTree of files) to process, but don't
+    // use it as a jar input, it's covered by the two items above.
+    private lateinit var unfilteredResources: FileCollection
 
     override fun doTaskAction() {
         workers.use {
@@ -58,7 +72,7 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
                 BundleLibraryJavaResRunnable::class.java,
                 BundleLibraryJavaResRunnable.Params(
                     output = output!!.get().asFile,
-                    inputs = resources.files
+                    inputs = unfilteredResources.files
                 )
             )
         }
@@ -96,7 +110,15 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
             super.configure(task)
 
             task.output = output
-            task.resources = projectJavaResFromStreams ?: getProjectJavaRes(variantScope)
+            // we should have two tasks with each input and ensure that only one runs for any build.
+            if (projectJavaResFromStreams != null) {
+                task.resourcesAsJars = projectJavaResFromStreams
+                task.unfilteredResources = projectJavaResFromStreams
+            } else {
+                val projectJavaRes = getProjectJavaRes(variantScope)
+                task.unfilteredResources = projectJavaRes
+                task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
+            }
         }
     }
 }

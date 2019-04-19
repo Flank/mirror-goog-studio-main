@@ -74,11 +74,7 @@ class MergeJavaResourcesDelegate(
     init {
         this.inputs = inputs.toMutableList()
         this.acceptedPathsPredicate = when(mergedType) {
-            QualifiedContent.DefaultContentType.RESOURCES ->
-                Predicate { path ->
-                    !path.endsWith(SdkConstants.DOT_CLASS) &&
-                            !path.endsWith(SdkConstants.DOT_NATIVE_LIBS)
-                }
+            QualifiedContent.DefaultContentType.RESOURCES -> MergeJavaResourceTask.predicate
             ExtendedContentType.NATIVE_LIBS ->
                 Predicate { path ->
                     val m = JAR_ABI_PATTERN.matcher(path)
