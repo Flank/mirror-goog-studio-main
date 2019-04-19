@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.cxx.attribution
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
-import com.android.build.gradle.internal.cxx.services.CxxBuildSessionService
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel
+import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
+import com.android.build.gradle.internal.cxx.services.completeModelAbis
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -36,7 +38,7 @@ internal fun appendTimestampAndBuildIdToNinjaLog(cxxAbiModel: CxxAbiModel): File
         contentToWrite.appendln("# ninja log v5")
     }
     contentToWrite.appendln(
-        "# ${Clock.systemUTC().millis()} ${CxxBuildSessionService.getInstance().buildId}"
+        "# ${Clock.systemUTC().millis()} ${getCxxBuildModel().buildId}"
     )
     return ninjaLogFile.apply { appendText(contentToWrite.toString()) }
 }
@@ -45,8 +47,8 @@ internal fun appendTimestampAndBuildIdToNinjaLog(cxxAbiModel: CxxAbiModel): File
  * Collects entries in the given ninja logs related to the given `buildId` to
  * `$projectRoot/.cxx/attribution/ninja_build_log_<timestamp>.zip`.
  */
-internal fun collectNinjaLogs(cxxBuildSessionService: CxxBuildSessionService) {
-    if (cxxBuildSessionService.allBuiltAbis.isEmpty()) {
+internal fun collectNinjaLogs(cxxBuildSessionService: CxxBuildModel) {
+    if (cxxBuildSessionService.completeModelAbis().isEmpty()) {
         return
     }
     // This is not the most natural thing but it works since all CxxModuleModel should point to the
@@ -54,12 +56,12 @@ internal fun collectNinjaLogs(cxxBuildSessionService: CxxBuildSessionService) {
     // buildAttributionFolder property should go under a new CxxProjectModel and by that time this
     // code can be refactored to do it in a more natural way.
     val buildAttributionFolder =
-        cxxBuildSessionService.allBuiltAbis.first().variant.module.buildAttributionFolder
+        cxxBuildSessionService.completeModelAbis().first().variant.module.buildAttributionFolder
     val zipFile =
         buildAttributionFolder.resolve("ninja_build_log_${Clock.systemUTC().millis()}.zip")
     zipFile.parentFile.mkdirs()
     ZipOutputStream(FileOutputStream(zipFile)).use { zipOs ->
-        for (abiModel in cxxBuildSessionService.allBuiltAbis) {
+        for (abiModel in cxxBuildSessionService.completeModelAbis()) {
             val ninjaLogFile = abiModel.ninjaLogFile
             if (!ninjaLogFile.exists()) continue
             val modulePath = abiModel.variant.module.gradleModulePathName

@@ -23,7 +23,9 @@ import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt
 import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.createCxxAbiModel;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
+import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.model.JsonUtilKt.writeJsonToFile;
+import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerCompleteModelAbi;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -430,10 +432,13 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull VariantScope scope) {
         CxxVariantModel variant = createCxxVariantModel(module, scope.getVariantData());
         List<CxxAbiModel> abis = Lists.newArrayList();
+
+
         for (Abi abi : variant.getValidAbiList()) {
-            abis.add(
-                    createCxxAbiModel(
-                            variant, abi, scope.getGlobalScope(), scope.getVariantData()));
+            CxxAbiModel model =
+                    createCxxAbiModel(variant, abi, scope.getGlobalScope(), scope.getVariantData());
+            abis.add(model);
+            registerCompleteModelAbi(getCxxBuildModel(), model);
         }
 
         GradleBuildVariant.Builder stats =

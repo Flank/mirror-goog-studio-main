@@ -19,9 +19,11 @@ package com.android.build.gradle.internal.cxx.attribution
 import com.android.build.gradle.internal.BuildSessionImpl
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
-import com.android.build.gradle.internal.cxx.services.CxxBuildSessionService
+import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
+import com.android.build.gradle.internal.cxx.services.registerCompleteModelAbi
 import com.google.common.truth.Truth
 import org.gradle.api.invocation.Gradle
 import org.junit.After
@@ -46,14 +48,14 @@ class UtilsKtTest {
     val testDir: TemporaryFolder = TemporaryFolder()
     private val mockAbiModel: CxxAbiModel = mock(CxxAbiModel::class.java)
     private val mockVariantModel = mock(CxxVariantModel::class.java)
-    private lateinit var buildSession: CxxBuildSessionService
+    private lateinit var buildSession: CxxBuildModel
     private lateinit var buildId: String
     private lateinit var buildAttributionFolder: File
     private lateinit var ninjaLogFile: File
 
     @Before
     fun setUp() {
-        buildSession = CxxBuildSessionService.getInstance()
+        buildSession = getCxxBuildModel()
         buildId = buildSession.buildId.toString()
         buildAttributionFolder = testDir.root.resolve(".cxx/attribution/")
         ninjaLogFile = testDir.root.resolve(".ninja_log")
@@ -64,11 +66,6 @@ class UtilsKtTest {
         `when`(mockVariantModel.module).thenReturn(mockModuleModel)
         `when`(mockModuleModel.buildAttributionFolder).thenReturn(buildAttributionFolder)
         `when`(mockModuleModel.gradleModulePathName).thenReturn(":app")
-    }
-
-    @After
-    fun tearDown() {
-        buildSession.allBuiltAbis.clear()
     }
 
     @Test
@@ -94,11 +91,12 @@ class UtilsKtTest {
     @Test
     fun `collectNinjaLogs works`() {
         val appDebugX86 = testDir.root.resolve("app-debug-x86")
-        buildSession.allBuiltAbis.add(mock(CxxAbiModel::class.java).apply {
+        buildSession.registerCompleteModelAbi(
+            mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86)
             `when`(ninjaLogFile).thenReturn(appDebugX86)
-            `when`(variant).thenReturn(mockVariantModel)
-        })
+            `when`(variant).thenReturn(mockVariantModel)})
+
         appDebugX86.writeText(
             """
                 # ninja log v5
@@ -110,7 +108,7 @@ class UtilsKtTest {
             """.trimIndent()
         )
         val appDebugX8664 = testDir.root.resolve("app-debug-x86_64")
-        buildSession.allBuiltAbis.add(mock(CxxAbiModel::class.java).apply {
+        buildSession.registerCompleteModelAbi(mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86_64)
             `when`(ninjaLogFile).thenReturn(appDebugX8664)
             `when`(variant).thenReturn(mockVariantModel)

@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.cxx.attribution.UtilsKt.collectNinjaLogs;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
+import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
@@ -36,7 +37,7 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
-import com.android.build.gradle.internal.cxx.services.CxxBuildSessionService;
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -447,14 +448,12 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
                 if (cxxAbiModelOptional.isPresent()) {
                     this.getVariantName();
                     UtilsKt.appendTimestampAndBuildIdToNinjaLog(cxxAbiModelOptional.get());
-                    CxxBuildSessionService cxxBuildSessionService =
-                            CxxBuildSessionService.getInstance();
-                    cxxBuildSessionService.getAllBuiltAbis().add(cxxAbiModelOptional.get());
+                    CxxBuildModel buildModel = getCxxBuildModel();
                     BuildSessionImpl.getSingleton()
                             .executeOnceWhenBuildFinished(
                                     CxxAbiModel.class.getName(),
                                     "CollectNinjaLogs",
-                                    () -> collectNinjaLogs(cxxBuildSessionService));
+                                    () -> collectNinjaLogs(buildModel));
                 } else {
                     warnln(
                             "Cannot locate ABI {} for generating build attribution metrics.",
