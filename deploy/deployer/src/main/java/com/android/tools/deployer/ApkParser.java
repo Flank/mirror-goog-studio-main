@@ -46,16 +46,16 @@ public class ApkParser {
     }
 
     public static class ApkDetails {
+        public final int versionCode;
         public final String fileName;
         public final String packageName;
         public final List<String> targetPackages;
 
         private ApkDetails(
-                String fileName,
-                String packageName,
-                List<String> targetPackages) {
+                String fileName, String packageName, int versionCode, List<String> targetPackages) {
             this.fileName = fileName;
             this.packageName = packageName;
+            this.versionCode = versionCode;
             this.targetPackages = targetPackages;
         }
     }
@@ -234,6 +234,7 @@ public class ApkParser {
 
         String packageName = null;
         String splitName = null;
+        int versionCode = 0;
         List<String> targetPackages = new ArrayList<>();
 
         XmlChunk xmlChunk = (XmlChunk) chunks.get(0);
@@ -252,6 +253,13 @@ public class ApkParser {
                     if (attribute.name().equals("package")) {
                         packageName = attribute.rawValue();
                     }
+
+                    if (attribute.name().equals("versionCode")) {
+                        BinaryResourceValue value = attribute.typedValue();
+                        if (value != null) {
+                            versionCode = value.data();
+                        }
+                    }
                 }
             }
 
@@ -269,6 +277,6 @@ public class ApkParser {
         }
 
         String apkFileName = splitName == null ? "base.apk" : "split_" + splitName + ".apk";
-        return new ApkDetails(apkFileName, packageName, targetPackages);
+        return new ApkDetails(apkFileName, packageName, versionCode, targetPackages);
     }
 }

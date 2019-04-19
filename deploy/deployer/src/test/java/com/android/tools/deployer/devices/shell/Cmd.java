@@ -24,16 +24,6 @@ import java.io.PrintStream;
 
 public class Cmd extends ShellCommand {
 
-    private final boolean reportCommitSuccess;
-
-    public Cmd(boolean reportSuccessOnCommit) {
-        reportCommitSuccess = reportSuccessOnCommit;
-    }
-
-    public Cmd() {
-        this(true);
-    }
-
     @Override
     public int execute(ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
             throws IOException {
@@ -105,11 +95,30 @@ public class Cmd extends ShellCommand {
                         }
                     case "install-commit":
                         {
-                            device.commitSession(parseSession(device, args));
-                            // On some APIs the "Success" part of install-commit is not printed. We allow this
-                            // to be configured so we can reproduce that odd behaviour.
-                            stdout.println(reportCommitSuccess ? "Success" : "");
-                            return 0;
+                            FakeDevice.InstallResult result =
+                                    device.commitSession(parseSession(device, args));
+                            switch (result.error) {
+                                case SUCCESS:
+                                    if (device.getApi() <= 24) {
+                                        stdout
+                                                .println(); // On API 24, a successful installation does not print anything;
+                                    } else {
+                                        stdout.println("Success");
+                                    }
+                                    return 0;
+                                case INSTALL_FAILED_INVALID_APK:
+                                    if (device.getApi() <= 25) {
+                                        stdout.println(
+                                                "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
+                                        return 0;
+                                    } else {
+                                        stdout.println(
+                                                "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
+                                        return 4;
+                                    }
+                                    // TODO: Take the -p flag into account which would need to return things like:
+                                    // stdout.println(String.format("Failure [INSTALL_FAILED_INVALID_APK: Existing base version code %d inconsistent with %d]\n", result.previous.versionCode, result.details.versionCode));
+                            }
                         }
                     case "install-abandon":
                         {

@@ -43,8 +43,15 @@ public class BasicPm extends ShellCommand {
                         "\tpkg: /data/local/tmp/sample.apk2\nFailure [INSTALL_FAILED_INVALID_URI]\n");
                 return 1;
             }
-            device.install(file);
-            stdout.println("Success");
+            FakeDevice.InstallResult install = device.install(file);
+            switch (install.error) {
+                case SUCCESS:
+                    stdout.println("Success");
+                    return 0;
+                case INSTALL_FAILED_INVALID_APK:
+                    stdout.println("Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
+                    return 0;
+            }
             return 0;
         } else {
             stdout.println("pm usage:\n...");

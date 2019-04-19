@@ -91,11 +91,8 @@ int main(int argc, char* argv[]) {
       write(STDOUT_FILENO, buffer, r);
       chunk -= r;
     }
-    if (fds[1].revents & (POLLHUP | POLLERR | POLLNVAL)) {
-      break;
-    }
   }
 
   close(sockfd);
-  return 0;
+  return 255;
 }

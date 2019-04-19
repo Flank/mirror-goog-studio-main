@@ -29,11 +29,12 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DeployerRunner implements UIService {
+public class DeployerRunner {
 
     private static final String DB_PATH = "/tmp/studio.db";
     private final ApkFileDatabase db;
     private final ArrayList<DeployMetric> metrics;
+    private final UIService service;
 
     // Run it from bazel with the following command:
     // bazel run :deployer.runner org.wikipedia.alpha PATH_TO_APK1 PATH_TO_APK2
@@ -50,13 +51,14 @@ public class DeployerRunner implements UIService {
 
     public static int tracedMain(String[] args, ILogger logger) {
         ApkFileDatabase db = new SqlApkFileDatabase(new File(DB_PATH));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, new CommandLineService());
         return runner.run(args, logger);
     }
 
-    public DeployerRunner(ApkFileDatabase db) {
+    public DeployerRunner(ApkFileDatabase db, UIService service) {
         this.db = db;
-        metrics = new ArrayList<>();
+        this.service = service;
+        this.metrics = new ArrayList<>();
     }
 
     public int run(String[] args, ILogger logger) {
@@ -98,7 +100,7 @@ public class DeployerRunner implements UIService {
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
         metrics.clear();
-        Deployer deployer = new Deployer(adb, db, runner, installer, this, metrics, logger);
+        Deployer deployer = new Deployer(adb, db, runner, installer, this.service, metrics, logger);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {
                 InstallOptions.Builder options = InstallOptions.builder().setAllowDebuggable();
@@ -155,16 +157,18 @@ public class DeployerRunner implements UIService {
         return bridge;
     }
 
-    @Override
-    public boolean prompt(String message) {
-        System.err.println(message + ". Y/N?");
-        try (Scanner scanner = new Scanner(System.in)) {
-            return scanner.nextLine().equalsIgnoreCase("y");
+    static class CommandLineService implements UIService {
+        @Override
+        public boolean prompt(String message) {
+            System.err.println(message + ". Y/N?");
+            try (Scanner scanner = new Scanner(System.in)) {
+                return scanner.nextLine().equalsIgnoreCase("y");
+            }
         }
-    }
 
-    @Override
-    public void message(String message) {
-        System.err.println(message);
+        @Override
+        public void message(String message) {
+            System.err.println(message);
+        }
     }
 }

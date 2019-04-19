@@ -138,10 +138,10 @@ public class FakeDevice {
         return exe.canExecute();
     }
 
-    public void install(byte[] file) throws IOException {
+    public InstallResult install(byte[] file) throws IOException {
         int session = createSession();
         writeToSession(session, file);
-        commitSession(session);
+        return commitSession(session);
     }
 
     public Set<String> getApps() {
@@ -169,36 +169,45 @@ public class FakeDevice {
         return sessions.get(session) != null;
     }
 
-    public void commitSession(int session) throws IOException {
-        String appPath = null;
-        String pkg = null;
-        for (byte[] bytes : sessions.get(session)) {
+    public InstallResult commitSession(int session) throws IOException {
+        ApkParser.ApkDetails details = null;
+        List<byte[]> apks = sessions.get(session);
+        sessions.put(session, null);
+        for (byte[] bytes : apks) {
             Path apk = Files.createTempFile(getStorage().toPath(), "apk", ".apk");
             Files.write(apk, bytes);
             ApkParser parser = new ApkParser();
-            ApkParser.ApkDetails details = parser.getApkDetails(apk.toFile().getAbsolutePath());
-            pkg = details.packageName;
-            if (appPath == null) {
-                appPath = "/data/app/" + pkg + "-" + UUID.randomUUID().toString();
-            }
-            File appDir = new File(getStorage(), appPath);
-            appDir.mkdirs();
-            Files.move(apk, new File(appDir, details.fileName).toPath());
+            details = parser.getApkDetails(apk.toFile().getAbsolutePath());
+            break;
         }
-        if (pkg != null) {
-            Application previous = apps.get(pkg);
-            if (previous != null) {
-                FileUtils.deleteRecursivelyIfExists(new File(getStorage(), previous.path));
-            }
+        if (details == null) {
+            throw new IllegalArgumentException("No apks added");
+        }
 
-            int id = apps.keySet().size() + 1;
-            // Using a similar numbering and naming scheme as android:
-            // See https://android.googlesource.com/platform/system/core/+/master/libcutils/include/private/android_filesystem_config.h
-            User user = addUser(10000 + id, "u0_a" + id);
-            Application app = new Application(pkg, appPath, user);
-            apps.put(pkg, app);
+        Application previous = apps.get(details.packageName);
+        if (previous != null) {
+            if (previous.details.versionCode > details.versionCode) {
+                return new InstallResult(
+                        InstallResult.Error.INSTALL_FAILED_INVALID_APK, previous.details, details);
+            }
+            FileUtils.deleteRecursivelyIfExists(new File(getStorage(), previous.path));
         }
-        sessions.put(session, null);
+
+        String appPath = "/data/app/" + details.packageName + "-" + UUID.randomUUID().toString();
+        int id = apps.keySet().size() + 1;
+
+        // Using a similar numbering and naming scheme as android:
+        // See https://android.googlesource.com/platform/system/core/+/master/libcutils/include/private/android_filesystem_config.h
+        User user = addUser(10000 + id, "u0_a" + id);
+        Application app = new Application(details, appPath, user);
+        apps.put(details.packageName, app);
+        File appDir = new File(getStorage(), appPath);
+        appDir.mkdirs();
+        for (byte[] bytes : apks) {
+            Path apk = new File(appDir, details.fileName).toPath();
+            Files.write(apk, bytes);
+        }
+        return new InstallResult(InstallResult.Error.SUCCESS, null, details);
     }
 
     private User addUser(int uid, String name) {
@@ -260,12 +269,12 @@ public class FakeDevice {
     }
 
     public static class Application {
-        public final String id;
+        public final ApkParser.ApkDetails details;
         public final String path;
         public final User user;
 
-        public Application(String id, String path, User user) {
-            this.id = id;
+        public Application(ApkParser.ApkDetails details, String path, User user) {
+            this.details = details;
             this.path = path;
             this.user = user;
         }
@@ -278,6 +287,24 @@ public class FakeDevice {
         public User(int uid, String name) {
             this.name = name;
             this.uid = uid;
+        }
+    }
+
+    public static class InstallResult {
+        public final Error error;
+        public final ApkParser.ApkDetails previous;
+        public final ApkParser.ApkDetails details;
+
+        public InstallResult(
+                Error error, ApkParser.ApkDetails previous, ApkParser.ApkDetails details) {
+            this.error = error;
+            this.previous = previous;
+            this.details = details;
+        }
+
+        public enum Error {
+            SUCCESS,
+            INSTALL_FAILED_INVALID_APK,
         }
     }
 }

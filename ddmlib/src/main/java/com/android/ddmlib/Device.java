@@ -1116,7 +1116,7 @@ final class Device implements IDevice {
             executeShellCommand(cmd, receiver, maxTimeout, maxTimeToOutputResponse, maxTimeUnits);
             String error = receiver.getErrorMessage();
             if (error != null) {
-                throw new InstallException(error);
+                throw new InstallException(error, receiver.getErrorCode());
             }
         } catch (TimeoutException
                 | AdbCommandRejectedException

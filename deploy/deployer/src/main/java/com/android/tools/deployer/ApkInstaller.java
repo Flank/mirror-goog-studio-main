@@ -32,6 +32,7 @@ public class ApkInstaller {
     private enum DeltaInstallStatus {
         SUCCESS,
         UNKNOWN,
+        ERROR,
         DISABLED,
         CANNOT_GENERATE_DELTA,
         API_NOT_SUPPORTED,
@@ -41,11 +42,18 @@ public class ApkInstaller {
         DUMP_UNKNOWN_PACKAGE,
     }
 
-    private enum DeltaInstallFailureReasons {}
-
     private class DeltaInstallResult {
-        DeltaInstallStatus status = DeltaInstallStatus.SUCCESS;
-        String packageManagerOutput = "";
+        final DeltaInstallStatus status;
+        final String packageManagerOutput;
+
+        private DeltaInstallResult(DeltaInstallStatus status, String output) {
+            this.status = status;
+            packageManagerOutput = output;
+        }
+
+        private DeltaInstallResult(DeltaInstallStatus status) {
+            this(status, "");
+        }
     }
 
     private final AdbClient adb;
@@ -68,8 +76,8 @@ public class ApkInstaller {
             Deployer.InstallMode installMode,
             Collection<DeployMetric> metrics)
             throws DeployerException {
-        DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
-        deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
+        DeltaInstallResult deltaInstallResult =
+                new DeltaInstallResult(DeltaInstallStatus.UNKNOWN, "");
 
         // First attempt to delta install.
         boolean allowReinstall = true;
@@ -84,28 +92,36 @@ public class ApkInstaller {
         AdbClient.InstallResult result = OK;
         switch (deltaInstallResult.status) {
             case SUCCESS:
-                result = OK;
+                // Success means that the install procedure finsihed on device. There could
+                // still be errors in the output if the installation was not finished.
                 DeployMetric metric = new DeployMetric("DELTAINSTALL", deltaInstallStart);
-                metric.finish(deltaInstallResult.status.name(), metrics);
-                break;
-            case UNKNOWN:
                 InstallReceiver installReceiver = new InstallReceiver();
                 String[] lines = deltaInstallResult.packageManagerOutput.split("\\n");
                 installReceiver.processNewLines(lines);
-                result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
+                installReceiver.done();
+                if (installReceiver.isSuccessfullyCompleted()) {
+                    metric.finish(DeltaInstallStatus.SUCCESS.name(), metrics);
+                } else {
+                    result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
+                    metric.finish(DeltaInstallStatus.ERROR.name() + "." + result.name(), metrics);
+                }
 
-                // Record metric for delta install.
-                DeployMetric deltaInstallMetric =
-                        new DeployMetric("DELTAINSTALL", deltaInstallStart);
-                deltaInstallMetric.finish(
-                        deltaInstallResult.status.name() + "." + result.name(), metrics);
-
-                // Fallback
-                result = adb.install(apks, options.getFlags(), allowReinstall);
-                long installStartTime = System.nanoTime();
-                DeployMetric installResult = new DeployMetric("INSTALL", installStartTime);
-                installResult.finish(result.name(), metrics);
+                // If the binary patching failed, we will experience a signature failure,
+                // so in that case only we fall back to a normal install.
+                switch (result) {
+                    case NO_CERTIFICATE:
+                    case INSTALL_PARSE_FAILED_NO_CERTIFICATES:
+                        result = adb.install(apks, options.getFlags(), allowReinstall);
+                        long installStartTime = System.nanoTime();
+                        DeployMetric installResult = new DeployMetric("INSTALL", installStartTime);
+                        installResult.finish(result.name(), metrics);
+                        break;
+                    default:
+                        // Don't fallback
+                }
                 break;
+            case ERROR:
+            case UNKNOWN:
             case DISABLED:
             case CANNOT_GENERATE_DELTA:
             case API_NOT_SUPPORTED:
@@ -178,19 +194,15 @@ public class ApkInstaller {
             Deployer.InstallMode installMode,
             String packageName)
             throws DeployerException {
-        DeltaInstallResult deltaInstallResult = new DeltaInstallResult();
-
         if (installMode != Deployer.InstallMode.DELTA) {
-            deltaInstallResult.status = DeltaInstallStatus.DISABLED;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.DISABLED);
         }
 
         // We use "cmd" on the device side which was only added in Android N (API 24)
         // Note that we also use "install-create" which was only added in Android LOLLIPOP (API 21)
         // so this check should factor in these limitations.
         if (!adb.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.N)) {
-            deltaInstallResult.status = DeltaInstallStatus.API_NOT_SUPPORTED;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.API_NOT_SUPPORTED);
         }
 
         List<ApkEntry> localEntries = new ApkParser().parsePaths(apks);
@@ -198,11 +210,11 @@ public class ApkInstaller {
         try {
             dump = new ApplicationDumper(installer).dump(localEntries);
         } catch (DeployerException e) {
-            deltaInstallResult.status = DeltaInstallStatus.DUMP_FAILED;
             if (e.getError() == DeployerException.Error.DUMP_UNKNOWN_PACKAGE) {
-                deltaInstallResult.status = DeltaInstallStatus.DUMP_UNKNOWN_PACKAGE;
+                return new DeltaInstallResult(DeltaInstallStatus.DUMP_UNKNOWN_PACKAGE);
+            } else {
+                return new DeltaInstallResult(DeltaInstallStatus.DUMP_FAILED);
             }
-            return deltaInstallResult;
         }
 
         // Send deltaInstall request
@@ -216,11 +228,9 @@ public class ApkInstaller {
         List<Deploy.PatchInstruction> patches =
                 new PatchSetGenerator().generateFromEntries(localEntries, dump.apkEntries);
         if (patches == null) {
-            deltaInstallResult.status = DeltaInstallStatus.CANNOT_GENERATE_DELTA;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.CANNOT_GENERATE_DELTA);
         } else if (patches.isEmpty()) {
-            deltaInstallResult.status = DeltaInstallStatus.NO_CHANGES;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
         }
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
@@ -228,8 +238,7 @@ public class ApkInstaller {
         Deploy.DeltaInstallRequest request = builder.build();
         // Check that size if not beyond the limit.
         if (request.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
-            deltaInstallResult.status = DeltaInstallStatus.PATCH_SIZE_EXCEEDED;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.PATCH_SIZE_EXCEEDED);
         }
 
         // Send delta install request.
@@ -237,18 +246,14 @@ public class ApkInstaller {
         try {
             res = installer.deltaInstall(request);
         } catch (IOException e) {
-            deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
-            return deltaInstallResult;
+            return new DeltaInstallResult(DeltaInstallStatus.UNKNOWN);
         }
 
-        // Retrieve and parse result.
-        if (res.getStatus() == Deploy.DeltaInstallResponse.Status.OK) {
-            deltaInstallResult.status = DeltaInstallStatus.SUCCESS;
-        } else {
-            deltaInstallResult.status = DeltaInstallStatus.UNKNOWN;
-            deltaInstallResult.packageManagerOutput = res.getInstallOutput();
-        }
-        return deltaInstallResult;
+        DeltaInstallStatus status =
+                (res.getStatus() == Deploy.DeltaInstallResponse.Status.OK)
+                        ? DeltaInstallStatus.SUCCESS
+                        : DeltaInstallStatus.ERROR;
+        return new DeltaInstallResult(status, res.getInstallOutput());
     }
 
     public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {

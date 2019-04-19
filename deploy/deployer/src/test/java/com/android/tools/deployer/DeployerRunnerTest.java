@@ -43,12 +43,18 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 
 @RunWith(Parameterized.class)
 public class DeployerRunnerTest extends FakeAdbTestBase {
+
+    private UIService service;
 
     @Parameterized.Parameters(name = "{0}")
     public static DeviceId[] getDevices() {
@@ -59,11 +65,21 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         super(new FakeDeviceLibrary().build(id));
     }
 
+    @Before
+    public void setUp() {
+        this.service = Mockito.mock(UIService.class);
+    }
+
+    @After
+    public void tearDown() {
+        Mockito.verifyNoMoreInteractions(service);
+    }
+
     @Test
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         String[] args = {
             "install", "com.example.helloworld", file.getAbsolutePath(), "--force-full-install"
@@ -83,7 +99,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         File installersPath = prepareInstaller();
         String[] args = {
@@ -147,7 +163,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = prepareInstaller();
 
@@ -202,7 +218,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = prepareInstaller();
 
@@ -256,6 +272,92 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         }
     }
 
+    @Test
+    public void testInstallOldVersion() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", v2.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", "base.apk", v2);
+        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+
+        device.getShell().clearHistory();
+
+        File v1 = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    v1.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        Mockito.when(service.prompt(ArgumentMatchers.anyString())).thenReturn(false);
+
+        int retcode = runner.run(args, logger);
+        assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), retcode);
+        assertEquals(1, device.getApps().size());
+
+        // Check old app still installed
+        assertInstalled("com.example.simpleapp", "base.apk", v2);
+
+        if (device.getApi() == 19) {
+            assertHistory(
+                    device, "getprop", "pm install -r -t \"/data/local/tmp/simple.apk\""
+                    // ,"rm \"/data/local/tmp/simple.apk\"" TODO: ddmlib doesn't remove when installation fails
+                    );
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:INSTALL_FAILED_VERSION_DOWNGRADE");
+        } else if (device.getApi() < 24) {
+            assertHistory(
+                    device,
+                    "getprop",
+                    "pm install-create -r -t -S 12789", // TODO: passing size on create?
+                    "pm install-write -S 12789 2 0_simple -",
+                    "pm install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:INSTALL_FAILED_VERSION_DOWNGRADE");
+        } else {
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version="
+                            + Version.hash()
+                            + " deltainstall",
+                    "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
+                    "cmd package install-write -S 12789 2 base.apk",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(), "DELTAINSTALL:ERROR.INSTALL_FAILED_VERSION_DOWNGRADE");
+        }
+        Mockito.verify(service, Mockito.times(1)).prompt(ArgumentMatchers.anyString());
+    }
+
     public File prepareInstaller() throws IOException {
         File root = TestUtils.getWorkspaceRoot();
         String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";
@@ -301,7 +403,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
         ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
-        DeployerRunner runner = new DeployerRunner(db);
+        DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
         String[] args = {"install", "com.android.test.uibench", file.getAbsolutePath()};
         int retcode = runner.run(args, logger);

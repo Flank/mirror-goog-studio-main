@@ -81,8 +81,20 @@ public class SessionPm extends ShellCommand {
                 }
             case "install-commit":
                 {
-                    device.commitSession(parseSession(device, args));
-                    stdout.println("Success");
+                    FakeDevice.InstallResult result =
+                            device.commitSession(parseSession(device, args));
+                    switch (result.error) {
+                        case SUCCESS:
+                            stdout.println("Success");
+                            return 0;
+                        case INSTALL_FAILED_INVALID_APK:
+                            stdout.println("Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
+                            if (device.getApi() == 21) {
+                                return 0; // Yes, it returns 0
+                            } else {
+                                return 1;
+                            }
+                    }
                     return 0;
                 }
             case "install-abandon":

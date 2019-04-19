@@ -215,10 +215,9 @@ void DeltaInstallCommand::StreamInstall() {
   response->set_install_output(output);
   if (!commit_result) {
     ErrEvent(output);
-    response->set_status(proto::DeltaInstallResponse_Status_ERROR);
-    return;
   }
-
+  // commit result cannot be reliable used to determine if the installation
+  // succedded.
   response->set_status(proto::DeltaInstallResponse_Status_OK);
 }
 

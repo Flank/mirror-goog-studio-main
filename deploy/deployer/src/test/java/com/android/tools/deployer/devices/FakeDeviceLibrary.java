@@ -69,7 +69,7 @@ public class FakeDeviceLibrary {
             case API_24:
                 {
                     device = new FakeDevice("7.0", 24);
-                    device.getShell().addCommand(new Cmd(false));
+                    device.getShell().addCommand(new Cmd());
                     break;
                 }
             case API_25:
