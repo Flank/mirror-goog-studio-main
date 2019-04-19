@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 import javax.xml.parsers.ParserConfigurationException;
 import org.junit.Before;
 import org.junit.Test;
@@ -313,13 +312,9 @@ public class ApkAnalyzerImplTest {
 
     @Test
     public void manifestVersionNameTest()
-            throws IOException, ParserConfigurationException, SAXException, ProcessException {
-        when(aaptInvoker.dumpBadging(apk.toFile()))
-                .thenReturn(
-                        Collections.singletonList(
-                                "package: name='com.example.packageName' versionCode='12345' versionName='someVersionName' platformBuildVersionName='8.0.0'"));
+            throws IOException, ParserConfigurationException, SAXException {
         impl.manifestVersionName(apk);
-        assertEquals("someVersionName\n", baos.toString());
+        assertEquals("1.0\n", baos.toString());
     }
 
     @Test
@@ -368,12 +363,8 @@ public class ApkAnalyzerImplTest {
 
     @Test
     public void apkSummaryTest() throws ProcessException {
-        when(aaptInvoker.dumpBadging(apk.toFile()))
-                .thenReturn(
-                        Collections.singletonList(
-                                "package: name='com.example.packageName' versionCode='12345' versionName='someVersionName' platformBuildVersionName='8.0.0'"));
         impl.apkSummary(apk);
-        assertEquals("com.example.packageName\t12345\tsomeVersionName\n", baos.toString());
+        assertEquals("com.example.helloworld\t1\t1.0\n", baos.toString());
     }
 
     @Test

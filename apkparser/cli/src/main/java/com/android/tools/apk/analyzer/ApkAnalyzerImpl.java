@@ -587,7 +587,7 @@ public class ApkAnalyzerImpl {
             out.println(String.valueOf(debuggable));
         } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
@@ -609,9 +609,9 @@ public class ApkAnalyzerImpl {
         try (ArchiveContext archiveContext = Archives.open(apk)) {
             ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.println(String.valueOf(manifestData.getTargetSdkVersion()));
-        }  catch (SAXException | ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
@@ -623,9 +623,9 @@ public class ApkAnalyzerImpl {
                     manifestData.getMinSdkVersion() != ManifestData.MIN_SDK_CODENAME
                             ? String.valueOf(manifestData.getMinSdkVersion())
                             : manifestData.getMinSdkVersionString());
-        }  catch (SAXException | ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
@@ -633,32 +633,32 @@ public class ApkAnalyzerImpl {
     public void manifestVersionCode(@NonNull Path apk) {
         try (ArchiveContext archiveContext = Archives.open(apk)) {
             ManifestData manifestData = getManifestData(archiveContext.getArchive());
-            out.printf("%d", manifestData.getVersionCode()).println();
-        }  catch (SAXException | ParserConfigurationException e) {
+            out.printf("%s", valueToDisplayString(manifestData.getVersionCode())).println();
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
     public void manifestVersionName(@NonNull Path apk) {
-        List<String> xml;
-        try {
-            xml = aaptInvoker.dumpBadging(apk.toFile());
-        } catch (ProcessException e) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
+            out.printf("%s", valueToDisplayString(manifestData.getVersionName())).println();
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        AndroidApplicationInfo apkInfo = AndroidApplicationInfo.parseBadging(xml);
-        out.println(apkInfo.versionName);
     }
 
     public void manifestAppId(@NonNull Path apk) {
         try (ArchiveContext archiveContext = Archives.open(apk)) {
             ManifestData manifestData = getManifestData(archiveContext.getArchive());
             out.println(manifestData.getPackage());
-        }  catch (SAXException | ParserConfigurationException e) {
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
@@ -779,15 +779,19 @@ public class ApkAnalyzerImpl {
     }
 
     public void apkSummary(@NonNull Path apk) {
-        List<String> output;
-        try {
-            output = aaptInvoker.dumpBadging(apk.toFile());
-        } catch (ProcessException e) {
+        try (ArchiveContext archiveContext = Archives.open(apk)) {
+            ManifestData manifestData = getManifestData(archiveContext.getArchive());
+            out.printf(
+                            "%s\t%s\t%s",
+                            valueToDisplayString(manifestData.getPackage()),
+                            valueToDisplayString(manifestData.getVersionCode()),
+                            valueToDisplayString(manifestData.getVersionName()))
+                    .println();
+        } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        AndroidApplicationInfo apkInfo = AndroidApplicationInfo.parseBadging(output);
-        out.printf("%s\t%d\t%s", apkInfo.packageId, apkInfo.versionCode, apkInfo.versionName)
-                .println();
     }
 
     public void filesList(
@@ -872,5 +876,10 @@ public class ApkAnalyzerImpl {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    @NonNull
+    private String valueToDisplayString(Object value) {
+        return value == null ? "UNKNOWN" : value.toString();
     }
 }
