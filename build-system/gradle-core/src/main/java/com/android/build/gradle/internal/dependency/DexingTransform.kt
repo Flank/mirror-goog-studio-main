@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.dependency
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.Blocks
+import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
@@ -32,7 +32,6 @@ import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.InputArtifactDependencies
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
-import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
@@ -41,15 +40,12 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Internal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
 
 abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Parameters> {
-    interface Parameters: TransformParameters {
-        @get:Internal
-        val projectName: Property<String>
+    interface Parameters: GenericTransformParameters {
         @get:Input
         val minSdkVersion: Property<Int>
         @get:Input
@@ -67,11 +63,10 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
     protected abstract fun enableDesugaring(): Boolean
 
     override fun transform(outputs: TransformOutputs) {
-        Blocks.recordArtifactTransformSpan<Exception>(
+        recordArtifactTransformSpan(
             parameters.projectName.get(),
             GradleTransformExecutionType.DEX_ARTIFACT_TRANSFORM
         ) {
-
             val name = Files.getNameWithoutExtension(primaryInput.name)
             val outputDir = outputs.dir(name)
             Closer.create().use { closer ->
@@ -158,7 +153,7 @@ data class DexingArtifactConfiguration(
             spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
             spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)
 
-            getAttributes().forEach { attribute, value ->
+            getAttributes().forEach { (attribute, value) ->
                 spec.from.attribute(attribute, value)
                 spec.to.attribute(attribute, value)
             }

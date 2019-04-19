@@ -16,27 +16,48 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.fixtures.FakeGenericTransformParameters
 import com.android.testutils.TestResources
 import com.google.common.io.Files
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import java.io.File
+import kotlin.test.fail
 
 class PlatformAttrTransformTest {
+    @get:Rule
+    var outputDir = TemporaryFolder()
 
     @Test
     fun testExtraction() {
-        val inputJar = TestResources.getFile(
-                PlatformAttrTransformTest::class.java, "PlatformAttrTransform.jar")
+        val transform = object : PlatformAttrTransform() {
+            override val primaryInput: File
+                get() = TestResources.getFile(
+                    PlatformAttrTransformTest::class.java, "PlatformAttrTransform.jar")
 
-        val outputDir = Files.createTempDir()
+            override fun getParameters()= FakeGenericTransformParameters()
+        }
 
-        val transform = PlatformAttrTransform()
-        transform.outputDirectory = outputDir
-        val outputFiles = transform.transform(inputJar)
+        var outputFile: File? = null
+        val outputs = object: TransformOutputs {
+            override fun file(p0: Any): File {
+                if (outputFile != null) fail("unexpected multiple calls to 'file'")
+                outputFile = outputDir.newFile(p0.toString())
+                return outputFile!!
+            }
+            override fun dir(p0: Any): File {
+                fail("unexpected 'dir' method call")
+            }
+        }
 
+        transform.transform(outputs)
 
-        val lines = Files.readLines(outputFiles.single(), Charsets.UTF_8)
+        assertThat(outputFile).isNotNull()
+        val lines = Files.readLines(outputFile!!, Charsets.UTF_8)
 
         Truth.assertThat(lines).containsExactly("int attr one 0x00000001", "int attr two 0x00000002")
     }

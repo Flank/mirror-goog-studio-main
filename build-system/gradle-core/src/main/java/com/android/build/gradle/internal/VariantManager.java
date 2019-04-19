@@ -627,10 +627,12 @@ public class VariantManager implements VariantModel {
                 });
 
         dependencies.registerTransform(
-                reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
-                    reg.getTo().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
-                    reg.artifactTransform(ExtractAarTransform.class);
+                ExtractAarTransform.class,
+                spec -> {
+                    spec.getParameters().getProjectName().set(project.getName());
+
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
+                    spec.getTo().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
                 });
 
         dependencies.registerTransform(
@@ -656,11 +658,13 @@ public class VariantManager implements VariantModel {
 
         // transform to extract attr info from android.jar
         dependencies.registerTransform(
-                reg -> {
+                PlatformAttrTransform.class,
+                spec -> {
+                    spec.getParameters().getProjectName().set(project.getName());
+
                     // Query for JAR instead of PROCESSED_JAR as android.jar doesn't need processing
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
-                    reg.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
-                    reg.artifactTransform(PlatformAttrTransform.class);
+                    spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
+                    spec.getTo().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_PLATFORM_ATTR);
                 });
 
         boolean sharedLibSupport =

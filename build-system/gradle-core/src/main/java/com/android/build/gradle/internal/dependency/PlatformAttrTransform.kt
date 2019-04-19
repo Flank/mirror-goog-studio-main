@@ -16,8 +16,17 @@
 
 package com.android.build.gradle.internal.dependency
 
+import com.android.build.gradle.internal.tasks.Blocks
+import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
+import com.android.utils.FileUtils
 import com.google.common.collect.Lists
+import com.google.common.io.Files
 import org.gradle.api.artifacts.transform.ArtifactTransform
+import org.gradle.api.artifacts.transform.InputArtifact
+import org.gradle.api.artifacts.transform.TransformAction
+import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.tasks.Classpath
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.FieldVisitor
@@ -29,34 +38,40 @@ import java.util.zip.ZipFile
 /**
  * Extract attr IDs from a jar file and puts it in a R.txt
  */
-class PlatformAttrTransform : ArtifactTransform() {
+abstract class PlatformAttrTransform : TransformAction<GenericTransformParameters> {
+    @get:Classpath
+    @get:InputArtifact
+    abstract val primaryInput: File
 
-    override fun transform(inputFile: File): MutableList<File> {
-        val outputFile = File(outputDirectory, "R.txt")
+    override fun transform(outputs: TransformOutputs) {
+        recordArtifactTransformSpan(
+            parameters.projectName.get(),
+            GradleTransformExecutionType.PLATFORM_ATTR_ARTIFACT_TRANSFORM) {
 
-        val attributes = ZipFile(inputFile).use { zip ->
-            // return from let{} is passed as return for use{}
-            zip.getEntry("android/R\$attr.class")?.let {
-                val stream = zip.getInputStream(it)!! // this method does not return null.
+            val outputFile = outputs.file("R.txt")
 
-                val customClassVisitor = CustomClassVisitor()
-                ClassReader(stream).accept(customClassVisitor, 0)
+            val attributes = ZipFile(primaryInput).use { zip ->
+                // return from let{} is passed as return for use{}
+                zip.getEntry("android/R\$attr.class")?.let {
+                    val stream = zip.getInputStream(it)!! // this method does not return null.
 
-                customClassVisitor.attributes
+                    val customClassVisitor = CustomClassVisitor()
+                    ClassReader(stream).accept(customClassVisitor, 0)
+
+                    customClassVisitor.attributes
+                }
             }
-        }
 
-        if (attributes == null || attributes.isEmpty()) {
-            error("Missing attr resources in android.jar, the file might be corrupted: $inputFile")
-        } else {
-            FileWriter(outputFile).use { writer ->
-                for ((name, value) in attributes) {
-                    writer.write("int attr $name 0x${String.format("%08x", value)}\n")
+            if (attributes == null || attributes.isEmpty()) {
+                error("Missing attr resources in android.jar, the file might be corrupted: $primaryInput")
+            } else {
+                FileWriter(outputFile).use { writer ->
+                    for ((name, value) in attributes) {
+                        writer.write("int attr $name 0x${String.format("%08x", value)}\n")
+                    }
                 }
             }
         }
-
-        return mutableListOf(outputFile)
     }
 }
 

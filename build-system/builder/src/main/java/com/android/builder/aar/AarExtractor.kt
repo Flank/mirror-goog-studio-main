@@ -41,7 +41,7 @@ class AarExtractor {
         append(File.separatorChar)
     }
 
-    fun choosePathInOutput(entryName: String): String {
+    private fun choosePathInOutput(entryName: String): String {
         stringBuilder.setLength(JARS_PREFIX_LENGTH)
 
         return when {
@@ -53,8 +53,7 @@ class AarExtractor {
                 // In case we have libs/classes.jar we are going to rename them, due an issue in
                 // Gradle.
                 // TODO: stop doing this once this is fixed in gradle. b/65298222
-                val pathWithinLibs = entryName.substring(LIBS_PREFIX_LENGTH)
-                when (pathWithinLibs) {
+                when (val pathWithinLibs = entryName.substring(LIBS_PREFIX_LENGTH)) {
                     FN_CLASSES_JAR -> stringBuilder.append(LIBS_PREFIX).append("classes-2$DOT_JAR")
                     FN_LINT_JAR -> stringBuilder.append(LIBS_PREFIX).append("lint-2$DOT_JAR")
                     else -> stringBuilder.append(LIBS_PREFIX).append(pathWithinLibs)
