@@ -95,8 +95,11 @@ public class VectorDrawableGeneratorTest extends TestCase {
                 assertTrue(errorLog.contains(expectedError));
             }
             xmlContent = outStream.toString();
-            if (xmlContent == null || xmlContent.isEmpty()) {
-                fail("Empty XML file.");
+            if (xmlContent.isEmpty()) {
+                if (expectedError == null) {
+                    fail("Empty XML file.");
+                }
+                return errorLog;
             }
             if (dumpXml) {
                 File tempXmlFile = new File(parentDirFile, imageName + ".xml");
@@ -544,6 +547,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         assertEquals(
                 "In test_unsupported_element.svg:\n" + "ERROR @ line 4: <text> is not supported",
                 errors);
+    }
+
+    public void testSvgImageOnly() throws Exception {
+        checkSvgConversionAndContainsError("test_image_only", "ERROR: No vector content found");
     }
 
     // Clip Path Tests

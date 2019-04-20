@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="1024pt"
+   height="1024pt"
+   viewBox="0 0 1024 1024"
+   version="1.1">
+  <defs>
+    <image id="image7575" width="4267" height="4267" xlink:href="data:image/png;base64" />
+  </defs>
+  <g style="fill:#aa0000">
+    <use
+       xlink:href="#image7575"
+       transform="matrix(0.24,0,0,0.24,0,0)"
+       id="use3361"
+       style="fill:#aa0000"/>
+  </g>
+</svg>

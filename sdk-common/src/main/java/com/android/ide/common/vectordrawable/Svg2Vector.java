@@ -1279,10 +1279,15 @@ public class Svg2Vector {
         String errorLog;
         try {
             SvgTree svgTree = parse(inputSvg);
-            if (svgTree.getHasLeafNode()) {
+            boolean hasContent = svgTree.getHasLeafNode();
+            if (hasContent) {
                 writeFile(outStream, svgTree);
             }
             errorLog = svgTree.getErrorLog();
+            if (!hasContent && errorLog.isEmpty()) {
+                svgTree.logError("No vector content found", null);
+                errorLog = svgTree.getErrorLog();
+            }
         } catch (Exception e) {
             errorLog = "Error while parsing " + inputSvg.getName();
             String errorDetail = e.getLocalizedMessage();
