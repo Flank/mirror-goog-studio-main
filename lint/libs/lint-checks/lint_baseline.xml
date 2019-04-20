@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha11">
+<issues format="5" by="lint 26.5.0-alpha13">
 
     <issue
         id="DefaultLocale"
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/AnnotationDetector.java"
-            line="779"/>
+            line="780"/>
     </issue>
 
     <issue
@@ -262,7 +262,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/VectorDetector.java"
-            line="283"/>
+            line="284"/>
     </issue>
 
     <issue
@@ -270,7 +270,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/VectorDetector.java"
-            line="308"/>
+            line="309"/>
     </issue>
 
     <issue
@@ -278,7 +278,7 @@
         message="Implicitly using the default locale is a common source of bugs: Use `String.format(Locale, ...)` instead">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/VectorDetector.java"
-            line="318"/>
+            line="319"/>
     </issue>
 
     <issue
@@ -290,11 +290,27 @@
     </issue>
 
     <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ApiDetector.kt"
+            line="2477"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/RestrictToDetector.kt"
+            line="162"/>
+    </issue>
+
+    <issue
         id="VisibleForTests"
         message="This method should only be accessed from tests or within private scope">
         <location
             file="libs/lint-checks/src/main/java/com/android/tools/lint/checks/ApiDetector.kt"
-            line="416"/>
+            line="419"/>
     </issue>
 
     <issue

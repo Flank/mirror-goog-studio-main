@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha08">
+<issues format="5" by="lint 26.5.0-alpha13">
 
     <issue
         id="DefaultLocale"
@@ -7,6 +7,62 @@
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/detector/api/Project.java"
             line="334"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/AnnotationLookup.kt"
+            line="102"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
+            line="117"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/helpers/DefaultJavaEvaluator.kt"
+            line="150"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/JavaEvaluator.kt"
+            line="721"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="3326"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="3326"/>
+    </issue>
+
+    <issue
+        id="ExternalAnnotations"
+        message="getAnnotations used instead of `JavaContext.getAllAnnotations`.">
+        <location
+            file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
+            line="3390"/>
     </issue>
 
     <issue
@@ -102,7 +158,7 @@
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
             file="libs/lint-api/src/main/java/com/android/tools/lint/client/api/LintDriver.kt"
-            line="2874"/>
+            line="2873"/>
     </issue>
 
     <issue

@@ -33,6 +33,90 @@ class ResolveTest : TestCase() {
     @get:Rule
     val folder = TemporaryFolder()
 
+    fun testKotlinReferencesIntoJavaSource() {
+        val tests = arrayOf(
+            java(
+                "pkg/Foo.java",
+                """
+                package pkg;
+
+                public class Foo {
+                    public static void test() {
+                        System.out.println("hello");
+                    }
+                }
+            """
+            ).indented(),
+            kotlin(
+                "test.kt",
+                """
+                package pkg
+
+                fun test() {
+                    Foo.test()
+                }
+            """
+            ).indented()
+        )
+
+        val pair = LintUtilsTest.parseAll(*tests)
+
+        val file = pair.first.find { it.file.name == "test.kt" }?.uastFile
+        assertEquals(
+            """
+            UFile (package = pkg) [package pkg...]
+                UClass (name = TestKt) [public final class TestKt {...}]
+                    UAnnotationMethod (name = test) [public static final fun test() : void {...}]
+                        UBlockExpression [{...}]
+                            UQualifiedReferenceExpression [Foo.test()] => PsiMethod:test
+                                USimpleNameReferenceExpression (identifier = Foo) [Foo] => PsiClass:Foo
+                                UCallExpression (kind = UastCallKind(name='method_call'), argCount = 0)) [test()] => PsiMethod:test
+                                    UIdentifier (Identifier (test)) [UIdentifier (Identifier (test))]
+                                    USimpleNameReferenceExpression (identifier = test, resolvesTo = null) [test] => <FAILED>
+            """.trimIndent().trim(),
+            file?.asResolveString()?.trim()
+        )
+        Disposer.dispose(pair.second)
+    }
+
+    fun testKotlinPropertyAccess() {
+        val tests = arrayOf(
+            kotlin(
+                """
+                import kotlin.reflect.full.declaredMemberFunctions
+
+                class KotlinTest {
+                    fun test() {
+                        this::class.members
+                        this::class.declaredMemberFunctions
+                    }
+                }
+            """
+            ).indented()
+        )
+
+        val pair = LintUtilsTest.parse(*tests)
+        val file = pair.first.uastFile
+        assertEquals(
+            """
+            UFile (package = ) [import kotlin.reflect.full.declaredMemberFunctions...]
+                UImportStatement (isOnDemand = false) [import kotlin.reflect.full.declaredMemberFunctions] => <FAILED>
+                UClass (name = KotlinTest) [public final class KotlinTest {...}]
+                    UAnnotationMethod (name = test) [public final fun test() : void {...}]
+                        UBlockExpression [{...}]
+                            UQualifiedReferenceExpression [KotlinTest.members] => <FAILED>
+                                UClassLiteralExpression [KotlinTest]
+                                USimpleNameReferenceExpression (identifier = members) [members] => PsiMethod:getMembers
+                            UQualifiedReferenceExpression [KotlinTest.declaredMemberFunctions] => <FAILED>
+                                UClassLiteralExpression [KotlinTest]
+                                USimpleNameReferenceExpression (identifier = declaredMemberFunctions) [declaredMemberFunctions] => PsiMethod:getDeclaredMemberFunctions
+                    UAnnotationMethod (name = KotlinTest) [public fun KotlinTest() = UastEmptyExpression]
+            """.trimIndent().trim(),
+            file?.asResolveString()?.trim()
+        )
+        Disposer.dispose(pair.second)
+    }
+
     fun testKotlinReferencesIntoBytecode() {
         val tests = arrayOf(
             kotlin(
