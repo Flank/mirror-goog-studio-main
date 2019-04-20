@@ -15,11 +15,7 @@
  */
 package com.android.ide.common.vectordrawable;
 
-import static com.android.ide.common.vectordrawable.SvgNode.CONTINUATION_INDENT;
-import static com.android.ide.common.vectordrawable.SvgNode.INDENT_UNIT;
 import static com.android.ide.common.vectordrawable.SvgTree.getStartLine;
-import static com.android.utils.XmlUtils.formatFloatAttribute;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -30,7 +26,6 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,9 +51,6 @@ import org.w3c.dom.NodeList;
  */
 public class Svg2Vector {
     private static final Logger logger = Logger.getLogger(Svg2Vector.class.getSimpleName());
-    private static final String HEAD =
-            "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"";
-    private static final String AAPT_BOUND = "xmlns:aapt=\"http://schemas.android.com/aapt\"";
     private static final String SVG_DEFS = "defs";
     private static final String SVG_USE = "use";
     private static final String SVG_HREF = "href";
@@ -1213,57 +1205,10 @@ public class Svg2Vector {
 
     private static void writeFile(@NonNull OutputStream outStream, @NonNull SvgTree svgTree)
             throws IOException {
-        OutputStreamWriter writer = new OutputStreamWriter(outStream, UTF_8);
-        writer.write(HEAD);
-        writer.write(System.lineSeparator());
-        if (svgTree.getHasGradient()) {
-            writer.write(CONTINUATION_INDENT);
-            writer.write(AAPT_BOUND);
-            writer.write(System.lineSeparator());
-        }
-        float viewportWidth = svgTree.getViewportWidth();
-        float viewportHeight = svgTree.getViewportHeight();
-
-        writer.write(CONTINUATION_INDENT);
-        writer.write("android:width=\"");
-        writer.write(formatFloatAttribute(svgTree.getWidth() * svgTree.getScaleFactor()));
-        writer.write("dp\"");
-        writer.write(System.lineSeparator());
-        writer.write(CONTINUATION_INDENT);
-        writer.write("android:height=\"");
-        writer.write(formatFloatAttribute(svgTree.getHeight() * svgTree.getScaleFactor()));
-        writer.write("dp\"");
-        writer.write(System.lineSeparator());
-
-        writer.write(CONTINUATION_INDENT);
-        writer.write("android:viewportWidth=\"");
-        writer.write(formatFloatAttribute(viewportWidth));
-        writer.write("\"");
-        writer.write(System.lineSeparator());
-        writer.write(CONTINUATION_INDENT);
-        writer.write("android:viewportHeight=\"");
-        writer.write(formatFloatAttribute(viewportHeight));
-        writer.write("\">");
-        writer.write(System.lineSeparator());
-
-        svgTree.normalize();
-        // TODO: this has to happen in the tree mode!!!
-        writeXml(svgTree, writer);
-        writer.write("</vector>");
-        writer.write(System.lineSeparator());
-
-        writer.close();
+        svgTree.writeXml(outStream);
     }
 
-    private static void writeXml(@NonNull SvgTree svgTree, @NonNull OutputStreamWriter fw)
-            throws IOException {
-        if (svgTree.getRoot() == null) {
-            throw new NullPointerException("SvgTree root is null.");
-        }
-        svgTree.getRoot().writeXml(fw, false, INDENT_UNIT);
-    }
-
-    /**
+  /**
      * Converts a SVG file into VectorDrawable's XML content, if no error is found.
      *
      * @param inputSvg the input SVG file
@@ -1279,15 +1224,10 @@ public class Svg2Vector {
         String errorLog;
         try {
             SvgTree svgTree = parse(inputSvg);
-            boolean hasContent = svgTree.getHasLeafNode();
-            if (hasContent) {
+            if (svgTree.getHasLeafNode()) {
                 writeFile(outStream, svgTree);
             }
             errorLog = svgTree.getErrorLog();
-            if (!hasContent && errorLog.isEmpty()) {
-                svgTree.logError("No vector content found", null);
-                errorLog = svgTree.getErrorLog();
-            }
         } catch (Exception e) {
             errorLog = "Error while parsing " + inputSvg.getName();
             String errorDetail = e.getLocalizedMessage();
