@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2018 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_NETWORK_IO_NETWORK_TYPE_PROVIDER_H_
-#define PERFD_NETWORK_IO_NETWORK_TYPE_PROVIDER_H_
+#include "network_type_sampler.h"
 
-#include "perfd/network/network_type_provider.h"
+#include "daemon/event_buffer.h"
+
+#include "proto/common.pb.h"
+#include "proto/network.pb.h"
 
 namespace profiler {
 
-// NetworkTypeProvider implementation that uses ioctl to fetch active network
-// interface type from the system.
-class IoNetworkTypeProvider final : public NetworkTypeProvider {
- public:
-  proto::NetworkTypeData::NetworkType GetDefaultNetworkType() override;
-};
+using proto::Event;
+
+void NetworkTypeSampler::Sample() {
+  Event event;
+  event.set_pid(session().info().pid());
+  event.set_kind(Event::NETWORK_TYPE);
+  event.mutable_network_type()->set_network_type(
+      network_type_provider_->GetDefaultNetworkType());
+  buffer()->Add(event);
+}
 
 }  // namespace profiler
-
-#endif  // PERFD_NETWORK_IO_NETWORK_TYPE_PROVIDER_H_

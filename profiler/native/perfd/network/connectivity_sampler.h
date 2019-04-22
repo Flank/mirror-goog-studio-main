@@ -22,6 +22,7 @@
 #include "perfd/network/io_network_type_provider.h"
 #include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
+#include "proto/network_data.pb.h"
 
 namespace profiler {
 
@@ -44,7 +45,7 @@ class ConnectivitySampler final : public NetworkSampler {
 
  private:
   std::shared_ptr<NetworkTypeProvider> network_type_provider_;
-  proto::ConnectivityData::NetworkType network_type_;
+  proto::NetworkTypeData::NetworkType network_type_;
 };
 
 }  // namespace profiler

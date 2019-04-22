@@ -24,25 +24,24 @@
 using profiler::ConnectivitySampler;
 using profiler::FakeNetworkTypeProvider;
 using profiler::TestUtils;
+using profiler::proto::NetworkTypeData;
 
 TEST(ConnectivitySampler, NetworkTypeMobileFromProvider) {
-  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
-      profiler::proto::ConnectivityData::MOBILE);
+  auto network_type_mobile =
+      std::make_shared<FakeNetworkTypeProvider>(NetworkTypeData::MOBILE);
   ConnectivitySampler sampler(network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::MOBILE,
-            data.connectivity_data().network_type());
+  EXPECT_EQ(NetworkTypeData::MOBILE, data.connectivity_data().network_type());
 }
 
 TEST(ConnectivitySampler, NetworkTypeWifiFromProvider) {
-  auto network_type_wifi = std::make_shared<FakeNetworkTypeProvider>(
-      profiler::proto::ConnectivityData::WIFI);
+  auto network_type_wifi =
+      std::make_shared<FakeNetworkTypeProvider>(NetworkTypeData::WIFI);
   ConnectivitySampler sampler(network_type_wifi);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::WIFI,
-            data.connectivity_data().network_type());
+  EXPECT_EQ(NetworkTypeData::WIFI, data.connectivity_data().network_type());
 }

@@ -21,6 +21,7 @@
 #include "perfd/samplers/memory_usage_sampler.h"
 #include "perfd/samplers/network_connection_count_sampler.h"
 #include "perfd/samplers/network_speed_sampler.h"
+#include "perfd/samplers/network_type_sampler.h"
 #include "perfd/statsd/pulled_atoms/mobile_bytes_transfer.h"
 #include "perfd/statsd/pulled_atoms/wifi_bytes_transfer.h"
 #include "perfd/statsd/statsd_subscriber.h"
@@ -44,6 +45,8 @@ Session::Session(int64_t stream_id, int32_t pid, int64_t start_timestamp,
   if (profiler_unified_pipeline) {
     samplers_.push_back(std::unique_ptr<Sampler>(
         new profiler::NetworkConnectionCountSampler(*this, daemon->buffer())));
+    samplers_.push_back(std::unique_ptr<Sampler>(
+        new profiler::NetworkTypeSampler(*this, daemon->buffer())));
     samplers_.push_back(
         std::unique_ptr<Sampler>(new profiler::CpuUsageDataSampler(
             *this, daemon->clock(), daemon->buffer())));

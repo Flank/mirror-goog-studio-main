@@ -52,6 +52,8 @@ message Event {
     NETWORK_HTTP_CONNECTION = 203;
     // group_id: connection id
     NETWORK_HTTP_THREAD = 204;
+    // No specified group_id
+    NETWORK_TYPE = 205;
 
     // Cpu Profiler Prefix = 300
     // group_id: process id
@@ -143,6 +145,8 @@ message Event {
     NetworkHttpConnectionData network_http_connection = 203;
     // Populated when |kind| is |NETWORK_HTTP_THREAD|
     NetworkHttpThreadData network_http_thread = 204;
+    // Populated when |kind| is |NETWORK_TYPE|
+    NetworkTypeData network_type = 205;
 
     // Cpu Profiler Prefix = 300
     CpuUsageData cpu_usage = 301;

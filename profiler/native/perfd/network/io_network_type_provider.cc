@@ -20,11 +20,12 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+using profiler::proto::NetworkTypeData;
+
 namespace profiler {
 
-proto::ConnectivityData::NetworkType
-IoNetworkTypeProvider::GetDefaultNetworkType() {
-  proto::ConnectivityData::NetworkType type = proto::ConnectivityData::INVALID;
+NetworkTypeData::NetworkType IoNetworkTypeProvider::GetDefaultNetworkType() {
+  NetworkTypeData::NetworkType type = NetworkTypeData::UNSPECIFIED_NETWORK_TYPE;
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0) {
     return type;
@@ -47,10 +48,10 @@ IoNetworkTypeProvider::GetDefaultNetworkType() {
       continue;
     }
     if (strncmp(name, "wlan", 4) == 0) {
-      type = proto::ConnectivityData::WIFI;
+      type = NetworkTypeData::WIFI;
       break;
     } else {
-      type = proto::ConnectivityData::MOBILE;
+      type = NetworkTypeData::MOBILE;
     }
   }
 

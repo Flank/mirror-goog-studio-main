@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "NetworkProfiler";
 
 import "common.proto";
+import "network_data.proto";
 
 service NetworkService {
   // Requests profiler data from the app with ID being |process_id|, in the time range
@@ -72,12 +73,7 @@ message SpeedData {
 message ConnectionData { int32 connection_number = 1; }
 
 message ConnectivityData {
-  enum NetworkType {
-    INVALID = 0;
-    MOBILE = 1;
-    WIFI = 2;
-  }
-  NetworkType network_type = 2;
+  NetworkTypeData.NetworkType network_type = 2;
 }
 
 message NetworkDataRequest {

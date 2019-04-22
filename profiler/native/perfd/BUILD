@@ -8,6 +8,7 @@ filegroup(
         "samplers/memory_usage_sampler.h",
         "samplers/network_connection_count_sampler.h",
         "samplers/network_speed_sampler.h",
+        "samplers/network_type_sampler.h",
         "samplers/sampler.h",
     ]),
 )
@@ -20,6 +21,7 @@ filegroup(
         "samplers/memory_usage_sampler.cc",
         "samplers/network_connection_count_sampler.cc",
         "samplers/network_speed_sampler.cc",
+        "samplers/network_type_sampler.cc",
         "samplers/sampler.cc",
     ]),
 )
@@ -94,6 +96,7 @@ cc_test(
         "samplers/cpu_thread_sampler_test.cc",
         "samplers/cpu_usage_sampler_test.cc",
         "samplers/memory_usage_sampler_test.cc",
+        "samplers/network_type_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
     ],

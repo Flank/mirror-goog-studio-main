@@ -25,7 +25,7 @@ class NetworkTypeProvider {
   virtual ~NetworkTypeProvider() = default;
 
   // Returns the active network interface type.
-  virtual proto::ConnectivityData::NetworkType GetDefaultNetworkType() = 0;
+  virtual proto::NetworkTypeData::NetworkType GetDefaultNetworkType() = 0;
 };
 
 }  // namespace profiler

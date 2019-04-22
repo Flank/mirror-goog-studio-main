@@ -20,7 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Network";
 
 message NetworkSpeedData {
-  int64 throughput = 1; // bytes / sec
+  int64 throughput = 1;  // bytes / sec
 }
 
 message NetworkConnectionData {
@@ -34,7 +34,7 @@ message NetworkHttpConnectionData {
     // Header fields associated with this request. See also:
     // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
     string fields = 3;
-    string method = 4;  
+    string method = 4;
   }
 
   message HttpRequestCompleted {
@@ -72,8 +72,18 @@ message NetworkHttpConnectionData {
 }
 
 message NetworkHttpThreadData {
-  // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+  // ID of the thread obtained from Java, which is different from the thread ID
+  // obtained in a JNI context.
   int64 id = 1;
   // Name of the thread as obtained by Thread#getName()
   string name = 2;
+}
+
+message NetworkTypeData {
+  enum NetworkType {
+    UNSPECIFIED_NETWORK_TYPE = 0;
+    MOBILE = 1;
+    WIFI = 2;
+  }
+  NetworkType network_type = 1;
 }

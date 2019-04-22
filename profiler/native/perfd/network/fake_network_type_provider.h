@@ -22,15 +22,15 @@ namespace profiler {
 
 class FakeNetworkTypeProvider final : public NetworkTypeProvider {
  public:
-  FakeNetworkTypeProvider(proto::ConnectivityData::NetworkType type)
+  FakeNetworkTypeProvider(proto::NetworkTypeData::NetworkType type)
       : type_(type) {}
 
-  proto::ConnectivityData::NetworkType GetDefaultNetworkType() override {
+  proto::NetworkTypeData::NetworkType GetDefaultNetworkType() override {
     return type_;
   }
 
  private:
-  proto::ConnectivityData::NetworkType type_;
+  proto::NetworkTypeData::NetworkType type_;
 };
 
 }  // namespace profiler
