@@ -108,7 +108,8 @@ message LayoutInspectorCommand {
   enum Type {
     UNKNOWN = 0;
     START = 1;
-    GET_PROPERTIES = 2;
+    STOP = 2;
+    GET_PROPERTIES = 3;
   }
 
   Type type = 1;

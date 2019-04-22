@@ -42,6 +42,13 @@ class LayoutInspectorAgentCommand {
               break;
             }
 
+            case LayoutInspectorCommand::STOP: {
+              jmethodID stop_command_method = jni_env->GetMethodID(
+                  inspector_class, "onStopLayoutInspectorCommand", "()V");
+              jni_env->CallVoidMethod(inspector_service, stop_command_method);
+              break;
+            }
+
             default: {
               jmethodID start_command_method = jni_env->GetMethodID(
                   inspector_class, "onStartLayoutInspectorCommand", "()V");

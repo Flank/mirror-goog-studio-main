@@ -37,6 +37,8 @@ import java.util.concurrent.Executors;
 public class LayoutInspectorService {
     private final Properties properties = new Properties();
     private final ComponentTree componentTree = new ComponentTree();
+    private final Object lock = new Object();
+    private AutoCloseable captureClosable = null;
 
     private static LayoutInspectorService sInstance;
 
@@ -94,12 +96,20 @@ public class LayoutInspectorService {
                             Executor.class,
                             Callable.class);
 
+            // Stop a running capture:
+            onStopLayoutInspectorCommand();
+
             root.post(
                     new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                startCaptureMethod.invoke(null, root, executor, callable);
+                                synchronized (lock) {
+                                    captureClosable =
+                                            (AutoCloseable)
+                                                    startCaptureMethod.invoke(
+                                                            null, root, executor, callable);
+                                }
                                 root.invalidate();
                             } catch (Throwable e) {
                                 sendErrorMessage(e);
@@ -109,6 +119,21 @@ public class LayoutInspectorService {
 
         } catch (Throwable e) {
             sendErrorMessage(e);
+        }
+    }
+
+    /** Stops the capture from sending more messages. */
+    @SuppressWarnings("unused") // invoked via jni
+    public void onStopLayoutInspectorCommand() {
+        synchronized (lock) {
+            if (captureClosable != null) {
+                try {
+                    captureClosable.close();
+                } catch (Exception ex) {
+                    sendErrorMessage(ex);
+                }
+                captureClosable = null;
+            }
         }
     }
 
