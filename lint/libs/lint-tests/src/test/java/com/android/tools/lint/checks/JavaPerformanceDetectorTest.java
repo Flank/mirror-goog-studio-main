@@ -697,6 +697,31 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expectInlinedMessages(true);
     }
 
+    public void testIsInitialized() {
+        // Regression test for
+        // 130892328: False positive for DrawAllocation with Kotlin nullable.isInitialized
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package com.android.demo\n"
+                                        + "\n"
+                                        + "import android.content.Context\n"
+                                        + "import android.graphics.Bitmap\n"
+                                        + "import android.graphics.Canvas\n"
+                                        + "import android.view.View\n"
+                                        + "\n"
+                                        + "private lateinit var bitmap: Bitmap\n"
+                                        + "\n"
+                                        + "class MyView(context: Context) : View(context) {\n"
+                                        + "    override fun onDraw(canvas: Canvas) {\n"
+                                        + "        if (!::bitmap.isInitialized)\n"
+                                        + "            bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)\n"
+                                        + "    }\n"
+                                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testWildcards() {
         String expected =
                 ""

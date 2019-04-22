@@ -55,6 +55,7 @@ import java.util.HashSet;
 import java.util.List;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UCallableReferenceExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UIfExpression;
@@ -414,6 +415,15 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
                     if (identifier != null) {
                         variables.add(identifier);
                     }
+                } else if (receiver instanceof UCallableReferenceExpression
+                        && selector instanceof USimpleNameReferenceExpression
+                        && "isInitialized"
+                                .equals(((USimpleNameReferenceExpression) selector).getIdentifier())
+                        && (((UCallableReferenceExpression) receiver).getQualifierExpression()
+                                == null)) {
+                    // If's of the form "if (!::field.isInitialized)"
+                    String name = ((UCallableReferenceExpression) receiver).getCallableName();
+                    variables.add(name);
                 }
             }
         }
