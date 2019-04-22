@@ -1208,33 +1208,33 @@ public class Svg2Vector {
         svgTree.writeXml(outStream);
     }
 
-  /**
+    /**
      * Converts a SVG file into VectorDrawable's XML content, if no error is found.
      *
      * @param inputSvg the input SVG file
      * @param outStream the converted VectorDrawable's content. This can be empty if there is any
      *     error found during parsing
-     * @return the error messages, which contain things like all the tags VectorDrawable doesn't
-     *     support or exception message
+     * @return the error message that combines all logged errors and warnings, or an empty string if
+     *     there were no errors
      */
     @NonNull
     public static String parseSvgToXml(@NonNull File inputSvg, @NonNull OutputStream outStream) {
         // Write all the error message during parsing into SvgTree and return here as getErrorLog().
         // We will also log the exceptions here.
-        String errorLog;
+        String errorMessage;
         try {
             SvgTree svgTree = parse(inputSvg);
             if (svgTree.getHasLeafNode()) {
                 writeFile(outStream, svgTree);
             }
-            errorLog = svgTree.getErrorLog();
+            errorMessage = svgTree.getErrorMessage();
         } catch (Exception e) {
-            errorLog = "Error while parsing " + inputSvg.getName();
+            errorMessage = "Error while parsing " + inputSvg.getName();
             String errorDetail = e.getLocalizedMessage();
             if (errorDetail != null) {
-                errorLog += ":\n" + errorDetail;
+                errorMessage += ":\n" + errorDetail;
             }
         }
-        return errorLog;
+        return errorMessage;
     }
 }

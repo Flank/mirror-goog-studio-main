@@ -231,10 +231,11 @@ class SvgTree {
     }
 
     /**
-     * Returns the error log. Empty string if there are no errors.
+     * Returns the error message that combines all logged errors and warnings. If there were no
+     * errors, returns an empty string.
      */
     @NonNull
-    public String getErrorLog() {
+    public String getErrorMessage() {
         if (mLogMessages.isEmpty()) {
             return "";
         }
