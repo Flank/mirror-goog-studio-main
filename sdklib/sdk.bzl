@@ -141,7 +141,7 @@ def _sdk_package_test_impl(ctx):
     lib_files = ["tools/lib/" + f + "_deploy.jar" for f in bin_files]
     bin_per_os = {platform: ["tools/bin/" + file + (".bat" if platform == "win" else "") for file in bin_files] for platform in platforms}
     other_files = ["tools/NOTICE.txt", "tools/source.properties"]
-    complete_contents_per_os = {platform: "\n".join(bin_per_os[platform] + lib_files + other_files) for platform in platforms}
+    complete_contents_per_os = {platform: " ".join(bin_per_os[platform] + lib_files + other_files) for platform in platforms}
     desired_file_per_os = {platform: "{}_{}.zip".format(ctx.attr.package.label.name, platform) for platform in platforms}
     zip_paths_per_os = {platform: [f.short_path for f in target if platform + ".zip" in f.basename][0] for platform in platforms}
     ctx.actions.write(
@@ -165,7 +165,8 @@ def _sdk_package_test_impl(ctx):
             #check "`zipinfo {zip}|grep -- '-r-xr-xr-x'|sed 's/.* //'|sort`" "{bins}"
             #check "`zipinfo {zip}|grep -- '-r--r--r--'|sed 's/.* //'|sort`" "{others}"
             """
-                   check "`zipinfo -1 {zip}|grep -v /$|sort`" "{contents}"
+                   sorted_contents=`echo {contents}|xargs -n 1|sort`
+                   check "`zipinfo -1 {zip}|grep -v /$|sort`" "$sorted_contents"
                    """.format(
                 zip = zip_paths_per_os[platform],
                 contents = complete_contents_per_os[platform],
