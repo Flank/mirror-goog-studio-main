@@ -37,6 +37,9 @@ import java.util.stream.Collectors;
 
 /** Implementation of the {@link ApkFileDatabase} based on SQLite. */
 public class SqlApkFileDatabase implements ApkFileDatabase {
+    // The SQLite use this property to determine where to temporary extract the .so / .dll during init.
+    private static final String SQLITE_JDBC_TEMP_DIR_PROPERTY = "org.sqlite.tmpdir";
+
     public static final int MAX_DEXFILES_ENTRY = 200;
 
     // Purely a value-based check. No plans to make the cache database forward / backward compatible.
@@ -46,14 +49,35 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
     private final int maxDexFilesEntries;
     private Connection connection;
 
-    public SqlApkFileDatabase(File file) {
-        this(file, CURRENT_SCHEMA_VERSION_NUMBER, MAX_DEXFILES_ENTRY);
+    /**
+     * @param nativeLibraryTmpDir SQLite requires extracting a native .so / .dll in a temp directory
+     *     for it to work. However, some OS set up might have given /tmp noexec. We are going to
+     *     require the caller to give us a good place to extract that library to. If this is null,
+     *     it will continue to use the OS's temp dir.
+     */
+    public SqlApkFileDatabase(File file, String nativeLibraryTmpDir) {
+        this(file, nativeLibraryTmpDir, CURRENT_SCHEMA_VERSION_NUMBER, MAX_DEXFILES_ENTRY);
     }
 
-    public SqlApkFileDatabase(File file, String schemaVersionNumber, int maxDexFileEntries) {
+    public SqlApkFileDatabase(
+            File file,
+            String nativeLibraryTmpDir,
+            String schemaVersionNumber,
+            int maxDexFileEntries) {
         this.schemaVersion = schemaVersionNumber;
         this.maxDexFilesEntries = maxDexFileEntries;
+
+        // Save the property incase someone needs to do something else with it.
+        String previousSqliteTmpdir = System.getProperty(SQLITE_JDBC_TEMP_DIR_PROPERTY);
         try {
+            if (nativeLibraryTmpDir != null) {
+                System.setProperty(SQLITE_JDBC_TEMP_DIR_PROPERTY, nativeLibraryTmpDir);
+                File tmpDir = new File(nativeLibraryTmpDir);
+                if (!tmpDir.exists() && !tmpDir.mkdirs()) {
+                    throw new RuntimeException("Cannot create temp directory: " + tmpDir.getPath());
+                }
+            }
+
             // For older versions of the JDBC we need to force load the sqlite.JDBC driver to trigger static initializer's and register
             // the JDBC driver with the Java DriverManager.
             Class.forName("org.sqlite.JDBC");
@@ -68,6 +92,14 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
             executeStatements("PRAGMA foreign_keys=ON;");
         } catch (ClassNotFoundException | SQLException e) {
             throw new RuntimeException(e);
+        } finally {
+            if (nativeLibraryTmpDir != null) {
+                if (previousSqliteTmpdir == null) {
+                    System.clearProperty(SQLITE_JDBC_TEMP_DIR_PROPERTY);
+                } else {
+                    System.setProperty(SQLITE_JDBC_TEMP_DIR_PROPERTY, previousSqliteTmpdir);
+                }
+            }
         }
     }
 

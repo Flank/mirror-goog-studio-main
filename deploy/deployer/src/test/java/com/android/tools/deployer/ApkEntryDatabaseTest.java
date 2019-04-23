@@ -36,7 +36,7 @@ public class ApkEntryDatabaseTest {
     private SqlApkFileDatabase createTestDb(String version, int maxDexes) throws Exception {
         TemporaryFolder tmpdir = new TemporaryFolder();
         tmpdir.create();
-        return new SqlApkFileDatabase(tmpdir.newFile("test.db"), version, maxDexes);
+        return new SqlApkFileDatabase(tmpdir.newFile("test.db"), null, version, maxDexes);
     }
 
     @Test
@@ -71,7 +71,7 @@ public class ApkEntryDatabaseTest {
         TemporaryFolder tmdir = new TemporaryFolder();
         tmdir.create();
         File file = tmdir.newFile("test.db");
-        SqlApkFileDatabase db = new SqlApkFileDatabase(file, "OUTDATED", 100);
+        SqlApkFileDatabase db = new SqlApkFileDatabase(file, null, "OUTDATED", 100);
 
         // Initialize the DB
         ApkEntry classes01 = new ApkEntry("01.dex", 1234, apk);
@@ -85,7 +85,7 @@ public class ApkEntryDatabaseTest {
         Assert.assertEquals(3, dump.size());
 
         db.close();
-        db = new SqlApkFileDatabase(file, "CURRENT", 100);
+        db = new SqlApkFileDatabase(file, null, "CURRENT", 100);
         dump = db.dump();
 
         Assert.assertEquals(0, dump.size());

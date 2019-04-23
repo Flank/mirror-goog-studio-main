@@ -50,7 +50,8 @@ public class DeployerRunner {
     }
 
     public static int tracedMain(String[] args, ILogger logger) {
-        ApkFileDatabase db = new SqlApkFileDatabase(new File(DB_PATH));
+        final File file = new File(DB_PATH);
+        ApkFileDatabase db = new SqlApkFileDatabase(file, null);
         DeployerRunner runner = new DeployerRunner(db, new CommandLineService());
         return runner.run(args, logger);
     }

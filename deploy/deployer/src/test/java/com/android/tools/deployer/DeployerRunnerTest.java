@@ -80,7 +80,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
     @Test
     public void testFullInstallSuccessful() throws Exception {
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         String[] args = {
@@ -105,7 +105,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "sample.apk");
         File installersPath = prepareInstaller();
@@ -206,7 +206,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = prepareInstaller();
@@ -267,7 +267,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File installersPath = prepareInstaller();
@@ -336,7 +336,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File v2 = TestUtils.getWorkspaceFile(BASE + "apks/simple+ver.apk");
         File installersPath = prepareInstaller();
@@ -424,7 +424,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -461,7 +461,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split+ver.apk");
@@ -495,7 +495,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -596,7 +596,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -698,7 +698,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -804,7 +804,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertTrue(device.getApps().isEmpty());
         device.setShellBridge(getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
         File split1 = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
@@ -951,7 +951,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
     public void testBasicSwap() throws Exception {
         // Install the base apk:
         assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
         DeployerRunner runner = new DeployerRunner(db, service);
         File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
         String[] args = {"install", "com.android.test.uibench", file.getAbsolutePath()};
