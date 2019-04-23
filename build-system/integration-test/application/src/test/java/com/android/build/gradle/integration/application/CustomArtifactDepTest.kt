@@ -1,44 +1,36 @@
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.ModelContainer;
-import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
-import com.android.builder.model.level2.DependencyGraphs;
-import java.io.IOException;
-import java.util.Collection;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.getVariantByName
+import java.io.IOException
+import org.junit.Rule
+import org.junit.Test
 
-/** Assemble tests for customArtifactDep. */
-public class CustomArtifactDepTest {
+/** Assemble tests for customArtifactDep.  */
+class CustomArtifactDepTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("customArtifactDep").create();
+    @get:Rule
+    var project = GradleTestProject.builder().fromTestProject("customArtifactDep").create()
 
     @Test
-    public void testModel() throws IOException {
-        ModelContainer<AndroidProject> models = project.model().fetchAndroidProjects();
-        AndroidProject appModel = models.getOnlyModelMap().get(":app");
-        assertNotNull("Module app null-check", appModel);
+    @Throws(IOException::class)
+    fun testModel() {
+        val appModel = project.model().fetchAndroidProjects().onlyModelMap[":app"]
+        assertNotNull("Module app null-check", appModel)
 
-        Collection<Variant> variants = appModel.getVariants();
-        assertEquals("Variant count", 2, variants.size());
+        val variants = appModel!!.variants
+        assertEquals("Variant count", 2, variants.size.toLong())
 
-        Variant variant = AndroidProjectUtils.getVariantByName(appModel, "release");
+        val mainInfo = appModel.getVariantByName("release").mainArtifact
+        assertNotNull("Main Artifact null-check", mainInfo)
 
-        AndroidArtifact mainInfo = variant.getMainArtifact();
-        assertNotNull("Main Artifact null-check", mainInfo);
+        val dependencyGraph = mainInfo.dependencyGraphs
+        assertNotNull("Dependencies null-check", dependencyGraph)
 
-        DependencyGraphs dependencyGraph = mainInfo.getDependencyGraphs();
-        assertNotNull("Dependencies null-check", dependencyGraph);
-
-        assertEquals("jar dep count", 1, dependencyGraph.getCompileDependencies().size());
+        assertEquals("jar dep count", 1, dependencyGraph.compileDependencies.size)
     }
 }
+
