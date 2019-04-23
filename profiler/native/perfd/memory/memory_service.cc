@@ -15,9 +15,11 @@
  */
 #include "memory_service.h"
 
+#include <unistd.h>
 #include <cassert>
 
 #include "proto/internal_memory.grpc.pb.h"
+#include "utils/clock.h"
 #include "utils/trace.h"
 
 using profiler::proto::AllocationContextsResponse;
@@ -45,6 +47,11 @@ using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
+
+// Retry SendRequestToAgent for 5 seconds in case the agent control stream was
+// not yet initialized.
+const int32_t kAgentReqRetryCount = 20;
+const uint64_t kAgentReqRetryIntervalUs = profiler::Clock::ms_to_us(250);
 
 namespace profiler {
 
@@ -204,7 +211,15 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
           control_request.mutable_disable_request();
       disable_request->set_timestamp(request->request_time());
     }
-    if (!private_service_->SendRequestToAgent(control_request)) {
+    // Retry for 5 seconds before failing the RPC in case the control stream
+    // wasn't initialized.
+    int32_t retries = 0;
+    bool req_result = false;
+    while (!req_result && retries++ < kAgentReqRetryCount) {
+      usleep(kAgentReqRetryIntervalUs);
+      req_result = private_service_->SendRequestToAgent(control_request);
+    }
+    if (!req_result) {
       return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
                             "Unable to start live allocation tracking.");
     }

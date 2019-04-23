@@ -277,13 +277,15 @@ void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
                         const AgentConfig& agent_config) {
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   Agent::Instance().InitializeProfilers();
-  InitializePerfa(jvmti_env, jni_env, agent_config);
   // MemoryTrackingEnv needs to wait for the MemoryComponent in the agent,
   // which blocks until the Daemon is connected, hence we delay initializing
   // it in the callback below.
   Agent::Instance().AddDaemonConnectedCallback([vm, agent_config] {
     MemoryTrackingEnv::Instance(vm, agent_config.mem());
   });
+  // Transformation of loaded classes may take long. Perform this after other
+  // tasks.
+  InitializePerfa(jvmti_env, jni_env, agent_config);
   // Perf-test currently waits on this message to determine that agent
   // has finished profiler initialization.
   Log::V("Profiler initialization complete on agent.");
