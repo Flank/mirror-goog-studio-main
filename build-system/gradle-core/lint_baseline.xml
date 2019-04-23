@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="5" by="lint 26.5.0-alpha11">
+<issues format="5" by="lint 26.5.0-alpha13">
 
     <issue
         id="VisibleForTests"
@@ -275,7 +275,7 @@
 
     <issue
         id="NewForkJoinPool"
-        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/res/namespaced/AutoNamespaceDependenciesTask.kt"
             line="507"/>
@@ -283,7 +283,7 @@
 
     <issue
         id="NewForkJoinPool"
-        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/DexMergingTask.kt"
             line="375"/>
@@ -291,7 +291,7 @@
 
     <issue
         id="NewForkJoinPool"
-        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`. See `go/do-not-freeze`.">
+        message="Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.">
         <location
             file="src/main/java/com/android/build/gradle/internal/tasks/Workers.kt"
             line="166"/>
