@@ -684,7 +684,7 @@ private class ProjectInitializer(
         val jarsDir = File(expanded, FD_JARS)
         if (jarsDir.isDirectory) {
             jarsDir.listFiles()?.let {
-                jarList.addAll(it.filter { name -> name.endsWith(DOT_JAR) }.toList())
+                jarList.addAll(it.filter { file -> file.name.endsWith(DOT_JAR) }.toList())
             }
         }
         val classesJar = File(expanded, "classes.jar")
