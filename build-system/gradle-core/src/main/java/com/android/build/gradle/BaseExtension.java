@@ -901,7 +901,11 @@ public abstract class BaseExtension implements AndroidConfig {
     @Override
     public List<File> getBootClasspath() {
         // do not call this method from within the plugin code as it forces SDK initialization.
-        return new ArrayList<>(globalScope.getBootClasspath().getFiles());
+        try {
+            return new ArrayList<>(globalScope.getBootClasspath().getFiles());
+        } catch (IllegalStateException e) {
+            return new ArrayList<>();
+        }
     }
 
     /**

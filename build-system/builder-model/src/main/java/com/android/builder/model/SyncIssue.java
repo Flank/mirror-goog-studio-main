@@ -191,6 +191,9 @@ public interface SyncIssue {
     /** Indicates that the user has specified multiple default product flavors */
     int TYPE_AMBIGUOUS_PRODUCT_FLAVOR_DEFAULT = 38;
 
+    /** Indicates that the compileSdkVersion is missing */
+    int TYPE_COMPILE_SDK_VERSION_NOT_SET = 39;
+
     // ATTENTION: When adding new values here, update EvalIssueReporter.Type and TYPE_MAX below.
 
     /**
@@ -198,7 +201,7 @@ public interface SyncIssue {
      *
      * <p>TODO: Why is it needed even when there are no usages in the code?
      */
-    int TYPE_MAX = 39; // increment when adding new types.
+    int TYPE_MAX = 40; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();
