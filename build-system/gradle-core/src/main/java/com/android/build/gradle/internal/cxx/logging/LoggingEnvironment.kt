@@ -99,10 +99,18 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
 
     companion object {
         /**
+         * Singly-linked list where null is used as empty list.
+         * The purpose is that Thread Local has zero allocations when there are no loggers so that
+         * the class loader that creates the loggers won't leak.
+         */
+        private data class LoggerStack(
+            val logger : LoggingEnvironment,
+            val next : LoggerStack?)
+        /**
          * Stack of logger environments.
          */
-        private val loggerStack = ThreadLocal.withInitial {
-            mutableListOf<LoggingEnvironment>(BOTTOM_LOGGING_ENVIRONMENT) }
+        private val loggerStack : ThreadLocal<LoggerStack?> =
+            ThreadLocal.withInitial { null }
 
         /**
          * The logger environment to use if there is no other environment. There should always be an
@@ -135,24 +143,25 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          * The current logger.
          */
         private val logger : LoggingEnvironment
-            get() = loggerStack.get().first()
+            get() = loggerStack.get()?.logger ?: BOTTOM_LOGGING_ENVIRONMENT
 
         /**
          * Push a new logging environment onto the stack of environments.
          */
-        private fun push(logger: ThreadLoggingEnvironment) = loggerStack.get().add(0, logger)
+        private fun push(logger: ThreadLoggingEnvironment) =
+            loggerStack.set(LoggerStack(logger, loggerStack.get()))
 
         /**
          * Pop the top logging environment.
          */
-        private fun pop() = loggerStack.get().removeAt(0)
+        private fun pop() = loggerStack.set(loggerStack.get()?.next)
 
         /**
          * Get the parent of the current logger.
          */
         @JvmStatic // error: using non-JVM static members protected in the superclass companion
                    // is unsupported yet
-        protected fun parentLogger() = loggerStack.get()[1]
+        protected fun parentLogger() = loggerStack.get()?.next?.logger ?: BOTTOM_LOGGING_ENVIRONMENT
 
         /**
          * Report an error.
