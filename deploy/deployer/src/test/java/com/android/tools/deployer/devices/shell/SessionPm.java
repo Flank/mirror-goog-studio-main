@@ -47,8 +47,16 @@ public class SessionPm extends ShellCommand {
                 // eg: pm install-create -r -t -S 5047
             case "install-create":
                 {
+                    String opt;
+                    String inherit = null;
+                    while ((opt = args.nextOption()) != null) {
+                        if (opt.equals("-p")) {
+                            inherit = args.nextArgument();
+                        }
+                    }
                     stdout.format(
-                            "Success: created install session [%d]\n", device.createSession());
+                            "Success: created install session [%d]\n",
+                            device.createSession(inherit));
                     return 0;
                 }
                 // eg: install-write -S 5047 100000000 0_sample -
@@ -61,7 +69,8 @@ public class SessionPm extends ShellCommand {
                         size = parse(args.nextArgument(), "Invalid long");
                     }
                     int session = parseSession(device, args);
-                    if (args.nextArgument() == null) {
+                    String name = args.nextArgument();
+                    if (name == null) {
                         stdout.println(
                                 "Error: java.lang.IllegalArgumentException: Invalid name: null");
                         return 0;
@@ -88,6 +97,15 @@ public class SessionPm extends ShellCommand {
                             stdout.println("Success");
                             return 0;
                         case INSTALL_FAILED_INVALID_APK:
+                            stdout.printf(
+                                    "Failure [INSTALL_FAILED_INVALID_APK: <filename> version code %d inconsistent with %d]\n",
+                                    result.previous, result.value);
+                            if (device.getApi() == 21) {
+                                return 0; // Yes, it returns 0
+                            } else {
+                                return 1;
+                            }
+                        case INSTALL_FAILED_VERSION_DOWNGRADE:
                             stdout.println("Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
                             if (device.getApi() == 21) {
                                 return 0; // Yes, it returns 0

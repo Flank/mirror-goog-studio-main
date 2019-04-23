@@ -22,6 +22,7 @@ import com.android.ddmlib.InstallReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.FileDiff;
 import com.android.utils.ILogger;
 import java.io.IOException;
 import java.util.Collection;
@@ -225,6 +226,7 @@ public class ApkInstaller {
         if (allowReinstall) {
             builder.addOptions("-r");
         }
+
         List<Deploy.PatchInstruction> patches =
                 new PatchSetGenerator().generateFromEntries(localEntries, dump.apkEntries);
         if (patches == null) {
@@ -232,6 +234,11 @@ public class ApkInstaller {
         } else if (patches.isEmpty()) {
             return new DeltaInstallResult(DeltaInstallStatus.NO_CHANGES);
         }
+
+        // We use inheritance if there are more than one apks, and if the manifests
+        // have not changed
+        boolean inherit = canInherit(apks.size(), new ApkDiffer().diff(dump, localEntries));
+        builder.setInherit(inherit);
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
 
@@ -254,6 +261,18 @@ public class ApkInstaller {
                         ? DeltaInstallStatus.SUCCESS
                         : DeltaInstallStatus.ERROR;
         return new DeltaInstallResult(status, res.getInstallOutput());
+    }
+
+    public static boolean canInherit(int apkCount, List<FileDiff> diff) {
+        boolean inherit = apkCount > 1;
+        if (inherit) {
+            for (FileDiff fileDiff : diff) {
+                if (fileDiff.oldFile.name.equals("AndroidManifest.xml")) {
+                    inherit = false;
+                }
+            }
+        }
+        return inherit;
     }
 
     public static AdbClient.InstallResult parseInstallerResultErrorCode(String errorCode) {
@@ -293,6 +312,8 @@ public class ApkInstaller {
                 return "APK signature verification failed.";
             case INSTALL_FAILED_USER_RESTRICTED:
                 return "Installation via USB is disabled.";
+            case INSTALL_FAILED_INVALID_APK:
+                return "The APKs are invalid.";
             default:
                 return "Installation failed due to: '" + result.getReason() + "'";
         }

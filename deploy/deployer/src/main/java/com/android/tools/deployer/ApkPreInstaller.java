@@ -19,6 +19,7 @@ import com.android.annotations.Trace;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.deployer.model.FileDiff;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import java.io.File;
@@ -69,7 +70,8 @@ public class ApkPreInstaller {
      * @return Session ID of the install session.
      */
     @Trace
-    public String preinstall(ApplicationDumper.Dump remoteContent, List<ApkEntry> localContent)
+    public String preinstall(
+            ApplicationDumper.Dump remoteContent, List<ApkEntry> localContent, List<FileDiff> diffs)
             throws DeployerException {
         // Build the list of local apks.
         HashMap<String, Apk> localApks = new HashMap<>();
@@ -100,7 +102,7 @@ public class ApkPreInstaller {
 
         // Attempt a DeltaPreinstall first and fallback on a FullPreinstall if it fails.
         try {
-            return deltaPreinstall(localApks, remoteApks, packageName);
+            return deltaPreinstall(localApks, remoteApks, packageName, diffs);
         } catch (DeltaPreInstallException e) {
             return fullPreinstall(localApks);
         }
@@ -109,7 +111,10 @@ public class ApkPreInstaller {
     @Trace
     /** @return Session ID. Empty if all APKs are unchanged from the device. */
     private String deltaPreinstall(
-            HashMap<String, Apk> localApks, HashMap<String, Apk> remoteApks, String packageName)
+            HashMap<String, Apk> localApks,
+            HashMap<String, Apk> remoteApks,
+            String packageName,
+            List<FileDiff> diffs)
             throws DeltaPreInstallException {
         try {
             // Pair remote and local apks. Attempt to build an app delta.
@@ -129,6 +134,9 @@ public class ApkPreInstaller {
                 return "<SKIPPED-INSTALLATION>";
             }
             pushRequestBuilder.addAllPatchInstructions(patches);
+
+            boolean inherit = ApkInstaller.canInherit(localApks.size(), diffs);
+            pushRequestBuilder.setInherit(inherit);
             pushRequestBuilder.setPackageName(packageName);
 
             Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();

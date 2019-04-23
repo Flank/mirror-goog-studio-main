@@ -27,8 +27,7 @@ message SwapRequest {
   int32 extra_agents = 6;
 }
 
-message ResumeRequest {
-}
+message ResumeRequest {}
 
 message ClassDef {
   // JVM class name for the class that is to be swapped.
@@ -59,9 +58,9 @@ message JvmtiErrorDetails {
 message AgentSwapResponse {
   enum Status {
     UNKNOWN = 0;
-    OK = 1; // The swap completed successfully.
-    ERROR = 2; // The swap did not succeed.
-    NEED_ACTIVITY_RESTART = 3; // The agent is waiting on an activity restart.
+    OK = 1;                     // The swap completed successfully.
+    ERROR = 2;                  // The swap did not succeed.
+    NEED_ACTIVITY_RESTART = 3;  // The agent is waiting on an activity restart.
   }
 
   // The state of the swap that was requested.
@@ -81,8 +80,8 @@ message AgentSwapResponse {
 message SwapResponse {
   enum Status {
     UNKNOWN = 0;
-    OK = 1; // The swap completed successfully.
-    ERROR = 2; // The swap did not succeed.
+    OK = 1;     // The swap completed successfully.
+    ERROR = 2;  // The swap did not succeed.
     INSTALLATION_FAILED = 3;
   }
 
@@ -96,7 +95,7 @@ message SwapResponse {
 // Message returned by the Android native IRR installer. There are two layers :
 // - Installer layer which is unaware of commands specifics.
 // - Command layer whici is unaware of installe specifics.
-// This layering is visible with the events messages which can be in both 
+// This layering is visible with the events messages which can be in both
 // 'events' fields but also 'extra' field.
 message InstallerResponse {
   enum Status {
@@ -119,8 +118,8 @@ message InstallerResponse {
 message Event {
   enum Type {
     UNINITIALIZED = 0;
-    TRC_BEG = 1; // Used for tracing. Mark beginning of a section.
-    TRC_END = 2; // Used for tracing. Mark end of a section.
+    TRC_BEG = 1;  // Used for tracing. Mark beginning of a section.
+    TRC_END = 2;  // Used for tracing. Mark end of a section.
     LOG_OUT = 3;
     LOG_ERR = 4;
 
@@ -165,7 +164,7 @@ message PackageDump {
 message DumpResponse {
   enum Status {
     UNKNOWN = 0;
-    OK = 1; // The dump completed successfully.
+    OK = 1;  // The dump completed successfully.
     ERROR_PACKAGE_NOT_FOUND = 2;
   }
 
@@ -186,19 +185,20 @@ message PatchInstruction {
 }
 
 message DeltaPreinstallRequest {
-   enum Status {
+  enum Status {
     UNKNOWN = 0;
     OK = 1;
     ERROR = 2;
   }
   Status status = 1;
+
   repeated PatchInstruction patchInstructions = 2;
 
-  // Having the package_name is useful to perform inheritance install (-p)
-  string package_name = 3;
+  bool inherit = 3;
+  string package_name = 4;
 }
 
-message DeltaPreinstallResponse{
+message DeltaPreinstallResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1;
@@ -217,11 +217,11 @@ message DeltaInstallRequest {
   repeated string options = 2;
   repeated PatchInstruction patchInstructions = 3;
 
-  // Having the package_name is useful to perform inheritance install (-p)
-  string package_name = 4;
+  bool inherit = 4;
+  string package_name = 5;
 }
 
-message DeltaInstallResponse{
+message DeltaInstallResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1;

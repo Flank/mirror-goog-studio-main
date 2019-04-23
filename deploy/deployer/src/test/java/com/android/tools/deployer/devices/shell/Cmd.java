@@ -21,6 +21,7 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.List;
 
 public class Cmd extends ShellCommand {
 
@@ -53,10 +54,20 @@ public class Cmd extends ShellCommand {
                 switch (action) {
                         // eg: pm install-create -r -t -S 5047
                     case "install-create":
-                        stdout.format(
-                                "Success: created install session [%d]\n", device.createSession());
-                        return 0;
-                        // eg: install-write -S 5047 100000000 0_sample -
+                        {
+                            String opt;
+                            String inherit = null;
+                            while ((opt = args.nextOption()) != null) {
+                                if (opt.equals("-p")) {
+                                    inherit = args.nextArgument();
+                                }
+                            }
+                            stdout.format(
+                                    "Success: created install session [%d]\n",
+                                    device.createSession(inherit));
+                            return 0;
+                            // eg: install-write -S 5047 100000000 0_sample -
+                        }
                     case "install-write":
                         {
                             String opt = args.nextOption();
@@ -107,17 +118,21 @@ public class Cmd extends ShellCommand {
                                     }
                                     return 0;
                                 case INSTALL_FAILED_INVALID_APK:
+                                    stdout.printf(
+                                            "Failure [INSTALL_FAILED_INVALID_APK: <filename> version code %d inconsistent with %d]\n",
+                                            result.previous, result.value);
                                     if (device.getApi() <= 25) {
-                                        stdout.println(
-                                                "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
                                         return 0;
                                     } else {
-                                        stdout.println(
-                                                "Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
                                         return 4;
                                     }
-                                    // TODO: Take the -p flag into account which would need to return things like:
-                                    // stdout.println(String.format("Failure [INSTALL_FAILED_INVALID_APK: Existing base version code %d inconsistent with %d]\n", result.previous.versionCode, result.details.versionCode));
+                                case INSTALL_FAILED_VERSION_DOWNGRADE:
+                                    stdout.println("Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
+                                    if (device.getApi() <= 25) {
+                                        return 0;
+                                    } else {
+                                        return 4;
+                                    }
                             }
                         }
                     case "install-abandon":
@@ -135,9 +150,11 @@ public class Cmd extends ShellCommand {
                                                 + "java.lang.IllegalArgumentException: Argument expected after \"path\"\n\tat com...");
                                 return 255;
                             }
-                            String path = device.getAppPath(pkg);
-                            if (path != null) {
-                                stdout.println("package:" + path + "/base.apk");
+                            List<String> paths = device.getAppPaths(pkg);
+                            if (paths != null) {
+                                for (String path : paths) {
+                                    stdout.println("package:" + path);
+                                }
                                 return 0;
                             } else {
                                 return 1;

@@ -153,13 +153,14 @@ public class Deployer {
         Task<List<FileDiff>> diffs =
                 runner.create(Tasks.DIFF, new ApkDiffer()::diff, dumps, newFiles);
 
-        // Push the apks to device and get the remote paths
+        // Push and pre install the apks
         Task<String> sessionId =
                 runner.create(
                         Tasks.PREINSTALL,
                         new ApkPreInstaller(adb, installer, logger)::preinstall,
                         dumps,
-                        newFiles);
+                        newFiles,
+                        diffs);
 
         // Verify the changes are swappable and get only the dexes that we can change
         Task<List<FileDiff>> dexDiffs =

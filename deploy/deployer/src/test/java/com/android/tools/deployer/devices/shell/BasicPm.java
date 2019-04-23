@@ -48,7 +48,7 @@ public class BasicPm extends ShellCommand {
                 case SUCCESS:
                     stdout.println("Success");
                     return 0;
-                case INSTALL_FAILED_INVALID_APK:
+                case INSTALL_FAILED_VERSION_DOWNGRADE:
                     stdout.println("Failure [INSTALL_FAILED_VERSION_DOWNGRADE]");
                     return 0;
             }
