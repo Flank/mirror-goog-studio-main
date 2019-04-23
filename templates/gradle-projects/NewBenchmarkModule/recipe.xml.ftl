@@ -16,7 +16,7 @@
     <dependency mavenUrl="androidx.test:runner:+" gradleConfiguration="androidTestImplementation" />
     <dependency mavenUrl="androidx.test.ext:junit:+" gradleConfiguration="androidTestImplementation" />
     <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="androidTestImplementation" />
-    <dependency mavenUrl="androidx.benchmark:benchmark:1.0.0-alpha01-SNAPSHOT01" gradleConfiguration="androidTestImplementation" />
+    <dependency mavenUrl="androidx.benchmark:benchmark:1.0.0-alpha01" gradleConfiguration="androidTestImplementation" />
 
     <instantiate from="root/src/main/AndroidManifest.xml.ftl"
                  to="${escapeXmlAttribute(projectOut)}/src/main/AndroidManifest.xml" />
