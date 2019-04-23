@@ -616,6 +616,196 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         }
     }
 
+    @Test
+    public void testAddSplit() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            base.getAbsolutePath(),
+            split.getAbsolutePath(),
+            "--force-full-install"
+        };
+
+        int code = runner.run(args, logger);
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertInstalled("com.example.simpleapp", base, split);
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        }
+
+        device.getShell().clearHistory();
+
+        File added = TestUtils.getWorkspaceFile(BASE + "apks/split2.apk");
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    base.getAbsolutePath(),
+                    split.getAbsolutePath(),
+                    added.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        code = runner.run(args, logger);
+
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertEquals(0, code);
+            assertEquals(1, device.getApps().size());
+
+            // Check new app installed
+            assertInstalled("com.example.simpleapp", base, split, added);
+
+            if (device.getApi() < 24) {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "pm install-create -r -t -S 30027",
+                        "pm install-write -S 12789 2 0_simple -",
+                        "pm install-write -S 8619 2 1_split -",
+                        "pm install-write -S 8619 2 2_split_ -",
+                        "pm install-commit 2");
+                assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            } else {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "/data/local/tmp/.studio/bin/installer -version="
+                                + Version.hash()
+                                + " dump com.example.simpleapp",
+                        "mkdir -p /data/local/tmp/.studio/bin",
+                        "chmod +x /data/local/tmp/.studio/bin/installer",
+                        "/data/local/tmp/.studio/bin/installer -version="
+                                + Version.hash()
+                                + " dump com.example.simpleapp",
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        "/system/bin/cmd package path com.example.simpleapp",
+                        "cmd package install-create -r -t -S 30027",
+                        "cmd package install-write -S 12789 2 0_simple -",
+                        "cmd package install-write -S 8619 2 1_split -",
+                        "cmd package install-write -S 8619 2 2_split_ -",
+                        "cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(), "DELTAINSTALL:CANNOT_GENERATE_DELTA", "INSTALL:OK");
+            }
+        }
+    }
+
+    @Test
+    public void testRemoveSplit() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"));
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File split1 = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
+        File split2 = TestUtils.getWorkspaceFile(BASE + "apks/split2.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            base.getAbsolutePath(),
+            split1.getAbsolutePath(),
+            split2.getAbsolutePath(),
+            "--force-full-install"
+        };
+
+        int code = runner.run(args, logger);
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertInstalled("com.example.simpleapp", base, split1, split2);
+            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        }
+
+        device.getShell().clearHistory();
+
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    base.getAbsolutePath(),
+                    split1.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        code = runner.run(args, logger);
+
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertEquals(0, code);
+            assertEquals(1, device.getApps().size());
+
+            // Check new app installed
+            assertInstalled("com.example.simpleapp", base, split1);
+
+            if (device.getApi() < 24) {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "pm install-create -r -t -S 21408",
+                        "pm install-write -S 12789 2 0_simple -",
+                        "pm install-write -S 8619 2 1_split -",
+                        "pm install-commit 2");
+                assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            } else {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "/data/local/tmp/.studio/bin/installer -version="
+                                + Version.hash()
+                                + " dump com.example.simpleapp",
+                        "mkdir -p /data/local/tmp/.studio/bin",
+                        "chmod +x /data/local/tmp/.studio/bin/installer",
+                        "/data/local/tmp/.studio/bin/installer -version="
+                                + Version.hash()
+                                + " dump com.example.simpleapp",
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        "/system/bin/cmd package path com.example.simpleapp",
+                        "cmd package install-create -r -t -S 21408",
+                        "cmd package install-write -S 12789 2 0_simple -",
+                        "cmd package install-write -S 8619 2 1_split -",
+                        "cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(), "DELTAINSTALL:CANNOT_GENERATE_DELTA", "INSTALL:OK");
+            }
+        }
+    }
+
     public File prepareInstaller() throws IOException {
         File root = TestUtils.getWorkspaceRoot();
         String testInstaller = "tools/base/deploy/installer/android-installer/test-installer";

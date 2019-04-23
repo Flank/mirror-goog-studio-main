@@ -92,7 +92,7 @@ java_binary(
 
 coverage_java_test(
     name = "deployer.tests",
-    size = "small",
+    size = "medium",
     srcs = glob(["src/test/java/**/*.java"]),
     data = glob(["src/test/resource/**"]) +
            select({

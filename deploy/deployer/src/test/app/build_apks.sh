@@ -26,6 +26,8 @@ function build_apk() {
   MANIFEST=$5
   SOURCE_FILE=$6
   HAS_RESOURCES=$7
+  SPLIT=$8
+  PACKAGE=com.example.simpleapp
 
   echo "AAPT2 compile..."
   FLATS=$(mktemp -d ./mkapk.flats.XXXXXX)
@@ -34,8 +36,9 @@ function build_apk() {
   OBJ=$(mktemp -d ./mkapk.obj.XXXXXX)
 
   sed  "s/%VERSION/$VERSION/" $MANIFEST > $GEN_SRC/AndroidManifest.xml
-  sed  -e "s/%PACKAGE/com.example.simpleapp/" -i "" $GEN_SRC/AndroidManifest.xml
-  
+  sed  -e "s/%PACKAGE/$PACKAGE/" -i "" $GEN_SRC/AndroidManifest.xml
+  sed  -e "s/%SPLIT/$SPLIT/" -i "" $GEN_SRC/AndroidManifest.xml
+
   if [ "$HAS_RESOURCES" = "true" ]; then
     $AAPT2 compile --no-crunch -o $FLATS res/layout/activity_main.xml
     mkdir -p $GEN_SRC/res/values
@@ -76,12 +79,13 @@ function build_apk() {
   rm -rf $OBJ
 }
 
-build_apk ../resource/apks/simple.apk "HelloWorld" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true com.example.simpleapp
-build_apk ../resource/apks/simple+code.apk "HelloWorld2" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true com.example.simpleapp
-build_apk ../resource/apks/simple+ver.apk "HelloWorld" "2" "Hello Android!" AndroidManifest.xml MainActivity.java true com.example.simpleapp
-build_apk ../resource/apks/simple+res.apk "HelloWorld" "1" "Hello Android2!" AndroidManifest.xml MainActivity.java true com.example.simpleapp
-build_apk ../resource/apks/simple+code+res.apk "HelloWorld2" "1" "Hello Android2!" AndroidManifest.xml MainActivity.java true com.example.simpleapp
+build_apk ../resource/apks/simple.apk "HelloWorld" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true base
+build_apk ../resource/apks/simple+code.apk "HelloWorld2" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true base
+build_apk ../resource/apks/simple+ver.apk "HelloWorld" "2" "Hello Android!" AndroidManifest.xml MainActivity.java true base
+build_apk ../resource/apks/simple+res.apk "HelloWorld" "1" "Hello Android2!" AndroidManifest.xml MainActivity.java true base
+build_apk ../resource/apks/simple+code+res.apk "HelloWorld2" "1" "Hello Android2!" AndroidManifest.xml MainActivity.java true base
 
-build_apk ../resource/apks/split.apk "HelloWorld" "1" "Hello Android!" SplitManifest.xml Data.java false com.example.simpleapp
-build_apk ../resource/apks/split+ver.apk "HelloWorld" "2" "Hello Android!" SplitManifest.xml Data.java false com.example.simpleapp
-build_apk ../resource/apks/split+code.apk "HelloWorld2" "1" "Hello Android!" SplitManifest.xml Data.java false com.example.simpleapp
+build_apk ../resource/apks/split.apk "HelloWorld" "1" "Hello Android!" SplitManifest.xml Data.java false split_01
+build_apk ../resource/apks/split2.apk "HelloWorld" "1" "Hello Android!" SplitManifest.xml Data.java false split_02
+build_apk ../resource/apks/split+ver.apk "HelloWorld" "2" "Hello Android!" SplitManifest.xml Data.java false split_01
+build_apk ../resource/apks/split+code.apk "HelloWorld2" "1" "Hello Android!" SplitManifest.xml Data.java false split_01

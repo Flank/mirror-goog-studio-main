@@ -54,6 +54,9 @@ public class PatchSetGenerator {
     public List<Deploy.PatchInstruction> generateFromApkSets(
             HashMap<String, Apk> remoteApks, HashMap<String, Apk> localApks) {
         try {
+            if (remoteApks.size() != localApks.size()) {
+                return null;
+            }
             // Pair remote and local apks. Attempt to build an app delta.
             List<Pair<Apk, Apk>> pairs = new ArrayList<>();
             for (Map.Entry<String, Apk> localApk : localApks.entrySet()) {
