@@ -37,14 +37,9 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 import java.util.function.Predicate;
 
 /**
@@ -245,29 +240,6 @@ public class IncrementalPackagerBuilder {
                             .setV2SigningEnabled(enableV2Signing)
                             .setMinSdkVersion(minSdk)
                             .setValidation(computeValidation())
-                            .setExecutor(
-                                    provider -> {
-                                        ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
-                                        try {
-                                            int jobCount = forkJoinPool.getParallelism();
-                                            List<Future<?>> jobs = new ArrayList<>(jobCount);
-
-                                            for (int i = 0; i < jobCount; i++) {
-                                                jobs.add(
-                                                        forkJoinPool.submit(
-                                                                provider.createRunnable()));
-                                            }
-
-                                            for (Future<?> future : jobs) {
-                                                future.get();
-                                            }
-                                        } catch (InterruptedException e) {
-                                            Thread.currentThread().interrupt();
-                                            throw new RuntimeException(e);
-                                        } catch (ExecutionException e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    })
                             .build());
         } catch (KeytoolException|FileNotFoundException e) {
             throw new RuntimeException(e);
