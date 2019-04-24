@@ -94,8 +94,8 @@ std::string ProcessManager::GetAttachAgentParams(
     const std::string& app_name, const std::string& data_path,
     const std::string& config_path, const std::string& lib_file_name) {
   std::ostringstream attach_params;
-  attach_params << app_name << " " << data_path << "/" << lib_file_name << "="
-                << config_path;
+  attach_params << app_name << " " << data_path << "/code_cache/"
+                << lib_file_name << "=" << config_path;
   return attach_params.str();
 }
 

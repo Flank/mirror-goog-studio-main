@@ -55,8 +55,10 @@ namespace {
 // use connector as the process name (not binary name) for the ease of
 // description.
 const char* const kConnectorFileName = "transport";
+// The subdirectory in app's data folder to contain files that are code.
+const char* const kCodeCacheRelativeDir = "./code_cache/";
 // On-device path of the connector program relative to an app's data folder.
-const char* const kConnectorRelativePath = "./transport";
+const char* const kConnectorRelativePath = "./code_cache/transport";
 // Name of the jar file containining the java classes (dex'd) which our
 // instrumentation code needs to reference. This jar file will be added to the
 // app via the jvmti agent.
@@ -66,7 +68,8 @@ const char* const kAgentJarFileName = "perfa.jar";
 void DeleteFileFromPackageFolder(const string& package_name,
                                  const string& file_name) {
   std::ostringstream os;
-  os << kRunAsExecutable << " " << package_name << " rm -f " << file_name;
+  os << kRunAsExecutable << " " << package_name << " rm -f "
+     << kCodeCacheRelativeDir << file_name;
   if (system(os.str().c_str()) == -1) {
     perror("system");
     exit(-1);
@@ -86,7 +89,7 @@ void CopyFileToPackageFolder(const string& package_name,
 
   std::ostringstream os;
   os << kRunAsExecutable << " " << package_name << " cp "
-     << CurrentProcess::dir() << file_name << " .";
+     << CurrentProcess::dir() << file_name << " " << kCodeCacheRelativeDir;
   if (system(os.str().c_str()) == -1) {
     perror("system");
     exit(-1);
