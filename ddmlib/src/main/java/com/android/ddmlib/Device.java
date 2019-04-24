@@ -66,6 +66,9 @@ final class Device implements IDevice {
     /** True if ADB is running as root */
     private boolean mIsRoot = false;
 
+    /** Information about the most recent installation via this device */
+    private InstallMetrics lastInstallMetrics = InstallMetrics.EMPTY;
+
     /** Device properties. */
     private final PropertyFetcher mPropFetcher = new PropertyFetcher(this);
     private final Map<String, String> mMountPoints = new HashMap<>();
@@ -919,8 +922,7 @@ final class Device implements IDevice {
     }
 
     @Override
-    public void installPackage(String packageFilePath, boolean reinstall,
-            String... extraArgs)
+    public void installPackage(String packageFilePath, boolean reinstall, String... extraArgs)
             throws InstallException {
         // Use default basic installReceiver
         installPackage(packageFilePath, reinstall, new InstallReceiver(), extraArgs);
@@ -955,7 +957,9 @@ final class Device implements IDevice {
             String... extraArgs)
             throws InstallException {
         try {
+            long uploadStartNs = System.nanoTime();
             String remoteFilePath = syncPackageToDevice(packageFilePath);
+            long uploadFinishNs = System.nanoTime();
             installRemotePackage(
                     remoteFilePath,
                     reinstall,
@@ -964,7 +968,11 @@ final class Device implements IDevice {
                     maxTimeToOutputResponse,
                     maxTimeUnits,
                     extraArgs);
+            long installFinishNs = System.nanoTime();
             removeRemotePackage(remoteFilePath);
+            lastInstallMetrics =
+                    new InstallMetrics(
+                            uploadStartNs, uploadFinishNs, uploadFinishNs, installFinishNs);
         } catch (IOException | AdbCommandRejectedException | TimeoutException | SyncException e) {
             throw new InstallException(e);
         }
@@ -979,8 +987,9 @@ final class Device implements IDevice {
             @NonNull TimeUnit timeoutUnit)
             throws InstallException {
         try {
-            SplitApkInstaller.create(this, apks, reinstall, installOptions)
-                    .install(timeout, timeoutUnit);
+            lastInstallMetrics =
+                    SplitApkInstaller.create(this, apks, reinstall, installOptions)
+                            .install(timeout, timeoutUnit);
         } catch (InstallException e) {
             throw e;
         } catch (Exception e) {
@@ -994,6 +1003,11 @@ final class Device implements IDevice {
             throws InstallException {
         // Use the default single apk installer timeout.
         installPackages(apks, reinstall, installOptions, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+    }
+
+    @Override
+    public InstallMetrics getLastInstallMetrics() {
+        return lastInstallMetrics;
     }
 
     @Override

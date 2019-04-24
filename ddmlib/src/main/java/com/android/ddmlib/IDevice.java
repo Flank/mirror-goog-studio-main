@@ -536,7 +536,7 @@ public interface IDevice extends IShellEnabledDevice {
      * @param packageFilePath the absolute file system path to file on local host to install
      * @param reinstall set to <code>true</code> if re-install of app should be performed
      * @param extraArgs optional extra arguments to pass. See 'adb shell pm install --help' for
-     *            available options.
+     *     available options.
      * @throws InstallException if the installation fails.
      */
     void installPackage(String packageFilePath, boolean reinstall, String... extraArgs)
@@ -622,6 +622,15 @@ public interface IDevice extends IShellEnabledDevice {
     default void installPackages(
             @NonNull List<File> apks, boolean reinstall, @NonNull List<String> installOptions)
             throws InstallException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Gets the information about the most recent installation on this device.
+     *
+     * @return {@link InstallMetrics} metrics describing the installation.
+     */
+    default InstallMetrics getLastInstallMetrics() {
         throw new UnsupportedOperationException();
     }
 

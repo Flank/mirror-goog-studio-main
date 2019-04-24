@@ -18,6 +18,7 @@ package com.android.tools.deployer;
 import static com.android.tools.deployer.AdbClient.InstallResult.OK;
 import static com.android.tools.deployer.AdbClient.InstallResult.SKIPPED_INSTALL;
 
+import com.android.ddmlib.InstallMetrics;
 import com.android.ddmlib.InstallReceiver;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deploy.proto.Deploy;
@@ -93,36 +94,76 @@ public class ApkInstaller {
         AdbClient.InstallResult result = OK;
         switch (deltaInstallResult.status) {
             case SUCCESS:
-                // Success means that the install procedure finsihed on device. There could
-                // still be errors in the output if the installation was not finished.
-                DeployMetric metric = new DeployMetric("DELTAINSTALL", deltaInstallStart);
-                InstallReceiver installReceiver = new InstallReceiver();
-                String[] lines = deltaInstallResult.packageManagerOutput.split("\\n");
-                installReceiver.processNewLines(lines);
-                installReceiver.done();
-                if (installReceiver.isSuccessfullyCompleted()) {
-                    metric.finish(DeltaInstallStatus.SUCCESS.name(), metrics);
-                } else {
-                    result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
-                    metric.finish(DeltaInstallStatus.ERROR.name() + "." + result.name(), metrics);
-                }
+                {
+                    // Success means that the install procedure finsihed on device. There could
+                    // still be errors in the output if the installation was not finished.
+                    DeployMetric metric = new DeployMetric("DELTAINSTALL", deltaInstallStart);
 
-                // If the binary patching failed, we will experience a signature failure,
-                // so in that case only we fall back to a normal install.
-                switch (result) {
-                    case NO_CERTIFICATE:
-                    case INSTALL_PARSE_FAILED_NO_CERTIFICATES:
-                        result = adb.install(apks, options.getFlags(), allowReinstall);
-                        long installStartTime = System.nanoTime();
-                        DeployMetric installResult = new DeployMetric("INSTALL", installStartTime);
-                        installResult.finish(result.name(), metrics);
-                        break;
-                    default:
-                        // Don't fallback
+                    InstallReceiver installReceiver = new InstallReceiver();
+                    String[] lines = deltaInstallResult.packageManagerOutput.split("\\n");
+                    installReceiver.processNewLines(lines);
+                    installReceiver.done();
+                    if (installReceiver.isSuccessfullyCompleted()) {
+                        metric.finish(DeltaInstallStatus.SUCCESS.name(), metrics);
+                    } else {
+                        result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
+                        metric.finish(
+                                DeltaInstallStatus.ERROR.name() + "." + result.name(), metrics);
+                    }
+
+                    // If the binary patching failed, we will experience a signature failure,
+                    // so in that case only we fall back to a normal install.
+                    switch (result) {
+                        case NO_CERTIFICATE:
+                        case INSTALL_PARSE_FAILED_NO_CERTIFICATES:
+                            result = adb.install(apks, options.getFlags(), allowReinstall);
+                            long installStartTime = System.nanoTime();
+                            DeployMetric installResult =
+                                    new DeployMetric("INSTALL", installStartTime);
+                            installResult.finish(result.name(), metrics);
+                            break;
+                        default:
+                            // Don't fallback
+                    }
+                    break;
                 }
-                break;
             case ERROR:
             case UNKNOWN:
+                {
+                    InstallReceiver installReceiver = new InstallReceiver();
+                    String[] lines = deltaInstallResult.packageManagerOutput.split("\\n");
+                    installReceiver.processNewLines(lines);
+                    result = parseInstallerResultErrorCode(installReceiver.getErrorCode());
+
+                    // Record metric for delta install.
+                    DeployMetric deltaInstallMetric =
+                            new DeployMetric("DELTAINSTALL", deltaInstallStart);
+                    deltaInstallMetric.finish(
+                            deltaInstallResult.status.name() + "." + result.name(), metrics);
+
+                    // Fallback
+                    long installStartedNs = System.nanoTime();
+                    result = adb.install(apks, options.getFlags(), allowReinstall);
+
+                    DeployMetric installResult = new DeployMetric("INSTALL", installStartedNs);
+                    installResult.finish(result.name(), metrics);
+
+                    // If the install succeeded and returned specific metrics about push/install
+                    // times, record those metrics as well.
+                    if (result.getMetrics() != InstallMetrics.EMPTY) {
+                        metrics.add(
+                                new DeployMetric(
+                                        "INSTALL::UPLOAD",
+                                        result.getMetrics().getUploadStartNs(),
+                                        result.getMetrics().getUploadFinishNs()));
+                        metrics.add(
+                                new DeployMetric(
+                                        "INSTALL::INSTALL",
+                                        result.getMetrics().getInstallStartNs(),
+                                        result.getMetrics().getInstallFinishNs()));
+                    }
+                    break;
+                }
             case DISABLED:
             case CANNOT_GENERATE_DELTA:
             case API_NOT_SUPPORTED:
@@ -136,10 +177,26 @@ public class ApkInstaller {
                             new DeployMetric("DELTAINSTALL", deltaInstallStart);
                     deltaNotPatchableMetric.finish(deltaInstallResult.status.name(), metrics);
 
-                    long installStarted = System.nanoTime();
+                    long installStartedNs = System.nanoTime();
                     result = adb.install(apks, options.getFlags(), allowReinstall);
-                    DeployMetric installMetric = new DeployMetric("INSTALL", installStarted);
-                    installMetric.finish(result.name(), metrics);
+
+                    DeployMetric installResult = new DeployMetric("INSTALL", installStartedNs);
+                    installResult.finish(result.name(), metrics);
+
+                    // If the install succeeded and returned specific metrics about push/install
+                    // times, record those metrics as well.
+                    if (result.getMetrics() != InstallMetrics.EMPTY) {
+                        metrics.add(
+                                new DeployMetric(
+                                        "INSTALL::UPLOAD",
+                                        result.getMetrics().getUploadStartNs(),
+                                        result.getMetrics().getUploadFinishNs()));
+                        metrics.add(
+                                new DeployMetric(
+                                        "INSTALL::INSTALL",
+                                        result.getMetrics().getInstallStartNs(),
+                                        result.getMetrics().getInstallFinishNs()));
+                    }
                     break;
                 }
             case NO_CHANGES:

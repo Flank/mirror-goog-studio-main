@@ -88,7 +88,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertEquals(0, retcode);
         assertEquals(1, device.getApps().size());
         assertInstalled("com.example.helloworld", file);
-        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "INSTALL::UPLOAD",
+                "INSTALL::INSTALL");
         assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
     }
 
@@ -115,14 +120,24 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertInstalled("com.example.helloworld", file);
 
         if (device.getApi() < 21) {
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
             assertHistory(
                     device,
                     "getprop",
                     "pm install -r -t \"/data/local/tmp/sample.apk\"",
                     "rm \"/data/local/tmp/sample.apk\"");
         } else if (device.getApi() < 24) {
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
             assertHistory(
                     device,
                     "getprop",
@@ -130,7 +145,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "pm install-write -S 5047 1 0_sample -",
                     "pm install-commit 1");
         } else {
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
             assertHistory(
                     device,
                     "getprop",
@@ -173,7 +193,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertEquals(0, runner.run(args, logger));
         assertInstalled("com.example.simpleapp", file);
-        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "INSTALL" + "::UPLOAD",
+                "INSTALL::INSTALL");
         device.getShell().clearHistory();
 
         args =
@@ -190,7 +215,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertInstalled("com.example.simpleapp", file);
 
         if (device.getApi() < 24) {
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         } else {
             assertHistory(
                     device,
@@ -228,7 +258,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertEquals(0, runner.run(args, logger));
         assertInstalled("com.example.simpleapp", file);
-        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "INSTALL::UPLOAD",
+                "INSTALL::INSTALL");
         device.getShell().clearHistory();
 
         file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
@@ -246,7 +281,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertInstalled("com.example.simpleapp", file);
 
         if (device.getApi() < 24) {
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         } else {
             assertHistory(
                     device,
@@ -289,7 +329,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
         assertEquals(0, runner.run(args, logger));
         assertInstalled("com.example.simpleapp", v2);
-        assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "INSTALL" + "::UPLOAD",
+                "INSTALL::INSTALL");
 
         device.getShell().clearHistory();
 
@@ -386,7 +431,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
         } else {
             assertInstalled("com.example.simpleapp", base, split);
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         }
     }
 
@@ -453,7 +503,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
         } else {
             assertInstalled("com.example.simpleapp", base, split);
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -551,7 +606,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
         } else {
             assertInstalled("com.example.simpleapp", base, split);
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -589,7 +649,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "pm install-write -S 12789 2 0_simple -",
                         "pm install-write -S 8619 2 1_split_code -",
                         "pm install-commit 2");
-                assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:API_NOT_SUPPORTED",
+                        "INSTALL:OK",
+                        "INSTALL::UPLOAD",
+                        "INSTALL::INSTALL");
             } else {
                 assertHistory(
                         device,
@@ -645,7 +710,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
         } else {
             assertInstalled("com.example.simpleapp", base, split);
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -685,7 +755,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "pm install-write -S 8619 2 1_split -",
                         "pm install-write -S 8619 2 2_split_ -",
                         "pm install-commit 2");
-                assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:API_NOT_SUPPORTED",
+                        "INSTALL:OK",
+                        "INSTALL::UPLOAD",
+                        "INSTALL::INSTALL");
             } else {
                 assertHistory(
                         device,
@@ -707,7 +782,11 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "cmd package install-write -S 8619 2 2_split_ -",
                         "cmd package install-commit 2");
                 assertMetrics(
-                        runner.getMetrics(), "DELTAINSTALL:CANNOT_GENERATE_DELTA", "INSTALL:OK");
+                        runner.getMetrics(),
+                        "DELTAINSTALL:CANNOT_GENERATE_DELTA",
+                        "INSTALL:OK",
+                        "INSTALL::UPLOAD",
+                        "INSTALL::INSTALL");
             }
         }
     }
@@ -743,7 +822,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
         } else {
             assertInstalled("com.example.simpleapp", base, split1, split2);
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:DISABLED", "INSTALL:OK");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "INSTALL::UPLOAD",
+                    "INSTALL::INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -780,7 +864,12 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "pm install-write -S 12789 2 0_simple -",
                         "pm install-write -S 8619 2 1_split -",
                         "pm install-commit 2");
-                assertMetrics(runner.getMetrics(), "DELTAINSTALL:API_NOT_SUPPORTED", "INSTALL:OK");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:API_NOT_SUPPORTED",
+                        "INSTALL:OK",
+                        "INSTALL::UPLOAD",
+                        "INSTALL::INSTALL");
             } else {
                 assertHistory(
                         device,
@@ -801,7 +890,11 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "cmd package install-write -S 8619 2 1_split -",
                         "cmd package install-commit 2");
                 assertMetrics(
-                        runner.getMetrics(), "DELTAINSTALL:CANNOT_GENERATE_DELTA", "INSTALL:OK");
+                        runner.getMetrics(),
+                        "DELTAINSTALL:CANNOT_GENERATE_DELTA",
+                        "INSTALL:OK",
+                        "INSTALL::UPLOAD",
+                        "INSTALL::INSTALL");
             }
         }
     }
@@ -845,7 +938,9 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
 
     private void assertMetrics(ArrayList<DeployMetric> metrics, String... expected) {
         String[] actual =
-                metrics.stream().map(m -> m.getName() + ":" + m.getStatus()).toArray(String[]::new);
+                metrics.stream()
+                        .map(m -> m.getName() + (m.hasStatus() ? ":" + m.getStatus() : ""))
+                        .toArray(String[]::new);
         assertArrayEquals(expected, actual);
     }
 

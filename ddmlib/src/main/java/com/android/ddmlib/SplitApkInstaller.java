@@ -40,9 +40,10 @@ public class SplitApkInstaller extends SplitApkInstallerBase {
      *
      * @param timeout installation timeout
      * @param timeoutUnit {@link TimeUnit} corresponding to the timeout parameter
+     * @return {@link InstallMetrics} metrics for time elapsed during this installation
      * @throws InstallException if the installation fails.
      */
-    public void install(long timeout, @NonNull TimeUnit unit) throws InstallException {
+    public InstallMetrics install(long timeout, @NonNull TimeUnit unit) throws InstallException {
         // Installing multiple APK's is perfomed as follows:
         //  # First we create a install session passing in the total size of all APKs
         //      $ [pm|cmd package] install-create -S <total_size>
@@ -69,11 +70,14 @@ public class SplitApkInstaller extends SplitApkInstallerBase {
             // now upload each APK in turn.
             int index = 0;
             boolean allUploadSucceeded = true;
+
+            long uploadStartNs = System.nanoTime();
             while (allUploadSucceeded && index < mApks.size()) {
                 allUploadSucceeded = uploadApk(sessionId, mApks.get(index), index++, timeout, unit);
             }
 
             // if all files were upload successfully, commit otherwise abandon the installation.
+            long uploadFinishNs = System.nanoTime();
             if (!allUploadSucceeded) {
                 installAbandon(sessionId, timeout, unit);
                 throw new InstallException("Failed to install-write all apks");
@@ -81,6 +85,9 @@ public class SplitApkInstaller extends SplitApkInstallerBase {
                 installCommit(sessionId, timeout, unit);
                 Log.d(LOG_TAG, "Successfully install apks: " + mApks.toString());
             }
+
+            return new InstallMetrics(
+                    uploadStartNs, uploadFinishNs, uploadFinishNs, System.nanoTime());
         } catch (InstallException e) {
             throw e;
         } catch (Exception e) {

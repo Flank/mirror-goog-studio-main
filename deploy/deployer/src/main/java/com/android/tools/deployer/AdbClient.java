@@ -59,13 +59,20 @@ public class AdbClient {
         ;
 
         private String reason = null;
+        private InstallMetrics metrics = InstallMetrics.EMPTY;
 
         public void setReason(String reason) {
             this.reason = reason;
         }
+        public void setMetrics(InstallMetrics metrics) {
+            this.metrics = metrics;
+        }
 
         public String getReason() {
             return reason;
+        }
+        public InstallMetrics getMetrics() {
+            return metrics;
         }
     }
 
@@ -112,16 +119,22 @@ public class AdbClient {
     public InstallResult install(List<String> apks, List<String> options, boolean reinstall) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
+            InstallMetrics metrics;
             if (device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.LOLLIPOP)) {
                 device.installPackages(files, reinstall, options, 5, TimeUnit.MINUTES);
+                metrics = device.getLastInstallMetrics();
             } else {
                 if (apks.size() != 1) {
                     return InstallResult.MULTI_APKS_NO_SUPPORTED_BELOW21;
                 } else {
                     device.installPackage(apks.get(0), reinstall, options.toArray(new String[0]));
+                    metrics = device.getLastInstallMetrics();
                 }
             }
-            return InstallResult.OK;
+
+            InstallResult result = InstallResult.OK;
+            result.setMetrics(metrics);
+            return result;
         } catch (InstallException e) {
             InstallResult result = InstallResult.UNKNOWN_ERROR;
             String code = e.getErrorCode();
