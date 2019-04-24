@@ -70,6 +70,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -243,6 +244,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     @get:Input
     var useFinalIds: Boolean = true
         private set
+
+    // Not an input as it is only used to rewrite exception and doesn't affect task output
+    private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private var compiledRemoteResources: ArtifactCollection? = null
 
@@ -568,6 +572,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
             )
+
+            task.manifestMergeBlameFile = variantScope.artifacts.getFinalProduct(
+                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
+            )
         }
     }
 
@@ -849,7 +857,11 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                         }
                     } catch (e: Aapt2Exception) {
                         throw rewriteLinkException(
-                            e, params.errorFormatMode, params.mergeBlameFolder, logger
+                            e,
+                            params.errorFormatMode,
+                            params.mergeBlameFolder,
+                            params.manifestMergeBlameFile,
+                            logger
                         )
                     }
 
@@ -929,6 +941,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
+        val manifestMergeBlameFile: File? = task.manifestMergeBlameFile.orNull?.asFile
     }
 
     @Input

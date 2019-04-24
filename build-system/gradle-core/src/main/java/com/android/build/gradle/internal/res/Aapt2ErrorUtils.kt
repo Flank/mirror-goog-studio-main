@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.res
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.errors.humanReadableMessage
+import com.android.build.gradle.internal.tasks.manifest.findOriginalManifestFilePosition
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.blame.MergingLog
@@ -29,6 +30,7 @@ import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser
 import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.utils.StdLogger
+import com.google.common.base.Charsets
 import com.google.common.collect.ImmutableList
 import org.gradle.api.logging.Logger
 import java.io.File
@@ -103,16 +105,34 @@ fun rewriteLinkException(
     e: Aapt2Exception,
     errorFormatMode: SyncOptions.ErrorFormatMode,
     mergeBlameFolder: File?,
+    manifestMergeBlameFile: File?,
     logger: Logger
 ): Aapt2Exception {
-    if (mergeBlameFolder == null) {
+    if (mergeBlameFolder == null && manifestMergeBlameFile == null) {
         return rewriteException(e, errorFormatMode, false, logger) {
             it
         }
     }
-    val mergingLog = MergingLog(mergeBlameFolder)
+    var mergingLog: MergingLog? = null
+    if (mergeBlameFolder != null) {
+        mergingLog = MergingLog(mergeBlameFolder)
+    }
+
+    var manifestMergeBlameContents: List<String>? = null
+    if (manifestMergeBlameFile != null) {
+        manifestMergeBlameContents = manifestMergeBlameFile.readLines(Charsets.UTF_8)
+    }
+
     return rewriteException(e, errorFormatMode, true, logger) {
-        mergingLog.find(it)
+        var newFile = it
+        if (mergingLog != null) {
+            newFile = mergingLog.find(it)
+        }
+        // If the merging log fails to find the original position, then try the manifest merge blame
+        if (it == newFile && manifestMergeBlameContents != null) {
+            newFile = findOriginalManifestFilePosition(manifestMergeBlameContents, it)
+        }
+        newFile
     }
 }
 

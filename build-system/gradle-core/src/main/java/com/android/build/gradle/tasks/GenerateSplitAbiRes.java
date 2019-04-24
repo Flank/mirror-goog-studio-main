@@ -64,6 +64,7 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -107,6 +108,9 @@ public class GenerateSplitAbiRes extends NonIncrementalTask {
     private FileCollection aapt2FromMaven;
 
     private File mergeBlameFolder;
+
+    // Not an input as it is only used to rewrite exception and doesn't affect task output
+    private Provider<RegularFile> manifestMergeBlameFile;
 
     private Provider<File> androidJarProvider;
 
@@ -201,7 +205,8 @@ public class GenerateSplitAbiRes extends NonIncrementalTask {
                                 aapt2ServiceKey,
                                 aaptConfig,
                                 errorFormatMode,
-                                mergeBlameFolder);
+                                mergeBlameFolder,
+                                getManifestMergeBlameFile());
                 workerExecutor.submit(Aapt2ProcessResourcesRunnable.class, params);
 
                 buildOutputs.add(
@@ -212,6 +217,14 @@ public class GenerateSplitAbiRes extends NonIncrementalTask {
             }
         }
         new BuildElements(buildOutputs.build()).save(outputDirectory);
+    }
+
+    @Nullable
+    private File getManifestMergeBlameFile() {
+        if (manifestMergeBlameFile.isPresent()) {
+            return manifestMergeBlameFile.get().getAsFile();
+        }
+        return null;
     }
 
     @InputFile
@@ -370,6 +383,10 @@ public class GenerateSplitAbiRes extends NonIncrementalTask {
                     scope.getGlobalScope().getSdkComponents().getAndroidJarProvider();
 
             task.mergeBlameFolder = scope.getResourceBlameLogDir();
+
+            task.manifestMergeBlameFile =
+                    scope.getArtifacts()
+                            .getFinalProduct(InternalArtifactType.MANIFEST_MERGE_BLAME_FILE);
 
             task.errorFormatMode =
                     SyncOptions.getErrorFormatMode(scope.getGlobalScope().getProjectOptions());

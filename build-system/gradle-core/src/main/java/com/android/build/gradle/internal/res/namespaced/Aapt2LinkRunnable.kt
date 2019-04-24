@@ -39,6 +39,7 @@ class Aapt2LinkRunnable @Inject constructor(
                     exception,
                     params.errorFormatMode,
                     null,
+                    null,
                     logger
                 )
             }

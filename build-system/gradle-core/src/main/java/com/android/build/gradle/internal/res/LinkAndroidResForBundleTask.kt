@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -82,6 +83,9 @@ open class LinkAndroidResForBundleTask
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     private var mergeBlameLogFolder: File? = null
+
+    // Not an input as it is only used to rewrite exception and doesn't affect task output
+    private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private var buildTargetDensity: String? = null
 
@@ -187,7 +191,8 @@ open class LinkAndroidResForBundleTask
                     aapt2ServiceKey,
                     config,
                     errorFormatMode,
-                    mergeBlameLogFolder
+                    mergeBlameLogFolder,
+                    manifestMergeBlameFile.orNull?.asFile
                 )
             )
         }
@@ -303,6 +308,10 @@ open class LinkAndroidResForBundleTask
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
+            )
+
+            task.manifestMergeBlameFile = variantScope.artifacts.getFinalProduct(
+                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
             if (variantScope.globalScope.projectOptions.

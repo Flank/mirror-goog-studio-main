@@ -52,6 +52,7 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
                     exception,
                     params.errorFormatMode,
                     params.mergeBlameFolder,
+                    params.manifestMergeBlameFile,
                     logger
                 )
             }
@@ -62,7 +63,8 @@ class Aapt2ProcessResourcesRunnable @Inject constructor(
         val aapt2ServiceKey: Aapt2ServiceKey,
         val request: AaptPackageConfig,
         val errorFormatMode: SyncOptions.ErrorFormatMode,
-        val mergeBlameFolder: File?
+        val mergeBlameFolder: File?,
+        val manifestMergeBlameFile: File?
     ) : Serializable
 }
 

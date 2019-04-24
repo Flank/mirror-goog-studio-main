@@ -50,6 +50,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -101,6 +102,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     private var compiledRemoteResources: ArtifactCollection? = null
 
     private lateinit var mergeBlameFolder: File
+
+    private lateinit var manifestMergeBlameFile: Provider<RegularFile>
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -157,7 +160,8 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 aapt2ServiceKey,
                 config,
                 errorFormatMode,
-                mergeBlameFolder
+                mergeBlameFolder,
+                manifestMergeBlameFile.orNull?.asFile
             )
             facade.submit(Aapt2ProcessResourcesRunnable::class.java, params)
         }
@@ -217,6 +221,10 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
             task.mergeBlameFolder = variantScope.resourceBlameLogDir
+
+            task.manifestMergeBlameFile = variantScope.artifacts.getFinalProduct(
+                InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
+            )
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions

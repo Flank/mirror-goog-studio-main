@@ -16,13 +16,15 @@
 
 package com.android.build.gradle.internal.tasks.manifest
 
+import com.android.SdkConstants.DOT_XML
+import com.android.ide.common.blame.SourceFilePosition
+import com.android.ide.common.blame.SourcePosition
 import com.android.manifmerger.ManifestMerger2
 import com.android.manifmerger.ManifestProvider
 import com.android.manifmerger.ManifestSystemProperty
 import com.android.manifmerger.MergingReport
 import com.android.utils.ILogger
 import com.google.common.base.Charsets
-import com.google.common.base.Strings
 import com.google.common.io.Files
 import java.io.File
 import java.io.IOException
@@ -185,6 +187,39 @@ fun mergeManifestsForApplication(
         throw RuntimeException(e)
     }
 
+}
+
+/**
+ * Finds the original source of the file position pointing to a merged manifest file.
+ *
+ * The manifest merge blame file is formatted as follow
+ * <lineNumber>--><filePath>:<startLine>:<startColumn>-<endLine>:<endColumn>
+ */
+fun findOriginalManifestFilePosition(
+    manifestMergeBlameContents: List<String>,
+    mergedFilePosition: SourceFilePosition
+): SourceFilePosition {
+    try {
+        val linePrefix = (mergedFilePosition.position.startLine + 1).toString() + "-->"
+        manifestMergeBlameContents.forEach { line ->
+            if (line.trim().startsWith(linePrefix)) {
+                val position = line.trim().substring(linePrefix.length)
+                val index = position.indexOf(DOT_XML)
+                if (index != -1) {
+                    val file = position.substring(0, index + DOT_XML.length).split(" ").last()
+                    return if (file != position) {
+                        val sourcePosition = position.substring(index + DOT_XML.length + 1)
+                        SourceFilePosition(File(file), SourcePosition.fromString(sourcePosition))
+                    } else {
+                        SourceFilePosition(File(file), SourcePosition.UNKNOWN)
+                    }
+                }
+            }
+        }
+    } catch (e: Exception) {
+        return mergedFilePosition
+    }
+    return mergedFilePosition
 }
 
 /**

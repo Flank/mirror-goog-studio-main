@@ -35,6 +35,24 @@ public class SourcePositionTest {
     }
 
     @Test
+    public void testFromString() {
+        assertThat(SourcePosition.fromString("2:3-4:5"))
+                .isEqualTo(new SourcePosition(1, 2, -1, 3, 4, -1));
+        assertThat(SourcePosition.fromString("2-4:5"))
+                .isEqualTo(new SourcePosition(1, -1, -1, 3, 4, -1));
+        assertThat(SourcePosition.fromString("2:3-4:?"))
+                .isEqualTo(new SourcePosition(1, 2, -1, 3, -1, -1));
+        assertThat(SourcePosition.fromString("2-4"))
+                .isEqualTo(new SourcePosition(1, -1, -1, 3, -1, -1));
+        assertThat(SourcePosition.fromString("2:3-5"))
+                .isEqualTo(new SourcePosition(1, 2, -1, 1, 4, -1));
+        assertThat(SourcePosition.fromString("2"))
+                .isEqualTo(new SourcePosition(1, -1, -1, -1, -1, -1));
+        assertThat(SourcePosition.fromString("?"))
+                .isEqualTo(new SourcePosition(-1, -1, -1, -1, -1, -1));
+    }
+
+    @Test
     public void testComparisonOffset() {
         SourcePosition pos1 = new SourcePosition(-1, -1, 5, -1, -1, 20);
         SourcePosition posInner = new SourcePosition(-1, -1, 6, -1, -1, 8);

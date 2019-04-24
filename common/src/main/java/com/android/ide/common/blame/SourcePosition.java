@@ -109,6 +109,55 @@ public final class SourcePosition implements Serializable {
         return sB.toString();
     }
 
+    private static int parseString(String string) {
+        if (string.equals("?")) {
+            return 0;
+        }
+        return Integer.parseInt(string);
+    }
+
+    /** Given the human-readable formatted string, returns a source position object. */
+    public static SourcePosition fromString(String string) {
+        if (string.equals("?")) {
+            return UNKNOWN;
+        }
+        int startLine, endLine = 0, startColumn = 0, endColumn = 0;
+        if (string.contains("-")) {
+            String[] startAndEndPositions = string.split("-");
+            if (startAndEndPositions[0].contains(":")) {
+                String[] startPosition = startAndEndPositions[0].split(":");
+                startLine = parseString(startPosition[0]);
+                startColumn = parseString(startPosition[1]);
+            } else {
+                startLine = parseString(startAndEndPositions[0]);
+            }
+
+            if (startAndEndPositions[1].contains(":")) {
+                String[] endPosition = startAndEndPositions[1].split(":");
+                endLine = parseString(endPosition[0]);
+                endColumn = parseString(endPosition[1]);
+            } else {
+                if (startColumn != 0) {
+                    endLine = startLine;
+                    endColumn = parseString(startAndEndPositions[1]);
+                } else {
+                    endLine = parseString(startAndEndPositions[1]);
+                }
+            }
+        } else {
+            if (string.contains(":")) {
+                String[] pos = string.split(":");
+                startLine = parseString(pos[0]);
+                startColumn = parseString(pos[1]);
+            } else {
+                startLine = parseString(string);
+            }
+        }
+
+        return new SourcePosition(
+                startLine - 1, startColumn - 1, -1, endLine - 1, endColumn - 1, -1);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
