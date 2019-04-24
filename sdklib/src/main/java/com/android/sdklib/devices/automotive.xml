@@ -19,7 +19,7 @@
     <d:device>
         <d:name>Automotive (1024p landscape)</d:name>
         <d:id>automotive_1024p_landscape</d:id>
-        <d:manufacturer>Generic</d:manufacturer>
+        <d:manufacturer>Google</d:manufacturer>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>
@@ -48,8 +48,8 @@
                 GPS
             </d:sensors>
             <d:mic>true</d:mic>
-            <d:keyboard>qwerty</d:keyboard>
-            <d:nav>dpad</d:nav>
+            <d:keyboard>nokeys</d:keyboard>
+            <d:nav>nonav</d:nav>
             <d:ram unit="KiB">3774492</d:ram>
             <d:buttons>soft</d:buttons>
             <d:internal-storage unit="KiB">10255672</d:internal-storage>
@@ -113,8 +113,8 @@
                 GPS
             </d:sensors>
             <d:mic>true</d:mic>
-            <d:keyboard>qwerty</d:keyboard>
-            <d:nav>dpad</d:nav>
+            <d:keyboard>nokeys</d:keyboard>
+            <d:nav>nonav</d:nav>
             <d:ram unit="GiB">2</d:ram>
             <d:buttons>soft</d:buttons>
             <d:internal-storage unit="GiB">7811891</d:internal-storage>

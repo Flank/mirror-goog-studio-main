@@ -182,14 +182,14 @@ public class HardwareConfigHelperTest extends TestCase {
 
     public void testAutomotiveGeneric() {
         DeviceManager deviceManager = getDeviceManager();
-        Device automotive1024p = deviceManager.getDevice("automotive_1024p_landscape", "Generic");
+        Device automotive1024p = deviceManager.getDevice("automotive_1024p_landscape", "Google");
         assertNotNull(automotive1024p);
         assertFalse(isWear(automotive1024p));
         assertFalse(isTv(automotive1024p));
         assertFalse(isMobile(automotive1024p));
         assertTrue(isAutomotive(automotive1024p));
         assertFalse(automotive1024p.isScreenRound());
-        assertTrue(isGeneric(automotive1024p));
+        assertFalse(isGeneric(automotive1024p));
         assertEquals(
                 "Automotive (1024p landscape) (1024 × 768, mdpi)",
                 getGenericLabel(automotive1024p));
