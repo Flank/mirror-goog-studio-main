@@ -28,13 +28,24 @@ class TracingUtils {
   // Grab the tracing buffer size from the tracer pipe (buffer_size_kb).
   // -1 is returned if the read fails.
   static int GetTracingBufferSize();
+  // Write 0 to the tracing_on pipe of tracer. This value disables kernel
+  // level tracing. This should only be called if we can verify we are the
+  // initiators of the trace and it was left on due to an unexpected issue.
+  static void ForceStopTracer();
 
  private:
-  // Helper function to read int values from Atrace files. This function will
+  // Helper function to read int values from tracer files. This function will
   // enumerate all |files| returning the first int value read from a file. The
   // array is expected to contain the paths to the config files for current and
   // past versions of android.
   static int ReadIntFromConfigFile(const char *files[], uint32_t count);
+
+  // Helper function to write int values to tracer files. This function will
+  // enumerate all |files| writing the |value| to the first file that exist.
+  // The |files| array is expected to contain th epaths to the config files for
+  // current and past versions of android.
+  static void WriteIntToConfigFile(const char* files[], uint32_t count,
+                                   uint32_t value);
 };
 }  // namespace profiler
 

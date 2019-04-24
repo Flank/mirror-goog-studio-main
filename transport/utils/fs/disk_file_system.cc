@@ -204,6 +204,15 @@ bool DiskFileSystem::AppendFile(const string &dpath, const string &spath) {
   return false;
 }
 
+bool DiskFileSystem::Write(const string &fpath, const string &str) {
+  FILE *file = fopen(fpath.c_str(), "wb");
+  if (file != nullptr) {
+    fwrite(str.c_str(), sizeof(char), str.length(), file);
+    return true;
+  }
+  return false;
+}
+
 void DiskFileSystem::Close(const string &fpath) {
   auto it = open_files_.find(fpath);
   if (it != open_files_.end()) {

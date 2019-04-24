@@ -105,6 +105,33 @@ TEST(PerfettoManagerTest, ValidateConfig) {
   EXPECT_EQ(config.buffers()[0].size_kb(), buffer_size_kb);
 }
 
+TEST(PerfettoManagerTest, ValidateShutdownErrors) {
+  FakeClock fake_clock;
+  std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());
+  perfetto->SetRunStateTo(true, true);
+  PerfettoManager manager{&fake_clock, perfetto};
+  perfetto::protos::TraceConfig config;
+  string trace_path;
+  string error;
+
+  // Test failing to stop tracer.
+  perfetto->SetStopStateTo(false, true);
+  EXPECT_TRUE(
+      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+  EXPECT_EQ(
+      manager.StopProfiling(&error),
+      profiler::proto::CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP);
+  EXPECT_EQ(error, "Failed to stop tracer.");
+
+  // Clear state and test failing to stop perfetto.
+  error = "";
+  perfetto->SetStopStateTo(true, false);
+  EXPECT_EQ(
+      manager.StopProfiling(&error),
+      profiler::proto::CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP);
+  EXPECT_EQ(error, "Failed to stop perfetto.");
+}
+
 TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   FakeClock fake_clock;
   std::shared_ptr<FakePerfetto> perfetto(new FakePerfetto());

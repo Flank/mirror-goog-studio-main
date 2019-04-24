@@ -64,13 +64,8 @@ class Perfetto {
   // Stops the perfetto process. Any data gathered will remain in the output
   // file path. Stop does not kill the traced and traced_probes processes
   // because they manage ftrace and do critical book keeping for multiple trace
-  // sessions. To kill the traced processes call shutdown.
-  virtual void Stop() {
-    if (IsPerfettoRunning()) {
-      command_->Kill();
-      command_.release();
-    }
-  }
+  // sessions. To kill the traced processes call Shutdown.
+  virtual void Stop();
 
   // Shutdown stops the perfetto process if running as well as kills the traced
   // and traced_probes processes. Shutdown gets called when perfd dies.
@@ -84,6 +79,12 @@ class Perfetto {
   // Returns the path to the |executable| binary with the abi_arch appended.
   std::string GetPath(const char* executable,
                       const std::string& abi_arch) const;
+
+  // Forces tracer to be turned off, this is only used when we know the
+  // pipe is open due to profilers launching of perfetto. This is needed
+  // if perfetto has a bug and does not close the ftrace pipe.
+  // True is returned if tracer was stopped successfully.
+  virtual void ForceStopTracer();
 };
 
 }  // namespace profiler

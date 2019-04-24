@@ -26,10 +26,12 @@ namespace profiler {
 class FakePerfetto : public Perfetto {
  public:
   explicit FakePerfetto()
-      : perfetto_state_(false),
-        tracer_state_(false),
-        perfetto_run_state_(true),
+      : tracer_state_(false),
         tracer_run_state_(true),
+        tracer_stop_state_(false),
+        perfetto_state_(false),
+        perfetto_run_state_(true),
+        perfetto_stop_state_(false),
         shutdown_(false) {}
   ~FakePerfetto() override {}
 
@@ -43,11 +45,12 @@ class FakePerfetto : public Perfetto {
   bool IsPerfettoRunning() override { return perfetto_state_; }
   bool IsTracerRunning() override { return tracer_state_; }
   void Stop() override {
-    perfetto_state_ = false;
-    tracer_state_ = false;
+    perfetto_state_ = perfetto_stop_state_;
+    tracer_state_ = tracer_stop_state_;
   }
   void Shutdown() override { Stop(); shutdown_ = true; }
   bool IsShutdown() { return shutdown_; }
+  void ForceStopTracer() override { tracer_state_ = false; }
 
   const std::string& OutputFilePath() { return output_file_path_; }
   const std::string& AbiArch() { return abi_arch_; }
@@ -58,12 +61,27 @@ class FakePerfetto : public Perfetto {
     perfetto_run_state_ = perfetto;
     tracer_run_state_ = tracer;
   }
+  void SetStopStateTo(bool perfetto, bool tracer) {
+    perfetto_stop_state_ = perfetto;
+    tracer_stop_state_ = tracer;
+  }
 
  private:
-  bool perfetto_state_;
+  // Holds the current state of tracer
   bool tracer_state_;
+  // Holds the state to put tracer in when run is called.
+  // This allows us to fail running tracer.
   bool tracer_run_state_;
+  // Holds the state to put tracer in when stop is called.
+  // This allows us to fail stopping tracer.
+  bool tracer_stop_state_;
+  // Holds the current state of perfetto.
+  bool perfetto_state_;
+  // Holds the state to put perfetto in when run is called.
   bool perfetto_run_state_;
+  // Holds the state to put perfetto in when stop is called.
+  bool perfetto_stop_state_;
+  // Allows us to test if shutdown is called.
   bool shutdown_;
   perfetto::protos::TraceConfig config_;
   std::string output_file_path_;

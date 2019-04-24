@@ -5,13 +5,13 @@
 #include "utils/fs/disk_file_system.h"
 
 namespace profiler {
+// Note: The it's unclear when the non-debug pipes will be used. In production
+// builds (on both Pixel, and Samsung) the debug pipe is always used.
 const char *kTracingFileNames[] = {"/sys/kernel/debug/tracing/tracing_on",
-                                   // Legacy tracing file name.
                                    "/sys/kernel/tracing/tracing_on"};
 
 const char *kTracingBufferFileNames[] = {
     "/sys/kernel/debug/tracing/buffer_size_kb",
-    // Legacy tracing file name.
     "/sys/kernel/tracing/buffer_size_kb"};
 
 bool TracingUtils::IsTracerRunning() {
@@ -26,6 +26,12 @@ int TracingUtils::GetTracingBufferSize() {
       sizeof(kTracingBufferFileNames) / sizeof(kTracingBufferFileNames[0]));
 }
 
+void TracingUtils::ForceStopTracer() {
+  WriteIntToConfigFile(kTracingFileNames,
+                       sizeof(kTracingFileNames) / sizeof(kTracingFileNames[0]),
+                       0);
+}
+
 int TracingUtils::ReadIntFromConfigFile(const char *files[], uint32_t count) {
   DiskFileSystem fs;
   for (uint32_t i = 0; i < count; i++) {
@@ -37,5 +43,15 @@ int TracingUtils::ReadIntFromConfigFile(const char *files[], uint32_t count) {
     }
   }
   return -1;
+}
+
+void TracingUtils::WriteIntToConfigFile(const char *files[], uint32_t count,
+                                        uint32_t value) {
+  DiskFileSystem fs;
+  for (uint32_t i = 0; i < count; i++) {
+    if (fs.Write(files[i], "0")) {
+      return;
+    }
+  }
 }
 }  // namespace profiler

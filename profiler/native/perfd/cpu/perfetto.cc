@@ -101,6 +101,21 @@ void Perfetto::Run(const PerfettoArgs &run_args) {
   }
 }
 
+void Perfetto::Stop() {
+  if (IsPerfettoRunning()) {
+    command_->Kill();
+    command_.release();
+  }
+
+  if (IsTracerRunning()) {
+    // Attempt to stop tracer since we know it is our process that opened it.
+    // This helps guard against perfetto failing to close the tracing pipe.
+    // If the pipe is not closed then the user is unable to run perfett/atrace
+    // until they reboot the phone or close the pipe manually via the shell.
+    ForceStopTracer();
+  }
+}
+
 void Perfetto::Shutdown() {
   Stop();
   if (traced_probes_.get() != nullptr && traced_probes_->IsRunning()) {
@@ -121,11 +136,11 @@ string Perfetto::GetPath(const char *executable, const string &abi_arch) const {
 }
 
 bool Perfetto::IsPerfettoRunning() {
-  return command_.get() != nullptr && command_->IsRunning() &&
-         traced_.get() != nullptr && traced_->IsRunning() &&
-         traced_probes_.get() != nullptr && traced_probes_->IsRunning();
+  return command_.get() != nullptr && command_->IsRunning();
 }
 
 bool Perfetto::IsTracerRunning() { return TracingUtils::IsTracerRunning(); }
+
+void Perfetto::ForceStopTracer() { TracingUtils::ForceStopTracer(); }
 
 }  // namespace profiler

@@ -61,7 +61,9 @@ class PerfettoManager {
   profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
       std::string *error);
 
-  bool IsProfiling() { return is_profiling_; }
+  bool IsProfiling() {
+    return perfetto_->IsPerfettoRunning() || perfetto_->IsTracerRunning();
+  }
 
   // Stops the perfetto process from running. Called when perfd dies.
   void Shutdown();
@@ -69,7 +71,6 @@ class PerfettoManager {
  private:
   std::shared_ptr<Perfetto> perfetto_;
   Clock *clock_;
-  bool is_profiling_;
 };
 }  // namespace profiler
 

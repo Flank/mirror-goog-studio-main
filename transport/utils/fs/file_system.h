@@ -206,6 +206,11 @@ class FileSystem {
   // be called if the file is not already in write mode.
   virtual bool Append(const std::string &fpath, const std::string &str) = 0;
 
+  // Write text to the file at the specified path. This should not
+  // be called if the file is in write mode. Subsequent calls will override
+  // previous call values.
+  virtual bool Write(const std::string &fpath, const std::string &str) = 0;
+
   // Indication that user is done writing to a file after calling
   // |OpenWriteMode|.
   virtual void Close(const std::string &fpath) = 0;

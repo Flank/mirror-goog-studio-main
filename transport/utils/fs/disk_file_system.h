@@ -50,6 +50,7 @@ class DiskFileSystem final : public FileSystem {
   void OpenForWrite(const std::string &path) override;
   bool Append(const std::string &path, const std::string &str) override;
   bool AppendFile(const std::string &dpath, const std::string &spath) override;
+  bool Write(const std::string &path, const std::string &str) override;
   void Close(const std::string &path) override;
   bool DeleteDir(const std::string &path) override;
   bool DeleteFile(const std::string &path) override;
