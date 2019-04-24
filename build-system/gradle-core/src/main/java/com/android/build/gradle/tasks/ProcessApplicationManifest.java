@@ -247,6 +247,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             XmlDocument mergedXmlDocument =
                     mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);
 
+            outputMergeBlameContents(mergingReport, getMergeBlameFile().get().getAsFile());
+
             ImmutableMap<String, String> properties =
                     mergedXmlDocument != null
                             ? ImmutableMap.of(
@@ -679,6 +681,17 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             taskProvider.map(
                                     ManifestProcessorTask::getInstantAppManifestOutputDirectory),
                             "");
+
+            getVariantScope()
+                    .getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(ProcessApplicationManifest::getMergeBlameFile),
+                            "manifest-merger-blame-"
+                                    + variantScope.getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
         }
 
         @Override

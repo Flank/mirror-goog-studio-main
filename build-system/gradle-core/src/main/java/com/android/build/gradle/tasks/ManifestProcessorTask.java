@@ -19,13 +19,20 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
+import com.android.manifmerger.MergingReport;
+import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
+import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
@@ -148,6 +155,27 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
         this.reportFile = reportFile;
     }
 
+    @OutputFile
+    @Optional
+    @NonNull
+    public abstract RegularFileProperty getMergeBlameFile();
+
+    protected static void outputMergeBlameContents(
+            @NonNull MergingReport mergingReport, @Nullable File mergeBlameFile)
+            throws IOException {
+        if (mergeBlameFile == null) {
+            return;
+        }
+        String output = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.BLAME);
+        if (output == null) {
+            return;
+        }
+
+        FileUtils.mkdirs(mergeBlameFile.getParentFile());
+        try (Writer writer = Files.newWriter(mergeBlameFile, Charsets.UTF_8)) {
+            writer.write(output);
+        }
+    }
 
     /**
      * Serialize a map key+value pairs into a comma separated list. Map elements are sorted to

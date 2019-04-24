@@ -29,6 +29,7 @@ import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
+import java.util.Objects;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -95,6 +96,25 @@ public class ManifestMergingTest {
         File logs = new File(flavors.getOutputFile("apk").getParentFile(), "logs");
         File[] reports = logs.listFiles(file -> file.getName().startsWith("manifest-merger"));
         assertEquals(8, reports.length);
+    }
+
+    @Test
+    public void checkManifestMergeBlameReport() throws Exception {
+        flavors.execute("clean", "assemble");
+
+        File dirs =
+                FileUtils.join(
+                        flavors.getOutputFile("apk").getParentFile().getParentFile(),
+                        "intermediates",
+                        "manifest_merge_blame_file");
+
+        Truth.assertThat(dirs.listFiles()).hasLength(8);
+
+        for (File dir : Objects.requireNonNull(dirs.listFiles())) {
+            Truth.assertThat(dir.listFiles()).hasLength(1);
+            Truth.assertThat(Objects.requireNonNull(dir.listFiles())[0].getName())
+                    .startsWith("manifest-merger-blame");
+        }
     }
 
     @Test

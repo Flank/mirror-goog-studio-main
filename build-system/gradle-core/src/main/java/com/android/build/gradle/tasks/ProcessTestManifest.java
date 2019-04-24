@@ -82,7 +82,7 @@ import org.gradle.api.tasks.TaskProvider;
  * the published intermediate manifest with type {@link AndroidArtifacts#TYPE_METADATA}
  * of the tested app.</p>
  */
-public class ProcessTestManifest extends ManifestProcessorTask {
+public abstract class ProcessTestManifest extends ManifestProcessorTask {
 
     @NonNull private FileCollection testTargetMetadata;
 
@@ -332,7 +332,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     }
 
     private void handleMergingResult(
-            @NonNull MergingReport mergingReport, @NonNull File outFile, @NonNull ILogger logger) {
+            @NonNull MergingReport mergingReport, @NonNull File outFile, @NonNull ILogger logger)
+            throws IOException {
+        outputMergeBlameContents(mergingReport, getMergeBlameFile().get().getAsFile());
+
         switch (mergingReport.getResult()) {
             case WARNING:
                 mergingReport.log(logger);
@@ -532,6 +535,16 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                             taskProvider,
                             taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
                             "");
+
+            scope.getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(ProcessTestManifest::getMergeBlameFile),
+                            "manifest-merger-blame-"
+                                    + scope.getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
         }
 
         @Override

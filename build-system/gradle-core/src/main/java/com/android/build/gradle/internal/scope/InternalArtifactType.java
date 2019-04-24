@@ -190,6 +190,7 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_APP_MANIFEST,
     MANIFEST_METADATA,
     MANIFEST_MERGE_REPORT,
+    MANIFEST_MERGE_BLAME_FILE(Kind.FILE),
     // Simplified android manifest with original package name.
     // It's used to create namespaced res.apk static library.
     STATIC_LIBRARY_MANIFEST,
