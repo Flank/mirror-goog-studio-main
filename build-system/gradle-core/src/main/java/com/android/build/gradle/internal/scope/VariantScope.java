@@ -268,9 +268,6 @@ public interface VariantScope extends TransformVariantScope {
     File getApkLocation();
 
     @NonNull
-    File getMergedClassesJarFile();
-
-    @NonNull
     MutableTaskContainer getTaskContainer();
 
     @NonNull

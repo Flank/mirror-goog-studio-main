@@ -121,6 +121,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JacocoTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MergeAaptProguardFilesCreationAction;
+import com.android.build.gradle.internal.tasks.MergeClassesTask;
 import com.android.build.gradle.internal.tasks.MergeGeneratedProguardFilesCreationAction;
 import com.android.build.gradle.internal.tasks.MergeJavaResourceTask;
 import com.android.build.gradle.internal.tasks.MergeNativeLibsTask;
@@ -158,7 +159,6 @@ import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
 import com.android.build.gradle.internal.transforms.DexSplitterTransform;
-import com.android.build.gradle.internal.transforms.MergeClassesTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
@@ -2036,11 +2036,11 @@ public abstract class TaskManager {
                     });
         }
 
-        // Add transform to create merged runtime classes if this is a feature, a dynamic-feature,
+        // Add a task to create merged runtime classes if this is a feature, a dynamic-feature,
         // or a base module consuming feature jars. Merged runtime classes are needed if code
         // minification is enabled in a project with features or dynamic-features.
         if (variantData.getType().isFeatureSplit() || variantScope.consumesFeatureJars()) {
-            createMergeClassesTransform(variantScope);
+            taskFactory.register(new MergeClassesTask.CreationAction(variantScope));
         }
 
         // ----- Android studio profiling transforms
@@ -3364,41 +3364,6 @@ public abstract class TaskManager {
                     artifact,
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     attributeMap);
-        }
-    }
-
-    private void createMergeClassesTransform(@NonNull VariantScope variantScope) {
-
-        File outputJar = variantScope.getMergedClassesJarFile();
-
-        MergeClassesTransform transform = new MergeClassesTransform(outputJar);
-
-        Optional<TaskProvider<TransformTask>> transformTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(
-                                taskFactory,
-                                variantScope,
-                                transform,
-                                taskName -> {
-                                    variantScope
-                                            .getArtifacts()
-                                            .appendArtifact(
-                                                    InternalArtifactType
-                                                            .MODULE_AND_RUNTIME_DEPS_CLASSES,
-                                                    ImmutableList.of(outputJar),
-                                                    taskName);
-                                },
-                                null,
-                                null);
-
-        if (!transformTask.isPresent()) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(
-                            Type.GENERIC,
-                            new EvalIssueException(
-                                    "Internal error, could not add the MergeClassesTransform"));
         }
     }
 

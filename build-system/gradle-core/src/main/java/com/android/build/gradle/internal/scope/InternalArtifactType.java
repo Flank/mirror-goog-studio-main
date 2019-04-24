@@ -297,7 +297,7 @@ public enum InternalArtifactType implements ArtifactType {
     // publishes these files when there's multi-apk code shrinking.
     FEATURE_DEX,
     // The class files for a module and all of its runtime dependencies.
-    MODULE_AND_RUNTIME_DEPS_CLASSES,
+    MODULE_AND_RUNTIME_DEPS_CLASSES(Kind.FILE),
 
     // The signing configuration the feature module should be using, which is taken from the
     // application module. Also used for androidTest variants (bug 118611693). This has already

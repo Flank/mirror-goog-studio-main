@@ -1205,22 +1205,6 @@ public class VariantScopeImpl implements VariantScope {
         return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
     }
 
-    /**
-     * Returns the location of the jar file containing the merged classes from the module and the
-     * runtime dependencies.
-     */
-    @NonNull
-    @Override
-    public File getMergedClassesJarFile() {
-        String fileName =
-                getType().isBaseModule()
-                        ? "base.jar"
-                        : TaskManager.getFeatureFileName(
-                                getProject().getPath(), SdkConstants.DOT_JAR);
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(), "merged-classes", getDirName(), fileName);
-    }
-
     @NonNull
     @Override
     public File getAarLocation() {
