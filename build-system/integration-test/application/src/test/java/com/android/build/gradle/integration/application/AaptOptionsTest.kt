@@ -1,82 +1,79 @@
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static com.android.testutils.truth.FileSubject.assertThat;
+import com.android.testutils.truth.FileSubject.assertThat
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.utils.FileUtils;
-import java.io.File;
-import java.io.IOException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.utils.FileUtils
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
-/** Tests for DSL AAPT options. */
-public class AaptOptionsTest {
-    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+/** Tests for DSL AAPT options.  */
+class AaptOptionsTest {
+    @get:Rule  var temporaryFolder = TemporaryFolder()
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .create();
+    @get:Rule
+    var project = GradleTestProject.builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
     @Before
-    public void setUp() throws IOException {
-        FileUtils.createFile(project.file("src/main/res/raw/ignored"), "ignored");
-        FileUtils.createFile(project.file("src/main/res/raw/kept"), "kept");
+    fun setUp() {
+        FileUtils.createFile(project.file("src/main/res/raw/ignored"), "ignored")
+        FileUtils.createFile(project.file("src/main/res/raw/kept"), "kept")
     }
 
     @Test
-    public void testAaptOptionsFlagsWithAapt2() throws IOException, InterruptedException {
-        File ids = temporaryFolder.newFile();
+    fun testAaptOptionsFlagsWithAapt2() {
+        val ids = temporaryFolder.newFile()
 
-        String idsFilePath = ids.getAbsolutePath();
-        String windowsFriendlyFilePath = idsFilePath.replace("\\", "\\\\");
-        String additionalParams = "additionalParameters \"--emit-ids\", \""
-                + windowsFriendlyFilePath
-                + "\"";
+        val idsFilePath = ids.absolutePath
+        val windowsFriendlyFilePath = idsFilePath.replace("\\", "\\\\")
+        val additionalParams = "additionalParameters \"--emit-ids\", \"$windowsFriendlyFilePath\""
 
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "  aaptOptions {\n"
-                        + "    "
-                        + additionalParams
-                        + "\n"
-                        + "  }\n"
-                        + "}\n");
+        project.buildFile,
+            """
+            android {
+                aaptOptions {
+                    $additionalParams
+                }
+            }
+            """.trimIndent()
+        )
 
-        project.executor().run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug")
 
         // Check that ids file is generated
-        assertThat(ids).exists();
-        assertThat(ids).contains("raw/kept");
-        FileUtils.delete(ids);
+        assertThat(ids).exists()
+        assertThat(ids).contains("raw/kept")
+        FileUtils.delete(ids)
 
-        TestFileUtils.searchAndReplace(project.getBuildFile(), additionalParams, "");
+        TestFileUtils.searchAndReplace(project.buildFile, additionalParams, "")
 
-        project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug")
 
         // Check that ids file is not generated
-        assertThat(ids).doesNotExist();
+        assertThat(ids).doesNotExist()
     }
 
     @Test
-    public void emptyNoCompressList() throws IOException, InterruptedException {
+    fun emptyNoCompressList() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "  aaptOptions {\n"
-                        + "    noCompress \"\"\n"
-                        + "  }\n"
-                        + "}\n");
+            project.buildFile,
+            """
+            android {
+                aaptOptions {
+                    noCompress ""
+                }
+            }
+            """.trimIndent()
+        )
 
         // Should execute without failure.
-        project.executor().run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug")
     }
 }
