@@ -145,11 +145,11 @@ public class VdPreview {
         NamedNodeMap attr = root.getAttributes();
         Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
         assert nodeAttr != null;
-        srcSize.sourceWidth = parseDimension(0, nodeAttr, false);
+        srcSize.sourceWidth = parseDimension(nodeAttr, 0, false);
 
         nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
         assert nodeAttr != null;
-        srcSize.sourceHeight = parseDimension(0, nodeAttr, false);
+        srcSize.sourceHeight = parseDimension(nodeAttr, 0, false);
         return srcSize;
     }
 
@@ -177,7 +177,7 @@ public class VdPreview {
         if (info.needsOverrideWidth()) {
             Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
             float overrideValue = info.getWidth();
-            float originalValue = parseDimension(overrideValue, nodeAttr, true);
+            float originalValue = parseDimension(nodeAttr, overrideValue, true);
             if (originalValue != overrideValue) {
                 isXmlFileContentChanged = true;
             }
@@ -185,7 +185,7 @@ public class VdPreview {
         if (info.needsOverrideHeight()) {
             Node nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
             float overrideValue = info.getHeight();
-            float originalValue = parseDimension(overrideValue, nodeAttr, true);
+            float originalValue = parseDimension(nodeAttr, overrideValue, true);
             if (originalValue != overrideValue) {
                 isXmlFileContentChanged = true;
             }
@@ -246,19 +246,19 @@ public class VdPreview {
     /**
      * Queries the dimension info and overrides it if needed.
      *
-     * @param overrideValue the dimension value to override with.
-     * @param nodeAttr the node who contains dimension info.
-     * @param override if true then override the dimension.
-     * @return the original dimension value.
+     * @param attrNode the attribute that contains dimension info
+     * @param overrideValue the dimension value to override with
+     * @param override if true then override the dimension
+     * @return the original dimension value
      */
-    private static float parseDimension(float overrideValue, Node nodeAttr, boolean override) {
-        assert nodeAttr != null;
-        String content = nodeAttr.getTextContent();
+    private static float parseDimension(
+            @NonNull Node attrNode, float overrideValue, boolean override) {
+        String content = attrNode.getTextContent();
         assert content.endsWith("dp");
         double originalValue = Double.parseDouble(content.substring(0, content.length() - 2));
 
         if (override) {
-            nodeAttr.setTextContent(XmlUtils.formatFloatAttribute(overrideValue) + "dp");
+            attrNode.setTextContent(XmlUtils.formatFloatAttribute(overrideValue) + "dp");
         }
         return (float) originalValue;
     }
