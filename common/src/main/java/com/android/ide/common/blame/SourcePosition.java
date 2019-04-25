@@ -99,6 +99,10 @@ public final class SourcePosition implements Serializable {
                 if (mEndColumn != -1) {
                     sB.append(':');
                     sB.append(mEndColumn + 1);
+                } else if (mStartColumn != -1) {
+                    // to distinguish between this case and the case when the start line is the same
+                    // as the end line.
+                    sB.append(":?");
                 }
             }
         }

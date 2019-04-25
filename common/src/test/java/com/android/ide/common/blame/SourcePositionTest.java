@@ -16,12 +16,23 @@
 
 package com.android.ide.common.blame;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class SourcePositionTest {
+
+    @Test
+    public void testToString() {
+        assertThat(new SourcePosition(1, 2, -1, 3, 4, -1).toString()).isEqualTo("2:3-4:5");
+        assertThat(new SourcePosition(1, -1, -1, 3, 4, -1).toString()).isEqualTo("2-4:5");
+        assertThat(new SourcePosition(1, 2, -1, 3, -1, -1).toString()).isEqualTo("2:3-4:?");
+        assertThat(new SourcePosition(1, -1, -1, 3, -1, -1).toString()).isEqualTo("2-4");
+        assertThat(new SourcePosition(1, 2, -1, 1, 4, -1).toString()).isEqualTo("2:3-5");
+        assertThat(new SourcePosition(1, -1, -1, -1, -1, -1).toString()).isEqualTo("2");
+        assertThat(new SourcePosition(-1, -1, -1, -1, -1, -1).toString()).isEqualTo("?");
+    }
 
     @Test
     public void testComparisonOffset() {
