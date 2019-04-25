@@ -450,7 +450,10 @@ final class MonitorThread extends Thread {
      * Tell the thread that something has changed.
      */
     private void wakeup() {
-        mSelector.wakeup();
+        // If we didn't started running yet, we might not have a selector set.
+        if (mSelector != null) {
+            mSelector.wakeup();
+        }
     }
 
     /**
@@ -477,7 +480,9 @@ final class MonitorThread extends Thread {
                 mDebugSelectedChan.socket().close();
                 mDebugSelectedChan = null;
             }
-            mSelector.close();
+            if (mSelector != null) {
+                mSelector.close();
+            }
         } catch (InterruptedException ie) {
             ie.printStackTrace();
         } catch (IOException e) {
