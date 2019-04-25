@@ -17,11 +17,14 @@
 package com.android.build.gradle.internal.ide
 
 import com.android.builder.model.NativeVariantInfo
+import java.io.File
 
 /**
  * A basic implementation of NativeVariantInfo.
  */
 data class NativeVariantInfoImpl(
-    private val abiNames : List<String>) : NativeVariantInfo {
+    private val abiNames : List<String>,
+    private val buildRootFolderMap : Map<String, File>) : NativeVariantInfo {
     override fun getAbiNames() = abiNames
+    override fun getBuildRootFolderMap() = buildRootFolderMap
 }

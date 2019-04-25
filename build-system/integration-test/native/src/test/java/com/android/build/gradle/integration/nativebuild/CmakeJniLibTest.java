@@ -130,5 +130,6 @@ public class CmakeJniLibTest {
 
         assertThat(groupToArtifacts.keySet()).containsExactly("debug", "release");
         assertThat(groupToArtifacts.get("debug")).hasSize(groupToArtifacts.get("release").size());
+        assertThat(model).hasVariantInfoBuildFolderForEachAbi();
     }
 }

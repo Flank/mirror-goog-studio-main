@@ -17,8 +17,10 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Native build information about a specific variant. This is the fast-to-compute information that
@@ -33,4 +35,25 @@ public interface NativeVariantInfo extends Serializable {
      */
     @NonNull
     List<String> getAbiNames();
+
+    /**
+     * Map of ABI name to corresponding build root folder for that ABI.
+     *
+     * <p>For CMake, the build root folder is the one that contains the generated build system. For
+     * example, this is where build.ninja is emitted. This is also the folder with
+     * compile_commands.json. This is the folder that is set by passing -B [folder] to CMake at
+     * project generation time.
+     *
+     * <p>For both ndk-build and CMake, this is the folder that contains android_gradle_build.json
+     * is emitted.
+     *
+     * <p>In general, this is the folder that contains metadata about the build for this particular
+     * ABI.
+     *
+     * <p>There should be one entry in the map per ABI name returned by getAbiNames().
+     *
+     * @return the map of ABI to build root folder.
+     */
+    @NonNull
+    Map<String, File> getBuildRootFolderMap();
 }

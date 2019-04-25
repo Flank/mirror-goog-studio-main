@@ -17,22 +17,26 @@
 package com.android.ide.common.gradle.model.stubs
 
 import com.android.builder.model.NativeVariantInfo
+import java.io.File
 
-class NativeVariantInfoStub(private val abiNames : List<String> = listOf("abiName")) : NativeVariantInfo {
+class NativeVariantInfoStub(
+    private val abiNames : List<String> = listOf("abiName"),
+    private val buildRootFolderMap : Map<String, File> = mapOf("abi" to File("buildRootFolder"))) : NativeVariantInfo {
     override fun getAbiNames() = abiNames
+    override fun getBuildRootFolderMap() = buildRootFolderMap.toMap()
     override fun equals(o: Any?): Boolean {
         if (this === o) {
             return true
         }
         val stub = o as? NativeVariantInfo ?: return false
-        return (abiNames == stub.abiNames)
+        return (abiNames == stub.abiNames) && (buildRootFolderMap == stub.buildRootFolderMap)
     }
 
     override fun hashCode(): Int {
-        return getAbiNames().hashCode()
+        return getAbiNames().hashCode() + buildRootFolderMap.hashCode()
     }
 
     override fun toString(): String {
-        return "abiNames=$abiNames"
+        return "abiNames=$abiNames buildRootFolders=$buildRootFolderMap"
     }
 }

@@ -176,5 +176,6 @@ public class NdkBuildSplitTest {
                         "platform21Debug");
         assertThat(groupToArtifacts.get("currentDebug"))
                 .hasSize(groupToArtifacts.get("currentRelease").size());
+        assertThat(model).hasVariantInfoBuildFolderForEachAbi();
     }
 }

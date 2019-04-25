@@ -88,7 +88,10 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
             return copy(
                     project.getVariantInfos(),
                     modelCache,
-                    variantInfo -> new IdeNativeVariantInfo(variantInfo.getAbiNames()));
+                    variantInfo ->
+                            new IdeNativeVariantInfo(
+                                    variantInfo.getAbiNames(),
+                                    variantInfo.getBuildRootFolderMap()));
         } catch (UnsupportedOperationException e) {
             return Maps.newHashMap();
         }

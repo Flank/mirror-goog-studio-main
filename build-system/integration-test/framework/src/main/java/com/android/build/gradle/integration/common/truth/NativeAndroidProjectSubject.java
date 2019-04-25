@@ -23,10 +23,12 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.builder.model.NativeVariantInfo;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.io.File;
@@ -35,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -271,6 +274,41 @@ public class NativeAndroidProjectSubject
                 failWithRawMessage(
                         "Not true that %s artifact group %s has size %s. " + "Actual size is <%s>",
                         actualAsString(), groupName, size, groups.get(groupName).size());
+            }
+        }
+    }
+
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasVariantInfoBuildFolderForEachAbi() {
+        for (NativeVariantInfo variantInfo : actual().getVariantInfos().values()) {
+            for (String abiName : variantInfo.getAbiNames()) {
+                if (!variantInfo.getBuildRootFolderMap().containsKey(abiName)) {
+                    failWithActual(
+                            Fact.fact(
+                                    "NativeVariantInfo build root folders does not contain expected ABI",
+                                    abiName));
+                }
+            }
+            for (String abiName : variantInfo.getBuildRootFolderMap().keySet()) {
+                if (!variantInfo.getAbiNames().contains(abiName)) {
+                    failWithActual(
+                            Fact.fact(
+                                    "NativeVariantInfo build root folders contains an unexpected ABI",
+                                    abiName));
+                }
+            }
+            for (Map.Entry<String, File> entry : variantInfo.getBuildRootFolderMap().entrySet()) {
+                String abiName = entry.getKey();
+                String buildRootFolder = entry.getValue().getPath();
+                if (!buildRootFolder.contains(abiName)) {
+                    failWithActual(
+                            Fact.fact(
+                                    String.format(
+                                            "NativeVariantInfo build root folder '%s' does "
+                                                    + "not have folder segment matching ABI",
+                                            buildRootFolder),
+                                    abiName));
+                }
             }
         }
     }

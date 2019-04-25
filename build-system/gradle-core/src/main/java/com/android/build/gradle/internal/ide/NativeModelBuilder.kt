@@ -127,9 +127,12 @@ class NativeModelBuilder(
         generator: ExternalNativeJsonGenerator
     ) {
         builder.addBuildSystem(generator.nativeBuildSystem.tag)
+        val abis = generator.abis.map { it.tag }
+        val buildFolders = generator.nativeBuildConfigurationsJsons.map { it.parentFile }
         builder.addVariantInfo(
             generator.variantName,
-            generator.abis.map { it.tag }.distinct()
+            abis,
+            (abis zip buildFolders).toMap()
         )
     }
 

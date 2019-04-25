@@ -33,6 +33,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ParameterizedAndroidProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
@@ -655,6 +656,7 @@ public class NativeModelTest {
         if (config.buildSystem != NativeBuildSystem.NDK_BUILD) {
             checkTargetTriplePresent(model);
         }
+        TruthHelper.assertThat(model).hasVariantInfoBuildFolderForEachAbi();
     }
 
     @Test

@@ -18,22 +18,26 @@ package com.android.ide.common.gradle.model
 
 import com.android.builder.model.NativeVariantInfo
 import com.google.common.collect.ImmutableList
+import java.io.File
 
-class IdeNativeVariantInfo(private val abiNames : List<String>) : NativeVariantInfo {
+class IdeNativeVariantInfo(
+    private val abiNames : List<String>,
+    private val buildRootFolderMap : Map<String, File>) : NativeVariantInfo {
     override fun getAbiNames() = ImmutableList.copyOf(abiNames)!!
+    override fun getBuildRootFolderMap() = buildRootFolderMap.toMap()
     override fun equals(o: Any?): Boolean {
         if (this === o) {
             return true
         }
         val stub = o as? NativeVariantInfo ?: return false
-        return (abiNames == stub.abiNames)
+        return (abiNames == stub.abiNames) && (buildRootFolderMap == stub.buildRootFolderMap)
     }
 
     override fun hashCode(): Int {
-        return getAbiNames().hashCode()
+        return getAbiNames().hashCode() + getBuildRootFolderMap().hashCode()
     }
 
     override fun toString(): String {
-        return "abiNames=$abiNames"
+        return "abiNames=$abiNames buildRootFolders=$buildRootFolderMap"
     }
 }

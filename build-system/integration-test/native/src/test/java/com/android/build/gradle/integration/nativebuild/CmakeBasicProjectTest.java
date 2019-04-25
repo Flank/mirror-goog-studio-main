@@ -162,6 +162,8 @@ public class CmakeBasicProjectTest {
 
         assertThat(model).hasArtifactGroupsNamed("debug", "release");
         assertThat(model).hasArtifactGroupsOfSize(abiCount);
+
+        assertThat(model).hasVariantInfoBuildFolderForEachAbi();
     }
 
     @Test

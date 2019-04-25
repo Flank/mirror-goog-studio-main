@@ -69,8 +69,9 @@ class NativeAndroidProjectBuilder {
     }
 
     /** Add information about a particular variant. */
-    void addVariantInfo(String variantName, List<String> abiNames) {
-        this.variantInfos.put(variantName, new NativeVariantInfoImpl(abiNames));
+    void addVariantInfo(
+            String variantName, List<String> abiNames, Map<String, File> buildRootFolderMap) {
+        this.variantInfos.put(variantName, new NativeVariantInfoImpl(abiNames, buildRootFolderMap));
     }
 
     /**
