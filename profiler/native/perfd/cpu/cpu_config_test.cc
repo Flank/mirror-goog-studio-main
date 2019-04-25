@@ -25,7 +25,7 @@
 using grpc::Status;
 using profiler::ProcfsFiles;
 using profiler::TestUtils;
-using profiler::proto::CpuCoreConfigResponse;
+using profiler::proto::CpuCoreConfigData;
 using std::string;
 
 namespace {
@@ -56,13 +56,13 @@ class MockProcfsFiles final : public ProcfsFiles {
 namespace profiler {
 
 TEST(CpuConfigTest, CpuCoreConfig) {
-  CpuCoreConfigResponse response;
+  CpuCoreConfigData data;
   MockProcfsFiles mock_fs;
 
-  grpc::Status status = CpuConfig::GetCpuCoreConfig(mock_fs, &response);
+  grpc::Status status = CpuConfig::GetCpuCoreConfig(mock_fs, &data);
   ASSERT_TRUE(status.ok());
-  ASSERT_EQ(1, response.configs_size());
-  auto core_config = response.configs(0);
+  ASSERT_EQ(1, data.core_configs_size());
+  auto core_config = data.core_configs(0);
   EXPECT_EQ(1, core_config.core());
   EXPECT_EQ(300000, core_config.min_frequency_in_khz());
   EXPECT_EQ(2000000, core_config.max_frequency_in_khz());

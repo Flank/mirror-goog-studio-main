@@ -30,7 +30,7 @@ using profiler::FileReader;
 using profiler::Log;
 using profiler::PathStat;
 using profiler::ProcfsFiles;
-using profiler::proto::CpuCoreConfigResponse;
+using profiler::proto::CpuCoreConfigData;
 using std::string;
 
 namespace {
@@ -45,8 +45,7 @@ bool GetCpuConfig(const string& freq_file, int32_t* frequency_in_khz) {
   return false;
 }
 
-bool ParseFrequencyFiles(const ProcfsFiles& proc_fs,
-                         CpuCoreConfigResponse* response,
+bool ParseFrequencyFiles(const ProcfsFiles& proc_fs, CpuCoreConfigData* data,
                          const PathStat& pstat) {
   const string& rel_path = pstat.rel_path();
   if (rel_path.compare("cpu") == 0) {
@@ -64,8 +63,7 @@ bool ParseFrequencyFiles(const ProcfsFiles& proc_fs,
   int32_t core_number = atoi(rel_path.substr(3).c_str());
   int32_t min_frequency_in_khz, max_frequency_in_khz;
 
-  CpuCoreConfigResponse::CpuCoreConfigData* core_config =
-      response->add_configs();
+  auto* core_config = data->add_core_configs();
   core_config->set_core(core_number);
   if (GetCpuConfig(proc_fs.GetSystemMinCpuFrequencyPath(core_number),
                    &min_frequency_in_khz)) {
@@ -88,13 +86,13 @@ bool ParseFrequencyFiles(const ProcfsFiles& proc_fs,
 
 namespace profiler {
 
-grpc::Status CpuConfig::GetCpuCoreConfig(CpuCoreConfigResponse* response) {
+grpc::Status CpuConfig::GetCpuCoreConfig(CpuCoreConfigData* data) {
   ProcfsFiles proc_fs;
-  return GetCpuCoreConfig(proc_fs, response);
+  return GetCpuCoreConfig(proc_fs, data);
 }
 
 grpc::Status CpuConfig::GetCpuCoreConfig(const ProcfsFiles& proc_fs,
-                                         CpuCoreConfigResponse* response) {
+                                         CpuCoreConfigData* data) {
   DiskFileSystem fs;
   // If the system CPU path is relative, then append it to the working dir.
   // This solves the issue of running the same code in Bazel vs on a device.
@@ -107,11 +105,11 @@ grpc::Status CpuConfig::GetCpuCoreConfig(const ProcfsFiles& proc_fs,
 
   bool keep_walking = true;
   fs.WalkDir(cpu_sys_dir->path(),
-             [response, &proc_fs, &keep_walking](const PathStat& pstat) {
+             [data, &proc_fs, &keep_walking](const PathStat& pstat) {
                if (!keep_walking) {
                  return;
                }
-               keep_walking &= ParseFrequencyFiles(proc_fs, response, pstat);
+               keep_walking &= ParseFrequencyFiles(proc_fs, data, pstat);
              },
              1);
 

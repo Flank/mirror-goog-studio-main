@@ -20,6 +20,7 @@ option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "Commands";
 
 import "common.proto";
+import "cpu_data.proto";
 import "echo.proto";
 import "layout_inspector.proto";
 
@@ -33,6 +34,9 @@ message Command {
     // General profiler commands starts at 100.
     BEGIN_SESSION = 100;
     END_SESSION = 101;
+
+    // Cpu Profiler Prefix = 300
+    GET_CPU_CORE_CONFIG = 303;
 
     // Sample echo Command
     ECHO = 1000;
@@ -60,6 +64,8 @@ message Command {
     BeginSession begin_session = 100;
     EndSession end_session = 101;
 
+    // Cpu Profiler Prefix = 300
+    GetCpuCoreConfig get_cpu_core_config = 303;
 
     // Sample Echo Command starts at 1000;
     echo.EchoData echo_data = 1000;
@@ -95,4 +101,8 @@ message EndSession {
 message AttachAgent {
   string agent_lib_file_name = 1;
   string agent_config_path = 2;
+}
+
+message GetCpuCoreConfig {
+  int64 device_id = 1;
 }

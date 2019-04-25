@@ -60,6 +60,8 @@ message Event {
     CPU_USAGE = 301;
     // group_id: thread id
     CPU_THREAD = 302;
+    // group_id: device id
+    CPU_CORE_CONFIG = 303;
 
     // Memory Profiler Prefix = 400
     // no specified group id.
@@ -151,6 +153,7 @@ message Event {
     // Cpu Profiler Prefix = 300
     CpuUsageData cpu_usage = 301;
     CpuThreadData cpu_thread = 302;
+    CpuCoreConfigData cpu_core_config = 303;
 
     // Memory Profiler Prefix = 400
     MemoryUsageData memory_usage = 401;

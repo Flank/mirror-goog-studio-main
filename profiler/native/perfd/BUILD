@@ -57,6 +57,8 @@ cc_library(
         "commands/begin_session.h",
         "commands/end_session.cc",
         "commands/end_session.h",
+        "commands/get_cpu_core_config.cc",
+        "commands/get_cpu_core_config.h",
         "common_profiler_component.h",
         "perfd.cc",
         "perfd.h",

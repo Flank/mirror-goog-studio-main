@@ -284,14 +284,7 @@ message CpuCoreConfigRequest {
 }
 
 message CpuCoreConfigResponse {
-  repeated CpuCoreConfigData configs = 1;
-
-  // CPU per-core physical configuration data.
-  message CpuCoreConfigData {
-    int32 core = 1;
-    int32 min_frequency_in_khz = 2;
-    int32 max_frequency_in_khz = 3;
-  }
+  CpuCoreConfigData cpu_core_config = 1;
 }
 
 // Requests the state of all the threads in the given time range.

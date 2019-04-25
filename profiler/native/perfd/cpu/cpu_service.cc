@@ -430,7 +430,7 @@ int64_t CpuServiceImpl::GetEarliestDataTime(int32_t pid) {
 Status CpuServiceImpl::GetCpuCoreConfig(ServerContext* context,
                                         const CpuCoreConfigRequest* request,
                                         CpuCoreConfigResponse* response) {
-  return CpuConfig::GetCpuCoreConfig(response);
+  return CpuConfig::GetCpuCoreConfig(response->mutable_cpu_core_config());
 }
 
 }  // namespace profiler

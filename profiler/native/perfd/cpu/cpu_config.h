@@ -18,17 +18,17 @@
 
 #include <grpc++/grpc++.h>
 
-#include "proto/cpu.grpc.pb.h"
+#include "proto/cpu_data.pb.h"
 #include "utils/procfs_files.h"
 
 namespace profiler {
 
 class CpuConfig {
  public:
-  static grpc::Status GetCpuCoreConfig(proto::CpuCoreConfigResponse* response);
+  static grpc::Status GetCpuCoreConfig(proto::CpuCoreConfigData* data);
 
   static grpc::Status GetCpuCoreConfig(const ProcfsFiles& proc_fs,
-                                       proto::CpuCoreConfigResponse* response);
+                                       proto::CpuCoreConfigData* data);
 };
 
 }  // namespace profiler
