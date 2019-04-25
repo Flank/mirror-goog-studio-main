@@ -246,7 +246,7 @@ public enum InternalArtifactType implements ArtifactType {
     AAR,
     INSTANTAPP_BUNDLE,
     SPLIT_LIST,
-    APK_LIST,
+    APK_LIST(Kind.FILE),
 
     // an intermediate bundle that contains only the current module
     MODULE_BUNDLE,

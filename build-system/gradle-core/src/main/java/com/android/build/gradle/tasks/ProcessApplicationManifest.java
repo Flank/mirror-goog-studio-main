@@ -89,6 +89,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -103,7 +104,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 
 /** A task that processes the manifest */
 @CacheableTask
-public class ProcessApplicationManifest extends ManifestProcessorTask {
+public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
@@ -116,7 +117,6 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
     private FileCollection microApkManifest;
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
-    private BuildableArtifact apkList;
     private Supplier<EnumSet<Feature>> optionalFeatures;
     private OutputScope outputScope;
     private final DependencyResourcesComputer resourcesComputer = new DependencyResourcesComputer();
@@ -610,11 +610,9 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
         return featureNameSupplier != null ? featureNameSupplier.get() : null;
     }
 
-    @InputFiles
+    @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getApkList() {
-        return apkList;
-    }
+    public abstract RegularFileProperty getApkList();
 
     public static class CreationAction
             extends AnnotationProcessingTaskCreationAction<ProcessApplicationManifest> {
@@ -776,7 +774,7 @@ public class ProcessApplicationManifest extends ManifestProcessorTask {
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
 
-            task.apkList = artifacts.getFinalArtifactFiles(InternalArtifactType.APK_LIST);
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST, task.getApkList());
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {

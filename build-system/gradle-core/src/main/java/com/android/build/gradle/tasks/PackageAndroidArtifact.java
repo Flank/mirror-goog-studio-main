@@ -26,7 +26,6 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -109,10 +108,12 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileType;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
@@ -228,8 +229,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     }
 
     protected FileCache fileCache;
-
-    protected BuildableArtifact apkList;
 
     protected boolean keepTimestampsInApk;
 
@@ -382,11 +381,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 .collect(Collectors.toList());
     }
 
-    @InputFiles
+    @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getApkList() {
-        return apkList;
-    }
+    public abstract RegularFileProperty getApkList();
 
     private static BuildOutput computeBuildOutputFile(
             ApkData apkInfo,
@@ -977,10 +974,9 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         : project.files());
             }
 
-            task.apkList =
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.APK_LIST);
+            variantScope
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(InternalArtifactType.APK_LIST, task.getApkList());
 
             task.setSigningConfig(variantScope.getSigningConfigFileCollection());
         }

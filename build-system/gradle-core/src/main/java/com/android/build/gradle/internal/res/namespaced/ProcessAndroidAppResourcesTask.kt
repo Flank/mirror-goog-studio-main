@@ -136,8 +136,6 @@ open class ProcessAndroidAppResourcesTask
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
 
-            val artifacts = variantScope.artifacts
-
             resourceApUnderscore = variantScope.artifacts
                 .appendArtifact(
                     InternalArtifactType.PROCESSED_RES,

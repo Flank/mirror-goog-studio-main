@@ -21,7 +21,6 @@ import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.VariantScope
@@ -61,7 +60,6 @@ open class MainApkListPersistenceTest {
     private lateinit var outputFactory: OutputFactory
     internal lateinit var project: Project
     internal lateinit var task: MainApkListPersistence
-    private lateinit var configAction: MainApkListPersistence.CreationAction
     internal lateinit var testDir: File
 
     @Before
@@ -79,10 +77,10 @@ open class MainApkListPersistenceTest {
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
-        task = project.tasks.create("test", MainApkListPersistence::class.java)
-        configAction = MainApkListPersistence.CreationAction(variantScope)
-        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APK_LIST,
-            task.name, SdkConstants.FN_APK_LIST)).thenReturn(temporaryFolder.newFolder())
+        task = project.tasks.register("test", MainApkListPersistence::class.java) {
+            task -> task.outputFile.set(project.file(
+                temporaryFolder.newFile(SdkConstants.FN_APK_LIST)))
+        }.get()
         outputFactory = OutputFactory("foo", config)
     }
 
@@ -95,15 +93,15 @@ open class MainApkListPersistenceTest {
                         "armeabi")))
         Mockito.`when`(variantScope.outputScope).thenReturn(outputFactory.output)
 
-        configAction.preConfigure(task.name)
-        configAction.configure(task)
+        MainApkListPersistence.CreationAction(variantScope).configure(task)
+
         assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
-        assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
+        assertThat(task.outputFile.get().asFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
         task.doTaskAction()
 
         // assert persistence.
-        val apkList = ExistingBuildElements.loadApkList(task.outputFile)
+        val apkList = ExistingBuildElements.loadApkList(task.outputFile.get().asFile)
         assertThat(apkList).hasSize(2)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}
@@ -123,15 +121,14 @@ open class MainApkListPersistenceTest {
                         "armeabi"))).disable()
         Mockito.`when`(variantScope.outputScope).thenReturn(outputFactory.output)
 
-        configAction.preConfigure(task.name)
-        configAction.configure(task)
+        MainApkListPersistence.CreationAction(variantScope).configure(task)
         assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
-        assertThat(task.outputFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
+        assertThat(task.outputFile.get().asFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
         task.doTaskAction()
 
         // assert persistence.
-        val apkList = ExistingBuildElements.loadApkList(task.outputFile)
+        val apkList = ExistingBuildElements.loadApkList(task.outputFile.get().asFile)
         assertThat(apkList).hasSize(1)
         assertThat(apkList.asSequence()
                 .filter { apkData -> apkData.type == VariantOutput.OutputType.FULL_SPLIT}

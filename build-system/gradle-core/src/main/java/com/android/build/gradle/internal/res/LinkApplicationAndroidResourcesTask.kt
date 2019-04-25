@@ -68,6 +68,7 @@ import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -206,9 +207,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     private lateinit var supportDirectory: File
 
     @get:InputFiles
+    @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var apkList: BuildableArtifact
-        private set
+    abstract val apkList: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -498,9 +499,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
             }
 
             task.multiOutputPolicy = variantData.multiOutputPolicy
-            task.apkList = variantScope
-                .artifacts
-                .getFinalArtifactFiles(InternalArtifactType.APK_LIST)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.APK_LIST, task.apkList)
 
             if (ProcessAndroidResources.generatesProguardOutputFile(variantScope)) {
                 task.proguardOutputFile = proguardOutputFile
