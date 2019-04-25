@@ -23,7 +23,6 @@ import com.android.annotations.concurrency.WorkerThread
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
-import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PACKAGE
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_PARAMETER
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -32,6 +31,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiMethod
@@ -57,11 +57,33 @@ val THREADING_ANNOTATIONS = setOf(SLOW, UI_THREAD, ANY_THREAD, WORKER_THREAD)
 
 /**
  * Looks for calls in the wrong thread context.
- * See [http://go/do-not-freeze]
+ *
+ * See [http://go/do-not-freeze] for more information on IntelliJ threading rules and best
+ * practices.
+ *
+ * This is a clone of `ThreadDetector` from "upstream" lint-checks, with slightly simpler rules and
+ * no support for annotating methods with more than one threading annotation, since in the IDE the
+ * threading annotations are exclusive and not meant to be combined.
  */
-class WrongThreadDetector : Detector(), SourceCodeScanner {
+class IntellijThreadDetector : Detector(), SourceCodeScanner {
     override fun applicableAnnotations(): List<String> = THREADING_ANNOTATIONS.toList()
 
+    /**
+     * Handles a given UAST node relevant to our annotations.
+     *
+     * [com.android.tools.lint.client.api.AnnotationHandler] will call us repeatedly (once for every
+     * element in [annotations]) if there are multiple annotations on the target method or method
+     * parameter (see [checkThreading]), but we check every UAST node only once, against all
+     * annotations on the target and the caller at once.
+     *
+     * The reason for this is that depending on [type], [annotations] is populated from either the
+     * target ([METHOD_CALL]) or the caller ([METHOD_CALL_PARAMETER]), which makes it hard to handle
+     * the two cases consistently.
+     *
+     * Marking the node also means we will ignore class-level annotations if method-level
+     * annotations were present, since [com.android.tools.lint.client.api.AnnotationHandler] handles
+     * [METHOD_CALL] before [METHOD_CALL_CLASS].
+     */
     override fun visitAnnotationUsage(
         context: JavaContext,
         usage: UElement,
@@ -75,70 +97,73 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         allClassAnnotations: List<UAnnotation>,
         allPackageAnnotations: List<UAnnotation>
     ) {
+        if (method == null) return
+        val usagePsi = usage.sourcePsi ?: return
+        if (usagePsi.getUserData(CHECKED) == true) return
+        usagePsi.putUserData(CHECKED, true)
+
+        // Meaning of the arguments we are given depends on `type`, get what we need accordingly:
         when (type) {
-            METHOD_CALL, METHOD_CALL_CLASS, METHOD_CALL_PACKAGE -> {
-                checkMethodCallThreading(context, usage, method ?: return, qualifiedName)
-            }
-            METHOD_CALL_PARAMETER -> {
-                checkCallableReference(
+            METHOD_CALL, METHOD_CALL_CLASS -> {
+                checkThreading(
                     context,
-                    (usage as? UCallableReferenceExpression) ?: return,
-                    qualifiedName
+                    usage,
+                    method,
+                    getThreadContext(context, usage) ?: return,
+                    getThreadsFromMethod(context, method) ?: return
                 )
             }
-            else -> return // We don't care about other [AnnotationUsageType]s.
+            METHOD_CALL_PARAMETER -> {
+                val reference = usage as? UCallableReferenceExpression ?: return
+                val referencedMethod = reference.resolve() as? PsiMethod ?: return
+                checkThreading(
+                    context,
+                    usage,
+                    referencedMethod,
+                    annotations.mapNotNull { it.qualifiedName },
+                    getThreadsFromMethod(context, referencedMethod) ?: return
+                )
+            }
+            else -> {
+                // We don't care about other types.
+                return
+            }
         }
     }
 
     /**
-     * Checks that the given method call uses the correct threading context
+     * Checks if the given [method] can be referenced from [node] which is either a method
+     * call or a callable reference passed to another method as a callback.
      *
-     * @param context the lint scanning context
-     * @param methodCallNode [UElement] pointing to the method call node
-     * @param method [PsiMethod] being called
-     * @param calleeThread the called method annotation being analyzed
+     * @param context lint scanning context
+     * @param node [UElement] that triggered the check, a method call or a callable reference
+     * @param method method that will be called. When [node] is a call expression, this is the
+     *     method being called. When [node] is a callable reference, this is the referenced method.
+     * @param callerThreads fully qualified names of threading annotations effective in the calling
+     *     code. When [node] is a call expression, these are annotations on the method containing
+     *     the call (or its class). When [node] is a calling reference, these are annotations on the
+     *     parameter to which the reference is passed.
+     * @param calleeThreads fully qualified names of threading annotations effective on
+     *     [method]. These can be specified on the method itself or its class.
      */
-    private fun checkMethodCallThreading(
+    private fun checkThreading(
         context: JavaContext,
-        methodCallNode: UElement,
+        node: UElement,
         method: PsiMethod,
-        calleeThread: String
+        callerThreads: List<String>,
+        calleeThreads: List<String>
     ) {
-        val callerThreads = getThreadContext(context, methodCallNode) ?: return
-
         val violation = callerThreads.asSequence()
-            .mapNotNull { checkForThreadViolation(it, calleeThread, method) }
-            .firstOrNull() ?: return
+            .flatMap { caller ->
+                calleeThreads.asSequence().map { callee -> Pair(caller, callee) }
+            }
+            .mapNotNull { (caller, callee) ->
+                checkForThreadViolation(caller, callee, method)
+            }
+            .firstOrNull()
+            ?: return
 
-        report(context, methodCallNode, violation)
-    }
-
-    /**
-     * Checks that the given callable reference (e.g. `this::compute`), passed as an argument to
-     * another method, obeys the contract of threading annotations.
-     *
-     * @param context the lint scanning context
-     * @param reference the UAST node of the reference
-     * @param callerThread fully qualified name of the threading annotation present on the method
-     *                     parameter, which needs to be compatible with all annotations on the
-     *                     method being passed as reference
-     */
-    private fun checkCallableReference(
-        context: JavaContext,
-        reference: UCallableReferenceExpression,
-        callerThread: String
-    ) {
-        val referencedMethod = reference.resolve() as? PsiMethod ?: return
-        val calleeThreads = context.evaluator
-            .getAllAnnotations(referencedMethod, false)
-            .filter { it.isThreadingAnnotation() }
-            .mapNotNull { it.qualifiedName }
-
-        val violation = calleeThreads.asSequence()
-            .mapNotNull { checkForThreadViolation(callerThread, it, referencedMethod) }
-            .firstOrNull() ?: return
-
-        report(context, reference, violation)
+        report(context, node, violation)
     }
 
     /** Checks for a thread annotation violation, returning an error message if found. */
@@ -328,9 +353,11 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
 
     companion object {
         private val IMPLEMENTATION = Implementation(
-            WrongThreadDetector::class.java,
+            IntellijThreadDetector::class.java,
             Scope.JAVA_FILE_SCOPE
         )
+
+        private val CHECKED = Key.create<Boolean>(IntellijThreadDetector::class.java.name + ".CHECKED")
 
         /** Calling methods on the wrong thread  */
         @JvmField

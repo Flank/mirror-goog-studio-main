@@ -21,7 +21,8 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import org.junit.Test
 
-class WrongThreadDetectorTest {
+@Suppress("ClassNameDiffersFromFileName") // For language injections.
+class IntellijThreadDetectorTest {
 
     @Test
     fun testIncompatibleMethods() {
@@ -160,7 +161,7 @@ class WrongThreadDetectorTest {
                 """
                 ).indented()
             )
-            .issues(WrongThreadDetector.ISSUE)
+            .issues(IntellijThreadDetector.ISSUE)
             .run()
             .expect(
                 """
@@ -207,6 +208,7 @@ class WrongThreadDetectorTest {
                     import com.intellij.openapi.actionSystem.AnAction;
                     import com.intellij.openapi.actionSystem.AnActionEvent;
 
+                    @SuppressWarnings("Convert2Lambda")
                     public class Test {
                         @Slow
                         public boolean slowMethod() { }
@@ -328,6 +330,8 @@ class WrongThreadDetectorTest {
                     import com.android.annotations.concurrency.UiThread;
                     import com.android.annotations.concurrency.WorkerThread;
                     import org.jetbrains.annotations.NotNull;
+
+                    @SuppressWarnings("ALL")
                     public class Application {
                         public void invokeLater(@NotNull @UiThread Runnable run) { run.run(); }
 
@@ -430,83 +434,83 @@ class WrongThreadDetectorTest {
                     ).indented()
                 )
             )
-            .issues(WrongThreadDetector.ISSUE)
+            .issues(IntellijThreadDetector.ISSUE)
             .run()
             .expect(
                 """
-                src/test/pkg/Test.java:26: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:27: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 slowMethod(); // WARN1
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:28: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:29: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 workerMethod(); // WARN2
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:33: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:34: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             slowMethod(); // WARN3
                             ~~~~~~~~~~~~
-                src/test/pkg/Test.java:35: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:36: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             workerMethod(); // WARN4
                             ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:39: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
+                src/test/pkg/Test.java:40: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
                             uiMethod(); // WARN5
                             ~~~~~~~~~~
-                src/test/pkg/Test.java:46: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:47: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 slowMethod(); // WARN6
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:48: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:49: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 workerMethod(); // WARN7
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:55: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
+                src/test/pkg/Test.java:56: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
                                 uiMethod(); // WARN8
                                 ~~~~~~~~~~
-                src/test/pkg/Test.java:62: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:63: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 slowMethod(); // WARN9
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:63: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:64: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 slowMethod(); // WARN10
                                 ~~~~~~~~~~~~
-                src/test/pkg/Test.java:65: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:66: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                                 workerMethod(); // WARN11
                                 ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:74: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
+                src/test/pkg/Test.java:75: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
                         uiMethod(); // WARN12
                         ~~~~~~~~~~
-                src/test/pkg/Test.java:78: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:79: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             slowMethod(); // WARN13
                             ~~~~~~~~~~~~
-                src/test/pkg/Test.java:80: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:81: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             workerMethod(); // WARN14
                             ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:85: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:86: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                         new Application().invokeLater(this::slowMethod); // WARN15
                                                       ~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:87: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
+                src/test/pkg/Test.java:88: Error: Method uiMethod must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
                         new Application().runOnPooledThread(this::uiMethod); // WARN16
                                                             ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:92: Error: Method runWriteAction must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
+                src/test/pkg/Test.java:93: Error: Method runWriteAction must run on the UI thread, yet the currently inferred thread is a worker thread [WrongThread]
                         new Application().runWriteAction(() -> { // WARN17
                         ^
-                src/test/pkg/Test.java:94: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:95: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             slowMethod(); // WARN18
                             ~~~~~~~~~~~~
-                src/test/pkg/Test.java:95: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:96: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             workerMethod(); // WARN19
                             ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:103: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:104: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                         slowMethod(); // WARN20
                         ~~~~~~~~~~~~
-                src/test/pkg/Test.java:105: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:106: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                         workerMethod(); // WARN21
                         ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:109: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:110: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             slowMethod(); // WARN22
                             ~~~~~~~~~~~~
-                src/test/pkg/Test.java:110: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:111: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                             workerMethod(); // WARN23
                             ~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:116: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:117: Error: Method slowMethod is slow and thus should run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                         new Application().runWriteAction(this::slowMethod); // WARN24
                                                          ~~~~~~~~~~~~~~~~
-                src/test/pkg/Test.java:117: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
+                src/test/pkg/Test.java:118: Error: Method workerMethod is intended to run on a worker thread, yet the currently inferred thread is the UI thread [WrongThread]
                         new Application().runWriteAction(this::workerMethod); // WARN25
                                                          ~~~~~~~~~~~~~~~~~~
                 25 errors, 0 warnings

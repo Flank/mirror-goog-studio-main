@@ -403,34 +403,59 @@ class ThreadDetectorTest : AbstractCheckTest() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=223101
         lint().files(
             java(
-                "" +
-                        "package test.pkg;\n" +
-                        "\n" +
-                        "import android.app.Activity;\n" +
-                        "import android.os.Bundle;\n" +
-                        "import android.support.annotation.WorkerThread;\n" +
-                        "\n" +
-                        "public class LambdaThreadTest extends Activity {\n" +
-                        "    @WorkerThread\n" +
-                        "    static void doSomething() {}\n" +
-                        "\n" +
-                        "    static void doInBackground(Runnable r) {}\n" +
-                        "\n" +
-                        "    @Override protected void onCreate(Bundle savedInstanceState) {\n" +
-                        "        super.onCreate(savedInstanceState);\n" +
-                        "        doInBackground(new Runnable() {\n" +
-                        "            @Override public void run() {\n" +
-                        "                doSomething();\n" +
-                        "            }\n" +
-                        "        });\n" +
-                        "        doInBackground(() -> doSomething());\n" +
-                        "        doInBackground(LambdaThreadTest::doSomething);\n" +
-                        "    }\n" +
-                        "}\n"
+                // language=java
+                """package test.pkg;
+
+                import android.app.Activity;
+                import android.os.Bundle;
+                import android.support.annotation.WorkerThread;
+                import android.support.annotation.UiThread;
+
+                public class LambdaThreadTest extends Activity {
+                    @WorkerThread
+                    static void compute() {}
+
+                    static void doInBackground(@WorkerThread Runnable r) {}
+                    static void doInUiThread(@UiThread Runnable r) {}
+
+                    @Override protected void onCreate(Bundle savedInstanceState) {
+                        super.onCreate(savedInstanceState);
+
+                        doInBackground(new Runnable() {
+                            @Override public void run() {
+                                compute();
+                            }
+                        });
+                        doInBackground(() -> compute());
+                        doInBackground(LambdaThreadTest::compute);
+
+                        doInUiThread(new Runnable() {
+                            @Override public void run() {
+                                compute();
+                            }
+                        });
+                        doInUiThread(() -> compute());
+                        doInUiThread(LambdaThreadTest::compute);
+                    }
+                }
+                """.trimIndent()
             ),
             SUPPORT_ANNOTATIONS_CLASS_PATH,
             SUPPORT_ANNOTATIONS_JAR
-        ).run().expectClean()
+        ).run().expect(
+            """
+            src/test/pkg/LambdaThreadTest.java:28: Error: Method compute must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
+                                            compute();
+                                            ~~~~~~~~~
+            src/test/pkg/LambdaThreadTest.java:31: Error: Method compute must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
+                                    doInUiThread(() -> compute());
+                                                       ~~~~~~~~~
+            src/test/pkg/LambdaThreadTest.java:32: Error: Method compute must be called from the worker thread, currently inferred thread is UI thread [WrongThread]
+                                    doInUiThread(LambdaThreadTest::compute);
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~
+            3 errors, 0 warnings
+            """.trimIndent()
+        )
     }
 
     fun testThreadsInLambdas() {

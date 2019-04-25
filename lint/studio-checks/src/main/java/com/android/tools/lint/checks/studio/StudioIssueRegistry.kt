@@ -29,10 +29,10 @@ class StudioIssueRegistry : IssueRegistry() {
         ForkJoinPoolDetector.COMMON_FJ_POOL,
         ForkJoinPoolDetector.NEW_FJ_POOL,
         ImplicitExecutorDetector.ISSUE,
+        IntellijThreadDetector.ISSUE,
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
-        SwingWorkerDetector.ISSUE,
-        WrongThreadDetector.ISSUE
+        SwingWorkerDetector.ISSUE
     )
 
 // TODO other checks:
