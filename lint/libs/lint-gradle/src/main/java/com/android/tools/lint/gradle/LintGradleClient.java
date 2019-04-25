@@ -285,7 +285,7 @@ public class LintGradleClient extends LintCliClient {
 
         List<Warning> merged = Lists.newArrayListWithExpectedSize(2 * maxCount);
 
-        // Map fro issue to message to line number to column number to
+        // Map from issue to message to line number to column number to
         // file name to canonical warning
         Map<Issue, Map<String, Map<Integer, Map<Integer, Map<String, Warning>>>>> map =
                 Maps.newHashMapWithExpectedSize(2 * maxCount);
@@ -318,7 +318,19 @@ public class LintGradleClient extends LintCliClient {
                     fileMap = Maps.newHashMap();
                     columnMap.put(warning.offset, fileMap);
                 }
-                String fileName = warning.file != null ? warning.file.getName() : "<unknown>";
+
+                String fileName;
+                File file = warning.file;
+                if (file != null) {
+                    File parent = file.getParentFile();
+                    if (parent != null) {
+                        fileName = parent.getName() + "/" + file.getName();
+                    } else {
+                        fileName = file.getName();
+                    }
+                } else {
+                    fileName = "<unknown>";
+                }
                 Warning canonical = fileMap.get(fileName);
                 if (canonical == null) {
                     canonical = warning;

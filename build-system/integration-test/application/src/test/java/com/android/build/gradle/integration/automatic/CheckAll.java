@@ -125,7 +125,8 @@ public class CheckAll {
                     "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check anyway.
                     "simpleManifestMergingTask", // Not an Android project.
                     "externalBuildPlugin", // Not an Android Project.
-                    "lintKotlin", // deliberately contains lint errors
+                    "lintKotlin", // deliberately contains lint errors (missing baseline file)
+                    "lintBaseline", // deliberately contains lint errors
                     "lintStandalone", // Not an Android project
                     "lintStandaloneVital", // Not an Android project
                     "lintStandaloneCustomRules", // Not an Android project
