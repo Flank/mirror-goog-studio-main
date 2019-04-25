@@ -216,7 +216,6 @@ class PrivateApiDetectorTest : AbstractCheckTest() {
             0 errors, 1 warnings
             """
 
-
         lint().files(
             java("""
                 package test.pkg.myapplication;

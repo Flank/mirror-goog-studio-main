@@ -172,7 +172,13 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     // ---- Implements JavaPsiScanner ----
 
     override fun getApplicableMethodNames(): List<String>? =
-        listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_CONSTRUCTOR, GET_DECLARED_METHOD, GET_DECLARED_FIELD)
+        listOf(
+            FOR_NAME,
+            LOAD_CLASS,
+            GET_DECLARED_CONSTRUCTOR,
+            GET_DECLARED_METHOD,
+            GET_DECLARED_FIELD
+        )
 
     override fun getApplicableReferenceNames(): List<String>? = KOTLIN_REFLECTION_METHODS
 
@@ -199,7 +205,8 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
     override fun visitReference(
         context: JavaContext,
         reference: UReferenceExpression,
-        referenced: PsiElement) {
+        referenced: PsiElement
+    ) {
         // Kotlin reflection is harder to analyze statically, there are multiple ways of
         // finally matching a method from the collection of declared members, etc. We heuristically
         // try to match the strings we see with method and field names from the private API list.
@@ -365,19 +372,22 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
         val targetSdk = context.project.targetSdk
 
         fun fatal() {
-            context.report(BLOCKED_PRIVATE_API, call, context.getLocation(call),
+            context.report(
+                BLOCKED_PRIVATE_API, call, context.getLocation(call),
                 "Reflective access to $api is forbidden when targeting API $targetSdk and above"
             )
         }
 
         fun error() {
-            context.report(SOON_BLOCKED_PRIVATE_API, call, context.getLocation(call),
+            context.report(
+                SOON_BLOCKED_PRIVATE_API, call, context.getLocation(call),
                 "Reflective access to $api will throw an exception when targeting API $targetSdk and above"
             )
         }
 
         fun warning() {
-            context.report(DISCOURAGED_PRIVATE_API, call, context.getLocation(call),
+            context.report(
+                DISCOURAGED_PRIVATE_API, call, context.getLocation(call),
                 "Reflective access to $api, which is not part of the public SDK and therefore likely to change in future Android releases"
             )
         }
@@ -387,15 +397,19 @@ class PrivateApiDetector : Detector(), SourceCodeScanner {
             Restriction.GREY_MAX_O ->
                 if (targetSdk <= AndroidVersion.VersionCodes.O ||
                     VersionChecks.isWithinVersionCheckConditional(
-                        context.evaluator, call, AndroidVersion.VersionCodes.O, false)) {
+                        context.evaluator, call, AndroidVersion.VersionCodes.O, false
+                    )
+                ) {
                     warning()
                 } else {
                     error()
                 }
             Restriction.GREY_MAX_P ->
                 if (targetSdk <= AndroidVersion.VersionCodes.P ||
-                  VersionChecks.isWithinVersionCheckConditional(
-                      context.evaluator, call, AndroidVersion.VersionCodes.P, false)) {
+                    VersionChecks.isWithinVersionCheckConditional(
+                        context.evaluator, call, AndroidVersion.VersionCodes.P, false
+                    )
+                ) {
                     warning()
                 } else {
                     error()

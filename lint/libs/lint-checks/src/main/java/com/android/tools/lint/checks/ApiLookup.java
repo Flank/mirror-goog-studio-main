@@ -283,7 +283,6 @@ public class ApiLookup extends ApiDatabase {
         }
     }
 
-
     /**
      * Returns the API version required by the given class reference, or -1 if this is not a known
      * API class. Note that it may return -1 for classes introduced in version 1; internally the

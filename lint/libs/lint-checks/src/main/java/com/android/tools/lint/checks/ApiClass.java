@@ -588,7 +588,6 @@ public final class ApiClass extends ApiClassBase {
         }
     }
 
-
     /* This code can be used to scan through all the fields and look for fields
        that have moved to a higher class:
             Field android/view/MotionEvent#CREATOR has api=1 but parent android/view/InputEvent provides it as 9

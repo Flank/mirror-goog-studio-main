@@ -93,7 +93,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         // want duplicate warnings.
         if (LintClient.isStudio) return
         if (method.parameterList.parametersCount != 0) return
-        reportToUpperLoweCase(context,method,node)
+        reportToUpperLoweCase(context, method, node)
     }
 
     private fun checkStringsKtToUpperLowerCase(
@@ -102,7 +102,7 @@ class LocaleDetector : Detector(), SourceCodeScanner {
         node: UCallExpression
     ) {
         if (method.parameterList.parametersCount > 1) return
-        reportToUpperLoweCase(context,method,node)
+        reportToUpperLoweCase(context, method, node)
     }
 
     private fun reportToUpperLoweCase(

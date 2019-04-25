@@ -52,7 +52,7 @@ class PrivateApiLookup private constructor(
         return Restriction.UNKNOWN
     }
 
-    private fun findMember(classNumber:Int, name:String, desc:String?): Int {
+    private fun findMember(classNumber: Int, name: String, desc: String?): Int {
         var curr = seekClassData(classNumber)
 
         // 3 bytes for first offset
@@ -113,11 +113,9 @@ class PrivateApiLookup private constructor(
 
             if (compare < 0) {
                 low = middle + 1
-            }
-            else if (compare > 0) {
+            } else if (compare > 0) {
                 high = middle
-            }
-            else {
+            } else {
                 assert(false) // compare == 0 already handled above
                 return -1
             }
