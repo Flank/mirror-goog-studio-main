@@ -25,7 +25,6 @@ import com.android.ddmlib.Log.ILogOutput;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.RawImage;
 import com.android.ddmlib.TimeoutException;
-import java.awt.color.ICC_Profile;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
@@ -204,6 +203,16 @@ public class Screenshot {
         try {
             AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(
                     adbLocation, true /* forceNewBridge */);
+
+            if (bridge == null) {
+                printAndExit(
+                        "Couldn't start using adb from: "
+                                + adbLocation
+                                + ". Verify if it's version is at least "
+                                + AndroidDebugBridge.MIN_ADB_VERSION
+                                + ".",
+                        true /* terminate */);
+            }
 
             // we can't just ask for the device list right away, as the internal thread getting
             // them from ADB may not be done getting the first list.

@@ -60,7 +60,7 @@ public class AndroidDebugBridge {
      * Minimum and maximum version of adb supported. This correspond to
      * ADB_SERVER_VERSION found in //device/tools/adb/adb.h
      */
-    private static final AdbVersion MIN_ADB_VERSION = AdbVersion.parseFrom("1.0.20");
+    public static final AdbVersion MIN_ADB_VERSION = AdbVersion.parseFrom("1.0.20");
 
     private static final String ADB = "adb"; //$NON-NLS-1$
     private static final String DDMS = "ddms"; //$NON-NLS-1$
