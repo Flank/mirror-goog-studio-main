@@ -311,7 +311,6 @@ coverage_report(
         "//tools/adt/idea/android:intellij.android.core",
         "//tools/adt/idea/android:intellij.android.core.tests",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.extensions",
-        "//tools/adt/idea/android-kotlin:intellij.android.kotlin.extensions.jps",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.idea",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.output.parser",
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests",
