@@ -14,43 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.AndroidDependenciesRenderer;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.google.common.collect.Ordering;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.internal.logging.text.StyledTextOutputFactory;
+import com.android.build.gradle.internal.AndroidDependenciesRenderer
+import com.android.build.gradle.internal.scope.VariantScope
+import java.io.IOException
+import java.util.HashSet
+import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.logging.text.StyledTextOutputFactory
 
-public class DependencyReportTask extends DefaultTask {
+open class DependencyReportTask : DefaultTask() {
 
-    private final AndroidDependenciesRenderer renderer = new AndroidDependenciesRenderer();
+    private val renderer = AndroidDependenciesRenderer()
 
-    private final Set<VariantScope> variants = new HashSet<>();
+    private val variants = HashSet<VariantScope>()
 
     @TaskAction
-    public void generate() throws IOException {
-        renderer.setOutput(getServices().get(StyledTextOutputFactory.class).create(getClass()));
-        List<VariantScope> sortedVariants =
-                Ordering.natural()
-                        .onResultOf(VariantScope::getFullVariantName)
-                        .sortedCopy(variants);
+    @Throws(IOException::class)
+    fun generate() {
+        renderer.setOutput(services.get(StyledTextOutputFactory::class.java).create(javaClass))
+        val sortedVariants = variants.sortedWith(compareBy { it.fullVariantName })
 
-        for (VariantScope variant : sortedVariants) {
-            renderer.startVariant(variant);
-            renderer.render(variant);
+        for (variant in sortedVariants) {
+            renderer.startVariant(variant)
+            renderer.render(variant)
         }
     }
 
-    /** Sets the variants to generate the report for. */
-    public void setVariants(@NonNull Collection<VariantScope> variantScopes) {
-        this.variants.addAll(variantScopes);
+    /** Sets the variants to generate the report for.  */
+    fun setVariants(variantScopes: Collection<VariantScope>) {
+        this.variants.addAll(variantScopes)
     }
 }
