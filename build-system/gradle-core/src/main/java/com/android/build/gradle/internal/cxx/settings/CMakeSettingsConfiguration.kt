@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.google.gson.annotations.JsonAdapter
-
 /**
  * A 'configurations' element from CMakeSettings.json.
  */
@@ -43,7 +41,7 @@ data class CMakeSettingsConfiguration(
      * The environments this configuration depends on.
      * Any custom environment can be used.
      */
-    val inheritEnvironments: List<EnvironmentName> = listOf(),
+    val inheritEnvironments: List<String> = listOf(),
     /**
      * The directory in which CMake generates build scripts for the chosen
      * generator. Supported macros include ${workspaceRoot},
@@ -63,6 +61,15 @@ data class CMakeSettingsConfiguration(
      * the cache.
      */
     val cmakeCommandArgs: String = "",
+    /**
+     * specifies the toolchain file. This is passed to CMake using -DCMAKE_TOOLCHAIN_FILE.
+     */
+    val cmakeToolchain: String = "",
+    /**
+     * specifies the full path to the CMake program executable, including the file name
+     * and extension.
+     */
+    val cmakeExecutable: String = "",
     /**
      * Native build switches passed to CMake after --build --.
      */

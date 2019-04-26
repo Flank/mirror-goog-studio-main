@@ -15,10 +15,12 @@
  */
 
 package com.android.build.gradle.internal.cxx.settings
+import com.google.gson.annotations.JsonAdapter
 
 /**
  * A 'environments' element from CMakeSettings.json.
  */
+@JsonAdapter(CMakeSettingsEnvironmentSerializer::class)
 data class CMakeSettingsEnvironment(
     /**
      * A way to categorize a list of “environment” groups. Allows it to be
@@ -26,13 +28,13 @@ data class CMakeSettingsEnvironment(
      * Example: ‘env’ which would be referenced later as ‘env.variablename’.
      * Default is ‘env’ if not specified.
      */
-    val namespace: NamespaceName = NamespaceName(""),
+    val namespace: String = "",
 
     /**
      * A unique identifier for this group of variables. Allows the group to be
      * inherited later in an 'inheritEnvironments' entry.
      */
-    val environment: EnvironmentName = EnvironmentName(""),
+    val environment: String = "",
 
     /**
      * The priority of these variables when evaluating them. Higher number
@@ -44,7 +46,7 @@ data class CMakeSettingsEnvironment(
      * A set of environments that are inherited by this group.
      * Any custom environment can be used.
      */
-    val inheritEnvironments: List<EnvironmentName> = listOf(),
+    val inheritEnvironments: List<String> = listOf(),
 
     /**
      * Environment properties.
