@@ -28,7 +28,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -171,10 +170,6 @@ public class BazelLintWrapper {
                     "Lint found new issues or the baseline was out of date. "
                             + "See "
                             + relativize(testXml));
-            System.out.print("\n==================== ");
-            System.out.println(
-                    "Original lint output (note that paths in the sandbox may no longer exist):");
-            System.out.println(baos.toString(StandardCharsets.UTF_8.name()));
             System.exit(1);
         }
     }
@@ -199,6 +194,20 @@ public class BazelLintWrapper {
             throw new RuntimeException(e);
         }
     }
+
+    private static final String BASELINE_MESSAGE =
+            "The baseline file contains issues which have "
+                    + "been fixed in the project. Please remove the fixed lint issues from the "
+                    + "lint_baseline.xml file in your module or regenerate it. Add the edited or "
+                    + "regenerated file to your CL and try again. See "
+                    + "tools/base/lint/studio-checks/README.md for more information.\n\n"
+                    + ""
+                    + "Do not add anything new to the baseline file; suppress new issues with "
+                    + "@SuppressWarnings in Java or @Suppress in Kotlin.\n\n"
+                    + ""
+                    + "If you want to regenerate the file, run `blaze test %1$s` and find the new file in %2$s. "
+                    + "You can also find the regenerated file in your presubmit results for the %1$s target, "
+                    + "under the Artifacts tab, in Archives/undeclared_outputs.zip";
 
     /**
      * Creates content of the JUnit-like XML report used by Bazel and return a boolean value
@@ -235,12 +244,10 @@ public class BazelLintWrapper {
                             newBaseline.toFile(), summary, Collections.emptyList());
                     explanations.put(
                             summary,
-                            "The baseline file contains issues which have been fixed in the project, "
-                                    + "please remove them or use the regenerated baseline. When running "
-                                    + "locally you can find in "
-                                    + relativize(outputDir.resolve("outputs.zip"))
-                                    + ", on CI you can download it from the Artifacts tab, under "
-                                    + "Archives/undeclared_outputs.zip.");
+                            String.format(
+                                    BASELINE_MESSAGE,
+                                    System.getenv("TEST_TARGET"),
+                                    relativize(outputDir.resolve("outputs.zip"))));
                     continue;
                 }
             }
