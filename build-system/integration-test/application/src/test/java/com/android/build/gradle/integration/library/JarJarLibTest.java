@@ -35,6 +35,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.truth.Truth8;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -155,10 +156,13 @@ public class JarJarLibTest {
         try {
             ZipEntry entry = zipFile.getEntry("com/android/tests/basic/Main.class");
             assertThat(entry).named("Main.class entry").isNotNull();
-            ClassReader classReader = new ClassReader(zipFile.getInputStream(entry));
+            ClassReader classReader;
+            try (InputStream zipEntry = zipFile.getInputStream(entry)) {
+                classReader = new ClassReader(zipEntry);
+            }
             ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM5);
             classReader.accept(mainTestClassNode, 0);
-
+            
             // Make sure bytecode got rewritten to point to renamed classes.
 
             // search for the onCrate method.
