@@ -29,6 +29,7 @@ import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -51,7 +52,7 @@ public class UninstallTask extends NonIncrementalTask {
     }
 
     @Override
-    protected void doTaskAction() throws DeviceException {
+    protected void doTaskAction() throws DeviceException, ExecutionException {
         final Logger logger = getLogger();
         final String applicationId = variant.getApplicationId();
 
@@ -61,27 +62,30 @@ public class UninstallTask extends NonIncrementalTask {
         final DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
 
-        deviceProvider.init();
+        deviceProvider.use(
+                () -> {
+                    final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
 
-        try {
-            final List<? extends DeviceConnector> devices = deviceProvider.getDevices();
+                    for (DeviceConnector device : devices) {
+                        device.uninstallPackage(applicationId, getTimeOutInMs(), iLogger);
+                        logger.lifecycle(
+                                "Uninstalling {} (from {}:{}) from device '{}' ({}).",
+                                applicationId,
+                                getProject().getName(),
+                                variant.getVariantConfiguration().getFullName(),
+                                device.getName(),
+                                device.getSerialNumber());
+                    }
 
-            for (DeviceConnector device : devices) {
-                device.uninstallPackage(applicationId, getTimeOutInMs(), iLogger);
-                logger.lifecycle(
-                        "Uninstalling {} (from {}:{}) from device '{}' ({}).",
-                        applicationId,
-                        getProject().getName(),
-                        variant.getVariantConfiguration().getFullName(),
-                        device.getName(),
-                        device.getSerialNumber());
-            }
+                    int n = devices.size();
+                    logger.quiet(
+                            "Uninstalled {} from {} device{}.",
+                            applicationId,
+                            n,
+                            n == 1 ? "" : "s");
 
-            int n = devices.size();
-            logger.quiet("Uninstalled {} from {} device{}.", applicationId, n, n == 1 ? "" : "s");
-        } finally {
-            deviceProvider.terminate();
-        }
+                    return null;
+                });
     }
 
     @InputFile

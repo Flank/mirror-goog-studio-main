@@ -52,7 +52,6 @@ import com.android.builder.testing.SimpleTestRunner;
 import com.android.builder.testing.TestRunner;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
-import com.android.builder.testing.api.TestException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.workers.ExecutorServiceAdapter;
 import com.android.utils.FileUtils;
@@ -67,6 +66,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -123,7 +123,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     private boolean codeCoverageEnabled;
     private TestOptions.Execution testExecution;
     private Configuration dependencies;
-    
+
     /**
      * The workers object is of type ExecutorServiceAdapter instead of WorkerExecutorFacade to
      * assert that the object returned is of type ExecutorServiceAdapter as Gradle workers can not
@@ -141,9 +141,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
     @Override
     protected void doTaskAction()
-            throws DeviceException, IOException, InterruptedException,
-                    TestRunner.NoAuthorizedDeviceFoundException, TestException,
-                    ParserConfigurationException, SAXException {
+            throws DeviceException, IOException, ParserConfigurationException, SAXException,
+                    ExecutionException {
         checkForNonApks(
                 buddyApks.getFiles(),
                 message -> {
@@ -172,36 +171,34 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
-            deviceProvider.init();
-
-            TestRunner testRunner =
-                    testRunnerFactory.build(getSplitSelectExec().get(), getProcessExecutor());
-
-            Collection<String> extraArgs =
-                    installOptions == null || installOptions.isEmpty()
-                            ? ImmutableList.of()
-                            : installOptions;
-            try {
-                success =
-                        testRunner.runTests(
-                                getProject().getName(),
-                                getFlavorName(),
-                                testData,
-                                buddyApks.getFiles(),
-                                deviceProvider.getDevices(),
-                                deviceProvider.getTimeoutInMs(),
-                                extraArgs,
-                                resultsOutDir,
-                                coverageOutDir,
-                                new LoggerWrapper(getLogger()));
-            } catch (Exception e) {
-                InstrumentationTestAnalytics.recordCrashedTestRun(
-                        dependencies, testExecution, codeCoverageEnabled);
-                throw e;
-            } finally {
-                deviceProvider.terminate();
-            }
-
+            success =
+                    deviceProvider.use(
+                            () -> {
+                                TestRunner testRunner =
+                                        testRunnerFactory.build(
+                                                getSplitSelectExec().get(), getProcessExecutor());
+                                Collection<String> extraArgs =
+                                        installOptions == null || installOptions.isEmpty()
+                                                ? ImmutableList.of()
+                                                : installOptions;
+                                try {
+                                    return testRunner.runTests(
+                                            getProject().getName(),
+                                            getFlavorName(),
+                                            testData,
+                                            buddyApks.getFiles(),
+                                            deviceProvider.getDevices(),
+                                            deviceProvider.getTimeoutInMs(),
+                                            extraArgs,
+                                            resultsOutDir,
+                                            coverageOutDir,
+                                            new LoggerWrapper(getLogger()));
+                                } catch (Exception e) {
+                                    InstrumentationTestAnalytics.recordCrashedTestRun(
+                                            dependencies, testExecution, codeCoverageEnabled);
+                                    throw e;
+                                }
+                            });
         }
 
         // run the report from the results.

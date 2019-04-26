@@ -30,6 +30,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.logging.Logger;
 
 /**
@@ -52,7 +53,7 @@ public class InstantAppProvisioner {
         this.logger = logger;
     }
 
-    void provisionDevices() throws ProvisionException, DeviceException {
+    void provisionDevices() throws ProvisionException, DeviceException, ExecutionException {
         ProvisionListener listener =
                 new ProvisionListener() {
                     @Override
@@ -85,23 +86,22 @@ public class InstantAppProvisioner {
                         ? new ProvisionRunner(instantAppSdk, listener)
                         : fakeProvisionRunner;
 
-        deviceProvider.init();
+        deviceProvider.use(
+                () -> {
+                    List<? extends DeviceConnector> devices = deviceProvider.getDevices();
+                    List<IDevice> iDevices = Lists.newArrayList();
+                    for (DeviceConnector device : devices) {
+                        if (device instanceof ConnectedDevice) {
+                            iDevices.add(((ConnectedDevice) device).getIDevice());
+                        }
+                    }
 
-        try {
-            List<? extends DeviceConnector> devices = deviceProvider.getDevices();
-            List<IDevice> iDevices = Lists.newArrayList();
-            for (DeviceConnector device : devices) {
-                if (device instanceof ConnectedDevice) {
-                    iDevices.add(((ConnectedDevice) device).getIDevice());
-                }
-            }
+                    for (IDevice device : iDevices) {
+                        provisionRunner.runProvision(device);
+                    }
 
-            for (IDevice device : iDevices) {
-                provisionRunner.runProvision(device);
-            }
-        } finally {
-            deviceProvider.terminate();
-        }
+                    return null;
+                });
     }
 
     @VisibleForTesting

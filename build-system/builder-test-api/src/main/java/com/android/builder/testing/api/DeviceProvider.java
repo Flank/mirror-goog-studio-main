@@ -19,6 +19,8 @@ package com.android.builder.testing.api;
 import com.android.annotations.NonNull;
 import com.google.common.annotations.Beta;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Provides a list of remote or local devices.
@@ -36,11 +38,34 @@ public abstract class DeviceProvider {
     public abstract String getName();
 
     /**
+     * Uses the device provider to run the given action. This method calls {@link #init()} before
+     * and {@link #terminate()} after executing the action.
+     *
+     * @param action the action to be executed
+     * @return the returned value after executing the action
+     * @throws DeviceException if initialization or termination fails
+     * @throws ExecutionException if the action fails
+     */
+    public final <V> V use(@NonNull Callable<V> action) throws DeviceException, ExecutionException {
+        init();
+        try {
+            try {
+                return action.call();
+            } catch (Exception e) {
+                throw new ExecutionException(e);
+            }
+        } finally {
+            terminate();
+        }
+    }
+
+    /**
      * Initializes the provider. This must be called before any other method (except {@link
      * #getName()}). Each successful call to {@link #init()} MUST be followed by a call to {@link
      * #terminate()}.
      *
      * @throws DeviceException if initialization fails.
+     * @see #use(Callable)
      */
     public abstract void init() throws DeviceException;
 
@@ -49,6 +74,7 @@ public abstract class DeviceProvider {
      * be followed by a call to {@link #terminate()}.
      *
      * @throws DeviceException if termination fails. Resources will still be cleaned up.
+     * @see #use(Callable)
      */
     public abstract void terminate() throws DeviceException;
 

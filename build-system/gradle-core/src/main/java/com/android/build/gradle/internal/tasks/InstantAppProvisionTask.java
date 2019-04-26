@@ -29,6 +29,7 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -47,7 +48,7 @@ public class InstantAppProvisionTask extends DefaultTask {
     private Provider<File> adbExecutableProvider;
 
     @TaskAction
-    public void provisionDevices() throws ProvisionException, DeviceException {
+    public void provisionDevices() throws ProvisionException, DeviceException, ExecutionException {
         if (instantAppSdk.get() == null) {
             throw new GradleException("No Instant App Sdk found.");
         }

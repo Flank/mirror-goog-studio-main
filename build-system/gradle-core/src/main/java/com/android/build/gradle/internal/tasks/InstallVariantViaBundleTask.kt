@@ -112,14 +112,12 @@ abstract class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: 
             val logger: Logger = Logging.getLogger(InstallVariantViaBundleTask::class.java)
             val iLogger = LoggerWrapper(logger)
             val deviceProvider = createDeviceProvider(iLogger)
-            deviceProvider.init()
 
-            var successfulInstallCount = 0
-            val devices = deviceProvider.devices
+            deviceProvider.use {
+                var successfulInstallCount = 0
+                val devices = deviceProvider.devices
 
-            val androidVersion = AndroidVersion(params.minSdkVersion, params.minApiCodeName)
-
-            try {
+                val androidVersion = AndroidVersion(params.minSdkVersion, params.minApiCodeName)
                 for (device in devices) {
                     if (!InstallUtils.checkDeviceApiLevel(
                             device, androidVersion, iLogger, params.projectName, params.variantName)
@@ -174,8 +172,6 @@ abstract class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: 
                         if (successfulInstallCount == 1) "device" else "devices"
                     )
                 }
-            } finally {
-                deviceProvider.terminate()
             }
         }
 

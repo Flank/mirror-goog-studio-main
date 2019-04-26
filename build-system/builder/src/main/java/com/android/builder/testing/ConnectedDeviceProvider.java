@@ -26,7 +26,9 @@ import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.Log;
 import com.android.utils.ILogger;
+import com.android.utils.concurrency.ReadWriteThreadLock;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -44,6 +46,11 @@ import java.util.function.Supplier;
  * are currently connected at the time {@link #init()} is called.
  */
 public class ConnectedDeviceProvider extends DeviceProvider {
+
+    /** A {@link ReadWriteThreadLock} used to provide synchronization across class loaders. */
+    @NonNull
+    private ReadWriteThreadLock.Lock sessionLock =
+            new ReadWriteThreadLock(DeviceProvider.class.toString()).writeLock();
 
     @NonNull private final Supplier<File> adbLocationSupplier;
 
@@ -96,21 +103,24 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
     @Override
     public void init() throws DeviceException {
-        // TODO: switch to devicelib
-        if (timeOut > 0) {
-            DdmPreferences.setTimeOut((int) timeOutUnit.toMillis(timeOut));
-        } else {
-            DdmPreferences.setTimeOut(Integer.MAX_VALUE);
-        }
+        // Use a lock to synchronize a device usage session which starts with a call to init() and
+        // ends with a call to terminate().
+        sessionLock.lock();
+
         logAdapter = new LogAdapter(iLogger);
         Log.addLogger(logAdapter);
         DdmPreferences.setLogLevel(Log.LogLevel.VERBOSE.getStringValue());
-        AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
 
         try {
+            // TODO: switch to devicelib
+            if (timeOut > 0) {
+                DdmPreferences.setTimeOut((int) timeOutUnit.toMillis(timeOut));
+            } else {
+                DdmPreferences.setTimeOut(Integer.MAX_VALUE);
+            }
 
+            AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
             File adbLocation = adbLocationSupplier.get();
-
             AndroidDebugBridge bridge =
                     AndroidDebugBridge.createBridge(
                             adbLocation.getAbsolutePath(), false /*forceNewBridge*/);
@@ -199,8 +209,10 @@ public class ConnectedDeviceProvider extends DeviceProvider {
             }
             // ensure device names are unique since many reports are keyed off of names.
             makeDeviceNamesUnique();
-        } finally {
-            terminate();
+        } catch (Throwable throwable) {
+            Log.removeLogger(logAdapter);
+            logAdapter = null;
+            throw throwable;
         }
     }
 
@@ -232,10 +244,13 @@ public class ConnectedDeviceProvider extends DeviceProvider {
     }
 
     @Override
-    public void terminate() throws DeviceException {
-        if (logAdapter != null) {
+    public void terminate() {
+        try {
+            Preconditions.checkNotNull(logAdapter, "logAdapter should not be null");
             Log.removeLogger(logAdapter);
             logAdapter = null;
+        } finally {
+            sessionLock.unlock();
         }
     }
 

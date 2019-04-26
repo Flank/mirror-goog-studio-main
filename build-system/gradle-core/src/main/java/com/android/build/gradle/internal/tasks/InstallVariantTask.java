@@ -45,6 +45,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.logging.Logger;
@@ -84,36 +85,36 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
     }
 
     @Override
-    protected void doTaskAction() throws DeviceException, ProcessException {
+    protected void doTaskAction() throws DeviceException, ExecutionException {
         final ILogger iLogger = new LoggerWrapper(getLogger());
         DeviceProvider deviceProvider =
                 new ConnectedDeviceProvider(adbExecutableProvider.get(), getTimeOutInMs(), iLogger);
-        deviceProvider.init();
+        deviceProvider.use(
+                () -> {
+                    BaseVariantData variantData = getVariantData();
+                    GradleVariantConfiguration variantConfig =
+                            variantData.getVariantConfiguration();
 
-        try {
-            BaseVariantData variantData = getVariantData();
-            GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+                    List<OutputFile> outputs =
+                            ImmutableList.copyOf(
+                                    ExistingBuildElements.from(
+                                            InternalArtifactType.APK, getApkDirectory()));
 
-            List<OutputFile> outputs =
-                    ImmutableList.copyOf(
-                            ExistingBuildElements.from(
-                                    InternalArtifactType.APK, getApkDirectory()));
+                    install(
+                            getProjectName(),
+                            variantConfig.getFullName(),
+                            deviceProvider,
+                            variantConfig.getMinSdkVersion(),
+                            getProcessExecutor(),
+                            getSplitSelectExe().getOrNull(),
+                            outputs,
+                            variantConfig.getSupportedAbis(),
+                            getInstallOptions(),
+                            getTimeOutInMs(),
+                            getLogger());
 
-            install(
-                    getProjectName(),
-                    variantConfig.getFullName(),
-                    deviceProvider,
-                    variantConfig.getMinSdkVersion(),
-                    getProcessExecutor(),
-                    getSplitSelectExe().getOrNull(),
-                    outputs,
-                    variantConfig.getSupportedAbis(),
-                    getInstallOptions(),
-                    getTimeOutInMs(),
-                    getLogger());
-        } finally {
-            deviceProvider.terminate();
-        }
+                    return null;
+                });
     }
 
     static void install(
