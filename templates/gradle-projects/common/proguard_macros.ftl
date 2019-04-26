@@ -17,11 +17,6 @@
            minifyEnabled false
            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
        }
-       <#if (isLibraryProject!false) >
-       defaultConfig {
-           consumerProguardFiles 'consumer-rules.pro'
-       }
-       </#if>
     }
 </#if>
 </#macro>
