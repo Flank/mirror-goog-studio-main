@@ -19,7 +19,9 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
@@ -29,12 +31,13 @@ import com.android.builder.core.DefaultApiVersion
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.model.ApiVersion
 import com.android.builder.model.ProductFlavor
+import com.android.utils.FileUtils
 import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Ordering
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -46,7 +49,6 @@ import org.mockito.MockitoAnnotations
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-import java.util.function.Supplier
 
 /** Tests for the [CompatibleScreensManifest] class  */
 class CompatibleScreensManifestTest {
@@ -102,7 +104,6 @@ class CompatibleScreensManifestTest {
         assertThat(task.name).isEqualTo("test")
         assertThat(task.minSdkVersion.get()).isEqualTo("21")
         assertThat(task.screenSizes).containsExactly("xxhpi", "xxxhdpi")
-        assertThat(task.splits).isEmpty()
         assertThat(task.outputFolder).isEqualTo(temporaryFolder.root)
     }
 
@@ -111,16 +112,19 @@ class CompatibleScreensManifestTest {
 
         val outputFactory = OutputFactory(PROJECT, variantConfiguration)
         val mainApk = outputFactory.addMainApk()
-        `when`(outputScope.apkDatas).thenReturn(ImmutableList.of(mainApk))
+        writeApkList(listOf(mainApk))
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
 
-        task.generate(mainApk)
-
-        assertThat(temporaryFolder.root.listFiles()).isEmpty()
+        task.taskAction()
+        val buildElements = ExistingBuildElements.from(
+            InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+            temporaryFolder.root
+        )
+        assertThat(buildElements).isEmpty()
     }
 
     @Test
@@ -136,14 +140,14 @@ class CompatibleScreensManifestTest {
                         )
                 )
         )
-        `when`(outputScope.apkDatas).thenReturn(ImmutableList.of(splitApk))
+        writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
-        task.generate(splitApk)
+        task.taskAction()
 
         val xml = Joiner.on("\n")
             .join(Files.readAllLines(
@@ -169,14 +173,14 @@ class CompatibleScreensManifestTest {
                         )
                 )
         )
-        `when`(outputScope.apkDatas).thenReturn(ImmutableList.of(splitApk))
+        writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { null }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
-        task.generate(splitApk)
+        task.taskAction()
 
         val xml = Joiner.on("\n")
             .join(
@@ -208,15 +212,14 @@ class CompatibleScreensManifestTest {
                         )
                 )
         )
-        `when`(outputScope.apkDatas).thenReturn(ImmutableList.of(xhdpiSplit, xxhdpiSplit))
+        writeApkList(listOf(xhdpiSplit, xxhdpiSplit))
 
         task.variantName = "variant"
         task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "23" }
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
 
-        task.generate(xhdpiSplit)
-        task.generate(xxhdpiSplit)
+        task.taskAction()
 
         var xml = Joiner.on("\n")
             .join(Files.readAllLines(
@@ -235,6 +238,12 @@ class CompatibleScreensManifestTest {
         assertThat(xml).contains("<compatible-screens>")
         assertThat(xml)
             .contains("<screen android:screenSize=\"xxhdpi\" android:screenDensity=\"480\" />")
+    }
+
+    private fun writeApkList(apkDataList: List<ApkData>) {
+        val apkList = temporaryFolder.newFile("apk_list.json")
+        FileUtils.writeToFile(apkList,ExistingBuildElements.persistApkList(apkDataList))
+        task.apkList.set(apkList)
     }
 
     companion object {

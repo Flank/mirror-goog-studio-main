@@ -149,7 +149,9 @@ class ExistingBuildElements {
                     OutputTypeTypeAdapter())
             val gson = gsonBuilder.create()
             val recordType = object : TypeToken<List<ApkData>>() {}.type
-            return gson.fromJson(FileReader(file), recordType)
+            return FileReader(file).use {
+                gson.fromJson(it, recordType)
+            }
         }
 
         @JvmStatic
@@ -212,6 +214,7 @@ class ExistingBuildElements {
             }
             out.name("fullName").value(value.fullName)
             out.name("baseName").value(value.baseName)
+            out.name("dirName").value(value.dirName)
             out.endObject()
         }
 
@@ -227,6 +230,7 @@ class ExistingBuildElements {
             var fullName: String? = null
             var baseName: String? = null
             var filterName: String? = null
+            var dirName: String? = null
 
             while (reader.hasNext()) {
                 when (reader.nextName()) {
@@ -239,6 +243,7 @@ class ExistingBuildElements {
                     "filterName" -> filterName = reader.nextString()
                     "baseName" -> baseName = reader.nextString()
                     "fullName" -> fullName = reader.nextString()
+                    "dirName" -> dirName = reader.nextString()
                 }
             }
             reader.endObject()
@@ -255,7 +260,8 @@ class ExistingBuildElements {
                     outputFile,
                     fullName ?: "",
                     baseName ?: "",
-                    enabled)
+                    enabled,
+                    dirName ?: "")
         }
 
         @Throws(IOException::class)

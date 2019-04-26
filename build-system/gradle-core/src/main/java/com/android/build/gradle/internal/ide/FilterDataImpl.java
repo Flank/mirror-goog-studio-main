@@ -21,21 +21,20 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.gradle.internal.scope.GradleAwareFilterData;
 import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Objects;
 
-/**
- * Implementation of {@link com.android.build.FilterData} interface
- */
+/** Implementation of {@link com.android.build.FilterData} interface */
 @Immutable
-public final class FilterDataImpl implements FilterData, Serializable {
+public final class FilterDataImpl implements GradleAwareFilterData, Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String filterType;
     private final String identifier;
 
-    public static OutputFile.FilterType getType(FilterData filter) {
+    public static OutputFile.FilterType getType(GradleAwareFilterData filter) {
         return VariantOutput.FilterType.valueOf(filter.getFilterType());
     }
 
@@ -60,7 +59,7 @@ public final class FilterDataImpl implements FilterData, Serializable {
         return filterType;
     }
 
-    public static FilterData build(final String filterType, final String identifier) {
+    public static GradleAwareFilterData build(final String filterType, final String identifier) {
         return new FilterDataImpl(filterType, identifier);
     }
 

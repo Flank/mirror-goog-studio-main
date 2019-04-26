@@ -25,6 +25,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
@@ -32,6 +33,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
+import org.gradle.api.tasks.Optional;
 
 /**
  * FIX ME : wrong name but convenient until I can clean up existing classes/namespace.
@@ -70,7 +75,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
             @NonNull OutputType outputType,
             @NonNull Collection<FilterData> filters,
             int versionCode) {
-        return of(outputType, filters, versionCode, null, null, null, "", "", true);
+        return of(outputType, filters, versionCode, null, null, null, "", "", true, "");
     }
 
     public static ApkData of(
@@ -82,7 +87,8 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
             @Nullable String outputFileName,
             @NonNull String fullName,
             @NonNull String baseName,
-            boolean enabled) {
+            boolean enabled,
+            @NonNull String dirName) {
         return new DefaultApkData(
                 outputType,
                 filters,
@@ -92,17 +98,29 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
                 outputFileName,
                 fullName,
                 baseName,
-                enabled);
+                enabled,
+                dirName);
+    }
+
+    @NonNull
+    @Nested
+    public Collection<GradleAwareFilterData> getFiltersForGradle() {
+        return getFilters()
+                .stream()
+                .map(it -> (GradleAwareFilterData) it)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @NonNull
     @Override
+    @Internal // represented by getFiltersForGradle
     public Collection<FilterData> getFilters() {
         return ImmutableList.of();
     }
 
     @NonNull
     @Override
+    @Input
     public Collection<String> getFilterTypes() {
         return getFilters().stream().map(FilterData::getFilterType).collect(Collectors.toList());
     }
@@ -129,12 +147,15 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     }
 
     @NonNull
+    @Input
     public abstract String getBaseName();
 
     @NonNull
+    @Input
     public abstract String getFullName();
 
     @NonNull
+    @Input
     public abstract OutputType getType();
 
     /**
@@ -144,6 +165,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
      * @return a directory name of null.
      */
     @NonNull
+    @Input
     public abstract String getDirName();
 
     public void setVersionCode(IntSupplier versionCode) {
@@ -159,16 +181,21 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     }
 
     @Override
+    @Input
     public int getVersionCode() {
         return versionCode.getAsInt();
     }
 
     @Nullable
+    @Input
+    @Optional
     public String getVersionName() {
         return versionName.get();
     }
 
     @Nullable
+    @Input
+    @Optional
     public String getOutputFileName() {
         return outputFileName;
     }
@@ -186,6 +213,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @NonNull
     @Override
+    @Internal
     public OutputFile getMainOutputFile() {
         throw new UnsupportedOperationException(
                 "getMainOutputFile is no longer supported.  Use getOutputFileName if you need to "
@@ -194,6 +222,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @NonNull
     @Override
+    @Internal
     public Collection<? extends OutputFile> getOutputs() {
         throw new UnsupportedOperationException(
                 "getOutputs is no longer supported.  Use getOutputFileName if you need to "
@@ -202,6 +231,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
 
     @NonNull
     @Override
+    @Input
     public String getOutputType() {
         return getType().name();
     }
@@ -224,6 +254,7 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
         enabled.set(false);
     }
 
+    @Input
     public boolean isEnabled() {
         return enabled.get();
     }
@@ -254,6 +285,8 @@ public abstract class ApkData implements VariantOutput, Comparable<ApkData>, Ser
     }
 
     @Nullable
+    @Optional
+    @Input
     public abstract String getFilterName();
 
 

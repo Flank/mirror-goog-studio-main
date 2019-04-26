@@ -21,6 +21,8 @@ import com.android.build.VariantOutput
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
@@ -31,11 +33,16 @@ import com.android.resources.Density
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
 import java.io.File
 import java.io.IOException
@@ -45,7 +52,7 @@ import java.io.IOException
  * density and the given list of screen sizes.
  */
 @CacheableTask
-open class CompatibleScreensManifest : NonIncrementalTask() {
+abstract class CompatibleScreensManifest : NonIncrementalTask() {
 
     @get:Input
     lateinit var screenSizes: Set<String>
@@ -55,12 +62,9 @@ open class CompatibleScreensManifest : NonIncrementalTask() {
     lateinit var outputFolder: File
         internal set
 
-    lateinit var outputScope: OutputScope
-        private set
-
-    @get:Input
-    val splits: List<ApkData>
-        get() = outputScope.apkDatas
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val apkList: RegularFileProperty
 
     @get:Input
     @get:Optional
@@ -69,17 +73,16 @@ open class CompatibleScreensManifest : NonIncrementalTask() {
     override fun doTaskAction() {
 
         BuildElements(
-                outputScope.apkDatas.mapNotNull { apkInfo ->
-                        val generatedManifest = generate(apkInfo)
-                        if (generatedManifest != null)
-                            BuildOutput(COMPATIBLE_SCREEN_MANIFEST, apkInfo, generatedManifest)
-                        else
-                            null }
-                        .toList())
-            .save(outputFolder)
+            ExistingBuildElements.loadApkList(apkList.get().asFile).mapNotNull {
+            val generatedManifest = generate(it)
+            if (generatedManifest != null)
+                BuildOutput(COMPATIBLE_SCREEN_MANIFEST, it, generatedManifest)
+            else
+                null
+        }.toList()).save(outputFolder)
     }
 
-    fun generate(apkData: ApkData): File? {
+    private fun generate(apkData: ApkData): File? {
         val densityFilter = apkData.getFilter(VariantOutput.FilterType.DENSITY)
                 ?: return null
 
@@ -150,9 +153,11 @@ open class CompatibleScreensManifest : NonIncrementalTask() {
         override fun configure(task: CompatibleScreensManifest) {
             super.configure(task)
 
-            task.outputScope = variantScope.outputScope
             task.screenSizes = screenSizes
             task.outputFolder = outputFolder
+
+            variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST,
+                task.apkList)
 
             val config = variantScope.variantConfiguration
             task.minSdkVersion = TaskInputHelper.memoizeToProvider(task.project) {

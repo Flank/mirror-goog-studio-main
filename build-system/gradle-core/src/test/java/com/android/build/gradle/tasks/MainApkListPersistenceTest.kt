@@ -95,7 +95,6 @@ open class MainApkListPersistenceTest {
 
         MainApkListPersistence.CreationAction(variantScope).configure(task)
 
-        assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
         assertThat(task.outputFile.get().asFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
         task.doTaskAction()
@@ -122,7 +121,6 @@ open class MainApkListPersistenceTest {
         Mockito.`when`(variantScope.outputScope).thenReturn(outputFactory.output)
 
         MainApkListPersistence.CreationAction(variantScope).configure(task)
-        assertThat(task.apkDataListJson).isEqualTo(ExistingBuildElements.persistApkList(outputFactory.output.apkDatas))
         assertThat(task.outputFile.get().asFile.absolutePath).startsWith(temporaryFolder.root.absolutePath)
 
         task.doTaskAction()

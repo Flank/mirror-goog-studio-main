@@ -28,7 +28,8 @@ data class DefaultApkData(
         private val _outputFileName: String?,
         private val _fullName: String = "",
         private val _baseName: String,
-        private val _enabled: Boolean) : ApkData() {
+        private val _enabled: Boolean,
+        private val _dirName: String = "") : ApkData() {
 
     override fun getFilter(filterType: VariantOutput.FilterType): FilterData? {
         for (filter in filters) {
@@ -49,5 +50,5 @@ data class DefaultApkData(
     override fun getBaseName(): String = _baseName
     override fun getType(): VariantOutput.OutputType = _type
     override fun getFilters(): MutableCollection<FilterData> = _filters
-    override fun getDirName(): String = ""
+    override fun getDirName(): String = _dirName
 }

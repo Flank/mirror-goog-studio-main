@@ -46,7 +46,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -118,7 +117,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
-    private OutputScope outputScope;
     private final DependencyResourcesComputer resourcesComputer = new DependencyResourcesComputer();
 
     // supplier to read the file above to get the feature name for the current project.
@@ -185,8 +183,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         List<File> navigationXmls =
                 resourcesComputer.getNavigationXmlsList(new LoggerWrapper(getLogger()));
         // FIX ME : multi threading.
-        // TODO : LOAD the APK_LIST FILE .....
-        for (ApkData apkData : outputScope.getApkDatas()) {
+        for (ApkData apkData : ExistingBuildElements.loadApkList(getApkList().get().getAsFile())) {
 
             compatibleScreenManifestForSplit = compatibleScreenManifests.element(apkData);
             File manifestOutputFile =
@@ -318,7 +315,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     protected void doIncrementalTaskAction(Map<File, ? extends FileStatus> changedInputs)
             throws IOException {
         Set<File> files = changedInputs.keySet();
-        if (hasManifestsOrApkLists(files) || hasNavigationXmls(files)) {
+        if (hasManifestsOrApkLists(files)
+                || hasNavigationXmls(files)
+                || files.contains(getApkList().get().getAsFile())) {
+
             doFullTaskAction();
         }
     }
@@ -347,25 +347,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public String getPackageOverride() {
         return variantConfiguration.getIdOverride();
-    }
-
-    @Input
-    public List<Integer> getVersionCodes() {
-        return outputScope
-                .getApkDatas()
-                .stream()
-                .map(ApkData::getVersionCode)
-                .collect(Collectors.toList());
-    }
-
-    @Input
-    @Optional
-    public List<String> getVersionNames() {
-        return outputScope
-                .getApkDatas()
-                .stream()
-                .map(ApkData::getVersionName)
-                .collect(Collectors.toList());
     }
 
     @Optional
@@ -714,8 +695,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             GlobalScope globalScope = variantScope.getGlobalScope();
 
             VariantType variantType = variantScope.getType();
-
-            task.outputScope = variantData.getOutputScope();
 
             task.setVariantConfiguration(config);
 
