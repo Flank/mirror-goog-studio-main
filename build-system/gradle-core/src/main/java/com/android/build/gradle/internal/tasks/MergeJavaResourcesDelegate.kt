@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.Scope
@@ -25,7 +24,6 @@ import com.android.build.gradle.internal.packaging.PackagingFileAction
 import com.android.build.gradle.internal.packaging.ParsedPackagingOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
-import com.android.build.gradle.internal.tasks.MergeJavaResourceTask
 import com.android.builder.merge.DelegateIncrementalFileMergerOutput
 import com.android.builder.merge.FilterIncrementalFileMergerInput
 import com.android.builder.merge.IncrementalFileMerger
@@ -47,7 +45,6 @@ import java.util.function.Predicate
 import java.util.regex.Pattern
 
 private val JAR_ABI_PATTERN = Pattern.compile("lib/([^/]+)/[^/]+")
-private val ABI_FILENAME_PATTERN = Pattern.compile(".*\\.so")
 
 private fun containsHighPriorityScope(scopes: MutableSet<in Scope>): Boolean {
     return scopes.stream()
@@ -83,9 +80,7 @@ class MergeJavaResourcesDelegate(
                         // remove the beginning of the path (lib/<abi>/)
                         val filename = path.substring(5 + m.group(1).length)
                         // and check the filename
-                        return@Predicate ABI_FILENAME_PATTERN.matcher(filename).matches() ||
-                                SdkConstants.FN_GDBSERVER == filename ||
-                                SdkConstants.FN_GDB_SETUP == filename
+                        return@Predicate MergeNativeLibsTask.predicate.test(filename)
                     }
                     return@Predicate false
                 }
