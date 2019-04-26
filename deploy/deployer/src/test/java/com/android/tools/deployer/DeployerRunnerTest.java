@@ -43,6 +43,8 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,8 +94,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 runner.getMetrics(),
                 "DELTAINSTALL:DISABLED",
                 "INSTALL:OK",
-                "INSTALL::UPLOAD",
-                "INSTALL::INSTALL");
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
         assertFalse(device.hasFile("/data/local/tmp/sample.apk"));
     }
 
@@ -124,8 +126,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:API_NOT_SUPPORTED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
             assertHistory(
                     device,
                     "getprop",
@@ -136,44 +138,66 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:API_NOT_SUPPORTED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
             assertHistory(
                     device,
                     "getprop",
-                    "pm install-create -r -t -S 5047",
-                    "pm install-write -S 5047 1 0_sample -",
+                    "pm install-create -r -t -S ${size:com.example.helloworld}",
+                    "pm install-write -S ${size:com.example.helloworld} 1 0_sample -",
                     "pm install-commit 1");
         } else {
             assertMetrics(
                     runner.getMetrics(),
                     "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.helloworld",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.helloworld",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.helloworld",
                     "/system/bin/run-as com.example.helloworld id -u",
                     "/system/bin/cmd package path com.example.helloworld",
                     "/system/bin/pm path com.example.helloworld", // TODO: we should not always attempt both paths
-                    "cmd package install-create -r -t -S 5047",
-                    "cmd package install-write -S 5047 1 0_sample -",
+                    "cmd package install-create -r -t -S ${size:com.example.helloworld}",
+                    "cmd package install-write -S ${size:com.example.helloworld} 1 0_sample -",
                     "cmd package install-commit 1");
         }
     }
 
-    private static void assertHistory(FakeDevice device, String... expected) {
-        List<String> actual = device.getShell().getHistory();
-        assertArrayEquals(expected, actual.toArray(new String[] {}));
+    private static void assertHistory(FakeDevice device, String... expectedHistory)
+            throws IOException {
+        List<String> actualHistory = device.getShell().getHistory();
+        String actual = String.join("\n", actualHistory);
+        String expected = String.join("\n", expectedHistory);
+
+        // Apply the right version
+        expected = expected.replaceAll("\\$VERSION", Version.hash());
+
+        // Find the right sizes:
+        Pattern pattern = Pattern.compile("\\$\\{size:([^:}]*)(:([^:}]*))?}");
+        Matcher matcher = pattern.matcher(expected);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String pkg = matcher.group(1);
+            String file = matcher.group(3);
+            List<String> paths = device.getAppPaths(pkg);
+            int size = 0;
+            for (String path : paths) {
+                if (file == null || path.endsWith("/" + file)) {
+                    size += device.readFile(path).length;
+                }
+            }
+            matcher.appendReplacement(buffer, Integer.toString(size));
+        }
+        matcher.appendTail(buffer);
+        expected = buffer.toString();
+
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -197,8 +221,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 runner.getMetrics(),
                 "DELTAINSTALL:DISABLED",
                 "INSTALL:OK",
-                "INSTALL" + "::UPLOAD",
-                "INSTALL::INSTALL");
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
         device.getShell().clearHistory();
 
         args =
@@ -219,20 +243,16 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:API_NOT_SUPPORTED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         } else {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package path com.example.simpleapp",
@@ -262,8 +282,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 runner.getMetrics(),
                 "DELTAINSTALL:DISABLED",
                 "INSTALL:OK",
-                "INSTALL::UPLOAD",
-                "INSTALL::INSTALL");
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
         device.getShell().clearHistory();
 
         file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
@@ -285,30 +305,28 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:API_NOT_SUPPORTED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         } else {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package path com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " deltainstall",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
                     "/system/bin/cmd package install-create -t -r",
-                    "cmd package install-write -S 12789 2 base.apk",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
-            assertMetrics(runner.getMetrics(), "DELTAINSTALL:SUCCESS");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:SUCCESS");
         }
     }
 
@@ -333,8 +351,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 runner.getMetrics(),
                 "DELTAINSTALL:DISABLED",
                 "INSTALL:OK",
-                "INSTALL" + "::UPLOAD",
-                "INSTALL::INSTALL");
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
 
         device.getShell().clearHistory();
 
@@ -369,8 +387,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
             assertHistory(
                     device,
                     "getprop",
-                    "pm install-create -r -t -S 12789", // TODO: passing size on create?
-                    "pm install-write -S 12789 2 0_simple -",
+                    "pm install-create -r -t -S ${size:com.example.simpleapp}", // TODO: passing size on create?
+                    "pm install-write -S ${size:com.example.simpleapp} 2 0_simple -",
                     "pm install-commit 2");
             assertMetrics(
                     runner.getMetrics(),
@@ -380,25 +398,22 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
             assertHistory(
                     device,
                     "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "mkdir -p /data/local/tmp/.studio/bin",
                     "chmod +x /data/local/tmp/.studio/bin/installer",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " dump com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                     "/system/bin/run-as com.example.simpleapp id -u",
                     "id -u",
                     "/system/bin/cmd package path com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version="
-                            + Version.hash()
-                            + " deltainstall",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
                     "/system/bin/cmd package install-create -t -r",
-                    "cmd package install-write -S 12789 2 base.apk",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
                     "/system/bin/cmd package install-commit 2");
             assertMetrics(
-                    runner.getMetrics(), "DELTAINSTALL:ERROR.INSTALL_FAILED_VERSION_DOWNGRADE");
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:ERROR.INSTALL_FAILED_VERSION_DOWNGRADE");
         }
         Mockito.verify(service, Mockito.times(1)).prompt(ArgumentMatchers.anyString());
     }
@@ -435,8 +450,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:DISABLED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         }
     }
 
@@ -507,8 +522,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:DISABLED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -542,9 +557,9 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 assertHistory(
                         device,
                         "getprop",
-                        "pm install-create -r -t -S 21408",
-                        "pm install-write -S 12789 2 0_simple -",
-                        "pm install-write -S 8619 2 1_split_ver -",
+                        "pm install-create -r -t -S ${size:com.example.simpleapp}",
+                        "pm install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split_ver -",
                         "pm install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
@@ -554,25 +569,23 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         "/system/bin/cmd package path com.example.simpleapp",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " deltainstall",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
                         "/system/bin/cmd package install-create -t -r",
-                        "cmd package install-write -S 8619 2 split_split_01.apk",
-                        "cmd package install-write -S 12789 2 base.apk",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
                         "/system/bin/cmd package install-commit 2");
-                assertMetrics(runner.getMetrics(), "DELTAINSTALL:ERROR.INSTALL_FAILED_INVALID_APK");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:ERROR.INSTALL_FAILED_INVALID_APK");
             }
         }
     }
@@ -610,8 +623,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:DISABLED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -645,38 +658,36 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 assertHistory(
                         device,
                         "getprop",
-                        "pm install-create -r -t -S 21408",
-                        "pm install-write -S 12789 2 0_simple -",
-                        "pm install-write -S 8619 2 1_split_code -",
+                        "pm install-create -r -t -S ${size:com.example.simpleapp}",
+                        "pm install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split_code -",
                         "pm install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:API_NOT_SUPPORTED",
                         "INSTALL:OK",
-                        "INSTALL::UPLOAD",
-                        "INSTALL::INSTALL");
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             } else {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         "/system/bin/cmd package path com.example.simpleapp",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " deltainstall",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
                         "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
-                        "cmd package install-write -S 8619 2 split_split_01.apk",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 split_split_01.apk",
                         "/system/bin/cmd package install-commit 2");
-                assertMetrics(runner.getMetrics(), "DELTAINSTALL:SUCCESS");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:SUCCESS");
             }
         }
     }
@@ -714,8 +725,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:DISABLED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -750,43 +761,39 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 assertHistory(
                         device,
                         "getprop",
-                        "pm install-create -r -t -S 30027",
-                        "pm install-write -S 12789 2 0_simple -",
-                        "pm install-write -S 8619 2 1_split -",
-                        "pm install-write -S 8619 2 2_split_ -",
+                        "pm install-create -r -t -S ${size:com.example.simpleapp}",
+                        "pm install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
                         "pm install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:API_NOT_SUPPORTED",
                         "INSTALL:OK",
-                        "INSTALL::UPLOAD",
-                        "INSTALL::INSTALL");
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             } else {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         "/system/bin/cmd package path com.example.simpleapp",
-                        "cmd package install-create -r -t -S 30027",
-                        "cmd package install-write -S 12789 2 0_simple -",
-                        "cmd package install-write -S 8619 2 1_split -",
-                        "cmd package install-write -S 8619 2 2_split_ -",
+                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_02.apk} 2 2_split_ -",
                         "cmd package install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:CANNOT_GENERATE_DELTA",
                         "INSTALL:OK",
-                        "INSTALL::UPLOAD",
-                        "INSTALL::INSTALL");
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             }
         }
     }
@@ -826,8 +833,8 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                     runner.getMetrics(),
                     "DELTAINSTALL:DISABLED",
                     "INSTALL:OK",
-                    "INSTALL::UPLOAD",
-                    "INSTALL::INSTALL");
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
         }
 
         device.getShell().clearHistory();
@@ -860,41 +867,37 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                 assertHistory(
                         device,
                         "getprop",
-                        "pm install-create -r -t -S 21408",
-                        "pm install-write -S 12789 2 0_simple -",
-                        "pm install-write -S 8619 2 1_split -",
+                        "pm install-create -r -t -S ${size:com.example.simpleapp}",
+                        "pm install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
                         "pm install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:API_NOT_SUPPORTED",
                         "INSTALL:OK",
-                        "INSTALL::UPLOAD",
-                        "INSTALL::INSTALL");
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             } else {
                 assertHistory(
                         device,
                         "getprop",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "mkdir -p /data/local/tmp/.studio/bin",
                         "chmod +x /data/local/tmp/.studio/bin/installer",
-                        "/data/local/tmp/.studio/bin/installer -version="
-                                + Version.hash()
-                                + " dump com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
                         "/system/bin/run-as com.example.simpleapp id -u",
                         "id -u",
                         "/system/bin/cmd package path com.example.simpleapp",
-                        "cmd package install-create -r -t -S 21408",
-                        "cmd package install-write -S 12789 2 0_simple -",
-                        "cmd package install-write -S 8619 2 1_split -",
+                        "cmd package install-create -r -t -S ${size:com.example.simpleapp}",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple -",
+                        "cmd package install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
                         "cmd package install-commit 2");
                 assertMetrics(
                         runner.getMetrics(),
                         "DELTAINSTALL:CANNOT_GENERATE_DELTA",
                         "INSTALL:OK",
-                        "INSTALL::UPLOAD",
-                        "INSTALL::INSTALL");
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
             }
         }
     }

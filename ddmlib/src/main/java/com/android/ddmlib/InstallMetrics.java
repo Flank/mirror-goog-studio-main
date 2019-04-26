@@ -16,8 +16,6 @@
 package com.android.ddmlib;
 
 public class InstallMetrics {
-    public static final InstallMetrics EMPTY = new InstallMetrics(0, 0, 0, 0);
-
     private final long uploadStartNs;
     private final long uploadFinishNs;
     private final long installStartNs;

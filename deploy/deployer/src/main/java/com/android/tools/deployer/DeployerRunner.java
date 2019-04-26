@@ -94,12 +94,12 @@ public class DeployerRunner {
         Trace.end();
 
         // Run
+        metrics.clear();
         AdbClient adb = new AdbClient(device, logger);
         Installer installer =
-                new AdbInstaller(parameters.getInstallersPath(), adb, new ArrayList<>(), logger);
+                new AdbInstaller(parameters.getInstallersPath(), adb, metrics, logger);
         ExecutorService service = Executors.newFixedThreadPool(5);
         TaskRunner runner = new TaskRunner(service);
-        metrics.clear();
         Deployer deployer = new Deployer(adb, db, runner, installer, this.service, metrics, logger);
         try {
             if (parameters.getCommand() == DeployRunnerParameters.Command.INSTALL) {

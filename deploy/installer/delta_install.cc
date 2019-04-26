@@ -50,7 +50,7 @@ void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
   deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
   std::string data;
 
-  BeginMetric("DELTAINSTALL::PUSH");
+  BeginMetric("DELTAINSTALL_UPLOAD");
   if (!wrapper.Read(&data)) {
     ErrEvent("Unable to read data on stdin.");
     EndPhase();
@@ -70,7 +70,7 @@ void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
 }
 
 void DeltaInstallCommand::Run() {
-  Metric m("DELTAINSTALL::INSTALL");
+  Metric m("DELTAINSTALL_INSTALL");
 
   proto::DeltaInstallResponse* response = new proto::DeltaInstallResponse();
   workspace_.GetResponse().set_allocated_deltainstall_response(response);
@@ -216,7 +216,8 @@ void DeltaInstallCommand::StreamInstall() {
   if (!commit_result) {
     ErrEvent(output);
   }
-  // commit result cannot be reliable used to determine if the installation
+  // Since old versions of Android do not return a proper status code,
+  // commit_result cannot be reliable used to determine if the installation
   // succedded.
   response->set_status(proto::DeltaInstallResponse_Status_OK);
 }

@@ -38,7 +38,7 @@ public class AdbClient {
         this.logger = logger;
     }
 
-    enum InstallResult {
+    enum InstallStatus {
         OK,
         INSTALL_FAILED_VERSION_DOWNGRADE,
         UNKNOWN_ERROR,
@@ -57,22 +57,23 @@ public class AdbClient {
         INSTALL_FAILED_INVALID_APK,
         SKIPPED_INSTALL, // no changes.
         ;
+    }
 
-        private String reason = null;
-        private InstallMetrics metrics = InstallMetrics.EMPTY;
+    static class InstallResult {
+        public final InstallStatus status;
+        public final String reason;
+        public final InstallMetrics metrics;
 
-        public void setReason(String reason) {
+        InstallResult(InstallStatus status) {
+            this.status = status;
+            reason = null;
+            metrics = null;
+        }
+
+        InstallResult(InstallStatus status, String reason, InstallMetrics metrics) {
+            this.status = status;
             this.reason = reason;
-        }
-        public void setMetrics(InstallMetrics metrics) {
             this.metrics = metrics;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-        public InstallMetrics getMetrics() {
-            return metrics;
         }
     }
 
@@ -119,28 +120,23 @@ public class AdbClient {
     public InstallResult install(List<String> apks, List<String> options, boolean reinstall) {
         List<File> files = apks.stream().map(File::new).collect(Collectors.toList());
         try {
-            InstallMetrics metrics;
             if (device.getVersion().isGreaterOrEqualThan(AndroidVersion.VersionCodes.LOLLIPOP)) {
                 device.installPackages(files, reinstall, options, 5, TimeUnit.MINUTES);
-                metrics = device.getLastInstallMetrics();
+                return new InstallResult(InstallStatus.OK, null, device.getLastInstallMetrics());
             } else {
                 if (apks.size() != 1) {
-                    return InstallResult.MULTI_APKS_NO_SUPPORTED_BELOW21;
+                    return new InstallResult(InstallStatus.MULTI_APKS_NO_SUPPORTED_BELOW21);
                 } else {
                     device.installPackage(apks.get(0), reinstall, options.toArray(new String[0]));
-                    metrics = device.getLastInstallMetrics();
+                    return new InstallResult(
+                            InstallStatus.OK, null, device.getLastInstallMetrics());
                 }
             }
-
-            InstallResult result = InstallResult.OK;
-            result.setMetrics(metrics);
-            return result;
         } catch (InstallException e) {
-            InstallResult result = InstallResult.UNKNOWN_ERROR;
             String code = e.getErrorCode();
             if (code != null) {
                 try {
-                    result = ApkInstaller.parseInstallerResultErrorCode(code);
+                    return ApkInstaller.parseInstallerResultErrorCode(code);
                 } catch (IllegalArgumentException | NullPointerException ignored) {
                     logger.warning(
                             "Unrecognized Installation Failure: %s\n%s\n", code, e.getMessage());
@@ -148,13 +144,13 @@ public class AdbClient {
             } else {
                 Throwable cause = e.getCause();
                 if (cause instanceof ShellCommandUnresponsiveException) {
-                    result = InstallResult.SHELL_UNRESPONSIVE;
+                    return new InstallResult(InstallStatus.SHELL_UNRESPONSIVE);
                 } else {
-                    result.setReason(e.getMessage());
                     logger.warning("Installation Failure: %s\n", e.getMessage());
+                    return new InstallResult(InstallStatus.UNKNOWN_ERROR, e.getMessage(), null);
                 }
             }
-            return result;
+            return new InstallResult(InstallStatus.UNKNOWN_ERROR);
         }
     }
 
