@@ -17,10 +17,12 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.provider.Provider;
@@ -29,12 +31,13 @@ import org.gradle.api.tasks.Nested;
 /** Task wrapper around ExternalNativeJsonGenerator. */
 public class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
+    private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
 
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(evalIssueReporter)) {
             generator.get().build();
         }
     }
@@ -78,6 +81,7 @@ public class ExternalNativeBuildJsonTask extends NonIncrementalTask {
         public void configure(@NonNull ExternalNativeBuildJsonTask task) {
             super.configure(task);
             task.generator = generator;
+            task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
         }
     }
 }

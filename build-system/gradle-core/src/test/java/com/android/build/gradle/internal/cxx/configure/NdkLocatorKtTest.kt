@@ -20,6 +20,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
+import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel
 import com.android.build.gradle.internal.cxx.logging.LoggingRecord
 import org.gradle.api.GradleException
@@ -72,48 +73,69 @@ class NdkLocatorKtTest {
 
     @Test(expected = GradleException::class)
     fun `non-existing ndk dir without NDK version in DSL (bug 129789776)`() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = null,
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties ={ path -> when(path.path) {
-                    "/my/ndk/folder".toSlash() -> null
-                    "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> throw RuntimeException(path.path)
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = null,
+                    ndkDirProperty = "/my/ndk/folder".toSlash(),
+                    androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf() },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> null
+                            "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             Location specified by ndk.dir (/my/ndk/folder) did not contain a valid NDK and and couldn't be used
-            """.trimIndent().toSlash())
-            throw e
+            """.trimIndent().toSlash()
+                )
+                throw e
+            }
         }
     }
 
     @Test(expected = GradleException::class)
     fun `non-existing ndk dir without NDK version in DSL and with side-by-side versions available (bug 129789776)`() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = null,
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = "/my/sdk/folder".toSlashFile(),
-                getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456")  },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    "/my/sdk/folder/ndk/18.1.00000".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.00000"))
-                    else -> null
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = null,
+                    ndkDirProperty = "/my/ndk/folder".toSlash(),
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = "/my/sdk/folder".toSlashFile(),
+                    getNdkVersionedFolderNames = { listOf("18.1.00000", "18.1.23456") },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            "/my/sdk/folder/ndk/18.1.00000".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.00000"
+                                )
+                            )
+                            else -> null
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             Location specified by ndk.dir (/my/ndk/folder) did not contain a valid NDK and and couldn't be used
-            """.trimIndent().toSlash())
-            throw e
+            """.trimIndent().toSlash()
+                )
+                throw e
+            }
         }
     }
 
@@ -224,24 +246,33 @@ class NdkLocatorKtTest {
 
     @Test(expected = GradleException::class)
     fun nonExistingNdkDirWithNdkVersionInDsl() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "18.1",
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties ={ path -> when(path.path) {
-                    "/my/ndk/folder".toSlash() -> null
-                    "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> throw RuntimeException(path.path)
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "18.1",
+                    ndkDirProperty = "/my/ndk/folder".toSlash(),
+                    androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf() },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> null
+                            "/my/ndk/environment-folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             Location specified by ndk.dir (/my/ndk/folder) did not contain a valid NDK and so couldn't satisfy the requested NDK version 18.1
-            """.trimIndent().toSlash())
-            throw e
+            """.trimIndent().toSlash()
+                )
+                throw e
+            }
         }
     }
 
@@ -759,67 +790,93 @@ class NdkLocatorKtTest {
 
     @Test(expected = GradleException::class)
     fun ndkDirPropertyLocationExistsWithWrongDslVersion() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> throw RuntimeException(path.path)
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo(
-                "Requested NDK version 17.1.23456" +
-                        " did not match the version 18.1.23456 requested by ndk.dir at ${"/my/ndk/folder".toSlash()}")
-            throw e
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = "/my/ndk/folder".toSlash(),
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf() },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    "Requested NDK version 17.1.23456" +
+                            " did not match the version 18.1.23456 requested by ndk.dir at ${"/my/ndk/folder".toSlash()}"
+                )
+                throw e
+            }
         }
     }
 
     @Test(expected = GradleException::class)
     fun androidHomeLocationExistsWithWrongDslVersion() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = null,
-                androidNdkHomeEnvironmentVariable = "/my/ndk/folder".toSlash(),
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> throw RuntimeException(path.path)
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = null,
+                    androidNdkHomeEnvironmentVariable = "/my/ndk/folder".toSlash(),
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf() },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
-            """.trimIndent())
-            throw e
+            """.trimIndent()
+                )
+                throw e
+            }
         }
     }
 
     @Test(expected = GradleException::class)
     fun sdkFolderNdkBundleExistsWithWrongDslVersion() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = null,
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = "/my/sdk/folder".toSlashFile(),
-                getNdkVersionedFolderNames = { listOf() },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/sdk/folder/ndk-bundle".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> throw RuntimeException(path.path)
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = null,
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = "/my/sdk/folder".toSlashFile(),
+                    getNdkVersionedFolderNames = { listOf() },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/sdk/folder/ndk-bundle".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
-            """.trimIndent())
-            throw e
+            """.trimIndent()
+                )
+                throw e
+            }
         }
     }
 
@@ -894,94 +951,124 @@ class NdkLocatorKtTest {
 
     @Test(expected = GradleException::class)
     fun ndkDirPropertyLocationExistsWithWrongDslVersionWithVersionedNdk() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = "/my/ndk/folder".toSlash(),
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = null,
-                getNdkVersionedFolderNames = { listOf("18.1.23456") },
-                getNdkSourceProperties = { path ->
-                    when (path.path) {
-                        "/my/ndk/folder".toSlash() -> SdkSourceProperties(
-                            mapOf(
-                                SDK_PKG_REVISION.key to "18.1.23456"
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = "/my/ndk/folder".toSlash(),
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf("18.1.23456") },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
                             )
-                        )
-                        else -> throw RuntimeException(path.path)
-                    }
-                })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo(
-                "Requested NDK version 17.1.23456 " +
-                        "did not match the version 18.1.23456 requested by ndk.dir at ${"/my/ndk/folder".toSlash()}")
-            throw e
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    "Requested NDK version 17.1.23456 " +
+                            "did not match the version 18.1.23456 requested by ndk.dir at ${"/my/ndk/folder".toSlash()}"
+                )
+                throw e
+            }
         }
     }
 
     @Test(expected = GradleException::class)
     fun androidHomeLocationExistsWithWrongDslVersionWithVersionedNdk() {
-       try {
-           findNdkPathWithRecord(
-               ndkVersionFromDsl = "17.1.23456",
-               ndkDirProperty = null,
-               androidNdkHomeEnvironmentVariable = "/my/ndk/folder".toSlash(),
-               sdkFolder = null,
-               getNdkVersionedFolderNames = { listOf("18.1.23456")  },
-               getNdkSourceProperties = { path -> when(path.path) {
-                   "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf(
-                       SDK_PKG_REVISION.key to "18.1.23456"))
-                   else -> throw RuntimeException(path.path)
-               } })
-       } catch (e : GradleException) {
-           assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = null,
+                    androidNdkHomeEnvironmentVariable = "/my/ndk/folder".toSlash(),
+                    sdkFolder = null,
+                    getNdkVersionedFolderNames = { listOf("18.1.23456") },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/ndk/folder".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> throw RuntimeException(path.path)
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
-            """.trimIndent())
-           throw e
-       }
+            """.trimIndent()
+                )
+                throw e
+            }
+        }
     }
 
     @Test(expected = GradleException::class)
     fun sdkFolderNdkBundleExistsWithWrongDslVersionWithVersionedNdk() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.23456",
-                ndkDirProperty = null,
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = "/my/sdk/folder".toSlashFile(),
-                getNdkVersionedFolderNames = { listOf("18.1.23456")  },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> null
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.23456",
+                    ndkDirProperty = null,
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = "/my/sdk/folder".toSlashFile(),
+                    getNdkVersionedFolderNames = { listOf("18.1.23456") },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> null
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             No version of NDK matched the requested version 17.1.23456. Versions available locally: 18.1.23456
-            """.trimIndent())
-            throw e
+            """.trimIndent()
+                )
+                throw e
+            }
         }
     }
 
     @Test(expected = GradleException::class)
     fun unparseableNdkVersionFromDsl() {
-        try {
-            findNdkPathWithRecord(
-                ndkVersionFromDsl = "17.1.unparseable",
-                ndkDirProperty = null,
-                androidNdkHomeEnvironmentVariable = null,
-                sdkFolder = "/my/sdk/folder".toSlashFile(),
-                getNdkVersionedFolderNames = { listOf("18.1.23456")  },
-                getNdkSourceProperties = { path -> when(path.path) {
-                    "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(mapOf(
-                        SDK_PKG_REVISION.key to "18.1.23456"))
-                    else -> null
-                } })
-        } catch (e : GradleException) {
-            assertThat(e.message).isEqualTo("""
+        ErrorsAreFatalThreadLoggingEnvironment().use {
+            try {
+                findNdkPathWithRecord(
+                    ndkVersionFromDsl = "17.1.unparseable",
+                    ndkDirProperty = null,
+                    androidNdkHomeEnvironmentVariable = null,
+                    sdkFolder = "/my/sdk/folder".toSlashFile(),
+                    getNdkVersionedFolderNames = { listOf("18.1.23456") },
+                    getNdkSourceProperties = { path ->
+                        when (path.path) {
+                            "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(
+                                mapOf(
+                                    SDK_PKG_REVISION.key to "18.1.23456"
+                                )
+                            )
+                            else -> null
+                        }
+                    })
+            } catch (e: GradleException) {
+                assertThat(e.message).isEqualTo(
+                    """
             Requested NDK version '17.1.unparseable' could not be parsed"""
-                .trimIndent())
-            throw e
+                        .trimIndent()
+                )
+                throw e
+            }
         }
     }
 

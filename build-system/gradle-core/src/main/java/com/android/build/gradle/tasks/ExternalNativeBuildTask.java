@@ -35,13 +35,15 @@ import com.android.build.gradle.internal.cxx.attribution.UtilsKt;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.BuildCommandException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -74,6 +76,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class ExternalNativeBuildTask extends NonIncrementalTask {
 
+    private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
 
     // This placeholder is inserted into the buildTargetsCommand, and then later replaced by the
@@ -107,8 +110,8 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
 
     @Override
     protected void doTaskAction() throws BuildCommandException, IOException {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(evalIssueReporter)) {
             buildImpl();
         }
     }
@@ -527,6 +530,7 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
                     generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
 
             task.generator = generator;
+            task.evalIssueReporter = getVariantScope().getGlobalScope().getErrorHandler();
         }
     }
 }

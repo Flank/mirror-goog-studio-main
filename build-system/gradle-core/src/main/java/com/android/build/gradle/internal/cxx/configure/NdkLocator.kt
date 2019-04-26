@@ -28,13 +28,14 @@ import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_DIR_LOCA
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_VERSIONED_FOLDER_LOCATION
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
 
-import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.LoggingRecord
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment
 
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.builder.errors.EvalIssueReporter
 import com.android.repository.Revision
 import java.io.File
 import java.io.FileNotFoundException
@@ -305,21 +306,19 @@ fun findNdkPathWithRecord(
     getNdkVersionedFolderNames: (File) -> List<String>,
     getNdkSourceProperties: (File) -> SdkSourceProperties?
 ): NdkLocatorRecord {
-    ErrorsAreFatalThreadLoggingEnvironment().use {
-        PassThroughRecordingLoggingEnvironment().use { loggingEnvironment ->
-            val ndkFolder = findNdkPathImpl(
-                ndkDirProperty,
-                androidNdkHomeEnvironmentVariable,
-                sdkFolder,
-                ndkVersionFromDsl,
-                getNdkVersionedFolderNames,
-                getNdkSourceProperties
-            )
-            return NdkLocatorRecord(
-                ndkFolder = ndkFolder,
-                messages = loggingEnvironment.record
-            )
-        }
+    PassThroughRecordingLoggingEnvironment().use { loggingEnvironment ->
+        val ndkFolder = findNdkPathImpl(
+            ndkDirProperty,
+            androidNdkHomeEnvironmentVariable,
+            sdkFolder,
+            ndkVersionFromDsl,
+            getNdkVersionedFolderNames,
+            getNdkSourceProperties
+        )
+        return NdkLocatorRecord(
+            ndkFolder = ndkFolder,
+            messages = loggingEnvironment.record
+        )
     }
 }
 
@@ -397,18 +396,21 @@ data class NdkLocatorRecord(
  * NDK so that the gradle Sync can continue.
  */
 fun findNdkPath(
+    evalIssueReporter : EvalIssueReporter,
     ndkVersionFromDsl: String?,
     projectDir: File
 ): NdkLocatorRecord {
-    val properties = gradleLocalProperties(projectDir)
-    val sdkLocation = SdkHandler.findSdkLocation(properties, projectDir)
-    val sdkPath = sdkLocation.first
-    return findNdkPathWithRecord(
-        ndkVersionFromDsl,
-        properties.getProperty(NDK_DIR_PROPERTY),
-        System.getenv("ANDROID_NDK_HOME"),
-        sdkPath,
-        ::getNdkVersionedFolders,
-        ::getNdkVersionInfo
-    )
+    IssueReporterLoggingEnvironment(evalIssueReporter).use {
+        val properties = gradleLocalProperties(projectDir)
+        val sdkLocation = SdkHandler.findSdkLocation(properties, projectDir)
+        val sdkPath = sdkLocation.first
+        return findNdkPathWithRecord(
+            ndkVersionFromDsl,
+            properties.getProperty(NDK_DIR_PROPERTY),
+            System.getenv("ANDROID_NDK_HOME"),
+            sdkPath,
+            ::getNdkVersionedFolders,
+            ::getNdkVersionInfo
+        )
+    }
 }

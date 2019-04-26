@@ -97,7 +97,7 @@ class CmakeExtensionsTest(
                 apply plugin: 'com.android.application'
                 android.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
                 android.externalNativeBuild.cmake.path "src/main/cpp/CMakeLists.txt"
-                android.defaultConfig.ndk.abiFilters "x86"
+                android.defaultConfig.ndk.abiFilters "x86_64"
                 """.trimIndent()
         )
         // any backslash in the path must be escaped.
@@ -144,7 +144,7 @@ class CmakeExtensionsTest(
     }
 
     private fun getAbiConfiguration() : CxxAbiModel {
-        val modelFile = join(project.testDir, ".cxx", "cmake", "debug", "x86", "build_model.json")
+        val modelFile = join(project.testDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
         return createCxxAbiModelFromJson(modelFile.readText())
     }
 
@@ -277,6 +277,8 @@ class CmakeExtensionsTest(
                 it.name.startsWith("_INCLUDED_TOOLCHAIN_FILE") -> false
                 it.name.startsWith("CMAKE_TOOLCHAIN_FILE") -> false
                 it.name.startsWith("ANDROID_GRADLE_BUILD") -> false
+                it.name.startsWith("CMAKE_INSTALL_PREFIX") -> false
+                it.name.startsWith("CMAKE_SYSTEM_PREFIX_PATH") -> false
                 it.name.endsWith("_FORCED") -> false
                 it.name.startsWith("CMAKE_MATCH_") -> false
                 it.name.startsWith("__") -> false

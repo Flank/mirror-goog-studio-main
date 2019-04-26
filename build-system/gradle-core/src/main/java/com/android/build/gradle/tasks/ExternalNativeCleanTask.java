@@ -25,11 +25,13 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -52,12 +54,13 @@ import org.gradle.api.provider.Provider;
  */
 public class ExternalNativeCleanTask extends NonIncrementalTask {
 
+    private EvalIssueReporter evalIssueReporter;
     @NonNull private Provider<ExternalNativeJsonGenerator> generator;
 
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(evalIssueReporter)) {
             infoln("starting clean");
             infoln("finding existing JSONs");
 
@@ -160,6 +163,7 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
         public void configure(@NonNull ExternalNativeCleanTask task) {
             task.setVariantName(variantScope.getFullVariantName());
             task.generator = generator;
+            task.evalIssueReporter = variantScope.getGlobalScope().getErrorHandler();
         }
     }
 

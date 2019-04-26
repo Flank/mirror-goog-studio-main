@@ -71,7 +71,7 @@ public class AbiPureSplits {
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
-        expected.add("x86");
+        expected.add("x86_64");
         expected.add("armeabi-v7a");
 
         List<? extends OutputFile> outputs = getOutputs(outputModel);
@@ -125,8 +125,8 @@ public class AbiPureSplits {
                 modifiedProject -> {
                     modifiedProject.replaceInFile(
                             "build.gradle",
-                            "include 'x86', 'armeabi-v7a'",
-                            "include 'x86', 'armeabi-v7a', 'x86_64'");
+                            "include 'x86_64', 'armeabi-v7a'",
+                            "include 'x86_64', 'armeabi-v7a', 'arm64-v8a'");
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 
@@ -173,7 +173,7 @@ public class AbiPureSplits {
                 project,
                 modifiedProject -> {
                     modifiedProject.replaceInFile(
-                            "build.gradle", "include 'x86', 'armeabi-v7a'", "include 'x86'");
+                            "build.gradle", "include 'x86_64', 'armeabi-v7a'", "include 'x86_64'");
                     ProjectBuildOutput incrementalModel =
                             project.executeAndReturnOutputModel("assembleDebug");
 

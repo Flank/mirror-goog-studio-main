@@ -16,14 +16,25 @@
 
 package com.android.build.gradle.internal.cxx.services
 
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.builder.errors.EvalIssueReporter
+
 
 /**
- * Create the default service registry.
+ * Private service key for [EvalIssueReporter].
  */
-fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
-    val registry = CxxServiceRegistryBuilder()
-    createProcessJunctionService(global, registry)
-    createEvalIssueReporterService(global, registry)
-    return registry.build()
+private val EVAL_ISSUE_REPORTER_SERVICE_KEY = object : CxxServiceKey<EvalIssueReporter> {
+    override val type = EvalIssueReporter::class.java
+}
+
+fun CxxModuleModel.evalIssueReporter() : EvalIssueReporter =
+    services[EVAL_ISSUE_REPORTER_SERVICE_KEY]
+
+internal fun createEvalIssueReporterService(
+    global: GlobalScope,
+    services: CxxServiceRegistryBuilder) {
+    services.registerFactory(EVAL_ISSUE_REPORTER_SERVICE_KEY) {
+        global.errorHandler
+    }
 }

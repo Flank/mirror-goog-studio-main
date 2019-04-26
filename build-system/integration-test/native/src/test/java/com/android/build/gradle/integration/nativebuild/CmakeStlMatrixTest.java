@@ -89,7 +89,7 @@ public class CmakeStlMatrixTest {
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\");\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86_64\");\n"
                         + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                         + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
                         + "                targets.addAll(\"hello-jni\")\n"
@@ -125,25 +125,25 @@ public class CmakeStlMatrixTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThatApk(apk).contains("lib/x86_64/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
 
-        lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
+        lib = ZipHelper.extractFile(apk, "lib/x86_64/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
     }
 
     @Test
     public void checkApkContentWithInjectedABI() throws IOException, InterruptedException {
         project.executor()
-                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86_64")
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThatApk(apk).contains("lib/x86_64/libhello-jni.so");
 
-        File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
+        File lib = ZipHelper.extractFile(apk, "lib/x86_64/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
     }
 
@@ -212,7 +212,7 @@ public class CmakeStlMatrixTest {
             allBuildOutputs.add(artifact.getOutputFile());
         }
 
-        // Change the build file to only have "x86"
+        // Change the build file to only have "x86_64"
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -223,7 +223,7 @@ public class CmakeStlMatrixTest {
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"
                         + "                abiFilters.clear();\n"
-                        + "                abiFilters.addAll(\"x86\");\n"
+                        + "                abiFilters.addAll(\"x86_64\");\n"
                         + "              }\n"
                         + "          }\n"
                         + "        }\n"
@@ -231,7 +231,7 @@ public class CmakeStlMatrixTest {
                         + "\n");
         project.execute("clean");
 
-        // All build outputs should no longer exist, even the non-x86 outputs
+        // All build outputs should no longer exist, even the non-x86_64 outputs
         for (File output : allBuildOutputs) {
             assertThat(output).doesNotExist();
         }

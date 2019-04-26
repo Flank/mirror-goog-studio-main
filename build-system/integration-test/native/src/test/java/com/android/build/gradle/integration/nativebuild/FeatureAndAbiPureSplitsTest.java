@@ -94,10 +94,10 @@ public class FeatureAndAbiPureSplitsTest {
         List<String> expectedFileNames =
                 ImmutableList.of(
                         "baseFeature-debug.apk",
-                        "baseFeature-x86-debug.apk",
+                        "baseFeature-x86_64-debug.apk",
                         "baseFeature-armeabi-v7a-debug.apk",
                         "feature_a-debug.apk",
-                        "feature_a-x86-debug.apk",
+                        "feature_a-x86_64-debug.apk",
                         "feature_a-armeabi-v7a-debug.apk",
                         "feature_a-hdpi-debug.apk");
         List<String> foundFileNames = new ArrayList<>();
@@ -107,9 +107,9 @@ public class FeatureAndAbiPureSplitsTest {
 
         List<String> expectedSplitNames =
                 ImmutableList.of(
-                        "config.x86",
+                        "config.x86_64",
                         "config.armeabi_v7a",
-                        "feature_a.config.x86",
+                        "feature_a.config.x86_64",
                         "feature_a.config.armeabi_v7a",
                         "feature_a.config.hdpi");
         List<String> foundSplitNames = new ArrayList<>();
@@ -198,10 +198,10 @@ public class FeatureAndAbiPureSplitsTest {
         List<String> expectedFileNames =
                 ImmutableList.of(
                         "baseFeature-release.apk",
-                        "baseFeature-x86-release.apk",
+                        "baseFeature-x86_64-release.apk",
                         "baseFeature-armeabi-v7a-release.apk",
                         "feature_a-release.apk",
-                        "feature_a-x86-release.apk",
+                        "feature_a-x86_64-release.apk",
                         "feature_a-armeabi-v7a-release.apk",
                         "feature_a-hdpi-release.apk");
         List<String> foundFileNames = new ArrayList<>();

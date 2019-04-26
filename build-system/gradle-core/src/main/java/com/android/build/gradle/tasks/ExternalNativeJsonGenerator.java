@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelK
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.model.JsonUtilKt.writeJsonToFile;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerCompleteModelAbi;
+import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -34,8 +35,9 @@ import com.android.build.gradle.internal.cxx.configure.JsonGenerationInvalidatio
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
-import com.android.build.gradle.internal.cxx.logging.ErrorsAreFatalThreadLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
@@ -151,8 +153,9 @@ public abstract class ExternalNativeJsonGenerator {
     @Nullable
     private Void buildForOneConfigurationConvertExceptions(
             boolean forceJsonGeneration, CxxAbiModel abi) {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(
+                        evalIssueReporter(abi.getVariant().getModule()))) {
             try {
                 buildForOneConfiguration(forceJsonGeneration, abi);
             } catch (@NonNull IOException | GradleException e) {
@@ -420,8 +423,8 @@ public abstract class ExternalNativeJsonGenerator {
     public static ExternalNativeJsonGenerator create(
             @NonNull CxxModuleModel module,
             @NonNull VariantScope scope) {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(evalIssueReporter(module))) {
             return createImpl(module, scope);
         }
     }
@@ -482,8 +485,8 @@ public abstract class ExternalNativeJsonGenerator {
 
     public void forEachNativeBuildConfiguration(@NonNull Consumer<JsonReader> callback)
             throws IOException {
-        try (ErrorsAreFatalThreadLoggingEnvironment ignore =
-                new ErrorsAreFatalThreadLoggingEnvironment()) {
+        try (ThreadLoggingEnvironment ignore =
+                new IssueReporterLoggingEnvironment(evalIssueReporter(variant.getModule()))) {
             List<File> files = getNativeBuildConfigurationsJsons();
             infoln("streaming %s JSON files", files.size());
             for (File file : getNativeBuildConfigurationsJsons()) {

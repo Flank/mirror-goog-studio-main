@@ -23,6 +23,7 @@ import com.android.SdkConstants
 import com.android.build.gradle.internal.SdkHandler
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorRecord
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
+import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.sdk.InstallFailedException
 import com.android.builder.sdk.LicenceNotAcceptedException
 import com.android.builder.sdk.SdkLibData
@@ -90,6 +91,7 @@ sealed class NdkInstallStatus {
  * Handles NDK related information.
  */
 class NdkHandler(
+    private val evalIssueReporter: EvalIssueReporter,
     private val enableSideBySideNdk: Boolean,
     private val ndkVersionFromDsl: String?,
     private val compileSdkVersion: String,
@@ -100,7 +102,8 @@ class NdkHandler(
 
     private fun findNdk(): File? {
         return if (enableSideBySideNdk) {
-            val record = findNdkPath(ndkVersionFromDsl, projectDir)
+            val record = findNdkPath(evalIssueReporter, ndkVersionFromDsl,
+                projectDir)
             sideBySideLocatorRecord = record
             record.ndkFolder
         } else {

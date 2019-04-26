@@ -56,7 +56,7 @@ public class NdkBuildSplitTest {
                 "\n"
                         + "apply plugin: 'com.android.application'\n"
                         + "import com.android.build.OutputFile;\n"
-                        + "ext.versionCodes = [\"armeabi-v7a\":1, \"mips\":2, \"x86\":3, \"mips64\":4, \"all\":0]\n"
+                        + "ext.versionCodes = [\"armeabi-v7a\":1, \"mips\":2, \"x86_64\":3, \"mips64\":4, \"all\":0]\n"
                         + "android {\n"
                         + "        compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
@@ -95,7 +95,7 @@ public class NdkBuildSplitTest {
                         + "        abi {\n"
                         + "            enable = true\n"
                         + "            universalApk = true\n"
-                        + "            exclude \"x86_64\", \"arm64-v8a\"\n"
+                        + "            exclude \"x86\", \"arm64-v8a\"\n"
                         + "        }\n"
                         + "    }\n"
                         + "\n"

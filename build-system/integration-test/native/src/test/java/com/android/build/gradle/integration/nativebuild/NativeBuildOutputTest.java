@@ -341,7 +341,7 @@ public class NativeBuildOutputTest {
                 project.getBuildFile(),
                 "android {\n"
                         + "    externalNativeBuild.cmake.path 'CMakeLists.txt'\n"
-                        + "    defaultConfig.externalNativeBuild.cmake.abiFilters 'x86'\n"
+                        + "    defaultConfig.externalNativeBuild.cmake.abiFilters 'x86_64'\n"
                         + "}");
 
         // CMakeLists.txt that references an external library. The library doesn't exist but that

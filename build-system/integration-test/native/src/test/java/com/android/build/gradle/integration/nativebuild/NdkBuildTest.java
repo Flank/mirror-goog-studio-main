@@ -70,7 +70,7 @@ public class NdkBuildTest {
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              ndkBuild {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\")\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"arm64-v8a\")\n"
                         + "              }\n"
                         + "          }\n"
                         + "        }\n"
@@ -104,30 +104,30 @@ public class NdkBuildTest {
         Apk apk = project.getApk("debug");
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        assertThatApk(apk).contains("lib/arm64-v8a/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isNotStripped();
 
-        lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
+        lib = ZipHelper.extractFile(apk, "lib/arm64-v8a/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
     }
 
     @Test
     public void injectedAbi() throws IOException, InterruptedException {
-        // Pass invalid-abi, x86 and armeabi. The first (invalid-abi) should be ignored because
-        // it is not valid for the build . The second (x86) should be the one chosen to build.
-        // Finally, armeabi is valid but it will be ignored because x86 is "preferred".
+        // Pass invalid-abi, arm64-v8a and armeabi. The first (invalid-abi) should be ignored because
+        // it is not valid for the build . The second (arm64-v8a) should be the one chosen to build.
+        // Finally, armeabi is valid but it will be ignored because arm64-v8a is "preferred".
         project.executor()
-                .with(StringOption.IDE_BUILD_TARGET_ABI, "invalid-abi,x86,armeabi")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "invalid-abi,arm64-v8a,armeabi")
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
         assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
-        assertThatApk(apk).doesNotContain("lib/x86_64/libhello-jni.so");
+        assertThatApk(apk).contains("lib/arm64-v8a/libhello-jni.so");
+        assertThatApk(apk).doesNotContain("lib/arm64-v8a_64/libhello-jni.so");
 
-        File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
+        File lib = ZipHelper.extractFile(apk, "lib/arm64-v8a/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
 
         assertThat(project.file("build/intermediates/merged_manifests/debug/AndroidManifest.xml"))
@@ -188,7 +188,7 @@ public class NdkBuildTest {
             allBuildOutputs.add(artifact.getOutputFile());
         }
 
-        // Change the build file to only have "x86"
+        // Change the build file to only have "arm64-v8a"
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -199,7 +199,7 @@ public class NdkBuildTest {
                         + "          externalNativeBuild {\n"
                         + "              ndkBuild {\n"
                         + "                abiFilters.clear();\n"
-                        + "                abiFilters.addAll(\"x86\")\n"
+                        + "                abiFilters.addAll(\"arm64-v8a\")\n"
                         + "              }\n"
                         + "          }\n"
                         + "        }\n"
@@ -207,7 +207,7 @@ public class NdkBuildTest {
                         + "\n");
         project.execute("clean");
 
-        // All build outputs should no longer exist, even the non-x86 outputs
+        // All build outputs should no longer exist, even the non-arm64-v8a outputs
         for (File output : allBuildOutputs) {
             assertThat(output).doesNotExist();
         }
