@@ -90,17 +90,6 @@ public abstract class ExternalNativeJsonGenerator {
         this.variant = variant;
         this.abis = abis;
         this.stats = stats;
-
-        // Check some basic configuration information at sync time.
-        if (!getNdkFolder().isDirectory()) {
-            errorln(
-                    "NDK not configured (%s).\n"
-                            + "Download the NDK from http://developer.android.com/tools/sdk/ndk/."
-                            + "Then add ndk.dir=path/to/ndk in local.properties.\n"
-                            + "(On Windows, make sure you escape backslashes, "
-                            + "e.g. C:\\\\ndk rather than C:\\ndk)",
-                    getNdkFolder());
-        }
     }
 
     /**

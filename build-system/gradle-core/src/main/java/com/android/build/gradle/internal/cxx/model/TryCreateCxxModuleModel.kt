@@ -98,15 +98,16 @@ fun tryCreateCxxModuleModel(global : GlobalScope, cmakeLocator : CmakeLocator) :
         override val services by lazy { createDefaultServiceRegistry(global) }
         private val ndkHandler by lazy {
             val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
+            val locatorRecord = join(cxxFolder, "ndk_locator_record.json")
             try {
                 if (!ndkHandler.ndkPlatform.isConfigured) {
                     global.sdkComponents.installNdk(ndkHandler)
                     if (!ndkHandler.ndkPlatform.isConfigured) {
-                        throw InvalidUserDataException("NDK not configured. Download it with SDK manager.")
+                        throw InvalidUserDataException("NDK not configured. Download it with SDK manager. Log: $locatorRecord")
                     }
                 }
             } finally {
-                ndkHandler.writeNdkLocatorRecord(join(cxxFolder, "ndk_locator_record.json"))
+                ndkHandler.writeNdkLocatorRecord(locatorRecord)
             }
             ndkHandler
         }

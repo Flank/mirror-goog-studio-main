@@ -27,6 +27,7 @@ import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.truth.ScannerSubjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.cxx.configure.NdkLocatorKt;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
@@ -106,7 +107,8 @@ public final class GradleTestProject implements TestRule {
     public static final String DEFAULT_COMPILE_SDK_VERSION;
 
     public static final String DEFAULT_BUILD_TOOL_VERSION;
-    public static final String DEFAULT_NDK_SIDE_BY_SIDE_VERSION = "19.0.5232133";
+    public static final String DEFAULT_NDK_SIDE_BY_SIDE_VERSION =
+            NdkLocatorKt.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION;
     public static final boolean APPLY_DEVICEPOOL_PLUGIN =
             Boolean.parseBoolean(System.getenv().getOrDefault("APPLY_DEVICEPOOL_PLUGIN", "false"));
 

@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.sdk;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.internal.cxx.configure.NdkLocatorKt.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertNotNull;
 
@@ -76,6 +77,8 @@ public class SdkAutoDownloadTest {
     private static final String BUILD_TOOLS_VERSION = SdkConstants.CURRENT_BUILD_TOOLS_VERSION;
     private static final String PLATFORM_VERSION =
             TestUtils.getLatestAndroidPlatform().replace("android-", "");
+    private static final String NDK_VERSION = "19.0.5106443-rc1";
+    private static final String NDK_VERSION_THREE_PART = "19.0.5106443";
 
     @Rule
     public GradleTestProject project =
@@ -163,8 +166,11 @@ public class SdkAutoDownloadTest {
 
     private void installNdk() throws IOException {
         FileUtils.copyDirectoryToDirectory(
-                FileUtils.join(TestUtils.getSdk().toPath().toFile(), SdkConstants.FD_NDK),
-                FileUtils.join(mSdkHome));
+                FileUtils.join(
+                        TestUtils.getSdk().toPath().toFile(),
+                        SdkConstants.FD_NDK_SIDE_BY_SIDE,
+                        ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
+                FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE));
     }
 
     /** Tests that the compile SDK target and build tools are automatically downloaded. */
@@ -303,15 +309,12 @@ public class SdkAutoDownloadTest {
 
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
-
-        // TODO: This should be changed to assembleDebug once b/116539441 is fixed.
-        // Currently assembleDebug causes ninja to its path component limit.
-        // See https://github.com/ninja-build/ninja/issues/1161
-        getExecutor().run("clean");
+        
+        getExecutor().run("assemble");
 
         File cmakeDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_CMAKE);
         assertThat(cmakeDirectory).isDirectory();
-        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK);
+        File ndkDirectory = FileUtils.join(mSdkHome, SdkConstants.FD_NDK_SIDE_BY_SIDE);
         assertThat(ndkDirectory).isDirectory();
     }
 
@@ -354,6 +357,11 @@ public class SdkAutoDownloadTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
+                        + "android.ndkVersion "
+                        + "\""
+                        + NDK_VERSION
+                        + "\""
+                        + System.lineSeparator()
                         + "android.compileSdkVersion "
                         + PLATFORM_VERSION
                         + System.lineSeparator()
@@ -388,6 +396,11 @@ public class SdkAutoDownloadTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
+                        + "android.ndkVersion "
+                        + "\""
+                        + NDK_VERSION
+                        + "\""
+                        + System.lineSeparator()
                         + "android.compileSdkVersion "
                         + PLATFORM_VERSION
                         + System.lineSeparator()
@@ -409,7 +422,6 @@ public class SdkAutoDownloadTest {
         assertThat(Throwables.getRootCause(result.getException()).getMessage()).contains("ndk");
     }
 
-    @Test
     @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_androidRepository() throws Exception {
         TestFileUtils.appendToFile(
@@ -435,7 +447,6 @@ public class SdkAutoDownloadTest {
         assertThat(SdkMavenRepository.GOOGLE.isInstalled(mSdkHome, FileOpUtils.create())).isFalse();
     }
 
-    @Test
     @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_googleRepository() throws Exception {
         TestFileUtils.appendToFile(
@@ -463,7 +474,6 @@ public class SdkAutoDownloadTest {
                 TestVersions.PLAY_SERVICES_VERSION);
     }
 
-    @Test
     @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_individualRepository() throws Exception {
         TestFileUtils.appendToFile(
@@ -594,7 +604,6 @@ public class SdkAutoDownloadTest {
         FileUtils.delete(licenseFile);
     }
 
-    @Test
     @Ignore("b/65237460")
     public void checkNoLicenseError_AddonTarget() throws Exception {
         deleteLicense();
@@ -658,7 +667,6 @@ public class SdkAutoDownloadTest {
                         "build-tools;" + BUILD_TOOLS_VERSION);
     }
 
-    @Test
     @Ignore("b/65237460")
     public void checkNoLicenseError_MultiplePackages() throws Exception {
         deleteLicense();

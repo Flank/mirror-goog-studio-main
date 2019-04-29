@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.configure.findNdkPath
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.SdkHandler
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorRecord
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.builder.errors.EvalIssueReporter
@@ -29,6 +30,7 @@ import com.android.builder.sdk.LicenceNotAcceptedException
 import com.android.builder.sdk.SdkLibData
 import com.android.builder.sdk.SdkLoader
 import com.android.repository.Revision
+import com.android.repository.Revision.parseRevision
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Charsets
 import com.google.gson.GsonBuilder
@@ -39,13 +41,12 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.util.Properties
 import org.gradle.api.InvalidUserDataException
-import org.gradle.api.logging.Logging
 import java.io.FileWriter
 
 val GSON = GsonBuilder()
     .registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
     .setPrettyPrinting()
-    .create()
+    .create()!!
 
 sealed class NdkInstallStatus {
     /**
@@ -112,12 +113,10 @@ class NdkHandler(
     }
 
     private fun getNdkInfo(ndkDirectory: File, revision: Revision): NdkInfo {
-        return if (revision.major >= 19) {
-            NdkR19Info(ndkDirectory)
-        } else if (revision.major >= 14) {
-            NdkR14Info(ndkDirectory)
-        } else {
-            DefaultNdkInfo(ndkDirectory)
+        return when {
+            revision.major >= 19 -> NdkR19Info(ndkDirectory)
+            revision.major >= 14 -> NdkR14Info(ndkDirectory)
+            else -> DefaultNdkInfo(ndkDirectory)
         }
     }
 
@@ -127,13 +126,11 @@ class NdkHandler(
             return NdkInstallStatus.NotInstalled
         }
 
-        val findRevisionResult = findRevision(ndkDirectory)
-        val revision = when (findRevisionResult) {
-            is FindRevisionResult.Found -> findRevisionResult.revision
-            is FindRevisionResult.Error -> return NdkInstallStatus.Invalid(
-                findRevisionResult.message
-            )
-        }
+        val revision =
+            when (val found = findRevision(ndkDirectory)) {
+                is FindRevisionResult.Found -> found.revision
+                is FindRevisionResult.Error -> return NdkInstallStatus.Invalid(found.message)
+            }
 
         val ndkInfo = getNdkInfo(ndkDirectory, revision)
 
@@ -167,7 +164,8 @@ class NdkHandler(
     fun installFromSdk(sdkLoader: SdkLoader, sdkLibData: SdkLibData) {
         try {
             if (enableSideBySideNdk) {
-                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE)
+                sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK_SIDE_BY_SIDE +
+                        ";" + downloadNdkVersion())
             } else {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_NDK)
             }
@@ -178,6 +176,13 @@ class NdkHandler(
         }
 
         invalidateNdk()
+    }
+
+    private fun downloadNdkVersion() : String {
+        val fullVersion = ndkVersionFromDsl ?: ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+        val parsed = parseRevision(fullVersion)
+        val threePart = Revision(parsed.major, parsed.minor, parsed.micro)
+        return threePart.toString()
     }
 
     /**

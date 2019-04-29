@@ -8,7 +8,7 @@ gradle_integration_test(
     srcs = glob(["**/*.java"]),
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
-        "//prebuilts/studio/sdk:ndk-bundle",
+        "//prebuilts/studio/sdk:ndk",
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/3534162-studio.sdk-patcher.zip.bak",
