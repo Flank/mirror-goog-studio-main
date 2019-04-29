@@ -43,7 +43,6 @@ import java.util.concurrent.CountDownLatch;
 public class EventProfiler implements ProfilerComponent, Application.ActivityLifecycleCallbacks {
 
     private static final int UNINITIALIZED_ROTATION = -1;
-    private static final int MAX_SLEEP_BACKOFF_MS = 500;
 
     /**
      * Preset thread names for threads created by EventProfiler. They may be used to whitelist
@@ -344,7 +343,15 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     }
 
     private class ActivityInitialization implements Runnable {
-        private boolean myInitialized = false;
+        private static final int INITIAL_SLEEP_BACKOFF_MS = 10;
+        private static final int MAX_SLEEP_BACKOFF_MS = 500;
+        /**
+         * The sleep length between retries would be 10, 20, 40, 80, 160, 320, 500, 500...
+         * milliseconds. By retrying 126 times, this class has waited over one minute for the
+         * activity to start, which should be sufficient.
+         */
+        private static final int MAX_TRY_COUNT = 126;
+
         private CountDownLatch myLatch;
         private final EventProfiler myProfiler;
 
@@ -355,9 +362,10 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
         @Override
         public void run() {
-            long sleepBackoffMs = 10;
-            boolean logErrorOnce = false;
-            while (!myInitialized) {
+            int sleepBackoffMs = INITIAL_SLEEP_BACKOFF_MS;
+            int tryCount = 0;
+            boolean initialized = false;
+            while (!initialized && tryCount++ < MAX_TRY_COUNT) {
                 try {
                     Class activityThreadClass = Class.forName("android.app.ActivityThread");
                     Application app =
@@ -367,14 +375,11 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                                             .invoke(null);
                     if (app != null) {
                         StudioLog.v("Acquiring Application for Events");
-                        myInitialized = true;
+                        initialized = true;
                         app.registerActivityLifecycleCallbacks(myProfiler);
                         // The activity could have started before the callback is added. If this happens, the activity
                         // and touch events are not shown in the events bar.
                         myProfiler.captureCurrentActivityState();
-                    } else if (!logErrorOnce) {
-                        StudioLog.e("Failed to capture application");
-                        logErrorOnce = true;
                     }
                     // Only tick our latch once then null it out, as we only
                     // care if we attempted to get the current application
@@ -385,7 +390,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                     }
 
                     // If we are initialized then break the wait loop.
-                    if (myInitialized) {
+                    if (initialized) {
                         break;
                     }
                 } catch (ClassNotFoundException ex) {
@@ -408,6 +413,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 } catch (InterruptedException ex) {
                     // Do nothing.
                 }
+            }
+            if (!initialized) {
+                StudioLog.e("Failed to capture application");
             }
         }
     }
