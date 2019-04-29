@@ -131,19 +131,23 @@ void TraceMonitor::SubmitStartEvent(int32_t tid, const string& fixed_path) {
     request.CopyFrom(unconfirmed_start_request_);
     request.set_pid(pid);
     request.set_timestamp(timestamp);
-    request.set_trace_id(timestamp);
     CpuTraceOperationResponse response;
     Status status = stub.SendTraceEvent(&ctx, request, &response);
     if (status.ok()) {
-      api_initiated_trace_in_progress_ = true;
-      ongoing_trace_id_ = timestamp;
-      confirmed_trace_path_ = fixed_path;
+      if (response.start_operation_allowed()) {
+        api_initiated_trace_in_progress_ = true;
+        ongoing_trace_id_ = response.trace_id();
+        confirmed_trace_path_ = fixed_path;
+      } else {
+        // This start operation isn't allowed. Ignore it.
+        unconfirmed_start_request_.Clear();
+        Log::W(
+            "Debug.startMethodTracing(String) called while tracing is already "
+            "in progress; the call is ignored.");
+      }
     } else {
-      // This start operation isn't allowed. Ignore it.
-      unconfirmed_start_request_.Clear();
-      Log::W(
-          "Debug.startMethodTracing(String) called while tracing is already "
-          "in progress; the call is ignored.");
+      // Not receiving a response from perfd. Since the profiling state is
+      // unknown, ignore this start operation.
     }
     return status;
   }});
@@ -164,7 +168,6 @@ void TraceMonitor::SubmitStopEvent(int tid) {
         request.set_pid(pid);
         request.set_thread_id(tid);
         request.set_timestamp(timestamp);
-        request.set_trace_id(ongoing_trace_id_);
         string trace_content;
         if (confirmed_trace_path_.empty()) {
           Log::E(
@@ -173,6 +176,7 @@ void TraceMonitor::SubmitStopEvent(int tid) {
         } else {
           profiler::FileReader::Read(confirmed_trace_path_, &trace_content);
         }
+        request.mutable_stop()->set_trace_id(ongoing_trace_id_);
         request.mutable_stop()->set_trace_content(trace_content);
         CpuTraceOperationResponse response;
         Status status = stub.SendTraceEvent(&ctx, request, &response);

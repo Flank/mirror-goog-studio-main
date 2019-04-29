@@ -15,6 +15,7 @@
  */
 #include "perfd/cpu/internal_cpu_service.h"
 
+#include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
 
@@ -33,19 +34,20 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     CpuTraceOperationResponse* response) {
   int pid = request->pid();
   std::cout << "CPU SendTraceEvent " << pid << " " << request->timestamp()
-            << " " << request->trace_id() << " " << request->detail_case();
+            << " " << request->detail_case();
   if (request->has_start()) {
     ProfilingApp* ongoing_capture = cache_.GetOngoingCapture(pid);
     if (ongoing_capture != nullptr) {
       std::cout << " START request ignored" << std::endl;
-      return Status::CANCELLED;
+      return Status::OK;
     }
 
     ProfilingApp capture;
     ProcessManager process_manager;
+    SteadyClock clock;
 
     capture.app_pkg_name = process_manager.GetCmdlineForPid(pid);
-    capture.trace_id = request->trace_id();
+    capture.trace_id = clock.GetCurrentTime();
     capture.trace_path = request->start().arg_trace_path();
     capture.start_timestamp = request->timestamp();
     capture.end_timestamp = -1;
@@ -54,12 +56,15 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     capture.initiation_type = TraceInitiationType::INITIATED_BY_API;
     if (!cache_.AddProfilingStart(pid, capture)) {
       std::cout << " START request ignored (no app cache)" << std::endl;
-      return Status::CANCELLED;
+      return Status::OK;
     }
+
+    response->set_trace_id(capture.trace_id);
+    response->set_start_operation_allowed(true);
     std::cout << " START " << request->start().method_name() << " "
               << request->start().method_signature() << " '"
               << request->start().arg_trace_path() << "'"
-              << " trace_id=" << request->trace_id() << std::endl;
+              << " trace_id=" << capture.trace_id << std::endl;
   } else if (request->has_stop()) {
     const ProfilingApp* ongoing = cache_.GetOngoingCapture(pid);
     if (ongoing == nullptr) {
@@ -69,15 +74,15 @@ Status InternalCpuServiceImpl::SendTraceEvent(
       Log::E(
           "Debug.stopMethodTracing() is called but the running trace is not "
           "initiated by startMetghodTracing* APIs");
-    } else if (ongoing->trace_id != request->trace_id()) {
+    } else if (ongoing->trace_id != request->stop().trace_id()) {
       Log::E(
           "Inconsistent Studio data when Debug.stopMethodTracing() is called");
     } else {
       cache_.AddProfilingStop(pid);
-      cache_.AddTraceContent(request->pid(), request->trace_id(),
+      cache_.AddTraceContent(request->pid(), request->stop().trace_id(),
                              request->stop().trace_content());
     }
-    std::cout << " STOP trace_id=" << request->trace_id()
+    std::cout << " STOP trace_id=" << request->stop().trace_id()
               << " size=" << request->stop().trace_content().size()
               << std::endl;
   }
