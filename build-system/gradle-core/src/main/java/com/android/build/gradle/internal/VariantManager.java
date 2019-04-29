@@ -545,13 +545,11 @@ public class VariantManager implements VariantModel {
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
                 Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
                         buildArtifactsHolder.getFinalProductWithTaskName(buildArtifactType);
-                if (finalProduct.getSecond().isPresent()) {
                     variantScope.publishIntermediateArtifact(
                             finalProduct.getSecond(),
                             finalProduct.getFirst(),
                             outputSpec.getArtifactType(),
                             outputSpec.getPublishedConfigTypes());
-                }
             }
         }
     }
