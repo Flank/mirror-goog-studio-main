@@ -16,11 +16,12 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
+import static com.android.utils.DecimalUtils.trimInsignificantZeros;
 import static com.android.utils.XmlUtils.formatFloatAttribute;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.XmlUtils;
+import com.android.utils.DecimalUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -378,7 +379,7 @@ class SvgGradientNode extends SvgNode {
 
             writer.write(indent);
             writer.write("<item android:offset=\"");
-            writer.write(XmlUtils.trimInsignificantZeros(g.getOffset()));
+            writer.write(trimInsignificantZeros(g.getOffset()));
             writer.write("\"");
             writer.write(" android:color=\"");
             writer.write(color);

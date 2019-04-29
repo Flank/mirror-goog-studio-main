@@ -16,28 +16,23 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.google.common.math.DoubleMath.roundToInt;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.util.AssetUtil;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Strings;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
 /**
  * Generates an image based on the VectorDrawable's XML content.
@@ -48,34 +43,8 @@ public class VdPreview {
     private static final String ANDROID_AUTO_MIRRORED = "android:autoMirrored";
     private static final String ANDROID_HEIGHT = "android:height";
     private static final String ANDROID_WIDTH = "android:width";
-    public static final int MAX_PREVIEW_IMAGE_SIZE = 4096;
-    public static final int MIN_PREVIEW_IMAGE_SIZE = 1;
-
-    /**
-     * Parses a vector drawable XML file into a {@link Document} object.
-     *
-     * @param xmlFileContent the content of the VectorDrawable's XML file.
-     * @param errorLog when errors were found, log them in this builder if it is not null.
-     * @return parsed document or null if errors happened.
-     */
-    @Nullable
-    public static Document parseVdStringIntoDocument(
-            @NonNull String xmlFileContent, @Nullable StringBuilder errorLog) {
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      DocumentBuilder db;
-      Document document;
-      try {
-        db = dbf.newDocumentBuilder();
-        document = db.parse(new InputSource(new StringReader(xmlFileContent)));
-      }
-      catch (Exception e) {
-        if (errorLog != null) {
-          errorLog.append("Exception while parsing XML file:\n").append(e.getMessage());
-        }
-        return null;
-      }
-      return document;
-    }
+    private static final int MAX_PREVIEW_IMAGE_SIZE = 4096;
+    private static final int MIN_PREVIEW_IMAGE_SIZE = 1;
 
     /**
      * Encapsulates the information used to determine the preview image size. The reason we have
@@ -97,26 +66,9 @@ public class VdPreview {
             return new TargetSize(maxDimension, 0);
         }
 
-        public static TargetSize createFromScale(float imageScale) {
+        public static TargetSize createFromScale(double imageScale) {
             return new TargetSize(0, imageScale);
         }
-    }
-
-    /**
-     * Since we allow overriding the vector drawable's size, we also need to keep
-     * the original size and aspect ratio.
-     */
-    public static class SourceSize {
-        public float getHeight() {
-            return sourceHeight;
-        }
-
-        public float getWidth() {
-            return sourceWidth;
-        }
-
-        private float sourceWidth;
-        private float sourceHeight;
     }
 
     /**
@@ -135,98 +87,57 @@ public class VdPreview {
     }
 
     /**
-     * Returns the vector drawable's original size.
-     */
-    public static SourceSize getVdOriginalSize(@NonNull Document document) {
-        Element root = document.getDocumentElement();
-        SourceSize srcSize = new SourceSize();
-        // Update attributes, note that attributes as width and height are required,
-        // while others are optional.
-        NamedNodeMap attr = root.getAttributes();
-        Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
-        assert nodeAttr != null;
-        srcSize.sourceWidth = parseDimension(nodeAttr, 0, false);
-
-        nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
-        assert nodeAttr != null;
-        srcSize.sourceHeight = parseDimension(nodeAttr, 0, false);
-        return srcSize;
-    }
-
-    /**
-     * The UI can override some properties of the Vector drawable.
-     * In order to override in an uniform way, we re-parse the XML file
-     * and pick the appropriate attributes to override.
+     * The UI can override some properties of the Vector drawable. In order to override in
+     * an uniform way, we re-parse the XML file and pick the appropriate attributes to override.
      *
      * @param document the parsed document of original VectorDrawable's XML file.
-     * @param info incoming override information for VectorDrawable.
+     * @param overrideInfo incoming override information for VectorDrawable.
      * @param errorLog log for the parsing errors and warnings.
-     * @return the overridden XML file in one string. If exception happens
-     *     or no attributes needs to be overridden, return null.
+     * @return the overridden XML, or null if exception happens or no attributes need to be
+     *     overridden.
      */
     @Nullable
-    public static String overrideXmlContent(@NonNull Document document,
-                                            @NonNull VdOverrideInfo info,
-                                            @Nullable StringBuilder errorLog) {
-        boolean isXmlFileContentChanged = false;
+    public static String overrideXmlContent(
+            @NonNull Document document,
+            @NonNull VdOverrideInfo overrideInfo,
+            @Nullable StringBuilder errorLog) {
+        boolean contentChanged = false;
         Element root = document.getDocumentElement();
 
         // Update attributes, note that attributes as width and height are required,
         // while others are optional.
-        NamedNodeMap attr = root.getAttributes();
-        if (info.needsOverrideWidth()) {
-            Node nodeAttr = attr.getNamedItem(ANDROID_WIDTH);
-            float overrideValue = info.getWidth();
-            float originalValue = parseDimension(nodeAttr, overrideValue, true);
-            if (originalValue != overrideValue) {
-                isXmlFileContentChanged = true;
+        if (overrideInfo.needsOverrideWidth()) {
+            if (setDimension(root, ANDROID_WIDTH, overrideInfo.getWidth())) {
+                contentChanged = true;
             }
         }
-        if (info.needsOverrideHeight()) {
-            Node nodeAttr = attr.getNamedItem(ANDROID_HEIGHT);
-            float overrideValue = info.getHeight();
-            float originalValue = parseDimension(nodeAttr, overrideValue, true);
-            if (originalValue != overrideValue) {
-                isXmlFileContentChanged = true;
+        if (overrideInfo.needsOverrideHeight()) {
+            if (setDimension(root, ANDROID_HEIGHT, overrideInfo.getHeight())) {
+                contentChanged = true;
             }
         }
-        if (info.needsOverrideAlpha()) {
-            String alphaValue = XmlUtils.formatFloatAttribute(info.getAlpha());
-            Node nodeAttr = attr.getNamedItem(ANDROID_ALPHA);
-            if (nodeAttr != null) {
-                nodeAttr.setTextContent(alphaValue);
+        if (overrideInfo.needsOverrideAlpha()) {
+            String value = XmlUtils.formatFloatAttribute(overrideInfo.getAlpha());
+            if (setAttributeValue(root, ANDROID_ALPHA, value)) {
+                contentChanged = true;
             }
-            else {
-                root.setAttribute(ANDROID_ALPHA, alphaValue);
-            }
-            isXmlFileContentChanged = true;
         }
 
-        if (info.needsOverrideTint()) {
-            String tintValue = String.format("#%06X", info.tintRgb());
-            Node nodeAttr = attr.getNamedItem(ANDROID_TINT);
-            if (nodeAttr != null) {
-                nodeAttr.setTextContent(tintValue);
+        if (overrideInfo.needsOverrideTint()) {
+            String value = String.format("#%06X", overrideInfo.tintRgb());
+            if (setAttributeValue(root, ANDROID_TINT, value)) {
+                contentChanged = true;
             }
-            else {
-                root.setAttribute(ANDROID_TINT, tintValue);
-            }
-            isXmlFileContentChanged = true;
         }
 
-        if (info.getAutoMirrored()) {
-            Node nodeAttr = attr.getNamedItem(ANDROID_AUTO_MIRRORED);
-            if (nodeAttr != null) {
-                nodeAttr.setTextContent("true");
+        if (overrideInfo.getAutoMirrored()) {
+            if (setAttributeValue(root, ANDROID_AUTO_MIRRORED, "true")) {
+                contentChanged = true;
             }
-            else {
-                root.setAttribute(ANDROID_AUTO_MIRRORED, "true");
-            }
-            isXmlFileContentChanged = true;
         }
 
-        if (isXmlFileContentChanged) {
-            // Prettify the XML string from the document.
+        if (contentChanged) {
+            // Pretty-print the XML string from the document.
             StringWriter stringOut = new StringWriter();
             XMLSerializer serial = new XMLSerializer(stringOut, getPrettyPrintFormat());
             try {
@@ -244,23 +155,24 @@ public class VdPreview {
     }
 
     /**
-     * Queries the dimension info and overrides it if needed.
-     *
-     * @param attrNode the attribute that contains dimension info
-     * @param overrideValue the dimension value to override with
-     * @param override if true then override the dimension
-     * @return the original dimension value
+     * Sets value of a dimension attribute. The returned value reflects whether the value of
+     * the attribute was changed or not.
      */
-    private static float parseDimension(
-            @NonNull Node attrNode, float overrideValue, boolean override) {
-        String content = attrNode.getTextContent();
-        assert content.endsWith("dp");
-        double originalValue = Double.parseDouble(content.substring(0, content.length() - 2));
+    private static boolean setDimension(
+            @NonNull Element element, @NonNull String attrName, double value) {
+        String newValue = XmlUtils.formatFloatAttribute(value) + "dp";
+        return setAttributeValue(element, attrName, newValue);
+    }
 
-        if (override) {
-            attrNode.setTextContent(XmlUtils.formatFloatAttribute(overrideValue) + "dp");
-        }
-        return (float) originalValue;
+    /**
+     * Sets value of an attribute. The returned value reflects whether the value of the attribute
+     * was changed or not.
+     */
+    private static boolean setAttributeValue(
+            @NonNull Element element, @NonNull String attrName, @NonNull String value) {
+        String oldValue = element.getAttribute(attrName);
+        element.setAttribute(attrName, value);
+        return !value.equals(oldValue);
     }
 
     /**
@@ -277,12 +189,11 @@ public class VdPreview {
     public static BufferedImage getPreviewFromVectorXml(@NonNull TargetSize targetSize,
                                                         @Nullable String xmlFileContent,
                                                         @Nullable StringBuilder errorLog) {
-        if (xmlFileContent == null || xmlFileContent.isEmpty()) {
+        if (Strings.isNullOrEmpty(xmlFileContent)) {
             return null;
         }
 
-        InputStream inputStream =
-                new ByteArrayInputStream(xmlFileContent.getBytes(StandardCharsets.UTF_8));
+        InputStream inputStream = new ByteArrayInputStream(xmlFileContent.getBytes(UTF_8));
         VdTree vdTree = VdParser.parse(inputStream, errorLog);
 
         return getPreviewFromVectorTree(targetSize, vdTree, errorLog);

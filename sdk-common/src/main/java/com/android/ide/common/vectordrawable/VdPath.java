@@ -16,10 +16,11 @@
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.VdUtil.parseColorValue;
+import static com.android.utils.DecimalUtils.trimInsignificantZeros;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.utils.XmlUtils;
+import com.android.utils.DecimalUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -182,7 +183,7 @@ class VdPath extends VdElement {
                     if (!Float.isFinite(param)) {
                         throw new IllegalArgumentException("Invalid number: " + param);
                     }
-                    String str = XmlUtils.trimInsignificantZeros(format.format(param));
+                    String str = trimInsignificantZeros(format.format(param));
                     result.append(str);
                 }
             }

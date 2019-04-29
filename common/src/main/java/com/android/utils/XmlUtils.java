@@ -848,44 +848,7 @@ public class XmlUtils {
         // We use Float.toString as opposed to Double.toString to avoid writing too many
         // insignificant digits.
         String result = Float.toString((float) value);
-        return trimInsignificantZeros(result);
-    }
-
-    /**
-     * Removes trailing zeros after the decimal dot and also the dot itself if there are no non-zero
-     * digits after it.
-     *
-     * @param floatingPointNumber the string representing a floating point number
-     * @return the original number with trailing zeros removed
-     */
-    @NonNull
-    public static String trimInsignificantZeros(@NonNull String floatingPointNumber) {
-        int pos = floatingPointNumber.lastIndexOf('.');
-        if (pos < 0) {
-            return floatingPointNumber;
-        }
-        if (pos == 0) {
-            pos = 2;
-        }
-
-        int exponent = floatingPointNumber.indexOf('e', pos);
-        if (exponent < 0) {
-            exponent = floatingPointNumber.indexOf('E', pos);
-        }
-        int i = exponent >= 0 ? exponent : floatingPointNumber.length();
-        while (--i > pos) {
-            if (floatingPointNumber.charAt(i) != '0') {
-                i++;
-                break;
-            }
-        }
-        if (exponent < 0) {
-            return floatingPointNumber.substring(0, i);
-        } else if (exponent == i) {
-            return floatingPointNumber;
-        } else {
-            return floatingPointNumber.substring(0, i) + floatingPointNumber.substring(exponent);
-        }
+        return DecimalUtils.trimInsignificantZeros(result);
     }
 
     /**
