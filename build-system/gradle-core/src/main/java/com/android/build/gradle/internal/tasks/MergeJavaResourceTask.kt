@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
+import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -39,16 +40,14 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.lang.RuntimeException
 import java.util.function.Predicate
 import javax.inject.Inject
 
@@ -59,11 +58,24 @@ import javax.inject.Inject
 open class MergeJavaResourceTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
-    @get:InputFiles
+    // @get:InputFiles more appropriate here, but incorrect incremental info from Gradle currently:
+    // https://github.com/gradle/gradle/issues/9320
+    @get:Classpath
     @get:Optional
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     var projectJavaRes: FileCollection? = null
         private set
+
+    // We need this input as long as
+    // (1) we're using @Classpath for projectJavaRes, to support renaming java resource files, and
+    // (2) projectJavaRes is a FileTree, to support changing java resource file relative paths
+    @get:Input
+    @get:Optional
+    val projectJavaResRelativePaths: Collection<String>?
+        get() = if (projectJavaRes == null) {
+            null
+        } else {
+            getRelativePaths(projectJavaRes!!.files, unfilteredProjectJavaRes.files)
+        }
 
     @get:Classpath
     @get:Optional
@@ -288,4 +300,41 @@ private fun getExternalLibJavaRes(scope: VariantScope, mergeScopes: Collection<S
         externalLibJavaRes.from(scope.localPackagedJars)
     }
     return externalLibJavaRes
+}
+
+/**
+ * Return a sorted list of relative paths given a collection of files and a collection of root
+ * directories. This method assumes each given file descends from one of the root directories,
+ * otherwise, we throw a [RuntimeException].
+ *
+ * @param files the collections of files
+ * @param dirs the collection of root directories
+ *
+ * @return the sorted list of system-independent relative paths of the files
+ */
+fun getRelativePaths(files: Collection<File>, dirs: Collection<File>): Collection<String> {
+    val relativePaths = mutableListOf<String>()
+    // We sort descending so that descendant dirs are searched before ancestor dirs, in corner-case
+    // where some dirs descend from others
+    val sortedFiles = files.sortedDescending()
+    val sortedDirs = dirs.sortedDescending()
+    var dirIndex = 0
+    for (file in sortedFiles) {
+        while (dirIndex < sortedDirs.size) {
+            val dir = sortedDirs[dirIndex]
+            if (file.startsWith(dir)) {
+                relativePaths.add(
+                    FileUtils.toSystemIndependentPath(
+                        FileUtils.relativePossiblyNonExistingPath(file, dir)
+                    )
+                )
+                break
+            }
+            dirIndex += 1
+        }
+        if (dirIndex >= sortedDirs.size) {
+            throw RuntimeException("file not a descendant of any dirs: $file")
+        }
+    }
+    return relativePaths.sorted()
 }

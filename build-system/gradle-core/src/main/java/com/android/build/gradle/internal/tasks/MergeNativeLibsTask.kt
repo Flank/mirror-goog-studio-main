@@ -38,12 +38,9 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -57,10 +54,18 @@ import javax.inject.Inject
 open class MergeNativeLibsTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
+    // @get:InputFiles more appropriate here, but incorrect incremental info from Gradle currently:
+    // https://github.com/gradle/gradle/issues/9320
+    @get:Classpath
     val projectNativeLibs: FileCollection
         get() = getProjectNativeLibs(variantScope).asFileTree.filter(spec)
+
+    // We need this input as long as
+    // (1) we're using @Classpath for projectNativeLibs, to support renaming .so files, and
+    // (2) projectNativeLibs is a FileTree, to support changing .so file relative paths
+    @get:Input
+    val projectNativeLibRelativePaths: Collection<String>
+        get() = getRelativePaths(projectNativeLibs.files, unfilteredProjectNativeLibs.files)
 
     @get:Classpath
     @get:Optional

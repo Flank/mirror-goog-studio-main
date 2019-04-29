@@ -197,6 +197,38 @@ public class NativeSoPackagingTest {
     }
 
     @Test
+    public void testAppProjectWithRenamedAssetFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    project.removeFile("src/main/jniLibs/x86/libapp.so");
+                    project.addFile("src/main/jniLibs/x86/moved_libapp.so", "app:abcd");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "libapp.so", null);
+                    checkApk(appProject, "moved_libapp.so", "app:abcd");
+                });
+    }
+
+    @Test
+    public void testAppProjectWithAssetFileWithChangedAbi() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    project.removeFile("src/main/jniLibs/x86/libapp.so");
+                    project.addFile("src/main/jniLibs/x86_64/libapp.so", "app:abcd");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "libapp.so", null);
+                    checkApk(appProject, "x86_64", "libapp.so", "app:abcd");
+                });
+    }
+
+    @Test
     public void testAppProjectWithModifiedAssetFile() throws Exception {
         execute("app:clean", "app:assembleDebug");
 
@@ -537,8 +569,28 @@ public class NativeSoPackagingTest {
     private static void checkApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
+        checkApk(project, "x86", filename, content);
+    }
+
+    /**
+     * check an apk has (or not) the given asset file name.
+     *
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
+     * content is null the file is not expected to be there.
+     *
+     * @param project the project
+     * @param abi the abi
+     * @param filename the filename
+     * @param content the content
+     */
+    private static void checkApk(
+            @NonNull GradleTestProject project,
+            @NonNull String abi,
+            @NonNull String filename,
+            @Nullable String content)
+            throws Exception {
         Apk apk = project.getApk("debug");
-        check(assertThatApk(apk), "lib", filename, content);
+        check(assertThatApk(apk), "lib", abi, filename, content);
         PackagingTests.checkZipAlign(apk);
     }
 
@@ -555,7 +607,7 @@ public class NativeSoPackagingTest {
     private void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getTestApk()), "lib", filename, content);
+        check(TruthHelper.assertThat(project.getTestApk()), "lib", "x86", filename, content);
     }
 
     /**
@@ -571,19 +623,20 @@ public class NativeSoPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getAar("debug")), "jni", filename, content);
+        check(TruthHelper.assertThat(project.getAar("debug")), "jni", "x86", filename, content);
     }
 
     private static void check(
             @NonNull AbstractAndroidSubject subject,
             @NonNull String folderName,
+            @NonNull String abi,
             @NonNull String filename,
             @Nullable String content)
             throws Exception {
         if (content != null) {
-            subject.containsFileWithContent(folderName + "/x86/" + filename, content);
+            subject.containsFileWithContent(folderName + "/" + abi + "/" + filename, content);
         } else {
-            subject.doesNotContain(folderName + "/x86/" + filename);
+            subject.doesNotContain(folderName + "/" + abi + "/" + filename);
         }
     }
 }

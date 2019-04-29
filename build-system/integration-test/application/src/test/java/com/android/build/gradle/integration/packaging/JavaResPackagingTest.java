@@ -221,6 +221,22 @@ public class JavaResPackagingTest {
     }
 
     @Test
+    public void testAppProjectWithMovedResFile() throws Exception {
+        execute("app:clean", "app:assembleDebug");
+
+        doTest(
+                appProject,
+                project -> {
+                    project.removeFile("src/main/resources/com/foo/app.txt");
+                    project.addFile("src/main/resources/com/bar/app.txt", "app:abcd");
+                    execute("app:assembleDebug");
+
+                    checkApk(appProject, "app.txt", null);
+                    checkApk(appProject, "com/bar", "app.txt", "app:abcd");
+                });
+    }
+
+    @Test
     public void testAppProjectWithModifiedResFile() throws Exception {
         execute("app:clean", "app:assembleDebug");
 
@@ -579,7 +595,27 @@ public class JavaResPackagingTest {
     private static void checkApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getApk("debug")), filename, content);
+        checkApk(project, "com/foo", filename, content);
+    }
+
+    /**
+     * check an apk has (or not) the given res file name.
+     *
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
+     * content is null the file is not expected to be there.
+     *
+     * @param project the project
+     * @param parentDirRelativePath the relative path of the file's parent directory
+     * @param filename the filename
+     * @param content the content
+     */
+    private static void checkApk(
+            @NonNull GradleTestProject project,
+            @NonNull String parentDirRelativePath,
+            @NonNull String filename,
+            @Nullable String content)
+            throws Exception {
+        check(assertThat(project.getApk("debug")), parentDirRelativePath, filename, content);
     }
 
     /**
@@ -595,11 +631,11 @@ public class JavaResPackagingTest {
     private void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getTestApk()), filename, content);
+        check(assertThat(project.getTestApk()), "com/foo", filename, content);
     }
 
     /**
-     * check an aat has (or not) the given res file name.
+     * check an aar has (or not) the given res file name.
      *
      * <p>If the content is non-null the file is expected to be there with the same content. If the
      * content is null the file is not expected to be there.
@@ -611,18 +647,31 @@ public class JavaResPackagingTest {
     private static void checkAar(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getAar("debug")), filename, content);
+        check(assertThat(project.getAar("debug")), "com/foo", filename, content);
     }
 
+    /**
+     * check an AbstractAndroidSubject has (or not) the given res file name.
+     *
+     * <p>If the content is non-null the file is expected to be there with the same content. If the
+     * content is null the file is not expected to be there.
+     *
+     * @param subject the AbstractAndroidSubject
+     * @param parentDirRelativePath the relative path of the file's parent directory
+     * @param filename the filename
+     * @param content the content
+     */
     private static void check(
             @NonNull AbstractAndroidSubject subject,
+            @NonNull String parentDirRelativePath,
             @NonNull String filename,
             @Nullable String content)
             throws Exception {
         if (content != null) {
-            subject.containsJavaResourceWithContent("com/foo/" + filename, content);
+            subject.containsJavaResourceWithContent(
+                    parentDirRelativePath + "/" + filename, content);
         } else {
-            subject.doesNotContainJavaResource("com/foo/" + filename);
+            subject.doesNotContainJavaResource(parentDirRelativePath + "/" + filename);
         }
     }
 }
