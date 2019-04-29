@@ -24,12 +24,13 @@ class StudioIssueRegistry : IssueRegistry() {
     override val api = CURRENT_API
 
     override val issues = listOf(
+        FileComparisonDetector.ISSUE,
         ForkJoinPoolDetector.COMMON_FJ_POOL,
         ForkJoinPoolDetector.NEW_FJ_POOL,
+        ImplicitExecutorDetector.ISSUE,
         RegexpPathDetector.ISSUE,
         SwingUtilitiesDetector.ISSUE,
         SwingWorkerDetector.ISSUE,
-        FileComparisonDetector.ISSUE,
         WrongThreadDetector.ISSUE
     )
 

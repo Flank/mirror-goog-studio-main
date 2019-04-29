@@ -89,14 +89,7 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         )
     }
 
-    override fun getApplicableConstructorTypes(): List<String>? =
-        listOf("java.util.concurrent.ForkJoinPool")
-
-    override fun getApplicableMethodNames(): List<String>? =
-    // TODO: CompletableFuture generally delegates to this too; see
-    // defaultExecutor etc.
-        listOf("commonPool", "whenCompleteAsync", "thenAcceptAsync")
-    // missing stuff fro CompletableFuture here, such as handleAsync
+    override fun getApplicableConstructorTypes() = listOf("java.util.concurrent.ForkJoinPool")
 
     override fun visitConstructor(
         context: JavaContext,
@@ -110,6 +103,8 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
             "Avoid using new ForkJoinPool instances when possible. Prefer using the IntelliJ application pool via `com.intellij.openapi.application.Application#executeOnPooledThread`, or for the Android Gradle Plugin use `com.android.build.gradle.internal.tasks.Workers`. See `go/do-not-freeze`.")
     }
 
+    override fun getApplicableMethodNames() = listOf("commonPool")
+
     override fun visitMethodCall(
         context: JavaContext,
         node: UCallExpression,
@@ -120,17 +115,6 @@ class ForkJoinPoolDetector : Detector(), SourceCodeScanner {
         when (method.name) {
             "commonPool" -> {
                 if (!evaluator.isMemberInClass(method, "java.util.concurrent.ForkJoinPool")) {
-                    return
-                }
-            }
-            "whenCompleteAsync", "thenAcceptAsync" -> {
-                if (!evaluator.isMemberInClass(method, "java.util.concurrent.CompletableFuture")) {
-                    return
-                }
-                // Make sure it's the one arg version of these methods; the 2 arg method
-                // takes an explicit executor (though if you're passing defaultExecutor that's
-                // not good)
-                if (method.parameterList.parametersCount != 1) {
                     return
                 }
             }
