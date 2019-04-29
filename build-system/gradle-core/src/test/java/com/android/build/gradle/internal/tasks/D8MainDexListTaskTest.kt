@@ -20,6 +20,7 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ERROR_DUPLICATE
 import com.android.builder.dexing.ERROR_DUPLICATE_HELP_PAGE
 import com.android.builder.multidex.D8MainDexList
+import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.google.common.truth.Truth.assertThat
@@ -27,6 +28,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.test.assertFailsWith
 
 /**
@@ -165,6 +168,59 @@ class D8MainDexListTaskTest {
 
         assertThat(exception.message).contains(ERROR_DUPLICATE)
         assertThat(exception.message).contains(ERROR_DUPLICATE_HELP_PAGE)
+    }
+
+    @Test
+    fun testMultiReleaseClassesInDir() {
+        val output = tmpDir.newFile()
+
+        val inputDir = tmpDir.newFolder("input")
+        TestInputsGenerator.dirWithEmptyClasses(inputDir.toPath(), listOf("test/A"))
+        inputDir.resolve("META-INF/versions/9/module-info.class").also {
+            it.parentFile.mkdirs()
+            it.createNewFile()
+        }
+
+        D8MainDexListTask.MainDexListRunnable(
+            D8MainDexListTask.MainDexListRunnable.Params(
+                listOf(),
+                listOf(inputDir),
+                getBootClasspath(),
+                null,
+                output,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            )
+        ).run()
+
+        assertThat(output.readLines()).isEmpty()
+    }
+
+    @Test
+    fun testMultiReleaseClassesInJar() {
+        val output = tmpDir.newFile()
+
+        val inputJar = tmpDir.root.resolve("input.jar").also { file ->
+            ZipOutputStream(file.outputStream()).use {
+                it.putNextEntry(ZipEntry("test/A.class"))
+                it.write(TestClassesGenerator.emptyClass("test", "A"))
+                it.closeEntry()
+                it.putNextEntry(ZipEntry("META-INF/versions/9/module-info.class"))
+                it.closeEntry()
+            }
+        }
+
+        D8MainDexListTask.MainDexListRunnable(
+            D8MainDexListTask.MainDexListRunnable.Params(
+                listOf(),
+                listOf(inputJar),
+                getBootClasspath(),
+                null,
+                output,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE
+            )
+        ).run()
+
+        assertThat(output.readLines()).isEmpty()
     }
 
     private fun getBootClasspath(): Collection<File> {

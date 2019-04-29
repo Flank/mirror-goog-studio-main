@@ -18,9 +18,10 @@ package com.android.builder.multidex;
 
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE;
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
+import static com.android.utils.PathUtils.toSystemIndependentPath;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.D8DiagnosticsHandler;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageReceiver;
@@ -81,9 +82,15 @@ public final class D8MainDexList {
                     command.addProgramFiles(program);
                 } else {
                     try (Stream<Path> classFiles = Files.walk(program)) {
-                        List<Path> allClasses = classFiles
-                                .filter(p -> p.toString().endsWith(SdkConstants.DOT_CLASS))
-                                .collect(Collectors.toList());
+                        List<Path> allClasses =
+                                classFiles
+                                        .filter(
+                                                file -> {
+                                                    Path relative = program.relativize(file);
+                                                    return ClassFileInput.CLASS_MATCHER.test(
+                                                            toSystemIndependentPath(relative));
+                                                })
+                                        .collect(Collectors.toList());
                         command.addProgramFiles(allClasses);
                     }
                 }
