@@ -14,179 +14,170 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static com.android.build.gradle.integration.common.truth.ScannerSubject.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
+import com.android.build.gradle.integration.common.truth.ScannerSubject.Companion.assertThat
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TestVersions;
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableMap;
-import java.io.File;
-import java.io.IOException;
-import java.util.Scanner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
+import com.android.build.gradle.integration.common.fixture.TEST_SUPPORT_LIB_VERSION
+import com.android.build.gradle.integration.common.fixture.app.AbstractAndroidTestModule
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
+import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableMap
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.experimental.categories.Category
 
-public class D8DesugaringConnectedTest {
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(
-                            new MultiModuleTestProject(
-                                    ImmutableMap.of(
-                                            ":app",
-                                            HelloWorldApp.noBuildFile(),
-                                            ":lib",
-                                            new EmptyAndroidTestApp())))
-                    .create();
+class D8DesugaringConnectedTest {
+    @get:Rule
+    var project = GradleTestProject.builder()
+        .fromTestApp(
+            MultiModuleTestProject(
+                ImmutableMap.of<String, AbstractAndroidTestModule>(
+                    ":app",
+                    HelloWorldApp.noBuildFile(),
+                    ":lib",
+                    EmptyAndroidTestApp()
+                )
+            )
+        )
+        .create()
 
     @Before
-    public void setUp() throws IOException {
+    fun setUp() {
         TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "\n"
-                        + "apply plugin: \"com.android.application\"\n"
-                        + "\n"
-                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
-                        + "\n"
-                        + "android {\n"
-                        + "    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "\n"
-                        + "    defaultConfig {\n"
-                        + "        applicationId \"com.example.d8desugartest\"\n"
-                        + "        minSdkVersion 20\n"
-                        + "        testInstrumentationRunner "
-                        + "\"android.support.test.runner.AndroidJUnitRunner\"\n"
-                        + "    }\n"
-                        + "\n"
-                        + "  flavorDimensions \"whatever\"\n"
-                        + "\n"
-                        + "    productFlavors {\n"
-                        + "      multidex {\n"
-                        + "        dimension \"whatever\"\n"
-                        + "        multiDexEnabled true\n"
-                        + "        multiDexKeepFile file('debug_main_dex_list.txt')\n"
-                        + "      }\n"
-                        + "      base {\n"
-                        + "        dimension \"whatever\"\n"
-                        + "      }\n"
-                        + "    }\n"
-                        + "    compileOptions {\n"
-                        + "        sourceCompatibility JavaVersion.VERSION_1_8\n"
-                        + "        targetCompatibility JavaVersion.VERSION_1_8\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    dependencies {\n"
-                        + "        implementation project(':lib')\n"
-                        + "        androidTestImplementation"
-                        + " 'com.android.support:support-v4:"
-                        + TestVersions.SUPPORT_LIB_VERSION
-                        + "'\n"
-                        + "        testImplementation 'junit:junit:4.12'\n"
-                        + "        androidTestImplementation 'com.android.support.test:runner:"
-                        + TestVersions.TEST_SUPPORT_LIB_VERSION
-                        + "'\n"
-                        + "        androidTestImplementation 'com.android.support.test:rules:"
-                        + TestVersions.TEST_SUPPORT_LIB_VERSION
-                        + "'\n"
-                        + "    }\n"
-                        + "}\n");
+            project.getSubproject(":app").buildFile,
+            """
+                    apply plugin: "com.android.application"
+
+                    apply from: "../../commonLocalRepo.gradle"
+
+                    android {
+                        compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
+
+                        defaultConfig {
+                            applicationId "com.example.d8desugartest"
+                            minSdkVersion 20
+                            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+                        }
+
+                      flavorDimensions "whatever"
+
+                        productFlavors {
+                          multidex {
+                            dimension "whatever"
+                            multiDexEnabled true
+                            multiDexKeepFile file('debug_main_dex_list.txt')
+                          }
+                          base {
+                            dimension "whatever"
+                          }
+                        }
+                        compileOptions {
+                            sourceCompatibility JavaVersion.VERSION_1_8
+                            targetCompatibility JavaVersion.VERSION_1_8
+                        }
+
+                        dependencies {
+                            implementation project(':lib')
+                            androidTestImplementation 'com.android.support:support-v4:$SUPPORT_LIB_VERSION'
+                            testImplementation 'junit:junit:4.12'
+                            androidTestImplementation 'com.android.support.test:runner:$TEST_SUPPORT_LIB_VERSION'
+                            androidTestImplementation 'com.android.support.test:rules:$TEST_SUPPORT_LIB_VERSION'
+                        }
+                    }
+                    """
+        )
 
         TestFileUtils.appendToFile(
-                project.getSubproject(":lib").getBuildFile(), "apply plugin: 'java'\n");
-        File interfaceWithDefault =
-                project.getSubproject(":lib")
-                        .file("src/main/java/com/example/helloworld/InterfaceWithDefault.java");
-        FileUtils.mkdirs(interfaceWithDefault.getParentFile());
+            project.getSubproject(":lib").buildFile, "apply plugin: 'java'\n"
+        )
+        val interfaceWithDefault = project.getSubproject(":lib")
+            .file("src/main/java/com/example/helloworld/InterfaceWithDefault.java")
+        FileUtils.mkdirs(interfaceWithDefault.parentFile)
         TestFileUtils.appendToFile(
-                interfaceWithDefault,
-                "package com.example.helloworld;\n"
-                        + "\n"
-                        + "public interface InterfaceWithDefault {\n"
-                        + "  \n"
-                        + "  static String defaultConvert(String input) {\n"
-                        + "    return input + \"-default\";\n"
-                        + "  }\n"
-                        + "  \n"
-                        + "  default String convert(String input) {\n"
-                        + "    return defaultConvert(input);\n"
-                        + "  }\n"
-                        + "}\n");
-        File stringTool =
-                project.getSubproject(":lib")
-                        .file("src/main/java/com/example/helloworld/StringTool.java");
-        FileUtils.mkdirs(stringTool.getParentFile());
+            interfaceWithDefault,
+            ("""package com.example.helloworld;
+
+                    public interface InterfaceWithDefault {
+
+                      static String defaultConvert(String input) {
+                        return input + "-default";
+                      }
+
+                      default String convert(String input) {
+                        return defaultConvert(input);
+                      }
+                    }
+                    """)
+        )
+        val stringTool = project.getSubproject(":lib")
+            .file("src/main/java/com/example/helloworld/StringTool.java")
+        FileUtils.mkdirs(stringTool.parentFile)
         TestFileUtils.appendToFile(
-                stringTool,
-                "package com.example.helloworld;\n"
-                        + "\n"
-                        + "public class StringTool {\n"
-                        + "  private InterfaceWithDefault converter;\n"
-                        + "  public StringTool(InterfaceWithDefault converter) {\n"
-                        + "    this.converter = converter;\n"
-                        + "  }\n"
-                        + "  public String convert(String input) {\n"
-                        + "    return converter.convert(input);\n"
-                        + "  }\n"
-                        + "}\n");
-        File exampleInstrumentedTest =
-                project.getSubproject(":app")
-                        .file(
-                                "src/androidTest/java/com/example/helloworld/ExampleInstrumentedTest.java");
-        FileUtils.mkdirs(exampleInstrumentedTest.getParentFile());
+            stringTool,
+            ("""package com.example.helloworld;
+
+                    public class StringTool {
+                      private InterfaceWithDefault converter;
+                      public StringTool(InterfaceWithDefault converter) {
+                        this.converter = converter;
+                      }
+                      public String convert(String input) {
+                        return converter.convert(input);
+                      }
+                    }
+                    """)
+        )
+        val exampleInstrumentedTest = project.getSubproject(":app")
+            .file(
+                "src/androidTest/java/com/example/helloworld/ExampleInstrumentedTest.java"
+            )
+        FileUtils.mkdirs(exampleInstrumentedTest.parentFile)
         TestFileUtils.appendToFile(
-                exampleInstrumentedTest,
-                "package com.example.helloworld;\n"
-                        + "\n"
-                        + "import android.content.Context;\n"
-                        + "import android.support.test.InstrumentationRegistry;\n"
-                        + "import android.support.test.runner.AndroidJUnit4;\n"
-                        + "\n"
-                        + "import org.junit.Test;\n"
-                        + "import org.junit.runner.RunWith;\n"
-                        + "\n"
-                        + "import static org.junit.Assert.*;\n"
-                        + "\n"
-                        + "@RunWith(AndroidJUnit4.class)\n"
-                        + "public class ExampleInstrumentedTest {\n"
-                        + "    @Test\n"
-                        + "    public void useAppContext() throws Exception {\n"
-                        + "        // Context of the app under test.\n"
-                        + "        Context appContext ="
-                        + " InstrumentationRegistry.getTargetContext();\n"
-                        + "        assertEquals(\"toto-default\", "
-                        + "new StringTool(new InterfaceWithDefault() { }).convert(\"toto\"));\n"
-                        + "    }\n"
-                        + "}\n");
-        File debugMainDexList = project.getSubproject(":app").file("debug_main_dex_list.txt");
+            exampleInstrumentedTest,
+            ("""package com.example.helloworld;
+
+                    import android.content.Context;
+                    import android.support.test.InstrumentationRegistry;
+                    import android.support.test.runner.AndroidJUnit4;
+
+                    import org.junit.Test;
+                    import org.junit.runner.RunWith;
+
+                    import static org.junit.Assert.*;
+
+                    @RunWith(AndroidJUnit4.class)
+                    public class ExampleInstrumentedTest {
+                        @Test
+                        public void useAppContext() throws Exception {
+                            // Context of the app under test.
+                            Context appContext = InstrumentationRegistry.getTargetContext();
+                            assertEquals("toto-default", new StringTool(new InterfaceWithDefault() { }).convert("toto"));
+                        }
+                    }
+                    """)
+        )
+        val debugMainDexList = project.getSubproject(":app").file("debug_main_dex_list.txt")
         TestFileUtils.appendToFile(
-                debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class");
+            debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class"
+        )
     }
 
-    @Category(DeviceTests.class)
+    @Category(DeviceTests::class)
     @Test
-    public void runAndroidTest() throws IOException, InterruptedException {
-        GradleBuildResult result =
-                project.executor()
-                        .with(BooleanOption.ENABLE_D8, true)
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .run("app:connectedBaseDebugAndroidTest");
-        try (Scanner stdout = result.getStdout()) {
-            assertThat(stdout).contains("Starting 2 tests on");
-        }
+    fun runAndroidTest() {
+        val result = project.executor()
+            .with(BooleanOption.ENABLE_D8, true)
+            .with(BooleanOption.ENABLE_D8_DESUGARING, true)
+            .run("app:connectedBaseDebugAndroidTest")
+        result.stdout.use { stdout -> assertThat(stdout).contains("Starting 2 tests on") }
     }
 }
