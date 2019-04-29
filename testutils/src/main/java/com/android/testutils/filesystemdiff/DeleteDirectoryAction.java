@@ -16,6 +16,7 @@
 package com.android.testutils.filesystemdiff;
 
 import com.android.utils.ILogger;
+import com.android.utils.PathUtils;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -38,28 +39,8 @@ public class DeleteDirectoryAction extends Action {
     @Override
     public void execute(ILogger logger) {
         try {
-            Files.walkFileTree(mEntry.getPath(), new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                  throws IOException {
-                    logger.verbose("Deleting file %s", file);
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                  throws IOException {
-                    if (exc != null) {
-                      throw exc;
-                    }
-                    logger.verbose("Deleting directory %s", dir);
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        }
-        catch (IOException e) {
+            PathUtils.deleteRecursivelyIfExists(mEntry.getPath());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

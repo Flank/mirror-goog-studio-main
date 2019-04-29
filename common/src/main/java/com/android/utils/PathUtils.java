@@ -87,8 +87,12 @@ public final class PathUtils {
             int failedAttempts = 1; // Count the failed deletion above
             while (failedAttempts < EMPTY_DIRECTORY_DELETION_ATTEMPTS) {
                 try {
+                    // making the thread sleep for a minimum amount of time appears to improve the
+                    // odds of success. I suspect that JDK is forcing re-reading or flushing when
+                    // the thread is swapped in/out.
+                    Thread.sleep(1);
                     Files.deleteIfExists(path);
-                } catch (DirectoryNotEmptyException e) {
+                } catch (InterruptedException | DirectoryNotEmptyException e) {
                     failedAttempts++;
                     continue;
                 }
