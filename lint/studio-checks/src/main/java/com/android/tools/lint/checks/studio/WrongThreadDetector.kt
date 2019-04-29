@@ -19,6 +19,7 @@ package com.android.tools.lint.checks.studio
 import com.android.annotations.concurrency.AnyThread
 import com.android.annotations.concurrency.Slow
 import com.android.annotations.concurrency.UiThread
+import com.android.annotations.concurrency.WorkerThread
 import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL
 import com.android.tools.lint.detector.api.AnnotationUsageType.METHOD_CALL_CLASS
@@ -51,7 +52,8 @@ import java.util.ArrayList
 val SLOW = Slow::class.java.canonicalName!!
 val UI_THREAD = UiThread::class.java.canonicalName!!
 val ANY_THREAD = AnyThread::class.java.canonicalName!!
-val THREADING_ANNOTATIONS = setOf(SLOW, UI_THREAD, ANY_THREAD)
+val WORKER_THREAD = WorkerThread::class.java.canonicalName!!
+val THREADING_ANNOTATIONS = setOf(SLOW, UI_THREAD, ANY_THREAD, WORKER_THREAD)
 
 /**
  * Looks for calls in the wrong thread context.
@@ -94,29 +96,21 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
      * @param context the lint scanning context
      * @param methodCallNode [UElement] pointing to the method call node
      * @param method [PsiMethod] being called
-     * @param annotationQualifiedName the called method annotation being analyzed
+     * @param calleeThread the called method annotation being analyzed
      */
     private fun checkMethodCallThreading(
         context: JavaContext,
         methodCallNode: UElement,
         method: PsiMethod,
-        annotationQualifiedName: String
+        calleeThread: String
     ) {
         val callerThreads = getThreadContext(context, methodCallNode) ?: return
-        if (allThreadsCompatible(callerThreads, annotationQualifiedName)) {
-            return
-        }
 
-        val message = String.format(
-            "%1\$s %2\$s must be called from the %3\$s thread, " +
-                    "currently inferred thread is %4\$s thread.",
-            if (method.isConstructor) "Constructor" else "Method",
-            method.name,
-            describeThread(annotationQualifiedName),
-            describeThreads(callerThreads, true)
-        )
+        val violation = callerThreads.asSequence()
+            .mapNotNull { checkForThreadViolation(it, calleeThread, method) }
+            .firstOrNull() ?: return
 
-        report(context, methodCallNode, message)
+        report(context, methodCallNode, violation)
     }
 
     /**
@@ -138,60 +132,66 @@ class WrongThreadDetector : Detector(), SourceCodeScanner {
         val calleeThreads = context.evaluator
             .getAllAnnotations(referencedMethod, false)
             .filter { it.isThreadingAnnotation() }
-
-        val invalidThread = calleeThreads.asSequence()
             .mapNotNull { it.qualifiedName }
-            .firstOrNull { !threadCompatible(callerThread, it) }
-            ?: return
 
-        val message = String.format(
-            "%1\$s %2\$s must be called from the %3\$s thread, " +
-                    "currently inferred thread is %4\$s thread.",
-            if (referencedMethod.isConstructor) "Constructor" else "Method",
-            referencedMethod.name,
-            describeThread(invalidThread),
-            describeThread(callerThread)
-        )
+        val violation = calleeThreads.asSequence()
+            .mapNotNull { checkForThreadViolation(callerThread, it, referencedMethod) }
+            .firstOrNull() ?: return
 
-        report(context, reference, message)
+        report(context, reference, violation)
+    }
+
+    /** Checks for a thread annotation violation, returning an error message if found. */
+    private fun checkForThreadViolation(
+        callerThread: String,
+        calleeThread: String,
+        method: PsiMethod
+    ): String? {
+
+        // We enforce the following constraints:
+        // (1) [UI responsiveness] Discourage {@UiThread, @AnyThread} --> {@Slow, @WorkerThread}
+        // (2) [Thread safety] Disallow {@WorkerThread, @AnyThread, @Slow} --> {@UiThread}
+        when (calleeThread) {
+            SLOW, WORKER_THREAD -> {
+                when (callerThread) {
+                    UI_THREAD, ANY_THREAD -> { /* (1) */ }
+                    else -> return null
+                }
+            }
+            UI_THREAD -> {
+                when (callerThread) {
+                    WORKER_THREAD, ANY_THREAD, SLOW -> { /* (2) */ }
+                    else -> return null
+                }
+            }
+            else -> return null
+        }
+
+        val methodDesc = when (method.isConstructor) {
+            true -> "Constructor ${method.name}"
+            else -> "Method ${method.name}"
+        }
+
+        val inferredThread = when (callerThread) {
+            WORKER_THREAD, SLOW -> "a worker thread"
+            UI_THREAD -> "the UI thread"
+            ANY_THREAD -> "any thread"
+            else -> return null
+        }
+
+        val calleeRequirement = when (calleeThread) {
+            SLOW -> "$methodDesc is slow and thus should run on a worker thread"
+            WORKER_THREAD -> "$methodDesc is intended to run on a worker thread"
+            UI_THREAD -> "$methodDesc must run on the UI thread"
+            else -> return null
+        }
+
+        return "$calleeRequirement, yet the currently inferred thread is $inferredThread"
     }
 
     private fun PsiAnnotation.isThreadingAnnotation(): Boolean {
         return THREADING_ANNOTATIONS.contains(qualifiedName)
     }
-
-    private fun describeThreads(annotations: List<String>, any: Boolean): String {
-        val sb = StringBuilder()
-        for (i in annotations.indices) {
-            if (i > 0) {
-                if (i == annotations.size - 1) {
-                    sb.append(if (any) " or " else " and ")
-                } else {
-                    sb.append(", ")
-                }
-            }
-            sb.append(describeThread(annotations[i]))
-        }
-        return sb.toString()
-    }
-
-    private fun describeThread(annotation: String): String = when (annotation) {
-        UI_THREAD -> "UI"
-        SLOW -> "worker"
-        ANY_THREAD -> "any"
-        else -> "other"
-    }
-
-    /** returns true if the two threads are compatible  */
-    private fun allThreadsCompatible(callers: List<String>, callee: String): Boolean {
-        // ALL calling contexts must be valid
-        assert(!callers.isEmpty())
-        return callers.all { threadCompatible(it, callee) }
-    }
-
-    /** returns true if the two threads are compatible  */
-    private fun threadCompatible(caller: String, callee: String): Boolean =
-        (callee == caller) || (ANY_THREAD == callee)
 
     /** Attempts to infer the current thread context at the site of the given method call  */
     private fun getThreadContext(context: JavaContext, methodCall: UElement): List<String>? {
