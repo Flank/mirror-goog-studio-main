@@ -124,6 +124,9 @@ public enum InternalArtifactType implements ArtifactType {
     // The R class jar generated from R.txt for application and tests
     COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR(Kind.FILE),
 
+    // Information neeeded to resolve included navigation graphs into intent filters
+    NAVIGATION_JSON(Kind.FILE),
+
     // --- Namespaced android res ---
     // Compiled resources (directory of .flat files) for the local library
     RES_COMPILED_FLAT_FILES,

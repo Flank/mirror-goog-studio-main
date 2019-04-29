@@ -53,6 +53,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_INS
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_DECLARATION
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_LIBRARY_DEPENDENCIES_REPORT
 import com.android.build.gradle.internal.scope.InternalArtifactType.METADATA_FEATURE_MANIFEST
+import com.android.build.gradle.internal.scope.InternalArtifactType.NAVIGATION_JSON
 import com.android.build.gradle.internal.scope.InternalArtifactType.SIGNING_CONFIG
 import com.android.build.gradle.internal.scope.InternalArtifactType.MODULE_BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.PACKAGED_RES
@@ -142,6 +143,7 @@ class PublishingSpecs {
                 metadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.METADATA_BASE_MODULE_DECLARATION)
 
                 metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
                 metadata(BUNDLE, ArtifactType.BUNDLE)
@@ -201,6 +203,7 @@ class PublishingSpecs {
                 metadata(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 metadata(AAPT_PROGUARD_FILE, ArtifactType.AAPT_PROGUARD_RULES)
                 metadata(FEATURE_TRANSITIVE_DEPS, ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // ----
 
@@ -248,6 +251,7 @@ class PublishingSpecs {
                 runtime(CONSUMER_PROGUARD_FILE, ArtifactType.CONSUMER_PROGUARD_RULES)
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get
@@ -275,6 +279,8 @@ class PublishingSpecs {
                 api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                         ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
                 api(SIGNING_CONFIG, ArtifactType.FEATURE_SIGNING_CONFIG)
+
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
             }
 
             variantSpec(VariantTypeImpl.FEATURE) {
@@ -300,6 +306,8 @@ class PublishingSpecs {
                 api(DATA_BINDING_ARTIFACT, ArtifactType.DATA_BINDING_ARTIFACT)
                 api(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
                     ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+
+                runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
             }
 
             // empty specs

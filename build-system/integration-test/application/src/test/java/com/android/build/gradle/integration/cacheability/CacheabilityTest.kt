@@ -88,7 +88,8 @@ class CacheabilityTest {
                     ":app:mergeDebugJavaResource",
                     ":app:mergeDebugNativeLibs",
                     ":app:mergeDexDebug",
-                    ":app:stripDebugDebugSymbols"
+                    ":app:stripDebugDebugSymbols",
+                    ":app:extractDeepLinksDebug"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.

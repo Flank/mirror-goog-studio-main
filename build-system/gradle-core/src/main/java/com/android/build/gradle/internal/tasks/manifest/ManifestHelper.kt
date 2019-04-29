@@ -34,7 +34,7 @@ fun mergeManifestsForApplication(
     mainManifest: File,
     manifestOverlays: List<File>,
     dependencies: List<ManifestProvider>,
-    navigationFiles: List<File>,
+    navigationJsons: List<File>,
     featureName: String?,
     packageOverride: String?,
     versionCode: Int,
@@ -60,7 +60,7 @@ fun mergeManifestsForApplication(
             .setPlaceHolderValues(placeHolders)
             .addFlavorAndBuildTypeManifests(*manifestOverlays.toTypedArray())
             .addManifestProviders(dependencies)
-            .addNavigationFiles(navigationFiles)
+            .addNavigationJsons(navigationJsons)
             .withFeatures(*optionalFeatures.toTypedArray())
             .setMergeReportFile(reportFile)
             .setFeatureName(featureName)

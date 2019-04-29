@@ -39,6 +39,7 @@ import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -2265,6 +2266,85 @@ public class ManifestMerger2SmallTest {
             assertThat(mergedDocument).doesNotContain("android:extractNativeLibs=\"false\"");
         } finally {
             assertTrue(tmpFile.delete());
+        }
+    }
+
+    @Test
+    public void testNavigationJson_mergedCorrectly() throws Exception {
+        MockLog mockLog = new MockLog();
+        String input =
+                "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "    <application android:name=\"app1\">\n"
+                        + "        <activity android:name=\".MainActivity\">\n"
+                        + "            <nav-graph android:value=\"@navigation/nav1\" />\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        String navJson1 =
+                "[\n"
+                        + "  {\n"
+                        + "    \"name\": \"nav1\",\n"
+                        + "    \"navigationXmlIds\": [\"nav2\"],\n"
+                        + "    \"deepLinks\": []\n"
+                        + "  }\n"
+                        + "]";
+        String navJson2 =
+                "[\n"
+                        + "  {\n"
+                        + "    \"name\": \"nav2\",\n"
+                        + "    \"navigationXmlIds\": [],\n"
+                        + "    \"deepLinks\": [\n"
+                        + "      {\n"
+                        + "        \"schemes\": [\n"
+                        + "          \"http\",\n"
+                        + "          \"https\"\n"
+                        + "        ],\n"
+                        + "        \"host\": \"www.example.com\",\n"
+                        + "        \"port\": -1,\n"
+                        + "        \"path\": \"/nav2_foo\",\n"
+                        + "        \"sourceFilePosition\": {\n"
+                        + "          \"mSourceFile\": {\n"
+                        + "            \"mSourceFile\": {\n"
+                        + "              \"path\": \"\"\n"
+                        + "            },\n"
+                        + "            \"mDescription\": \"nav1\"\n"
+                        + "          },\n"
+                        + "          \"mSourcePosition\": {\n"
+                        + "            \"mStartLine\": 0,\n"
+                        + "            \"mStartColumn\": 0,\n"
+                        + "            \"mStartOffset\": 0,\n"
+                        + "            \"mEndLine\": 0,\n"
+                        + "            \"mEndColumn\": 0,\n"
+                        + "            \"mEndOffset\": 0\n"
+                        + "          }\n"
+                        + "        },\n"
+                        + "        \"isAutoVerify\": false\n"
+                        + "      }\n"
+                        + "    ]\n"
+                        + "  }\n"
+                        + "]";
+
+        File tmpFile = TestUtils.inputAsFile("ManifestMerger2Test_navigationJson", input);
+        File nav1 = TestUtils.inputAsFile("nav1.json", navJson1);
+        File nav2 = TestUtils.inputAsFile("nav2.json", navJson2);
+        assertTrue(tmpFile.exists());
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    tmpFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .addNavigationJsons(Lists.newArrayList(nav1, nav2))
+                            .merge();
+            assertEquals(MergingReport.Result.SUCCESS, mergingReport.getResult());
+            String mergedDocument = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+            assertThat(mergedDocument).contains("/nav2_foo");
+        } finally {
+            assertTrue(tmpFile.delete());
+            assertTrue(nav1.delete());
+            assertTrue(nav2.delete());
         }
     }
 

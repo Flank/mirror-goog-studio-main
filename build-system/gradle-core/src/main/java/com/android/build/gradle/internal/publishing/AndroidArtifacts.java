@@ -113,6 +113,8 @@ public class AndroidArtifacts {
 
     private static final String TYPE_BUNDLE_MANIFEST = "android-bundle-manifest";
 
+    private static final String TYPE_NAVIGATION_JSON = "android-navigation-json";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
         RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
@@ -276,7 +278,9 @@ public class AndroidArtifacts {
 
         // types for querying only. Not publishable.
         AAR(TYPE_AAR),
-        EXPLODED_AAR(TYPE_EXPLODED_AAR);
+        EXPLODED_AAR(TYPE_EXPLODED_AAR),
+
+        NAVIGATION_JSON(TYPE_NAVIGATION_JSON);
 
         @NonNull private final String type;
 

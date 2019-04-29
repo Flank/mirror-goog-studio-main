@@ -41,7 +41,7 @@ import java.io.File
 
 class DependencyResourcesComputer {
     @set:VisibleForTesting
-    var resources: Map<String, BuildableArtifact>? = null
+    lateinit var resources: Map<String, BuildableArtifact>
 
     @set:VisibleForTesting
     var localLibraries: ArtifactCollection? = null
@@ -49,10 +49,10 @@ class DependencyResourcesComputer {
     var remoteLibraries: ArtifactCollection? = null
 
     @set:VisibleForTesting
-    var renderscriptResOutputDir: FileCollection? = null
+    lateinit var renderscriptResOutputDir: FileCollection
 
     @set:VisibleForTesting
-    var generatedResOutputDir: FileCollection? = null
+    lateinit var generatedResOutputDir: FileCollection
 
     @set:VisibleForTesting
     var microApkResDirectory: FileCollection? = null
@@ -191,29 +191,5 @@ class DependencyResourcesComputer {
             variantData.variantConfiguration.buildType.isEmbedMicroApp) {
             microApkResDirectory = project.files(variantScope.microApkResDirectory)
         }
-    }
-
-    fun initForNavigation(variantScope: VariantScope) {
-        this.localLibraries =
-            variantScope.getArtifactCollection(RUNTIME_CLASSPATH, PROJECT, ANDROID_RES)
-        this.remoteLibraries =
-            variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, ANDROID_RES)
-        this.resources = variantScope.variantData.androidResources
-    }
-
-    fun getNavigationXmlsList(logger: ILogger): List<File> {
-        val resourceSetList = compute()
-        val whitelist = Sets.immutableEnumSet(ResourceFolderType.NAVIGATION)
-        resourceSetList.forEach {
-            it.setResourcesWhitelist(whitelist)
-            it.loadFromFiles(logger)
-        }
-        return resourceSetList.flatMap {
-            it.dataMap.asMap().values
-                .map { it.first() } // Take the first if there are duplicates?
-                .filter { it.type == ResourceType.NAVIGATION }
-                .mapNotNull { it.file }
-            // reversed in order to have the right precedence (first with the higher priority)
-        }.reversed()
     }
 }

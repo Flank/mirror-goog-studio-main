@@ -29,6 +29,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.ide.common.xml.XmlFormatPreferences;
 import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.common.xml.XmlPrettyPrinter;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
@@ -41,6 +42,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -99,6 +102,7 @@ public class ManifestMerger2 {
     @NonNull private final String mFeatureName;
     @NonNull private final FileStreamProvider mFileStreamProvider;
     @NonNull private final ImmutableList<File> mNavigationFiles;
+    @NonNull private final ImmutableList<File> mNavigationJsons;
     @NonNull private final DocumentModel<ManifestModel.NodeTypes> mModel;
 
     private ManifestMerger2(
@@ -114,7 +118,8 @@ public class ManifestMerger2 {
             @NonNull Optional<File> reportFile,
             @NonNull String featureName,
             @NonNull FileStreamProvider fileStreamProvider,
-            @NonNull ImmutableList<File> navigationFiles) {
+            @NonNull ImmutableList<File> navigationFiles,
+            @NonNull ImmutableList<File> navigationJsons) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
         this.mPlaceHolderValues = placeHolderValues;
         this.mManifestFile = mainManifestFile;
@@ -128,6 +133,7 @@ public class ManifestMerger2 {
         this.mFeatureName = featureName;
         this.mFileStreamProvider = fileStreamProvider;
         this.mNavigationFiles = navigationFiles;
+        this.mNavigationJsons = navigationJsons;
         this.mModel =
                 new ManifestModel(
                         mOptionalFeatures.contains(
@@ -311,23 +317,9 @@ public class ManifestMerger2 {
 
         // done with proper merging phase, now we need to expand <nav-graph> elements, trim unwanted
         // elements, perform placeholder substitution and system properties injection.
-        Map<String, NavigationXmlDocument> loadedNavigationMap = new HashMap<>();
-        for (File navigationFile : mNavigationFiles) {
-            String navigationId = navigationFile.getName().replaceAll("\\.xml$", "");
-            if (loadedNavigationMap.get(navigationId) != null) {
-                continue;
-            }
-            try (InputStream inputStream = mFileStreamProvider.getInputStream(navigationFile)) {
-                loadedNavigationMap.put(
-                        navigationId,
-                        NavigationXmlLoader.INSTANCE.load(
-                                navigationId, navigationFile, inputStream));
-            } catch (Exception e) {
-                throw new MergeFailureException(e);
-            }
-        }
 
         if (mMergeType == MergeType.APPLICATION) {
+            Map<String, NavigationXmlDocument> loadedNavigationMap = createNavigationMap();
             xmlDocumentOptional =
                     Optional.of(
                             NavGraphExpander.INSTANCE.expandNavGraphs(
@@ -442,6 +434,45 @@ public class ManifestMerger2 {
         }
 
         return mergingReport;
+    }
+
+    private Map<String, NavigationXmlDocument> createNavigationMap() throws MergeFailureException {
+        Map<String, NavigationXmlDocument> loadedNavigationMap = new HashMap<>();
+        for (File navigationFile : mNavigationFiles) {
+            String navigationId = navigationFile.getName().replaceAll("\\.xml$", "");
+            if (loadedNavigationMap.get(navigationId) != null) {
+                continue;
+            }
+            try (InputStream inputStream = mFileStreamProvider.getInputStream(navigationFile)) {
+                loadedNavigationMap.put(
+                        navigationId,
+                        NavigationXmlLoader.INSTANCE.load(
+                                navigationId, navigationFile, inputStream));
+            } catch (Exception e) {
+                throw new MergeFailureException(e);
+            }
+        }
+        Gson gson = new GsonBuilder().create();
+        for (File navigationJson : mNavigationJsons) {
+            try {
+                String jsonText = FileUtils.loadFileWithUnixLineSeparators(navigationJson);
+                NavigationXmlDocumentData[] navDatas =
+                        gson.fromJson(jsonText, NavigationXmlDocumentData[].class);
+                for (NavigationXmlDocumentData navData : navDatas) {
+                    String navigationId = navData.getName();
+                    if (loadedNavigationMap.get(navigationId) != null) {
+                        mLogger.info(
+                                "Navigation file %s from %s is ignored (skipped).",
+                                navigationId, navigationJson);
+                        continue;
+                    }
+                    loadedNavigationMap.put(navigationId, new NavigationXmlDocument(navData));
+                }
+            } catch (IOException e) {
+                throw new MergeFailureException(e);
+            }
+        }
+        return loadedNavigationMap;
     }
 
     private LoadedManifestInfo removeDynamicFeatureManifestSplitAttributeIfSpecified(
@@ -1480,6 +1511,10 @@ public class ManifestMerger2 {
         private final ImmutableList.Builder<File> mNavigationFilesBuilder =
                 new ImmutableList.Builder<>();
 
+        @NonNull
+        private final ImmutableList.Builder<File> mNavigationJsonsBuilder =
+                new ImmutableList.Builder<>();
+
         /**
          * Sets a value for a {@link ManifestSystemProperty}
          * @param override the property to set
@@ -1836,6 +1871,18 @@ public class ManifestMerger2 {
         }
 
         /**
+         * Add several navigation.json files in the list.
+         *
+         * @param files the navigation.json files to add.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker addNavigationJsons(@NonNull Iterable<File> files) {
+            this.mNavigationJsonsBuilder.addAll(files);
+            return thisAsT();
+        }
+
+        /**
          * Specify if the file being merged is an overlay (flavor). If not called, the merging
          * process will assume a master manifest merge. The master manifest needs to have a package
          * and some other mandatory fields like "uses-sdk", etc.
@@ -1892,7 +1939,8 @@ public class ManifestMerger2 {
                             Optional.fromNullable(mReportFile),
                             mFeatureName,
                             fileStreamProvider,
-                            mNavigationFilesBuilder.build());
+                            mNavigationFilesBuilder.build(),
+                            mNavigationJsonsBuilder.build());
             return manifestMerger.merge();
         }
 

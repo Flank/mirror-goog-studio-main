@@ -56,6 +56,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
 import com.android.build.gradle.tasks.ExtractAnnotations;
+import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
@@ -109,6 +110,8 @@ public class LibraryTaskManager extends TaskManager {
         GlobalScope globalScope = variantScope.getGlobalScope();
 
         createAnchorTasks(variantScope);
+
+        taskFactory.register(new ExtractDeepLinksTask.CreationAction(variantScope));
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);

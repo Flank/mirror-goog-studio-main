@@ -34,8 +34,18 @@ import org.w3c.dom.NamedNodeMap
  * Has a pointer to the root [Element] and provides services to get lists of the directly
  * referenced navigation xml IDs and [DeepLink]s
  */
-@VisibleForTesting
-class NavigationXmlDocument(private val sourceFile: SourceFile, private val rootElement: Element) {
+class NavigationXmlDocument private constructor(
+    private val sourceFile: SourceFile?,
+    private val rootElement: Element?,
+    private val precomputedData: NavigationXmlDocumentData?) {
+
+    constructor(data: NavigationXmlDocumentData) :
+            this(null, null, data)
+
+    constructor(sourceFile: SourceFile, rootElement: Element) :
+            this(sourceFile, rootElement, null)
+
+    fun convertToData() = NavigationXmlDocumentData(name!!, navigationXmlIds, deepLinks)
 
     /**
      * The list of navigation xml IDs found in this document, including duplicates.
@@ -43,8 +53,11 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
      * "app:graph" attribute values, trimmed of their "@navigation/" prefix.
      */
     val navigationXmlIds: List<String> by lazy {
+        precomputedData?.let {
+            return@lazy it.navigationXmlIds
+        }
         val navigationXmlIds = ArrayList<String>()
-        getNavigationXmlIds(navigationXmlIds, rootElement)
+        getNavigationXmlIds(navigationXmlIds, rootElement!!)
         ImmutableList.copyOf(navigationXmlIds)
     }
 
@@ -53,10 +66,19 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
      * [DeepLink]s are found in <deepLink> elements.
      */
     val deepLinks: List<DeepLink> by lazy {
+        precomputedData?.let {
+            return@lazy it.deepLinks
+        }
         val deepLinks = ArrayList<DeepLink>()
-        getDeepLinks(deepLinks, rootElement)
+        getDeepLinks(deepLinks, rootElement!!)
         ImmutableList.copyOf(deepLinks)
     }
+
+    val name: String? =
+        precomputedData?.let {
+            it.name
+        } ?: sourceFile!!.description
+
 
     /**
      * Recursive search for navigation xml IDs
@@ -113,7 +135,7 @@ class NavigationXmlDocument(private val sourceFile: SourceFile, private val root
                                     SdkConstants.ANDROID_URI, SdkConstants.ATTR_AUTO_VERIFY)
             val autoVerify = autoVerifyAttribute?.nodeValue == "true"
             val sourceFilePosition =
-                    SourceFilePosition(sourceFile, PositionXmlParser.getPosition(element))
+                    SourceFilePosition(sourceFile!!, PositionXmlParser.getPosition(element))
             if (deepLinkUri != null) {
                 deepLinks.add(DeepLink.fromUri(deepLinkUri, sourceFilePosition, autoVerify))
             } else {

@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.VariantType;
@@ -110,6 +111,9 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         createAnchorTasks(variantScope);
+
+        taskFactory.register(new ExtractDeepLinksTask.CreationAction(variantScope));
+
         createCheckManifestTask(variantScope);
 
         handleMicroApp(variantScope);

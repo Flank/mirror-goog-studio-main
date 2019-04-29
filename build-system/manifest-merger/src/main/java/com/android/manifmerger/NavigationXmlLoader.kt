@@ -26,7 +26,6 @@ import javax.xml.parsers.ParserConfigurationException
 import org.xml.sax.SAXException
 
 /** Responsible for loading navigation XML files.  */
-@VisibleForTesting
 object NavigationXmlLoader {
 
     /**

@@ -16,13 +16,13 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.FN_APK_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_FEATURE_MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NAVIGATION_JSON;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -31,7 +31,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.DependencyResourcesComputer;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -56,13 +55,11 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
-import com.android.ide.common.resources.FileStatus;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
 import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
-import com.android.resources.ResourceFolderType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -71,10 +68,9 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -117,7 +113,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
-    private final DependencyResourcesComputer resourcesComputer = new DependencyResourcesComputer();
+
+    private FileCollection navigationJsons;
 
     // supplier to read the file above to get the feature name for the current project.
     @Nullable private Supplier<String> featureNameSupplier = null;
@@ -125,15 +122,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Inject
     public ProcessApplicationManifest(ObjectFactory objectFactory) {
         super(objectFactory);
-    }
-
-    @Override
-    @Internal
-    protected boolean getIncremental() {
-        // This task is not actually incremental, the incrementality is used to skip executions
-        // triggered by the changes in files not used in this task. Namely, we only use manifests
-        // and navigation xml resource files
-        return true;
     }
 
     @Override
@@ -180,8 +168,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         ImmutableList.Builder<BuildOutput> bundleManifestOutputs = ImmutableList.builder();
         ImmutableList.Builder<BuildOutput> instantAppManifestOutputs = ImmutableList.builder();
 
-        List<File> navigationXmls =
-                resourcesComputer.getNavigationXmlsList(new LoggerWrapper(getLogger()));
+        List<File> navJsons =
+                navigationJsons == null
+                        ? Collections.emptyList()
+                        : Lists.newArrayList(navigationJsons);
         // FIX ME : multi threading.
         for (ApkData apkData : ExistingBuildElements.loadApkList(getApkList().get().getAsFile())) {
 
@@ -216,7 +206,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             getMainManifest(),
                             getManifestOverlays(),
                             computeFullProviderList(compatibleScreenManifestForSplit),
-                            navigationXmls,
+                            navJsons,
                             getFeatureName(),
                             moduleMetadata == null
                                     ? getPackageOverride()
@@ -299,32 +289,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         }
     }
 
-    private static boolean hasManifestsOrApkLists(Set<File> files) {
-        return files.stream()
-                .map(File::getName)
-                .anyMatch(name -> name.equals(ANDROID_MANIFEST_XML) || name.equals(FN_APK_LIST));
-    }
-
-    private static boolean hasNavigationXmls(Set<File> files) {
-        return files.stream()
-                .anyMatch(
-                        file ->
-                                ResourceFolderType.getFolderType(file.getParentFile().getName())
-                                        == ResourceFolderType.NAVIGATION);
-    }
-
-    @Override
-    protected void doIncrementalTaskAction(Map<File, ? extends FileStatus> changedInputs)
-            throws IOException {
-        Set<File> files = changedInputs.keySet();
-        if (hasManifestsOrApkLists(files)
-                || hasNavigationXmls(files)
-                || files.contains(getApkList().get().getAsFile())) {
-
-            doFullTaskAction();
-        }
-    }
-
     @Nullable
     @Override
     @Internal
@@ -349,36 +313,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @Optional
     public String getPackageOverride() {
         return variantConfiguration.getIdOverride();
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getLocalLibraries() {
-        if (resourcesComputer.getLocalLibraries() != null) {
-            return resourcesComputer.getLocalLibraries().getArtifactFiles();
-        }
-        return null;
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getRemoteLibraries() {
-        if (resourcesComputer.getRemoteLibraries() != null) {
-            return resourcesComputer.getRemoteLibraries().getArtifactFiles();
-        }
-        return null;
-    }
-
-    @Optional
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public Collection<BuildableArtifact> getResources() {
-        if (resourcesComputer.getResources() != null) {
-            return resourcesComputer.getResources().values();
-        }
-        return null;
     }
 
     /**
@@ -554,6 +488,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests.getArtifactFiles();
+    }
+
+    @Optional
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getNavigationJsons() {
+        return navigationJsons;
     }
 
     @InputFiles
@@ -788,7 +729,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
 
             if (!variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
-                task.resourcesComputer.initForNavigation(variantScope);
+                task.navigationJsons =
+                        project.files(
+                                variantScope
+                                        .getArtifacts()
+                                        .getFinalProduct(InternalArtifactType.NAVIGATION_JSON),
+                                variantScope.getArtifactFileCollection(
+                                        RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }
