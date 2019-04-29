@@ -14,40 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp
+import com.android.utils.FileUtils
+import com.google.common.base.Charsets
+import java.nio.file.Files
+import org.junit.Rule
+import org.junit.Test
 
-public class DexArchivesKotlinTest {
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
-                    .create();
+class DexArchivesKotlinTest {
+    @get:Rule
+    val project = GradleTestProject.builder()
+        .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
-    /** Regression test for http://b/65363841. */
+    /** Regression test for http://b/65363841.  */
     @Test
-    public void testIncrementalDexing() throws IOException, InterruptedException {
-        String javaContent = "package com.example.helloworld;\n" + "public class MyClass {}";
-        File srcToRemove =
-                FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/MyClass.java");
-        FileUtils.mkdirs(srcToRemove.getParentFile());
-        Files.write(srcToRemove.toPath(), javaContent.getBytes(Charsets.UTF_8));
-        project.executor().run("assembleDebug");
+    fun testIncrementalDexing() {
+        val javaContent = "package com.example.helloworld;\n" + "public class MyClass {}"
+        val srcToRemove = FileUtils.join(project.mainSrcDir, "com/example/helloworld/MyClass.java")
+        FileUtils.mkdirs(srcToRemove.parentFile)
+        Files.write(srcToRemove.toPath(), javaContent.toByteArray(Charsets.UTF_8))
+        project.executor().run("assembleDebug")
 
-        FileUtils.delete(srcToRemove);
-        String kotlinContent = "package com.example.helloworld;\n class MyClass";
-        File kotlinSrc =
-                FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/MyClass.kt");
-        Files.write(kotlinSrc.toPath(), kotlinContent.getBytes(Charsets.UTF_8));
-        project.executor().run("assembleDebug");
+        FileUtils.delete(srcToRemove)
+        val kotlinContent = "package com.example.helloworld;\n class MyClass"
+        val kotlinSrc = FileUtils.join(project.mainSrcDir, "com/example/helloworld/MyClass.kt")
+        Files.write(kotlinSrc.toPath(), kotlinContent.toByteArray(Charsets.UTF_8))
+        project.executor().run("assembleDebug")
     }
 }
+
