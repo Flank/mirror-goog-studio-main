@@ -29,9 +29,10 @@ namespace profiler {
 class JByteArrayWrapper {
  public:
   JByteArrayWrapper(JNIEnv *env, const jbyteArray &jbytes, const jint jlen) {
-    char bytes[jlen];
+    char *bytes = new char[jlen];
     env->GetByteArrayRegion(jbytes, 0, jlen, reinterpret_cast<jbyte *>(bytes));
     byte_str_.assign(bytes, jlen);
+    delete[] bytes;
   }
 
   // Note: Although this is technically returning a string, this really is more
