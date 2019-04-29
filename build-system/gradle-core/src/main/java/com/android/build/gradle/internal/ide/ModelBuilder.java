@@ -85,6 +85,7 @@ import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.ProjectSyncIssues;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SyncIssue;
@@ -100,6 +101,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -153,6 +155,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
      */
     private ImmutableMap<String, String> buildMapping = null;
 
+    // TODO: Stop buildAndroidProject from manually populating
+    //       this field and use the syncIssueHandler instead.
     private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
     public ModelBuilder(
@@ -181,7 +185,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(GlobalLibraryMap.class.getName())
                 || modelName.equals(ProjectBuildOutput.class.getName())
-                || modelName.equals(Variant.class.getName());
+                || modelName.equals(Variant.class.getName())
+                || modelName.equals(ProjectSyncIssues.class.getName());
     }
 
     @NonNull
@@ -229,8 +234,13 @@ public class ModelBuilder<Extension extends AndroidConfig>
     private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(ProjectBuildOutput.class.getName())) {
             return buildMinimalisticModel();
+        } else if (modelName.equals(GlobalLibraryMap.class.getName())) {
+            return buildGlobalLibraryMap();
+        } else if (modelName.equals(ProjectSyncIssues.class.getName())) {
+            return buildProjectSyncIssuesModel();
         }
-        return buildGlobalLibraryMap();
+
+        throw new RuntimeException("Invalid model requested: " + modelName);
     }
 
     @Override
@@ -297,6 +307,15 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
     private static Object buildGlobalLibraryMap() {
         return new GlobalLibraryMapImpl(LibraryUtils.getGlobalLibMap());
+    }
+
+    private Object buildProjectSyncIssuesModel() {
+        // TODO: Lock the issue handler object so any attempt to register new issues should throw.
+        return new DefaultProjectSyncIssues(
+                ImmutableSet.<SyncIssue>builder()
+                        .addAll(syncIssues)
+                        .addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues())
+                        .build());
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
