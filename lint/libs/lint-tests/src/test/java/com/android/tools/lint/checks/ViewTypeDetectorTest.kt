@@ -29,7 +29,7 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "    android:layout_height=\"match_parent\"\n" +
                 "    android:orientation=\"vertical\" >\n" +
                 "\n" +
-                "    <Button\n" +
+                "    <view class=\"Button\"\n" +
                 "        android:id=\"@+id/button\"\n" +
                 "        android:layout_width=\"wrap_content\"\n" +
                 "        android:layout_height=\"wrap_content\"\n" +
@@ -40,6 +40,11 @@ class ViewTypeDetectorTest : AbstractCheckTest() {
                 "        android:layout_width=\"wrap_content\"\n" +
                 "        android:layout_height=\"wrap_content\"\n" +
                 "        android:text=\"EditText\" />\n" +
+                "\n" +
+                "    <view\n" + // missing class=
+                "        android:id=\"@+id/view\"\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\" />\n" +
                 "\n" +
                 "</LinearLayout>\n"
     )

@@ -424,8 +424,8 @@ open class ViewTypeDetector : ResourceXmlDetector(), SourceCodeScanner {
                     id = stripIdPrefix(id)
                     var tag = parser.name ?: continue
                     if (tag == VIEW_TAG || tag == VIEW_FRAGMENT) {
-                        tag = parser.getAttributeValue(null, ATTR_CLASS)
-                        if (tag == null || tag.isEmpty()) {
+                        tag = parser.getAttributeValue(null, ATTR_CLASS) ?: continue
+                        if (tag.isEmpty()) {
                             continue
                         }
                     } else if (tag == VIEW_MERGE || tag == VIEW_INCLUDE) {
