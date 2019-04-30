@@ -77,22 +77,30 @@ public final class PathUtils {
          * We have also tried using Guava (com.google.common.io.MoreFiles.deleteRecursively) for
          * file deletion, but (surprisingly) Guava also faces this same problem.
          *
-         * To work around the issue, we could wait for a fixed amount of time, but it's unclear how
-         * long we should wait to be effective but not wasteful. Therefore, let's just keep deleting
-         * the directory until it succeeds or hits a reasonable limit.
+         * To work around the issue, we use a combination of waiting and retrying. Waiting alone is
+         * not enough because it's unclear how long we should wait to be effective but not wasteful.
+         * Retrying alone is not enough because we tried it before and still ran into this issue---
+         * see bug 131623810.
          */
         try {
             Files.deleteIfExists(path);
         } catch (DirectoryNotEmptyException exception) {
-            int failedAttempts = 1; // Count the failed deletion above
+            // Keep deleting the directory until it succeeds or hits a reasonable limit.
+            int failedAttempts = 1; // Count failed attempts, including the initial failure above
             while (failedAttempts < EMPTY_DIRECTORY_DELETION_ATTEMPTS) {
                 try {
                     // making the thread sleep for a minimum amount of time appears to improve the
                     // odds of success. I suspect that JDK is forcing re-reading or flushing when
                     // the thread is swapped in/out.
                     Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException(e);
+                }
+                try {
+
                     Files.deleteIfExists(path);
-                } catch (InterruptedException | DirectoryNotEmptyException e) {
+                } catch (DirectoryNotEmptyException e) {
                     failedAttempts++;
                     continue;
                 }
