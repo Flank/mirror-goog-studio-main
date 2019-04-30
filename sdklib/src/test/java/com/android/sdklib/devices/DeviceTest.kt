@@ -47,6 +47,8 @@ class DeviceTest {
   val pixel2XLPhone = devMgr.getDevice("pixel_2_xl", "Google")
   val pixel3Phone = devMgr.getDevice("pixel_3", "Google")
   val pixel3XLPhone = devMgr.getDevice("pixel_3_xl", "Google")
+  val pixel3aPhone = devMgr.getDevice("pixel_3a", "Google")
+  val pixel3aXLPhone = devMgr.getDevice("pixel_3a_xl", "Google")
 
   @Test
   fun testGetDisplayName() {
@@ -59,6 +61,8 @@ class DeviceTest {
     assertThat(pixel2XLPhone?.getDisplayName()).isEqualTo("Pixel 2 XL")
     assertThat(pixel3Phone?.getDisplayName()).isEqualTo("Pixel 3")
     assertThat(pixel3XLPhone?.getDisplayName()).isEqualTo("Pixel 3 XL")
+    assertThat(pixel3aPhone?.getDisplayName()).isEqualTo("Pixel 3a")
+    assertThat(pixel3aXLPhone?.getDisplayName()).isEqualTo("Pixel 3a XL")
   }
 
   @Test
@@ -72,6 +76,8 @@ class DeviceTest {
     assertThat(pixel2XLPhone?.hasPlayStore()).isFalse()
     assertThat(pixel3Phone?.hasPlayStore()).isTrue()
     assertThat(pixel3XLPhone?.hasPlayStore()).isFalse()
+    assertThat(pixel3aPhone?.hasPlayStore()).isTrue()
+    assertThat(pixel3aXLPhone?.hasPlayStore()).isFalse()
   }
 
   @Test
@@ -85,6 +91,8 @@ class DeviceTest {
     assertThat(pixel2XLPhone?.manufacturer).isEqualTo("Google")
     assertThat(pixel3Phone?.manufacturer).isEqualTo("Google")
     assertThat(pixel3XLPhone?.manufacturer).isEqualTo("Google")
+    assertThat(pixel3aPhone?.manufacturer).isEqualTo("Google")
+    assertThat(pixel3aXLPhone?.manufacturer).isEqualTo("Google")
   }
 
   @Test
@@ -98,6 +106,8 @@ class DeviceTest {
     assertThat(pixel2XLPhone?.getScreenSize(ScreenOrientation.LANDSCAPE)).isEqualTo(Dimension(2880, 1440))
     assertThat(pixel3Phone?.getScreenSize(ScreenOrientation.LANDSCAPE)).isEqualTo(Dimension(2160, 1080))
     assertThat(pixel3XLPhone?.getScreenSize(ScreenOrientation.LANDSCAPE)).isEqualTo(Dimension(2960, 1440))
+    assertThat(pixel3aPhone?.getScreenSize(ScreenOrientation.LANDSCAPE)).isEqualTo(Dimension(2220, 1080))
+    assertThat(pixel3aXLPhone?.getScreenSize(ScreenOrientation.LANDSCAPE)).isEqualTo(Dimension(2160, 1080))
   }
 
 }
