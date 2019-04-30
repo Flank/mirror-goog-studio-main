@@ -27,11 +27,9 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 
 /**
  * Task to persist the {@see OutputScope#apkdatas} which allows downstream tasks to depend
@@ -73,7 +71,8 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 taskProvider.map { task -> task.outputFile },
-                SdkConstants.FN_APK_LIST)
+                fileName = SdkConstants.FN_APK_LIST
+            )
         }
 
         override fun configure(task: MainApkListPersistence) {

@@ -1029,11 +1029,16 @@ public class ModelBuilder<Extension extends AndroidConfig>
                                         mainApkInfo.getType(),
                                         mainApkInfo.getFilters(),
                                         mainApkInfo.getVersionCode(),
-                                        BuildableArtifactUtil.singleFile(
+                                        new File(
                                                 variantScope
                                                         .getArtifacts()
-                                                        .getFinalArtifactFiles(
-                                                                InternalArtifactType.AAR)))));
+                                                        .getFinalProduct(InternalArtifactType.AAR)
+                                                        .get()
+                                                        .getAsFile(),
+                                                variantScope
+                                                        .getOutputScope()
+                                                        .getMainSplit()
+                                                        .getOutputFileName()))));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(InternalArtifactType.APK),

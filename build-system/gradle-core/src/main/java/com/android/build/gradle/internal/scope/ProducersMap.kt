@@ -55,25 +55,45 @@ class ProducersMap<T: FileSystemLocation>(
      * [ArtifactType]
      *
      * @param artifactType the artifact type for looked up producers.
+     * @param buildDirectory intended location for the artifact or not provided if using the default.
      * @return a [Producers] instance for that [ArtifactType]
      */
-    fun getProducers(artifactType: ArtifactType)=
-        producersMap.getOrPut(artifactType) {
+    internal fun getProducers(artifactType: ArtifactType, buildDirectory: Provider<Directory> = this.buildDirectory): Producers<T> {
+
+        val outputLocationResolver: (Producers<T>, Producer<T>) -> Provider<T> =
+            if (buildDirectory != this.buildDirectory) {
+                { _, producer -> producer.resolve(buildDirectory.get().asFile) }
+            } else {
+                { producers, producer ->
+                    val outputLocation = FileUtils.join(
+                        artifactType.getOutputDir(buildDirectory.get().asFile),
+                        identifier(),
+                        if (producers.hasMultipleProducers()) producer.taskName else ""
+                    )
+
+                    producer.resolve(outputLocation) }
+            }
+
+        return producersMap.getOrPut(artifactType) {
             Producers(
                 artifactType,
                 identifier,
                 buildDirectory,
-                when(artifactType.kind()) {
-                    ArtifactType.Kind.DIRECTORY -> buildDirectory.dir("__EMPTY_DIR__")
-                    ArtifactType.Kind.FILE -> buildDirectory.file("__EMPTY_FILE__")
+                outputLocationResolver,
+                when (artifactType.kind()) {
+                    ArtifactType.Kind.DIRECTORY -> this.buildDirectory.dir("__EMPTY_DIR__")
+                    ArtifactType.Kind.FILE -> this.buildDirectory.file("__EMPTY_FILE__")
                 } as Provider<T>,
-                objectFactory.listProperty(when(artifactType.kind()) {
-                    ArtifactType.Kind.DIRECTORY -> Directory::class.java
-                    ArtifactType.Kind.FILE -> RegularFile::class.java
-                } as Class<T>),
+                objectFactory.listProperty(
+                    when (artifactType.kind()) {
+                        ArtifactType.Kind.DIRECTORY -> Directory::class.java
+                        ArtifactType.Kind.FILE -> RegularFile::class.java
+                    } as Class<T>
+                ),
                 objectFactory.listProperty(Provider::class.java as Class<Provider<T>>)
             )
         }!!
+    }
 
     /**
      * Republishes an [ArtifactType] under a different type. This is useful when a level of
@@ -84,7 +104,7 @@ class ProducersMap<T: FileSystemLocation>(
      * under.
      */
     fun republish(from: ArtifactType, to: ArtifactType) {
-        producersMap[to] = getProducers(from)
+        producersMap[to] = getProducers(from, buildDirectory)
     }
 
     /**
@@ -104,12 +124,11 @@ class ProducersMap<T: FileSystemLocation>(
     class Producers<T : FileSystemLocation>(
         val artifactType: ArtifactType,
         val identifier: () -> String,
-        val buildDirectory: DirectoryProperty,
+        val buildDirectory: Provider<Directory>,
+        val resolver: (Producers<T>, Producer<T>) -> Provider<T>,
         private val emptyProvider: Provider<T>,
         private val listProperty: ListProperty<T>,
         val dependencies: ListProperty<Provider<T>>) : ArrayList<Producer<T>>() {
-
-        val buildDir:File = buildDirectory.get().asFile
 
         // create a unique injectable value for this artifact type. This injectable value will be
         // used for consuming the artifact. When the provider is resolved, which mean that the
@@ -127,9 +146,8 @@ class ProducersMap<T: FileSystemLocation>(
 
         private fun resolveAll(): List<Provider<T>> {
             return synchronized(this) {
-                val multipleProducers = hasMultipleProducers()
                 map {
-                    it.resolve(buildDir, identifier, artifactType, multipleProducers)
+                    resolver(this, it)
                 }
             }
         }
@@ -152,15 +170,15 @@ class ProducersMap<T: FileSystemLocation>(
 
         fun getCurrent(): Provider<T>? {
             val currentProduct = lastOrNull() ?: return null
-            return currentProduct.resolve(buildDir, identifier, artifactType, hasMultipleProducers())
+            return resolver(this, currentProduct)
         }
 
         fun getAllProducers(): ListProperty<T> {
             return listProperty
         }
 
-        fun resolve(producer: Producer<T>) =
-            producer.resolve(buildDir, identifier, artifactType, hasMultipleProducers())
+        fun resolve(producer: Producer<T>)=
+            resolver(this, producer)
 
         fun hasMultipleProducers() = size > 1
     }
@@ -174,16 +192,9 @@ class ProducersMap<T: FileSystemLocation>(
         private val originalProperty: Provider<Property<T>>,
         val taskName: String,
         val fileName: String) {
-        fun resolve(buildDir: File,
-            identifier: () -> String,
-            artifactType: ArtifactType,
-            multipleProducers: Boolean): Provider<T> {
+        fun resolve(outputDirectory: File): Provider<T> {
 
-            val fileLocation = FileUtils.join(
-                artifactType.getOutputDir(buildDir),
-                identifier(),
-                if (multipleProducers) taskName else "",
-                fileName)
+            val fileLocation = File(outputDirectory, fileName)
             when(settableLocation) {
                 is DirectoryProperty->
                     settableLocation.set(fileLocation)

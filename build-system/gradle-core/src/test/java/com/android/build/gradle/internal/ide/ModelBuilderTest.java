@@ -28,14 +28,17 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
+import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.VariantType;
@@ -55,13 +58,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -337,11 +340,17 @@ public class ModelBuilderTest {
         when(variantScope.getArtifacts()).thenReturn(artifacts);
         BaseVariantData variantData = createVariantData(variantScope, variantConfiguration);
 
-        BuildableArtifact buildableArtifact = Mockito.mock(BuildableArtifact.class);
-        when(buildableArtifact.iterator())
-                .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
-        when(artifacts.getFinalArtifactFiles(ArgumentMatchers.eq(InternalArtifactType.AAR)))
-                .thenReturn(buildableArtifact);
+        RegularFile regularFileMock = Mockito.mock(RegularFile.class);
+        when(regularFileMock.getAsFile()).thenReturn(temporaryFolder.getRoot());
+        when(artifacts.<RegularFile>getFinalProduct(InternalArtifactType.AAR))
+                .thenReturn(new FakeGradleProvider<>(regularFileMock));
+
+        OutputScope outputScopeMock = Mockito.mock(OutputScope.class);
+        when(variantScope.getOutputScope()).thenReturn(outputScopeMock);
+        ApkData apkDataMock = Mockito.mock(ApkData.class);
+        when(outputScopeMock.getMainSplit()).thenReturn(apkDataMock);
+        when(apkDataMock.getOutputFileName()).thenReturn("test.aar");
+
 
         GradleVariantConfiguration testVariantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);

@@ -127,7 +127,7 @@ abstract class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory)
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 taskProvider.map { it.outputDir },
-                "out"
+                fileName = "out"
             )
         }
 

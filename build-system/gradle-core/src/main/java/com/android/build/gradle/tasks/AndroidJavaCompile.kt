@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
@@ -271,11 +270,12 @@ abstract class AndroidJavaCompile: JavaCompile(), VariantAwareTask {
 
             variantScope.taskContainer.javacTask = taskProvider
 
-            variantScope.artifacts.producesDir(JAVAC,
+            variantScope.artifacts.producesDir(
+                JAVAC,
                 APPEND,
                 taskProvider,
                 taskProvider.map { it.outputDirectory },
-                "classes"
+                fileName = "classes"
                 )
 
             // When doing annotation processing, register its output

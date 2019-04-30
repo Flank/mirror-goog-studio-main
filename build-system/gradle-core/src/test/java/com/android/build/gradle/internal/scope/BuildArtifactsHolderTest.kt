@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.scope
 import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_MANIFEST
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
@@ -78,7 +76,7 @@ class BuildArtifactsHolderTest(
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
-    private lateinit var holder : BuildArtifactsHolder
+    private lateinit var holder : TestBuildArtifactsHolder
     private lateinit var task1 : Task
     private lateinit var task2 : Task
     private lateinit var task3 : Task
@@ -87,19 +85,16 @@ class BuildArtifactsHolderTest(
     fun setUp() {
         project = ProjectBuilder.builder().build()
         root = project.file("build")
-        holder = VariantBuildArtifactsHolder(
+        holder = TestBuildArtifactsHolder(
             project,
             "debug",
-            root,
-            dslScope)
+            ::root,
+            dslScope
+        )
         task1 = project.tasks.create("task1")
         task2 = project.tasks.create("task2")
         task3 = project.tasks.create("task3")
     }
-
-    /** Return the expected location of a generated file given the task name and file name. */
-    private fun file(artifactType: InternalArtifactType, taskName : String, filename : String) =
-            FileUtils.join(artifactType.getOutputDir(root), "debug", taskName, filename)
 
     @Test
     fun earlyFinalOutput() {
@@ -112,13 +107,20 @@ class BuildArtifactsHolderTest(
 
     @Test
     fun lateFinalOutput() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         val taskProvider = registerDirectoryTask("final")
-        newHolder.producesDir(MERGED_MANIFESTS,
+        newHolder.producesDir(
+            MERGED_MANIFESTS,
             operationType,
             taskProvider,
             taskProvider.map { task -> task.output },
-            "finalFile")
+            fileName = "finalFile"
+        )
 
         val files = newHolder.getCurrentProduct(MERGED_MANIFESTS)
         assertThat(files).isNotNull()
@@ -132,13 +134,20 @@ class BuildArtifactsHolderTest(
 
     @Test
     fun appendProducerTest() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         val task1Provider = registerDirectoryTask("original")
-        newHolder.producesDir(MERGED_MANIFESTS,
+        newHolder.producesDir(
+            MERGED_MANIFESTS,
             OperationType.INITIAL,
             task1Provider,
             task1Provider.map { task -> task.output },
-            "initialFile")
+            fileName = "initialFile"
+        )
 
         val task2Provider = registerDirectoryTask(operationType.name)
         val appendShouldFail = operationType != OperationType.APPEND
@@ -149,7 +158,7 @@ class BuildArtifactsHolderTest(
                 operationType,
                 task2Provider,
                 task2Provider.map { task -> task.output },
-                "appended"
+                fileName = "appended"
             )
         } catch(e:RuntimeException) {
             assertThat(appendShouldFail).isTrue()
@@ -185,14 +194,20 @@ class BuildArtifactsHolderTest(
 
     @Test
     fun finalProducerLocation() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         if (artifactType.kind == ArtifactType.Kind.FILE) {
             val taskProvider = registerRegularFileTask("test")
-            newHolder.producesFile(artifactType,
+            newHolder.producesFile(
+                artifactType,
                 operationType,
                 taskProvider,
                 taskProvider.map { task -> task.output },
-                "finalFile"
+                fileName = "finalFile"
             )
         } else {
             val taskProvider = registerDirectoryTask("test")
@@ -201,7 +216,7 @@ class BuildArtifactsHolderTest(
                 operationType,
                 taskProvider,
                 taskProvider.map { task -> task.output },
-                "finalFile"
+                fileName = "finalFile"
             )
         }
 
@@ -219,7 +234,12 @@ class BuildArtifactsHolderTest(
 
     @Test
     fun finalProducersLocation() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         val firstProvider : TaskProvider<out Task>
         val secondProvider : TaskProvider<out Task>
 
@@ -230,7 +250,8 @@ class BuildArtifactsHolderTest(
                 operationType,
                 firstProvider,
                 firstProvider.map { task -> task.output },
-                "firstFile")
+                fileName = "firstFile"
+            )
 
             secondProvider = registerRegularFileTask("second")
             newHolder.producesFile(
@@ -238,7 +259,8 @@ class BuildArtifactsHolderTest(
                 OperationType.APPEND,
                 secondProvider,
                 secondProvider.map { task -> task.output },
-                "secondFile")
+                fileName = "secondFile"
+            )
         } else {
             firstProvider = registerDirectoryTask("first")
             newHolder.producesDir(
@@ -246,7 +268,8 @@ class BuildArtifactsHolderTest(
                 operationType,
                 firstProvider,
                 firstProvider.map { task -> task.output },
-                "firstFile")
+                fileName = "firstFile"
+            )
 
             secondProvider = registerDirectoryTask("second")
             newHolder.producesDir(
@@ -254,7 +277,8 @@ class BuildArtifactsHolderTest(
                 OperationType.APPEND,
                 secondProvider,
                 secondProvider.map { task -> task.output },
-                "secondFile")
+                fileName = "secondFile"
+            )
         }
 
         val finalArtifactFiles: ListProperty<out FileSystemLocation> = newHolder.getFinalProducts(artifactType)
@@ -287,26 +311,36 @@ class BuildArtifactsHolderTest(
         holder.createBuildableArtifact(
             MERGED_MANIFESTS,
             OperationType.INITIAL,
-            project.files(file(MERGED_MANIFESTS,"task1", "task1File")).files,
+            project.files(holder.file(MERGED_MANIFESTS,"task1", "task1File")).files,
             task1.name)
         val javaClasses = holder.getArtifactFiles(MERGED_MANIFESTS)
 
         // register the buildable artifact under a different type.
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         newHolder.createBuildableArtifact(
             MERGED_MANIFESTS,
             OperationType.INITIAL,
             javaClasses)
         // and verify that files and dependencies are carried over.
         val newJavaClasses = newHolder.getArtifactFiles(MERGED_MANIFESTS)
-        assertThat(newJavaClasses.single()).isEqualTo(file(MERGED_MANIFESTS,"task1", "task1File"))
+        assertThat(newJavaClasses.single()).isEqualTo(holder.file(MERGED_MANIFESTS,"task1", "task1File"))
         @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
         assertThat(newJavaClasses.buildDependencies.getDependencies(null)).containsExactly(task1)
     }
 
     @Test
     fun finalBuildableLocation() {
-        val newHolder = TestBuildArtifactsHolder(project, { root }, dslScope)
+        val newHolder = TestBuildArtifactsHolder(
+            project,
+            "test",
+            ::root,
+            dslScope
+        )
         artifactType.createOutputLocation(
             newHolder,
             operationType,
@@ -330,20 +364,20 @@ class BuildArtifactsHolderTest(
     fun transformedBuildableIntermediatesAccess() {
         holder.createBuildableArtifact(artifactType,
             OperationType.INITIAL,
-            project.files(file(artifactType,"task1", "foo")).files, task1.name)
+            project.files(holder.file(artifactType,"task1", "foo")).files, task1.name)
         val files1 = holder.getArtifactFiles(artifactType)
         holder.createBuildableArtifact(artifactType,
             OperationType.TRANSFORM,
-            project.files(file(artifactType,"task2", "bar")).files, task2.name)
+            project.files(holder.file(artifactType,"task2", "bar")).files, task2.name)
         val files2 = holder.getArtifactFiles(artifactType)
         artifactType.createOutputLocation(holder, OperationType.APPEND,
             task3.name,
             "baz")
 
-        assertThat(files1.single()).isEqualTo(file(artifactType,"task1", "foo"))
+        assertThat(files1.single()).isEqualTo(holder.file(artifactType,"task1", "foo"))
         // TaskDependency.getDependencies accepts null.
         assertThat(files1.buildDependencies.getDependencies(null)).containsExactly(task1)
-        assertThat(files2.single()).isEqualTo(file(artifactType,"task2", "bar"))
+        assertThat(files2.single()).isEqualTo(holder.file(artifactType,"task2", "bar"))
         assertThat(files2.buildDependencies.getDependencies(null)).containsExactly(task2)
 
         val history = holder.getHistory(artifactType)
@@ -365,14 +399,14 @@ class BuildArtifactsHolderTest(
         val afterTask3 = holder.getArtifactFiles(artifactType)
 
         assertThat(afterTask1).containsExactly(
-            file(artifactType, "task1", "foo"))
+            holder.file(artifactType, "task1", "foo"))
         assertThat(afterTask2).containsExactly(
-            file(artifactType,"task1", "foo"),
-            file(artifactType,"task2", "bar"))
+            holder.file(artifactType,"task1", "foo"),
+            holder.file(artifactType,"task2", "bar"))
         assertThat(afterTask3).containsExactly(
-            file(artifactType,"task1", "foo"),
-            file(artifactType,"task2", "bar"),
-            file(artifactType,"task3", "baz"))
+            holder.file(artifactType,"task1", "foo"),
+            holder.file(artifactType,"task2", "bar"),
+            holder.file(artifactType,"task3", "baz"))
 
         assertThat(afterTask1.buildDependencies.getDependencies(null)).containsExactly(task1)
         assertThat(afterTask2.buildDependencies.getDependencies(null))
@@ -395,12 +429,12 @@ class BuildArtifactsHolderTest(
         val afterTask3 = holder.getArtifactFiles(artifactType)
 
         assertThat(afterTask1).containsExactly(
-            file(artifactType,"task1", "foo"))
+            holder.file(artifactType,"task1", "foo"))
         assertThat(afterTask2).containsExactly(
-            file(artifactType,"task1", "foo"),
-            file(artifactType,"task2", "bar"))
+            holder.file(artifactType,"task1", "foo"),
+            holder.file(artifactType,"task2", "bar"))
         assertThat(afterTask3).containsExactly(
-            file(artifactType,"task3", "baz"))
+            holder.file(artifactType,"task3", "baz"))
 
         assertThat(afterTask1.buildDependencies.getDependencies(null)).containsExactly(task1)
         assertThat(afterTask2.buildDependencies.getDependencies(null))
@@ -417,9 +451,9 @@ class BuildArtifactsHolderTest(
         artifactType.createOutputLocation(holder, OperationType.APPEND, task3.name, "baz")
 
         assertThat(allFiles).containsExactly(
-            file(artifactType,"task1", "foo"),
-            file(artifactType,"task2", "bar"),
-            file(artifactType,"task3", "baz"))
+            holder.file(artifactType,"task1", "foo"),
+            holder.file(artifactType,"task2", "bar"),
+            holder.file(artifactType,"task3", "baz"))
     }
 
     @Test
@@ -430,7 +464,7 @@ class BuildArtifactsHolderTest(
         artifactType.createOutputLocation(holder, OperationType.TRANSFORM, task3.name, "baz")
 
         assertThat(allFiles).containsExactly(
-            file(artifactType,"task3", "baz"))
+            holder.file(artifactType,"task3", "baz"))
     }
 
     @Test
@@ -537,13 +571,5 @@ class BuildArtifactsHolderTest(
 
     open class RegularFileProducerTask @Inject constructor(objectFactory: ObjectFactory)
         : TaskWithOutput<RegularFileProperty>(objectFactory.fileProperty())
-
-    private class TestBuildArtifactsHolder(
-        project: Project,
-        rootOutputDir: () -> File,
-        dslScope: DslScope) : BuildArtifactsHolder(project, rootOutputDir, dslScope) {
-
-        override fun getIdentifier() = "test"
-    }
 
 }

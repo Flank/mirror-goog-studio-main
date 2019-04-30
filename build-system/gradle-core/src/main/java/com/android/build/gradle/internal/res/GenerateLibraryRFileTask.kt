@@ -182,7 +182,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 taskProvider.map { it.rClassOutputJar },
-                "R.jar"
+                fileName = "R.jar"
             )
         }
 

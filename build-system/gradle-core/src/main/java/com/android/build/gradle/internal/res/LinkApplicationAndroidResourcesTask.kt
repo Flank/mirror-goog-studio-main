@@ -613,13 +613,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     taskProvider.map { it.rClassOutputJar },
                     FN_R_CLASS_JAR)
 
-            if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
-                variantScope.artifacts.producesDir(InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskProvider,
-                    taskProvider.map { it.sourceOutputDir },
-                    SdkConstants.FD_RES_CLASS)
-            }
+            if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {variantScope.artifacts.producesDir(
+                InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                taskProvider.map { it.sourceOutputDir },
+                fileName = SdkConstants.FD_RES_CLASS
+            )}
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
@@ -663,11 +663,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
             super.handleProvider(taskProvider)
 
-            variantScope.artifacts.producesDir(InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 taskProvider.map { it.sourceOutputDir },
-                "out")
+                fileName = "out"
+            )
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {

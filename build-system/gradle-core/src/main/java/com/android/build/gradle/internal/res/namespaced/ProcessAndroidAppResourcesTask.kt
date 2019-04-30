@@ -151,7 +151,7 @@ open class ProcessAndroidAppResourcesTask
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 taskProvider.map { it.rClassSource },
-                "out"
+                fileName = "out"
             )
         }
 

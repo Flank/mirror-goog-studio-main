@@ -174,7 +174,7 @@ open class MergeNativeLibsTask
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 taskProvider.map { it.outputDir },
-                "out"
+                fileName = "out"
             )
         }
 
