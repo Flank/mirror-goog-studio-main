@@ -74,4 +74,18 @@ class LoggingEnvironmentTest {
                 "error nest 1: error")
         }
     }
+
+    @Test
+    fun `131271062 percent in format with no args`() {
+        TestLoggingEnvironment("nest 1").use {
+            errorln("error %F")
+        }
+    }
+
+    @Test
+    fun `131271062 percent in format with args`() {
+        TestLoggingEnvironment("nest 1").use {
+            errorln("error %F", "arg")
+        }
+    }
 }

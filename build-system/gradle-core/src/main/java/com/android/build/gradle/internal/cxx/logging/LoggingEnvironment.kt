@@ -54,23 +54,23 @@ fun infoln(format: String, vararg args: Any) =
 /**
  * If caller from Java side misuses %s-style formatting (too many %s for example), the exception
  * from String.format can be concealed by Gradle's logging system. It will appear as
- * "Invalid format (%s)" with no other indication about the source of the problem. Since this is
- * effectively a code bug not a build error this method catches those exceptions and provides a
- * prominent message about the problem.
+ * "Invalid format (%s)" with no other indication about the source of the problem. This is not
+ * necessarily a code bug (for example a user string might be passed in format and that user
+ * string has an invalid %)
  */
 private fun checkedFormat(format: String, args: Array<out Any>): String {
-    try {
-        return String.format(format, *args)
+    if (args.isEmpty()) {
+        return format
+    }
+    return try {
+        String.format(format, *args)
     } catch (e: Throwable) {
-        println(
-            """
-            ${e.message}
-            format = $format
-            args[${args.size}] = ${args.joinToString("\n")}
-            stacktrace = ${e.stackTrace.joinToString("\n")}"""
-                .trimIndent()
-        )
-        throw e
+        """
+        ${e.message}
+        format = $format
+        args[${args.size}] = ${args.joinToString("\n")}
+        stacktrace = ${e.stackTrace.joinToString("\n")}"""
+        .trimIndent()
     }
 }
 
