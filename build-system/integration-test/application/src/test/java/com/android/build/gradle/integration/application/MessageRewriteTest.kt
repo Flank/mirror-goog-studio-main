@@ -14,45 +14,37 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.options.BooleanOption
+import com.android.utils.FileUtils
+import org.junit.Rule
+import org.junit.Test
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.utils.FileUtils;
-import java.util.Scanner;
-import org.junit.Rule;
-import org.junit.Test;
+/** Tests the error message rewriting logic.  */
+class MessageRewriteTest {
 
-/** Tests the error message rewriting logic. */
-public class MessageRewriteTest {
-
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("flavored").withoutNdk().create();
+    @get:Rule
+    val project = GradleTestProject.builder().fromTestProject("flavored").withoutNdk().create()
 
     @Test
-    public void invalidLayoutFile() throws Exception {
-        project.execute("assembleDebug");
-        TemporaryProjectModification.doTest(
-                project,
-                it -> {
-                    it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "");
-                    GradleBuildResult result =
-                            project.executor()
-                                    .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-                                    .expectFailure()
-                                    .run("assembleF1Debug");
-                    try (Scanner stdout = result.getStdout()) {
-                        ScannerSubject.assertThat(stdout)
-                                .contains(
-                                        FileUtils.join("src", "main", "res", "layout", "main.xml"));
-                    }
-                });
-
-        project.execute("assembleDebug");
+    fun invalidLayoutFile() {
+        project.execute("assembleDebug")
+        TemporaryProjectModification.doTest(project) {
+            it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "")
+            val result = project.executor()
+                .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+                .expectFailure()
+                .run("assembleF1Debug")
+            result.stdout.use { stdout ->
+                ScannerSubject.assertThat(stdout)
+                    .contains(
+                        FileUtils.join("src", "main", "res", "layout", "main.xml")
+                    )
+            }
+        }
     }
 }
