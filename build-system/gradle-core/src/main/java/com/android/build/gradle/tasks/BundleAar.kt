@@ -87,7 +87,7 @@ open class BundleAar : Zip(), VariantAwareTask {
             task.archiveFileName.set(variantScope.outputScope.mainSplit.outputFileName!!)
             task.archiveExtension.set(BuilderConstants.EXT_LIB_ARCHIVE)
             task.from(
-                variantScope.artifacts.getArtifactFiles(
+                variantScope.artifacts.getFinalProduct<Directory>(
                     InternalArtifactType.AIDL_PARCELABLE
                 ),
                 prependToCopyPath(SdkConstants.FD_AIDL)

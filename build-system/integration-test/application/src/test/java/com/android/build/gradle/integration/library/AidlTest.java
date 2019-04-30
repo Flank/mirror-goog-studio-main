@@ -196,7 +196,6 @@ public class AidlTest {
                 project.getGeneratedSourceFile(
                         "aidl_source_output_dir",
                         "debug",
-                        "compileDebugAidl",
                         "out",
                         "com",
                         "example",

@@ -25,6 +25,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -47,6 +48,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.inject.Inject;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.provider.Provider;
@@ -64,14 +67,9 @@ import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile aidl files. Supports incremental update. */
 @CacheableTask
-public class AidlCompile extends NonIncrementalTask {
+public abstract class AidlCompile extends NonIncrementalTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet().include("**/*.aidl");
-
-    private File sourceOutputDir;
-
-    @Nullable
-    private File packagedDir;
 
     @Nullable
     private Collection<String> packageWhitelist;
@@ -127,11 +125,11 @@ public class AidlCompile extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws IOException {
         // this is full run, clean the previous output
-        File destinationDir = getSourceOutputDir();
-        File parcelableDir = getPackagedDir();
+        File destinationDir = getSourceOutputDir().get().getAsFile();
+        Directory parcelableDir = getPackagedDir().getOrNull();
         FileUtils.cleanOutputDir(destinationDir);
         if (parcelableDir != null) {
-            FileUtils.cleanOutputDir(parcelableDir);
+            FileUtils.cleanOutputDir(parcelableDir.getAsFile());
         }
 
         try (WorkerExecutorFacade workers = this.workers) {
@@ -148,8 +146,8 @@ public class AidlCompile extends NonIncrementalTask {
                             aidlExecutableProvider.get().getAbsolutePath(),
                             aidlFrameworkProvider.get().getAbsolutePath(),
                             fullImportList,
-                            sourceOutputDir,
-                            packagedDir,
+                            destinationDir,
+                            parcelableDir != null ? parcelableDir.getAsFile() : null,
                             packageWhitelist,
                             new DepFileProcessor(),
                             processExecutor,
@@ -162,24 +160,13 @@ public class AidlCompile extends NonIncrementalTask {
     }
 
     @OutputDirectory
-    public File getSourceOutputDir() {
-        return sourceOutputDir;
-    }
-
-    public void setSourceOutputDir(File sourceOutputDir) {
-        this.sourceOutputDir = sourceOutputDir;
-    }
+    @NonNull
+    public abstract DirectoryProperty getSourceOutputDir();
 
     @OutputDirectory
     @Optional
-    @Nullable
-    public File getPackagedDir() {
-        return packagedDir;
-    }
-
-    public void setPackagedDir(@Nullable File packagedDir) {
-        this.packagedDir = packagedDir;
-    }
+    @NonNull
+    public abstract DirectoryProperty getPackagedDir();
 
     @Input
     @Optional
@@ -200,7 +187,6 @@ public class AidlCompile extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<AidlCompile> {
 
-        private File sourceOutputDir;
         private File packagedDir;
 
         public CreationAction(@NonNull VariantScope scope) {
@@ -220,27 +206,28 @@ public class AidlCompile extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            sourceOutputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR, taskName, "out");
-            if (getVariantScope().getVariantConfiguration().getType().isAar()) {
-                packagedDir =
-                        getVariantScope()
-                                .getArtifacts()
-                                .appendArtifact(
-                                        InternalArtifactType.AIDL_PARCELABLE, taskName, "out");
-            }
-        }
-
-        @Override
         public void handleProvider(@NonNull TaskProvider<? extends AidlCompile> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope().getTaskContainer().setAidlCompileTask(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            taskProvider.map(AidlCompile::getSourceOutputDir),
+                            "out");
+
+            if (getVariantScope().getVariantConfiguration().getType().isAar()) {
+                getVariantScope()
+                        .getArtifacts()
+                        .producesDir(
+                                InternalArtifactType.AIDL_PARCELABLE,
+                                BuildArtifactsHolder.OperationType.INITIAL,
+                                taskProvider,
+                                taskProvider.map(AidlCompile::getPackagedDir),
+                                "out");
+            }
         }
 
         @Override
@@ -261,10 +248,7 @@ public class AidlCompile extends NonIncrementalTask {
             compileTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, AIDL);
 
-            compileTask.setSourceOutputDir(sourceOutputDir);
-
             if (variantConfiguration.getType().isAar()) {
-                compileTask.setPackagedDir(packagedDir);
                 compileTask.setPackageWhitelist(
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }

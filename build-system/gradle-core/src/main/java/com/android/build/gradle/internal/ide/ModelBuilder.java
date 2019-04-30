@@ -1186,9 +1186,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         folders.add(
                 scope.getArtifacts()
-                        .getFinalArtifactFiles(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
+                        .getFinalProduct(InternalArtifactType.AIDL_SOURCE_OUTPUT_DIR)
                         .get()
-                        .getSingleFile());
+                        .getAsFile());
         folders.add(scope.getBuildConfigSourceOutputDir());
         Boolean ndkMode = variantData.getVariantConfiguration().getMergedFlavor().getRenderscriptNdkModeEnabled();
         if (ndkMode == null || !ndkMode) {
