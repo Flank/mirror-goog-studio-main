@@ -1,8 +1,6 @@
 <component name="ProjectDictionaryState">
   <dictionary name="adt">
     <words>
-      <w>&amp;amp</w>
-      <w>Parcelize</w>
       <w>aapt</w>
       <w>aarrggbb</w>
       <w>abis</w>
@@ -173,6 +171,7 @@
       <w>jarpath</w>
       <w>javabuilder</w>
       <w>javanature</w>
+      <w>jdbc</w>
       <w>jdwp</w>
       <w>jpeg</w>
       <w>junit</w>
@@ -247,6 +246,7 @@
       <w>opcodes</w>
       <w>optim</w>
       <w>parallelization</w>
+      <w>parcelize</w>
       <w>pathname</w>
       <w>picasa</w>
       <w>plugin's</w>
@@ -308,6 +308,7 @@
       <w>sharding</w>
       <w>shrinker</w>
       <w>sparsearray</w>
+      <w>sqlite</w>
       <w>sqrt</w>
       <w>srcs</w>
       <w>stacktrace</w>
@@ -320,9 +321,12 @@
       <w>subclassed</w>
       <w>subclassing</w>
       <w>subfolder</w>
+      <w>subgraph</w>
       <w>submenu</w>
       <w>subproject</w>
       <w>subprojects</w>
+      <w>subqueries</w>
+      <w>subquery</w>
       <w>superset</w>
       <w>sysdir</w>
       <w>sysimg</w>
