@@ -147,21 +147,27 @@ public class NativeAndroidProjectSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage("Not true that %s build intermediates was %s. Set %s was missing %s",
-                    getIntermediatesFolders(baseFolder),
-                    expected,
-                    intermediateNames,
-                    expectedNotFound);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build intermediates was %s. Set %s was missing %s",
+                                    getIntermediatesFolders(baseFolder),
+                                    expected,
+                                    intermediateNames,
+                                    expectedNotFound)));
         }
 
         Set<String> foundNotExpected = Sets.newHashSet();
         foundNotExpected.addAll(intermediateNames);
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage("Not true that %s build intermediates was %s. It had extras %s",
-                    getIntermediatesFolders(baseFolder),
-                    expected,
-                    foundNotExpected);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build intermediates was %s. It had extras %s",
+                                    getIntermediatesFolders(baseFolder),
+                                    expected,
+                                    foundNotExpected)));
         }
     }
 
@@ -185,9 +191,11 @@ public class NativeAndroidProjectSubject
         List<File> buildOutputs = getOutputs();
 
         if (buildOutputs.size() != expectedCount) {
-            failWithRawMessage(
-                    "Not true that %s build output count was %s. It was %s",
-                    actualAsString(), expectedCount, buildOutputs.size());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build output count was %s. It was %s",
+                                    actualAsString(), expectedCount, buildOutputs.size())));
         }
     }
 
@@ -202,9 +210,11 @@ public class NativeAndroidProjectSubject
             }
         }
         if (!dontExist.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build outputs <%s> exist. Existing build outputs are <%s>",
-                    actualAsString(), dontExist, exist);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build outputs <%s> exist. Existing build outputs are <%s>",
+                                    actualAsString(), dontExist, exist)));
         }
     }
 
@@ -219,9 +229,11 @@ public class NativeAndroidProjectSubject
             }
         }
         if (!exist.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build outputs <%s> don't exist. Nonexistent build outputs are <%s>",
-                    actualAsString(), exist, dontExist);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build outputs <%s> don't exist. Nonexistent build outputs are <%s>",
+                                    actualAsString(), exist, dontExist)));
         }
     }
 
@@ -237,9 +249,11 @@ public class NativeAndroidProjectSubject
         }
         Set<String> actual = Sets.newHashSet(shortNames);
         if (!actual.equals(expected)) {
-            failWithRawMessage(
-                    "Not true that %s build files are <%s>. They are <%s>",
-                    actualAsString(), expected, actual);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s build files are <%s>. They are <%s>",
+                                    actualAsString(), expected, actual)));
         }
     }
 
@@ -248,9 +262,11 @@ public class NativeAndroidProjectSubject
         Set<String> expected = Sets.newHashSet(artifacts);
         Multimap<String, NativeArtifact> groups = getArtifactsGroupedByGroupName();
         if (!groups.keySet().equals(expected)) {
-            failWithRawMessage(
-                    "Not true that %s artifact groups are <%s>. They are <%s>",
-                    actualAsString(), expected, groups.keySet());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s artifact groups are <%s>. They are <%s>",
+                                    actualAsString(), expected, groups.keySet())));
         }
     }
 
@@ -259,9 +275,11 @@ public class NativeAndroidProjectSubject
         Set<String> expected = Sets.newHashSet(artifacts);
         Multimap<String, NativeArtifact> groups = getArtifactsByName();
         if (!groups.keySet().equals(expected)) {
-            failWithRawMessage(
-                    "Not true that %s that qualified targets are <%s>. They are <%s>",
-                    actualAsString(), expected, groups.keySet());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s that qualified targets are <%s>. They are <%s>",
+                                    actualAsString(), expected, groups.keySet())));
         }
     }
 
@@ -271,9 +289,15 @@ public class NativeAndroidProjectSubject
         Multimap<String, NativeArtifact> groups = getArtifactsGroupedByGroupName();
         for (String groupName : groups.keySet()) {
             if (groups.get(groupName).size() != size) {
-                failWithRawMessage(
-                        "Not true that %s artifact group %s has size %s. " + "Actual size is <%s>",
-                        actualAsString(), groupName, size, groups.get(groupName).size());
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "Not true that %s artifact group %s has size %s. "
+                                                + "Actual size is <%s>",
+                                        actualAsString(),
+                                        groupName,
+                                        size,
+                                        groups.get(groupName).size())));
             }
         }
     }

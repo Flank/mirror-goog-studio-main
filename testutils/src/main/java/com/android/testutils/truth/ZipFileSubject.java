@@ -18,6 +18,7 @@ package com.android.testutils.truth;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Zip;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -48,7 +49,8 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
     public void contains(@NonNull String path) {
         exists();
         if (actual().getEntry(path) == null) {
-            failWithRawMessage("'%s' does not contain '%s'", actual(), path);
+            failWithoutActual(
+                    Fact.simpleFact(String.format("'%s' does not contain '%s'", actual(), path)));
         }
     }
 
@@ -56,7 +58,9 @@ public class ZipFileSubject extends AbstractZipSubject<ZipFileSubject, Zip> {
     public void doesNotContain(@NonNull String path) {
         exists();
         if (actual().getEntry(path) != null) {
-            failWithRawMessage("'%s' unexpectedly contains '%s'", actual(), path);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("'%s' unexpectedly contains '%s'", actual(), path)));
         }
     }
 

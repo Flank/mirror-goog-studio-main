@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.common.truth;
 import com.android.SdkConstants;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.io.File;
@@ -50,13 +51,15 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
         Process p = getFileData();
         if (p.exitValue() != 0) {
             String err = new String(ByteStreams.toByteArray(p.getErrorStream()), Charsets.UTF_8);
-            failWithRawMessage("Error executing \'file\'.\n" + err);
+            failWithoutActual(Fact.simpleFact("Error executing \'file\'.\n" + err));
         }
         String output = new String(ByteStreams.toByteArray(p.getInputStream()), Charsets.UTF_8);
         if (output.contains("not stripped")) {
-            failWithRawMessage(
-                    "Not true that <%s> is stripped.  File information:\n%s\n",
-                    actualAsString(), output);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that <%s> is stripped.  File information:\n%s\n",
+                                    actualAsString(), output)));
         }
     }
 
@@ -69,13 +72,15 @@ public class NativeLibrarySubject extends Subject<NativeLibrarySubject, File> {
         Process p = getFileData();
         if (p.exitValue() != 0) {
             String err = new String(ByteStreams.toByteArray(p.getErrorStream()), Charsets.UTF_8);
-            failWithRawMessage("Error executing \'file\'.\n" + err);
+            failWithoutActual(Fact.simpleFact("Error executing \'file\'.\n" + err));
         }
         String output = new String(ByteStreams.toByteArray(p.getInputStream()), Charsets.UTF_8);
         if (!output.contains("not stripped")) {
-            failWithRawMessage(
-                    "Not true that <%s> is not stripped.  File information:\n%s\n",
-                    actualAsString(), output);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that <%s> is not stripped.  File information:\n%s\n",
+                                    actualAsString(), output)));
         }
     }
 

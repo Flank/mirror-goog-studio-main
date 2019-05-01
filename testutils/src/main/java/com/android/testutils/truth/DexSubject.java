@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -98,13 +99,15 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
             if (!missing.isEmpty()) {
                 if (!unexpectedElements.isEmpty()) {
-                    failWithRawMessage(
-                            "Not true that %s %s <%s>. It is missing <%s> and has unexpected items <%s>",
-                            actualAsString(),
-                            "contains exactly",
-                            expected,
-                            Iterables.toString(missing),
-                            Iterables.toString(unexpectedElements));
+                    failWithoutActual(
+                            Fact.simpleFact(
+                                    String.format(
+                                            "Not true that %s %s <%s>. It is missing <%s> and has unexpected items <%s>",
+                                            actualAsString(),
+                                            "contains exactly",
+                                            expected,
+                                            Iterables.toString(missing),
+                                            Iterables.toString(unexpectedElements))));
                 } else {
                     failWithBadResults(
                             "contains exactly classes",
@@ -160,8 +163,9 @@ public class DexSubject extends Subject<DexSubject, Dex> {
 
     private boolean assertSubjectIsNonNull() {
         if (actual() == null) {
-            failWithRawMessage(
-                    "Cannot assert about the contents of a dex file that does not exist.");
+            failWithoutActual(
+                    Fact.simpleFact(
+                            "Cannot assert about the contents of a dex file that does not exist."));
             return false;
         }
         return true;

@@ -155,7 +155,9 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
         Integer actualVersionCode = apkInfo.getVersionCode();
         if (actualVersionCode == null) {
-            failWithRawMessage("Unable to query %s for versionCode", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("Unable to query %s for versionCode", actualAsString())));
         }
 
         if (!apkInfo.getVersionCode().equals(versionCode)) {
@@ -185,7 +187,9 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
         String actualVersionName = apkInfo.getVersionName();
         if (actualVersionName == null) {
-            failWithRawMessage("Unable to query %s for versionName", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("Unable to query %s for versionName", actualAsString())));
         }
 
         if (!apkInfo.getVersionName().equals(versionName)) {
@@ -206,7 +210,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
      */
     public void containsApkSigningBlock() {
         if (!hasApkSigningBlock()) {
-            failWithRawMessage("APK does not contain APK Signing Block");
+            failWithoutActual(Fact.simpleFact("APK does not contain APK Signing Block"));
         }
     }
 
@@ -216,7 +220,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
      */
     public void doesNotContainApkSigningBlock() {
         if (hasApkSigningBlock()) {
-            failWithRawMessage("APK contains APK Signing Block");
+            failWithoutActual(Fact.simpleFact("APK contains APK Signing Block"));
         }
     }
 
@@ -270,7 +274,11 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
             }
         }
 
-        failWithRawMessage("maxSdkVersion not found in badging output for %s", actualAsString());
+        failWithoutActual(
+                Fact.simpleFact(
+                        String.format(
+                                "maxSdkVersion not found in badging output for %s",
+                                actualAsString())));
     }
 
 }

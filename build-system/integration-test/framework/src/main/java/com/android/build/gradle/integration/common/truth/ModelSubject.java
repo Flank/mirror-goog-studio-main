@@ -24,6 +24,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.truth.IndirectSubject;
 import com.google.common.collect.Iterables;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.util.Collection;
@@ -163,7 +164,11 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
             }
         }
 
-        failWithRawMessage("'%s' does not contain <%s / %s>", actualAsString(), severity, type);
+        failWithoutActual(
+                Fact.simpleFact(
+                        String.format(
+                                "'%s' does not contain <%s / %s>",
+                                actualAsString(), severity, type)));
         // won't reach
         return null;
     }
@@ -189,8 +194,11 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
             }
         }
 
-        failWithRawMessage(
-                "'%s' does not contain <%s / %s / %s>", actualAsString(), severity, type, data);
+        failWithoutActual(
+                Fact.simpleFact(
+                        String.format(
+                                "'%s' does not contain <%s / %s / %s>",
+                                actualAsString(), severity, type, data)));
         // won't reach
         return null;
     }

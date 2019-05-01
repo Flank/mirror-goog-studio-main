@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.MavenCoordinates;
 import com.google.common.base.Preconditions;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
@@ -52,33 +53,43 @@ public class MavenCoordinatesSubject extends Subject<MavenCoordinatesSubject, Ma
         MavenCoordinates coordinates = actual();
 
         if (groupId != null && !groupId.equals(coordinates.getGroupId())) {
-            failWithRawMessage(
-                    "Not true that groupId of %s is equal to %s. It is %s",
-                    actualAsString(), groupId, coordinates.getGroupId());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that groupId of %s is equal to %s. It is %s",
+                                    actualAsString(), groupId, coordinates.getGroupId())));
         }
 
         if (artifactId != null && !artifactId.equals(coordinates.getArtifactId())) {
-            failWithRawMessage(
-                    "Not true that artifactId of %s is equal to %s. It is %s",
-                    actualAsString(), artifactId, coordinates.getArtifactId());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that artifactId of %s is equal to %s. It is %s",
+                                    actualAsString(), artifactId, coordinates.getArtifactId())));
         }
 
         if (version != null && !version.equals(coordinates.getVersion())) {
-            failWithRawMessage(
-                    "Not true that version of %s is equal to %s. It is %s",
-                    actualAsString(), version, coordinates.getVersion());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that version of %s is equal to %s. It is %s",
+                                    actualAsString(), version, coordinates.getVersion())));
         }
 
         if (packaging != null && !packaging.equals(coordinates.getPackaging())) {
-            failWithRawMessage(
-                    "Not true that packaging of %s is equal to %s. It is %s",
-                    actualAsString(), packaging, coordinates.getPackaging());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that packaging of %s is equal to %s. It is %s",
+                                    actualAsString(), packaging, coordinates.getPackaging())));
         }
 
         if (classifier != null && !classifier.equals(coordinates.getClassifier())) {
-            failWithRawMessage(
-                    "Not true that classifier of %s is equal to %s. It is %s",
-                    actualAsString(), classifier, coordinates.getClassifier());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that classifier of %s is equal to %s. It is %s",
+                                    actualAsString(), classifier, coordinates.getClassifier())));
         }
     }
 
@@ -87,9 +98,11 @@ public class MavenCoordinatesSubject extends Subject<MavenCoordinatesSubject, Ma
         MavenCoordinates coordinates = actual();
 
         if (!version.equals(coordinates.getVersion())) {
-            failWithRawMessage(
-                    "Not true that version of %s is equal to %s. It is %s",
-                    actualAsString(), version, coordinates.getVersion());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that version of %s is equal to %s. It is %s",
+                                    actualAsString(), version, coordinates.getVersion())));
         }
     }
 }

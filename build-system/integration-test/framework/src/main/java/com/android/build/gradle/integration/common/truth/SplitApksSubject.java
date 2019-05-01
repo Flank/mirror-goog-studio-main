@@ -24,6 +24,7 @@ import com.android.testutils.apk.SplitApks;
 import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.IndirectSubject;
 import com.google.common.base.Preconditions;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import java.io.IOException;
@@ -46,14 +47,16 @@ public final class SplitApksSubject extends Subject<SplitApksSubject, SplitApks>
         Preconditions.checkNotNull(actual());
         @Nullable DexBackedClassDef foundClass = actual().getAllClasses().get(name);
         if (foundClass == null) {
-            failWithRawMessage(
-                    "%s does not contain class %s.\n Classes: \n    %s",
-                    actual(),
-                    name,
-                    actual().getAllClasses()
-                            .keySet()
-                            .stream()
-                            .collect(Collectors.joining("\n    ")));
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "%s does not contain class %s.\n Classes: \n    %s",
+                                    actual(),
+                                    name,
+                                    actual().getAllClasses()
+                                            .keySet()
+                                            .stream()
+                                            .collect(Collectors.joining("\n    ")))));
         }
         return () -> assertAbout(DexClassSubject.dexClasses()).that(foundClass);
     }

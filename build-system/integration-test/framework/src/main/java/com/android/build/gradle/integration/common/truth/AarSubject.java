@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
@@ -49,7 +50,8 @@ public class AarSubject extends AbstractAndroidSubject<AarSubject, Aar> {
 
     private void validateAar() {
         if (actual().getEntry("AndroidManifest.xml") == null) {
-            failWithRawMessage("Invalid aar, should contain " + "AndroidManifest.xml");
+            failWithoutActual(
+                    Fact.simpleFact("Invalid aar, should contain " + "AndroidManifest.xml"));
         }
     }
 

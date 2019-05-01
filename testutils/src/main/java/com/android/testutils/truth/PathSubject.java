@@ -19,6 +19,7 @@ package com.android.testutils.truth;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -97,7 +98,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         "byte[" + contents.length + "]");
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", actual());
+            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 
@@ -113,7 +114,7 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         Joiner.on('\n').join(contents));
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", actual());
+            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 

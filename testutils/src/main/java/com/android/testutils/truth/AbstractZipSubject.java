@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.testutils.apk.Zip;
 import com.google.common.base.MoreObjects;
 import com.google.common.primitives.Bytes;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
@@ -114,11 +115,12 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
 
         byte[] contents = extractContentAsBytes(path);
         if (contents == null) {
-            failWithRawMessage("No entry with path " + path);
+            failWithoutActual(Fact.simpleFact("No entry with path " + path));
         }
         int index = Bytes.indexOf(contents, sub.getBytes());
         if (index != -1) {
-            failWithRawMessage("Found byte sequence at " + index + " in class file " + path);
+            failWithoutActual(
+                    Fact.simpleFact("Found byte sequence at " + index + " in class file " + path));
         }
     }
 
@@ -159,22 +161,29 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
         try {
             actual().close();
         } catch (Exception e) {
-            failWithRawMessage("Exception while closing %1$s", actual());
+            failWithoutActual(
+                    Fact.simpleFact(String.format("Exception while closing %1$s", actual())));
         }
     }
 
     protected final String extractContentAsString(@NonNull String path) {
         Path entry = actual().getEntry(path);
         if (entry == null) {
-            failWithRawMessage("Entry %s does not exist in zip %s.", path, actual().toString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Entry %s does not exist in zip %s.",
+                                    path, actual().toString())));
             return null;
         }
         try {
             return Files.readAllLines(entry).stream().collect(Collectors.joining("\n"));
         } catch (IOException e) {
-            failWithRawMessage(
-                    "IOException when extracting %1$s from zip %2$s: %3$s",
-                    path, actual(), e.toString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "IOException when extracting %1$s from zip %2$s: %3$s",
+                                    path, actual(), e.toString())));
             return null;
         }
     }
@@ -183,15 +192,17 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
     protected final byte[] extractContentAsBytes(@NonNull String path) {
         Path entry = actual().getEntry(path);
         if (entry == null) {
-            failWithRawMessage("Entry " + path + " does not exist.");
+            failWithoutActual(Fact.simpleFact("Entry " + path + " does not exist."));
             return null;
         }
         try {
             return Files.readAllBytes(entry);
         } catch (IOException e) {
-            failWithRawMessage(
-                    "IOException when extracting %1$s from zip %2$s: %3$s",
-                    path, actual(), e.toString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "IOException when extracting %1$s from zip %2$s: %3$s",
+                                    path, actual(), e.toString())));
             return null;
         }
     }

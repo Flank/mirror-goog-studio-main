@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.common.truth.Truth;
@@ -91,7 +92,7 @@ public class FileSubject extends Subject<FileSubject, File> {
                 }
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", actual());
+            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 
@@ -108,7 +109,7 @@ public class FileSubject extends Subject<FileSubject, File> {
                         "byte[" + contents.length + "]");
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", actual());
+            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 
@@ -121,7 +122,7 @@ public class FileSubject extends Subject<FileSubject, File> {
                 failWithBadResults("does not contains", expectedContent, "is", contents);
             }
         } catch (IOException e) {
-            failWithRawMessage("Unable to read %s", actual());
+            failWithoutActual(Fact.simpleFact(String.format("Unable to read %s", actual())));
         }
     }
 

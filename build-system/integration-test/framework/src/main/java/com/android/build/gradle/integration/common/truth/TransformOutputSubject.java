@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.internal.pipeline.SubStream;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
@@ -44,6 +45,10 @@ public class TransformOutputSubject
             }
         }
 
-        failWithRawMessage("%s should have contained stream named <%s>", actualAsString(), name);
+        failWithoutActual(
+                Fact.simpleFact(
+                        String.format(
+                                "%s should have contained stream named <%s>",
+                                actualAsString(), name)));
     }
 }

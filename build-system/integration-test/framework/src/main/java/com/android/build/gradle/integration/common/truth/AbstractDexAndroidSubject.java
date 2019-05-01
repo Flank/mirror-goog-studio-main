@@ -24,6 +24,7 @@ import com.android.testutils.apk.DexAndroidArchive;
 import com.android.testutils.truth.DexClassSubject;
 import com.android.testutils.truth.DexSubject;
 import com.android.testutils.truth.IndirectSubject;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import java.io.IOException;
 import java.util.Optional;
@@ -43,7 +44,8 @@ public class AbstractDexAndroidSubject<
     public final IndirectSubject<DexSubject> hasMainDexFile() throws IOException {
         Optional<Dex> dex = actual().getMainDexFile();
         if (!dex.isPresent()) {
-            failWithRawMessage("'%s' does not contain main dex", actual());
+            failWithoutActual(
+                    Fact.simpleFact(String.format("'%s' does not contain main dex", actual())));
         }
         return () -> DexSubject.assertThat(dex.get());
     }

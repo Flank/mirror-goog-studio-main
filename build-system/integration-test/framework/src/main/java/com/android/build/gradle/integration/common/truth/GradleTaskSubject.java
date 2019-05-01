@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertAbout;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.truth.TaskStateList.TaskInfo;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 
@@ -48,31 +49,39 @@ public class GradleTaskSubject extends Subject<GradleTaskSubject, TaskInfo> {
 
     public void wasUpToDate() {
         if (!actual().wasUpToDate()) {
-            failWithRawMessage("Not true that %s was UP-TO-DATE", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("Not true that %s was UP-TO-DATE", actualAsString())));
         }
     }
 
     public void wasFromCache() {
         if (!actual().wasFromCache()) {
-            failWithRawMessage("Not true that %s was FROM-CACHE", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("Not true that %s was FROM-CACHE", actualAsString())));
         }
     }
 
     public void didWork() {
         if (!actual().didWork()) {
-            failWithRawMessage("Not true that %s did work", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(String.format("Not true that %s did work", actualAsString())));
         }
     }
 
     public void wasSkipped() {
         if (!actual().wasSkipped()) {
-            failWithRawMessage("Not true that %s was skipped", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format("Not true that %s was skipped", actualAsString())));
         }
     }
 
     public void failed() {
         if (!actual().failed()) {
-            failWithRawMessage("Not true that %s failed ", actualAsString());
+            failWithoutActual(
+                    Fact.simpleFact(String.format("Not true that %s failed ", actualAsString())));
         }
     }
 

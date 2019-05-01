@@ -28,8 +28,10 @@ import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.truth.Fact;
 import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.Collections;
@@ -192,23 +194,7 @@ public class NativeBuildConfigValueSubject
     private void hasExactOutputFiles(String... baseName) {
         Set<String> intermediateNames = getIntermediatesNames();
         Set<String> expected = Sets.newHashSet(baseName);
-        Set<String> expectedNotFound = Sets.newHashSet();
-        expectedNotFound.addAll(expected);
-        expectedNotFound.removeAll(intermediateNames);
-        if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build outputs was %s. Set %s was missing %s",
-                    actualAsString(), expected, intermediateNames, expectedNotFound);
-        }
-
-        Set<String> foundNotExpected = Sets.newHashSet();
-        foundNotExpected.addAll(intermediateNames);
-        foundNotExpected.removeAll(expected);
-        if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build outputs was %s. It had extras %s",
-                    actualAsString(), expected, foundNotExpected);
-        }
+        Truth.assertThat(intermediateNames).containsExactlyElementsIn(expected);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -220,23 +206,7 @@ public class NativeBuildConfigValueSubject
     public void hasExactLibrariesNamed(String... targets) {
         Set<String> intermediateNames = getLibraryNames();
         Set<String> expected = Sets.newHashSet(targets);
-        Set<String> expectedNotFound = Sets.newHashSet();
-        expectedNotFound.addAll(expected);
-        expectedNotFound.removeAll(intermediateNames);
-        if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build targets was %s. Set %s was missing %s",
-                    actualAsString(), expected, intermediateNames, expectedNotFound);
-        }
-
-        Set<String> foundNotExpected = Sets.newHashSet();
-        foundNotExpected.addAll(intermediateNames);
-        foundNotExpected.removeAll(expected);
-        if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s build targets was %s. It had extras %s",
-                    actualAsString(), expected, foundNotExpected);
-        }
+        Truth.assertThat(intermediateNames).containsExactlyElementsIn(expected);
     }
 
     @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
@@ -252,9 +222,11 @@ public class NativeBuildConfigValueSubject
         }
 
         if (!duplicates.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s libraries have unique names. It had duplications %s",
-                    actualAsString(), duplicates);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s libraries have unique names. It had duplications %s",
+                                    actualAsString(), duplicates)));
         }
     }
 
@@ -266,18 +238,25 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s source files was %s. Set %s was missing %s",
-                    actualAsString(), expected, intermediateNames, expectedNotFound);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s source files was %s. Set %s was missing %s",
+                                    actualAsString(),
+                                    expected,
+                                    intermediateNames,
+                                    expectedNotFound)));
         }
 
         Set<String> foundNotExpected = Sets.newHashSet();
         foundNotExpected.addAll(intermediateNames);
         foundNotExpected.removeAll(expected);
         if (!foundNotExpected.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s source files was %s. It had extras %s",
-                    actualAsString(), expected, foundNotExpected);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s source files was %s. It had extras %s",
+                                    actualAsString(), expected, foundNotExpected)));
         }
     }
 
@@ -289,9 +268,14 @@ public class NativeBuildConfigValueSubject
         expectedNotFound.addAll(expected);
         expectedNotFound.removeAll(intermediateNames);
         if (!expectedNotFound.isEmpty()) {
-            failWithRawMessage(
-                    "Not true that %s source files contained %s. Set %s was missing %s",
-                    actualAsString(), expected, intermediateNames, expectedNotFound);
+            failWithoutActual(
+                    Fact.simpleFact(
+                            String.format(
+                                    "Not true that %s source files contained %s. Set %s was missing %s",
+                                    actualAsString(),
+                                    expected,
+                                    intermediateNames,
+                                    expectedNotFound)));
         }
     }
 }
