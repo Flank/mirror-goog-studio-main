@@ -229,7 +229,9 @@ public class Gradle implements Closeable {
                         + "}\n"
                         + "rootProject {\n"
                         + "    task cleanLocalCaches(type: Delete) {\n"
-                        + "       delete gradle.gradleUserHomeDir.toString() + '/caches/transforms-2'\n"
+                        + "       delete fileTree(gradle.gradleUserHomeDir.toString() + '/caches/transforms-2') { "
+                        + "           exclude '*.lock'\n"
+                        + "        }\n"
                         + "       delete System.env['ANDROID_SDK_HOME'] + '/build-cache'\n"
                         + "    }\n"
                         + "}\n";
