@@ -19,6 +19,7 @@ import static com.android.ide.common.vectordrawable.SvgTree.getStartLine;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Slow;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1217,6 +1218,7 @@ public class Svg2Vector {
      * @return the error message that combines all logged errors and warnings, or an empty string if
      *     there were no errors
      */
+    @Slow
     @NonNull
     public static String parseSvgToXml(@NonNull File inputSvg, @NonNull OutputStream outStream) {
         // Write all the error message during parsing into SvgTree and return here as getErrorLog().
