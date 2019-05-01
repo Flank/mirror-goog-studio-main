@@ -17,6 +17,8 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.io.Files;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -24,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Calendar;
 import javax.swing.DefaultListSelectionModel;
@@ -36,7 +39,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 /**
  * Support a command line tool to convert SVG files to VectorDrawables and display them.
@@ -217,10 +223,9 @@ public class VdCommandLineTool {
             try {
                 ByteArrayOutputStream byteArrayOutStream = new ByteArrayOutputStream();
 
-                String error = Svg2Vector
-                        .parseSvgToXml(inputSVGFile, byteArrayOutStream);
+                String error = Svg2Vector.parseSvgToXml(inputSVGFile, byteArrayOutStream);
 
-                if (error != null && !error.isEmpty()) {
+                if (!error.isEmpty()) {
                     errorSvgFileCounter++;
                     System.err.println("error is " + error);
                     if (DBG_COPY_BROKEN_SVG) {
@@ -234,8 +239,7 @@ public class VdCommandLineTool {
                 // Override the size info if needed. Negative value will be ignored.
                 String vectorXmlContent = byteArrayOutStream.toString();
                 if (options.getForceHeight() > 0 || options.getForceWidth() > 0) {
-                    Document vdDocument = VdPreview
-                            .parseVdStringIntoDocument(vectorXmlContent, null);
+                    Document vdDocument = parseVdStringIntoDocument(vectorXmlContent, null);
 
                     if (vdDocument != null) {
                         VdOverrideInfo info = new VdOverrideInfo(options.getForceWidth(),
@@ -262,5 +266,26 @@ public class VdCommandLineTool {
         System.out.println("Convert " + totalSvgFileCounter + " SVG files in total, errors found in "
                 + errorSvgFileCounter + " files");
         return allOutputFiles.toArray(new File[0]);
+    }
+
+    /**
+     * Parses a vector drawable XML file into a {@link Document} object.
+     *
+     * @param xmlFileContent the content of the VectorDrawable's XML file.
+     * @param errorLog when errors were found, log them in this builder if it is not null.
+     * @return parsed document or null if errors happened.
+     */
+    @Nullable
+    private static Document parseVdStringIntoDocument(
+            @NonNull String xmlFileContent, @Nullable StringBuilder errorLog) {
+        try {
+            DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            return db.parse(new InputSource(new StringReader(xmlFileContent)));
+        } catch (Exception e) {
+            if (errorLog != null) {
+                errorLog.append("Exception while parsing XML file:\n").append(e.getMessage());
+            }
+            return null;
+        }
     }
 }
