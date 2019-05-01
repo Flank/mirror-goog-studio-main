@@ -32,7 +32,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    public static final int INITIAL_CAPACITY = 363;
+    public static final int INITIAL_CAPACITY = 364;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -384,6 +384,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(WakelockDetector.TIMEOUT);
         issues.add(WearStandaloneAppDetector.INVALID_WEAR_FEATURE_ATTRIBUTE);
         issues.add(WearStandaloneAppDetector.WEAR_STANDALONE_APP_ISSUE);
+        issues.add(WebViewApiAvailabilityDetector.ISSUE);
         issues.add(WebViewDetector.ISSUE);
         issues.add(WorkManagerDetector.ISSUE);
         issues.add(WrongCallDetector.ISSUE);
