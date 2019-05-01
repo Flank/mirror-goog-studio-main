@@ -2917,10 +2917,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
     public void testReflectiveOperationException() {
         String expected =
                 ""
-                        + "src/test/pkg/Java7API.java:8: Error: Class requires API level 19 (current min is 1): java.lang.ReflectiveOperationException [NewApi]\n"
+                        + "src/test/pkg/Java7API.java:8: Error: Exception requires API level 19 (current min is 1): java.lang.ReflectiveOperationException [NewApi]\n"
                         + "        } catch (ReflectiveOperationException e) {\n"
                         + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "1 errors, 0 warnings\n";
+                        + "1 errors, 0 warnings";
         lint().files(manifest().minSdk(1), mJava7API)
                 .checkMessage(this::checkReportedError)
                 .run()
@@ -3502,7 +3502,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
         //noinspection all // Sample code
         lint().files(
-                        manifest().minSdk(4),
+                        manifest().minSdk(19), // prior to 19, version check does not prevent crash
                         java(
                                 ""
                                         + "package test.pkg;\n"
@@ -4324,22 +4324,22 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
         String expected =
                 ""
-                        + "src/test/pkg/MultiCatch.java:12: Error: Class requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
+                        + "src/test/pkg/MultiCatch.java:12: Error: Exception requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
                         + "        } catch (MediaDrm.MediaDrmStateException | UnsupportedSchemeException e) {\n"
                         + "                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/MultiCatch.java:12: Error: Class requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
+                        + "src/test/pkg/MultiCatch.java:12: Error: Exception requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
                         + "        } catch (MediaDrm.MediaDrmStateException | UnsupportedSchemeException e) {\n"
                         + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/MultiCatch.java:18: Error: Class requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
+                        + "src/test/pkg/MultiCatch.java:18: Error: Exception requires API level 21 (current min is 1): android.media.MediaDrm.MediaDrmStateException [NewApi]\n"
                         + "        } catch (MediaDrm.MediaDrmStateException\n"
                         + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/MultiCatch.java:19: Error: Class requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
+                        + "src/test/pkg/MultiCatch.java:19: Error: Exception requires API level 18 (current min is 1): android.media.UnsupportedSchemeException [NewApi]\n"
                         + "                  | UnsupportedSchemeException e) {\n"
                         + "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/MultiCatch.java:25: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
                         + "        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {\n"
                         + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "5 errors, 0 warnings\n";
+                        + "5 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                         java(
@@ -4382,6 +4382,112 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
+    }
+
+    public void testExceptionHandlingDalvik() {
+        // Regression test for 131349148: Dalvik: java.lang.VerifyError
+
+        //noinspection all // Sample code
+        lint().files(
+                        java(
+                                "src/test/pkg/CatchTest.java",
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.hardware.camera2.CameraAccessException;\n"
+                                        + "import android.media.MediaDrmResetException;\n"
+                                        + "import android.os.Build;\n"
+                                        + "\n"
+                                        + "import android.annotation.TargetApi;\n"
+                                        + "import android.support.annotation.RequiresApi;"
+                                        + "\n"
+                                        + "@SuppressWarnings({\"unused\", \"WeakerAccess\"})\n"
+                                        + "public class CatchTest {\n"
+                                        + "    public class C0 {\n"
+                                        + "        public void test() {\n"
+                                        + "            try {\n"
+                                        + "                thrower();\n"
+                                        + "            } catch (CameraAccessException e) { // ERROR: Requires 21\n"
+                                        + "                logger(e.toString());\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public class C1 {\n"
+                                        + "        public void test() {\n"
+                                        + "            try {\n"
+                                        + "                thrower();\n"
+                                        + "            } catch (MediaDrmResetException | CameraAccessException e) { // ERROR: Requires 23 & 21\n"
+                                        + "                logger(e.toString());\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public class C2 {\n"
+                                        + "        public void test() {\n"
+                                        + "            if (Build.VERSION.SDK_INT >= 23) { // Not adequate\n"
+                                        + "                try {\n"
+                                        + "                    thrower();\n"
+                                        + "                } catch (CameraAccessException e) { // ERROR: Requires 23; version check not enough\n"
+                                        + "                    logger(e.toString());\n"
+                                        + "                }\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public class C3 {\n"
+                                        + "        @TargetApi(21)\n"
+                                        + "        public void test() {\n"
+                                        + "            try {\n"
+                                        + "                thrower();\n"
+                                        + "            } catch (CameraAccessException e) { // ERROR: Requires 23; @TargetApi on method not enough\n"
+                                        + "                logger(e.toString());\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    @RequiresApi(23) // OK\n"
+                                        + "    public class C4 {\n"
+                                        + "        public void test() {\n"
+                                        + "            try {\n"
+                                        + "                thrower();\n"
+                                        + "            } catch (CameraAccessException | MediaDrmResetException e) { // OK: Class requires 21\n"
+                                        + "                logger(e.toString());\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    private void logger(String e) {\n"
+                                        + "    }\n"
+                                        + "\n"
+                                        + "    public void thrower() throws CameraAccessException, MediaDrmResetException {\n"
+                                        + "        if (Build.VERSION.SDK_INT >= 21) {\n"
+                                        + "            throw new CameraAccessException(CameraAccessException.CAMERA_ERROR);\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        mSupportClasspath,
+                        mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/CatchTest.java:15: Error: Exception requires API level 21 (current min is 1): android.hardware.camera2.CameraAccessException [NewApi]\n"
+                                + "            } catch (CameraAccessException e) { // ERROR: Requires 21\n"
+                                + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CatchTest.java:25: Error: Exception requires API level 21 (current min is 1): android.hardware.camera2.CameraAccessException [NewApi]\n"
+                                + "            } catch (MediaDrmResetException | CameraAccessException e) { // ERROR: Requires 23 & 21\n"
+                                + "                                              ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CatchTest.java:25: Error: Exception requires API level 23 (current min is 1): android.media.MediaDrmResetException [NewApi]\n"
+                                + "            } catch (MediaDrmResetException | CameraAccessException e) { // ERROR: Requires 23 & 21\n"
+                                + "                     ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CatchTest.java:36: Error: Exception requires API level 21 (current min is 1): android.hardware.camera2.CameraAccessException, and having a surrounding/preceding version check does not help since prior to API level 19, just loading the class will cause a crash. Consider marking the surrounding class with RequiresApi(19) to ensure that the class is never loaded except when on API 19 or higher. [NewApi]\n"
+                                + "                } catch (CameraAccessException e) { // ERROR: Requires 23; version check not enough\n"
+                                + "                         ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CatchTest.java:48: Error: Exception requires API level 21 (current min is 21): android.hardware.camera2.CameraAccessException, and having a surrounding/preceding version check does not help since prior to API level 19, just loading the class will cause a crash. Consider marking the surrounding class with RequiresApi(19) to ensure that the class is never loaded except when on API 19 or higher. [NewApi]\n"
+                                + "            } catch (CameraAccessException e) { // ERROR: Requires 23; @TargetApi on method not enough\n"
+                                + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "5 errors, 0 warnings");
     }
 
     @SuppressWarnings("all") // Sample code
@@ -5872,7 +5978,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "    fun testCatch() {\n"
                                         + "        try {\n"
                                         + "\n"
-                                        + "        } catch (e: /*Class requires API level 21 (current min is 1): android.system.ErrnoException*/ErrnoException/**/) {\n"
+                                        + "        } catch (e: /*Exception requires API level 21 (current min is 1): android.system.ErrnoException*/ErrnoException/**/) {\n"
                                         + "\n"
                                         + "        }\n"
                                         + "    }\n"

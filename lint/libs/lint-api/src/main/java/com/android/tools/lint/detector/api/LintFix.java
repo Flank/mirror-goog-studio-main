@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.intellij.psi.PsiElement;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.regex.Matcher;
 import org.intellij.lang.annotations.Language;
 import org.intellij.lang.annotations.RegExp;
 import org.jetbrains.annotations.Nls;
+import org.jetbrains.uast.UElement;
 
 /**
  * A <b>description</b> of a quickfix for a lint warning, which provides structured data for use by
@@ -1001,6 +1003,10 @@ public class LintFix {
                 key = Map.class;
             } else if (value instanceof Set) {
                 key = Set.class;
+            } else if (value instanceof UElement) {
+                key = UElement.class;
+            } else if (value instanceof PsiElement) {
+                key = PsiElement.class;
             }
             assert !map.containsKey(key);
             map.put(key, value);

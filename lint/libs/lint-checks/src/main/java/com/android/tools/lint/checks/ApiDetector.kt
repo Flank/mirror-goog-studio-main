@@ -695,17 +695,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             @Suppress("UNUSED_PARAMETER")
             desc: String? = null
         ) {
-            val min = Math.max(minSdk, getTargetApi(node))
-
-            // For preview releases, don't show the API level as a number; show it using
-            // a version code
-            val apiLevel = if (requires <= SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
-                requires.toString()
-            } else {
-                SdkVersionInfo.getCodeName(requires) ?: requires.toString()
-            }
-
-            val message = "${type.usLocaleCapitalize()} requires API level $apiLevel (current min is $min): `$sig`"
+            val message = getApiErrorMessage(minSdk, node, requires, type, sig)
             report(issue, node, location, message, fix, owner, name, desc)
         }
 
@@ -1726,6 +1716,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 // with multi-catches: see issue 153406
                 val minSdk = getMinSdk(context)
                 if (minSdk < 19 && isMultiCatchReflectiveOperationException(catchClause)) {
+                    // No -- see 131349148: Dalvik: java.lang.VerifyError
                     if (isSuppressed(context, 19, node, minSdk)) {
                         return
                     }
@@ -1771,18 +1762,50 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (api <= minSdk) {
                     return
                 }
-                val target = getTargetApi(statement)
-                if (target != -1 && api <= target) {
-                    return
+
+                val containingClass: UClass? = statement.getContainingUClass()
+                if (containingClass != null) {
+                    val target = getTargetApi(if (minSdk < 19) containingClass else statement)
+                    if (target != -1 && api <= target) {
+                        return
+                    }
                 }
 
                 if (isSuppressed(context, api, statement, minSdk)) {
-                    return
+                    // Normally having a surrounding version check is enough, but on Dalvik
+                    // just loading the class, whether or not the try statement is ever
+                    // executed will result in a crash, so the only way to prevent the
+                    // crash there is to never load the class; e.g. mark the whole class
+                    // with @RequiresApi:
+                    if (minSdk < 19) {
+                        // TODO: Look for RequiresApi on the class
+                        val location = context.getLocation(typeReference)
+                        val fqcn = resolved.qualifiedName
+                        val apiMessage =
+                            getApiErrorMessage(minSdk, typeReference, api, "Exception", fqcn ?: "")
+                        val message = "$apiMessage, and having a surrounding/preceding version " +
+                                "check **does** not help since prior to API level 19, just " +
+                                "**loading** the class will cause a crash. Consider marking the " +
+                                "surrounding class with `RequiresApi(19)` to ensure that the " +
+                                "class is never loaded except when on API 19 or higher."
+                        val fix = LintFix.create().data(api, PsiClass::class.java)
+                        report(UNSUPPORTED, typeReference, location, message, fix, signature)
+                        return
+                    } else {
+                        // On ART we're good.
+                        return
+                    }
                 }
 
                 val location = context.getLocation(typeReference)
                 val fqcn = resolved.qualifiedName
-                report(UNSUPPORTED, typeReference, location, "Class", fqcn ?: "", api, minSdk, apiLevelFix(api), signature)
+                val fix =
+                        if (minSdk < 19) {
+                            LintFix.create().data(api, PsiClass::class.java)
+                        } else {
+                            LintFix.create().data(api)
+                        }
+                report(UNSUPPORTED, typeReference, location, "Exception", fqcn ?: "", api, minSdk, fix, signature)
             }
         }
 
@@ -1884,6 +1907,28 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 }
             }
         }
+    }
+
+    private fun getApiErrorMessage(
+        minSdk: Int,
+        node: UElement,
+        requires: Int,
+        type: String,
+        sig: String
+    ): String {
+        val min = Math.max(minSdk, getTargetApi(node))
+
+        // For preview releases, don't show the API level as a number; show it using
+        // a version code
+        val apiLevel = if (requires <= SdkVersionInfo.HIGHEST_KNOWN_STABLE_API) {
+            requires.toString()
+        } else {
+            SdkVersionInfo.getCodeName(requires) ?: requires.toString()
+        }
+
+        val message =
+            "${type.usLocaleCapitalize()} requires API level $apiLevel (current min is $min): `$sig`"
+        return message
     }
 
     private fun checkObsoleteSdkVersion(context: JavaContext, node: UElement) {
