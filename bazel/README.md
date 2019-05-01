@@ -206,6 +206,13 @@ You can also use it to download protoc binaries, like this:
 bazel run //tools/base/bazel:add_dependency com.google.protobuf:protoc:exe:linux-x86_64:3.0.0
 ```
 
+It can also be used to download sources and javadoc, like this:
+
+```
+bazel run //tools/base/bazel:add_dependency com.google.truth:truth:jar:sources:0.42
+bazel run //tools/base/bazel:add_dependency com.google.truth:truth:jar:javadoc:0.42
+```
+
 The tool by default uses Maven Central, JCenter and the Google Maven
 repository. You can add more (like a staging repository for libraries to be
 pushed to maven.google.com) using a flag:
