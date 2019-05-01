@@ -361,7 +361,10 @@ config_setting(
 
 config_setting(
     name = "remote_windows",
-    values = {"define": "REMOTE_WINDOWS=true"},
+    values = {
+        "define": "REMOTE_WINDOWS=true",
+        "cpu": "x64_windows",
+    },
     visibility = ["//visibility:public"],
 )
 
