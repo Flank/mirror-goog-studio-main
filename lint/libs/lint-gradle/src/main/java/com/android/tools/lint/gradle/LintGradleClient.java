@@ -22,9 +22,9 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.repository.Revision;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -110,7 +110,7 @@ public class LintGradleClient extends LintCliClient {
 
         // Look up local lint configuration for this project, either via Gradle lintOptions
         // or via local lint.xml
-        AndroidProject gradleProjectModel = project.getGradleProjectModel();
+        IdeAndroidProject gradleProjectModel = project.getGradleProjectModel();
         if (gradleProjectModel != null) {
             LintOptions lintOptions = gradleProjectModel.getLintOptions();
             File lintXml = lintOptions.getLintConfig();
@@ -267,7 +267,7 @@ public class LintGradleClient extends LintCliClient {
      */
     @NonNull
     public static List<Warning> merge(
-            @NonNull Map<Variant, List<Warning>> warningMap, @NonNull AndroidProject project) {
+            @NonNull Map<Variant, List<Warning>> warningMap, @NonNull IdeAndroidProject project) {
         // Easy merge?
         if (warningMap.size() == 1) {
             return warningMap.values().iterator().next();

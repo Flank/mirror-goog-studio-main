@@ -25,10 +25,10 @@ import static org.mockito.Mockito.when;
 
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.ResourceVisibilityLookup.SymbolProvider;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
@@ -97,7 +97,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         AndroidArtifact mockArtifact = createMockArtifact(Collections.singletonList(library));
         Variant variant = createMockVariant(mockArtifact);
 
-        AndroidProject project;
+        IdeAndroidProject project;
 
         project = createMockProject("1.0.1", 0);
         assertTrue(new ResourceVisibilityLookup.Provider().get(project, variant).isEmpty());
@@ -355,8 +355,8 @@ public class ResourceVisibilityLookupTest extends TestCase {
         assertSame(symbols, symbols2);
     }
 
-    public static AndroidProject createMockProject(String modelVersion, int apiVersion) {
-        AndroidProject project = createNiceMock(AndroidProject.class);
+    public static IdeAndroidProject createMockProject(String modelVersion, int apiVersion) {
+        IdeAndroidProject project = createNiceMock(IdeAndroidProject.class);
         expect(project.getApiVersion()).andReturn(apiVersion).anyTimes();
         expect(project.getModelVersion()).andReturn(modelVersion).anyTimes();
         replay(project);

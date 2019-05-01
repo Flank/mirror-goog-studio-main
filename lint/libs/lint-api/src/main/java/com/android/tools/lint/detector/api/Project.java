@@ -53,11 +53,11 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.repository.ResourceVisibilityLookup;
@@ -209,7 +209,7 @@ public class Project {
      * @return the project model, or null
      */
     @Nullable
-    public AndroidProject getGradleProjectModel() {
+    public IdeAndroidProject getGradleProjectModel() {
         return null;
     }
 
@@ -245,7 +245,7 @@ public class Project {
     @Nullable
     public GradleVersion getGradleModelVersion() {
         if (gradleVersion == null && isGradleProject()) {
-            AndroidProject gradleProjectModel = getGradleProjectModel();
+            IdeAndroidProject gradleProjectModel = getGradleProjectModel();
             if (gradleProjectModel != null) {
                 gradleVersion = GradleVersion.tryParse(gradleProjectModel.getModelVersion());
             }
@@ -412,7 +412,7 @@ public class Project {
     /** Gets the namespacing mode used for this project */
     @NonNull
     private AaptOptions.Namespacing getNamespacingMode() {
-        AndroidProject model = getGradleProjectModel();
+        IdeAndroidProject model = getGradleProjectModel();
         if (model != null) {
             return model.getAaptOptions().getNamespacing();
         } else {
@@ -789,7 +789,7 @@ public class Project {
     @NonNull
     public Set<String> getAllApplicationIds() {
         Set<String> ids = new HashSet<>();
-        AndroidProject model = getGradleProjectModel();
+        IdeAndroidProject model = getGradleProjectModel();
         if (model != null) {
             for (Variant variant : model.getVariants()) {
                 String applicationId = variant.getMergedFlavor().getApplicationId();
@@ -1600,7 +1600,7 @@ public class Project {
                 Set<String> relevantDensities = Sets.newHashSet();
                 Variant variant = getCurrentVariant();
                 List<String> variantFlavors = variant.getProductFlavors();
-                AndroidProject gradleProjectModel = getGradleProjectModel();
+                IdeAndroidProject gradleProjectModel = getGradleProjectModel();
 
                 addResConfigsFromFlavor(
                         relevantDensities, null, getGradleProjectModel().getDefaultConfig());
@@ -1690,7 +1690,7 @@ public class Project {
     public ResourceVisibilityLookup getResourceVisibility() {
         if (resourceVisibility == null) {
             if (isGradleProject()) {
-                AndroidProject project = getGradleProjectModel();
+                IdeAndroidProject project = getGradleProjectModel();
                 Variant variant = getCurrentVariant();
                 if (project != null && variant != null) {
                     resourceVisibility =

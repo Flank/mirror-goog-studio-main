@@ -26,8 +26,8 @@ import static com.android.SdkConstants.TAG_VECTOR;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.resources.ResourceItem;
@@ -103,7 +103,7 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckRootProject(@NonNull Context context) {
-        AndroidProject model = context.getProject().getGradleProjectModel();
+        IdeAndroidProject model = context.getProject().getGradleProjectModel();
 
         if (model == null) {
             mSkipChecks = true;

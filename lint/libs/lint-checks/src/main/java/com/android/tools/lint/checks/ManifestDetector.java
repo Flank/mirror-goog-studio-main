@@ -63,6 +63,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -1286,7 +1287,7 @@ public class ManifestDetector extends Detector implements XmlScanner {
      */
     private static boolean isDebugOrTestManifest(
             @NonNull XmlContext context, @NonNull File manifestFile) {
-        AndroidProject model = context.getProject().getGradleProjectModel();
+        IdeAndroidProject model = context.getProject().getGradleProjectModel();
         if (model != null) {
             // Quickly check if it's the main manifest first; that's the most likely scenario
             if (manifestFile.equals(

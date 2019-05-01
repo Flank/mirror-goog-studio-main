@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.gradle.model;
 
+import static com.android.builder.model.AndroidProject.GENERATION_ORIGINAL;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
@@ -299,7 +301,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myFlavorDimensions;
     }
 
-    @Override
+    @Deprecated // Need to clean up IdeAndroidProjectImplTest
     @NonNull
     public Collection<ArtifactMetaData> getExtraArtifacts() {
         throw new UnusedModelMethodException("getExtraArtifacts");
@@ -317,7 +319,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myBootClassPath;
     }
 
-    @Override
+    @Deprecated // Need to clean up IdeAndroidProjectImplTest
     @NonNull
     public Collection<File> getFrameworkSources() {
         throw new UnusedModelMethodException("getFrameworkSources");

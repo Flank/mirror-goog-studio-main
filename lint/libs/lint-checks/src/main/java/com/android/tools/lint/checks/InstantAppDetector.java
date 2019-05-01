@@ -31,6 +31,7 @@ import static com.android.SdkConstants.TAG_USES_SDK;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
@@ -105,7 +106,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
      */
     private static boolean isInstantApp(@NonNull Context context) {
         Project mainProject = context.getMainProject();
-        AndroidProject model = mainProject.getGradleProjectModel();
+        IdeAndroidProject model = mainProject.getGradleProjectModel();
         if (model == null) {
             return false;
         }
@@ -127,7 +128,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements SourceCod
 
     /** Checks whether the the given project is an instant app module */
     private static boolean isInstantApp(@NonNull Project project) {
-        AndroidProject model = project.getGradleProjectModel();
+        IdeAndroidProject model = project.getGradleProjectModel();
         if (model == null) {
             return false;
         }

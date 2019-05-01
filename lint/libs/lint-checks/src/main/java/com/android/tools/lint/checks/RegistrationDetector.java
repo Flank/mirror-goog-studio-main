@@ -32,6 +32,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProviderContainer;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
@@ -216,7 +217,7 @@ public class RegistrationDetector extends LayoutDetector implements SourceCodeSc
 
         // Don't flag activities registered in test source sets
         if (context.getProject().isGradleProject()) {
-            AndroidProject model = context.getProject().getGradleProjectModel();
+            IdeAndroidProject model = context.getProject().getGradleProjectModel();
             if (model != null) {
                 String javaSource = context.file.getPath();
                 // Test source set?

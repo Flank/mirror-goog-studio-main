@@ -24,8 +24,8 @@ import static com.android.SdkConstants.UNIT_DP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceUrl;
@@ -287,7 +287,7 @@ public class VectorDetector extends ResourceXmlDetector {
                             apiThreshold);
             context.report(ISSUE, element, context.getLocation(element), message);
         } else if ("group".equals(tag)) {
-            AndroidProject model = context.getMainProject().getGradleProjectModel();
+            IdeAndroidProject model = context.getMainProject().getGradleProjectModel();
             if (model != null && model.getModelVersion().startsWith("1.4.")) {
                 String message =
                         "Update Gradle plugin version to 1.5+ to correctly handle "

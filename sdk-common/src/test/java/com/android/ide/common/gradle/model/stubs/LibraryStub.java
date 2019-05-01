@@ -27,9 +27,10 @@ public class LibraryStub extends BaseStub implements Library {
     @Nullable private final String myProject;
     @Nullable private final String myName;
     private final boolean myProvided;
+    private final boolean myIsSkipped;
 
     public LibraryStub() {
-        this(new MavenCoordinatesStub(), null, "project", "name", true);
+        this(new MavenCoordinatesStub(), null, "project", "name", true, false);
     }
 
     public LibraryStub(
@@ -37,12 +38,14 @@ public class LibraryStub extends BaseStub implements Library {
             @Nullable String buildId,
             @Nullable String project,
             @Nullable String name,
-            boolean provided) {
+            boolean provided,
+            boolean isSkipped) {
         myResolvedCoordinates = coordinates;
         myBuildId = buildId;
         myProject = project;
         myName = name;
         myProvided = provided;
+        myIsSkipped = isSkipped;
     }
 
     @Override
@@ -77,7 +80,7 @@ public class LibraryStub extends BaseStub implements Library {
 
     @Override
     public boolean isSkipped() {
-        throw new UnusedModelMethodException("isSkipped");
+        return myIsSkipped;
     }
 
     @Override

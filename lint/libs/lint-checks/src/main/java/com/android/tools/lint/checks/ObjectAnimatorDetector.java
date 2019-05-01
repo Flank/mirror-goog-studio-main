@@ -20,8 +20,8 @@ import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.support.AndroidxName;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
@@ -547,7 +547,7 @@ public class ObjectAnimatorDetector extends Detector implements SourceCodeScanne
             return true;
         }
 
-        AndroidProject model = project.getGradleProjectModel();
+        IdeAndroidProject model = project.getGradleProjectModel();
         if (model != null) {
             for (BuildTypeContainer buildTypeContainer : model.getBuildTypes()) {
                 if (buildTypeContainer.getBuildType().isMinifyEnabled()) {

@@ -21,9 +21,9 @@ import static com.android.utils.CharSequences.regionMatches;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -289,7 +289,7 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     @Nullable
     private static Boolean getReleaseMode(@NonNull Context context) {
         Project project = context.getMainProject();
-        AndroidProject model = project.getGradleProjectModel();
+        IdeAndroidProject model = project.getGradleProjectModel();
         Variant variant = project.getCurrentVariant();
         if (model != null && variant != null) {
             String buildType = variant.getBuildType();

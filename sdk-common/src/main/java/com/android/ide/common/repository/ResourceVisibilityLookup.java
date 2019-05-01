@@ -19,7 +19,11 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.*;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.MavenCoordinates;
+import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.annotations.VisibleForTesting;
@@ -415,14 +419,14 @@ public abstract class ResourceVisibilityLookup {
         }
 
         /**
-         * Returns true if the given Gradle model is compatible with public resources.
-         * (Older models than 1.3 will throw exceptions if we attempt to for example
-         * query the public resource file location.
+         * Returns true if the given Gradle model is compatible with public resources. (Older models
+         * than 1.3 will throw exceptions if we attempt to for example query the public resource
+         * file location.
          *
          * @param project the project to check
          * @return true if the model is recent enough to support resource visibility queries
          */
-        public static boolean isVisibilityAwareModel(@NonNull AndroidProject project) {
+        public static boolean isVisibilityAwareModel(@NonNull IdeAndroidProject project) {
             String modelVersion = project.getModelVersion();
             // getApiVersion doesn't work prior to 1.2, and API level must be at least 3
             return !(modelVersion.startsWith("1.0") || modelVersion.startsWith("1.1"))
@@ -438,8 +442,7 @@ public abstract class ResourceVisibilityLookup {
          */
         @NonNull
         public ResourceVisibilityLookup get(
-                @NonNull AndroidProject project,
-                @NonNull Variant variant) {
+                @NonNull IdeAndroidProject project, @NonNull Variant variant) {
             String key = getMapKey(variant);
             ResourceVisibilityLookup visibility = mInstances.get(key);
             if (visibility == null) {

@@ -27,13 +27,16 @@ import java.util.Set;
 
 /** Creates a deep copy of a {@link LintOptions}. */
 public final class IdeLintOptions extends IdeModel implements LintOptions {
-    // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 1L;
+    // Increase the value when adding/removing fields or when changing the
+    // serialization/deserialization mechanism.
+    private static final long serialVersionUID = 2L;
 
     @Nullable private final File myBaselineFile;
+    @Nullable private final File myLintConfig;
     @Nullable private final Map<String, Integer> mySeverityOverrides;
     private final boolean myCheckTestSources;
     private final int myHashCode;
+    private final boolean myIsCheckDependencies;
 
     public IdeLintOptions(
             @NonNull LintOptions options,
@@ -44,12 +47,14 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
                 modelVersion != null && modelVersion.isAtLeast(2, 3, 0, "beta", 2, true)
                         ? options.getBaselineFile()
                         : null;
+        myLintConfig = copyNewProperty(options::getLintConfig, null);
         mySeverityOverrides = copy(options.getSeverityOverrides());
         myCheckTestSources =
                 modelVersion != null
                         && modelVersion.isAtLeast(2, 4, 0)
                         && options.isCheckTestSources();
-
+        myIsCheckDependencies =
+                Objects.requireNonNull(copyNewProperty(options::isCheckDependencies, false));
         myHashCode = calculateHashCode();
     }
 
@@ -79,7 +84,7 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
     @Override
     @Nullable
     public File getLintConfig() {
-        throw new UnusedModelMethodException("getLintConfig");
+        return myLintConfig;
     }
 
     @Override
@@ -194,7 +199,7 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
 
     @Override
     public boolean isCheckDependencies() {
-        throw new UnusedModelMethodException("isCheckDependencies");
+        return myIsCheckDependencies;
     }
 
     @Override
@@ -207,7 +212,9 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
         }
         IdeLintOptions options = (IdeLintOptions) o;
         return myCheckTestSources == options.myCheckTestSources
+                && Objects.equals(myLintConfig, options.myLintConfig)
                 && Objects.equals(myBaselineFile, options.myBaselineFile)
+                && myIsCheckDependencies == options.myIsCheckDependencies
                 && Objects.equals(mySeverityOverrides, options.mySeverityOverrides);
     }
 
@@ -217,7 +224,12 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
     }
 
     private int calculateHashCode() {
-        return Objects.hash(myBaselineFile, mySeverityOverrides, myCheckTestSources);
+        return Objects.hash(
+                myBaselineFile,
+                myLintConfig,
+                mySeverityOverrides,
+                myIsCheckDependencies,
+                myCheckTestSources);
     }
 
     @Override
@@ -225,10 +237,14 @@ public final class IdeLintOptions extends IdeModel implements LintOptions {
         return "IdeLintOptions{"
                 + "myBaselineFile="
                 + myBaselineFile
+                + ", myLintConfig="
+                + myLintConfig
                 + ", mySeverityOverrides="
                 + mySeverityOverrides
                 + ", myCheckTestSources="
                 + myCheckTestSources
-                + "}";
+                + ", myIsCheckDependencies="
+                + myIsCheckDependencies
+                + '}';
     }
 }

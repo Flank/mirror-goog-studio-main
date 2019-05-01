@@ -38,6 +38,7 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.GradleModelConverterUtil;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.projectmodel.ProjectType;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -223,7 +224,7 @@ public class LintGradleProject extends Project {
     // TODO: Rename: this isn't really an "App" project (it could be a library) too; it's a "project"
     // (e.g. not a remote artifact) - LocalGradleProject
     private static class AppGradleProject extends LintGradleProject {
-        private final AndroidProject mProject;
+        private final IdeAndroidProject mProject;
         private final Variant mVariant;
         private List<SourceProvider> mProviders;
         private List<SourceProvider> mTestProviders;
@@ -232,7 +233,7 @@ public class LintGradleProject extends Project {
                 @NonNull LintGradleClient client,
                 @NonNull File dir,
                 @NonNull File referenceDir,
-                @NonNull AndroidProject project,
+                @NonNull IdeAndroidProject project,
                 @NonNull Variant variant,
                 @Nullable File manifest) {
             super(client, dir, referenceDir, manifest);
@@ -246,7 +247,7 @@ public class LintGradleProject extends Project {
         }
 
         @Override
-        public AndroidProject getGradleProjectModel() {
+        public IdeAndroidProject getGradleProjectModel() {
             return mProject;
         }
 
@@ -305,7 +306,7 @@ public class LintGradleProject extends Project {
                 try {
                     proguardFiles = new ArrayList<>();
                     Variant variant = mVariant;
-                    AndroidProject project = mProject;
+                    IdeAndroidProject project = mProject;
                     for (String flavorName : variant.getProductFlavors()) {
                         for (ProductFlavorContainer flavor : project.getProductFlavors()) {
                             ProductFlavor productFlavor = flavor.getProductFlavor();
@@ -812,7 +813,7 @@ public class LintGradleProject extends Project {
      * libraries, looking up tooling models for each project, etc.
      */
     static class ProjectSearch {
-        public final Map<AndroidProject, Project> appProjects = Maps.newHashMap();
+        public final Map<IdeAndroidProject, Project> appProjects = Maps.newHashMap();
         public final Map<AndroidLibrary, Project> libraryProjects = Maps.newHashMap();
         public final Map<MavenCoordinates, LintGradleProject> libraryProjectsByCoordinate =
                 Maps.newHashMap();
@@ -820,12 +821,13 @@ public class LintGradleProject extends Project {
         public final Map<JavaLibrary, Project> javaLibraryProjects = Maps.newHashMap();
         public final Map<MavenCoordinates, LintGradleProject> javaLibraryProjectsByCoordinate =
                 Maps.newHashMap();
-        public final Map<org.gradle.api.Project, AndroidProject> gradleProjects = Maps.newHashMap();
+        public final Map<org.gradle.api.Project, IdeAndroidProject> gradleProjects =
+                Maps.newHashMap();
 
         public ProjectSearch() {}
 
         @Nullable
-        private static AndroidProject createAndroidProject(
+        private static IdeAndroidProject createAndroidProject(
                 @NonNull org.gradle.api.Project gradleProject) {
             PluginContainer pluginContainer = gradleProject.getPlugins();
             for (Plugin p : pluginContainer) {
@@ -840,8 +842,8 @@ public class LintGradleProject extends Project {
         }
 
         @Nullable
-        private AndroidProject getAndroidProject(@NonNull org.gradle.api.Project gradleProject) {
-            AndroidProject androidProject = gradleProjects.get(gradleProject);
+        private IdeAndroidProject getAndroidProject(@NonNull org.gradle.api.Project gradleProject) {
+            IdeAndroidProject androidProject = gradleProjects.get(gradleProject);
             if (androidProject == null) {
                 androidProject = createAndroidProject(gradleProject);
                 if (androidProject != null) {
@@ -855,7 +857,7 @@ public class LintGradleProject extends Project {
                 @NonNull LintGradleClient lintClient,
                 @NonNull org.gradle.api.Project gradleProject,
                 @Nullable String variantName) {
-            AndroidProject androidProject = getAndroidProject(gradleProject);
+            IdeAndroidProject androidProject = getAndroidProject(gradleProject);
             if (androidProject != null && variantName != null) {
                 Collection<Variant> variants = androidProject.getVariants();
                 for (Variant variant : variants) {
@@ -1013,7 +1015,7 @@ public class LintGradleProject extends Project {
 
         public Project getProject(
                 @NonNull LintGradleClient client,
-                @NonNull AndroidProject project,
+                @NonNull IdeAndroidProject project,
                 @NonNull Variant variant,
                 @NonNull org.gradle.api.Project gradleProject) {
             Project cached = appProjects.get(project);

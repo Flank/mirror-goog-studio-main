@@ -34,13 +34,13 @@ import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.builder.model.Version;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestMerger2.Invoker.Feature;
@@ -1306,7 +1306,7 @@ public class LintCliClient extends LintClient {
 
         LanguageLevel maxLevel = LanguageLevel.JDK_1_7;
         for (Project project : knownProjects) {
-            AndroidProject model = project.getGradleProjectModel();
+            IdeAndroidProject model = project.getGradleProjectModel();
             if (model != null) {
                 JavaCompileOptions javaCompileOptions = model.getJavaCompileOptions();
                 String sourceCompatibility = javaCompileOptions.getSourceCompatibility();

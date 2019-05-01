@@ -31,6 +31,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     @Nullable private final String myBuildId;
     @Nullable private final String myProject;
     @Nullable private final String myName;
+    @Nullable private final Boolean myIsSkipped;
     @Nullable private final Boolean myProvided;
     private final int myHashCode;
 
@@ -41,7 +42,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
         myProject = copyNewProperty(library::getProject, null);
         myName = copyNewProperty(library::getName, null); // Library.getName() was added in 2.2
         myProvided = copyNewProperty(library::isProvided, null);
-
+        myIsSkipped = copyNewProperty(library::isSkipped, null);
         myHashCode = calculateHashCode();
     }
 
@@ -77,7 +78,10 @@ public abstract class IdeLibrary extends IdeModel implements Library {
 
     @Override
     public boolean isSkipped() {
-        throw new UnusedModelMethodException("isSkipped");
+        if (myIsSkipped != null) {
+            return myIsSkipped;
+        }
+        throw new UnsupportedOperationException("Unsupported method: IdeLibrary.isSkipped()");
     }
 
     @Override
@@ -85,7 +89,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
         if (myProvided != null) {
             return myProvided;
         }
-        throw new UnsupportedOperationException("Unsupported method: AndroidLibrary.isProvided()");
+        throw new UnsupportedOperationException("Unsupported method: IdeLibrary.isProvided()");
     }
 
     @Override
@@ -98,6 +102,7 @@ public abstract class IdeLibrary extends IdeModel implements Library {
         }
         IdeLibrary library = (IdeLibrary) o;
         return library.canEqual(this)
+                && Objects.equals(myIsSkipped, library.myIsSkipped)
                 && Objects.equals(myProvided, library.myProvided)
                 && Objects.equals(myResolvedCoordinates, library.myResolvedCoordinates)
                 && Objects.equals(myBuildId, library.myBuildId)
@@ -116,7 +121,8 @@ public abstract class IdeLibrary extends IdeModel implements Library {
     }
 
     protected int calculateHashCode() {
-        return Objects.hash(myResolvedCoordinates, myBuildId, myProject, myName, myProvided);
+        return Objects.hash(
+                myResolvedCoordinates, myBuildId, myProject, myName, myProvided, myIsSkipped);
     }
 
     @Override

@@ -51,6 +51,7 @@ import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
@@ -99,7 +100,7 @@ import org.mockito.stubbing.OngoingStubbing;
  * dependencies etc)
  */
 public class GradleModelMocker {
-    private AndroidProject project;
+    private IdeAndroidProject project;
     private Variant variant;
     private GlobalLibraryMap globalLibraryMap;
     private final List<BuildType> buildTypes = Lists.newArrayList();
@@ -226,7 +227,7 @@ public class GradleModelMocker {
         return javaLibraryPlugin;
     }
 
-    public AndroidProject getProject() {
+    public IdeAndroidProject getProject() {
         ensureInitialized();
         return project;
     }
@@ -243,7 +244,7 @@ public class GradleModelMocker {
     }
 
     private void initialize() {
-        project = mock(AndroidProject.class);
+        project = mock(IdeAndroidProject.class);
 
         when(project.getModelVersion()).thenReturn(modelVersion.toString());
         int apiVersion = modelVersion.getMajor() >= 2 ? 3 : 2;

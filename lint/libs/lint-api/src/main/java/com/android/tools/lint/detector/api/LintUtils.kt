@@ -41,6 +41,7 @@ import com.android.builder.model.ApiVersion
 import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
+import com.android.ide.common.gradle.model.IdeAndroidProject
 import com.android.ide.common.rendering.api.ResourceNamespace
 import com.android.ide.common.rendering.api.ResourceValue
 import com.android.ide.common.rendering.api.ResourceValueImpl
@@ -1186,7 +1187,7 @@ fun isSameResourceFile(file1: File?, file2: File?): Boolean {
 }
 
 /** Looks up the resource prefix for the given Gradle project, if possible  */
-fun computeResourcePrefix(project: AndroidProject?): String? {
+fun computeResourcePrefix(project: IdeAndroidProject?): String? {
     try {
         if (tryPrefixLookup && project != null) {
             return project.resourcePrefix
@@ -1736,7 +1737,7 @@ fun resolvePlaceHolder(
 }
 
 fun getSourceProviders(
-    project: AndroidProject,
+    project: IdeAndroidProject,
     variant: Variant
 ): List<SourceProvider> {
     val providers = ArrayList<SourceProvider>()
@@ -1780,7 +1781,7 @@ private fun isTestArtifact(extra: SourceProviderContainer): Boolean {
 }
 
 fun getTestSourceProviders(
-    project: AndroidProject,
+    project: IdeAndroidProject,
     variant: Variant
 ): List<SourceProvider> {
     val providers = ArrayList<SourceProvider>()
@@ -2448,15 +2449,6 @@ object LintUtils {
     @JvmStatic
     @Deprecated(
         "Use package function instead",
-        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.computeResourcePrefix(project)")
-    )
-    fun computeResourcePrefix(project: AndroidProject?): String? {
-        return com.android.tools.lint.detector.api.computeResourcePrefix(project)
-    }
-
-    @JvmStatic
-    @Deprecated(
-        "Use package function instead",
         replaceWith = ReplaceWith("com.android.tools.lint.detector.api.computeResourceName(prefix, name, folderType)")
     )
     @JvmOverloads
@@ -2697,30 +2689,6 @@ object LintUtils {
     )
     fun resolveManifestName(element: Element): String {
         return com.android.tools.lint.detector.api.resolveManifestName(element)
-    }
-
-    @JvmStatic
-    @Deprecated(
-        "Use package function instead",
-        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getSourceProviders(project, variant)")
-    )
-    fun getSourceProviders(
-        project: AndroidProject,
-        variant: Variant
-    ): List<SourceProvider> {
-        return com.android.tools.lint.detector.api.getSourceProviders(project, variant)
-    }
-
-    @JvmStatic
-    @Deprecated(
-        "Use package function instead",
-        replaceWith = ReplaceWith("com.android.tools.lint.detector.api.getTestSourceProviders(project, variant)")
-    )
-    fun getTestSourceProviders(
-        project: AndroidProject,
-        variant: Variant
-    ): List<SourceProvider> {
-        return com.android.tools.lint.detector.api.getTestSourceProviders(project, variant)
     }
 
     @JvmStatic

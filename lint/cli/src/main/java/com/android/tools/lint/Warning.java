@@ -17,8 +17,8 @@
 package com.android.tools.lint;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
@@ -46,7 +46,7 @@ public class Warning implements Comparable<Warning> {
     public final String message;
     public final Severity severity;
     public final Project project;
-    public AndroidProject gradleProject;
+    public IdeAndroidProject gradleProject;
     public Location location;
     public File file;
     public String path;

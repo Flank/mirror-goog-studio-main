@@ -34,7 +34,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
@@ -44,6 +43,7 @@ import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.resources.MergingException;
 import com.android.ide.common.resources.ResourceFile;
@@ -516,7 +516,7 @@ public class TestLintClient extends LintCliClient {
             driver.addLintListener(
                     (driver, type, project, context) -> {
                         if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
-                            AndroidProject model = project.getGradleProjectModel();
+                            IdeAndroidProject model = project.getGradleProjectModel();
                             Variant variant = project.getCurrentVariant();
                             if (model != null && variant != null) {
                                 task.mockModifier.modify(model, variant);
@@ -1361,7 +1361,7 @@ public class TestLintClient extends LintCliClient {
 
         @Nullable
         @Override
-        public AndroidProject getGradleProjectModel() {
+        public IdeAndroidProject getGradleProjectModel() {
             return mocker != null ? mocker.getProject() : null;
         }
 
@@ -1369,7 +1369,7 @@ public class TestLintClient extends LintCliClient {
 
         private List<SourceProvider> getSourceProviders() {
             if (mProviders == null) {
-                AndroidProject project = getGradleProjectModel();
+                IdeAndroidProject project = getGradleProjectModel();
                 Variant variant = getCurrentVariant();
                 if (project == null || variant == null) {
                     return Collections.emptyList();

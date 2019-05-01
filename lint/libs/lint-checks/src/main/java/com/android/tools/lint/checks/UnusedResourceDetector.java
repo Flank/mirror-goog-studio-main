@@ -36,7 +36,6 @@ import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
@@ -44,6 +43,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.resources.usage.ResourceUsageModel;
 import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.android.resources.ResourceFolderType;
@@ -180,7 +180,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
 
     private void addDynamicResources(@NonNull Context context) {
         Project project = context.getProject();
-        AndroidProject model = project.getGradleProjectModel();
+        IdeAndroidProject model = project.getGradleProjectModel();
         if (model != null) {
             Variant selectedVariant = project.getCurrentVariant();
             if (selectedVariant != null) {
@@ -253,7 +253,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
                     && project.isGradleProject()
                     && !project.isLibrary()
                     && LintClient.isStudio()) {
-                AndroidProject model = project.getGradleProjectModel();
+                IdeAndroidProject model = project.getGradleProjectModel();
                 Variant variant = project.getCurrentVariant();
                 if (model != null && variant != null) {
                     addInactiveReferences(model, variant);
@@ -405,7 +405,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
     /** Returns source providers that are <b>not</b> part of the given variant */
     @NonNull
     private static List<SourceProvider> getInactiveSourceProviders(
-            @NonNull AndroidProject project, @NonNull Variant variant) {
+            @NonNull IdeAndroidProject project, @NonNull Variant variant) {
         Collection<Variant> variants = project.getVariants();
         List<SourceProvider> providers = Lists.newArrayList();
 
@@ -509,7 +509,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector
         }
     }
 
-    private void addInactiveReferences(@NonNull AndroidProject model, @NonNull Variant variant) {
+    private void addInactiveReferences(@NonNull IdeAndroidProject model, @NonNull Variant variant) {
         for (SourceProvider provider : getInactiveSourceProviders(model, variant)) {
             for (File res : provider.getResDirectories()) {
                 // Scan resource directory

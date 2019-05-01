@@ -41,6 +41,7 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.collect.Iterators;
@@ -95,7 +96,7 @@ public class GradleModelMockerTest {
     @Nullable
     private static BuildType findBuildType(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         for (BuildTypeContainer container : project.getBuildTypes()) {
             BuildType buildType = container.getBuildType();
             if (name.equals(buildType.getName())) {
@@ -108,7 +109,7 @@ public class GradleModelMockerTest {
     @Nullable
     private static ProductFlavor findProductFlavor(
             @NonNull GradleModelMocker mocker, @NonNull String name) {
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         for (ProductFlavorContainer container : project.getProductFlavors()) {
             ProductFlavor productFlavor = container.getProductFlavor();
             if (name.equals(productFlavor.getName())) {
@@ -129,7 +130,7 @@ public class GradleModelMockerTest {
                                 + "    compile 'my.group.id:mylib:25.0.0-SNAPSHOT'\n"
                                 + "}");
         Variant variant = mocker.getVariant();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
@@ -154,7 +155,7 @@ public class GradleModelMockerTest {
                                 + "    implementation \"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version\"\n"
                                 + "}");
         Variant variant = mocker.getVariant();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_APP);
 
         assertThat(variant.getMergedFlavor().getVersionCode()).isNull(); // not Integer.valueOf(0)!
@@ -192,7 +193,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
 
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         Variant variant = mocker.getVariant();
 
         assertThat(project.getCompileTarget()).isEqualTo("android-25");
@@ -233,7 +234,7 @@ public class GradleModelMockerTest {
                                 + "        paid { flavorDimension \"pricing\" }\n"
                                 + "    }\n"
                                 + "}");
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         Variant variant = mocker.getVariant();
         BuildType buildType = findBuildType(mocker, "debug");
         assertThat(buildType).isNotNull();
@@ -278,7 +279,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
 
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
 
         File manifestFile = project.getDefaultConfig().getSourceProvider().getManifestFile();
         assertThat(manifestFile.getPath()).endsWith("AndroidManifest.xml");
@@ -300,7 +301,7 @@ public class GradleModelMockerTest {
                                 + "}\n");
 
         Variant variant = mocker.getVariant();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project.getProjectType()).isEqualTo(AndroidProject.PROJECT_TYPE_LIBRARY);
         Dependencies dependencies = variant.getMainArtifact().getDependencies();
         Collection<JavaLibrary> libraries = dependencies.getJavaLibraries();
@@ -350,7 +351,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
 
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project.getModelVersion()).isEqualTo("1.5.1");
         assertThat(project.getApiVersion()).isEqualTo(3);
     }
@@ -400,7 +401,7 @@ public class GradleModelMockerTest {
                                 + "     }\n"
                                 + "}");
 
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
 
         // Check default config
         Map<String, ClassField> resValues =
@@ -1069,7 +1070,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}\n");
         assertThat(mocker).isNotNull();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
         LintOptions options = project.getLintOptions();
         assertThat(options).isNotNull();
@@ -1096,7 +1097,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
         assertThat(mocker).isNotNull();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
         JavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.8");
@@ -1115,7 +1116,7 @@ public class GradleModelMockerTest {
                                 + "    }\n"
                                 + "}");
         assertThat(mocker).isNotNull();
-        AndroidProject project = mocker.getProject();
+        IdeAndroidProject project = mocker.getProject();
         assertThat(project).isNotNull();
         JavaCompileOptions compileOptions = project.getJavaCompileOptions();
         assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.7");

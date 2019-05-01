@@ -27,6 +27,9 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
+import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeAndroidProjectImpl;
+import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.LintFixPerformer;
 import com.android.tools.lint.LintStats;
@@ -81,7 +84,7 @@ public class LintGradleExecution {
     public void analyze() throws IOException {
         ToolingModelBuilderRegistry toolingRegistry = descriptor.getToolingRegistry();
         if (toolingRegistry != null) {
-            AndroidProject modelProject =
+            IdeAndroidProject modelProject =
                     createAndroidProject(descriptor.getProject(), toolingRegistry);
             String variantName = descriptor.getVariantName();
 
@@ -343,7 +346,7 @@ public class LintGradleExecution {
         }
     }
 
-    protected static AndroidProject createAndroidProject(
+    protected static IdeAndroidProject createAndroidProject(
             @NonNull Project gradleProject, @NonNull ToolingModelBuilderRegistry toolingRegistry) {
         String modelName = AndroidProject.class.getName();
         ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
@@ -362,7 +365,11 @@ public class LintGradleExecution {
             ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, true);
 
             try {
-                return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
+                AndroidProject project =
+                        (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
+
+                return new IdeAndroidProjectImpl(
+                        project, new IdeDependenciesFactory(), project.getVariants());
             } finally {
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);
@@ -401,7 +408,7 @@ public class LintGradleExecution {
      * Runs lint individually on all the variants, and then compares the results across variants and
      * reports these
      */
-    public void lintAllVariants(@NonNull AndroidProject modelProject) throws IOException {
+    public void lintAllVariants(@NonNull IdeAndroidProject modelProject) throws IOException {
         // In the Gradle integration we iterate over each variant, and
         // attribute unused resources to each variant, so don't make
         // each variant run go and inspect the inactive variant sources
