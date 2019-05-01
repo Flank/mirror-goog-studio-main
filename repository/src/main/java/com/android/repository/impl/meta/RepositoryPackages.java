@@ -16,6 +16,8 @@
 
 package com.android.repository.impl.meta;
 
+import static com.android.repository.util.RepoPackageUtilKt.getAllRepoPackagePrefixes;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
@@ -34,7 +36,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.xml.bind.annotation.XmlTransient;
-
 
 /**
  * Store of currently-known local and remote packages, in convenient forms.
@@ -275,14 +276,11 @@ public final class RepositoryPackages {
             Map<String, ? extends P> packages) {
         Multimap<String, P> packagesByPrefix = TreeMultimap.create();
         for (Map.Entry<String, ? extends P> entry : packages.entrySet()) {
-            String key = entry.getKey();
-            while(true) {
-                packagesByPrefix.put(key, entry.getValue());
-                int endIndex = key.lastIndexOf(RepoPackage.PATH_SEPARATOR);
-                if (endIndex < 0) {
-                    break;
-                }
-                key = key.substring(0, endIndex);
+            String path = entry.getKey();
+            P p = entry.getValue();
+            List<String> prefixes = getAllRepoPackagePrefixes(path);
+            for (String prefix : prefixes) {
+                packagesByPrefix.put(prefix, p);
             }
         }
         return packagesByPrefix;
