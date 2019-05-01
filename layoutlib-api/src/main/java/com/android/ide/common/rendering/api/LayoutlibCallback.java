@@ -28,7 +28,7 @@ import org.intellij.lang.annotations.MagicConstant;
  * flexibility to add newer methods without having to update {@link Bridge#API_CURRENT LayoutLib API
  * version}.
  */
-@SuppressWarnings({"MethodMayBeStatic", "unused"})
+@SuppressWarnings("unused")
 public abstract class LayoutlibCallback implements XmlParserFactory {
 
     public enum ViewAttribute {
@@ -249,4 +249,13 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
     public boolean isResourceNamespacingRequired() {
         return false;
     }
+
+    /** Logs an error message to the Studio error log. */
+    public void error(@NonNull String message, @NonNull String... details) {}
+
+    /** Logs an error message to the Studio error log. */
+    public void error(@NonNull String message, @Nullable Throwable t) {}
+
+    /** Logs an error message to the Studio error log. */
+    public void error(@NonNull Throwable t) {}
 }
