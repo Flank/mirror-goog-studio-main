@@ -86,6 +86,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
@@ -822,7 +823,8 @@ public class VariantManager implements VariantModel {
                 artifactConfiguration.registerTransform(
                         globalScope.getProject().getName(),
                         dependencies,
-                        globalScope.getBootClasspath());
+                        globalScope.getBootClasspath(),
+                        SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()));
             }
         }
     }

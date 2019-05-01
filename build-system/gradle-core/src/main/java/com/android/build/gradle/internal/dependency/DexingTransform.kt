@@ -40,6 +40,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Path
@@ -52,6 +53,8 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
         val debuggable: Property<Boolean>
         @get:Classpath
         val bootClasspath: ConfigurableFileCollection
+        @get:Internal
+        val errorFormat: Property<SyncOptions.ErrorFormatMode>
     }
 
     @get:Classpath
@@ -79,7 +82,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
                     enableDesugaring(),
                     MessageReceiverImpl(
-                        SyncOptions.ErrorFormatMode.MACHINE_PARSABLE,
+                        parameters.errorFormat.get(),
                         LoggerFactory.getLogger(DexingNoDesugarTransform::class.java)
                     )
                 )
@@ -139,7 +142,8 @@ data class DexingArtifactConfiguration(
     fun registerTransform(
         projectName: String,
         dependencyHandler: DependencyHandler,
-        bootClasspath: FileCollection
+        bootClasspath: FileCollection,
+        errorFormat: SyncOptions.ErrorFormatMode
     ) {
         dependencyHandler.registerTransform(getTransformClass()) { spec ->
             spec.parameters { parameters ->
@@ -149,6 +153,7 @@ data class DexingArtifactConfiguration(
                 if (enableDesugaring) {
                     parameters.bootClasspath.from(bootClasspath)
                 }
+                parameters.errorFormat.set(errorFormat)
             }
             spec.from.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.PROCESSED_JAR.type)
             spec.to.attribute(ARTIFACT_FORMAT, AndroidArtifacts.ArtifactType.DEX.type)

@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
+import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
@@ -165,12 +165,14 @@ class DexingTransformTest {
         class TestParameters(
             minSdkVersion: Int,
             debuggable: Boolean,
-            bootClasspath: List<File> = listOf()
+            bootClasspath: List<File> = listOf(),
+            errorFormat: SyncOptions.ErrorFormatMode = SyncOptions.ErrorFormatMode.MACHINE_PARSABLE
         ) : BaseDexingTransform.Parameters {
             override var projectName = FakeGradleProperty(":test")
             override var debuggable = FakeGradleProperty(debuggable)
             override val minSdkVersion = FakeGradleProperty(minSdkVersion)
             override val bootClasspath = FakeConfigurableFileCollection(bootClasspath)
+            override val errorFormat = FakeGradleProperty(errorFormat)
         }
 
         override fun getParameters(): Parameters {
