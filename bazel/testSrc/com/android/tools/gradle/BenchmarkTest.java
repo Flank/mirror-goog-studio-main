@@ -51,7 +51,6 @@ public class BenchmarkTest {
         String benchmarkFlag = null;
         String benchmarkSize = null;
         String benchmarkType = null;
-        boolean benchmarkWithWorkers = false;
         String testProjectGradleRootFromSourceRoot = ".";
         List<String> setupDiffs = new ArrayList<>();
         int warmUps = 0;
@@ -118,8 +117,6 @@ public class BenchmarkTest {
                 listeners.add(locateListener(it.next()).newInstance());
             } else if (arg.equals("--from-studio") && it.hasNext()) {
                 fromStudio = Boolean.valueOf(it.next());
-            } else if (arg.equals("--with-workers") && it.hasNext()) {
-                benchmarkWithWorkers = Boolean.valueOf(it.next());
             } else if (arg.equals("--gradle-root") && it.hasNext()) {
                 testProjectGradleRootFromSourceRoot = it.next();
             } else if (arg.equals("--pre_mutate_assertion") && it.hasNext()) {
@@ -142,7 +139,6 @@ public class BenchmarkTest {
                         benchmarkFlag,
                         benchmarkSize,
                         benchmarkType,
-                        benchmarkWithWorkers,
                         testProjectGradleRootFromSourceRoot,
                         new BenchmarkRun(
                                 warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
@@ -219,7 +215,6 @@ public class BenchmarkTest {
             String benchmarkFlag,
             String benchmarkSize,
             String benchmarkType,
-            boolean benchmarkWithWorkers,
             String testProjectGradleRootFromSourceRoot,
             BenchmarkRun benchmarkRun,
             List<String> setupDiffs,
@@ -257,7 +252,6 @@ public class BenchmarkTest {
         }
         mapBuilder.put("fromStudio", Boolean.toString(fromStudio));
         mapBuilder.put("benchmarkHost", hostName());
-        mapBuilder.put("benchmarkWithWorkers", Boolean.toString(benchmarkWithWorkers));
         benchmarkBuilder.setMetadata(mapBuilder.build());
 
         Benchmark benchmark = benchmarkBuilder.build();
