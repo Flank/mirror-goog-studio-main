@@ -170,21 +170,20 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
             ) + (if (includeDynamicFeatures) setOf(FEATURES) else emptySet())
 
             val libraryScopes = setOf(PROVIDED_ONLY, TESTED_CODE)
-            val allScopes = inputScopes + libraryScopes
 
+            // It is ok to get streams that have more types/scopes than we are asking for, so just
+            // check if intersection is not empty. This is what TransformManager does.
             inputClasses = scope.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
-                    ) && allScopes.intersect(scopes).size == scopes.size
-                            && inputScopes.intersect(scopes).isNotEmpty()
+                    ) && inputScopes.intersect(scopes).isNotEmpty()
                 }
             libraryClasses = scope.transformManager
                 .getPipelineOutputAsFileCollection { contentTypes, scopes ->
                     contentTypes.contains(
                         QualifiedContent.DefaultContentType.CLASSES
-                    ) && allScopes.intersect(scopes).size == scopes.size
-                            && libraryScopes.intersect(scopes).isNotEmpty()
+                    ) && libraryScopes.intersect(scopes).isNotEmpty()
                 }
         }
 
