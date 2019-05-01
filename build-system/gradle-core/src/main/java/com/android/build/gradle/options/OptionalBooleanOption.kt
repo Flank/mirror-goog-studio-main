@@ -26,6 +26,13 @@ enum class OptionalBooleanOption(
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, status = STABLE),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, status = STABLE),
     ENABLE_R8("android.enableR8", status = Option.Status.STABLE),
+
+    /**
+     * This project property is read by the firebase plugin, and has no direct impact on AGP behavior.
+     *
+     * It is included as an OptionalBooleanOption in order that its value, if set, is recorded in the AGP analytics.
+     */
+    FIREBASE_PERF_PLUGIN_ENABLE_FLAG("firebasePerformanceInstrumentationEnabled", status = STABLE)
     ;
 
     override fun parse(value: Any): Boolean {
