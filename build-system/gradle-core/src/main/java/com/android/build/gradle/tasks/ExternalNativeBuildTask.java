@@ -478,6 +478,18 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
     }
 
     @NonNull
+    @SuppressWarnings("unused") // Exposed in Variants API
+    public File getObjFolder() {
+        return generator.get().getObjFolder();
+    }
+
+    @NonNull
+    @SuppressWarnings("unused") // Exposed in Variants API
+    public File getSoFolder() {
+        return generator.get().getSoFolder();
+    }
+
+    @NonNull
     private Map<Abi, File> getStlSharedObjectFiles() {
         return generator.get().getStlSharedObjectFiles();
     }

@@ -101,6 +101,8 @@ Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask':
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.stlSharedObjectFiles' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variant' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildJsonTask': property 'externalNativeJsonGenerator.variantName' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildTask': property 'objFolder' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.ExternalNativeBuildTask': property 'soFolder' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.ExtractAnnotations': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.GenerateSplitAbiRes': property 'applicationIdOverride' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.InvokeManifestMerger': property 'mainManifestFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

@@ -35,6 +35,7 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -59,51 +60,59 @@ public class CmakeBasicProjectTest {
                     .setWithCmakeDirInLocalProp(true)
                     .create();
 
+    static final String moduleBody =
+            "\n"
+                    + "apply plugin: 'com.android.application'\n"
+                    + "\n"
+                    + "    android {\n"
+                    + "        compileSdkVersion "
+                    + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                    + "\n"
+                    + "        buildToolsVersion \""
+                    + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                    + "\"\n"
+                    + "        ndkVersion \""
+                    + DEFAULT_NDK_SIDE_BY_SIDE_VERSION
+                    + "\"\n"
+                    + "        defaultConfig {\n"
+                    + "          externalNativeBuild {\n"
+                    + "              cmake {\n"
+                    + "                abiFilters.addAll(\"armeabi-v7a\", \"x86_64\");\n"
+                    + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
+                    + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
+                    + "                targets.addAll(\"hello-jni\")\n"
+                    + "              }\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "        externalNativeBuild {\n"
+                    + "          cmake {\n"
+                    + "            path \"CMakeLists.txt\"\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      // -----------------------------------------------------------------------\n"
+                    + "      // See b/131857476\n"
+                    + "      // -----------------------------------------------------------------------\n"
+                    + "      applicationVariants.all { variant ->\n"
+                    + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                    + "            println(\"externalNativeBuild objFolder = \" + task.objFolder)\n"
+                    + "            println(\"externalNativeBuild soFolder = \" + task.soFolder)\n"
+                    + "        }\n"
+                    + "      }\n"
+                    + "      // ------------------------------------------------------------------------\n"
+                    + "    }\n"
+                    + "\n";
+
     @Before
     public void setUp() throws IOException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "apply plugin: 'com.android.application'\n"
-                        + "\n"
-                        + "    android {\n"
-                        + "        compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "        buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
-                        + "        ndkVersion \""
-                        + DEFAULT_NDK_SIDE_BY_SIDE_VERSION
-                        + "\"\n"
-                        + "        defaultConfig {\n"
-                        + "          externalNativeBuild {\n"
-                        + "              cmake {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86_64\");\n"
-                        + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
-                        + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
-                        + "                targets.addAll(\"hello-jni\")\n"
-                        + "              }\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "        externalNativeBuild {\n"
-                        + "          cmake {\n"
-                        + "            path \"CMakeLists.txt\"\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "\n");
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "\n"
-                        + "android {\n"
-                        + "    applicationVariants.all { variant ->\n"
-                        + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
-                        + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
-                        + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n");
+        TestFileUtils.appendToFile(project.getBuildFile(), moduleBody);
+    }
+
+    // See b/131857476
+    @Test
+    public void checkModuleBodyReferencesObjAndSo() {
+        // Checks for whether module body has references to objFolder and soFolder
+        Truth.assertThat(moduleBody).contains(".objFolder");
+        Truth.assertThat(moduleBody).contains(".soFolder");
     }
 
     @Test
