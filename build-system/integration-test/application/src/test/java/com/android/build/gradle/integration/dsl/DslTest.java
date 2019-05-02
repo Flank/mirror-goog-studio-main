@@ -157,7 +157,7 @@ public class DslTest {
                         + "}\n");
         final ModelContainer<AndroidProject> model =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
-        Collection<SyncIssue> syncIssues = model.getOnlyModel().getSyncIssues();
+        Collection<SyncIssue> syncIssues = model.getOnlyModelSyncIssues();
         assertThat(syncIssues).hasSize(1);
         assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
                 .contains("android.defaultConfig.versionCode is set to 0");
@@ -177,7 +177,7 @@ public class DslTest {
                         + "}\n");
         final ModelContainer<AndroidProject> flavoredModel =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
-        Collection<SyncIssue> flavoredSyncIssues = flavoredModel.getOnlyModel().getSyncIssues();
+        Collection<SyncIssue> flavoredSyncIssues = flavoredModel.getOnlyModelSyncIssues();
         assertThat(flavoredSyncIssues).hasSize(1);
         assertThat(Iterables.getOnlyElement(flavoredSyncIssues).getMessage())
                 .contains("versionCode is set to -1 in product flavor red");

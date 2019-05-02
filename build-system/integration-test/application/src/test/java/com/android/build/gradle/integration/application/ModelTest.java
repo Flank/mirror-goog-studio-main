@@ -50,10 +50,9 @@ public class ModelTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\ndependencies {\n    api 'foo:bar:1.2.3'\n}\n");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
+        Collection<SyncIssue> issues =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelSyncIssues();
 
-        Collection<SyncIssue> issues = model.getSyncIssues();
         assertThat(issues).hasSize(1);
 
         SyncIssue issue = Iterables.getOnlyElement(issues);
@@ -66,10 +65,9 @@ public class ModelTest {
     public void unresolvedDynamicDependencies() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\n" + "dependencies {\n" + "    api 'foo:bar:+'\n" + "}");
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
-        Collection<SyncIssue> issues = model.getSyncIssues();
+        Collection<SyncIssue> issues =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelSyncIssues();
         assertThat(issues).hasSize(1);
 
         SyncIssue issue = Iterables.getOnlyElement(issues);

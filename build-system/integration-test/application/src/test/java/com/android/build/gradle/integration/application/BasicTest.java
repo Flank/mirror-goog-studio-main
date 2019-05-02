@@ -30,17 +30,14 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
-import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.Iterators;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +70,10 @@ public class BasicTest {
                 project.executeAndReturnOutputModel("clean", "assembleDebug", "assembleRelease");
         // basic project overwrites buildConfigField which emits a sync warning
         model = project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        model.getSyncIssues()
+        project.model()
+                .ignoreSyncIssues()
+                .fetchAndroidProjects()
+                .getOnlyModelSyncIssues()
                 .forEach(
                         issue -> {
                             assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);

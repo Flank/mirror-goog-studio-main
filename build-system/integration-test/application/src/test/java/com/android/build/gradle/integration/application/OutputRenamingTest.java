@@ -73,8 +73,13 @@ public class OutputRenamingTest {
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
                         .getOnlyModel();
-        assertThat(model.getSyncIssues()).hasSize(1);
-        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+        Collection<SyncIssue> syncIssues =
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .fetchAndroidProjects()
+                        .getOnlyModelSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
     }

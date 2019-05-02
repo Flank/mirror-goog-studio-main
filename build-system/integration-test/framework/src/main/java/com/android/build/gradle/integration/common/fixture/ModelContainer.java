@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 import org.gradle.tooling.model.BuildIdentifier;
 
@@ -77,6 +78,27 @@ public final class ModelContainer<T> implements Serializable {
     @NonNull
     public Map<BuildIdentifier, Map<String, T>> getModelMaps() {
         return modelMap;
+    }
+
+    @NonNull
+    public Collection<SyncIssue> getOnlyModelSyncIssues() {
+        if (syncIssuesMap.keySet().size() != 1) {
+            throw new RuntimeException("Can't call getOnlyModelSyncIssues with included builds");
+        }
+        return getRootBuildSyncIssuesMap().values();
+    }
+
+    @NonNull
+    public Multimap<String, SyncIssue> getOnlyModelSyncIssuesMap() {
+        if (syncIssuesMap.keySet().size() > 1) {
+            throw new RuntimeException("Can't call getOnlyModelSyncIssuesMap with included builds");
+        }
+        return getRootBuildSyncIssuesMap();
+    }
+
+    @NonNull
+    private Multimap<String, SyncIssue> getRootBuildSyncIssuesMap() {
+        return syncIssuesMap.get(rootBuildId);
     }
 
     @NonNull

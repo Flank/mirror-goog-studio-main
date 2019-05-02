@@ -23,8 +23,6 @@ import com.google.common.truth.Truth
 import org.junit.Rule
 import org.junit.Test
 import java.io.File
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Tests to verify that build models detect instant enabling correctly.
@@ -107,7 +105,7 @@ class ModelInstantAppCompatibleTest {
             "dist:onDemand=\"false\" dist:instant=\"true\""
         )
         val issues =
-            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":app"]!!.syncIssues
+            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssuesMap[":app"]!!
         Truth.assertThat(issues.size).isAtLeast(1)
         Truth.assertThat(issues.last().message).startsWith("Failed to parse XML")
         Truth.assertThat(issues.last().message).contains(
@@ -151,7 +149,7 @@ class ModelInstantAppCompatibleTest {
             "dist:onDemand=\"false\" dist:instant=\"true\""
         )
         val issues =
-            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":app"]!!.syncIssues
+            project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssuesMap[":app"]!!
         Truth.assertThat(issues).isEmpty()
         var models = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap
         for ((_, model) in models) {

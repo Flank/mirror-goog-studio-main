@@ -22,6 +22,7 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -76,10 +77,11 @@ public class AndroidTestUtilTest {
                         + "androidTestUtil 'com.google.guava:guava:19.0'\n"
                         + "}\n");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
-        SyncIssue issue = model.getSyncIssues().iterator().next();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        assertThat(modelContainer.getOnlyModel())
+                .hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
+        SyncIssue issue = modelContainer.getOnlyModelSyncIssues().iterator().next();
         assertThat(issue.getMessage()).contains("guava");
     }
 }

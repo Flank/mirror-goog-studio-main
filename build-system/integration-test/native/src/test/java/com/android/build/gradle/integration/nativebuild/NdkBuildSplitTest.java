@@ -24,7 +24,6 @@ import static com.android.testutils.truth.PathSubject.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.SyncIssue;
@@ -33,6 +32,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -136,13 +136,13 @@ public class NdkBuildSplitTest {
     @Test
     public void checkModel() throws IOException {
         // Make sure we can get the AndroidProject
-        AndroidProject nonNativeModel =
+        Collection<SyncIssue> syncIssues =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
-                        .getOnlyModel();
-        assertThat(nonNativeModel.getSyncIssues()).hasSize(1);
-        assertThat(Iterables.getOnlyElement(nonNativeModel.getSyncIssues()).getMessage())
+                        .getOnlyModelSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
 

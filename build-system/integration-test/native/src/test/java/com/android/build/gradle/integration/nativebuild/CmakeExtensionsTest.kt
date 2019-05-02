@@ -150,8 +150,8 @@ class CmakeExtensionsTest(
 
     @Test
     fun basicTest() {
-        val androidProject = project.model().fetchAndroidProjects().onlyModel
-        assertThat(androidProject.syncIssues).hasSize(0)
+        val syncIssue = project.model().fetchAndroidProjects().onlyModelSyncIssues
+        assertThat(syncIssue).hasSize(0)
         project.model()
             .with(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE, true)
             .fetch(NativeAndroidProject::class.java)

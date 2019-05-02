@@ -46,7 +46,7 @@ class NoManifestTest {
 
     @Test
     fun noManifestSyncNoApplicationIdTest() {
-        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
         assertEquals(2, issues.size)
         val errors = issues.stream()
             .filter { syncIssue -> syncIssue.severity === SyncIssue.SEVERITY_ERROR }
@@ -70,7 +70,7 @@ class NoManifestTest {
             project.getSubproject(":app").buildFile,
             "\nandroid.defaultConfig.applicationId \"com.example.app\"\n"
         )
-        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+        val issues = project.model().with(BooleanOption.DISABLE_EARLY_MANIFEST_PARSING, true).ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
 
         assertEquals(1, issues.size)
         val issue = Iterables.getOnlyElement(issues)

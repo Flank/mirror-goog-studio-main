@@ -41,11 +41,11 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.SyncIssue;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -61,6 +61,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -595,8 +596,9 @@ public class NativeModelTest {
 
     @Test
     public void checkModel() throws Exception {
-        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
-        assertThat(androidProject.getSyncIssues()).hasSize(0);
+        Collection<SyncIssue> syncIssues =
+                project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
+        assertThat(syncIssues).hasSize(0);
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model).isNotNull();
         assertThat(model.getName()).isEqualTo("project");

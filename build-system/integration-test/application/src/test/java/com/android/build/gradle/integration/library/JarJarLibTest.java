@@ -120,10 +120,8 @@ public class JarJarLibTest {
                         + "    registerTransform(new com.android.test.jarjar.JarJarTransform(true /*broken transform*/))\n"
                         + "}\n");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-
-        Collection<SyncIssue> issues = model.getSyncIssues();
+        Collection<SyncIssue> issues =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelSyncIssues();
         assertThat(issues).hasSize(2);
 
         Collection<SyncIssue> errors =

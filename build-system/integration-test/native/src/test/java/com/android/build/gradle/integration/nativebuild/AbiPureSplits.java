@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil;
 import com.android.build.gradle.integration.common.utils.ProjectBuildOutputUtils;
 import com.android.build.gradle.integration.common.utils.VariantOutputUtils;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.VariantBuildOutput;
@@ -229,13 +228,13 @@ public class AbiPureSplits {
     private ProjectBuildOutput assembleAndGetModel() throws IOException, InterruptedException {
         ProjectBuildOutput outputModel =
                 project.executeAndReturnOutputModel("clean", "assembleDebug");
-        AndroidProject syncModel =
+        Collection<SyncIssue> syncIssues =
                 project.model()
                         .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
                         .fetchAndroidProjects()
-                        .getOnlyModel();
-        assertThat(syncModel.getSyncIssues()).hasSize(1);
-        assertThat(Iterables.getOnlyElement(syncModel.getSyncIssues()).getMessage())
+                        .getOnlyModelSyncIssues();
+        assertThat(syncIssues).hasSize(1);
+        assertThat(Iterables.getOnlyElement(syncIssues).getMessage())
                 .contains(
                         "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
         return outputModel;

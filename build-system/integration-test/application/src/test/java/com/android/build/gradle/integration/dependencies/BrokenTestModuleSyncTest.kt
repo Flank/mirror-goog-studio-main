@@ -20,7 +20,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import org.junit.Rule
 import org.junit.Test
@@ -62,11 +61,10 @@ class BrokenTestModuleSyncTest {
 
     @Test
     fun checkSync() {
-        val model: AndroidProject =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelMap[":test"] ?:
+        val issues =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssuesMap[":test"] ?:
                         throw RuntimeException("Failed to find model for :test")
 
-        val issues = model.syncIssues
         TruthHelper.assertThat(issues).hasSize(2)
 
         val severities = issues.map(SyncIssue::getSeverity).toSet()

@@ -242,10 +242,11 @@ public class FeatureAndAbiPureSplitsTest {
 
         ModelBuilder modelBuilder = sProject.model().ignoreSyncIssues();
 
-        AndroidProject model =
-                modelBuilder.fetchAndroidProjects().getOnlyModelMap().get(":feature_a");
         List<SyncIssue> syncIssues =
-                model.getSyncIssues()
+                modelBuilder
+                        .fetchAndroidProjects()
+                        .getOnlyModelSyncIssuesMap()
+                        .get(":feature_a")
                         .stream()
                         .filter(issue -> issue.getType() != SyncIssue.TYPE_PLUGIN_OBSOLETE)
                         .collect(Collectors.toList());

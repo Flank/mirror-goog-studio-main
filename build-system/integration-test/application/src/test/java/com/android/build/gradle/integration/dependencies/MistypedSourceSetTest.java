@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.utils.TestFileUtils.ap
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
@@ -66,10 +65,8 @@ public class MistypedSourceSetTest {
                         + "}\n"
                         + "\n");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-
-        Collection<SyncIssue> issues = model.getSyncIssues();
+        Collection<SyncIssue> issues =
+                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelSyncIssues();
         assertThat(issues).hasSize(1);
 
         SyncIssue issue = Iterables.getOnlyElement(issues);

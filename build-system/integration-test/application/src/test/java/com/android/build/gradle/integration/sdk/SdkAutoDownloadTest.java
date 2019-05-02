@@ -32,7 +32,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.ToolsRevisionUtils;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -52,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -666,9 +666,10 @@ public class SdkAutoDownloadTest {
                 .contains("missing components");
 
         // Check that
-        AndroidProject model = getModel().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
+        Collection<SyncIssue> syncIssues =
+                getModel().ignoreSyncIssues().fetchAndroidProjects().getOnlyModelSyncIssues();
         List<SyncIssue> syncErrors =
-                model.getSyncIssues()
+                syncIssues
                         .stream()
                         .filter(issue -> issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
                         .collect(Collectors.toList());

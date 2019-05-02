@@ -97,10 +97,7 @@ public class MatchingFallbackTest {
         ModelContainer<AndroidProject> models =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
 
-        //get the app model
-        AndroidProject appModel = models.getOnlyModelMap().get(":app");
-
-        final Collection<SyncIssue> syncIssues = appModel.getSyncIssues();
+        final Collection<SyncIssue> syncIssues = models.getOnlyModelSyncIssuesMap().get(":app");
         assertThat(syncIssues).hasSize(4);
 
         // all the issues should have the same type/severity/data

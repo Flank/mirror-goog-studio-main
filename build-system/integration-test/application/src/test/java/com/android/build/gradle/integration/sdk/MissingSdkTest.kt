@@ -47,7 +47,7 @@ class MissingSdkTest {
         )
 
         val syncIssues =
-            testProject.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel.syncIssues
+            testProject.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
         assertThat(syncIssues.size).isEqualTo(1)
         val syncIssue = syncIssues.first()
         assertThat(syncIssue.type).isEqualTo(TYPE_SDK_NOT_SET)

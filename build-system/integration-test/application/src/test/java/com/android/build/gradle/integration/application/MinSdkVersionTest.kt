@@ -62,9 +62,7 @@ class MinSdkVersionTest {
 
     @Test
     fun checkMinSdkSyncIssue() {
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel()
-
-        val issues = model.getSyncIssues()
+        val issues = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModelSyncIssues
         assertThat(issues).hasSize(1)
 
         val issue = Iterables.getOnlyElement(issues)

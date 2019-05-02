@@ -26,8 +26,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import org.junit.Before;
@@ -362,8 +363,9 @@ public class NativeBuildOutputTest {
                 ImmutableList.of("void main() {}"),
                 StandardCharsets.UTF_8);
 
-        AndroidProject androidProject = project.model().fetchAndroidProjects().getOnlyModel();
-        assertThat(androidProject.getSyncIssues()).hasSize(0);
+        Collection<SyncIssue> syncIssues =
+                project.model().fetchAndroidProjects().getOnlyModelSyncIssues();
+        assertThat(syncIssues).hasSize(0);
         NativeAndroidProject nativeProject = project.model().fetch(NativeAndroidProject.class);
         // TODO: remove this if statement once a fresh CMake is deployed to buildbots.
         // Old behavior was to emit two targets: "hello-jni-Debug-x86" and "hello-jni-Release-x86"

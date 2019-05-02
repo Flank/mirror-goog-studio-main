@@ -120,8 +120,7 @@ public class BasicTest2 {
         // basic project overwrites buildConfigField which emits a sync warning
         modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
         modelContainer
-                .getOnlyModel()
-                .getSyncIssues()
+                .getOnlyModelSyncIssues()
                 .forEach(
                         issue -> {
                             Truth.assertThat(issue.getSeverity())

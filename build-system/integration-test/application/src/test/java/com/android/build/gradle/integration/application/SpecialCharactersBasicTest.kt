@@ -60,9 +60,8 @@ class SpecialCharactersBasicTest(projectName: String) {
         project.execute("clean", "assemble")
 
         // basic project overwrites buildConfigField which emits a sync warning
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel
-
-        model.syncIssues
+        project.model().ignoreSyncIssues().fetchAndroidProjects()
+            .onlyModelSyncIssues
             .forEach { issue ->
                 assertThat(issue.severity).isEqualTo(SyncIssue.SEVERITY_WARNING)
                 assertThat(issue.message)

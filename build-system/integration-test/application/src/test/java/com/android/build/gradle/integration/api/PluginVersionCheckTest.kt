@@ -98,5 +98,5 @@ class PluginVersionCheckTest {
     }
 
     private fun ModelContainer<AndroidProject>.getNonDeprecationIssues() =
-        onlyModel.syncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
+        onlyModelSyncIssues.filter { it.type != SyncIssue.TYPE_DEPRECATED_DSL }
 }

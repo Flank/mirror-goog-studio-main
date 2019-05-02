@@ -23,9 +23,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.InvalidUserDataException
 import org.gradle.tooling.BuildActionFailureException
-import org.junit.Ignore
 import java.io.File
 
 class UnresolveableNdkVersionTest {

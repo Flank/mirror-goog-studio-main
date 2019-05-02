@@ -67,16 +67,16 @@ class MissingCompileSdkVersionTest {
     @Throws(Exception::class)
     fun testSyncIsSuccessful() {
         // Sync should complete successfully
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel
+        val modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        val syncIssues = modelContainer.onlyModelSyncIssues
 
-        val syncIssues = model.syncIssues
         assertThat(syncIssues).hasSize(2)
         val compileSdkIssue = syncIssues.elementAt(0)
 
         assertThat(compileSdkIssue.type).isEqualTo(SyncIssue.TYPE_COMPILE_SDK_VERSION_NOT_SET)
         assertThat(compileSdkIssue.message).isEqualTo("compileSdkVersion is not specified. Please add it to build.gradle")
 
-        assertThat(model.compileTarget).isEqualTo("android-"+GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)
+        assertThat(modelContainer.onlyModel.compileTarget).isEqualTo("android-"+GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)
     }
 
     /**

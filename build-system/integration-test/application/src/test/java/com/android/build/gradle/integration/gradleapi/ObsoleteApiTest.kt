@@ -65,20 +65,20 @@ class ObsoleteApiTest(private val provider: TestProjectProvider) {
 
     @Test
     fun `test via model`() {
-        val model = project
+        val modelContainer = project
             .model()
             .with(BooleanOption.DEBUG_OBSOLETE_API, true)
             .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
             .fetchAndroidProjects()
-            .onlyModel
+        val syncIssues = modelContainer.onlyModelSyncIssues
 
         when(provider.name) {
             "Kotlin" -> {
-                Truth.assertThat(model.syncIssues).hasSize(0)
+                Truth.assertThat(syncIssues).hasSize(0)
             }
             "Java" -> {
-                Truth.assertThat(model.syncIssues).hasSize(1)
-                val warningMsg = model.syncIssues.first().message
+                Truth.assertThat(syncIssues).hasSize(1)
+                val warningMsg = syncIssues.first().message
                 Truth.assertThat(warningMsg).isEqualTo(
                     "API 'variant.getJavaCompile()' is obsolete and has been replaced with 'variant.getJavaCompileProvider()'.\n" +
                         "It will be removed at the end of 2019.\n" +

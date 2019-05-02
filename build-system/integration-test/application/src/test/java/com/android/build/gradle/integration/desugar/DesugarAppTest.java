@@ -36,7 +36,6 @@ import com.android.build.gradle.integration.desugar.resources.TestClass;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.TestInputsGenerator;
@@ -122,18 +121,17 @@ public class DesugarAppTest {
     @Test
     public void syncIssueIfJava8AndDesugaringDisabled() throws IOException {
         enableJava8();
-        AndroidProject result =
+        Collection<SyncIssue> result =
                 project.model()
                         .with(BooleanOption.ENABLE_D8_DESUGARING, false)
                         .with(BooleanOption.ENABLE_R8_DESUGARING, false)
                         .with(BooleanOption.ENABLE_DESUGAR, false)
                         .ignoreSyncIssues()
                         .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .getOnlyModelSyncIssues();
         String expectedMsg = "to your gradle.properties file to enable Java 8 language support.";
         boolean found =
-                result.getSyncIssues()
-                        .stream()
+                result.stream()
                         .filter(i -> i.getSeverity() == SyncIssue.SEVERITY_ERROR)
                         .anyMatch(i -> i.getMessage().contains(expectedMsg));
         assertThat(found).named("Sync issue to enable desugaring found").isTrue();
