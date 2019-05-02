@@ -13,171 +13,141 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.compiling.BuildConfigGenerator;
-import com.android.builder.model.ClassField;
-import com.android.utils.FileUtils;
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.function.Supplier;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.TaskProvider;
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.NonIncrementalTask
+import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.builder.compiling.BuildConfigGenerator
+import com.android.builder.model.ClassField
+import com.android.utils.FileUtils
+import com.google.common.base.Strings
+import com.google.common.collect.Lists
+import org.gradle.api.file.DirectoryProperty
+import java.io.File
+import java.util.function.Supplier
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 
 @CacheableTask
-public class GenerateBuildConfig extends NonIncrementalTask {
+abstract class GenerateBuildConfig : NonIncrementalTask() {
 
     // ----- PUBLIC TASK API -----
 
-    private File sourceOutputDir;
-
-    @OutputDirectory
-    public File getSourceOutputDir() {
-        return sourceOutputDir;
-    }
-
-    public void setSourceOutputDir(File sourceOutputDir) {
-        this.sourceOutputDir = sourceOutputDir;
-    }
+    @get:OutputDirectory
+    lateinit var sourceOutputDir: File
 
     // ----- PRIVATE TASK API -----
 
-    private Supplier<String> buildConfigPackageName;
+    private lateinit var buildConfigPackageNameSupplier: Supplier<String>
 
-    private Supplier<String> appPackageName;
+    private lateinit var appPackageNameSupplier: Supplier<String>
 
-    private Supplier<Boolean> debuggable;
+    private lateinit var isDebuggableSupplier: Supplier<Boolean>
 
-    private Supplier<String> flavorName;
+    private lateinit var flavorNameSupplier: Supplier<String>
 
-    private Supplier<List<String>> flavorNamesWithDimensionNames;
+    private lateinit var flavorNamesWithDimensionNamesSupplier: Supplier<List<String>>
 
-    private String buildTypeName;
+    @get:Input
+    lateinit var buildTypeName: String
 
-    private Supplier<String> versionName;
+    private lateinit var versionNameSupplier: Supplier<String?>
 
-    private Supplier<Integer> versionCode;
+    private lateinit var versionCodeSupplier: Supplier<Int>
 
-    private Supplier<List<Object>> items;
+    private lateinit var itemsSupplier: Supplier<List<Any>>
 
-    private BuildableArtifact checkManifestResult;
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
+    var checkManifestResult: BuildableArtifact? = null
+        private set
 
-    private boolean isLibrary;
+    @get:Input
+    var isLibrary: Boolean = false
+        private set
 
-    @Input
-    public String getBuildConfigPackageName() {
-        return buildConfigPackageName.get();
-    }
+    @get:Input
+    val buildConfigPackageName: String
+        get() = buildConfigPackageNameSupplier.get()
 
-    @Input
-    @Optional
-    public String getAppPackageName() {
-        if (isLibrary()) {
-            return null;
-        }
-        return appPackageName.get();
-    }
+    @get:Input
+    @get:Optional
+    val appPackageName: String?
+        get() = if (isLibrary) {
+            null
+        } else appPackageNameSupplier.get()
 
-    @Input
-    public boolean isDebuggable() {
-        return debuggable.get();
-    }
+    @get:Input
+    val isDebuggable: Boolean
+        get() = isDebuggableSupplier.get()
 
-    @Input
-    public String getFlavorName() {
-        return flavorName.get();
-    }
+    @get:Input
+    val flavorName: String
+        get() = flavorNameSupplier.get()
 
-    @Input
-    public List<String> getFlavorNamesWithDimensionNames() {
-        return flavorNamesWithDimensionNames.get();
-    }
+    @get:Input
+    val flavorNamesWithDimensionNames: List<String>
+        get() = flavorNamesWithDimensionNamesSupplier.get()
 
-    @Input
-    public String getBuildTypeName() {
-        return buildTypeName;
-    }
+    @get:Input
+    @get:Optional
+    val versionName: String?
+        get() = versionNameSupplier.get()
 
-    public void setBuildTypeName(String buildTypeName) {
-        this.buildTypeName = buildTypeName;
-    }
+    @get:Input
+    val versionCode: Int
+        get() = versionCodeSupplier.get()
 
-    @Input
-    @Optional
-    public String getVersionName() {
-        return versionName.get();
-    }
+    val itemValues: List<String>
+        @Input
+        get() {
+            val resolvedItems = items
+            val list = Lists.newArrayListWithCapacity<String>(resolvedItems.size * 3)
 
-    @Input
-    public int getVersionCode() {
-        return versionCode.get();
-    }
-
-    @Internal // handled by getItemValues()
-    public List<Object> getItems() {
-        return items.get();
-    }
-
-    @Input
-    public List<String> getItemValues() {
-        List<Object> resolvedItems = getItems();
-        List<String> list = Lists.newArrayListWithCapacity(resolvedItems.size() * 3);
-
-        for (Object object : resolvedItems) {
-            if (object instanceof String) {
-                list.add((String) object);
-            } else if (object instanceof ClassField) {
-                ClassField field = (ClassField) object;
-                list.add(field.getType());
-                list.add(field.getName());
-                list.add(field.getValue());
+            for (item in resolvedItems) {
+                if (item is String) {
+                    list.add(item)
+                } else if (item is ClassField) {
+                    list.add(item.type)
+                    list.add(item.name)
+                    list.add(item.value)
+                }
             }
+
+            return list
         }
 
-        return list;
-    }
+    @get:Internal // handled by getItemValues()
+    val items: List<Any>
+        get() = itemsSupplier.get()
 
-    @Input
-    public boolean isLibrary() {
-        return isLibrary;
-    }
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mergedManifests: DirectoryProperty
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    @Optional
-    public BuildableArtifact getCheckManifestResult() {
-        return checkManifestResult;
-    }
-
-    @Override
-    protected void doTaskAction() throws IOException {
+    override fun doTaskAction() {
         // must clear the folder in case the packagename changed, otherwise,
         // there'll be two classes.
-        File destinationDir = getSourceOutputDir();
-        FileUtils.cleanOutputDir(destinationDir);
+        val destinationDir = sourceOutputDir
+        FileUtils.cleanOutputDir(destinationDir)
 
-        BuildConfigGenerator generator = new BuildConfigGenerator(
-                getSourceOutputDir(),
-                getBuildConfigPackageName());
+        val generator = BuildConfigGenerator(
+            sourceOutputDir,
+            buildConfigPackageName
+        )
 
         // Hack (see IDEA-100046): We want to avoid reporting "condition is always true"
         // from the data flow inspection, so use a non-constant value. However, that defeats
@@ -188,116 +158,114 @@ public class GenerateBuildConfig extends NonIncrementalTask {
         // map.put(PH_DEBUG, Boolean.toString(mDebug));
 
         generator.addField(
-                "boolean", "DEBUG", isDebuggable() ? "Boolean.parseBoolean(\"true\")" : "false");
+            "boolean", "DEBUG", if (isDebuggable) "Boolean.parseBoolean(\"true\")" else "false"
+        )
 
         if (isLibrary) {
             generator
-                    .addField(
-                            "String",
-                            "LIBRARY_PACKAGE_NAME",
-                            '"' + getBuildConfigPackageName() + '"')
-                    .addDeprecatedField(
-                            "String",
-                            "APPLICATION_ID",
-                            '"' + getBuildConfigPackageName() + '"',
-                            "@deprecated APPLICATION_ID is misleading in libraries. For the library package name use LIBRARY_PACKAGE_NAME");
+                .addField(
+                    "String",
+                    "LIBRARY_PACKAGE_NAME",
+                    '"'.toString() + buildConfigPackageName + '"'.toString()
+                )
+                .addDeprecatedField(
+                    "String",
+                    "APPLICATION_ID",
+                    '"'.toString() + buildConfigPackageName + '"'.toString(),
+                    "@deprecated APPLICATION_ID is misleading in libraries. For the library package name use LIBRARY_PACKAGE_NAME"
+                )
         } else {
-            generator.addField("String", "APPLICATION_ID", '"' + getAppPackageName() + '"');
+            generator.addField(
+                "String",
+                "APPLICATION_ID",
+                '"'.toString() + appPackageName + '"'.toString()
+            )
         }
 
         generator
-                .addField("String", "BUILD_TYPE", '"' + getBuildTypeName() + '"')
-                .addField("String", "FLAVOR", '"' + getFlavorName() + '"')
-                .addField("int", "VERSION_CODE", Integer.toString(getVersionCode()))
-                .addField(
-                        "String", "VERSION_NAME", '"' + Strings.nullToEmpty(getVersionName()) + '"')
-                .addItems(getItems());
+            .addField("String", "BUILD_TYPE", '"'.toString() + buildTypeName + '"'.toString())
+            .addField("String", "FLAVOR", '"'.toString() + flavorName + '"'.toString())
+            .addField("int", "VERSION_CODE", Integer.toString(versionCode))
+            .addField(
+                "String",
+                "VERSION_NAME",
+                '"'.toString() + Strings.nullToEmpty(versionName) + '"'.toString()
+            )
+            .addItems(items)
 
-        List<String> flavors = getFlavorNamesWithDimensionNames();
-        int count = flavors.size();
+        val flavors = flavorNamesWithDimensionNames
+        val count = flavors.size
         if (count > 1) {
-            for (int i = 0; i < count; i += 2) {
+            var i = 0
+            while (i < count) {
                 generator.addField(
-                        "String", "FLAVOR_" + flavors.get(i + 1), '"' + flavors.get(i) + '"');
+                    "String",
+                    "FLAVOR_" + flavors[i + 1],
+                    '"'.toString() + flavors[i] + '"'.toString()
+                )
+                i += 2
             }
         }
 
-        generator.generate();
+        generator.generate()
     }
 
     // ----- Config Action -----
 
-    public static final class CreationAction
-            extends VariantTaskCreationAction<GenerateBuildConfig> {
+    class CreationAction(scope: VariantScope) :
+        VariantTaskCreationAction<GenerateBuildConfig>(scope) {
 
-        public CreationAction(@NonNull VariantScope scope) {
-            super(scope);
+        override val name: String = scope.getTaskName("generate", "BuildConfig")
+
+        override val type: Class<GenerateBuildConfig> = GenerateBuildConfig::class.java
+
+        override fun handleProvider(taskProvider: TaskProvider<out GenerateBuildConfig>) {
+            super.handleProvider(taskProvider)
+            variantScope.taskContainer.generateBuildConfigTask = taskProvider
         }
 
-        @Override
-        @NonNull
-        public String getName() {
-            return getVariantScope().getTaskName("generate", "BuildConfig");
-        }
+        override fun configure(task: GenerateBuildConfig) {
+            super.configure(task)
 
-        @Override
-        @NonNull
-        public Class<GenerateBuildConfig> getType() {
-            return GenerateBuildConfig.class;
-        }
+            val variantData = variantScope.variantData
 
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends GenerateBuildConfig> taskProvider) {
-            super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setGenerateBuildConfigTask(taskProvider);
-        }
+            val variantConfiguration = variantData.variantConfiguration
 
-        @Override
-        public void configure(@NonNull GenerateBuildConfig task) {
-            super.configure(task);
-            VariantScope scope = getVariantScope();
+            task.buildConfigPackageNameSupplier =
+                TaskInputHelper.memoize { variantConfiguration.originalApplicationId }
 
-            BaseVariantData variantData = scope.getVariantData();
+            task.appPackageNameSupplier =
+                TaskInputHelper.memoize { variantConfiguration.applicationId }
 
-            final GradleVariantConfiguration variantConfiguration =
-                    variantData.getVariantConfiguration();
+            task.versionNameSupplier = TaskInputHelper.memoize { variantConfiguration.versionName }
+            task.versionCodeSupplier = TaskInputHelper.memoize { variantConfiguration.versionCode }
 
-            task.buildConfigPackageName =
-                    TaskInputHelper.memoize(variantConfiguration::getOriginalApplicationId);
+            task.isDebuggableSupplier =
+                TaskInputHelper.memoize { variantConfiguration.buildType.isDebuggable }
 
-            task.appPackageName = TaskInputHelper.memoize(variantConfiguration::getApplicationId);
-
-            task.versionName = TaskInputHelper.memoize(variantConfiguration::getVersionName);
-            task.versionCode = TaskInputHelper.memoize(variantConfiguration::getVersionCode);
-
-            task.debuggable =
-                    TaskInputHelper.memoize(
-                            () -> variantConfiguration.getBuildType().isDebuggable());
-
-            task.buildTypeName = variantConfiguration.getBuildType().getName();
+            task.buildTypeName = variantConfiguration.buildType.name
 
             // no need to memoize, variant configuration does that already.
-            task.flavorName = variantConfiguration::getFlavorName;
+            task.flavorNameSupplier = Supplier { variantConfiguration.flavorName }
 
-            task.flavorNamesWithDimensionNames =
-                    TaskInputHelper.memoize(variantConfiguration::getFlavorNamesWithDimensionNames);
+            task.flavorNamesWithDimensionNamesSupplier =
+                TaskInputHelper.memoize { variantConfiguration.flavorNamesWithDimensionNames }
 
-            task.items = TaskInputHelper.memoize(variantConfiguration::getBuildConfigItems);
+            task.itemsSupplier = TaskInputHelper.memoize { variantConfiguration.buildConfigItems }
 
-            task.setSourceOutputDir(scope.getBuildConfigSourceOutputDir());
+            task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 
-            task.checkManifestResult =
-                    scope.getArtifacts()
-                            .getFinalArtifactFilesIfPresent(
-                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
-            if (scope.getVariantConfiguration().getType().isTestComponent()) {
-                // in case of a test project, the manifest is generated so we need to depend
-                // on its creation.
-                task.dependsOn(scope.getTaskContainer().getProcessManifestTask());
+            task.checkManifestResult = variantScope.artifacts
+                .getFinalArtifactFilesIfPresent(
+                    InternalArtifactType.CHECK_MANIFEST_RESULT
+                )
+            if (variantScope.variantConfiguration.type.isTestComponent) {
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests
+                )
             }
 
-            task.isLibrary = variantConfiguration.getType().isAar();
+            task.isLibrary = variantConfiguration.type.isAar
         }
     }
 }
