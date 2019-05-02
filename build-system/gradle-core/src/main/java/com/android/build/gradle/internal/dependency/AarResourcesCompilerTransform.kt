@@ -31,7 +31,9 @@ import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.artifacts.transform.TransformParameters
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Internal
 import java.io.BufferedInputStream
 import java.io.File
 import java.nio.file.Files
@@ -78,7 +80,7 @@ abstract class AarResourcesCompilerTransform :
             Aapt2CompileRunnable.Params(
                 aapt2ServiceKey,
                 requestList,
-                SyncOptions.ErrorFormatMode.MACHINE_PARSABLE
+                parameters.errorFormatMode.getOrElse(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
             )
         ).run()
     }
@@ -91,5 +93,7 @@ abstract class AarResourcesCompilerTransform :
     interface Parameters : TransformParameters {
         @get:Classpath
         val aapt2FromMaven: ConfigurableFileCollection
+        @get:Internal
+        val errorFormatMode: Property<SyncOptions.ErrorFormatMode>
     }
 }

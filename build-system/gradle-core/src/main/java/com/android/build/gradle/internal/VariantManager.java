@@ -703,11 +703,14 @@ public class VariantManager implements VariantModel {
                                         ArtifactType.COMPILED_REMOTE_RESOURCES.getType());
 
                         reg.parameters(
-                                params ->
-                                        params.getAapt2FromMaven()
-                                                .from(
-                                                        Aapt2MavenUtils.getAapt2FromMaven(
-                                                                globalScope)));
+                                params -> {
+                                    params.getAapt2FromMaven()
+                                            .from(Aapt2MavenUtils.getAapt2FromMaven(globalScope));
+                                    params.getErrorFormatMode()
+                                            .set(
+                                                    SyncOptions.getErrorFormatMode(
+                                                            globalScope.getProjectOptions()));
+                                });
                     });
         }
 
