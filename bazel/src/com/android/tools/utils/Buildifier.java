@@ -26,15 +26,22 @@ public class Buildifier {
     /**
      * Runs buildifier (formatter for bazel BUILD files) on the given file.
      *
-     * <p>(currently only on linux)
+     * <p>(currently only on linux or mac)
      */
     public static void runBuildifier(Path file) throws IOException {
-        if (!System.getProperty("os.name").startsWith("Linux")) {
+        String prebuiltPlatform;
+        String osName = System.getProperty("os.name");
+        if (osName.startsWith("Linux")) {
+            prebuiltPlatform = "linux-x86";
+        } else if (osName.startsWith("Mac")) {
+            prebuiltPlatform = "darwin-x86";
+        } else {
             return;
         }
         try {
             Path workspace = WorkspaceUtils.findWorkspace();
-            Path buildifier = workspace.resolve("prebuilts/tools/linux-x86/bazel/buildifier");
+            Path buildifier =
+                    workspace.resolve("prebuilts/tools/" + prebuiltPlatform + "/bazel/buildifier");
             Process process = new ProcessBuilder(buildifier.toString(), file.toString()).start();
             process.waitFor();
         } catch (InterruptedException | IOException e) {
