@@ -24,6 +24,7 @@ import com.intellij.ide.highlighter.JavaFileType
 import com.intellij.mock.MockProject
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.io.FileUtilRt
+import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.vfs.PersistentFSConstants
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
@@ -35,6 +36,7 @@ import com.intellij.util.io.URLUtil
 import org.jetbrains.kotlin.asJava.LightClassGenerationSupport
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.CliModuleVisibilityManagerImpl
+import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.common.messages.MessageRenderer
 import org.jetbrains.kotlin.cli.common.messages.PrintingMessageCollector
@@ -84,7 +86,7 @@ import java.io.File
 
 // Analyze PSI files with Kotlin compiler and produce binding context
 // From https://github.com/JetBrains/kotlin/commits/rr/yan : fb82b72dc1892d377ccf98511d56ecce219c8098
-class KotlinLintAnalyzerFacade {
+class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPerformanceManager? = null) {
     fun analyze(files: List<File>, contentRoots: List<File>, project: MockProject): BindingTrace {
 
         if (ServiceManager.getService(project, LightClassGenerationSupport::class.java) == null) {
@@ -252,8 +254,17 @@ class KotlinLintAnalyzerFacade {
             compilerConfiguration.getBoolean(JVMConfigurationKeys.USE_FAST_CLASS_FILES_READING)
         )
 
+        performanceManager?.notifyCompilerInitialized()
+        performanceManager?.notifyAnalysisStarted()
+
         TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
             project, ktFiles, trace, compilerConfiguration, ::createPackagePartProvider
+        )
+
+        performanceManager?.notifyAnalysisFinished(
+            ktFiles.size,
+            countLinesOfCode(ktFiles),
+            "KotlinLintAnalyzerFacade.analyze "
         )
 
         return trace
@@ -372,4 +383,7 @@ class KotlinLintAnalyzerFacade {
         }
         return paths
     }
+
+    private fun countLinesOfCode(ktFiles: List<KtFile>): Int =
+        ktFiles.sumBy { StringUtil.getLineBreakCount(it.text) }
 }

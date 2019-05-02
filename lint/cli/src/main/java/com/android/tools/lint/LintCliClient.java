@@ -115,10 +115,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
+import org.jetbrains.kotlin.cli.common.CommonCompilerPerformanceManager;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl;
 import org.jetbrains.kotlin.cli.jvm.index.JavaRoot;
 import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl;
 import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex;
+import org.jetbrains.kotlin.util.PerformanceCounter;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -151,6 +153,7 @@ public class LintCliClient extends LintClient {
     protected final LintCliFlags flags;
     private Configuration configuration;
     private boolean validatedIds;
+    private LintCliKotlinPerformanceManager kotlinPerformanceManager;
 
     public LintCliClient(@NonNull String clientName) {
         super(clientName);
@@ -226,6 +229,11 @@ public class LintCliClient extends LintClient {
         assert !flags.getReporters().isEmpty();
         this.registry = registry;
 
+        String kotlinPerfReport = System.getenv("KOTLIN_PERF_REPORT");
+        if (kotlinPerfReport != null && !kotlinPerfReport.isEmpty()) {
+            kotlinPerformanceManager = new LintCliKotlinPerformanceManager(kotlinPerfReport);
+        }
+
         LintRequest lintRequest = createLintRequest(files);
         driver = createDriver(registry, lintRequest);
         driver.setAnalysisStartTime(startTime);
@@ -234,6 +242,10 @@ public class LintCliClient extends LintClient {
         validateIssueIds();
 
         driver.analyze();
+
+        if (kotlinPerformanceManager != null) {
+            kotlinPerformanceManager.report(lintRequest);
+        }
 
         Collections.sort(warnings);
 
@@ -1730,7 +1742,8 @@ public class LintCliClient extends LintClient {
             MockProject project = (MockProject) ideaProject;
             if (project != null && projectEnvironment != null) {
                 List<File> paths = projectEnvironment.getPaths();
-                new KotlinLintAnalyzerFacade().analyze(kotlinFiles, paths, project);
+                new KotlinLintAnalyzerFacade(kotlinPerformanceManager)
+                        .analyze(kotlinFiles, paths, project);
             }
 
             boolean ok = super.prepare(contexts, testContexts);
@@ -1749,6 +1762,36 @@ public class LintCliClient extends LintClient {
             }
 
             return ok;
+        }
+    }
+
+    private static class LintCliKotlinPerformanceManager extends CommonCompilerPerformanceManager {
+
+        private final String perfReportName;
+
+        public LintCliKotlinPerformanceManager(String perfReportName) {
+            super("Lint CLI");
+            this.perfReportName = perfReportName;
+            enableCollectingPerformanceStatistics();
+            PerformanceCounter.Companion.resetAllCounters();
+        }
+
+        public void report(@NonNull LintRequest request) {
+            notifyCompilationFinished();
+
+            StringBuilder sb = new StringBuilder(perfReportName);
+            if (request.getProjects() != null) {
+                for (Project project : request.getProjects()) {
+                    sb.append('-');
+                    sb.append(project.getName());
+                    if (project.getCurrentVariant() != null) {
+                        sb.append(project.getCurrentVariant().getName());
+                    }
+                }
+            }
+            sb.append(".txt");
+
+            dumpPerformanceReport(new File(sb.toString()));
         }
     }
 }
