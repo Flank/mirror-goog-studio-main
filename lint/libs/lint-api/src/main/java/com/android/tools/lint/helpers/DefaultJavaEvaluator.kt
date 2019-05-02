@@ -54,6 +54,7 @@ import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.java.JavaUAnnotation
+import java.io.File
 
 open class DefaultJavaEvaluator(
     private val myProject: com.intellij.openapi.project.Project?,
@@ -203,13 +204,9 @@ open class DefaultJavaEvaluator(
         val virtualFile = element.containingFile?.virtualFile ?: return null
         val file = VfsUtilCore.virtualToIoFile(virtualFile)
         val path = file.path
-        for (project in projects) {
-            if (path.startsWith(project.dir.path)) {
-                return project
-            }
-        }
-
-        return null
+        return projects.asSequence()
+            .filter { path == it.dir.path || path.startsWith(it.dir.path + File.separator) }
+            .maxBy { it.dir.path.length }
     }
 
     override fun findJarPath(element: PsiElement): String? {
