@@ -123,7 +123,8 @@ public class ReadWriteProcessLockTest {
             fail("Expect IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e)
-                    .hasMessage(
+                    .hasMessageThat()
+                    .isEqualTo(
                             "Parent directory of "
                                     + lockFile2.getAbsolutePath()
                                     + " does not exist");

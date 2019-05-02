@@ -217,7 +217,8 @@ public class SymbolTableTest {
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e)
-                    .hasMessage(
+                    .hasMessageThat()
+                    .isEqualTo(
                             "Package 'com.example.int' from AndroidManifest.xml is not a valid"
                                     + " Java package name as 'int' is a Java keyword.");
         }
@@ -230,7 +231,8 @@ public class SymbolTableTest {
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             assertThat(e)
-                    .hasMessage(
+                    .hasMessageThat()
+                    .isEqualTo(
                             "Package 'com.example.my-package' from AndroidManifest.xml is not a"
                                     + " valid Java package name as 'my-package' is not a valid"
                                     + " Java identifier.");

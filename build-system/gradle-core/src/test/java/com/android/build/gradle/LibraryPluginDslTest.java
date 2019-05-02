@@ -126,7 +126,9 @@ public class LibraryPluginDslTest {
             plugin.createAndroidTasks();
             fail("Expected resource shrinker error");
         } catch (EvalIssueException e) {
-            assertThat(e).hasMessage("Resource shrinker cannot be used for libraries.");
+            assertThat(e)
+                    .hasMessageThat()
+                    .isEqualTo("Resource shrinker cannot be used for libraries.");
         }
 
         debug.getPostprocessing().setRemoveUnusedResources(false);

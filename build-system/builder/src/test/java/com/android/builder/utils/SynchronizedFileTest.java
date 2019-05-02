@@ -197,7 +197,7 @@ public class SynchronizedFileTest {
                         });
                 fail("Expected ExecutionException");
             } catch (ExecutionException e) {
-                assertThat(e.getCause()).hasMessage("Some exception");
+                assertThat(e.getCause()).hasMessageThat().isEqualTo("Some exception");
             }
         }
 
@@ -210,7 +210,7 @@ public class SynchronizedFileTest {
                         });
                 fail("Expected ExecutionException");
             } catch (ExecutionException e) {
-                assertThat(e.getCause()).hasMessage("Some exception");
+                assertThat(e.getCause()).hasMessageThat().isEqualTo("Some exception");
             }
         }
 
@@ -225,7 +225,7 @@ public class SynchronizedFileTest {
                 fail("Expected ExecutionException");
             } catch (ExecutionException e) {
                 assertThat(Throwables.getRootCause(e)).isInstanceOf(IOException.class);
-                assertThat(Throwables.getRootCause(e)).hasMessage("Some exception");
+                assertThat(Throwables.getRootCause(e)).hasMessageThat().isEqualTo("Some exception");
             }
         }
 

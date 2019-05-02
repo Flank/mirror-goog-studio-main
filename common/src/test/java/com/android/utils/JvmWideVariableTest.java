@@ -413,7 +413,7 @@ public class JvmWideVariableTest {
             fail("Expected ExecutionException");
         } catch (ExecutionException e) {
             assertThat(Throwables.getRootCause(e)).isInstanceOf(IllegalStateException.class);
-            assertThat(Throwables.getRootCause(e)).hasMessage("Some exception");
+            assertThat(Throwables.getRootCause(e)).hasMessageThat().isEqualTo("Some exception");
         }
         variable.unregister();
     }

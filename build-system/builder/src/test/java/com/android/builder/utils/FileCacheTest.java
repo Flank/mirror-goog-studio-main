@@ -391,7 +391,7 @@ public class FileCacheTest {
                     outputFile, inputs, () -> writeStringToFile("Some text", outputFile));
             fail("Expected UncheckedIOException");
         } catch (UncheckedIOException e) {
-            assertThat(Throwables.getRootCause(e)).hasMessage("Invalid file path");
+            assertThat(Throwables.getRootCause(e)).hasMessageThat().isEqualTo("Invalid file path");
         }
     }
 
@@ -453,12 +453,14 @@ public class FileCacheTest {
             fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
-            assertThat(exception).hasMessage(
-                    String.format(
-                            "Output file/directory '%1$s' must not be located"
-                                    + " in the cache directory '%2$s'",
-                            outputFile.getAbsolutePath(),
-                            fileCache.getCacheDirectory().getAbsolutePath()));
+            assertThat(exception)
+                    .hasMessageThat()
+                    .isEqualTo(
+                            String.format(
+                                    "Output file/directory '%1$s' must not be located"
+                                            + " in the cache directory '%2$s'",
+                                    outputFile.getAbsolutePath(),
+                                    fileCache.getCacheDirectory().getAbsolutePath()));
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
 
@@ -467,11 +469,13 @@ public class FileCacheTest {
             fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
-            assertThat(exception).hasMessage(
-                    String.format(
-                            "Output directory '%1$s' must not contain the cache directory '%2$s'",
-                            outputFile.getAbsolutePath(),
-                            fileCache.getCacheDirectory().getAbsolutePath()));
+            assertThat(exception)
+                    .hasMessageThat()
+                    .isEqualTo(
+                            String.format(
+                                    "Output directory '%1$s' must not contain the cache directory '%2$s'",
+                                    outputFile.getAbsolutePath(),
+                                    fileCache.getCacheDirectory().getAbsolutePath()));
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
 
@@ -480,10 +484,12 @@ public class FileCacheTest {
             fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected IllegalArgumentException");
         } catch (IllegalArgumentException exception) {
-            assertThat(exception).hasMessage(
-                    String.format(
-                            "Output directory must not be the same as the cache directory '%1$s'",
-                            fileCache.getCacheDirectory().getAbsolutePath()));
+            assertThat(exception)
+                    .hasMessageThat()
+                    .isEqualTo(
+                            String.format(
+                                    "Output directory must not be the same as the cache directory '%1$s'",
+                                    fileCache.getCacheDirectory().getAbsolutePath()));
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
@@ -572,13 +578,18 @@ public class FileCacheTest {
         File outputFile = new File(outputDir, "output");
 
         try {
-            fileCache.createFile(outputFile, inputs, () -> {
-                throw new IOException("Some I/O exception");
-            });
+            fileCache.createFile(
+                    outputFile,
+                    inputs,
+                    () -> {
+                        throw new IOException("Some I/O exception");
+                    });
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(IOException.class);
-            assertThat(Throwables.getRootCause(exception)).hasMessage("Some I/O exception");
+            assertThat(Throwables.getRootCause(exception))
+                    .hasMessageThat()
+                    .isEqualTo("Some I/O exception");
         }
         assertThat(fileCache.getCacheDirectory().list()).isNotEmpty();
     }
@@ -599,7 +610,9 @@ public class FileCacheTest {
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(RuntimeException.class);
-            assertThat(Throwables.getRootCause(exception)).hasMessage("Some runtime exception");
+            assertThat(Throwables.getRootCause(exception))
+                    .hasMessageThat()
+                    .isEqualTo("Some runtime exception");
         }
         assertThat(fileCache.getCacheDirectory().list()).isNotEmpty();
     }
@@ -618,7 +631,7 @@ public class FileCacheTest {
             fileCache.createFile(outputFile, inputs, () -> {});
             fail("expected UncheckedIOException");
         } catch (UncheckedIOException e) {
-            assertThat(Throwables.getRootCause(e)).hasMessage("Invalid file path");
+            assertThat(Throwables.getRootCause(e)).hasMessageThat().isEqualTo("Invalid file path");
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
@@ -638,7 +651,9 @@ public class FileCacheTest {
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(IOException.class);
-            assertThat(Throwables.getRootCause(exception)).hasMessage("Some I/O exception");
+            assertThat(Throwables.getRootCause(exception))
+                    .hasMessageThat()
+                    .isEqualTo("Some I/O exception");
         }
         assertThat(fileCache.getCacheDirectory().list()).isNotEmpty();
     }
@@ -658,7 +673,9 @@ public class FileCacheTest {
             fail("expected ExecutionException");
         } catch (ExecutionException exception) {
             assertThat(Throwables.getRootCause(exception)).isInstanceOf(RuntimeException.class);
-            assertThat(Throwables.getRootCause(exception)).hasMessage("Some runtime exception");
+            assertThat(Throwables.getRootCause(exception))
+                    .hasMessageThat()
+                    .isEqualTo("Some runtime exception");
         }
         assertThat(fileCache.getCacheDirectory().list()).isNotEmpty();
     }
@@ -1276,7 +1293,7 @@ public class FileCacheTest {
             new FileCache.Inputs.Builder(FileCache.Command.TEST).build();
             fail("expected IllegalStateException");
         } catch (IllegalStateException exception) {
-            assertThat(exception).hasMessage("Inputs must not be empty.");
+            assertThat(exception).hasMessageThat().isEqualTo("Inputs must not be empty.");
         }
 
         // Test input parameters with duplicate names
@@ -1287,7 +1304,7 @@ public class FileCacheTest {
                     .build();
             fail("expected IllegalStateException");
         } catch (IllegalStateException exception) {
-            assertThat(exception).hasMessage("Input parameter arg already exists");
+            assertThat(exception).hasMessageThat().isEqualTo("Input parameter arg already exists");
         }
 
         // Test input parameters with empty strings

@@ -250,7 +250,8 @@ public class IncrementalRelativeFileSetsTest {
             fail("Expected IllegalStateException");
         } catch (IllegalStateException e) {
             assertThat(e)
-                    .hasMessage(
+                    .hasMessageThat()
+                    .isEqualTo(
                             String.format(
                                     "Changes include a deleted file ('%s'), which is not allowed.",
                                     bar.getAbsolutePath()));

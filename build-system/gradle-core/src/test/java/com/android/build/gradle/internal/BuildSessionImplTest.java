@@ -235,7 +235,7 @@ public class BuildSessionImplTest {
             buildListener.buildFinished(new BuildResult(null, null));
             fail("Expected RuntimeException");
         } catch (RuntimeException e) {
-            assertThat(e).hasMessage("Some error");
+            assertThat(e).hasMessageThat().isEqualTo("Some error");
         }
 
         // Check that the next build ignores this corrupted state
