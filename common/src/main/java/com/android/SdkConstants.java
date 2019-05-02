@@ -2687,6 +2687,9 @@ public final class SdkConstants {
     public static final String TYPE_DEF_FLAG_ATTRIBUTE = "flag";
     public static final String FN_ANNOTATIONS_ZIP = "annotations.zip";
 
+    public static final String VIEW_BINDING_ARTIFACT = "com.android.databinding:viewbinding";
+    public static final String ANDROIDX_VIEW_BINDING_ARTIFACT = "androidx.databinding:viewbinding";
+
     // Data Binding MISC
     public static final String DATA_BINDING_LIB_ARTIFACT = "com.android.databinding:library";
     // processor is always AndroidX

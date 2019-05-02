@@ -3580,12 +3580,13 @@ public abstract class TaskManager {
         boolean dataBindingEnabled = options.isEnabled();
 
         if (viewBindingEnabled) {
-            project.getDependencies()
-                    .add(
-                            "api",
-                            useAndroidX
-                                    ? SdkConstants.ANDROIDX_ANNOTATIONS_ARTIFACT + ":1.0.0"
-                                    : SdkConstants.ANNOTATIONS_LIB_ARTIFACT + ":28.0.0");
+            String version =
+                    dataBindingBuilder.getLibraryVersion(dataBindingBuilder.getCompilerVersion());
+            String groupAndArtifact =
+                    useAndroidX
+                            ? SdkConstants.ANDROIDX_VIEW_BINDING_ARTIFACT
+                            : SdkConstants.VIEW_BINDING_ARTIFACT;
+            project.getDependencies().add("api", groupAndArtifact + ":" + version);
         }
 
         if (dataBindingEnabled) {
