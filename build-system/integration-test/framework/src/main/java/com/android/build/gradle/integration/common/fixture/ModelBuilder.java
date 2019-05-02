@@ -35,6 +35,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -341,33 +342,35 @@ public class ModelBuilder extends BaseGradleExecutor<ModelBuilder> {
     private ModelContainer<AndroidProject> assertNoSyncIssues(
             @NonNull ModelContainer<AndroidProject> container) {
         Set<String> allowedOptions = Sets.union(explicitlyAllowedOptions, getOptionPropertyNames());
+
         container
-                .getModelMaps()
+                .getSyncIssuesMap()
                 .entrySet()
                 .stream()
                 .flatMap(
-                        entry ->
-                                entry.getValue()
+                        buildEntry ->
+                                buildEntry
+                                        .getValue()
+                                        .asMap()
                                         .entrySet()
                                         .stream()
                                         .map(
-                                                entry2 ->
+                                                project ->
                                                         Pair.of(
-                                                                entry.getKey().getRootDir()
+                                                                buildEntry.getKey().getRootDir()
                                                                         + "@@"
-                                                                        + entry2.getKey(),
-                                                                entry2.getValue())))
+                                                                        + project.getKey(),
+                                                                project.getValue())))
                 .forEach(projectPair -> assertNoSyncIssues(projectPair, allowedOptions));
         return container;
     }
 
     private void assertNoSyncIssues(
-            @NonNull Pair<String, AndroidProject> projectPair,
+            @NonNull Pair<String, Collection<SyncIssue>> projectPair,
             @NonNull Set<String> allowedOptions) {
         List<SyncIssue> issues =
                 projectPair
                         .getSecond()
-                        .getSyncIssues()
                         .stream()
                         .filter(syncIssue -> syncIssue.getSeverity() > maxSyncIssueSeverityLevel)
                         .filter(syncIssue -> syncIssue.getType() != SyncIssue.TYPE_DEPRECATED_DSL)

@@ -23,11 +23,15 @@ import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeVariantAbi;
 import com.android.builder.model.NativeVariantInfo;
+import com.android.builder.model.ProjectSyncIssues;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,8 +47,6 @@ import org.gradle.tooling.model.gradle.GradleBuild;
  * a Build Action that returns all the models of the parameterized type for all the Gradle projects
  */
 public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> {
-
-    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
 
     private final Class<T> type;
 
@@ -84,6 +86,8 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         }
 
         Map<BuildIdentifier, Map<String, T>> modelMap = getModelMap(projects, buildController);
+        Map<BuildIdentifier, Multimap<String, SyncIssue>> syncIssuesMap =
+                getSyncIssuesMap(projects, buildController);
 
         GlobalLibraryMap globalLibraryMap = null;
         if (type == AndroidProject.class) {
@@ -93,7 +97,7 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
         long t2 = System.currentTimeMillis();
         System.out.println("GetAndroidModelAction: " + (t2 - t1) + "ms");
 
-        return new ModelContainer<>(rootBuildId, modelMap, globalLibraryMap);
+        return new ModelContainer<>(rootBuildId, modelMap, syncIssuesMap, globalLibraryMap);
     }
 
     @NonNull
@@ -108,11 +112,33 @@ public class GetAndroidModelAction<T> implements BuildAction<ModelContainer<T>> 
                 .orElseThrow(() -> new AssertionError("No GlobalLibraryMap model found."));
     }
 
+    @NonNull
+    private Map<BuildIdentifier, Multimap<String, SyncIssue>> getSyncIssuesMap(
+            List<Pair<BuildIdentifier, BasicGradleProject>> projects,
+            BuildController buildController) {
+        Map<BuildIdentifier, Multimap<String, SyncIssue>> syncIssues =
+                Maps.newHashMapWithExpectedSize(projects.size());
+
+        for (Pair<BuildIdentifier, BasicGradleProject> pair : projects) {
+            BasicGradleProject project = pair.getSecond();
+            ProjectSyncIssues syncIssuesModel =
+                    buildController.findModel(project, ProjectSyncIssues.class);
+
+            if (syncIssuesModel != null) {
+                Multimap<String, SyncIssue> perBuildMap =
+                        syncIssues.computeIfAbsent(pair.getFirst(), id -> HashMultimap.create());
+                perBuildMap.putAll(project.getPath(), syncIssuesModel.getSyncIssues());
+            }
+        }
+
+        return syncIssues;
+    }
+
     private Map<BuildIdentifier, Map<String, T>> getModelMap(
             @NonNull List<Pair<BuildIdentifier, BasicGradleProject>> projects,
             @NonNull BuildController buildController) {
         Map<BuildIdentifier, Map<String, T>> models =
-                Maps.newHashMapWithExpectedSize(projects.size() / CPU_COUNT);
+                Maps.newHashMapWithExpectedSize(projects.size());
 
         for (Pair<BuildIdentifier, BasicGradleProject> pair : projects) {
             BasicGradleProject project = pair.getSecond();

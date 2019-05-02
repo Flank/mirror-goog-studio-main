@@ -18,9 +18,11 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import java.io.Serializable;
 import java.util.Map;
 import org.gradle.tooling.model.BuildIdentifier;
@@ -30,14 +32,17 @@ public final class ModelContainer<T> implements Serializable {
 
     @NonNull private final BuildIdentifier rootBuildId;
     @NonNull private final Map<BuildIdentifier, Map<String, T>> modelMap;
+    @NonNull private final Map<BuildIdentifier, Multimap<String, SyncIssue>> syncIssuesMap;
     @Nullable private final GlobalLibraryMap globalLibraryMap;
 
     public ModelContainer(
             @NonNull BuildIdentifier rootBuildId,
             @NonNull Map<BuildIdentifier, Map<String, T>> modelMap,
+            @NonNull Map<BuildIdentifier, Multimap<String, SyncIssue>> syncIssuesMap,
             @Nullable GlobalLibraryMap globalLibraryMap) {
         this.rootBuildId = rootBuildId;
         this.modelMap = modelMap;
+        this.syncIssuesMap = syncIssuesMap;
         this.globalLibraryMap = globalLibraryMap;
     }
 
@@ -72,6 +77,11 @@ public final class ModelContainer<T> implements Serializable {
     @NonNull
     public Map<BuildIdentifier, Map<String, T>> getModelMaps() {
         return modelMap;
+    }
+
+    @NonNull
+    public Map<BuildIdentifier, Multimap<String, SyncIssue>> getSyncIssuesMap() {
+        return syncIssuesMap;
     }
 
     @NonNull
