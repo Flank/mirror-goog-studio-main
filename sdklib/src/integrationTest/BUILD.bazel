@@ -1,0 +1,19 @@
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
+
+kotlin_test(
+    name = "integration-test",
+    srcs = ["java"],
+    coverage = False,
+    data = [
+        "//tools/base/sdklib:commandlinetools",
+    ],
+    jvm_flags = ["-Dtest.suite.jar=integration-test.jar"],
+    test_class = "com.android.testutils.JarTestSuite",
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
+    ],
+)

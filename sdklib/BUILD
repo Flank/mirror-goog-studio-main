@@ -2,7 +2,7 @@ load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load(":sdk.bzl", "sdk_java_binary", "sdk_package", "sdk_package_test", "combine_licenses")
+load(":sdk.bzl", "sdk_java_binary", "sdk_package", "combine_licenses")
 
 # managed by go/iml_to_build
 iml_module(
@@ -157,10 +157,10 @@ sdk_package(
         "//tools/base/misc/screenshot2:screenshot2",
     ],
     sourceprops = "tools_source.properties",
+    visibility = ["//visibility:public"],
 )
 
-sdk_package_test(
+test_suite(
     name = "commandlinetoolstest",
-    package = ":commandlinetools",
-    tags = ["no_windows"],
+    tests = ["//tools/base/sdklib/src/integrationTest:integration-test.test"],
 )

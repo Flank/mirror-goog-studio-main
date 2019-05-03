@@ -3,7 +3,11 @@ load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 java_library(
     name = "screenshot2lib",
     srcs = glob(["src/main/java/**"]),
-    deps = ["//tools/base/ddmlib:studio.android.sdktools.ddmlib"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+    ],
 )
 
 sdk_java_binary(

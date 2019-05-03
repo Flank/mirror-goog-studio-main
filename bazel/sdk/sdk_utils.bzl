@@ -49,10 +49,17 @@ def sdk_path(paths):
     })
 
 def expand_template_impl(ctx):
+    runtime_jars = ctx.attr.java_binary[JavaInfo].transitive_runtime_jars
+    jar_names = [calculate_jar_name_for_sdk_package(jar) for jar in runtime_jars]
+    sep = ";" if ctx.attr.is_windows else ":"
+    lib_path = "%APP_HOME%\\lib\\" if ctx.attr.is_windows else "$APP_HOME/lib/"
+    jar_paths = sep.join([lib_path + jar for jar in jar_names])
     ctx.actions.expand_template(
         template = ctx.file.template,
         output = ctx.outputs.out,
-        substitutions = ctx.attr.substitutions,
+        substitutions = ctx.attr.substitutions + {
+            "${JARS}": jar_paths,
+        },
     )
 
 expand_template = rule(
@@ -60,15 +67,14 @@ expand_template = rule(
     attrs = {
         "template": attr.label(mandatory = True, allow_single_file = True),
         "substitutions": attr.string_dict(mandatory = True),
+        "java_binary": attr.label(mandatory = True),
+        "is_windows": attr.bool(mandatory = True),
         "out": attr.output(mandatory = True),
     },
 )
 
-def tool_start_script(name, platform, command_name, main_class_name, jars, default_jvm_opts, visibility):
+def tool_start_script(name, platform, command_name, main_class_name, java_binary, default_jvm_opts, visibility):
     is_windows = platform == "win"
-    sep = ";" if is_windows else ":"
-    lib_path = "%APP_HOME%\\lib\\" if is_windows else "$APP_HOME/lib/"
-    jar_names = [jar[jar.find(":") + 1:] for jar in jars]
     expand_template(
         name = name,
         visibility = visibility,
@@ -78,8 +84,26 @@ def tool_start_script(name, platform, command_name, main_class_name, jars, defau
             "${COMMAND_NAME}": command_name,
             "${DEFAULT_JVM_OPTS}": default_jvm_opts,
             "${MAIN_CLASS}": main_class_name,
-            "${JARS}": sep.join([lib_path + jar for jar in jar_names]),
             "${PLATFORM}": platform,
             "${COMMAND_UPPER}": command_name.upper(),
         },
+        java_binary = java_binary,
+        is_windows = is_windows,
     )
+
+sdk_jar_prefix_to_zip_location = {
+    "prebuilts/tools/common/m2/repository/": "external/",
+    "prebuilts/tools/common/": "external/",
+    "tools/external/": "external/",
+    "tools/base/": "",
+    "tools/": "",
+}
+
+def calculate_jar_name_for_sdk_package(jar):
+    path = jar.short_path
+    path = path.replace("/libtools.", "/", maxsplit = 1)
+
+    for prefix in sdk_jar_prefix_to_zip_location.keys():
+        if path.startswith(prefix):
+            return sdk_jar_prefix_to_zip_location[prefix] + path[len(prefix):]
+    fail("Unknown path mapping for jar " + jar.path)

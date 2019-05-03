@@ -45,6 +45,7 @@
       <module fileurl="file://$PROJECT_DIR$/sdk-common/android.sdktools.base.sdk-common-base.iml" filepath="$PROJECT_DIR$/sdk-common/android.sdktools.base.sdk-common-base.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdk-common/generate-locale-data/android.sdktools.base.sdk-common.generate-locale-data.iml" filepath="$PROJECT_DIR$/sdk-common/generate-locale-data/android.sdktools.base.sdk-common.generate-locale-data.iml" />
       <module fileurl="file://$PROJECT_DIR$/sdklib/android.sdktools.base.sdklib-base.iml" filepath="$PROJECT_DIR$/sdklib/android.sdktools.base.sdklib-base.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sdklib/src/integrationTest/android.sdktools.base.sdklib-base.sdklib-integration-test.iml" filepath="$PROJECT_DIR$/sdklib/src/integrationTest/android.sdktools.base.sdklib-base.sdklib-integration-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/vector-drawable-tool/android.sdktools.base.vector-drawable-tool.iml" filepath="$PROJECT_DIR$/vector-drawable-tool/android.sdktools.base.vector-drawable-tool.iml" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/binary-resources/android.sdktools.binary-resources.iml" filepath="$PROJECT_DIR$/apkparser/binary-resources/android.sdktools.binary-resources.iml" />
       <module fileurl="file://$PROJECT_DIR$/../buildSrc/android.sdktools.buildSrc.iml" filepath="$PROJECT_DIR$/../buildSrc/android.sdktools.buildSrc.iml" />

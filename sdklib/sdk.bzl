@@ -3,14 +3,14 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("//tools/base/bazel/sdk:sdk_utils.bzl", "tool_start_script")
+load("//tools/base/bazel/sdk:sdk_utils.bzl", "calculate_jar_name_for_sdk_package")
 
 platforms = ["win", "linux", "mac"]
 
 def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps = [], default_jvm_opts = {}, visibility = None):
     command_name = command_name if command_name else name
-    native.java_binary(
+    native.java_library(
         name = command_name,
-        create_executable = False,
         runtime_deps = runtime_deps,
         visibility = visibility,
     )
@@ -21,7 +21,7 @@ def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps =
             command_name = command_name,
             default_jvm_opts = default_jvm_opts.get(platform) or "",
             main_class_name = main_class,
-            jars = [name + "_deploy.jar"],
+            java_binary = name,
             visibility = visibility,
         )
 
@@ -77,10 +77,16 @@ def _package_component_impl(ctx):
         file = bin.files.to_list()[0]
         args.append("tools/bin/%s=%s" % (file.basename, file.path))
         inputs += [file]
-    for lib in ctx.attr.libs:
-        file = lib.files.to_list()[0]
-        args.append("tools/lib/%s=%s" % (file.basename, file.path))
-        inputs += [file]
+    runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in ctx.attr.java_libs])
+    runtime_jar_names = {}
+    for jar in runtime_jars:
+        name = calculate_jar_name_for_sdk_package(jar)
+        existing = runtime_jar_names.get(name)
+        if existing:
+            fail("Multiple jars have same name for SDK component with the same name! name= " + name + " jars= " + existing.path + "       " + jar.path)
+        runtime_jar_names[name] = jar
+        args.append("tools/lib/%s=%s" % (name, jar.path))
+        inputs += [jar]
     args.append("tools/source.properties=" + ctx.file.sourceprops.path)
     inputs += [ctx.file.sourceprops]
     args.append("tools/NOTICE.txt=" + ctx.file.notice.path)
@@ -98,7 +104,7 @@ package_component = rule(
     implementation = _package_component_impl,
     attrs = {
         "bins": attr.label_list(),
-        "libs": attr.label_list(allow_files = True),
+        "java_libs": attr.label_list(),
         "sourceprops": attr.label(allow_single_file = True),
         "notice": attr.label(allow_single_file = True),
         "_zipper": attr.label(
@@ -110,7 +116,7 @@ package_component = rule(
     outputs = {"out": "%{name}.zip"},
 )
 
-def sdk_package(name, binaries, sourceprops):
+def sdk_package(name, binaries, sourceprops, visibility):
     version_file = "//tools/buildSrc/base:version.properties"
     native.genrule(
         name = "generate_source_props",
@@ -126,63 +132,13 @@ def sdk_package(name, binaries, sourceprops):
         package_component(
             name = "%s_%s" % (name, platform),
             bins = [bin + "_wrapper_" + platform for bin in binaries],
-            libs = [lib + "_deploy.jar" for lib in binaries],
+            java_libs = binaries,
             sourceprops = "source.properties",
             notice = name + "_combined_licenses",
+            visibility = visibility,
         )
     native.filegroup(
         name = name,
         srcs = ["%s_%s.zip" % (name, platform) for platform in platforms],
+        visibility = visibility,
     )
-
-def _sdk_package_test_impl(ctx):
-    target = ctx.files.package
-    bin_files = sorted(["jobb", "avdmanager", "apkanalyzer", "lint", "screenshot2", "sdkmanager"])
-    lib_files = ["tools/lib/" + f + "_deploy.jar" for f in bin_files]
-    bin_per_os = {platform: ["tools/bin/" + file + (".bat" if platform == "win" else "") for file in bin_files] for platform in platforms}
-    other_files = ["tools/NOTICE.txt", "tools/source.properties"]
-    complete_contents_per_os = {platform: " ".join(bin_per_os[platform] + lib_files + other_files) for platform in platforms}
-    desired_file_per_os = {platform: "{}_{}.zip".format(ctx.attr.package.label.name, platform) for platform in platforms}
-    zip_paths_per_os = {platform: [f.short_path for f in target if platform + ".zip" in f.basename][0] for platform in platforms}
-    ctx.actions.write(
-        ctx.outputs.executable,
-        """
-        fail() {{
-          echo $1 >&2
-          exit 1;
-        }}
-        check() {{
-          [[ $1 == $2 ]] || fail "expected $1 to be $2"
-        }}
-
-        check "{zip_base_names}" "{desired_zip_names}"
-        """.format(
-            zip_base_names = " ".join(sorted([t.basename for t in target])),
-            desired_zip_names = " ".join(sorted(desired_file_per_os.values())),
-        ) +
-        "\n".join([
-            #TODO: set permissions correctly
-            #check "`zipinfo {zip}|grep -- '-r-xr-xr-x'|sed 's/.* //'|sort`" "{bins}"
-            #check "`zipinfo {zip}|grep -- '-r--r--r--'|sed 's/.* //'|sort`" "{others}"
-            """
-                   sorted_contents=`echo {contents}|xargs -n 1|sort`
-                   check "`zipinfo -1 {zip}|grep -v /$|sort`" "$sorted_contents"
-                   """.format(
-                zip = zip_paths_per_os[platform],
-                contents = complete_contents_per_os[platform],
-                bins = "\n".join(bin_per_os[platform]),
-                others = "\n".join(lib_files + other_files),
-            )
-            for platform in platforms
-        ]),
-        True,
-    )
-    return [DefaultInfo(runfiles = ctx.runfiles(files = target))]
-
-sdk_package_test = rule(
-    implementation = _sdk_package_test_impl,
-    attrs = {
-        "package": attr.label(),
-    },
-    test = True,
-)
