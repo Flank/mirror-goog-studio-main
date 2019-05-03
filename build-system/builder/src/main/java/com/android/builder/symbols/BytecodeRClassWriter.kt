@@ -48,6 +48,9 @@ import java.util.EnumSet
 import java.util.jar.JarOutputStream
 import java.util.zip.ZipEntry
 
+// Any negative time value sets ZipEntry's xdostime to DOSTIME_BEFORE_1980 constant
+private const val TIME_BEFORE_1980 = -1L
+
 @Throws(IOException::class)
 fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: Boolean = false) {
     val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
@@ -59,13 +62,17 @@ fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: 
                 val bytes = generateResourceTypeClass(table, resType, finalIds) ?: continue
                 resourceTypes.add(resType)
                 val innerR = internalName(table, resType)
-                jarOutputStream.putNextEntry(ZipEntry(innerR + SdkConstants.DOT_CLASS))
+                val entry = ZipEntry(innerR + SdkConstants.DOT_CLASS)
+                entry.time = TIME_BEFORE_1980
+                jarOutputStream.putNextEntry(entry)
                 jarOutputStream.write(bytes)
             }
 
             // Generate and write the main R class file.
             val packageR = internalName(table, null)
-            jarOutputStream.putNextEntry(ZipEntry(packageR + SdkConstants.DOT_CLASS))
+            val mainREntry = ZipEntry(packageR + SdkConstants.DOT_CLASS)
+            mainREntry.time = TIME_BEFORE_1980
+            jarOutputStream.putNextEntry(mainREntry)
             jarOutputStream.write(generateOuterRClass(resourceTypes, packageR))
         }
     }
