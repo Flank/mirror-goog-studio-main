@@ -16,6 +16,8 @@
 
 package com.android.testutils;
 
+import com.android.utils.ILogger;
+import com.android.utils.StdLogger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -55,7 +57,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.junit.runner.Runner;
 import org.junit.runner.manipulation.Sorter;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -71,13 +75,31 @@ public class JarTestSuiteRunner extends Suite {
 
     private static final String JAVA_CLASS_PATH = "java.class.path";
 
+    private static final ILogger logger = new StdLogger(StdLogger.Level.INFO);
+
+    private final boolean isBazelIntegrationTestsSuite;
+
     public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
         super(new DelegatingRunnerBuilder(builder), suiteClass, getTestClasses(suiteClass));
+        isBazelIntegrationTestsSuite =
+                suiteClass
+                        .getName()
+                        .equals("com.android.build.gradle.integration.BazelIntegrationTestsSuite");
         final String seed = System.getProperty("test.seed");
         if (seed != null) {
             randomizeTestOrder(Long.parseLong(seed));
         }
         useAbsoluteForClasspath();
+    }
+
+    @Override
+    protected void runChild(Runner runner, RunNotifier notifier) {
+        // Logs the test class that will be invoked, temporarily added to investigate tests timing
+        // out issue b/78568459
+        if (isBazelIntegrationTestsSuite) {
+            logger.info("Running " + describeChild(runner).getClassName());
+        }
+        super.runChild(runner, notifier);
     }
 
     private void randomizeTestOrder(long seed) {
