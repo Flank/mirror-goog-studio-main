@@ -29,7 +29,9 @@ import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -364,22 +366,21 @@ public class FeatureTest {
                 });
         assertThat(expectedVariantNames).isEmpty();
 
-        Map<String, AndroidProject> models =
-                project.model()
-                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
-                        .fetchAndroidProjects()
-                        .getOnlyModelMap();
+        ModelContainer<AndroidProject> container =
+                project.model().ignoreSyncIssues(SyncIssue.SEVERITY_WARNING).fetchAndroidProjects();
+        Map<String, AndroidProject> models = container.getOnlyModelMap();
         AndroidProject featureModel = models.get(":feature");
         assertThat(featureModel.isBaseSplit()).isFalse();
         AndroidProject baseModel = models.get(":baseFeature");
         assertThat(baseModel.isBaseSplit()).isTrue();
-        AndroidProject instantAppModel = models.get(":bundle");
 
-        assertThat(featureModel)
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .project(":feature")
                 .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
-        assertThat(baseModel)
-                .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
-        assertThat(instantAppModel)
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .project(":baseFeature")
                 .hasSingleIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_PLUGIN_OBSOLETE);
     }
 

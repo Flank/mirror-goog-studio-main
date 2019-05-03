@@ -17,14 +17,15 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
@@ -238,14 +239,15 @@ public class D8DesugaringTest {
 
     @Test
     public void checkD8DesugaringWithoutD8Enable() throws IOException {
-        AndroidProject app =
+        ModelContainer<AndroidProject> container =
                 project.model()
                         .ignoreSyncIssues()
                         .with(BooleanOption.ENABLE_D8, false)
                         .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .fetchAndroidProjects()
-                        .getOnlyModelMap()
-                        .get(":app");
-        assertThat(app).hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
+                        .fetchAndroidProjects();
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .project(":app")
+                .hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
     }
 }

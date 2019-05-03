@@ -5,8 +5,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
@@ -139,9 +140,11 @@ public class BuildToolsTest {
                 project.getBuildFile(),
                 "buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'",
                 "buildToolsVersion '24.0.3'");
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        TruthHelper.assertThat(model)
+        ModelContainer<AndroidProject> container =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .onlyProject()
                 .hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
     }
 }

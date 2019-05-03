@@ -1,12 +1,13 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
-import static com.android.build.gradle.integration.common.truth.ModelSubject.assertThat;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -41,10 +42,13 @@ public class OptionalLibraryTest {
                         + "    useLibrary 'foo'\n"
                         + "}");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
 
-        assertThat(model)
+        ModelContainer<AndroidProject> container =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .onlyProject()
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND, "foo");
     }

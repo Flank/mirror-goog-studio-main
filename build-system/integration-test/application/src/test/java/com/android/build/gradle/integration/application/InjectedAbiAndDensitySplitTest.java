@@ -17,11 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -125,13 +126,15 @@ public class InjectedAbiAndDensitySplitTest {
 
     @Test
     public void checkError() throws Exception {
-        AndroidProject model =
+        ModelContainer<AndroidProject> container =
                 sProject.model()
                         .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
                         .ignoreSyncIssues()
-                        .fetchAndroidProjects()
-                        .getOnlyModel();
+                        .fetchAndroidProjects();
 
-        assertThat(model).hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_GENERIC);
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .onlyProject()
+                .hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_GENERIC);
     }
 }

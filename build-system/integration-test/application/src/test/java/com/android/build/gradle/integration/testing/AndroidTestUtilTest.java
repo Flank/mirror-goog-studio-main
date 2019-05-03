@@ -17,13 +17,13 @@
 package com.android.build.gradle.integration.testing;
 
 
-import static com.android.build.gradle.integration.common.truth.ModelSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.VariantUtils;
@@ -79,7 +79,9 @@ public class AndroidTestUtilTest {
 
         ModelContainer<AndroidProject> modelContainer =
                 project.model().ignoreSyncIssues().fetchAndroidProjects();
-        assertThat(modelContainer.getOnlyModel())
+        ModelContainerSubject.assertThat(modelContainer)
+                .rootBuild()
+                .onlyProject()
                 .hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
         SyncIssue issue = modelContainer.getOnlyModelSyncIssues().iterator().next();
         assertThat(issue.getMessage()).contains("guava");

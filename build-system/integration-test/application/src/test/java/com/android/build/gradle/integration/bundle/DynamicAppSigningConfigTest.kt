@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.bundle
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import org.junit.Rule
@@ -33,7 +33,7 @@ class DynamicAppSigningConfigTest {
 
     @Test
     fun testSyncWarning() {
-       project.getSubproject("feature1").buildFile.appendText(
+        project.getSubproject("feature1").buildFile.appendText(
                 """
                     android {
                         signingConfigs {
@@ -48,10 +48,10 @@ class DynamicAppSigningConfigTest {
                             debug.signingConfig signingConfigs.myConfig
                         }
                     }
-                """.trimIndent());
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
+                """.trimIndent())
+        val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
 
-        TruthHelper.assertThat(model.rootBuildModelMap[":feature1"])
+        assertThat(container).rootBuild().project(":feature1")
                 .hasSingleIssue(
                         EvalIssueReporter.Severity.WARNING.severity,
                         SyncIssue.TYPE_SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
@@ -64,7 +64,7 @@ class DynamicAppSigningConfigTest {
 
     @Test
     fun testNoSyncWarning() {
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        TruthHelper.assertThat(model.rootBuildModelMap[":feature2"]).hasIssueSize(0)
+        val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        assertThat(container).rootBuild().project(":feature2").hasNoIssues()
     }
 }

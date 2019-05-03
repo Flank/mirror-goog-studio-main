@@ -16,16 +16,18 @@
 
 package com.android.build.gradle.integration.application
 
+
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.truth.TruthHelper
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+
 
 class AbiRelatedDslUsageTest {
 
@@ -73,12 +75,12 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect DSL declaration.
-        val model : AndroidProject = project.model().ignoreSyncIssues().fetchAndroidProjects().onlyModel
+        val modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects()
 
         if (isUniversalApkRequested) {
-            TruthHelper.assertThat(model).hasIssueSize(0)
+            assertThat(modelContainer).rootBuild().onlyProject().hasNoIssues()
         } else {
-            val dslIssue = TruthHelper.assertThat(model).hasIssue(
+            val dslIssue = assertThat(modelContainer).rootBuild().onlyProject().hasIssue(
                 SyncIssue.SEVERITY_ERROR,
                 SyncIssue.TYPE_GENERIC)
 
@@ -108,10 +110,12 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect ABI target.
-        val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
-                .ignoreSyncIssues().fetchAndroidProjects().onlyModel
+        val container = project.model()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
+            .ignoreSyncIssues()
+            .fetchAndroidProjects()
 
-        val dslIssue = TruthHelper.assertThat(model).hasIssue(
+        val dslIssue = assertThat(container).rootBuild().onlyProject().hasIssue(
                 SyncIssue.SEVERITY_WARNING,
                 SyncIssue.TYPE_GENERIC)
 
@@ -145,10 +149,12 @@ class AbiRelatedDslUsageTest {
                 "}\n")
 
         // Query the model to get the incorrect ABI target.
-        val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
-                .ignoreSyncIssues().fetchAndroidProjects().onlyModel
+        val container = project.model()
+            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
+            .ignoreSyncIssues()
+            .fetchAndroidProjects()
 
-        val dslIssue = TruthHelper.assertThat(model).hasIssue(
+        val dslIssue = assertThat(container).rootBuild().onlyProject().hasIssue(
                 SyncIssue.SEVERITY_WARNING,
                 SyncIssue.TYPE_GENERIC)
 

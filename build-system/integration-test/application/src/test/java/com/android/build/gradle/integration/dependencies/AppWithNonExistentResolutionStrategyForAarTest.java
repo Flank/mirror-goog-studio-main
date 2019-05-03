@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
+import static com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.ModelContainer;
@@ -104,7 +104,9 @@ public class AppWithNonExistentResolutionStrategyForAarTest {
     public void checkWeReceivedASyncIssue() throws Exception {
         modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects();
         SyncIssue issue =
-                assertThat(modelContainer.getOnlyModelMap().get(":app"))
+                assertThat(modelContainer)
+                        .rootBuild()
+                        .project(":app")
                         .hasSingleIssue(
                                 SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
         assertThat(issue.getMessage()).contains("org.jdeferred:jdeferred-android-aar:-1.-1.-1");

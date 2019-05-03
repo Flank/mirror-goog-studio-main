@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.dependencies
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject.assertThat
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.SyncIssue
 import org.junit.Rule
@@ -38,10 +38,11 @@ class DeprecatedConfigurationTest {
                       testCompile project(':library2')
                     }
                     """)
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        assertThat(model.onlyModelMap[":app"]).hasSingleIssue(
-                    SyncIssue.SEVERITY_WARNING,
-                    SyncIssue.TYPE_DEPRECATED_CONFIGURATION,
-                    "testCompile::testImplementation::CONFIG_NAME")
+        val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        assertThat(container).rootBuild().project(":app")
+                .hasSingleIssue(
+                        SyncIssue.SEVERITY_WARNING,
+                        SyncIssue.TYPE_DEPRECATED_CONFIGURATION,
+                        "testCompile::testImplementation::CONFIG_NAME")
     }
 }

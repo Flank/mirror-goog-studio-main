@@ -22,8 +22,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
@@ -48,9 +49,11 @@ public class PostprocessingTest {
                 project.getBuildFile(),
                 "android.buildTypes.release { postprocessing.removeUnusedCode = true; minifyEnabled = true\n }");
 
-        AndroidProject model =
-                project.model().ignoreSyncIssues().fetchAndroidProjects().getOnlyModel();
-        TruthHelper.assertThat(model)
+        ModelContainer<AndroidProject> container =
+                project.model().ignoreSyncIssues().fetchAndroidProjects();
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .onlyProject()
                 .hasSingleIssue(
                         SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC, "setMinifyEnabled");
     }
@@ -61,9 +64,10 @@ public class PostprocessingTest {
                 project.getBuildFile(),
                 "android.buildTypes.release { postprocessing.removeUnusedCode = true\n }");
 
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModel();
-        TruthHelper.assertThat(model).hasIssueSize(0);
+        ModelContainer<AndroidProject> container = project.model().fetchAndroidProjects();
+        ModelContainerSubject.assertThat(container).rootBuild().onlyProject().hasNoIssues();
 
+        AndroidProject model = container.getOnlyModel();
         BuildTypeContainer buildTypeContainer =
                 model.getBuildTypes()
                         .stream()

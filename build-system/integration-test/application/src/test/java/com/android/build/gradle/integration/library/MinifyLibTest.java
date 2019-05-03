@@ -19,14 +19,16 @@ package com.android.build.gradle.integration.library;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelContainer;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -64,8 +66,8 @@ public class MinifyLibTest {
     public void consumerProguardFile() throws Exception {
         getExecutor().run(":app:assembleDebug");
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
-        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
-        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
+        assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
+        assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
     }
 
     @Test
@@ -87,14 +89,14 @@ public class MinifyLibTest {
                         + "defaultConfig.consumerProguardFiles getDefaultProguardFile('proguard-android.txt')\n"
                         + "}\n");
 
-        AndroidProject model =
+        ModelContainer<AndroidProject> container =
                 project.model()
                         .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
                         .ignoreSyncIssues()
-                        .fetchAndroidProjects()
-                        .getOnlyModelMap()
-                        .get(":lib");
-        assertThat(model)
+                        .fetchAndroidProjects();
+        ModelContainerSubject.assertThat(container)
+                .rootBuild()
+                .project(":lib")
                 .hasSingleError(SyncIssue.TYPE_GENERIC)
                 .that()
                 .hasMessageThatContains(

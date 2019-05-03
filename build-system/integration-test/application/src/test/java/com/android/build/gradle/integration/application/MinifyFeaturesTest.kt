@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
+import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.scope.CodeShrinker
@@ -872,8 +873,8 @@ class MinifyFeaturesTest(
         project.getSubproject(":foo:otherFeature1")
             .buildFile
             .appendText("android.buildTypes.minified.minifyEnabled true")
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        assertThat(model.rootBuildModelMap[":foo:otherFeature1"])
+        val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        ModelContainerSubject.assertThat(container).rootBuild().project(":foo:otherFeature1")
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("cannot set minifyEnabled to true.")
@@ -895,8 +896,8 @@ class MinifyFeaturesTest(
                     }
                     """
             )
-        val model = project.model().ignoreSyncIssues().fetchAndroidProjects()
-        assertThat(model.rootBuildModelMap[otherFeature2GradlePath])
+        val container = project.model().ignoreSyncIssues().fetchAndroidProjects()
+        ModelContainerSubject.assertThat(container).rootBuild().project(otherFeature2GradlePath)
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("should not be specified in this module.")
