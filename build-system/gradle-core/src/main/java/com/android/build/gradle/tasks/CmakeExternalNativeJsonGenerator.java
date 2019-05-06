@@ -41,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.gradle.api.InvalidUserDataException;
 
 /**
  * CMake JSON generation logic. This is separated from the corresponding CMake task so that JSON can

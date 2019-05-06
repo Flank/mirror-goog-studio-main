@@ -17,18 +17,16 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.repository.Revision
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
 
 class JsonUtilTest {
     @Test
     fun `round trip`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global)!!
+            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder,
+                it.cmakeVersionProvider)!!
             val variant = createCxxVariantModel(
                 module,
                 it.baseVariantData

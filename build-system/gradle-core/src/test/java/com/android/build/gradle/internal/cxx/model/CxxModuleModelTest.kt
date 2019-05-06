@@ -39,6 +39,7 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
     CxxCmakeAbiModel::class.java,
     CxxBuildModel::class.java,
     CxxVariantModel::class.java,
+    CxxVariantModel::class.java,
     CxxAbiModel::class.java,
     CxxCmakeModuleModel::class.java,
     CxxModuleModel::class.java
@@ -154,6 +155,16 @@ class CxxModuleModelTest {
                 if (typeName.endsWith("Kt")) {
                     checkFunctionClass(type)
                     return
+                }
+                // Data classes must correspond to an interface of the same name but without
+                // "Data" at the end.
+                if (typeName.endsWith("Data")) {
+                    for (allowed in ALLOWED_MODEL_INTERFACES) {
+                        println("$typeName : $allowed")
+                        if (type.name.startsWith(allowed.name)) {
+                            return
+                        }
+                    }
                 }
                 fail(type.toGenericString())
             }

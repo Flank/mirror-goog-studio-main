@@ -192,6 +192,7 @@ open class BasicModuleModelMock {
         CmakeLocator::class.java,
         throwUnmocked
     )
+    val cmakeVersionProvider = { _ : File -> Revision.parseRevision("3.10.2")}
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx
 
+import com.android.repository.Revision
+import java.lang.Math.abs
 import java.lang.RuntimeException
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -29,8 +31,19 @@ import java.util.UUID
  */
 @Suppress("UNCHECKED_CAST")
 class RandomInstanceGenerator {
-    private val random = Random()
+    private val random = Random(192)
     private val factoryMap = mutableMapOf<Type, (RandomInstanceGenerator) -> Any>()
+
+    init {
+        // Revision can't handle negative values
+        addFactory(Revision::class.java) {
+            Revision(
+                abs(random.nextInt()),
+                abs(random.nextInt()),
+                abs(random.nextInt()),
+                abs(random.nextInt()))
+        }
+    }
 
     /**
      * Add a new factory for the given type.
@@ -53,9 +66,16 @@ class RandomInstanceGenerator {
             Int::class.java -> return random.nextInt() as T
         }
 
+        if (type.isEnum) {
+            return type.enumConstants.toList().shuffled(random)[0]
+        }
+
         val constructor = type.constructors
             .filter { !it.isSynthetic }
-            .maxBy { it.parameterCount }!!
+            .maxBy { it.parameterCount }
+            ?: throw RuntimeException("No usable constructor ${type.name}: " +
+                    "${type.constructors.map { it.toGenericString() }}")
+
         val params = constructor.genericParameterTypes
             .map { syntheticOfType(it) }
             .toTypedArray()
@@ -75,6 +95,11 @@ class RandomInstanceGenerator {
                                 syntheticOfType(type.actualTypeArguments[1])
                     )
                 }
+                Set::class.java -> {
+                    setOf(
+                        syntheticOfType(type.actualTypeArguments[0])
+                    )
+                }
                 else -> throw RuntimeException(type.toString())
             }
             is WildcardType -> {
@@ -83,7 +108,7 @@ class RandomInstanceGenerator {
                 }
                 syntheticOfType(type.upperBounds[0])
             }
-            else -> throw RuntimeException(type.typeName)
+            else -> throw RuntimeException(type.typeName ?: type.toString())
         }
     }
 }

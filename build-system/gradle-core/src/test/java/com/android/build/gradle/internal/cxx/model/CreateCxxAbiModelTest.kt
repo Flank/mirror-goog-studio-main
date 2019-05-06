@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.repository.Revision
+import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.File
@@ -80,12 +80,24 @@ class CreateCxxAbiModelTest {
             assertThat(abi.gradleBuildOutputFolder.path
                     .replace("\\", "/"))
                 .doesNotContain("cmake/debug/cxx/debug")
-            assertThat(abi.cmake!!.buildGenerationStateFile.path!!
+            assertThat(
+                abi.cmake!!.buildGenerationStateFile.path!!
                     .replace("\\", "/"))
                 .doesNotContain("cmake/cxx/x86")
-            assertThat(abi.cmake!!.cmakeListsWrapperFile.path!!
+            assertThat(
+                abi.cmake!!.cmakeListsWrapperFile.path!!
                     .replace("\\", "/"))
                 .endsWith(".cxx/cxx/debug/x86/CMakeLists.txt")
         }
+    }
+
+    @Test
+    fun `round trip random instance`() {
+        val abi = RandomInstanceGenerator()
+            .synthetic(CxxAbiModelData::class.java)
+        val abiString = abi.toJsonString()
+        val recoveredAbi = createCxxAbiModelFromJson(abiString)
+        val recoveredAbiString = recoveredAbi.toJsonString()
+        assertThat(abiString).isEqualTo(recoveredAbiString)
     }
 }

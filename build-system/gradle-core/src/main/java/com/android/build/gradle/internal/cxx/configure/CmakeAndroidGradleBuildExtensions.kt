@@ -270,7 +270,7 @@ fun writeCompilerSettingsToCache(
             val propertiesDefinedInBuild = buildVariables.properties.map { it.name }
             val requiredPropertiesMissing =
                 CMAKE_COMPILER_CHECK_CACHE_VALUE_REQUIRED_STRINGS subtract propertiesDefinedInBuild
-            if (!requiredPropertiesMissing.isEmpty()) {
+            if (requiredPropertiesMissing.isNotEmpty()) {
                 cacheWriteStatus = "Build didn't define all required properties. Missing: " +
                         requiredPropertiesMissing.joinToString()
                 return
