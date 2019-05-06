@@ -311,7 +311,6 @@ public class FeatureTest {
                         baseProject.getIntermediateFile(
                                 "processed_res",
                                 "debugFeature",
-                                "processDebugFeatureResources",
                                 "out",
                                 "resources-debugFeature.ap_"))) {
             baseFeatureResources.exists();

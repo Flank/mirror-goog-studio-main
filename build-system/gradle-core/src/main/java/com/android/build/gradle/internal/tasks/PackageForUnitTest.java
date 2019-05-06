@@ -21,7 +21,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCESSED_RES;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -41,7 +40,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
@@ -49,8 +50,7 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 @CacheableTask
-public class PackageForUnitTest extends NonIncrementalTask {
-    BuildableArtifact resApk;
+public abstract class PackageForUnitTest extends NonIncrementalTask {
     ListProperty<Directory> mergedAssets;
     File apkForUnitTest;
 
@@ -58,7 +58,7 @@ public class PackageForUnitTest extends NonIncrementalTask {
     protected void doTaskAction() throws IOException {
         // this can certainly be optimized by making it incremental...
 
-        FileUtils.copyFile(apkFrom(resApk), apkForUnitTest);
+        FileUtils.copyFile(apkFrom(getResApk()), apkForUnitTest);
 
         URI uri = URI.create("jar:" + apkForUnitTest.toURI());
         try (FileSystem apkFs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
@@ -84,9 +84,7 @@ public class PackageForUnitTest extends NonIncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
-    public BuildableArtifact getResApk() {
-        return resApk;
-    }
+    public abstract DirectoryProperty getResApk();
 
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
@@ -100,7 +98,7 @@ public class PackageForUnitTest extends NonIncrementalTask {
     }
 
     @NonNull
-    private static File apkFrom(BuildableArtifact compiledResourcesZip) {
+    private static File apkFrom(Provider<Directory> compiledResourcesZip) {
         return Iterables.getOnlyElement(
                 ExistingBuildElements.from(PROCESSED_RES, compiledResourcesZip))
                 .getOutputFile();
@@ -139,7 +137,7 @@ public class PackageForUnitTest extends NonIncrementalTask {
             super.configure(task);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-            task.resApk = artifacts.getArtifactFiles(PROCESSED_RES);
+            artifacts.setTaskInputToFinalProduct(PROCESSED_RES, task.getResApk());
             task.mergedAssets = artifacts.getFinalProducts(MERGED_ASSETS);
             task.apkForUnitTest = apkForUnitTest;
         }

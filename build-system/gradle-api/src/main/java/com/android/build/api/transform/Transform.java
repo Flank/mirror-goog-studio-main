@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Incubating;
+import org.gradle.api.file.DirectoryProperty;
 
 /**
  * A Transform that processes intermediary build artifacts.
@@ -236,6 +237,14 @@ public abstract class Transform {
      * something else triggers a non incremental run.
      */
     public abstract boolean isIncremental();
+
+    /**
+     * For Transforms that produce an output available though the [BuildArtifactsHolder] provider
+     * based interfaces should indicate the output directory of the produced artifact
+     *
+     * @param directory
+     */
+    public void setOutputDirectory(DirectoryProperty directory) {}
 
 
     /**

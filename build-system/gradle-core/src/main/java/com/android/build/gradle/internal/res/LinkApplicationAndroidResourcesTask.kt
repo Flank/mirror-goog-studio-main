@@ -189,8 +189,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         private set
 
     @get:OutputDirectory
-    lateinit var resPackageOutputFolder: File
-        private set
+    abstract val resPackageOutputFolder: DirectoryProperty
 
     @get:Input
     lateinit var projectBaseName: String
@@ -256,7 +255,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
 
     // FIXME : make me incremental !
     override fun doFullTaskAction() {
-        FileUtils.deleteDirectoryContents(resPackageOutputFolder)
+        val outputDirectory = resPackageOutputFolder.get().asFile
+        FileUtils.deleteDirectoryContents(outputDirectory)
 
         val manifestBuildElements = ExistingBuildElements.from(taskInputType, manifestFiles)
 
@@ -354,7 +354,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                 // In case we generated pure splits, we may have more than one
                 // resource AP_ in the output directory. reconcile with the
                 // splits list and save it for downstream tasks.
-                val packagedResForSplit = findPackagedResForSplit(resPackageOutputFolder, apkInfo)
+                val packagedResForSplit = findPackagedResForSplit(
+                    outputDirectory, apkInfo)
 
                 if (packagedResForSplit != null) {
                     AaptSplitInvoker.appendOutput(
@@ -363,7 +364,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                             apkInfo,
                             packagedResForSplit
                         ),
-                        resPackageOutputFolder
+                        outputDirectory
                     )
                 } else {
                     logger.warn("Cannot find output for $apkInfo")
@@ -412,7 +413,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         private val baseName: String?,
         private val isLibrary: Boolean
     ) : VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>(scope) {
-        private lateinit var resPackageOutputFolder: File
         private lateinit var proguardOutputFile: File
         private lateinit var aaptMainDexListProguardOutputFile: File
 
@@ -427,10 +427,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         override fun preConfigure(taskName: String) {
             super.preConfigure(taskName)
             val variantScope = variantScope
-
-            resPackageOutputFolder = variantScope
-                .artifacts
-                .appendArtifact(InternalArtifactType.PROCESSED_RES, taskName, "out")
 
             if (ProcessAndroidResources.generatesProguardOutputFile(variantScope)) {
                 proguardOutputFile = variantScope.processAndroidResourcesProguardOutputFile
@@ -460,6 +456,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         ) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.processAndroidResTask = taskProvider
+            variantScope.artifacts.producesDir(InternalArtifactType.PROCESSED_RES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                taskProvider.map { task -> task.resPackageOutputFolder })
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
@@ -471,7 +471,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
 
             preconditionsCheck(variantData)
 
-            task.resPackageOutputFolder = resPackageOutputFolder
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
 
             task.applicationId = TaskInputHelper.memoize { config.applicationId }
@@ -918,7 +917,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val resourceConfigs: Set<String> = splitList.resourceConfigs
         val multiOutputPolicySplitList: Set<String> = splitList.getSplits(task.multiOutputPolicy)
         val variantScopeMainSplit: ApkData = task.variantScope.outputScope.mainSplit
-        val resPackageOutputFolder: File = task.resPackageOutputFolder
+        val resPackageOutputFolder: File = task.resPackageOutputFolder.get().asFile
         val isNamespaced: Boolean = task.isNamespaced
         val variantDataType: VariantType = task.variantScope.variantData.type
         val originalApplicationId: String? = task.originalApplicationId.get()

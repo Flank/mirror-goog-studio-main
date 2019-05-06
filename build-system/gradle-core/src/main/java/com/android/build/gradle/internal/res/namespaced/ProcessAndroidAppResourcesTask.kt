@@ -36,8 +36,9 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
@@ -63,8 +64,8 @@ import javax.inject.Inject
  * as well as the generated R classes for this app that can be compiled against.
  */
 @CacheableTask
-open class ProcessAndroidAppResourcesTask
-@Inject constructor(objects: ObjectFactory, workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class ProcessAndroidAppResourcesTask
+@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -87,8 +88,8 @@ open class ProcessAndroidAppResourcesTask
         private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
-    @get:OutputDirectory val rClassSource= objects.directoryProperty()
-    @get:OutputFile lateinit var resourceApUnderscore: File private set
+    @get:OutputDirectory abstract val rClassSource: DirectoryProperty
+    @get:OutputFile abstract val resourceApUnderscore: RegularFileProperty
 
     @get:Internal lateinit var outputScope: OutputScope private set
 
@@ -108,7 +109,7 @@ open class ProcessAndroidAppResourcesTask
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
-                resourceOutputApk = resourceApUnderscore,
+                resourceOutputApk = resourceApUnderscore.get().asFile,
                 variantType = VariantTypeImpl.LIBRARY,
                 intermediateDir = aaptIntermediateDir)
 
@@ -131,19 +132,6 @@ open class ProcessAndroidAppResourcesTask
         override val type: Class<ProcessAndroidAppResourcesTask>
             get() = ProcessAndroidAppResourcesTask::class.java
 
-        private lateinit var resourceApUnderscore: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            resourceApUnderscore = variantScope.artifacts
-                .appendArtifact(
-                    InternalArtifactType.PROCESSED_RES,
-                    taskName,
-                    "res.apk")
-
-        }
-
         override fun handleProvider(taskProvider: TaskProvider<out ProcessAndroidAppResourcesTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
@@ -152,6 +140,15 @@ open class ProcessAndroidAppResourcesTask
                 taskProvider,
                 taskProvider.map { it.rClassSource },
                 fileName = "out"
+            )
+            // TODO: This is not correct, other location expect a directory for this type.
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.PROCESSED_RES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                taskProvider.map { it.resourceApUnderscore },
+                "res.apk"
+
             )
         }
 
@@ -192,7 +189,6 @@ open class ProcessAndroidAppResourcesTask
             task.aaptIntermediateDir =
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-process-intermediate", variantScope.variantConfiguration.dirName)
-            task.resourceApUnderscore = resourceApUnderscore
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
             task.errorFormatMode = SyncOptions.getErrorFormatMode(

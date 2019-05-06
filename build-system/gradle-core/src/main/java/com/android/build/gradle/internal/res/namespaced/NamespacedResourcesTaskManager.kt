@@ -106,10 +106,7 @@ class NamespacedResourcesTaskManager(
            )
        )
         if (packageOutputType != null) {
-            variantScope.artifacts.createBuildableArtifact(
-                packageOutputType,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
+            variantScope.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
         }
     }
 
@@ -117,10 +114,7 @@ class NamespacedResourcesTaskManager(
             packageOutputType: InternalArtifactType?) {
         taskFactory.register(ProcessAndroidAppResourcesTask.CreationAction(variantScope))
         if (packageOutputType != null) {
-            variantScope.artifacts.createBuildableArtifact(
-                packageOutputType,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.PROCESSED_RES))
+            variantScope.artifacts.republish(InternalArtifactType.PROCESSED_RES, packageOutputType)
         }
     }
 

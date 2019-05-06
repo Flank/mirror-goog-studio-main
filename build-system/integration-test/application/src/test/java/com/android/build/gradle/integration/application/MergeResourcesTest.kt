@@ -104,7 +104,6 @@ class MergeResourcesTest {
             "intermediates",
             "processed_res",
             "debug",
-            "processDebugResources",
             "out",
             "resources-debug.ap_"
         )
@@ -154,7 +153,6 @@ class MergeResourcesTest {
             "intermediates",
             "processed_res",
             "debug",
-            "processDebugResources",
             "out",
             "resources-debug.ap_"
         )
@@ -210,7 +208,6 @@ class MergeResourcesTest {
             "intermediates",
             "processed_res",
             "debug",
-            "processDebugResources",
             "out",
             "resources-debug.ap_"
         )
@@ -272,7 +269,6 @@ class MergeResourcesTest {
             "intermediates",
             "processed_res",
             "debug",
-            "processDebugResources",
             "out",
             "resources-debug.ap_"
         )

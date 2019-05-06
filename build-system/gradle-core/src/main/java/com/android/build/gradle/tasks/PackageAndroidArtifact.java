@@ -874,10 +874,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             packageAndroidArtifact
                     .getResourceFiles()
-                    .from(
-                            variantScope
-                                    .getArtifacts()
-                                    .getFinalArtifactFiles(inputResourceFilesType));
+                    .from(variantScope.getArtifacts().getFinalProduct(inputResourceFilesType));
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact
                     .getIncrementalFolder()

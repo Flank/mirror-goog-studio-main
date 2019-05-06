@@ -65,6 +65,7 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -104,19 +105,18 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final BuildableArtifact resourceDir;
     @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final Provider<Directory> mergedManifests;
-    @NonNull private final BuildableArtifact uncompressedResources;
+    @NonNull private final Provider<Directory> uncompressedResources;
 
     @NonNull private final AaptOptions aaptOptions;
     @NonNull private final VariantType variantType;
     private final boolean isDebuggableBuildType;
     @NonNull private final MultiOutputPolicy multiOutputPolicy;
 
-    @NonNull private final File compressedResources;
+    @NonNull private DirectoryProperty compressedResources;
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantData variantData,
-            @NonNull BuildableArtifact uncompressedResources,
-            @NonNull File compressedResources,
+            @NonNull Provider<Directory> uncompressedResources,
             @NonNull Logger logger) {
         VariantScope variantScope = variantData.getScope();
         GlobalScope globalScope = variantScope.getGlobalScope();
@@ -146,8 +146,6 @@ public class ShrinkResourcesTransform extends Transform {
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
         this.multiOutputPolicy = variantData.getMultiOutputPolicy();
-
-        this.compressedResources = compressedResources;
     }
 
     @NonNull
@@ -182,6 +180,16 @@ public class ShrinkResourcesTransform extends Transform {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
+    /**
+     * Sets the directory where we should output compressed resources
+     *
+     * @param directory the output directory
+     */
+    @Override
+    public void setOutputDirectory(DirectoryProperty directory) {
+        compressedResources = directory;
+    }
+
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
@@ -196,7 +204,7 @@ public class ShrinkResourcesTransform extends Transform {
         }
 
         secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests.get().getAsFile()));
-        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
+        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources.get().getAsFile()));
 
         return secondaryFiles;
     }
@@ -230,7 +238,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull
     @Override
     public Collection<File> getSecondaryDirectoryOutputs() {
-        return ImmutableList.of(compressedResources);
+        return ImmutableList.of(compressedResources.get().getAsFile());
     }
 
     @Override
@@ -276,7 +284,9 @@ public class ShrinkResourcesTransform extends Transform {
                                             mergedManifestsOutputs,
                                             classes,
                                             this))
-                    .into(InternalArtifactType.SHRUNK_PROCESSED_RES, compressedResources);
+                    .into(
+                            InternalArtifactType.SHRUNK_PROCESSED_RES,
+                            compressedResources.get().getAsFile());
         }
     }
 
@@ -407,7 +417,7 @@ public class ShrinkResourcesTransform extends Transform {
             this.classes = classes;
             compressedResourceFile =
                     new File(
-                            transform.compressedResources,
+                            transform.compressedResources.get().getAsFile(),
                             "resources-" + apkInfo.getBaseName() + "-stripped.ap_");
             mappingFile =
                     transform.mappingFileSrc != null

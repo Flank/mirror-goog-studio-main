@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-34b579eb31fef787565fa00af8c21522036eca043dc97569a6834dd4b9d4c5d7
+e80dfa92b0815accd214158f95f1e1341fe431a8f7e6f5324e664945bdd8e783
 -------------------------------------------------------------------------
 com.android.build.api.attributes.BuildTypeAttr
 com.android.build.api.attributes.ProductFlavorAttr
@@ -73,6 +73,7 @@ com.android.build.api.transform.Transform.getSecondaryFileOutputs: java.util.Col
 com.android.build.api.transform.Transform.getSecondaryFiles: java.util.Collection<com.android.build.api.transform.SecondaryFile> ()
 com.android.build.api.transform.Transform.isCacheable: boolean ()
 com.android.build.api.transform.Transform.isIncremental: boolean ()
+com.android.build.api.transform.Transform.setOutputDirectory: void (org.gradle.api.file.DirectoryProperty)
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.Context, java.util.Collection<com.android.build.api.transform.TransformInput>, java.util.Collection<com.android.build.api.transform.TransformInput>, com.android.build.api.transform.TransformOutputProvider, boolean) throws java.io.IOException, com.android.build.api.transform.TransformException, java.lang.InterruptedException
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.TransformInvocation) throws com.android.build.api.transform.TransformException, java.lang.InterruptedException, java.io.IOException
 com.android.build.api.transform.TransformException
