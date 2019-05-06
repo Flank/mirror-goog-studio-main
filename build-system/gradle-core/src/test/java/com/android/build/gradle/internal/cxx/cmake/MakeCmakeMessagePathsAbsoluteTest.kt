@@ -28,7 +28,7 @@ private const val ERROR_STRING =
     "CMake Error at %s:123:456. We had a reactor leak here now. Give us a few minutes to " +
             "lock it down. Large leak, very dangerous."
 
-class CmakePathCorrectorTest {
+class MakeCmakeMessagePathsAbsolute {
 
     @Rule
     @JvmField
