@@ -100,7 +100,7 @@ enum class Macro(
         description = "Folder of the current Android NDK",
         environment = NDK,
         tag = "dir",
-        example = "${SDK_DIR.ref}/ndk/19.0.5232133"),
+        example = "${SDK_DIR.ref}/ndk/19.2.5345600"),
     NDK_CMAKE_TOOLCHAIN(
         description = "Path to the current Android NDK's CMake toolchain",
         environment = NDK,
