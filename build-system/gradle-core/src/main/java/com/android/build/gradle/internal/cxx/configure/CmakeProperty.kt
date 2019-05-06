@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
  * A subset of possible CMake properties.
  */
 enum class CmakeProperty {
+    ANDROID_ABI,
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED,
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_RECORDED_VERSION,
     ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_USED,
