@@ -39,6 +39,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import java.io.BufferedReader;
 import java.io.File;
@@ -186,9 +188,9 @@ public class PlatformTarget implements IAndroidTarget {
             }
 
             return optionalLibraries;
-        } catch (IOException e) {
-            // shouldn't happen since we've checked the file is here, but can happen in
-            // some cases (too many files open).
+        } catch (IOException | JsonIOException | JsonSyntaxException e) {
+            // Shouldn't happen since we've checked the file is here, but can happen in
+            // some cases (too many files open, corrupted file contents, etc).
             return Collections.emptyList();
         }
     }
