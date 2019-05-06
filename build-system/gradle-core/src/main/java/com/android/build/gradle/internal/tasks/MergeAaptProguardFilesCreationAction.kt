@@ -41,7 +41,7 @@ class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
             InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
             BuildArtifactsHolder.OperationType.INITIAL,
             taskProvider,
-            MergeFileTask::getOutputFile,
+            MergeFileTask::outputFile,
             SdkConstants.FN_MERGED_AAPT_RULES)
     }
 

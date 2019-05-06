@@ -13,66 +13,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
+import com.android.utils.FileUtils
+import com.google.common.base.Charsets
+import com.google.common.io.Files
+import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import java.io.File
+import java.io.IOException
 
-/** Task to merge files. This appends all the files together into an output file. */
-public abstract class MergeFileTask extends NonIncrementalTask {
+/** Task to merge files. This appends all the files together into an output file.  */
+abstract class MergeFileTask : NonIncrementalTask() {
 
-    private FileCollection mInputFiles;
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract var inputFiles: FileCollection
 
-    @Override
-    protected void doTaskAction() throws IOException {
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
-        Set<File> inputFiles = getInputFiles().getFiles();
-        File output = getOutputFile().get().getAsFile();
-
-        // filter out any non-existent files
-        List<File> existingFiles =
-                inputFiles.stream().filter(File::isFile).collect(Collectors.toList());
-
-        if (existingFiles.size() == 1) {
-            Files.copy(existingFiles.iterator().next(), output);
-            return;
-        }
-
-        // first delete the current file
-        FileUtils.deleteIfExists(output);
-
-        // no input? done.
-        if (existingFiles.isEmpty()) {
-            return;
-        }
-
-        // otherwise put the all the files together
-        for (File file : existingFiles) {
-            String content = Files.toString(file, Charsets.UTF_8);
-            Files.append(content, output, Charsets.UTF_8);
-            Files.append("\n", output, Charsets.UTF_8);
-        }
+    @Throws(IOException::class)
+    override fun doTaskAction() {
+        mergeFiles(inputFiles.files, outputFile.get().asFile)
     }
 
-    @InputFiles
-    public FileCollection getInputFiles() {
-        return mInputFiles;
-    }
+    companion object {
+        fun mergeFiles(inputFiles: Collection<File>, output: File) {
+            // filter out any non-existent files
+            val existingFiles = inputFiles.filter { it.isFile() }
 
-    public void setInputFiles(FileCollection inputFiles) {
-        mInputFiles = inputFiles;
-    }
+            if (existingFiles.size == 1) {
+                FileUtils.copyFile(existingFiles[0], output)
+                return
+            }
 
-    @OutputFile
-    public abstract RegularFileProperty getOutputFile();
+            // first delete the current file
+            FileUtils.deleteIfExists(output)
+
+            // no input? done.
+            if (existingFiles.isEmpty()) {
+                return
+            }
+
+            // otherwise put all the files together
+            for (file in existingFiles) {
+                val content = Files.toString(file, Charsets.UTF_8)
+                Files.append("$content\n", output, Charsets.UTF_8)
+            }
+        }
+    }
 }

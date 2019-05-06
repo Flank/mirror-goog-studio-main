@@ -53,8 +53,6 @@ Warning: Task type 'com.android.build.gradle.internal.tasks.LibraryAarJarsTask':
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'autoFix' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'fatalOnly' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'lintOptions' is not annotated with an input or output annotation.
-Warning: Task type 'com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask': property 'inputFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.tasks.MergeFileTask': property 'inputFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask': property 'metadataFromInstalledModule' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.NdkTask': property 'ndkConfig' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.PerModuleReportDependenciesTask': property 'runtimeClasspathArtifacts' has @Input annotation used on property of type org.gradle.api.file.FileCollection.
