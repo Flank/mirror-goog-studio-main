@@ -340,7 +340,10 @@ public interface AndroidProject {
      * Returns issues found during sync.  The returned list gets
      * populated only if the system property {@link #PROPERTY_BUILD_MODEL_ONLY} has been
      * set to {@code true}.
+     *
+     * @deprecated request {@link ProjectSyncIssues} instead.
      */
+    @Deprecated
     @NonNull
     Collection<SyncIssue> getSyncIssues();
 
