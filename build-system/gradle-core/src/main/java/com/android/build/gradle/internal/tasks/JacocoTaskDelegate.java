@@ -419,7 +419,11 @@ public class JacocoTaskDelegate {
                         } else { // just copy
                             data = ByteStreams.toByteArray(classInputStream);
                         }
-                        outputZip.putNextEntry(new ZipEntry(entryName));
+                        ZipEntry nextEntry = new ZipEntry(entryName);
+                        // Any negative time value sets ZipEntry's xdostime to DOSTIME_BEFORE_1980
+                        // constant.
+                        nextEntry.setTime(-1L);
+                        outputZip.putNextEntry(nextEntry);
                         outputZip.write(data);
                         outputZip.closeEntry();
                     }

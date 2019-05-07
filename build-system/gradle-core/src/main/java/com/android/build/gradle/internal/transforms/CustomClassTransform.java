@@ -282,7 +282,11 @@ public class CustomClassTransform extends Transform {
             ZipEntry entry = zis.getNextEntry();
             while (entry != null && ZipEntryUtils.isValidZipEntryName(entry)) {
                 if (!entry.isDirectory() && entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                    zos.putNextEntry(new ZipEntry(entry.getName()));
+                    ZipEntry nextEntry = new ZipEntry(entry.getName());
+                    // Any negative time value sets ZipEntry's xdostime to DOSTIME_BEFORE_1980
+                    // constant.
+                    nextEntry.setTime(-1L);
+                    zos.putNextEntry(nextEntry);
                     apply(function, zis, zos);
                 } else {
                     // Do not copy resources
