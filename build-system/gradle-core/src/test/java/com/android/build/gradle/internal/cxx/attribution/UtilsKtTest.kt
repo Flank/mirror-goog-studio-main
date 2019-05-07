@@ -23,10 +23,9 @@ import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
-import com.android.build.gradle.internal.cxx.services.registerCompleteModelAbi
+import com.android.build.gradle.internal.cxx.services.registerAbi
 import com.google.common.truth.Truth
 import org.gradle.api.invocation.Gradle
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -46,17 +45,18 @@ class UtilsKtTest {
 
     @get:Rule
     val testDir: TemporaryFolder = TemporaryFolder()
+    private val mockGradle: Gradle = mock(Gradle::class.java)
     private val mockAbiModel: CxxAbiModel = mock(CxxAbiModel::class.java)
     private val mockVariantModel = mock(CxxVariantModel::class.java)
-    private lateinit var buildSession: CxxBuildModel
+    private lateinit var cxxBuildModel: CxxBuildModel
     private lateinit var buildId: String
     private lateinit var buildAttributionFolder: File
     private lateinit var ninjaLogFile: File
 
     @Before
     fun setUp() {
-        buildSession = getCxxBuildModel()
-        buildId = buildSession.buildId.toString()
+        cxxBuildModel = getCxxBuildModel(mockGradle)
+        buildId = cxxBuildModel.buildId.toString()
         buildAttributionFolder = testDir.root.resolve(".cxx/attribution/")
         ninjaLogFile = testDir.root.resolve(".ninja_log")
         `when`(mockAbiModel.ninjaLogFile).thenReturn(testDir.root.resolve(".ninja_log"))
@@ -71,7 +71,7 @@ class UtilsKtTest {
     @Test
     fun `appendTimestampAndBuildIdToNinjaLog append time stamp and build ID`() {
         ninjaLogFile.writeText("# ninja log v5\n")
-        appendTimestampAndBuildIdToNinjaLog(mockAbiModel)
+        appendTimestampAndBuildIdToNinjaLog(cxxBuildModel, mockAbiModel)
         val ninjaLogLines = ninjaLogFile.readLines()
         Truth.assertThat(ninjaLogLines).hasSize(2)
         Truth.assertThat(ninjaLogLines[0]).isEqualTo("# ninja log v5")
@@ -81,7 +81,7 @@ class UtilsKtTest {
     @Test
     fun `appendTimestampAndBuildIdToNinjaLog appends magic word if file does not exist`() {
         val ninjaLogFile = testDir.root.resolve(".ninja_log")
-        appendTimestampAndBuildIdToNinjaLog(mockAbiModel)
+        appendTimestampAndBuildIdToNinjaLog(cxxBuildModel, mockAbiModel)
         val ninjaLogLines = ninjaLogFile.readLines()
         Truth.assertThat(ninjaLogLines).hasSize(2)
         Truth.assertThat(ninjaLogLines[0]).isEqualTo("# ninja log v5")
@@ -91,7 +91,7 @@ class UtilsKtTest {
     @Test
     fun `collectNinjaLogs works`() {
         val appDebugX86 = testDir.root.resolve("app-debug-x86")
-        buildSession.registerCompleteModelAbi(
+        cxxBuildModel.registerAbi(
             mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86)
             `when`(ninjaLogFile).thenReturn(appDebugX86)
@@ -108,7 +108,7 @@ class UtilsKtTest {
             """.trimIndent()
         )
         val appDebugX8664 = testDir.root.resolve("app-debug-x86_64")
-        buildSession.registerCompleteModelAbi(mock(CxxAbiModel::class.java).apply {
+        cxxBuildModel.registerAbi(mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86_64)
             `when`(ninjaLogFile).thenReturn(appDebugX8664)
             `when`(variant).thenReturn(mockVariantModel)
@@ -123,7 +123,7 @@ class UtilsKtTest {
                 x86_64 metric 2
             """.trimIndent()
         )
-        collectNinjaLogs(buildSession)
+        collectNinjaLogs(cxxBuildModel)
 
         val (zipFile) = buildAttributionFolder.listFiles()
         Truth.assertThat(zipFile.name).matches("ninja_build_log_\\d+\\.zip")

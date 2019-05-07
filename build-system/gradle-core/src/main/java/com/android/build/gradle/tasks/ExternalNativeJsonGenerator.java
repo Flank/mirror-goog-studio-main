@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.cr
 import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.model.JsonUtilKt.writeJsonToFile;
-import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerCompleteModelAbi;
+import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
 
 import com.android.annotations.NonNull;
@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
@@ -410,8 +411,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     @NonNull
     public static ExternalNativeJsonGenerator create(
-            @NonNull CxxModuleModel module,
-            @NonNull VariantScope scope) {
+            @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
         try (ThreadLoggingEnvironment ignore =
                 new IssueReporterLoggingEnvironment(evalIssueReporter(module))) {
             return createImpl(module, scope);
@@ -419,18 +419,18 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    public static ExternalNativeJsonGenerator createImpl(
-            @NonNull CxxModuleModel module,
-            @NonNull VariantScope scope) {
+    private static ExternalNativeJsonGenerator createImpl(
+            @NonNull CxxModuleModel module, @NonNull VariantScope scope) {
         CxxVariantModel variant = createCxxVariantModel(module, scope.getVariantData());
         List<CxxAbiModel> abis = Lists.newArrayList();
 
-
+        CxxBuildModel cxxBuildModel =
+                getCxxBuildModel(scope.getGlobalScope().getProject().getGradle());
         for (Abi abi : variant.getValidAbiList()) {
             CxxAbiModel model =
                     createCxxAbiModel(variant, abi, scope.getGlobalScope(), scope.getVariantData());
             abis.add(model);
-            registerCompleteModelAbi(getCxxBuildModel(), model);
+            registerAbi(cxxBuildModel, model);
         }
 
         GradleBuildVariant.Builder stats =

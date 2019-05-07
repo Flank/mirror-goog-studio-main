@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
+import static com.android.build.gradle.internal.cxx.services.CxxFinishListenerServiceKt.runWhenBuildFinishes;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -29,7 +30,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.BuildSessionImpl;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.attribution.UtilsKt;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
@@ -60,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
@@ -76,6 +77,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public class ExternalNativeBuildTask extends NonIncrementalTask {
 
+    private Supplier<CxxBuildModel> cxxBuildModel;
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;
 
@@ -449,14 +451,23 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
                                 .filter(abiModel -> abiModel.getAbi().getTag().equals(abiName))
                                 .findFirst();
                 if (cxxAbiModelOptional.isPresent()) {
-                    this.getVariantName();
-                    UtilsKt.appendTimestampAndBuildIdToNinjaLog(cxxAbiModelOptional.get());
-                    CxxBuildModel buildModel = getCxxBuildModel();
-                    BuildSessionImpl.getSingleton()
-                            .executeOnceWhenBuildFinished(
-                                    CxxAbiModel.class.getName(),
-                                    "CollectNinjaLogs",
-                                    () -> collectNinjaLogs(buildModel));
+                    CxxBuildModel buildModel = cxxBuildModel.get();
+                    UtilsKt.appendTimestampAndBuildIdToNinjaLog(
+                            buildModel, cxxAbiModelOptional.get());
+                    runWhenBuildFinishes(
+                            buildModel,
+                            "CollectNinjaLogs",
+                            () -> {
+                                try {
+                                    collectNinjaLogs(buildModel);
+                                } catch (IOException e) {
+                                    getLogger()
+                                            .warn(
+                                                    "Cannot collect ninja logs for build attribution.",
+                                                    e);
+                                }
+                                return /* kotlin.Unit */ null;
+                            });
                 } else {
                     warnln(
                             "Cannot locate ABI {} for generating build attribution metrics.",
@@ -538,6 +549,8 @@ public class ExternalNativeBuildTask extends NonIncrementalTask {
 
             VariantScope scope = getVariantScope();
 
+            task.cxxBuildModel =
+                    () -> getCxxBuildModel(scope.getGlobalScope().getProject().getGradle());
             task.dependsOn(
                     generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI));
 

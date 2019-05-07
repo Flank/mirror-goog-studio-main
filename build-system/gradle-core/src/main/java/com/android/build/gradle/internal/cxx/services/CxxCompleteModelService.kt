@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 
 /**
- * Create and register a [CxxProcessService] for holding the complete data model for the
+ * Create and register a [CxxCompleteModelService] for holding the complete data model for the
  * whole build
  */
 internal fun createCompleteModelService(services: CxxServiceRegistryBuilder) {
@@ -30,30 +30,25 @@ internal fun createCompleteModelService(services: CxxServiceRegistryBuilder) {
 }
 
 /**
- * Register a [CxxAbiModel] as part of the complete build model.
+ * Registers a [CxxAbiModel] as part of this build.
  * All [CxxAbiModel]s will be registered here.
  */
-fun CxxBuildModel.registerCompleteModelAbi(abi : CxxAbiModel) {
+fun CxxBuildModel.registerAbi(abi: CxxAbiModel) {
     services[COMPLETE_MODEL_SERVICE_KEY].abis += abi
 }
 
 /**
  * Retrieve all [CxxAbiModel]s for this build.
  */
-fun CxxBuildModel.completeModelAbis() : List<CxxAbiModel> {
+fun CxxBuildModel.allAbis(): List<CxxAbiModel> {
     return services[COMPLETE_MODEL_SERVICE_KEY].abis
 }
 
-/**
- * Private service key for overall data model for the build.
- */
+/** Private service key for CxxCompleteModelService. */
 private val COMPLETE_MODEL_SERVICE_KEY = object : CxxServiceKey<CxxCompleteModelService> {
     override val type = CxxCompleteModelService::class.java
 }
 
-/**
- * Private interface to access the process service via [CxxServiceRegistry].
- */
 private data class CxxCompleteModelService(
-    val abis : MutableList<CxxAbiModel> = mutableListOf()
+    val abis: MutableList<CxxAbiModel> = mutableListOf()
 )

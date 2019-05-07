@@ -16,24 +16,47 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.internal.BuildSessionImpl
 import com.android.build.gradle.internal.cxx.services.createBuildModelServiceRegistry
+import com.android.build.gradle.internal.cxx.services.runFinishListeners
+import org.gradle.BuildListener
+import org.gradle.BuildResult
+import org.gradle.api.initialization.Settings
+import org.gradle.api.invocation.Gradle
 import java.util.UUID
 
+/**
+ * This instance is per classloader so there could be multiple build models, in the same build if
+ * different sub projects are loaded by different classloaders due to different class path
+ * configurations in each subproject build.gradle file.
+ */
 private var buildModel : CxxBuildModel? = null
+
+private object GetCxxBuildModelLock
 
 /**
  * Get the current build model.
  */
-fun getCxxBuildModel() : CxxBuildModel {
-    BuildSessionImpl.getSingleton()
-        .executeOnce(
-            CxxBuildModel::class.java.name,
-            "createCxxPerBuildService") {
-            buildModel = object : CxxBuildModel {
-                override val buildId = UUID.randomUUID()
-                override val services = createBuildModelServiceRegistry()
-            }
+fun getCxxBuildModel(gradle: Gradle): CxxBuildModel = synchronized(GetCxxBuildModelLock) {
+    if (buildModel == null) {
+        buildModel = object : CxxBuildModel {
+            override val buildId = UUID.randomUUID()
+            override val services = createBuildModelServiceRegistry()
         }
+        fun Gradle.findRoot(): Gradle = gradle.parent?.findRoot() ?: this
+        val rootGradle = gradle.findRoot()
+        rootGradle.addBuildListener(object : BuildListener {
+            override fun settingsEvaluated(ignored: Settings) {}
+            override fun projectsLoaded(ignored: Gradle) {}
+            override fun buildStarted(ignored: Gradle) {}
+            override fun projectsEvaluated(ignored: Gradle) {}
+            override fun buildFinished(ignored: BuildResult) {
+                try {
+                    buildModel?.runFinishListeners()
+                } finally {
+                    buildModel = null
+                }
+            }
+        })
+    }
     return buildModel!!
 }

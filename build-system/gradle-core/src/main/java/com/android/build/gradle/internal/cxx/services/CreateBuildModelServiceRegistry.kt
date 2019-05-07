@@ -23,5 +23,6 @@ package com.android.build.gradle.internal.cxx.services
 fun createBuildModelServiceRegistry() : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()
     createCompleteModelService(registry)
+    createFinishListenerService(registry)
     return registry.build()
 }
