@@ -213,7 +213,7 @@ open class CompileSourceSetResources
                 InternalArtifactType.PARTIAL_R_FILES,
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
-                taskProvider.map { it.partialRDirectory })
+                CompileSourceSetResources::partialRDirectory)
         }
 
         override fun configure(task: CompileSourceSetResources) {

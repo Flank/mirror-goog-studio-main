@@ -135,7 +135,7 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
                 else InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
-                taskProvider.map { it.output },
+                BundleLibraryClasses::output,
                 fileName = FN_CLASSES_JAR
             )
         }

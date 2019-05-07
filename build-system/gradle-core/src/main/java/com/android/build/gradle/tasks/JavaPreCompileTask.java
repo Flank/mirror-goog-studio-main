@@ -258,7 +258,7 @@ public class JavaPreCompileTask extends NonIncrementalTask {
                             InternalArtifactType.ANNOTATION_PROCESSOR_LIST,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(JavaPreCompileTask::getProcessorListFile),
+                            JavaPreCompileTask::getProcessorListFile,
                             "annotationProcessors.json");
         }
 

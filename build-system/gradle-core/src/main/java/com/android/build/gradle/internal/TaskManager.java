@@ -3413,7 +3413,7 @@ public abstract class TaskManager {
                             InternalArtifactType.SHRUNK_PROCESSED_RES,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             shrinkTask.get(),
-                            shrinkTask.get().map(TransformTask::getOutputDirectory),
+                            TransformTask::getOutputDirectory,
                             "out");
         }
 

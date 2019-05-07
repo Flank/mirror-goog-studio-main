@@ -669,7 +669,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
+                            ManifestProcessorTask::getManifestOutputDirectory,
                             "");
 
             variantScope
@@ -678,8 +678,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             InternalArtifactType.INSTANT_APP_MANIFEST,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(
-                                    ManifestProcessorTask::getInstantAppManifestOutputDirectory),
+                            ManifestProcessorTask::getInstantAppManifestOutputDirectory,
                             "");
 
             getVariantScope()
@@ -688,7 +687,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ProcessApplicationManifest::getMergeBlameFile),
+                            ProcessApplicationManifest::getMergeBlameFile,
                             "manifest-merger-blame-"
                                     + variantScope.getVariantConfiguration().getBaseName()
                                     + "-report.txt");

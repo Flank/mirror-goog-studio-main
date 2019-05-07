@@ -92,7 +92,7 @@ abstract class GenerateNamespacedLibraryRFilesTask @Inject constructor(objects: 
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                taskProvider.map { it.rJarFile },
+                GenerateNamespacedLibraryRFilesTask::rJarFile,
                 fileName = "R.jar"
             )
         }

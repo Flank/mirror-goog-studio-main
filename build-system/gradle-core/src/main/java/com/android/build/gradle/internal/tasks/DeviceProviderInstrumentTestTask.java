@@ -431,7 +431,7 @@ public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
                                 InternalArtifactType.CODE_COVERAGE,
                                 BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
-                                taskProvider.map(DeviceProviderInstrumentTestTask::getCoverageDir),
+                                DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
             } else {
                 getVariantScope()
@@ -440,7 +440,7 @@ public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
                                 BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
-                                taskProvider.map(DeviceProviderInstrumentTestTask::getCoverageDir),
+                                DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
             }
 

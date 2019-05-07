@@ -138,7 +138,7 @@ abstract class ProcessAndroidAppResourcesTask
                 InternalArtifactType.RUNTIME_R_CLASS_SOURCES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                taskProvider.map { it.rClassSource },
+                ProcessAndroidAppResourcesTask::rClassSource,
                 fileName = "out"
             )
             // TODO: This is not correct, other location expect a directory for this type.
@@ -146,7 +146,7 @@ abstract class ProcessAndroidAppResourcesTask
                 InternalArtifactType.PROCESSED_RES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                taskProvider.map { it.resourceApUnderscore },
+                ProcessAndroidAppResourcesTask::resourceApUnderscore,
                 "res.apk"
 
             )

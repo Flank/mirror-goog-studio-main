@@ -533,7 +533,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
+                            ManifestProcessorTask::getManifestOutputDirectory,
                             "");
 
             scope.getArtifacts()
@@ -541,7 +541,7 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ProcessTestManifest::getMergeBlameFile),
+                            ProcessTestManifest::getMergeBlameFile,
                             "manifest-merger-blame-"
                                     + scope.getVariantConfiguration().getBaseName()
                                     + "-report.txt");

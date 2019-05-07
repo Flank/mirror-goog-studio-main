@@ -70,7 +70,7 @@ abstract class MainApkListPersistence : NonIncrementalTask() {
                 InternalArtifactType.APK_LIST,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                taskProvider.map { task -> task.outputFile },
+                MainApkListPersistence::outputFile,
                 fileName = SdkConstants.FN_APK_LIST
             )
         }

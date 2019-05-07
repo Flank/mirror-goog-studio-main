@@ -115,7 +115,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
                     InternalArtifactType.UNIT_TEST_CONFIG_DIRECTORY,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
-                    taskProvider.map { task -> task.outputDirectory },
+                    GenerateTestConfig::outputDirectory,
                     fileName = "out"
                 )
         }

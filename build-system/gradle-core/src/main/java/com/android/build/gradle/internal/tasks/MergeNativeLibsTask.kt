@@ -173,7 +173,7 @@ open class MergeNativeLibsTask
                 MERGED_NATIVE_LIBS,
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
-                taskProvider.map { it.outputDir },
+                MergeNativeLibsTask::outputDir,
                 fileName = "out"
             )
         }

@@ -28,6 +28,7 @@ import com.google.common.base.Joiner
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
+import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.Directory
@@ -47,6 +48,7 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
+import kotlin.reflect.KProperty1
 
 typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
 
@@ -213,11 +215,11 @@ abstract class BuildArtifactsHolder(
      * using the default location.
      * @param fileName the desired produced file name.
      */
-    fun producesFile(
+    fun <T: Task> producesFile(
         artifactType: ArtifactType,
         operationType: OperationType,
-        taskProvider: TaskProvider<*>,
-        product: Provider<Property<RegularFile>>,
+        taskProvider: TaskProvider<out T>,
+        productProvider: (T) -> RegularFileProperty,
         buildDirectory: Provider<Directory> = project.layout.buildDirectory,
         fileName: String
     ) {
@@ -228,7 +230,7 @@ abstract class BuildArtifactsHolder(
             fileProducersMap,
             operationType,
             taskProvider,
-            product,
+            productProvider,
             settableProperty,
             fileName,
             buildDirectory)
@@ -270,11 +272,11 @@ abstract class BuildArtifactsHolder(
      *
      * @param fileName the desired produced file name.
      */
-    fun producesDir(
+    fun <T: Task> producesDir(
         artifactType: ArtifactType,
         operationType: OperationType,
-        taskProvider: TaskProvider<*>,
-        product: Provider<Property<Directory>>,
+        taskProvider: TaskProvider<out T>,
+        productProvider: (T) -> DirectoryProperty,
         buildDirectory: Provider<Directory> = project.layout.buildDirectory,
         fileName: String = "out"
     ) {
@@ -283,40 +285,45 @@ abstract class BuildArtifactsHolder(
             directoryProducersMap,
             operationType,
             taskProvider,
-            product,
+            productProvider,
             project.objects.directoryProperty(),
             fileName,
             buildDirectory)
     }
 
     // TODO : remove these 2 APIs once all java tasks stopped using those after Kotlin translation.
-    fun producesFile(
+    fun <T: Task> producesFile(
         artifactType: ArtifactType,
         operationType: OperationType,
-        taskProvider: TaskProvider<*>,
-        product: Provider<Property<RegularFile>>,
+        taskProvider: TaskProvider<out T>,
+        productProvider: (T) -> RegularFileProperty,
         fileName: String = "out"
-    )= producesFile(artifactType, operationType, taskProvider, product, project.layout.buildDirectory, fileName)
+    )= producesFile(artifactType, operationType, taskProvider, productProvider, project.layout.buildDirectory, fileName)
 
 
-    fun producesDir(
+    fun <T: Task> producesDir(
         artifactType: ArtifactType,
         operationType: OperationType,
-        taskProvider: TaskProvider<*>,
-        product: Provider<Property<Directory>>,
+        taskProvider: TaskProvider<out T>,
+        propertyProvider: (T) -> DirectoryProperty,
         fileName: String = "out"
-    )= producesDir(artifactType, operationType, taskProvider, product, project.layout.buildDirectory, fileName)
+    )= producesDir(artifactType, operationType, taskProvider, propertyProvider, project.layout.buildDirectory, fileName)
 
     private val dummyTask by lazy {
-        project.tasks.register("dummy" + getIdentifier())
+
+        project.tasks.register("dummy" + getIdentifier(), DummyTask::class.java)
+    }
+
+    abstract class DummyTask: DefaultTask() {
+        abstract val emptyFileProperty: RegularFileProperty
     }
 
     fun emptyFile(artifactType: ArtifactType) {
-        produces<RegularFile>(artifactType,
+        produces<RegularFile, DummyTask>(artifactType,
             fileProducersMap,
             OperationType.INITIAL,
             dummyTask,
-            dummyTask.map { project.objects.fileProperty() },
+            DummyTask::emptyFileProperty,
             project.objects.fileProperty(),
             "out",
             project.layout.buildDirectory
@@ -324,16 +331,17 @@ abstract class BuildArtifactsHolder(
     }
 
 
-    private fun <T : FileSystemLocation> produces(artifactType: ArtifactType,
+    private fun <T : FileSystemLocation, U: Task> produces(artifactType: ArtifactType,
         producersMap: ProducersMap<T>,
         operationType: OperationType,
-        taskProvider: TaskProvider<*>,
-        product: Provider<Property<T>>,
+        taskProvider: TaskProvider<out U>,
+        productProvider: (U) -> Property<T>,
         settableFileLocation: Property<T>,
         fileName: String,
         buildDirectory: Provider<Directory>) {
 
         val producers = producersMap.getProducers(artifactType, buildDirectory)
+        val product= taskProvider.map { productProvider(it) }
 
         when(operationType) {
             OperationType.INITIAL -> {

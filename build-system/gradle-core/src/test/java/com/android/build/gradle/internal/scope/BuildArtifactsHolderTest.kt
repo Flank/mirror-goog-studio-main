@@ -118,7 +118,7 @@ class BuildArtifactsHolderTest(
             MERGED_MANIFESTS,
             operationType,
             taskProvider,
-            taskProvider.map { task -> task.output },
+            DirectoryProducerTask::output,
             fileName = "finalFile"
         )
 
@@ -145,7 +145,7 @@ class BuildArtifactsHolderTest(
             MERGED_MANIFESTS,
             OperationType.INITIAL,
             task1Provider,
-            task1Provider.map { task -> task.output },
+            DirectoryProducerTask::output,
             fileName = "initialFile"
         )
 
@@ -157,7 +157,7 @@ class BuildArtifactsHolderTest(
                 MERGED_MANIFESTS,
                 operationType,
                 task2Provider,
-                task2Provider.map { task -> task.output },
+                DirectoryProducerTask::output,
                 fileName = "appended"
             )
         } catch(e:RuntimeException) {
@@ -206,7 +206,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 operationType,
                 taskProvider,
-                taskProvider.map { task -> task.output },
+                RegularFileProducerTask::output,
                 fileName = "finalFile"
             )
         } else {
@@ -215,7 +215,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 operationType,
                 taskProvider,
-                taskProvider.map { task -> task.output },
+                DirectoryProducerTask::output,
                 fileName = "finalFile"
             )
         }
@@ -249,7 +249,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 operationType,
                 firstProvider,
-                firstProvider.map { task -> task.output },
+                RegularFileProducerTask::output,
                 fileName = "firstFile"
             )
 
@@ -258,7 +258,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 OperationType.APPEND,
                 secondProvider,
-                secondProvider.map { task -> task.output },
+                RegularFileProducerTask::output,
                 fileName = "secondFile"
             )
         } else {
@@ -267,7 +267,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 operationType,
                 firstProvider,
-                firstProvider.map { task -> task.output },
+                DirectoryProducerTask::output,
                 fileName = "firstFile"
             )
 
@@ -276,7 +276,7 @@ class BuildArtifactsHolderTest(
                 artifactType,
                 OperationType.APPEND,
                 secondProvider,
-                secondProvider.map { task -> task.output },
+                DirectoryProducerTask::output,
                 fileName = "secondFile"
             )
         }

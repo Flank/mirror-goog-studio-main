@@ -113,7 +113,7 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
                 AP_GENERATED_SOURCES,
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
-                taskProvider.map { it.outputFolder }
+                ProcessAnnotationsTask::outputFolder
             )
         }
 

@@ -133,7 +133,7 @@ abstract class LibraryJniLibsTask
                 artifactType = artifactType,
                 operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
-                product = taskProvider.map(LibraryJniLibsTask::outputDirectory),
+                productProvider = LibraryJniLibsTask::outputDirectory,
                 fileName = SdkConstants.FD_JNI
             )
         }

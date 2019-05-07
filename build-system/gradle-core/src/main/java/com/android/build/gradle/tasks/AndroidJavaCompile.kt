@@ -274,7 +274,7 @@ abstract class AndroidJavaCompile: JavaCompile(), VariantAwareTask {
                 JAVAC,
                 APPEND,
                 taskProvider,
-                taskProvider.map { it.outputDirectory },
+                AndroidJavaCompile::outputDirectory,
                 fileName = "classes"
                 )
 
@@ -284,7 +284,7 @@ abstract class AndroidJavaCompile: JavaCompile(), VariantAwareTask {
                     AP_GENERATED_SOURCES,
                     INITIAL,
                     taskProvider,
-                    taskProvider.map { it.annotationProcessorSourcesDirectory }
+                    AndroidJavaCompile::annotationProcessorSourcesDirectory
                 )
             }
         }

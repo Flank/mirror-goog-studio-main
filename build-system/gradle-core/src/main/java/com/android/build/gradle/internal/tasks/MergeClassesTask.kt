@@ -107,7 +107,7 @@ abstract class MergeClassesTask
                 artifactType = InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES,
                 operationType = BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider = taskProvider,
-                product = taskProvider.map(MergeClassesTask::outputFile),
+                productProvider = MergeClassesTask::outputFile,
                 fileName = if (variantScope.type.isBaseModule) {
                     "base.jar"
                 } else {

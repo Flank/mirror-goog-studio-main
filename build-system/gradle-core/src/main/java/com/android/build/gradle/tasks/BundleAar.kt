@@ -29,18 +29,12 @@ import com.android.builder.core.BuilderConstants
 import org.gradle.api.Action
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
-import java.io.File
 
 /** Custom Zip task to allow archive name to be set lazily. */
 abstract class BundleAar : Zip(), VariantAwareTask {
@@ -64,7 +58,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             variantScope.artifacts.producesDir(InternalArtifactType.AAR,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                taskProvider.map(BundleAar::getDestinationDirectory),
+                BundleAar::getDestinationDirectory,
                 variantScope.globalScope.project.layout.buildDirectory.dir(
                     variantScope.aarLocation.absolutePath),
                 "")

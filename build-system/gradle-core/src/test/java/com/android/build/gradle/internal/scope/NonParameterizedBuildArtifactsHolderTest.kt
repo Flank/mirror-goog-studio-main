@@ -107,7 +107,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             InternalArtifactType.LIBRARY_MANIFEST,
             BuildArtifactsHolder.OperationType.INITIAL,
             task1Provider,
-            task1Provider.map { task -> task.output },
+            RegularFileProducerTask::output,
             project.layout.buildDirectory.dir("set_location"),
             "initialFile"
         )
@@ -131,7 +131,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             InternalArtifactType.MERGED_MANIFESTS,
             BuildArtifactsHolder.OperationType.INITIAL,
             task1Provider,
-            task1Provider.map { task -> task.output },
+            DirectoryProducerTask::output,
             buildDirectory= project.layout.buildDirectory.dir("set_location")
         )
 

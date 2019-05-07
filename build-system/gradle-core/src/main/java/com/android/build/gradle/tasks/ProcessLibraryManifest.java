@@ -414,8 +414,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(
-                                    ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory),
+                            ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory,
                             "aapt");
 
             scope.getArtifacts()
@@ -423,7 +422,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ManifestProcessorTask::getManifestOutputDirectory),
+                            ManifestProcessorTask::getManifestOutputDirectory,
                             "");
 
             scope.getArtifacts()
@@ -431,7 +430,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             InternalArtifactType.LIBRARY_MANIFEST,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ProcessLibraryManifest::getManifestOutputFile),
+                            ProcessLibraryManifest::getManifestOutputFile,
                             SdkConstants.ANDROID_MANIFEST_XML);
 
             getVariantScope()
@@ -440,7 +439,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
-                            taskProvider.map(ProcessLibraryManifest::getMergeBlameFile),
+                            ProcessLibraryManifest::getMergeBlameFile,
                             "manifest-merger-blame-"
                                     + getVariantScope().getVariantConfiguration().getBaseName()
                                     + "-report.txt");
