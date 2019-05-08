@@ -31,19 +31,18 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
+import com.android.builder.packaging.JarCreator
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -145,7 +144,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
     private fun addHybridFolder(
         jarMerger: JarMerger,
         files: Iterable<File>,
-        relocator: JarMerger.Relocator? = null,
+        relocator: JarCreator.Relocator? = null,
         fileFilter: Predicate<String>? = null ) {
         // in this case the artifact is a folder containing things to add
         // to the zip. These can be file to put directly, jars to copy the content
@@ -239,7 +238,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
     }
 }
 
-private class Relocator(private val prefix: String): JarMerger.Relocator {
+private class Relocator(private val prefix: String): JarCreator.Relocator {
     override fun relocate(entryPath: String) = "$prefix/$entryPath"
 }
 
@@ -256,7 +255,7 @@ private class Relocator(private val prefix: String): JarMerger.Relocator {
  * When dealing with a single feature (base) in legacy multidex, we must not rename the
  * main dex file (classes.dex) as it contains the bootstrap code for the application.
  */
-private class DexRelocator(private val prefix: String): JarMerger.Relocator {
+private class DexRelocator(private val prefix: String): JarCreator.Relocator {
     // first valid classes.dex with an index starts at 2.
     val index = AtomicInteger(2)
     val classesDexNameUsed = AtomicBoolean(false)
@@ -275,7 +274,7 @@ private class DexRelocator(private val prefix: String): JarMerger.Relocator {
 }
 
 
-private class ResRelocator : JarMerger.Relocator {
+private class ResRelocator : JarCreator.Relocator {
     override fun relocate(entryPath: String) = when(entryPath) {
         SdkConstants.FN_ANDROID_MANIFEST_XML -> "manifest/" + SdkConstants.FN_ANDROID_MANIFEST_XML
         else -> entryPath

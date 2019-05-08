@@ -23,7 +23,6 @@ import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitResult;
@@ -45,7 +44,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /** Jar Merger class. */
-public class JarMerger implements Closeable {
+public class JarMerger implements JarCreator {
 
     public static final Predicate<String> CLASSES_ONLY =
             archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
@@ -54,23 +53,7 @@ public class JarMerger implements Closeable {
 
     public static final String MODULE_PATH = "module-path";
 
-    public interface Transformer {
-        /**
-         * Transforms the given file.
-         *
-         * @param entryPath the path within the jar file
-         * @param input an input stream of the contents of the file
-         * @return a new input stream if the file is transformed in some way, the same input stream
-         *     if the file is to be kept as is and null if the file should not be packaged.
-         */
-        @Nullable
-        InputStream filter(@NonNull String entryPath, @NonNull InputStream input);
-    }
 
-    public interface Relocator {
-        @NonNull
-        String relocate(@NonNull String entryPath);
-    }
 
     public static final FileTime ZERO_TIME = FileTime.fromMillis(0);
 
@@ -91,10 +74,12 @@ public class JarMerger implements Closeable {
                 new JarOutputStream(new BufferedOutputStream(Files.newOutputStream(jarFile)));
     }
 
+    @Override
     public void addDirectory(@NonNull Path directory) throws IOException {
         addDirectory(directory, filter, null, null);
     }
 
+    @Override
     public void addDirectory(
             @NonNull Path directory,
             @Nullable Predicate<String> filterOverride,
@@ -137,10 +122,12 @@ public class JarMerger implements Closeable {
         }
     }
 
+    @Override
     public void addJar(@NonNull Path file) throws IOException {
         addJar(file, filter, null);
     }
 
+    @Override
     public void addJar(
             @NonNull Path file,
             @Nullable Predicate<String> filterOverride,
@@ -186,12 +173,14 @@ public class JarMerger implements Closeable {
         }
     }
 
+    @Override
     public void addFile(@NonNull String entryPath, @NonNull Path file) throws IOException {
         try (InputStream is = new BufferedInputStream(Files.newInputStream(file))) {
             write(new JarEntry(entryPath), is);
         }
     }
 
+    @Override
     public void addEntry(@NonNull String entryPath, @NonNull InputStream input) throws IOException {
         try (InputStream is = new BufferedInputStream(input)) {
             write(new JarEntry(entryPath), is);
@@ -206,6 +195,7 @@ public class JarMerger implements Closeable {
      *
      * @param level the compression level (0-9)
      */
+    @Override
     public void setCompressionLevel(int level) {
         jarOutputStream.setLevel(level);
     }
@@ -215,6 +205,7 @@ public class JarMerger implements Closeable {
         jarOutputStream.close();
     }
 
+    @Override
     public void setManifestProperties(Map<String, String> properties) throws IOException {
         Manifest manifest = new Manifest();
         Attributes global = manifest.getMainAttributes();

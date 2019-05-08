@@ -28,6 +28,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.builder.packaging.JarCreator;
 import com.android.builder.packaging.JarMerger;
 import com.android.builder.packaging.TypedefRemover;
 import com.android.builder.utils.ZipEntryUtils;
@@ -258,7 +259,7 @@ public class LibraryAarJarsTransform extends Transform {
 
         // now handle the folders.
         if (!qualifiedContentList.isEmpty()) {
-            try (JarMerger jarMerger =
+            try (JarCreator jarMerger =
                     new JarMerger(
                             new File(localJarsLocation, "otherclasses.jar").toPath(),
                             JarMerger.CLASSES_ONLY)) {
@@ -344,7 +345,7 @@ public class LibraryAarJarsTransform extends Transform {
             throws IOException {
         Predicate<String> filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter);
 
-        try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
+        try (JarCreator jarMerger = new JarMerger(toFile.toPath())) {
             for (QualifiedContent content : qualifiedContentList) {
                 // merge only class files if RESOURCES are not in the scope
                 boolean hasResources =
