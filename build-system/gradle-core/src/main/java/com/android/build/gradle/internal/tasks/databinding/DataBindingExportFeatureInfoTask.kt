@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.FeaturePackageInfo
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -26,10 +27,12 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -49,10 +52,10 @@ import javax.inject.Inject
  * dependency is already a dependency of another feature, its BR class will already have been
  * generated)
  */
-open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: WorkerExecutor)
+abstract class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: WorkerExecutor)
     : NonIncrementalTask() {
-    @get:OutputDirectory lateinit var outFolder: File
-        private set
+
+    @get:OutputDirectory abstract val outFolder: DirectoryProperty
 
     private lateinit var resOffsetSupplier: Supplier<Int>
 
@@ -74,7 +77,7 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
         workers.use {
             it.submit(
                 ExportFeatureInfoRunnable::class.java, ExportFeatureInfoParams(
-                    outFolder = outFolder,
+                    outFolder = outFolder.get().asFile,
                     resOffset = resOffset,
                     directDependencies = directDependencies.asFileTree.files
                 )
@@ -91,19 +94,18 @@ open class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: 
         override val type: Class<DataBindingExportFeatureInfoTask>
             get() = DataBindingExportFeatureInfoTask::class.java
 
-        private lateinit var outFolder: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outFolder = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
-                    taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out DataBindingExportFeatureInfoTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                DataBindingExportFeatureInfoTask::outFolder)
         }
 
         override fun configure(task: DataBindingExportFeatureInfoTask) {
             super.configure(task)
 
-            task.outFolder = outFolder
             task.directDependencies = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

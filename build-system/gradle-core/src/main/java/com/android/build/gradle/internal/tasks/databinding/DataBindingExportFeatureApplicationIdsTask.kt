@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks.databinding
 import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.store.FeatureInfoList
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -26,10 +27,12 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -42,12 +45,11 @@ import javax.inject.Inject
  * read by the DataBindingAnnotationProcessor.
  */
 @CacheableTask
-open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
+abstract class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
     workerExecutor: WorkerExecutor
 ) : NonIncrementalTask() {
     // where to keep the log of the task
-    @get:OutputDirectory lateinit var packageListOutFolder: File
-        private set
+    @get:OutputDirectory abstract val packageListOutFolder: DirectoryProperty
     @get:InputFiles lateinit var featureDeclarations: FileCollection
         private set
 
@@ -58,7 +60,7 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
             it.submit(
                 ExportApplicationIdsRunnable::class.java, ExportApplicationIdsParams(
                     featureDeclarations = featureDeclarations.asFileTree.files,
-                    packageListOutFolder = packageListOutFolder
+                    packageListOutFolder = packageListOutFolder.get().asFile
                 )
             )
         }
@@ -74,21 +76,18 @@ open class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
         override val type: Class<DataBindingExportFeatureApplicationIdsTask>
             get() = DataBindingExportFeatureApplicationIdsTask::class.java
 
-        private lateinit var packageListOutFolder: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            packageListOutFolder = variantScope.artifacts
-                .appendArtifact(
-                    InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
-                    taskName
-                )
+        override fun handleProvider(taskProvider: TaskProvider<out DataBindingExportFeatureApplicationIdsTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.FEATURE_DATA_BINDING_BASE_FEATURE_INFO,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                DataBindingExportFeatureApplicationIdsTask::packageListOutFolder)
         }
 
         override fun configure(task: DataBindingExportFeatureApplicationIdsTask) {
             super.configure(task)
 
-            task.packageListOutFolder = packageListOutFolder
             task.featureDeclarations = variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                     AndroidArtifacts.ArtifactScope.PROJECT,

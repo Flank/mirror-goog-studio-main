@@ -18,18 +18,21 @@ package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -41,7 +44,7 @@ import javax.inject.Inject
  * To account for V1 dependencies, we still copy their layout-info files from the compile classpath.
  */
 @CacheableTask
-open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
+abstract class DataBindingMergeDependencyArtifactsTask @Inject constructor(
     workerExecutor: WorkerExecutor
 ) : NonIncrementalTask() {
     /**
@@ -64,8 +67,7 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
      * Folder which includes all merged artifacts.
      */
     @get:OutputDirectory
-    lateinit var outFolder: File
-        private set
+    abstract val outFolder: DirectoryProperty
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -74,7 +76,7 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
             it.submit(
                 MergeArtifactsRunnable::class.java,
                 MergeArtifactsParams(
-                    outFolder = outFolder,
+                    outFolder = outFolder.get().asFile,
                     compileTimeDependencies = compileTimeDependencies.asFileTree.files,
                     runtimeDependencies = runtimeDependencies.asFileTree.files
                 )
@@ -91,14 +93,12 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
         override val type: Class<DataBindingMergeDependencyArtifactsTask>
             get() = DataBindingMergeDependencyArtifactsTask::class.java
 
-        private lateinit var outFolder: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outFolder = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
-                taskName
-            )
+        override fun handleProvider(taskProvider: TaskProvider<out DataBindingMergeDependencyArtifactsTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                DataBindingMergeDependencyArtifactsTask::outFolder)
         }
 
         override fun configure(task: DataBindingMergeDependencyArtifactsTask) {
@@ -114,7 +114,6 @@ open class DataBindingMergeDependencyArtifactsTask @Inject constructor(
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT
             )
-            task.outFolder = outFolder
         }
     }
 }

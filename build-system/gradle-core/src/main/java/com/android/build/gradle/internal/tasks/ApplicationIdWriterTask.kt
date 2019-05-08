@@ -21,16 +21,18 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import java.io.File
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task responsible for publishing the application Id.
@@ -42,7 +44,7 @@ import java.io.File
  *
  * This task is currently used to publish the output as a text resource for others to consume.
  */
-open class ApplicationIdWriterTask : NonIncrementalTask() {
+abstract class ApplicationIdWriterTask : NonIncrementalTask() {
 
     private var applicationIdSupplier: () -> String? = { null }
 
@@ -56,8 +58,7 @@ open class ApplicationIdWriterTask : NonIncrementalTask() {
         private set
 
     @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    abstract val outputFile: RegularFileProperty
 
     override fun doTaskAction() {
         val resolvedApplicationId = appMetadata?.let {
@@ -65,7 +66,7 @@ open class ApplicationIdWriterTask : NonIncrementalTask() {
         } ?: applicationId
 
         if (resolvedApplicationId != null) {
-            FileUtils.write(outputFile, resolvedApplicationId)
+            FileUtils.write(outputFile.get().asFile, resolvedApplicationId)
         } else {
             logger.error("ApplicationId could not be resolved for $variantName")
         }
@@ -79,22 +80,18 @@ open class ApplicationIdWriterTask : NonIncrementalTask() {
         override val type: Class<ApplicationIdWriterTask>
             get() = ApplicationIdWriterTask::class.java
 
-        private lateinit var outputFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputFile = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.METADATA_APPLICATION_ID,
-                taskName,
-                "application-id.txt"
-            )
+        override fun handleProvider(taskProvider: TaskProvider<out ApplicationIdWriterTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(InternalArtifactType.METADATA_APPLICATION_ID,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ApplicationIdWriterTask::outputFile,
+                "application-id.txt")
         }
 
         override fun configure(task: ApplicationIdWriterTask) {
             super.configure(task)
 
-            task.outputFile = outputFile
             // if BASE_FEATURE get the app ID from the app module
             if (variantScope.type.isBaseModule && variantScope.type.isHybrid) {
                 task.appMetadata = variantScope.getArtifactFileCollection(

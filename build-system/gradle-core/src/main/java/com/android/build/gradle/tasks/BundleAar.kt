@@ -98,11 +98,8 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
                 task.from(
-                    variantScope.globalScope.project.provider {
-                        variantScope.artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
-                        )
-                    },
+                    variantScope.artifacts.getFinalProduct<Directory>(
+                        InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                     prependToCopyPath(
                         DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR
                     )

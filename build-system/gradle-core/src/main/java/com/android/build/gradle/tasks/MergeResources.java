@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.res.namespaced.Aapt2DaemonManagerService;
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.Blocks;
@@ -75,6 +76,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.CacheableTask;
@@ -89,7 +91,7 @@ import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
-public class MergeResources extends ResourceAwareTask {
+public abstract class MergeResources extends ResourceAwareTask {
     // ----- PUBLIC TASK API -----
 
     /**
@@ -130,9 +132,6 @@ public class MergeResources extends ResourceAwareTask {
     private FileCollection aapt2FromMaven;
 
     @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
-
-    /** Where data binding exports its outputs after parsing layout files. */
-    @Nullable private File dataBindingLayoutInfoOutFolder;
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
@@ -175,12 +174,10 @@ public class MergeResources extends ResourceAwareTask {
         return true;
     }
 
-    @Nullable
+    @NonNull
     @OutputDirectory
     @Optional
-    public File getDataBindingLayoutInfoOutFolder() {
-        return dataBindingLayoutInfoOutFolder;
-    }
+    public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
     private final WorkerExecutorFacade workerExecutorFacade;
 
@@ -200,8 +197,9 @@ public class MergeResources extends ResourceAwareTask {
         // this is full run, clean the previous outputs
         File destinationDir = getOutputDir();
         FileUtils.cleanOutputDir(destinationDir);
-        if (dataBindingLayoutInfoOutFolder != null) {
-            FileUtils.deleteDirectoryContents(dataBindingLayoutInfoOutFolder);
+        if (getDataBindingLayoutInfoOutFolder().isPresent()) {
+            FileUtils.deleteDirectoryContents(
+                    getDataBindingLayoutInfoOutFolder().get().getAsFile());
         }
 
         List<ResourceSet> resourceSets = getConfiguredResourceSets(preprocessor);
@@ -595,7 +593,6 @@ public class MergeResources extends ResourceAwareTask {
         private final boolean processResources;
         private final boolean processVectorDrawables;
         @NonNull private final ImmutableSet<Flag> flags;
-        private File dataBindingLayoutInfoOutFolder;
 
         public CreationAction(
                 @NonNull VariantScope variantScope,
@@ -630,24 +627,6 @@ public class MergeResources extends ResourceAwareTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            if (getVariantScope().getGlobalScope().getExtension().getDataBinding().isEnabled()) {
-                // Keep as an output.
-                dataBindingLayoutInfoOutFolder =
-                        getVariantScope()
-                                .getArtifacts()
-                                .appendArtifact(
-                                        mergeType == MERGE
-                                                ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
-                                                : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
-                                        taskName,
-                                        "out");
-            }
-        }
-
-        @Override
         public void handleProvider(@NonNull TaskProvider<? extends MergeResources> taskProvider) {
             super.handleProvider(taskProvider);
             // In LibraryTaskManager#createMergeResourcesTasks, there are actually two
@@ -658,6 +637,17 @@ public class MergeResources extends ResourceAwareTask {
             // finally registered in the current scope.
             // Filed https://issuetracker.google.com//110412851 to clean this up at some point.
             getVariantScope().getTaskContainer().setMergeResourcesTask(taskProvider);
+
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            mergeType == MERGE
+                                    ? DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
+                                    : DATA_BINDING_LAYOUT_INFO_TYPE_PACKAGE,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            MergeResources::getDataBindingLayoutInfoOutFolder,
+                            "out");
         }
 
         @Override
@@ -721,7 +711,6 @@ public class MergeResources extends ResourceAwareTask {
                     globalScope.getProjectOptions().get(BooleanOption.ENABLE_VIEW_BINDING);
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
-                task.dataBindingLayoutInfoOutFolder = dataBindingLayoutInfoOutFolder;
                 task.dataBindingLayoutProcessor =
                         new SingleFileProcessor() {
 
@@ -755,7 +744,10 @@ public class MergeResources extends ResourceAwareTask {
                             @Override
                             public void end() throws JAXBException {
                                 getProcessor()
-                                        .writeLayoutInfoFiles(task.dataBindingLayoutInfoOutFolder);
+                                        .writeLayoutInfoFiles(
+                                                task.getDataBindingLayoutInfoOutFolder()
+                                                        .get()
+                                                        .getAsFile());
                             }
                         };
             }

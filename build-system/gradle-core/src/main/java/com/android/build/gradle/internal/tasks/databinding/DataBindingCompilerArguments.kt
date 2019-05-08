@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
@@ -25,6 +24,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA
 import com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_DATA_BINDING_FEATURE_INFO
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.options.BooleanOption
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -67,25 +68,25 @@ class DataBindingCompilerArguments constructor(
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val dependencyArtifactsDir: BuildableArtifact,
+    val dependencyArtifactsDir: Provider<Directory>,
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val layoutInfoDir: BuildableArtifact,
+    val layoutInfoDir: Provider<Directory>,
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val classLogDir: BuildableArtifact,
-
-    @get:Optional
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    val baseFeatureInfoDir: BuildableArtifact?,
+    val classLogDir: Provider<Directory>,
 
     @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    val featureInfoDir: BuildableArtifact?,
+    val baseFeatureInfoDir: Provider<Directory>,
+
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val featureInfoDir: Provider<Directory>,
 
     @get:Optional
     @get:OutputDirectory
@@ -125,11 +126,11 @@ class DataBindingCompilerArguments constructor(
             modulePackage = getModulePackage(),
             minApi = minApi,
             sdkDir = sdkDir,
-            dependencyArtifactsDir = dependencyArtifactsDir.get().singleFile,
-            layoutInfoDir = layoutInfoDir.get().singleFile,
-            classLogDir = classLogDir.get().singleFile,
-            baseFeatureInfoDir = baseFeatureInfoDir?.get()?.singleFile,
-            featureInfoDir = featureInfoDir?.get()?.singleFile,
+            dependencyArtifactsDir = dependencyArtifactsDir.get().asFile,
+            layoutInfoDir = layoutInfoDir.get().asFile,
+            classLogDir = classLogDir.get().asFile,
+            baseFeatureInfoDir = baseFeatureInfoDir.orNull?.asFile,
+            featureInfoDir = featureInfoDir.orNull?.asFile,
             aarOutDir = aarOutDir,
             exportClassListOutFile = exportClassListOutFile,
             enableDebugLogs = enableDebugLogs,
@@ -191,15 +192,12 @@ class DataBindingCompilerArguments constructor(
                 minApi = variantConfig.minSdkVersion.apiLevel,
                 sdkDir = globalScope.sdkComponents.getSdkFolder()!!,
                 dependencyArtifactsDir =
-                        artifacts.getFinalArtifactFiles(DATA_BINDING_DEPENDENCY_ARTIFACTS),
+                        artifacts.getFinalProduct(DATA_BINDING_DEPENDENCY_ARTIFACTS),
                 layoutInfoDir =
-                        artifacts.getFinalArtifactFiles(DATA_BINDING_LAYOUT_INFO_TYPE_MERGE),
-                classLogDir = artifacts.getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
-                baseFeatureInfoDir =
-                        artifacts.getFinalArtifactFilesIfPresent(
-                                FEATURE_DATA_BINDING_BASE_FEATURE_INFO),
-                featureInfoDir =
-                        artifacts.getFinalArtifactFilesIfPresent(FEATURE_DATA_BINDING_FEATURE_INFO),
+                        artifacts.getFinalProduct(DATA_BINDING_LAYOUT_INFO_TYPE_MERGE),
+                classLogDir = artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                baseFeatureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_BASE_FEATURE_INFO),
+                featureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_FEATURE_INFO),
                 aarOutDir = variantScope.bundleArtifactFolderForDataBinding,
                 exportClassListOutFile = exportClassListOutFile,
                 enableDebugLogs = enableDebugLogs,

@@ -493,10 +493,9 @@ public class LibraryTaskManager extends TaskManager {
             File dependencyArtifactsDir =
                     variantScope
                             .getArtifacts()
-                            .getFinalArtifactFiles(
-                                    InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
+                            .getFinalProduct(InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS)
                             .get()
-                            .getSingleFile();
+                            .getAsFile();
             return dataBindingBuilder.getJarExcludeList(
                     variantScope.getVariantData().getLayoutXmlProcessor(),
                     excludeFile,

@@ -151,7 +151,6 @@ public class DataBindingIncrementalTest {
         return project.getIntermediateFile(
                 "data_binding_layout_info_type_merge",
                 "debug",
-                "mergeDebugResources",
                 "out",
                 fileName);
     }
