@@ -143,7 +143,7 @@ class Aapt2DaemonManagerTest {
         daemonWait.release()
         thread.join()
         assertThat(exception)
-                .hasMessage("AAPT Process manager cannot be shut down while daemons are in use")
+                .hasMessageThat().isEqualTo("AAPT Process manager cannot be shut down while daemons are in use")
         manager.shutdown()
     }
 

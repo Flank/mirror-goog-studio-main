@@ -132,7 +132,7 @@ class ValidateSigningTaskTest {
             task.actions.single().execute(task)
             fail("Expected failure")
         } catch (e: InvalidUserDataException) {
-            assertThat(e).hasMessage("Keystore file not set for signing config release")
+            assertThat(e).hasMessageThat().isEqualTo("Keystore file not set for signing config release")
         }
 
     }
