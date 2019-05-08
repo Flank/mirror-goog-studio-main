@@ -18,12 +18,12 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.utils.FileCache;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
@@ -92,6 +92,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
             extends PackageAndroidArtifact.CreationAction<PackageApplication> {
 
         private final InternalArtifactType expectedOutputType;
+        private final File outputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope packagingScope,
@@ -105,7 +106,6 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                 boolean packageCustomClassDependencies) {
             super(
                     packagingScope,
-                    outputDirectory,
                     inputResourceFilesType,
                     manifests,
                     manifestType,
@@ -113,6 +113,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                     outputScope,
                     packageCustomClassDependencies);
             this.expectedOutputType = expectedOutputType;
+            this.outputDirectory = outputDirectory;
         }
 
         @NonNull
@@ -128,19 +129,24 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            getVariantScope()
-                    .getArtifacts()
-                    .appendArtifact(
-                            expectedOutputType, ImmutableList.of(outputDirectory), taskName);
-        }
-
-        @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends PackageApplication> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope().getTaskContainer().setPackageAndroidTask(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            expectedOutputType,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            PackageApplication::getOutputDirectory,
+                            getVariantScope()
+                                    .getGlobalScope()
+                                    .getProject()
+                                    .getLayout()
+                                    .getBuildDirectory()
+                                    .dir(outputDirectory.getAbsolutePath()),
+                            "");
         }
 
         @Override

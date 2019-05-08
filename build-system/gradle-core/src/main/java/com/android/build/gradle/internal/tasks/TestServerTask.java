@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -31,17 +29,14 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 
 /** Task sending APKs out to a {@link TestServer} */
-public class TestServerTask extends NonIncrementalTask {
-
-    private BuildableArtifact testApks;
-
-    @Nullable private BuildableArtifact testedApks;
+public abstract class TestServerTask extends NonIncrementalTask {
 
     TestServer testServer;
 
@@ -49,8 +44,8 @@ public class TestServerTask extends NonIncrementalTask {
     protected void doTaskAction() {
 
         List<File> testedApkFiles =
-                testedApks != null
-                        ? ExistingBuildElements.from(InternalArtifactType.APK, testedApks)
+                getTestedApks().isPresent()
+                        ? ExistingBuildElements.from(InternalArtifactType.APK, getTestedApks())
                                 .stream()
                                 .map(BuildOutput::getOutputFile)
                                 .collect(Collectors.toList())
@@ -61,7 +56,7 @@ public class TestServerTask extends NonIncrementalTask {
         }
         File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
         List<File> testApkFiles =
-                ExistingBuildElements.from(InternalArtifactType.APK, testApks)
+                ExistingBuildElements.from(InternalArtifactType.APK, getTestApks())
                         .stream()
                         .map(BuildOutput::getOutputFile)
                         .collect(Collectors.toList());
@@ -72,16 +67,12 @@ public class TestServerTask extends NonIncrementalTask {
     }
 
     @InputFiles
-    public BuildableArtifact getTestApks() {
-        return testApks;
-    }
+    public abstract DirectoryProperty getTestApks();
 
     @InputFiles
     @Optional
-    @Nullable
-    public BuildableArtifact getTestedApks() {
-        return testedApks;
-    }
+    @NonNull
+    public abstract DirectoryProperty getTestedApks();
 
     @NonNull
     @Override
@@ -90,20 +81,8 @@ public class TestServerTask extends NonIncrementalTask {
         return super.getVariantName();
     }
 
-    public TestServer getTestServer() {
-        return testServer;
-    }
-
     public void setTestServer(TestServer testServer) {
         this.testServer = testServer;
-    }
-
-    public void setTestApks(BuildableArtifact testApks) {
-        this.testApks = testApks;
-    }
-
-    public void setTestedApks(@Nullable BuildableArtifact testedApks) {
-        this.testedApks = testedApks;
     }
 
     /** Configuration Action for a TestServerTask. */
@@ -151,14 +130,14 @@ public class TestServerTask extends NonIncrementalTask {
 
             if (testedVariantData != null && testedVariantData.getScope()
                     .getArtifacts().hasArtifact(InternalArtifactType.APK)) {
-                task.setTestedApks(
-                        testedVariantData
-                                .getScope()
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.APK));
+                testedVariantData
+                        .getScope()
+                        .getArtifacts()
+                        .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getTestedApks());
             }
 
-            task.setTestApks(scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getTestApks());
 
             if (!testServer.isConfigured()) {
                 task.setEnabled(false);

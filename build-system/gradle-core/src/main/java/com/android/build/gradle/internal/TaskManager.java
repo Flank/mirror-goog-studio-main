@@ -1875,26 +1875,28 @@ public abstract class TaskManager {
                             testVariantData,
                             testVariantScope
                                     .getArtifacts()
-                                    .getFinalArtifactFiles(InternalArtifactType.APK),
+                                    .getFinalProduct(InternalArtifactType.APK),
                             FeatureSplitUtils.getFeatureName(globalScope.getProject().getPath()),
                             baseVariantData
                                     .getScope()
                                     .getArtifactFileCollection(
                                             RUNTIME_CLASSPATH, PROJECT, APKS_FROM_BUNDLE));
         } else {
+            ConfigurableFileCollection testedApkFileCollection =
+                    project.files(
+                            testVariantData
+                                    .getTestedVariantData()
+                                    .getScope()
+                                    .getArtifacts()
+                                    .getFinalProduct(InternalArtifactType.APK));
+
             testData =
                     new TestDataImpl(
                             testVariantData,
                             testVariantScope
                                     .getArtifacts()
-                                    .getFinalArtifactFiles(InternalArtifactType.APK),
-                            isLibrary
-                                    ? null
-                                    : testVariantData
-                                            .getTestedVariantData()
-                                            .getScope()
-                                            .getArtifacts()
-                                            .getFinalArtifactFiles(InternalArtifactType.APK));
+                                    .getFinalProduct(InternalArtifactType.APK),
+                            isLibrary ? null : testedApkFileCollection);
         }
 
         configureTestData(testData);

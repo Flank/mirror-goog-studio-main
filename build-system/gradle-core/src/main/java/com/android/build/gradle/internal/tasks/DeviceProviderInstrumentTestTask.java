@@ -27,7 +27,6 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -77,6 +76,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
@@ -95,7 +95,7 @@ import org.gradle.internal.logging.ConsoleRenderer;
 import org.xml.sax.SAXException;
 
 /** Run instrumentation tests for a given variant */
-public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
+public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTask
         implements AndroidTestTask {
 
     private static final Predicate<File> IS_APK =
@@ -372,13 +372,13 @@ public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
     }
 
     @InputFiles
-    public BuildableArtifact getTestApkDir() {
+    public Provider<Directory> getTestApkDir() {
         return testData.getTestApkDir();
     }
 
     @InputFiles
     @Optional
-    public BuildableArtifact getTestedApksDir() {
+    public FileCollection getTestedApksDir() {
         return testData.getTestedApksDir();
     }
 
@@ -572,16 +572,12 @@ public class DeviceProviderInstrumentTestTask extends NonIncrementalTask
 
             task.setEnabled(deviceProvider.isConfigured());
 
-            // FIXME these should be task inputs!
-            // depends on the test APK
-            task.dependsOn(scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
-
             if (testedVariantData != null) {
                 task.dependsOn(
                         testedVariantData
                                 .getScope()
                                 .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.APK));
+                                .getFinalProduct(InternalArtifactType.APK));
 
             } else {
                 // this is a separate the test project, we should consume the BA for the tested

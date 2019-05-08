@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildElementsCopyParams;
@@ -39,10 +38,11 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /**
@@ -51,12 +51,8 @@ import org.gradle.workers.WorkerExecutor;
  * <p>This is useful when having configuration or feature splits which are located in different
  * folders since they are produced by different tasks.
  */
-public class CopyOutputs extends NonIncrementalTask {
+public abstract class CopyOutputs extends NonIncrementalTask {
 
-    private BuildableArtifact fullApks;
-    private BuildableArtifact abiSplits;
-    private BuildableArtifact resourcesSplits;
-    private File destinationDir;
     private final WorkerExecutorFacade workers;
 
     @Inject
@@ -66,40 +62,32 @@ public class CopyOutputs extends NonIncrementalTask {
     }
 
     @OutputDirectory
-    public java.io.File getDestinationDir() {
-        return destinationDir;
-    }
+    public abstract DirectoryProperty getDestinationDir();
 
     @InputFiles
-    public BuildableArtifact getFullApks() {
-        return fullApks;
-    }
+    public abstract DirectoryProperty getFullApks();
 
     @InputFiles
     @Optional
-    public BuildableArtifact getAbiSplits() {
-        return abiSplits;
-    }
+    public abstract DirectoryProperty getAbiSplits();
 
     @InputFiles
     @Optional
-    public BuildableArtifact getResourcesSplits() {
-        return resourcesSplits;
-    }
+    public abstract DirectoryProperty getResourcesSplits();
 
     // FIX ME : add incrementality
     @Override
     protected void doTaskAction() throws IOException, ExecutionException {
-        FileUtils.cleanOutputDir(getDestinationDir());
+        FileUtils.cleanOutputDir(getDestinationDir().get().getAsFile());
 
         List<Callable<BuildElements>> buildElementsCallables = new ArrayList<>();
 
-        buildElementsCallables.add(copy(InternalArtifactType.FULL_APK, fullApks.get()));
-        buildElementsCallables.add(copy(InternalArtifactType.ABI_PACKAGED_SPLIT, abiSplits.get()));
+        buildElementsCallables.add(copy(InternalArtifactType.FULL_APK, getFullApks()));
+        buildElementsCallables.add(copy(InternalArtifactType.ABI_PACKAGED_SPLIT, getAbiSplits()));
         buildElementsCallables.add(
                 copy(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                        resourcesSplits.get()));
+                        getResourcesSplits()));
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
 
@@ -111,10 +99,10 @@ public class CopyOutputs extends NonIncrementalTask {
             }
         }
 
-        new BuildElements(buildOutputs.build()).save(getDestinationDir());
+        new BuildElements(buildOutputs.build()).save(getDestinationDir().get().getAsFile());
     }
 
-    private Callable<BuildElements> copy(InternalArtifactType inputType, FileCollection inputs) {
+    private Callable<BuildElements> copy(InternalArtifactType inputType, DirectoryProperty inputs) {
         return ExistingBuildElements.from(inputType, inputs)
                 .transform(
                         workers,
@@ -122,7 +110,9 @@ public class CopyOutputs extends NonIncrementalTask {
                         (apkInfo, inputFile) ->
                                 new BuildElementsCopyParams(
                                         inputFile,
-                                        new File(getDestinationDir(), inputFile.getName())))
+                                        new File(
+                                                getDestinationDir().get().getAsFile(),
+                                                inputFile.getName())))
                 .intoCallable(InternalArtifactType.APK);
     }
 
@@ -148,12 +138,23 @@ public class CopyOutputs extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
+        public void handleProvider(@NonNull TaskProvider<? extends CopyOutputs> taskProvider) {
+            super.handleProvider(taskProvider);
+
             getVariantScope()
                     .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.APK, ImmutableList.of(destinationDir), taskName);
+                    .producesDir(
+                            InternalArtifactType.APK,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            CopyOutputs::getDestinationDir,
+                            getVariantScope()
+                                    .getGlobalScope()
+                                    .getProject()
+                                    .getLayout()
+                                    .getBuildDirectory()
+                                    .dir(destinationDir.getAbsolutePath()),
+                            "");
         }
 
         @Override
@@ -161,14 +162,12 @@ public class CopyOutputs extends NonIncrementalTask {
             super.configure(task);
 
             BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
-            task.fullApks = artifacts.getFinalArtifactFiles(
-                    InternalArtifactType.FULL_APK);
-            task.abiSplits = artifacts.getFinalArtifactFiles(
-                    InternalArtifactType.ABI_PACKAGED_SPLIT);
-            task.resourcesSplits =
-                    artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT);
-            task.destinationDir = destinationDir;
+            artifacts.setTaskInputToFinalProduct(InternalArtifactType.FULL_APK, task.getFullApks());
+            artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.ABI_PACKAGED_SPLIT, task.getAbiSplits());
+            artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                    task.getResourcesSplits());
         }
     }
 }

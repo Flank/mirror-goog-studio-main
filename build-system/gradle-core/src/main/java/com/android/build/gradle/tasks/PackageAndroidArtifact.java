@@ -211,8 +211,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
     @Nullable protected String buildTargetDensity;
 
-    protected File outputDirectory;
-
     @Nullable protected OutputFileProvider outputFileProvider;
 
     private final WorkerExecutorFacade workers;
@@ -362,9 +360,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     }
 
     @OutputDirectory
-    public File getOutputDirectory() {
-        return outputDirectory;
-    }
+    public abstract DirectoryProperty getOutputDirectory();
 
     /**
      * Returns the paths to generated APKs as @Input to this task, so that when the output file name
@@ -426,7 +422,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                                         changedResourceFiles.contains(inputFile),
                                         changes,
                                         this))
-                .into(getInternalArtifactType(), outputDirectory);
+                .into(getInternalArtifactType(), getOutputDirectory().get().getAsFile());
     }
 
 
@@ -519,7 +515,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                     computeBuildOutputFile(
                                     apkInfo,
                                     task.outputFileProvider,
-                                    task.outputDirectory,
+                                    task.getOutputDirectory().get().getAsFile(),
                                     task.getInternalArtifactType())
                             .getOutputFile();
 
@@ -833,7 +829,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
         protected final Project project;
         @NonNull protected final Provider<Directory> manifests;
         @NonNull protected final InternalArtifactType inputResourceFilesType;
-        @NonNull protected final File outputDirectory;
         @NonNull protected final OutputScope outputScope;
         @Nullable private final FileCache fileCache;
         @NonNull private final InternalArtifactType manifestType;
@@ -841,7 +836,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         public CreationAction(
                 @NonNull VariantScope variantScope,
-                @NonNull File outputDirectory,
                 @NonNull InternalArtifactType inputResourceFilesType,
                 @NonNull Provider<Directory> manifests,
                 @NonNull InternalArtifactType manifestType,
@@ -852,7 +846,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             this.project = variantScope.getGlobalScope().getProject();
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
-            this.outputDirectory = outputDirectory;
             this.outputScope = outputScope;
             this.manifestType = manifestType;
             this.fileCache = fileCache;
@@ -875,7 +868,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             packageAndroidArtifact
                     .getResourceFiles()
                     .from(variantScope.getArtifacts().getFinalProduct(inputResourceFilesType));
-            packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact
                     .getIncrementalFolder()
                     .set(

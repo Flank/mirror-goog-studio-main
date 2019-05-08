@@ -210,10 +210,10 @@ abstract class BuildArtifactsHolder(
      * [OperationType.INITIAL] but many [OperationType.APPEND] or [OperationType.TRANSFORM]
      * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
      * artifact.
-     * @param product the [Provider] of the artifact [RegularFile]
+     * @param productProvider the [Provider] of the artifact [RegularFile]
      * @param buildDirectory the destination directory of the produced artifact or not provided if
      * using the default location.
-     * @param fileName the desired produced file name.
+     * @param fileName the desired file name, must be provided.
      */
     fun <T: Task> producesFile(
         artifactType: ArtifactType,
@@ -266,11 +266,11 @@ abstract class BuildArtifactsHolder(
      * [OperationType.INITIAL] but many [OperationType.APPEND] or [OperationType.TRANSFORM]
      * @param taskProvider the [TaskProvider] for the task ultimately responsible for producing the
      * artifact.
+     * @param productProvider the [Provider] of the artifact [Directory]
      * @param buildDirectory the destination directory of the produced artifact or not provided if
      * using the default location.
-     * @param product the [Provider] of the artifact [Directory]
-     *
-     * @param fileName the desired produced file name.
+     * @param fileName the desired directory name or empty string if no sub-directory should be
+     * used.
      */
     fun <T: Task> producesDir(
         artifactType: ArtifactType,

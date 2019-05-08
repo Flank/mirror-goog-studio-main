@@ -345,18 +345,18 @@ class BuildElementsTest {
             workers,
             TransformTestRunnable::class.java
         ) { _, input -> TransformTestParams(input, splitOutputFolder) }
-            .into(InternalArtifactType.APK, splitOutputFolder)
+            .into(APK, splitOutputFolder)
 
         ExistingBuildElements.from(MERGED_MANIFESTS, folder).transform(
             workers,
             TransformTestRunnable::class.java
         ) { _, input -> TransformTestParams(input, manifestOutputFolder) }
-            .into(InternalArtifactType.FULL_APK, manifestOutputFolder)
+            .into(FULL_APK, manifestOutputFolder)
 
         assertThat(
             HashSet<String>(
                 ExistingBuildElements.from(
-                    InternalArtifactType.APK,
+                    APK,
                     splitOutputFolder
                 ).elements.map { it.outputFile.name })
         ).containsExactlyElementsIn(
@@ -370,7 +370,7 @@ class BuildElementsTest {
         assertThat(
             HashSet<String>(
                 ExistingBuildElements.from(
-                    InternalArtifactType.FULL_APK,
+                    FULL_APK,
                     manifestOutputFolder
                 ).elements.map { it.outputFile.name })
         ).containsExactlyElementsIn(ImmutableSet.of("AndroidManifest.xml"))

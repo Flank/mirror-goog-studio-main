@@ -36,7 +36,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 
 /**
  * Common implementation of {@link TestData} for embedded test projects (in androidTest folder)
@@ -52,14 +54,14 @@ public abstract class AbstractTestDataImpl implements TestData {
 
     private boolean animationsDisabled;
 
-    @NonNull protected final BuildableArtifact testApkDir;
+    @NonNull protected final Provider<Directory> testApkDir;
 
-    @Nullable protected final BuildableArtifact testedApksDir;
+    @Nullable protected final FileCollection testedApksDir;
 
     public AbstractTestDataImpl(
             @NonNull VariantConfiguration<?, ?, ?> testVariantConfig,
-            @NonNull BuildableArtifact testApkDir,
-            @Nullable BuildableArtifact testedApksDir) {
+            @NonNull Provider<Directory> testApkDir,
+            @Nullable FileCollection testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantConfig);
         this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
         this.testApkDir = testApkDir;
@@ -119,7 +121,7 @@ public abstract class AbstractTestDataImpl implements TestData {
      * @return the directory containing the test APK
      */
     @NonNull
-    public BuildableArtifact getTestApkDir() {
+    public Provider<Directory> getTestApkDir() {
         return testApkDir;
     }
 
@@ -131,7 +133,7 @@ public abstract class AbstractTestDataImpl implements TestData {
      *     library
      */
     @Nullable
-    public BuildableArtifact getTestedApksDir() {
+    public FileCollection getTestedApksDir() {
         return testedApksDir;
     }
 

@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.tasks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -48,6 +46,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -62,7 +61,7 @@ import org.gradle.api.tasks.TaskProvider;
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-public class InstallVariantTask extends NonIncrementalTask {
+public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private Provider<File> adbExecutableProvider;
     private Provider<File> splitSelectExeProvider;
@@ -74,8 +73,6 @@ public class InstallVariantTask extends NonIncrementalTask {
     private int timeOutInMs = 0;
 
     private Collection<String> installOptions;
-
-    private BuildableArtifact apkDirectory;
 
     private BaseVariantData variantData;
 
@@ -100,8 +97,7 @@ public class InstallVariantTask extends NonIncrementalTask {
             List<OutputFile> outputs =
                     ImmutableList.copyOf(
                             ExistingBuildElements.from(
-                                    InternalArtifactType.APK,
-                                    BuildableArtifactUtil.singleFile(apkDirectory)));
+                                    InternalArtifactType.APK, getApkDirectory()));
 
             install(
                     getProjectName(),
@@ -166,7 +162,7 @@ public class InstallVariantTask extends NonIncrementalTask {
                             variantName);
 
                     final Collection<String> extraArgs =
-                            MoreObjects.firstNonNull(installOptions, ImmutableList.<String>of());
+                            MoreObjects.firstNonNull(installOptions, ImmutableList.of());
 
                     if (apkFiles.size() > 1) {
                         device.installPackages(apkFiles, extraArgs, timeOutInMs, iLogger);
@@ -237,13 +233,7 @@ public class InstallVariantTask extends NonIncrementalTask {
     }
 
     @InputFiles
-    public BuildableArtifact getApkDirectory() {
-        return apkDirectory;
-    }
-
-    public void setApkDirectory(BuildableArtifact apkDirectory) {
-        this.apkDirectory = apkDirectory;
-    }
+    public abstract DirectoryProperty getApkDirectory();
 
     public BaseVariantData getVariantData() {
         return variantData;
@@ -280,8 +270,8 @@ public class InstallVariantTask extends NonIncrementalTask {
             task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
             task.setProjectName(scope.getGlobalScope().getProject().getName());
-            task.setApkDirectory(
-                    scope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.APK));
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getApkDirectory());
             task.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             task.setInstallOptions(

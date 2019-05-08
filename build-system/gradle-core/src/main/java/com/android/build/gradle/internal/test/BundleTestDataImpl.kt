@@ -25,7 +25,9 @@ import com.android.builder.testing.api.DeviceConfigProvider
 import com.android.ide.common.process.ProcessExecutor
 import com.android.utils.ILogger
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
 import java.io.File
 
 /**
@@ -36,7 +38,7 @@ import java.io.File
  */
 class BundleTestDataImpl(
     private val testVariantData: TestVariantData,
-    testApkDir: BuildableArtifact,
+    testApkDir: Provider<Directory>,
     private val moduleName: String?,
     private val apkBundle: FileCollection
 ) : AbstractTestDataImpl(testVariantData.variantConfiguration, testApkDir, null) {

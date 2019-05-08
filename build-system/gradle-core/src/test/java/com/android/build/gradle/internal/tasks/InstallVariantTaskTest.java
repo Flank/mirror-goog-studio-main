@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.builder.testing.api.DeviceConnector;
-import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
@@ -69,7 +68,7 @@ public class InstallVariantTaskTest {
     }
 
     @Before
-    public void setUpMocks() throws Exception {
+    public void setUpMocks() {
         when(lollipopDevice.getApiLevel()).thenReturn(21);
         when(lollipopDevice.getName()).thenReturn("lollipop_device");
         when(kitkatDevice.getApiLevel()).thenReturn(19);
@@ -136,7 +135,7 @@ public class InstallVariantTaskTest {
         }
 
         @Override
-        public void init() throws DeviceException {
+        public void init() {
             if (state != State.NOT_READY) {
                 throw new IllegalStateException(
                         "Can only go to READY from NOT_READY. Current state is " + state);
@@ -145,7 +144,7 @@ public class InstallVariantTaskTest {
         }
 
         @Override
-        public void terminate() throws DeviceException {
+        public void terminate() {
             if (state != State.READY) {
                 throw new IllegalStateException(
                         "Can only go to TERMINATED from READY. Current state is " + state);

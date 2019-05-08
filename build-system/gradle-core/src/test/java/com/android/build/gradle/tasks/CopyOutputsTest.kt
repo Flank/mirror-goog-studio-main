@@ -18,8 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.build.FilterData
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
@@ -46,43 +44,28 @@ class CopyOutputsTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
 
-    @Mock
-    internal lateinit var variantScope: VariantScope
-
-    @Mock
-    internal lateinit var buildArtifactsHolder: BuildArtifactsHolder
-
-    @Mock
-    internal lateinit var taskContainer: MutableTaskContainer
-
-    private lateinit var fileSet: Set<String>
-
     private lateinit var outputDir: File
     private lateinit var testDir: File
 
     private lateinit var project: Project
 
-    private fun getOrCreateFile(parent: File, name: String): File {
-        val file = File(parent.path + File.separator + name)
-        if (!file.exists()) {
-            file.createNewFile()
-        }
-        return file
-    }
-
     @Before
     fun setUp() {
         Workers.useDirectWorkerExecutor = true
-
-        MockitoAnnotations.initMocks(this)
         testDir = temporaryFolder.newFolder()
         outputDir = temporaryFolder.newFolder()
-
-        val apkDir = temporaryFolder.newFolder()
-        val splitDir = temporaryFolder.newFolder()
-        val resDir = temporaryFolder.newFolder()
-
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
+    }
+
+    @After
+    fun tearDown() {
+        Workers.useDirectWorkerExecutor = false
+    }
+
+    @Test
+    fun copyOutputs() {
+        val taskProvider = project.tasks.register("copyOutputs", CopyOutputs::class.java)
+        val task = taskProvider.get()
 
         val apkInfo =
             ApkData.of(
@@ -90,7 +73,7 @@ class CopyOutputsTest {
                 ImmutableList.of<FilterData>(),
                 12345
             )
-
+        val apkDir = temporaryFolder.newFolder()
         BuildElements(
             listOf(
                 BuildOutput(
@@ -105,6 +88,9 @@ class CopyOutputsTest {
                 )
             )
         ).save(apkDir)
+        task.fullApks.set(apkDir)
+
+        val splitDir = temporaryFolder.newFolder()
         BuildElements(
             listOf(
                 BuildOutput(
@@ -119,6 +105,9 @@ class CopyOutputsTest {
                 )
             )
         ).save(splitDir)
+        task.abiSplits.set(splitDir)
+
+        val resDir = temporaryFolder.newFolder()
         BuildElements(
             listOf(
                 BuildOutput(
@@ -133,48 +122,30 @@ class CopyOutputsTest {
                 )
             )
         ).save(resDir)
+        task.resourcesSplits.set(resDir)
 
-        fileSet = setOf(
-            "apk1",
-            "apk2",
-            "split1",
-            "split2",
-            "resource1",
-            "resource2",
-            "output.json"
-        )
-
-        `when`<BuildArtifactsHolder>(variantScope.artifacts).thenReturn(buildArtifactsHolder)
-        `when`<String>(variantScope.fullVariantName).thenReturn("test")
-        `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
-        `when`<MutableTaskContainer>(variantScope.taskContainer).thenReturn(taskContainer)
-
-        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.FULL_APK)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(apkDir, "output.json")))
-        )
-        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.ABI_PACKAGED_SPLIT)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(splitDir, "output.json")))
-        )
-        `when`<BuildableArtifact>(buildArtifactsHolder.getFinalArtifactFiles(InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)).thenReturn(
-            BuildableArtifactImpl(project.files(getOrCreateFile(resDir, "output.json")))
-        )
-    }
-
-    @After
-    fun tearDown() {
-        Workers.useDirectWorkerExecutor = false
-    }
-
-    @Test
-    fun copyOutputs() {
-        val creationAction = CopyOutputs.CreationAction(variantScope, outputDir)
-
-        val task = project.tasks.create("copyOutputs", CopyOutputs::class.java)
-
-        creationAction.configure(task)
+        task.destinationDir.set(outputDir)
         task.doTaskAction()
 
         assertThat(outputDir.listFiles()).hasLength(7)
-        assertThat(outputDir.listFiles().map { it.name }.toSet()).containsExactlyElementsIn(fileSet)
+        assertThat(outputDir.listFiles().map { it.name }.toSet()).containsExactlyElementsIn(
+            setOf(
+                "apk1",
+                "apk2",
+                "split1",
+                "split2",
+                "resource1",
+                "resource2",
+                "output.json"
+            )
+        )
+    }
+
+    private fun getOrCreateFile(parent: File, name: String): File {
+        val file = File(parent.path + File.separator + name)
+        if (!file.exists()) {
+            file.createNewFile()
+        }
+        return file
     }
 }

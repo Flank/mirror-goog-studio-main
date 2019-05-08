@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ApkData;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -52,16 +53,13 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
 
     private FileCollection signingConfig;
     private File incrementalDir;
-    public File splitResApkOutputDirectory;
     private boolean keepTimestampsInApk;
 
     @InputFiles
     public abstract DirectoryProperty getProcessedResources();
 
     @OutputDirectory
-    public File getSplitResApkOutputDirectory() {
-        return splitResApkOutputDirectory;
-    }
+    public abstract DirectoryProperty getSplitResApkOutputDirectory();
 
     @InputFiles
     public FileCollection getSigningConfig() {
@@ -93,7 +91,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                                 new PackageSplitResTransformParams(apkInfo, file, this)))
                 .into(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                        splitResApkOutputDirectory);
+                        getSplitResApkOutputDirectory().get().getAsFile());
     }
 
     private static class PackageSplitResTransformRunnable extends BuildElementsTransformRunnable {
@@ -147,7 +145,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
             this.input = input;
             output =
                     new File(
-                            task.splitResApkOutputDirectory,
+                            task.getSplitResApkOutputDirectory().get().getAsFile(),
                             getOutputFileNameForSplit(
                                     apkInfo,
                                     (String)
@@ -178,8 +176,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<PackageSplitRes> {
 
-        private File splitResApkOutputDirectory;
-
         public CreationAction(VariantScope scope) {
             super(scope);
         }
@@ -197,21 +193,17 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            splitResApkOutputDirectory =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                                    taskName,
-                                    "out");
-        }
-
-        @Override
         public void handleProvider(@NonNull TaskProvider<? extends PackageSplitRes> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope().getTaskContainer().setPackageSplitResourcesTask(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            PackageSplitRes::getSplitResApkOutputDirectory,
+                            "out");
         }
 
         @Override
@@ -223,7 +215,6 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.PROCESSED_RES, task.getProcessedResources());
             task.signingConfig = scope.getSigningConfigFileCollection();
-            task.splitResApkOutputDirectory = splitResApkOutputDirectory;
             task.incrementalDir = scope.getIncrementalDir(getName());
             task.keepTimestampsInApk =
                     scope.getGlobalScope()

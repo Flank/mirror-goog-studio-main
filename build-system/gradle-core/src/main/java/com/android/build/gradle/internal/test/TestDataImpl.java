@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -38,6 +37,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 import org.xml.sax.SAXException;
 
 /**
@@ -53,8 +55,8 @@ public class TestDataImpl extends AbstractTestDataImpl {
 
     public TestDataImpl(
             @NonNull TestVariantData testVariantData,
-            @NonNull BuildableArtifact testApkDir,
-            @Nullable BuildableArtifact testedApksDir) {
+            @NonNull Provider<Directory> testApkDir,
+            @Nullable FileCollection testedApksDir) {
         super(testVariantData.getVariantConfiguration(), testApkDir, testedApksDir);
         this.testVariantData = testVariantData;
         this.testVariantConfig = testVariantData.getVariantConfiguration();
@@ -111,7 +113,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
                                 testedVariantData
                                         .getScope()
                                         .getArtifacts()
-                                        .getFinalArtifactFiles(InternalArtifactType.APK)));
+                                        .getFinalProduct(InternalArtifactType.APK)));
         apks.addAll(
                 SplitOutputMatcher.computeBestOutput(
                         processExecutor,

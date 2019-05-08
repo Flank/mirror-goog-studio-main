@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.test;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -39,6 +38,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.Provider;
 
 /** Implementation of {@link TestData} for separate test modules. */
 public class TestApplicationTestData extends AbstractTestDataImpl {
@@ -50,8 +52,8 @@ public class TestApplicationTestData extends AbstractTestDataImpl {
     public TestApplicationTestData(
             GradleVariantConfiguration variantConfiguration,
             Supplier<String> testApplicationId,
-            @NonNull BuildableArtifact testApkDir,
-            @NonNull BuildableArtifact testedApksDir) {
+            @NonNull Provider<Directory> testApkDir,
+            @NonNull FileCollection testedApksDir) {
         super(variantConfiguration, testApkDir, testedApksDir);
         this.variantConfiguration = variantConfiguration;
         this.testedProperties = new HashMap<>();

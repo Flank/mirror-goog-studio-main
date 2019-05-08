@@ -68,7 +68,8 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
         PackageAndroidArtifact packageAndroidArtifact = getPackageApplication();
         if (packageAndroidArtifact != null) {
             return new File(
-                    packageAndroidArtifact.getOutputDirectory(), apkData.getOutputFileName());
+                    packageAndroidArtifact.getOutputDirectory().get().getAsFile(),
+                    apkData.getOutputFileName());
         } else {
             return super.getOutputFile();
         }
