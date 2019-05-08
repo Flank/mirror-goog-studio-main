@@ -69,8 +69,8 @@ public class InstantAppTaskManager extends TaskManager {
                 .getErrorHandler()
                 .reportWarning(
                         EvalIssueReporter.Type.PLUGIN_OBSOLETE,
-                        "The com.android.instantapp plugin is deprecated and will be removed in a future"
-                                + " gradle plugin version. Please switch to using the Android App"
+                        "The com.android.instantapp plugin is deprecated and will be removed by"
+                                + " the end of 2019. Please switch to using the Android App"
                                 + " Bundle to build your instant app. For more information on"
                                 + " migrating to Android App Bundles, please visit"
                                 + " https://developer.android.com/topic/google-play-instant/feature-module-migration");
