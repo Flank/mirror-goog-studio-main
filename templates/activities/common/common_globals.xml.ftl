@@ -1,5 +1,5 @@
 <globals>
-    <#assign theme=getApplicationTheme()!{ "name": "AppTheme"}>
+    <#assign theme=applicationTheme!{ "name": "AppTheme"}>
     <#assign themeName=theme.name!'AppTheme'>
     <#assign themeNameNoActionBar=theme.nameNoActionBar!'AppTheme.NoActionBar'>
     <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
