@@ -78,7 +78,7 @@ public class SdkAutoDownloadTest {
     private static final String PLATFORM_VERSION =
             TestUtils.getLatestAndroidPlatform().replace("android-", "");
     private static final String NDK_VERSION = "19.0.5106443-rc1";
-    private static final String NDK_VERSION_THREE_PART = "19.0.5106443";
+    private static final String CMAKE_VERSION = "3.6.0";
 
     @Rule
     public GradleTestProject project =
@@ -305,7 +305,11 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.version \""
+                        + CMAKE_VERSION
+                        + "\"");
 
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
@@ -337,7 +341,11 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.version \""
+                        + CMAKE_VERSION
+                        + "\"");
 
         Files.write(project.file("CMakeLists.txt").toPath(),
                 cmakeLists.getBytes(StandardCharsets.UTF_8));
@@ -369,7 +377,11 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.version \""
+                        + CMAKE_VERSION
+                        + "\"");
 
         Files.write(
                 project.file("CMakeLists.txt").toPath(),
@@ -408,7 +420,11 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\""
                         + System.lineSeparator()
-                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\"");
+                        + "android.externalNativeBuild.cmake.path \"CMakeLists.txt\""
+                        + System.lineSeparator()
+                        + "android.externalNativeBuild.cmake.version \""
+                        + CMAKE_VERSION
+                        + "\"");
 
         Files.write(
                 project.file("CMakeLists.txt").toPath(),

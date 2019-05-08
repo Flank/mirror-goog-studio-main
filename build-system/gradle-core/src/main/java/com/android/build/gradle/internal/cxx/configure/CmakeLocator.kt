@@ -130,7 +130,14 @@ private val canarySdkPaths = listOf("3.10.4819442")
  *  version to avoid giving the impression that fork CMake is not a shipping version in Android
  *  Studio.
  */
-private val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
+val forkCmakeReportedVersion = Revision.parseRevision("3.6.0")
+
+/**
+ * This is the default version of CMake to use for this Android Gradle Plugin if there was no
+ * version defined in build.gradle.
+ */
+val defaultCmakeVersion = Revision.parseRevision("3.10.2")
+private val DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION = "$defaultCmakeVersion.4988404"
 
 private val newline = System.lineSeparator()
 
@@ -179,18 +186,20 @@ private class CmakeSearchContext(
         left.compareTo(right, Revision.PreviewComparison.IGNORE) == 0
 
     /**
-     * @return true if left is greater than right, ignoring the preview component.
+     * @return true if candidate CMake version would satisfy cmake_minimum_version
      */
-    private fun versionGreaterThan(left: Revision, right: Revision) =
-        left.compareTo(right, Revision.PreviewComparison.IGNORE) > 0
+    private fun Revision.satisfies(requested: Revision) =
+        (dslVersionHasPlus() && compareTo(requested, Revision.PreviewComparison.IGNORE) >= 0) ||
+                (versionEquals(this, requested))
 
     fun tryAcceptFoundCmake(
         candidateCmakeInstallFolder: File,
         candidateVersion: Revision,
+        cmakeVersionGetter: (File) -> Revision?,
         locationTag: String
     ) {
         if (dslVersionHasPlus()) {
-            if (versionGreaterThan(requestedCmakeVersion, candidateVersion)) {
+            if (!candidateVersion.satisfies(requestedCmakeVersion)) {
                 recordUnsuitableCmakeMessage(
                     "CMake '$candidateVersion' found " +
                             "$locationTag could not satisfy requested version " +
@@ -207,6 +216,18 @@ private class CmakeSearchContext(
                 )
                 return
             }
+        }
+
+        try {
+            if (cmakeVersionGetter(candidateCmakeInstallFolder) != null) {
+                recordUnsuitableCmakeMessage(
+                    "CMake '$candidateVersion' found " +
+                            "$locationTag could not execute --version."
+                )
+                return
+            }
+        } catch (e: IOException) {
+            warnln("Could not execute cmake at '$candidateCmakeInstallFolder' to get version. Skipping.")
         }
 
         // If the candidate matches the requested version exactly, then the highest version is taken.
@@ -254,14 +275,14 @@ private class CmakeSearchContext(
     internal fun useDefaultCmakeVersionIfNecessary(): CmakeSearchContext {
         val cmakeVersionFromDslNoPlus = cmakeVersionFromDslNoPlus()
         requestedCmakeVersion = if (cmakeVersionFromDslNoPlus == null) {
-            infoln("No CMake version was specified in build.gradle. Choosing a suitable version.")
-            forkCmakeReportedVersion
+            infoln("No CMake version was specified in build.gradle. Using default version $defaultCmakeVersion.")
+            defaultCmakeVersion
         } else {
             try {
                 Revision.parseRevision(cmakeVersionFromDslNoPlus)
             } catch (e: NumberFormatException) {
                 error("CMake version '$cmakeVersionFromDsl' is not formatted correctly.")
-                forkCmakeReportedVersion
+                defaultCmakeVersion
             }
         }
         return this
@@ -320,7 +341,7 @@ private class CmakeSearchContext(
             resultCmakeInstallFolder = pathFromLocalProperties
             resultCmakeVersion = version
         } else {
-            tryAcceptFoundCmake(pathFromLocalProperties, version, "from cmake.dir")
+            tryAcceptFoundCmake(pathFromLocalProperties, version, cmakeVersionGetter, "from cmake.dir")
             if (resultCmakeInstallFolder == null) {
                 error(
                     "CMake '$version' found via cmake.dir='$pathFromLocalProperties' does not match " +
@@ -336,6 +357,7 @@ private class CmakeSearchContext(
      * Search within the already-download SDK packages.
      */
     internal fun tryLocalRepositoryPackages(
+        cmakeVersionGetter: (File) -> Revision?,
         downloader: Consumer<String>,
         repositoryPackages: () -> List<LocalPackage>
     ): CmakeSearchContext {
@@ -349,6 +371,7 @@ private class CmakeSearchContext(
             tryAcceptFoundCmake(
                 pkg.location,
                 convertSdkVersionToCmakeVersion(pkg.version),
+                cmakeVersionGetter,
                 "in SDK"
             )
         }
@@ -356,27 +379,54 @@ private class CmakeSearchContext(
             return this
         }
 
-        // Cmake was not found in local packages. If the user asked the fork Cmake version, auto-download it.
-        if (versionEquals(requestedCmakeVersion, forkCmakeReportedVersion)) {
-            // The version is exactly the default version. Download it if possible.
-            infoln("- Downloading '$forkCmakeSdkVersionRevision'.")
-            downloader.accept(FORK_CMAKE_SDK_VERSION)
+        // Cmake was not found in local packages. Choose a version to download.
+        val (messageVersion, sdkDownloadVersion) = when {
+            /**
+             * This is an escape hatch for users who need fork CMake only. If they specify exactly
+             * "3.6.0" in gradle DSL then that version will be downloaded instead of the default
+             * version. Without this, the default version would always satisfy and it would be
+             * impossible to download the fork CMake version.
+             */
+            versionEquals(requestedCmakeVersion, forkCmakeReportedVersion) ->
+                Pair(forkCmakeSdkVersionRevision, FORK_CMAKE_SDK_VERSION)
 
-            val res = repositoryPackages().find { versionEquals(it.version, forkCmakeSdkVersionRevision) }
-            if (res != null) {
-                tryAcceptFoundCmake(
-                    res.location,
-                    convertSdkVersionToCmakeVersion(res.version),
-                    "in SDK"
-                )
-            }
+            /**
+             * This is the expected main path. Check whether the user's requested CMake version
+             * can be satisfied by the default CMake version for this gradle plugin. If it is,
+             * then download it.
+             */
+            defaultCmakeVersion.satisfies(requestedCmakeVersion) ->
+                Pair(defaultCmakeVersion, DEFAULT_CMAKE_SDK_DOWNLOAD_VERSION)
 
-            if (resultCmakeInstallFolder == null) {
-                requestDownloadFromAndroidStudio = true
+            /**
+             * If the default version of CMake for this plugin did not satisfied the version
+             * requested by the user in the gradle DSL then disregard it and don't download.
+             */
+            else -> {
+                infoln("Requested CMake version $requestedCmakeVersion was not satisfied by " +
+                        "default version $defaultCmakeVersion for this Android Gradle Plugin")
+                return this
             }
-            return this
+        }
+        // The version is exactly the default version. Download it if possible.
+        infoln("- Downloading '$messageVersion'.")
+        downloader.accept(sdkDownloadVersion)
+
+        val res = repositoryPackages().find {
+            versionEquals(it.version, messageVersion)
+        }
+        if (res != null) {
+            tryAcceptFoundCmake(
+                res.location,
+                convertSdkVersionToCmakeVersion(res.version),
+                cmakeVersionGetter,
+                "in SDK after download"
+            )
         }
 
+        if (resultCmakeInstallFolder == null) {
+            requestDownloadFromAndroidStudio = true
+        }
         return this
     }
 
@@ -417,7 +467,7 @@ private class CmakeSearchContext(
                     )
                 } else {
                     val cmakeInstallPath = cmakeFolder.parentFile
-                    tryAcceptFoundCmake(cmakeInstallPath, version, tag)
+                    tryAcceptFoundCmake(cmakeInstallPath, version, cmakeVersionGetter, tag)
 
                     // At this point, we found a cmake.exe on the PATH. We only look the first one.
                     // Any cmake.exe further down the path is ignored.
@@ -531,17 +581,17 @@ fun findCmakePathLogic(
     downloader: Consumer<String>,
     environmentPaths: () -> List<File>,
     canarySdkPaths: () -> List<File>,
-    cmakeVersion: (File) -> Revision?,
+    cmakeVersionGetter: (File) -> Revision?,
     repositoryPackages: () -> List<LocalPackage>
 ): File? {
     return CmakeSearchContext(cmakeVersionFromDsl)
         .useDefaultCmakeVersionIfNecessary()
         .checkForCmakeVersionTooLow()
         .checkForCmakeVersionAdequatePrecision()
-        .tryPathFromLocalProperties(cmakeVersion, cmakePathFromLocalProperties)
-        .tryLocalRepositoryPackages(downloader, repositoryPackages)
-        .tryFindInPath(cmakeVersion, environmentPaths, "in PATH")
-        .tryFindInPath(cmakeVersion, canarySdkPaths, "in SDK canaries")
+        .tryPathFromLocalProperties(cmakeVersionGetter, cmakePathFromLocalProperties)
+        .tryLocalRepositoryPackages(cmakeVersionGetter, downloader, repositoryPackages)
+        .tryFindInPath(cmakeVersionGetter, environmentPaths, "in PATH")
+        .tryFindInPath(cmakeVersionGetter, canarySdkPaths, "in SDK canaries")
         .issueVersionNotFoundError()
 }
 

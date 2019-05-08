@@ -23,7 +23,7 @@ import com.android.builder.errors.EvalIssueReporter.Severity.WARNING
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
 
-// Change to false when b/130363042 is fixed
+// Change to false when b/130363042 is fixed.
 private const val FORCE_EXCEPTION_ON_ERROR = true
 
 /**
@@ -36,7 +36,11 @@ class IssueReporterLoggingEnvironment(
     private val errors = mutableListOf<LoggingRecord>()
 
     override fun error(message: String) {
-        issueReporter.reportIssue(EXTERNAL_NATIVE_BUILD_CONFIGURATION, ERROR, message)
+        if (!FORCE_EXCEPTION_ON_ERROR) {
+            issueReporter.reportIssue(EXTERNAL_NATIVE_BUILD_CONFIGURATION, ERROR, message)
+        } else {
+            errors += errorRecordOf(message)
+        }
         logger.error(message)
     }
 
