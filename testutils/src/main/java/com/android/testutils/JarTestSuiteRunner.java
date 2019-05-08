@@ -18,6 +18,7 @@ package com.android.testutils;
 
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
+import com.google.common.base.Stopwatch;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -43,6 +44,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -97,9 +99,15 @@ public class JarTestSuiteRunner extends Suite {
         // Logs the test class that will be invoked, temporarily added to investigate tests timing
         // out issue b/78568459
         if (isBazelIntegrationTestsSuite) {
+            Stopwatch stopwatch = Stopwatch.createStarted();
             logger.info("Running " + describeChild(runner).getClassName());
+            super.runChild(runner, notifier);
+            logger.info(
+                    describeChild(runner).getClassName() + " finished running in %d secs",
+                    stopwatch.stop().elapsed(TimeUnit.SECONDS));
+        } else {
+            super.runChild(runner, notifier);
         }
-        super.runChild(runner, notifier);
     }
 
     private void randomizeTestOrder(long seed) {
