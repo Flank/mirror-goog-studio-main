@@ -171,6 +171,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
+import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -3338,6 +3340,10 @@ public abstract class TaskManager {
                         task.setGroup(ANDROID_GROUP);
                     });
         }
+
+        variantScopes.forEach(
+                (VariantScope scope) ->
+                        taskFactory.register(new AnalyzeDependenciesTask.CreationAction(scope)));
     }
 
     public void createAnchorTasks(@NonNull VariantScope scope) {
