@@ -95,6 +95,11 @@ message GetTraceInfoResponse {
 message SaveTraceInfoRequest {
   Session session = 1;
   CpuTraceInfo trace_info = 2;
+  // If |updated_trace| isn't null, it contains the trace after preprocessing
+  // (e.g., symbolizing a simpleperf raw trace and converting it into the
+  // protobuf format). The preprocessed trace should be used for all
+  // subsequent references to the given trace ID in the |trace_info|.
+  bytes preprocessed_trace = 3;
 }
 
 message Thread {
