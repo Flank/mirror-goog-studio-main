@@ -36,9 +36,6 @@ service CpuService {
   rpc SaveTraceInfo(SaveTraceInfoRequest) returns (EmptyCpuReply) {
   }
 
-  rpc GetTrace(GetTraceRequest) returns (GetTraceResponse) {
-  }
-
   // Starts collecting execution metrics of a running app, such as usage info
   // and thread states. Does nothing if the app is already being monitored.
   // TODO(b/29258733): Support configuring sampling details.
@@ -89,7 +86,6 @@ message GetTraceInfoRequest {
 
 message GetTraceInfoResponse {
   repeated CpuTraceInfo trace_info = 1;
-  int64 response_timestamp = 2;
 }
 
 message SaveTraceInfoRequest {
@@ -100,27 +96,6 @@ message SaveTraceInfoRequest {
 message Thread {
   int32 tid = 1;
   string name = 2;
-}
-
-message GetTraceRequest {
-  Session session = 1;
-  // Trace ID should be unique within a session.
-  int64 trace_id = 2;
-}
-
-message GetTraceResponse {
-  // TODO: add more status as needed.
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    FAILURE = 2;
-  }
-  Status status = 1;
-  bytes data = 2;
-  // Type of the trace used to obtain the trace.
-  CpuTraceType trace_type = 3;
-  // Mode (i.e. sampling or instrumentation) used to obtain the trace.
-  CpuTraceMode trace_mode = 4;
 }
 
 // Requests profiler data associated with |session|, in the time range
@@ -166,8 +141,6 @@ message StartupProfilingResponse {
   string error_message = 2;
   // Buffer size (in KB) acquired by Atrace trace configs.
   int32 buffer_size_acquired_kb = 3;
-  // Trace file path set only by ART trace configs.
-  string file_path = 4;
 }
 
 message CpuStopRequest {
@@ -233,8 +206,6 @@ message CpuProfilingAppStopResponse {
   string error_message = 2;
   // Trace ID should be unique within an app.
   int64 trace_id = 3;
-  // TODO: remove this trace attribute after fully migrating to the new API.
-  bytes trace = 4;
 }
 
 message ProfilingStateRequest {

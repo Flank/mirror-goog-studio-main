@@ -31,7 +31,7 @@ TEST(PerfettoManagerTest, ProfilingStartStop) {
   string trace_path;
   string error;
   EXPECT_TRUE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_TRUE(perfetto->IsPerfettoRunning());
   EXPECT_TRUE(perfetto->IsTracerRunning());
   EXPECT_TRUE(manager.StopProfiling(&error));
@@ -49,7 +49,7 @@ TEST(PerfettoManagerTest, ValidateRunArgs) {
   string error;
   const char* abi_arch = "armv8";
   EXPECT_TRUE(
-      manager.StartProfiling(app_name, abi_arch, config, &trace_path, &error));
+      manager.StartProfiling(app_name, abi_arch, config, trace_path, &error));
   EXPECT_TRUE(perfetto->IsPerfettoRunning());
   EXPECT_EQ(perfetto->AbiArch(), abi_arch);
   // Cannot EXPECT_EQ two protos as the operator == fails.
@@ -71,7 +71,7 @@ TEST(PerfettoManagerTest, ValidateShutdown) {
   const char* abi_arch = "armv8";
   const char* app_name = "App Name";
   EXPECT_TRUE(
-      manager.StartProfiling(app_name, abi_arch, config, &trace_path, &error));
+      manager.StartProfiling(app_name, abi_arch, config, trace_path, &error));
   EXPECT_TRUE(perfetto->IsPerfettoRunning());
   EXPECT_TRUE(manager.IsProfiling());
   manager.Shutdown();
@@ -117,7 +117,7 @@ TEST(PerfettoManagerTest, ValidateShutdownErrors) {
   // Test failing to stop tracer.
   perfetto->SetStopStateTo(false, true);
   EXPECT_TRUE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_EQ(
       manager.StopProfiling(&error),
       profiler::proto::CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP);
@@ -142,7 +142,7 @@ TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   string error;
   // Fail to launch perfetto
   EXPECT_FALSE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_FALSE(perfetto->IsPerfettoRunning());
   EXPECT_EQ(error, "Failed to launch perfetto.\n");
 
@@ -152,7 +152,7 @@ TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   perfetto->SetTracerState(false);
   error = "";
   EXPECT_FALSE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_EQ(error, "Failed to launch tracer.\n");
 
   // Attempt to record with tracer already running.
@@ -161,7 +161,7 @@ TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   perfetto->SetTracerState(true);
   error = "";
   EXPECT_FALSE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_EQ(error, "Tracer is already running unable to run perfetto.");
 
   // Attempt to record with perfetto already running.
@@ -170,7 +170,7 @@ TEST(PerfettoManagerTest, ValidateErrorsToRun) {
   perfetto->SetTracerState(false);
   error = "";
   EXPECT_FALSE(
-      manager.StartProfiling("App Name", "armv8", config, &trace_path, &error));
+      manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
   EXPECT_EQ(error, "Perfetto is already running unable to start new trace.");
 }
 

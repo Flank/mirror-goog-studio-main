@@ -26,7 +26,6 @@
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu_data.pb.h"
 #include "utils/clock.h"
-#include "utils/file_cache.h"
 #include "utils/time_value_buffer.h"
 
 namespace profiler {
@@ -42,8 +41,8 @@ class CpuCache {
 
   // Construct the main CPU cache holder. |capacity| is of every app's every
   // kind of cache (same size for all).
-  explicit CpuCache(int32_t capacity, Clock* clock, FileCache* file_cache)
-      : capacity_(capacity), clock_(clock), file_cache_(file_cache) {}
+  explicit CpuCache(int32_t capacity, Clock* clock)
+      : capacity_(capacity), clock_(clock) {}
 
   // Returns true if successfully allocating a cache for a given pid, or if
   // the cache is already allocated.
@@ -76,7 +75,7 @@ class CpuCache {
   void AddStartupProfilingStart(const std::string& apk_pkg_name,
                                 const ProfilingApp& record);
   // Adds stop event for startup profiling.
-  void AddStartupProfilingStop(const std::string& apk_pkg_name);
+  void AddStartupProfilingStop(int32_t pid, const std::string& apk_pkg_name);
 
   // Returns the |ProfilingApp| of the app with the given |pid|.
   ProfilingApp* GetOngoingCapture(int32_t pid);
@@ -88,13 +87,6 @@ class CpuCache {
   // Returns the captures from process of |pid| that overlap with the given
   // interval [|from|, |to|], both inclusive.
   std::vector<ProfilingApp> GetCaptures(int32_t pid, int64_t from, int64_t to);
-  // Returns true if successfully adding |trace_content| of the given |trace_id|
-  // generated from app of given process ID |pid|.
-  bool AddTraceContent(int32_t pid, int32_t trace_id,
-                       const std::string& trace_content);
-  // Returns true if successfully retrieve the content of given |trace_id| from
-  // process of |pid|.
-  bool RetrieveTraceContent(int32_t pid, int32_t trace_id, std::string* output);
 
  private:
   // Each app's cache held by CPU component in the on-device daemon.
@@ -117,20 +109,11 @@ class CpuCache {
   // it doesn't exist. No ownership transfer.
   AppCpuCache* FindAppCache(int32_t pid);
 
-  // Returns a new positive integer that is unique throughout the lifetime of
-  // this cache. It satisfies the uniqueness requirement for a trace ID (unique
-  // within a session).
-  int32_t GenerateTraceId();
-
-  // Returns a unique, valid file name given the |pid| and |trace_id|.
-  std::string GetCachedFileName(int32_t pid, int32_t trace_id);
-
   // Each app has a set of dedicated caches.
   std::vector<std::unique_ptr<AppCpuCache>> app_caches_;
   // The capacity of every kind of cache.
   int32_t capacity_;
   Clock* clock_;
-  FileCache* file_cache_;
 
   // Map from app package name to the corresponding data of startup profiling.
   std::map<std::string, ProfilingApp> startup_profiling_apps_;

@@ -19,13 +19,15 @@
 #include <grpc++/grpc++.h>
 #include "perfd/cpu/cpu_cache.h"
 #include "proto/internal_cpu.grpc.pb.h"
+#include "utils/file_cache.h"
 
 namespace profiler {
 
 class InternalCpuServiceImpl final
     : public profiler::proto::InternalCpuService::Service {
  public:
-  explicit InternalCpuServiceImpl(CpuCache* cpu_cache) : cache_(*cpu_cache) {}
+  explicit InternalCpuServiceImpl(CpuCache* cpu_cache, FileCache* file_cache)
+      : cache_(*cpu_cache), file_cache_(file_cache) {}
 
   grpc::Status SendTraceEvent(
       grpc::ServerContext* context,
@@ -35,6 +37,7 @@ class InternalCpuServiceImpl final
  private:
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
+  FileCache* file_cache_;
 };
 
 }  // namespace profiler

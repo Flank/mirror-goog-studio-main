@@ -32,6 +32,7 @@
 #include "utils/activity_manager.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
+#include "utils/file_cache.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/termination_service.h"
 
@@ -40,13 +41,13 @@ namespace profiler {
 // CPU profiler specific service for desktop clients (e.g., Android Studio).
 class CpuServiceImpl final : public profiler::proto::CpuService::Service {
  public:
-  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
+  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache, FileCache* file_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
                  const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service)
       : CpuServiceImpl(
-            clock, cpu_cache, usage_sampler, thread_monitor, cpu_config,
-            termination_service, ActivityManager::Instance(),
+            clock, cpu_cache, file_cache, usage_sampler, thread_monitor,
+            cpu_config, termination_service, ActivityManager::Instance(),
             std::unique_ptr<SimpleperfManager>(new SimpleperfManager(clock)),
             // Number of millis to wait between atrace dumps when profiling.
             // The average user will run a capture around 20 seconds, however to
@@ -57,7 +58,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
                 1000 * 30)),
             std::unique_ptr<PerfettoManager>(new PerfettoManager(clock))) {}
 
-  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache,
+  CpuServiceImpl(Clock* clock, CpuCache* cpu_cache, FileCache* file_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor,
                  const profiler::proto::DaemonConfig::CpuConfig& cpu_config,
                  TerminationService* termination_service,
@@ -67,6 +68,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
                  std::unique_ptr<PerfettoManager> perfetto_manager)
       : cache_(*cpu_cache),
         clock_(clock),
+        file_cache_(file_cache),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         cpu_config_(cpu_config),
@@ -95,10 +97,6 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       grpc::ServerContext* context,
       const profiler::proto::GetTraceInfoRequest* request,
       profiler::proto::GetTraceInfoResponse* response) override;
-
-  grpc::Status GetTrace(grpc::ServerContext* context,
-                        const profiler::proto::GetTraceRequest* request,
-                        profiler::proto::GetTraceResponse* response) override;
 
   // TODO: Handle the case if there is no such a running process.
   grpc::Status StartMonitoringApp(
@@ -162,6 +160,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuCache& cache_;
   // Clock that timestamps start profiling requests.
   Clock* clock_;
+  FileCache* file_cache_;
   // The monitor that samples CPU usage data.
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).

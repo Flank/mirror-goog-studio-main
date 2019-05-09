@@ -38,13 +38,14 @@ class ActivityManager {
   // code instrumentation.
   // Returns true is profiling started successfully. Otherwise false
   // and populate error_string.
-  // |trace_path| is populated with absolute path where trace is being recorded.
+  // |trace_path| is where the trace file will be made available once profiling
+  // of this app is stopped.
   // Calling start twice in a row (without a stop) will result in an error.
   // |is_startup_profiling| means that profiler started with application launch
   // command, i.e "am start ... --start-profiler".
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
-                      int sampling_interval, std::string *trace_path,
+                      int sampling_interval, const std::string &trace_path,
                       std::string *error_string,
                       bool is_startup_profiling = false);
 
@@ -81,12 +82,6 @@ class ActivityManager {
   // an app package name with the trace file being produced.
   std::map<std::string, ArtOnGoingProfiling> profiled_;
   std::mutex profiled_lock_;  // Protects |profiled_|
-
-  // Returns the absolute path_ where a profiling trace file should be
-  // saved for a given |app_package_name|. App does not have to be up
-  // and running for this method to succeed.
-  // Generated path is unique (based on app package name and timestamp).
-  std::string GenerateTracePath(const std::string &app_package_name) const;
 
   // Returns true if app is being profiled.
   bool IsAppProfiled(const std::string &app_package_name) const;

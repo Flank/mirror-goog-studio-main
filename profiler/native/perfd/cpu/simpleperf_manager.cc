@@ -53,7 +53,7 @@ void SimpleperfManager::Shutdown() {
 bool SimpleperfManager::StartProfiling(const std::string &app_name,
                                        const std::string &abi_arch,
                                        int sampling_interval_us,
-                                       std::string *trace_path,
+                                       const std::string &trace_path,
                                        std::string *error,
                                        bool is_startup_profiling) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
@@ -61,9 +61,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
   Log::D("Profiler:Received query to profile %s", app_name.c_str());
 
   if (IsProfiling(app_name)) {
-    OnGoingProfiling ongoing_recording = profiled_[app_name];
-    *trace_path = ongoing_recording.trace_path;
-    return true;
+    return false;
   }
 
   int pid = kStartupProfilingPid;
@@ -88,13 +86,11 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
   entry.pid = pid;
   entry.process_name = ProcessManager::GetPackageNameFromAppName(app_name);
   entry.abi_arch = abi_arch;
-  entry.output_prefix = GetFileBaseName(app_name);
-  entry.trace_path =
-      CurrentProcess::dir() + entry.output_prefix + ".simpleperf.trace";
-  entry.log_file_path = CurrentProcess::dir() + entry.output_prefix + ".log";
-  entry.raw_trace_path = CurrentProcess::dir() + entry.output_prefix + ".dat";
-  // Point trace path to entry's trace path so the trace can be pulled later.
-  *trace_path = entry.trace_path;
+  entry.trace_path = trace_path;
+  std::ostringstream temp_file_name;
+  temp_file_name << "simpleperf-" << app_name;
+  entry.log_file_path = CurrentProcess::dir() + temp_file_name.str() + ".log";
+  entry.raw_trace_path = CurrentProcess::dir() + temp_file_name.str() + ".dat";
 
   // fork process to run simpleperf profiling.
   int forkpid = fork();
@@ -120,15 +116,6 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
     }
   }
   return true;
-}
-
-string SimpleperfManager::GetFileBaseName(const string &app_name) const {
-  std::ostringstream trace_filebase;
-  trace_filebase << "simpleperf-";
-  trace_filebase << app_name;
-  trace_filebase << "-";
-  trace_filebase << clock_->GetCurrentTime();
-  return trace_filebase.str();
 }
 
 bool SimpleperfManager::IsProfiling(const std::string &app_name) {

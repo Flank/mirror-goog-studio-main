@@ -82,7 +82,7 @@ struct CpuServiceTest : testing::Test {
       const profiler::proto::DaemonConfig::CpuConfig& config) {
     // Set up CPU service.
     return std::unique_ptr<CpuServiceImpl>(new CpuServiceImpl(
-        &clock_, &cache_, &sampler_, &thread_monitor_, config,
+        &clock_, &cache_, &file_cache_, &sampler_, &thread_monitor_, config,
         termination_service_.get(), ActivityManager::Instance(),
         std::unique_ptr<SimpleperfManager>(new SimpleperfManager(
             &clock_, std::unique_ptr<Simpleperf>(new FakeSimpleperf()))),
@@ -154,7 +154,7 @@ struct CpuServiceTest : testing::Test {
   FileCache file_cache_{
       std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
       "/"};
-  CpuCache cache_{100, &clock_, &file_cache_};
+  CpuCache cache_{100, &clock_};
   CpuUsageSampler sampler_{&clock_, &cache_};
   ThreadMonitor thread_monitor_{&clock_, &cache_};
   std::unique_ptr<TestTerminationService> termination_service_{
@@ -213,6 +213,7 @@ TEST_F(CpuServiceTest, StopArtTraceWhenPerfdTerminated) {
   CpuServiceImpl cpu_service{
       &clock_,
       &cache_,
+      &file_cache_,
       &sampler_,
       &thread_monitor_,
       cpu_config,

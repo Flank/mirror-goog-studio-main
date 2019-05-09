@@ -46,8 +46,6 @@ class PerfettoManager {
   static perfetto::protos::TraceConfig BuildConfig(std::string app_pkg_name,
                                                    int acquired_buffer_size_kb);
 
-  std::string GetFileBaseName(const std::string &app_name) const;
-
   // Returns true if profiling was started successfully.
   // |trace_path| is also set to where the trace file will be made available
   // once profiling of this app is stopped. To call this method on an already
@@ -55,7 +53,7 @@ class PerfettoManager {
   // Only one instance of Perfetto should be running at a time.
   bool StartProfiling(const std::string &app_name, const std::string &abi_arch,
                       const perfetto::protos::TraceConfig &config,
-                      std::string *trace_path, std::string *error);
+                      const std::string &trace_path, std::string *error);
 
   // Stops profiling returns true if perfetto is no longer running.
   profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(

@@ -55,7 +55,6 @@ AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
                              Clock *clock, int dump_data_interval_ms,
                              std::unique_ptr<Atrace> atrace)
     : file_system_(std::move(file_system)),
-      clock_(clock),
       dump_data_interval_ms_(dump_data_interval_ms),
       dumps_created_(0),
       is_profiling_(false),
@@ -64,7 +63,7 @@ AtraceManager::AtraceManager(std::unique_ptr<FileSystem> file_system,
 bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
                                    int buffer_size_in_mb,
                                    int *acquired_buffer_size_kb,
-                                   std::string *trace_path,
+                                   const std::string &trace_path,
                                    std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   *acquired_buffer_size_kb = 0;
@@ -80,10 +79,8 @@ bool AtraceManager::StartProfiling(const std::string &app_pkg_name,
   Trace trace("CPU: StartProfiling atrace");
   Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
   // Build entry to keep track of what is being profiled.
-  profiled_app_.trace_path = GetTracePath(app_pkg_name);
+  profiled_app_.trace_path = trace_path;
   profiled_app_.app_pkg_name = app_pkg_name;
-  // Point trace path to entry's trace path so the trace can be pulled later.
-  *trace_path = profiled_app_.trace_path;
   // Check if atrace is already running, if it is its okay to use that instance.
   bool isRunning = atrace_->IsAtraceRunning();
   int requested_buffer_size_kb = buffer_size_in_mb * kMbToKb;
@@ -153,21 +150,6 @@ void AtraceManager::DumpData() {
                     "--async_dump", buffer_size_arg_});
     }
   }
-}
-
-string AtraceManager::GetTracePath(const string &app_name) const {
-  std::ostringstream path;
-  path << CurrentProcess::dir() << GetFileBaseName(app_name) << ".atrace.trace";
-  return path.str();
-}
-
-string AtraceManager::GetFileBaseName(const string &app_name) const {
-  std::ostringstream trace_filebase;
-  trace_filebase << "atrace-";
-  trace_filebase << app_name;
-  trace_filebase << "-";
-  trace_filebase << clock_->GetCurrentTime();
-  return trace_filebase.str();
 }
 
 string AtraceManager::GetNextDumpPath() {

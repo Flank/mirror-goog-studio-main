@@ -47,11 +47,12 @@ class CpuProfilerComponent final : public ServiceComponent {
       Clock* clock, FileCache* file_cache,
       const proto::DaemonConfig::CpuConfig& cpu_config,
       TerminationService* termination_service)
-      : cache_(kBufferCapacity, clock, file_cache),
+      : cache_(kBufferCapacity, clock),
         usage_sampler_(clock, &cache_),
         thread_monitor_(clock, &cache_),
-        public_service_(clock, &cache_, &usage_sampler_, &thread_monitor_,
-                        cpu_config, termination_service) {
+        public_service_(clock, &cache_, file_cache, &usage_sampler_,
+                        &thread_monitor_, cpu_config, termination_service),
+        internal_service_(&cache_, file_cache) {
     collector_.Start();
   }
 
@@ -72,7 +73,7 @@ class CpuProfilerComponent final : public ServiceComponent {
   CpuCollector collector_{kDefaultCollectionIntervalUs, &usage_sampler_,
                           &thread_monitor_};
   CpuServiceImpl public_service_;
-  InternalCpuServiceImpl internal_service_{&cache_};
+  InternalCpuServiceImpl internal_service_;
 };
 
 }  // namespace profiler

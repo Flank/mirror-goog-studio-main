@@ -15,11 +15,7 @@
  */
 #include "perfd/cpu/cpu_cache.h"
 
-#include <algorithm>
 #include <cstdint>
-#include <iterator>
-#include <mutex>
-#include <vector>
 
 #include "utils/process_manager.h"
 
@@ -124,8 +120,21 @@ void CpuCache::AddStartupProfilingStart(const string& apk_pkg_name,
   startup_profiling_apps_[apk_pkg_name] = record;
 }
 
-void CpuCache::AddStartupProfilingStop(const string& apk_pkg_name) {
-  startup_profiling_apps_.erase(apk_pkg_name);
+void CpuCache::AddStartupProfilingStop(int32_t pid,
+                                       const string& apk_pkg_name) {
+  auto* profiling_app = GetOngoingStartupProfiling(apk_pkg_name);
+  if (profiling_app != nullptr) {
+    // Move the capture data over to the normal cache
+    // TODO b/119261457 This is temporary.
+    // We should make all capture initiation types share the same cache.
+    profiling_app->end_timestamp = clock_->GetCurrentTime();
+    auto* found = FindAppCache(pid);
+    if (found != nullptr) {
+      found->capture_cache.Add(*profiling_app);
+    }
+
+    startup_profiling_apps_.erase(apk_pkg_name);
+  }
 }
 
 ProfilingApp* CpuCache::GetOngoingCapture(int32_t pid) {
@@ -157,42 +166,35 @@ ProfilingApp* CpuCache::GetOngoingStartupProfiling(
 
 vector<ProfilingApp> CpuCache::GetCaptures(int32_t pid, int64_t from,
                                            int64_t to) {
-  auto* found = FindAppCache(pid);
-  if (found == nullptr) {
-    vector<ProfilingApp> empty;
-    return empty;
-  }
-  auto& cache = found->capture_cache;
   vector<ProfilingApp> captures;
-  for (size_t i = 0; i < cache.size(); i++) {
-    const auto& candidate = cache.Get(i);
-    // Skip completed captures that ends earlier than |from| and those
-    // (completed or not) that starts after |to|.
-    if ((candidate.end_timestamp != -1 && candidate.end_timestamp < from) ||
-        candidate.start_timestamp > to)
-      continue;
-    captures.push_back(candidate);
+
+  auto* found = FindAppCache(pid);
+
+  if (found != nullptr) {
+    auto& cache = found->capture_cache;
+    for (size_t i = 0; i < cache.size(); i++) {
+      const auto& candidate = cache.Get(i);
+      // Skip completed captures that ends earlier than |from| and those
+      // (completed or not) that starts after |to|.
+      if ((candidate.end_timestamp != -1 && candidate.end_timestamp < from) ||
+          candidate.start_timestamp > to)
+        continue;
+      captures.push_back(candidate);
+    }
   }
+
+  // TODO b/119261457 This is temporary.
+  // We should make all capture initiation types share the same cache.
+  string app_pkg_name = ProcessManager::GetCmdlineForPid(pid);
+  auto* startup_profiling = GetOngoingStartupProfiling(app_pkg_name);
+  if (startup_profiling != nullptr) {
+    // Always return startup traces because if there is an entry, it has to
+    // to be ongoing and began when the app started, and therefore we don't
+    // need to check against timestamps.
+    captures.push_back(*startup_profiling);
+  }
+
   return captures;
-}
-
-bool CpuCache::AddTraceContent(int32_t pid, int32_t trace_id,
-                               const std::string& trace_content) {
-  const string& file_name = GetCachedFileName(pid, trace_id);
-  file_cache_->AddChunk(file_name, trace_content);
-  file_cache_->Complete(file_name);
-  return true;
-}
-
-bool CpuCache::RetrieveTraceContent(int32_t pid, int32_t trace_id,
-                                    string* output) {
-  std::shared_ptr<File> file =
-      file_cache_->GetFile(GetCachedFileName(pid, trace_id));
-  if (file.get() != nullptr) {
-    *output = file->Contents();
-    return true;
-  }
-  return false;
 }
 
 CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
@@ -202,12 +204,6 @@ CpuCache::AppCpuCache* CpuCache::FindAppCache(int32_t pid) {
     }
   }
   return nullptr;
-}
-
-string CpuCache::GetCachedFileName(int32_t pid, int32_t trace_id) {
-  std::ostringstream oss;
-  oss << "CpuTraceContent-" << pid << "-" << trace_id << ".trace";
-  return oss.str();
 }
 
 }  // namespace profiler

@@ -15,6 +15,9 @@
  */
 #include "perfd/cpu/internal_cpu_service.h"
 
+#include <sstream>
+#include <string>
+
 #include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/process_manager.h"
@@ -47,7 +50,6 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     SteadyClock clock;
 
     capture.trace_id = clock.GetCurrentTime();
-    capture.trace_path = request->start().arg_trace_path();
     capture.start_timestamp = request->timestamp();
     capture.end_timestamp = -1;
     capture.configuration.set_app_name(process_manager.GetCmdlineForPid(pid));
@@ -77,8 +79,12 @@ Status InternalCpuServiceImpl::SendTraceEvent(
           "initiated by startMetghodTracing* APIs");
     } else {
       cache_.AddProfilingStop(pid);
-      cache_.AddTraceContent(request->pid(), ongoing->trace_id,
-                             request->stop().trace_content());
+
+      std::ostringstream oss;
+      oss << ongoing->trace_id;
+      std::string file_name = oss.str();
+      file_cache_->AddChunk(file_name, request->stop().trace_content());
+      file_cache_->Complete(file_name);
     }
     std::cout << " STOP trace_id=" << ongoing->trace_id
               << " size=" << request->stop().trace_content().size()

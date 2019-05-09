@@ -55,9 +55,9 @@ class AtraceManager {
   virtual ~AtraceManager() { Shutdown(); };
 
   // Returns true if profiling of app |app_name| was started successfully.
-  // |trace_path| is also set to where the trace file will be made available
-  // once profiling of this app is stopped. To call this method on an already
-  // profiled app is a noop and returns false.
+  // |trace_path| is where the trace file will be made available once profiling
+  // of this app is stopped. To call this method on an already profiled app is
+  // a noop and returns false.
   // |acquired_buffer_size_kb| is an out parameter of the buffer size Atrace was
   // able to allocate. If start profiling was unsucessful this parameter is 0 or
   // the last buffer size attempted.
@@ -65,20 +65,16 @@ class AtraceManager {
   // TODO: Investigate if running atrace with two different application
   // names keeps the profiling unique.
   bool StartProfiling(const std::string &app_name, int buffer_size_in_mb,
-                      int *acquired_buffer_size_kb, std::string *trace_path,
-                      std::string *error);
+                      int *acquired_buffer_size_kb,
+                      const std::string &trace_path, std::string *error);
   profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
       const std::string &app_name, bool need_result, std::string *error);
   void Shutdown();
   bool IsProfiling() { return is_profiling_; }
   int GetDumpCount() { return dumps_created_; }
 
-  // Generates the trace path to be used for storing trace files.
-  virtual std::string GetTracePath(const std::string &app_name) const;
-
  private:
   std::unique_ptr<FileSystem> file_system_;
-  Clock *clock_;
   AtraceProfilingMetadata profiled_app_;
   // Protects atrace start/stop
   std::mutex start_stop_mutex_;
@@ -92,10 +88,6 @@ class AtraceManager {
   int dumps_created_;  // Incremented by the atrace_thread_.
   bool is_profiling_;  // Writen to by main thread, read from by atrace thread.
   std::unique_ptr<Atrace> atrace_;
-
-  // Generate the filename pattern used for trace and log (a name guaranteed
-  // not to collide and without an extension).
-  std::string GetFileBaseName(const std::string &app_name) const;
 
   // Function to dump atrace data periodically this should be run in its own
   // thread.

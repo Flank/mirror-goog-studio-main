@@ -18,8 +18,6 @@
 #include "perfetto.h"
 
 #include "proto/profiler.grpc.pb.h"
-#include "utils/current_process.h"
-#include "utils/log.h"
 #include "utils/trace.h"
 
 using profiler::proto::CpuProfilingAppStopResponse;
@@ -34,7 +32,7 @@ PerfettoManager::PerfettoManager(Clock* clock,
 
 bool PerfettoManager::StartProfiling(
     const std::string& app_name, const std::string& abi_arch,
-    const perfetto::protos::TraceConfig& config, std::string* trace_path,
+    const perfetto::protos::TraceConfig& config, const std::string& trace_path,
     std::string* error) {
   if (perfetto_->IsPerfettoRunning()) {
     error->append("Perfetto is already running unable to start new trace.");
@@ -45,11 +43,8 @@ bool PerfettoManager::StartProfiling(
     return false;
   }
   Trace trace("CPU: StartProfiling perfetto");
-  // Point trace path to entry's trace path so the trace can be pulled later.
-  *trace_path =
-      CurrentProcess::dir() + GetFileBaseName(app_name) + ".perfetto.trace";
   Perfetto::LaunchStatus status =
-      perfetto_->Run({config, abi_arch, *trace_path});
+      perfetto_->Run({config, abi_arch, trace_path});
   if ((status & Perfetto::FAILED_LAUNCH_PERFETTO) != 0) {
     error->append("Failed to launch perfetto.\n");
   }
@@ -88,15 +83,6 @@ void PerfettoManager::Shutdown() {
   if (IsProfiling()) {
     perfetto_->Shutdown();
   }
-}
-
-string PerfettoManager::GetFileBaseName(const string& app_name) const {
-  std::ostringstream trace_filebase;
-  trace_filebase << "perfetto-";
-  trace_filebase << app_name;
-  trace_filebase << "-";
-  trace_filebase << clock_->GetCurrentTime();
-  return trace_filebase.str();
 }
 
 perfetto::protos::TraceConfig PerfettoManager::BuildConfig(

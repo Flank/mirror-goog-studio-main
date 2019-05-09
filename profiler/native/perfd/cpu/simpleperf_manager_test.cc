@@ -37,9 +37,13 @@ TEST(SimpleperfManagerTest, StartProfiling) {
   string abi = "arm";
 
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
-                                    &error);
+  EXPECT_TRUE(simpleperf_manager.StartProfiling(app_name, abi, 1000,
+                                                fake_trace_path, &error));
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
+
+  // Should not be able to start profiling twice.
+  EXPECT_FALSE(simpleperf_manager.StartProfiling(app_name, abi, 1000,
+                                                 fake_trace_path, &error));
 }
 
 TEST(SimpleperfManagerTest, StartStartupProfiling) {
@@ -52,7 +56,7 @@ TEST(SimpleperfManagerTest, StartStartupProfiling) {
   string abi = "arm";
 
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error, true);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 }
@@ -70,7 +74,7 @@ TEST(SimpleperfManagerTest, StartProfilingWithoutProfilingEnabled) {
   string app_name = "some_app_name";
   string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_FALSE(simpleperf_manager.IsProfiling(app_name));
   EXPECT_THAT(error, HasSubstr("Unable to setprop to enable profiling"));
@@ -85,7 +89,7 @@ TEST(SimpleperfManagerTest, StopProfilingProfiledApp) {
   string app_name = "some_app_name";
   string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
@@ -120,7 +124,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToKillSimpleperf) {
   string app_name = "some_app_name";
   string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
@@ -147,7 +151,7 @@ TEST(SimpleperfManagerTest, StopProfilingFailToConvertProto) {
   string app_name = "some_app_name";
   string abi = "arm";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
@@ -167,7 +171,7 @@ TEST(SimpleperfManagerTest, StopSimpleperfProfiledApp) {
   string app_name = "some_app_name";
   string abi = "x86";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
@@ -192,7 +196,7 @@ TEST(SimpleperfManagerTest, StopSimpleperfFailToKillSimpleperf) {
   string app_name = "some_app_name";
   string abi = "x86_64";
 
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   EXPECT_TRUE(simpleperf_manager.IsProfiling(app_name));
 
@@ -217,7 +221,7 @@ TEST(SimpleperfManagerTest, ReportSampleNotCalledIfRunningOnHost) {
   string abi = "arm";
 
   bool report_sample_on_host = true;
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   simpleperf_manager.StopProfiling(app_name, true, report_sample_on_host,
                                    &error);
@@ -228,7 +232,7 @@ TEST(SimpleperfManagerTest, ReportSampleNotCalledIfRunningOnHost) {
   EXPECT_FALSE(fake_simpleperf->GetReportSampleCalled());
 
   report_sample_on_host = false;
-  simpleperf_manager.StartProfiling(app_name, abi, 1000, &fake_trace_path,
+  simpleperf_manager.StartProfiling(app_name, abi, 1000, fake_trace_path,
                                     &error);
   simpleperf_manager.StopProfiling(app_name, true, report_sample_on_host,
                                    &error);

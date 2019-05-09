@@ -42,7 +42,8 @@ ActivityManager::ActivityManager()
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
                                      int sampling_interval_us,
-                                     string *trace_path, string *error_string,
+                                     const string &trace_path,
+                                     string *error_string,
                                      bool is_startup_profiling) {
   Trace trace("CPU:StartProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
@@ -51,7 +52,6 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
     *error_string = "App is already being profiled with ART";
     return false;
   }
-  *trace_path = this->GenerateTracePath(app_package_name);
   // if |is_startup_profiling| is true, it means that profiling started with
   // activity launch command, so there is no need to start profiling.
   if (!is_startup_profiling) {
@@ -72,13 +72,13 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
     // eyes of Activity Service. See b/112379230 for details.
     parameters << (app_package_name == "system_server" ? "system"
                                                        : app_package_name);
-    parameters << " " << *trace_path;
+    parameters << " " << trace_path;
     if (!bash_->Run(parameters.str(), error_string)) {
       *error_string = "Unable to run profile start command";
       return false;
     }
   }
-  AddProfiledApp(app_package_name, *trace_path);
+  AddProfiledApp(app_package_name, trace_path);
   return true;
 }
 
@@ -154,20 +154,6 @@ void ActivityManager::Shutdown() {
   for (auto const &record : profiled_) {
     RunProfileStopCmd(record.first, &error);
   }
-}
-
-std::string ActivityManager::GenerateTracePath(
-    const std::string &app_package_name) const {
-  // TODO: The activity manager should be a component of the daemon.
-  // And it should use the daemon's steady clock.
-  SteadyClock clock;
-  std::stringstream path;
-  path << CurrentProcess::dir();
-  path << app_package_name;
-  path << "-";
-  path << clock.GetCurrentTime();
-  path << ".art_trace";
-  return path.str();
 }
 
 ActivityManager *ActivityManager::Instance() {

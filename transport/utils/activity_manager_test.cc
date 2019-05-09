@@ -67,14 +67,13 @@ TEST(ActivityManagerTest, SamplingStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::SAMPLING,
-                         kTestPackageName, 1000, &trace_path, &output_string);
+                         kTestPackageName, 1000, trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(kTestPackageName));
   EXPECT_THAT(cmd, HasSubstr("--sampling 1000 "));
   // '--sampling 0' is effectively instrumentation mode.
   EXPECT_THAT(cmd, Not(HasSubstr("--sampling 0 ")));
-  EXPECT_THAT(trace_path, StrNe(""));
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 
@@ -90,12 +89,11 @@ TEST(ActivityManagerTest, InstrumentStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::INSTRUMENTED,
-                         kTestPackageName, 1000, &trace_path, &output_string);
+                         kTestPackageName, 1000, trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(kTestPackageName));
   EXPECT_THAT(cmd, Not(HasSubstr("--sampling")));
-  EXPECT_THAT(trace_path, StrNe(""));
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 
@@ -111,12 +109,11 @@ TEST(ActivityManagerTest, InstrumentSystemServerStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::INSTRUMENTED,
-                         "system_server", 1000, &trace_path, &output_string);
+                         "system_server", 1000, trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(" system "));
   EXPECT_THAT(cmd, Not(HasSubstr(" system_server ")));
-  EXPECT_THAT(trace_path, StrNe(""));
   EXPECT_THAT(output_string, StrEq(kMockOutputString));
 }
 

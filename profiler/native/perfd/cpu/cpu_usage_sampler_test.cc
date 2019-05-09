@@ -24,7 +24,6 @@
 #include "perfd/cpu/cpu_cache.h"
 #include "test/utils.h"
 #include "utils/fake_clock.h"
-#include "utils/fs/memory_file_system.h"
 #include "utils/procfs_files.h"
 
 using profiler::Clock;
@@ -86,10 +85,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kElapsedTime = 1175801430;
 
   FakeClock clock;
-  FileCache file_cache(
-      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
-      "/");
-  CpuCache cache(100, &clock, &file_cache);
+  CpuCache cache(100, &clock);
   cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler(&clock, &cache);
   sampler.AddProcess(kMockAppPid);
@@ -128,10 +124,7 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_2 = 140;
 
   FakeClock clock;
-  FileCache file_cache(
-      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
-      "/");
-  CpuCache cache(100, &clock, &file_cache);
+  CpuCache cache(100, &clock);
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);
   CpuUsageSamplerToTest sampler(&clock, &cache);
