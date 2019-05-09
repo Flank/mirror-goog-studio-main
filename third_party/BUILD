@@ -134,7 +134,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.auto.value_auto-value-annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value-annotations/1.6.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value-annotations/1.6.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -275,7 +275,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.truth.extensions_truth-java8-extension",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.42:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.44:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.truth_truth",
@@ -286,7 +286,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "com.google.truth_truth",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.42:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/truth/truth/0.44:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.auto.value_auto-value-annotations",
@@ -295,7 +295,6 @@ maven_java_library(
         ":com.googlecode.java-diff-utils_diffutils",
         ":junit_junit",
         ":org.checkerframework_checker-compat-qual",
-        ":org.checkerframework_checker-qual",
     ],
 )
 
@@ -929,7 +928,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.checkerframework_checker-compat-qual",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-compat-qual/2.5.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-compat-qual/2.5.5:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -937,7 +936,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.checkerframework_checker-qual",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/checkerframework/checker-qual/2.5.5:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

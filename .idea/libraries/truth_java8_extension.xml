@@ -4,11 +4,11 @@
       <root url="file://$PROJECT_DIR$/external-annotations" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.42/truth-java8-extension-0.42.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.44/truth-java8-extension-0.44.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.42/truth-java8-extension-0.42-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/com/google/truth/extensions/truth-java8-extension/0.44/truth-java8-extension-0.44-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
