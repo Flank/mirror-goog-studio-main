@@ -21,7 +21,7 @@ import com.android.SdkConstants.FD_NDK_SIDE_BY_SIDE
 import com.android.SdkConstants.FN_SOURCE_PROP
 import com.android.SdkConstants.NDK_DIR_PROPERTY
 import com.google.common.annotations.VisibleForTesting
-import com.android.build.gradle.internal.SdkHandler
+import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.configure.LocationType.ANDROID_NDK_HOME_LOCATION
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_BUNDLE_FOLDER_LOCATION
 import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_DIR_LOCATION
@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.builder.errors.EvalIssueReporter
 import com.android.repository.Revision
-import com.android.repository.Revision.parseRevision
 import com.android.utils.FileUtils.join
 import java.io.File
 import java.io.FileNotFoundException
@@ -435,8 +434,7 @@ fun findNdkPath(
 ): NdkLocatorRecord {
     IssueReporterLoggingEnvironment(evalIssueReporter).use {
         val properties = gradleLocalProperties(projectDir)
-        val sdkLocation = SdkHandler.findSdkLocation(properties, projectDir)
-        val sdkPath = sdkLocation.first
+        val sdkPath = SdkLocator.getSdkLocation(projectDir).directory
         return findNdkPathWithRecord(
             ndkVersionFromDsl,
             properties.getProperty(NDK_DIR_PROPERTY),

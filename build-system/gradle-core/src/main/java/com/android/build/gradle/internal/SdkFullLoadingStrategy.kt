@@ -27,7 +27,7 @@ import java.io.File
 import java.util.function.Supplier
 
 class SdkFullLoadingStrategy(
-    private val backingSdkHandler: SdkHandler,
+    private val sdkHandlerSupplier: Supplier<SdkHandler>,
     private val platformTargetHashSupplier: Supplier<String?>,
     private val buildToolRevisionSupplier: Supplier<Revision?>,
     private val useAndroidX: Boolean) {
@@ -47,12 +47,14 @@ class SdkFullLoadingStrategy(
         val buildToolRevision = checkNotNull(buildToolRevisionSupplier.get()) {
             "Extension not initialized yet, couldn't access buildToolsVersion."}
 
-        val result = backingSdkHandler.initTarget(platformHash, buildToolRevision)
+        val sdkHandler = sdkHandlerSupplier.get()
+
+        val result = sdkHandler.initTarget(platformHash, buildToolRevision)
         if (result == null) {
             sdkInitResult = false
             return false
         }
-        backingSdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure()
+        sdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure()
         sdkInitResult = true
         sdkInfo = result.first
         targetInfo = result.second
@@ -96,6 +98,6 @@ class SdkFullLoadingStrategy(
     @Synchronized
     fun reset() {
         sdkInitResult = null
-        backingSdkHandler.unload()
+        sdkHandlerSupplier.get().unload()
     }
 }

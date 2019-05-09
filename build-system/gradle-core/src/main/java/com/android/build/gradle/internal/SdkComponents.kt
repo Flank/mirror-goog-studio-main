@@ -39,8 +39,10 @@ import java.util.function.Supplier
 open class SdkComponents(
     project: Project,
     private val sdkLoadStrategy: SdkLoadingStrategy,
-    private val sdkHandler: SdkHandler,
+    private val sdkHandlerSupplier: Supplier<SdkHandler>,
     val ndkHandlerSupplier: Supplier<NdkHandler>) {
+
+    private val projectRootDir = project.rootDir
 
     companion object {
         fun createSdkComponents(
@@ -50,15 +52,29 @@ open class SdkComponents(
             logger: ILogger,
             evalIssueReporter: EvalIssueReporter): SdkComponents {
 
-            val sdkHandler = SdkHandler(project, logger, evalIssueReporter)
+            val sdkSourceSet = SdkLocationSourceSet(project.rootDir)
+
+            val sdkHandlerSupplier = Suppliers.memoize {
+                val sdkHandler = SdkHandler(
+                    sdkSourceSet,
+                    logger,
+                    evalIssueReporter)
+                sdkHandler.setSdkLibData(
+                    SdkLibDataFactory(
+                        !project.gradle.startParameter.isOffline && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD),
+                        projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL),
+                        logger
+                    ).getSdkLibData())
+                sdkHandler
+            }
 
             val fullScanLoadingStrategy = SdkFullLoadingStrategy(
-                sdkHandler,
+                sdkHandlerSupplier,
                 Supplier { extensionSupplier.get()?.compileSdkVersion },
                 Supplier { extensionSupplier.get()?.buildToolsRevision },
                 projectOptions.get(BooleanOption.USE_ANDROID_X))
             val directLoadingStrategy = SdkDirectLoadingStrategy(
-                sdkHandler.sdkFolder,
+                sdkSourceSet,
                 Supplier { extensionSupplier.get()?.compileSdkVersion },
                 Supplier { extensionSupplier.get()?.buildToolsRevision },
                 projectOptions.get(BooleanOption.USE_ANDROID_X),
@@ -76,14 +92,7 @@ open class SdkComponents(
                     project.rootDir)
             }
 
-            sdkHandler.setSdkLibData(
-                SdkLibDataFactory(
-                    !project.gradle.startParameter.isOffline && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD),
-                    projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL),
-                    logger
-                ).getSdkLibData())
-
-            return SdkComponents(project, sdkLoadWithFallback, sdkHandler, ndkHandlerSupplier)
+            return SdkComponents(project, sdkLoadWithFallback, sdkHandlerSupplier, ndkHandlerSupplier)
 
         }
     }
@@ -124,25 +133,14 @@ open class SdkComponents(
     // TODO: Add mechanism to warn if those are called during configuration time.
 
     fun installNdk(ndkHandler: NdkHandler) {
-        sdkHandler.installNdk(ndkHandler)
+        sdkHandlerSupplier.get().installNdk(ndkHandler)
     }
 
     fun installCmake(version: String) {
-        sdkHandler.installCMake(version)
+        sdkHandlerSupplier.get().installCMake(version)
     }
-
-    // These old methods are not expensive and are computed on SdkHandler creation by navigating
-    // through the directories set by the user using the configuration mechanisms.
 
     fun getSdkFolder(): File? {
-        return sdkHandler.sdkFolder
-    }
-
-    fun getCMakeExecutable(): File? {
-        return sdkHandler.cmakePathInLocalProp
-    }
-
-    fun getNdkSymlinkDirInLocalProp(): File? {
-        return sdkHandler.ndkSymlinkDirInLocalProp
+        return SdkLocator.getSdkLocation(projectRootDir).directory
     }
 }

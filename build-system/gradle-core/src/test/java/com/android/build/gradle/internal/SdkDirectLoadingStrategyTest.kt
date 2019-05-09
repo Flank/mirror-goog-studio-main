@@ -30,6 +30,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.Properties
 import java.util.function.Supplier
 
 class SdkDirectLoadingStrategyTest {
@@ -156,17 +157,20 @@ class SdkDirectLoadingStrategyTest {
     @Before
     fun setup() {
         SdkDirectLoadingStrategy.clearCaches()
+        SdkLocator.sdkTestDirectory = testFolder.newFolder("sdk")
     }
 
     @After
     fun tearDown() {
         SdkDirectLoadingStrategy.clearCaches()
+        SdkLocator.sdkTestDirectory = null
+        SdkLocator.resetCache()
     }
 
     @Test
     fun load_ok() {
-        val sdkDirectory = configureSdkDirectory()
-        val directLoader = getDirectLoader(sdkDirectory)
+        configureSdkDirectory()
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isTrue()
         assertAllComponentsArePresent(directLoader)
@@ -174,23 +178,24 @@ class SdkDirectLoadingStrategyTest {
 
     @Test
     fun load_cacheHit() {
-        val sdkDirectory = configureSdkDirectory()
+        configureSdkDirectory()
 
         // Add it to the cache.
-        getDirectLoader(sdkDirectory)
+        getDirectLoader()
 
         // We delete the sdk files to make sure it's not going to the disk again.
         testFolder.root.resolve("platforms").deleteRecursively()
 
         // We request it again, should be fetched direct from the cache.
-        val directLoader = getDirectLoader(sdkDirectory)
+        val directLoader = getDirectLoader()
         assertThat(directLoader.loadedSuccessfully()).isTrue()
         assertAllComponentsArePresent(directLoader)
     }
 
     @Test
     fun load_badSdkDirectory() {
-        val directLoader = getDirectLoader(testFolder.root)
+        SdkLocator.sdkTestDirectory = testFolder.root.resolve("bad_sdk")
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -198,8 +203,8 @@ class SdkDirectLoadingStrategyTest {
 
     @Test
     fun load_missingPlatform() {
-        val sdkDirectory = configureSdkDirectory(configurePlatform = false)
-        val directLoader = getDirectLoader(sdkDirectory)
+        configureSdkDirectory(configurePlatform = false)
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -208,8 +213,8 @@ class SdkDirectLoadingStrategyTest {
     @Test
     fun load_wrongPlatform() {
         // We put the 28 API in the "android-27" directory and request it.
-        val sdkDirectory = configureSdkDirectory(platformDirectory = "android-27")
-        val directLoader = getDirectLoader(sdkDirectory, platformHash = "android-27")
+        configureSdkDirectory(platformDirectory = "android-27")
+        val directLoader = getDirectLoader(platformHash = "android-27")
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -217,8 +222,8 @@ class SdkDirectLoadingStrategyTest {
 
     @Test
     fun load_missingBuildTools() {
-        val sdkDirectory = configureSdkDirectory(configureBuildTools = false)
-        val directLoader = getDirectLoader(sdkDirectory)
+        configureSdkDirectory(configureBuildTools = false)
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -228,8 +233,8 @@ class SdkDirectLoadingStrategyTest {
     fun load_oldBuildTools() {
         // Even if we request an older version, it should bump to the one in
         // ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION and look for it.
-        val sdkDirectory = configureSdkDirectory()
-        val directLoader = getDirectLoader(sdkDirectory, buildTools = "27.0.0")
+        configureSdkDirectory()
+        val directLoader = getDirectLoader(buildTools = "27.0.0")
 
         assertThat(directLoader.loadedSuccessfully()).isTrue()
         assertAllComponentsArePresent(directLoader)
@@ -237,8 +242,8 @@ class SdkDirectLoadingStrategyTest {
 
     @Test
     fun load_missingPlatformTools() {
-        val sdkDirectory = configureSdkDirectory(configurePlatformTools = false)
-        val directLoader = getDirectLoader(sdkDirectory)
+        configureSdkDirectory(configurePlatformTools = false)
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -246,19 +251,18 @@ class SdkDirectLoadingStrategyTest {
 
     @Test
     fun load_missingSupportTools() {
-        val sdkDirectory = configureSdkDirectory(configureSupportTools = false)
-        val directLoader = getDirectLoader(sdkDirectory)
+        configureSdkDirectory(configureSupportTools = false)
+        val directLoader = getDirectLoader()
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
     }
 
     private fun getDirectLoader(
-        sdkDir: File,
         platformHash: String = "android-28",
         buildTools: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION): SdkDirectLoadingStrategy {
         return SdkDirectLoadingStrategy(
-            sdkDir,
+            SdkLocationSourceSet(testFolder.root, Properties(), Properties(), Properties()),
             Supplier { platformHash },
             Supplier { Revision.parseRevision(buildTools) },
             true,
@@ -274,7 +278,7 @@ class SdkDirectLoadingStrategyTest {
         configurePlatformTools: Boolean = true,
         configureSupportTools: Boolean = true): File {
 
-        val sdkDir = testFolder.newFolder("sdk")
+        val sdkDir = SdkLocator.sdkTestDirectory!!
 
         if (configurePlatform) {
             val platformRoot = sdkDir.resolve("platforms/$platformDirectory")

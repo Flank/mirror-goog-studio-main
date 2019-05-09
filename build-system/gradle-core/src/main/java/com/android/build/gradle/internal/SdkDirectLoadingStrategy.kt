@@ -38,14 +38,14 @@ import java.util.function.Supplier
  * This loads the SDK and BuildTools specified inside the {@code options} directly, without
  * performing a full SDK scan (see {@link SdkFullLoadingStrategy}).
  *
- * <p>This is done by trying to predict the location of the buildtool/SDK requested and parsing
+ * <p>This is done by trying to predict the directory of the buildtool/SDK requested and parsing
  * only those package.xml files (with some basic validation).
  *
  * <p>Unlike the full SDK scan, it cannot load/find sdk components that are installed in a
  * non-default directory structure.
  */
 class SdkDirectLoadingStrategy(
-    private val sdkDirectory: File?,
+    private val sdkLocationSourceSet: SdkLocationSourceSet,
     private val platformTargetHashSupplier: Supplier<String?>,
     private val buildToolRevisionSupplier: Supplier<Revision?>,
     private val useAndroidX: Boolean,
@@ -87,7 +87,12 @@ class SdkDirectLoadingStrategy(
     }
 
     private fun loadSdkComponents(targetHash: String, buildToolRevision: Revision): DirectLoadComponents? {
-        if (sdkDirectory == null || !sdkDirectory.exists()) return null
+        val sdkLocation = SdkLocator.getSdkLocation(sdkLocationSourceSet)
+        if (sdkLocation.type == SdkType.MISSING) {
+            return null
+        }
+
+        val sdkDirectory = sdkLocation.directory!!
 
         val platformTools = PlatformToolsComponents.build(sdkDirectory)
         val supportTools = SupportToolsComponents.build(sdkDirectory)

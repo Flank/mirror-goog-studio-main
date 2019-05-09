@@ -25,7 +25,7 @@ import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.LibraryPlugin;
-import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.options.Option;
 import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
@@ -137,7 +137,7 @@ public class TestProjects {
 
         @NonNull
         public Project build() throws IOException {
-            SdkHandler.setTestSdkFolder(TestUtils.getSdk());
+            SdkLocator.setSdkTestDirectory(TestUtils.getSdk());
 
             Path manifest = projectDir.resolve("src/main/AndroidManifest.xml");
 

@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkComponents;
-import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.SdkLocator;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
@@ -417,6 +417,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         ModelBuilder.clearCaches();
                         Workers.INSTANCE.shutdown();
                         sdkComponents.unload();
+                        SdkLocator.resetCache();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
                                 project.getPath(),
@@ -704,7 +705,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         // This is because project don't get evaluated in the unit test setup.
         // See AppPluginDslTest
         if ((!project.getState().getExecuted() || project.getState().getFailure() != null)
-                && SdkHandler.sTestSdkFolder == null) {
+                && SdkLocator.getSdkTestDirectory() == null) {
             return;
         }
 

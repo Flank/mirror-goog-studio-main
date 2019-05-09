@@ -20,7 +20,7 @@ import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.build.gradle.internal.cxx.configure.findNdkPath
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.SdkHandler
+import com.android.build.gradle.internal.SdkLocator
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.NdkLocatorRecord
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
@@ -285,8 +285,7 @@ class NdkHandler(
                 return File(ndkEnvVar)
             }
 
-            val sdkLocation = SdkHandler.findSdkLocation(properties, projectDir)
-            val sdkFolder = sdkLocation.first
+            val sdkFolder = SdkLocator.getSdkLocation(projectDir).directory
             if (sdkFolder != null) {
                 // Worth checking if the NDK came bundled with the SDK
                 val ndkBundle = File(sdkFolder, SdkConstants.FD_NDK)
