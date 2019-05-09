@@ -14,51 +14,50 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
 
-import static com.android.testutils.truth.FileSubject.assertThat;
+import com.android.testutils.truth.FileSubject.assertThat
 
-import com.android.builder.compiling.ResValueGenerator;
-import com.android.builder.internal.ClassFieldImpl;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.IOException;
-import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import com.android.builder.compiling.ResValueGenerator
+import com.android.builder.internal.ClassFieldImpl
+import com.google.common.collect.ImmutableList
+import java.io.File
+import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /**
  * Unit test for GenerateResValues
  */
-public class GenerateResValuesTest {
+class GenerateResValuesTest {
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
 
     @Test
-    public void test () throws IOException, ParserConfigurationException {
-        File testDir = temporaryFolder.newFolder();
-        Project project = ProjectBuilder.builder().withProjectDir(testDir).build();
+    fun test() {
+        val testDir = temporaryFolder.newFolder()
+        val project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
-        GenerateResValues task =  project.getTasks().create("test", GenerateResValues.class);
-        task.setItems(ImmutableList.of(new ClassFieldImpl("string", "VALUE_DEFAULT", "1")));
-        task.setResOutputDir(testDir);
+        val task = project.tasks.create("test", GenerateResValues::class.java)
+        task.items = ImmutableList.of(ClassFieldImpl("string", "VALUE_DEFAULT", "1"))
+        task.resOutputDir = testDir
 
-        task.doTaskAction();
+        task.taskAction()
 
-        File output = new File(testDir, "values/" + ResValueGenerator.RES_VALUE_FILENAME_XML);
+        val output = File(testDir, "values/" + ResValueGenerator.RES_VALUE_FILENAME_XML)
         assertThat(output).contentWithUnixLineSeparatorsIsExactly(
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "\n"
-                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
-                        + "\n"
-                        + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
-                + "\n"
-                + "</resources>");
+            """
+                <?xml version="1.0" encoding="utf-8"?>
+                <resources>
+
+                    <!-- Automatically generated file. DO NOT MODIFY -->
+
+                    <string name="VALUE_DEFAULT" translatable="false">1</string>
+
+                </resources>""".trimIndent()
+        )
     }
 }
