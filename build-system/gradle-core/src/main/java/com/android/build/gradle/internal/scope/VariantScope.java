@@ -217,12 +217,6 @@ public interface VariantScope extends TransformVariantScope {
     @NonNull
     File getSourceFoldersJavaResDestinationDir();
 
-    @NonNull
-    File getAarClassesJar();
-
-    @NonNull
-    File getAarLibsDirectory();
-
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique
      * per task, ideally generated with {@link

@@ -1123,18 +1123,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public File getAarClassesJar() {
-        return intermediate("packaged-classes", FN_CLASSES_JAR);
-    }
-
-    @NonNull
-    @Override
-    public File getAarLibsDirectory() {
-        return intermediate("packaged-classes", SdkConstants.LIBS_FOLDER);
-    }
-
-    @NonNull
-    @Override
     public File getCoverageReportDir() {
         return new File(globalScope.getReportsDir(), "coverage/" + getDirName());
     }

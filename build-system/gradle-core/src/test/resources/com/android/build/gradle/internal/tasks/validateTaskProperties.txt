@@ -48,6 +48,8 @@ Warning: Task type 'com.android.build.gradle.internal.tasks.InstantAppProvisionT
 Warning: Task type 'com.android.build.gradle.internal.tasks.InstantAppSideLoadTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.JacocoTask': property 'inputClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.JacocoTask': property 'jacocoAntTaskConfiguration' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
+Warning: Task type 'com.android.build.gradle.internal.tasks.LibraryAarJarsTask': property 'excludeListProvider' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.LibraryAarJarsTask': property 'packageNameSupplier' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'autoFix' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'fatalOnly' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.LintStandaloneTask': property 'lintOptions' is not annotated with an input or output annotation.

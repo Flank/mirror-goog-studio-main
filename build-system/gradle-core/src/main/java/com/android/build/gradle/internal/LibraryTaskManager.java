@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
+import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
@@ -47,7 +48,6 @@ import com.android.build.gradle.internal.tasks.PackageRenderscriptTask;
 import com.android.build.gradle.internal.tasks.StripDebugSymbolsTask;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
-import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
@@ -64,7 +64,6 @@ import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -280,46 +279,16 @@ public class LibraryTaskManager extends TaskManager {
         maybeCreateJavaCodeShrinkerTransform(variantScope);
         maybeCreateResourcesShrinkerTransform(variantScope);
 
-        // now add a transform that will take all the class/res and package them
+        // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.
-        // This transform technically does not use its transform output, but that's
-        // ok. We use the transform mechanism to get incremental data from
-        // the streams.
         // This is used for building the AAR.
 
-        File classesJar = variantScope.getAarClassesJar();
-        File libsDirectory = variantScope.getAarLibsDirectory();
-        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+        taskFactory.register(
+                new LibraryAarJarsTask.CreationAction(
+                        variantScope,
+                        extension.getPackageBuildConfig(),
+                        excludeDataBindingClassesIfNecessary(variantScope)));
 
-        LibraryAarJarsTransform transform =
-                new LibraryAarJarsTransform(
-                        classesJar,
-                        libsDirectory,
-                        artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
-                                ? artifacts.getFinalProduct(
-                                        InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
-                                : null,
-                        variantConfig::getPackageFromManifest,
-                        extension.getPackageBuildConfig());
-
-        transform.setExcludeListProvider(excludeDataBindingClassesIfNecessary(variantScope));
-
-        transformManager.addTransform(
-                taskFactory,
-                variantScope,
-                transform,
-                taskName -> {
-                    artifacts.appendArtifact(
-                            InternalArtifactType.AAR_MAIN_JAR,
-                            ImmutableList.of(classesJar),
-                            taskName);
-                    artifacts.appendArtifact(
-                            InternalArtifactType.AAR_LIBS_DIRECTORY,
-                            ImmutableList.of(libsDirectory),
-                            taskName);
-                },
-                null,
-                null);
 
         // now add a task that will take all the native libs and package
         // them into the libs folder of the bundle. This processes both the PROJECT

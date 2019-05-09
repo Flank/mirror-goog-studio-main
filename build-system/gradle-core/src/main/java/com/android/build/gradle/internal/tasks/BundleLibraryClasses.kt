@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform
 import com.android.builder.packaging.JarMerger
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
@@ -49,7 +48,7 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
 
 /**
  * Bundle all library classes in a jar. Additional filters can be specified, in addition to ones
- * defined in [LibraryAarJarsTransform.getDefaultExcludes].
+ * defined in [LibraryAarJarsTask.getDefaultExcludes].
  */
 abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
@@ -168,7 +167,7 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         params.output.parentFile.mkdirs()
 
         val ignorePatterns =
-            (LibraryAarJarsTransform.getDefaultExcludes(
+            (LibraryAarJarsTask.getDefaultExcludes(
                 params.packageName,
                 params.packageBuildConfig
             ) + params.toIgnore)

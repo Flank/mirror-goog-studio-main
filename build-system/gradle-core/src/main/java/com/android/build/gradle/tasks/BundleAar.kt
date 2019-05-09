@@ -139,9 +139,9 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             task.from(variantScope.globalScope.artifacts
                 .getFinalProduct<RegularFile>(InternalArtifactType.LINT_PUBLISH_JAR))
             task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.ANNOTATIONS_ZIP))
-            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_MAIN_JAR))
+            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.AAR_MAIN_JAR))
             task.from(
-                artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_LIBS_DIRECTORY),
+                artifacts.getFinalProduct<Directory>(InternalArtifactType.AAR_LIBS_DIRECTORY),
                 prependToCopyPath(SdkConstants.LIBS_FOLDER)
             )
             task.from(
