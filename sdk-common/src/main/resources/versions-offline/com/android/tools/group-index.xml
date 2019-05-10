@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools>
-  <dvlib versions="26.3.2,26.5.0-alpha08"/>
-  <sdklib versions="26.3.2,26.5.0-alpha08"/>
-  <repository versions="26.3.2,26.5.0-alpha08"/>
-  <annotations versions="26.3.2,26.5.0-alpha08"/>
-  <devicelib versions="26.3.2,26.5.0-alpha08"/>
-  <sdk-common versions="26.3.2,26.5.0-alpha08"/>
-  <testutils versions="26.3.2,26.5.0-alpha08"/>
-  <common versions="26.3.2,26.5.0-alpha08"/>
-  <r8 versions="1.3.52"/>
-  <draw9patch versions="26.3.2,26.5.0-alpha08"/>
-  <ninepatch versions="26.3.2,26.5.0-alpha08"/>
+  <dvlib versions="26.4.0,26.5.0-beta01"/>
+  <sdklib versions="26.4.0,26.5.0-beta01"/>
+  <repository versions="26.4.0,26.5.0-beta01"/>
+  <annotations versions="26.4.0,26.5.0-beta01"/>
+  <devicelib versions="26.4.0,26.5.0-beta01"/>
+  <sdk-common versions="26.4.0,26.5.0-beta01"/>
+  <testutils versions="26.4.0,26.5.0-beta01"/>
+  <common versions="26.4.0,26.5.0-beta01"/>
+  <r8 versions="1.4.93"/>
+  <draw9patch versions="26.4.0,26.5.0-beta01"/>
+  <ninepatch versions="26.4.0,26.5.0-beta01"/>
 </com.android.tools>
 

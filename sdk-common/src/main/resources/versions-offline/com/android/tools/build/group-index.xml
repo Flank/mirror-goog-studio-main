@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <com.android.tools.build>
   <gradle-experimental versions="0.11.1"/>
-  <manifest-merger versions="26.3.2,26.5.0-alpha08"/>
-  <gradle-api versions="3.3.2,3.5.0-alpha08"/>
+  <manifest-merger versions="26.4.0,26.5.0-beta01"/>
+  <gradle-api versions="3.4.0,3.5.0-beta01"/>
   <transform-api versions="2.0.0-deprecated-use-gradle-api"/>
-  <apksig versions="3.3.2,3.5.0-alpha08"/>
-  <builder-test-api versions="3.3.2,3.5.0-alpha08"/>
-  <gradle versions="3.3.2,3.5.0-alpha08"/>
-  <builder versions="3.3.2,3.5.0-alpha08"/>
-  <builder-model versions="3.3.2,3.5.0-alpha08"/>
+  <apksig versions="3.4.0,3.5.0-beta01"/>
+  <builder-test-api versions="3.4.0,3.5.0-beta01"/>
+  <gradle versions="3.4.0,3.5.0-beta01"/>
+  <builder versions="3.4.0,3.5.0-beta01"/>
+  <builder-model versions="3.4.0,3.5.0-beta01"/>
   <gradle-core versions="3.1.4,3.2.0-alpha10"/>
   <aapt2-proto versions="0.4.0"/>
   <bundletool versions="0.9.0"/>
-  <apkzlib versions="3.3.2,3.5.0-alpha08"/>
-  <aapt2 versions="3.3.2-5309881,3.5.0-alpha08-5342889"/>
+  <apkzlib versions="3.4.0,3.5.0-beta01"/>
+  <aapt2 versions="3.4.0-5326820,3.5.0-beta01-5435860"/>
 </com.android.tools.build>
 

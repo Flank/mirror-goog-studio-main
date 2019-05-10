@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.media>
   <media-widget versions="1.0.0-alpha5"/>
-  <media versions="1.0.1,1.1.0-alpha03"/>
+  <media versions="1.0.1,1.1.0-beta01"/>
 </androidx.media>
 

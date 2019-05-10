@@ -2,8 +2,8 @@
 <com.crashlytics.sdk.android>
   <answers versions="1.4.7"/>
   <beta versions="1.2.10"/>
-  <crashlytics-core versions="2.6.8"/>
-  <crashlytics versions="2.9.9"/>
-  <crashlytics-ndk versions="2.0.5"/>
+  <crashlytics-core versions="2.7.0"/>
+  <crashlytics versions="2.10.0"/>
+  <crashlytics-ndk versions="2.1.0"/>
 </com.crashlytics.sdk.android>
 

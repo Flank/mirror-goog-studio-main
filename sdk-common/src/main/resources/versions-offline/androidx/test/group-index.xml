@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <androidx.test>
-  <monitor versions="1.1.1,1.1.2-alpha02"/>
-  <runner versions="1.1.1,1.1.2-alpha02"/>
-  <orchestrator versions="1.1.1,1.1.2-alpha02"/>
-  <rules versions="1.1.1,1.1.2-alpha02"/>
-  <core versions="1.1.0,1.1.1-alpha02"/>
-  <core-ktx versions="1.1.0,1.1.1-alpha02"/>
+  <monitor versions="1.1.1,1.2.0-beta01"/>
+  <runner versions="1.1.1,1.2.0-beta01"/>
+  <orchestrator versions="1.1.1,1.2.0-beta01"/>
+  <rules versions="1.1.1,1.2.0-beta01"/>
+  <core versions="1.1.0,1.2.0-beta01"/>
+  <core-ktx versions="1.1.0,1.2.0-beta01"/>
 </androidx.test>
 
