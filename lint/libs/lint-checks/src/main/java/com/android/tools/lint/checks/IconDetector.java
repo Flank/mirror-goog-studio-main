@@ -569,7 +569,9 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                                 || endsWithIgnoreCase(name, DOT_JPEG)) {
                             // Launcher icons are not eligible for WEBP conversion
                             String folderName = f.getParentFile().getName();
-                            if (isLauncherIcon(folderName, getBaseName(name))) {
+                            String baseName = getBaseName(name);
+                            if (isLauncherIcon(folderName, baseName)
+                                    || isAdaptiveIconLayer(baseName)) {
                                 continue;
                             }
 
@@ -1612,7 +1614,9 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                 continue;
             }
             String name = file.getName();
-            if (isLauncherIcon(file.getParentFile().getName(), getBaseName(name))) {
+            String baseName = getBaseName(name);
+            if (isLauncherIcon(file.getParentFile().getName(), baseName)
+                    || isAdaptiveIconLayer(baseName)) {
                 Location location = Location.create(file);
                 String message = "Launcher icons must be in PNG format";
                 context.report(WEBP_UNSUPPORTED, location, message);
@@ -2068,6 +2072,8 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
                     // TODO: Should this be done for each folder size?
                     checkSize(context, folderName, file, 25, 25, true, /*exact*/ folderConfig);
                 }
+            } else if (isAdaptiveIconLayer(baseName)) {
+                checkSize(context, folderName, file, 108, 108, true, /*exact*/ folderConfig);
             } else if (name.startsWith("ic_menu_")) {
                 if (isAndroid30(context, folderVersion)) {
                     // Menu icons (<=2.3 only: Replaced by action bar icons (ic_action_ in 3.0).
@@ -2445,7 +2451,7 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
 
         // Naming convention
         //noinspection SimplifiableIfStatement
-        if (name.startsWith("ic_launcher")) {
+        if (name.startsWith("ic_launcher") && !isAdaptiveIconLayer(name)) {
             return true;
         }
 
@@ -2524,6 +2530,14 @@ public class IconDetector extends Detector implements XmlScanner, SourceCodeScan
         }
 
         return false;
+    }
+
+    /**
+     * Checks if the file looks like a foreground or background layer of an adaptive launcher icon.
+     */
+    private static boolean isAdaptiveIconLayer(@NonNull String name) {
+        return name.startsWith("ic_launcher")
+                && (name.endsWith("_foreground") || name.endsWith("_background"));
     }
 
     // XML detector: Skim manifest and menu files

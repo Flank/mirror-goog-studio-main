@@ -565,27 +565,32 @@ public class IconDetectorTest extends AbstractCheckTest {
         String expected =
                 ""
                         + "res/drawable-mdpi/ic_launcher.png: Warning: Incorrect icon size for drawable-mdpi/ic_launcher.png: expected 48x48, but was 24x24 [IconExpectedSize]\n"
+                        + "res/drawable-mdpi/ic_launcher_foreground.png: Warning: Incorrect icon size for drawable-mdpi/ic_launcher_foreground.png: expected 108x108, but was 48x48 [IconExpectedSize]\n"
                         + "res/drawable-mdpi/icon1.png: Warning: Incorrect icon size for drawable-mdpi/icon1.png: expected 32x32, but was 48x48 [IconExpectedSize]\n"
                         + "res/drawable-mdpi/icon3.png: Warning: Incorrect icon size for drawable-mdpi/icon3.png: expected 24x24, but was 48x48 [IconExpectedSize]\n"
-                        + "0 errors, 3 warnings\n";
+                        + "0 errors, 4 warnings\n";
         lint().files(
                         manifest().minSdk(14),
                         mNotificationTest,
                         mMenu,
                         mActionBarTest,
 
-                        // 3 wrong-sized icons:
+                        // 4 wrong-sized icons:
                         image("res/drawable-mdpi/icon1.png", 48, 48).fill(0xFF00FF30),
                         image("res/drawable-mdpi/icon3.png", 48, 48)
                                 .fill(10, 10, 20, 20, 0xFF00FFFF),
                         image("res/drawable-mdpi/ic_launcher.png", 24, 24),
+                        image("res/drawable-mdpi/ic_launcher_foreground.png", 48, 48)
+                                .fill(10, 10, 20, 20, 0xFFFFFF00),
 
                         // OK sizes
                         image("res/drawable-mdpi/icon2.png", 32, 32)
                                 .fill(10, 10, 20, 20, 0xFFFFFFFF),
                         image("res/drawable-mdpi/icon4.png", 24, 24),
                         image("res/drawable-mdpi/ic_launcher2.png", 48, 48)
-                                .fill(10, 10, 20, 20, 0xFF00FFFF))
+                                .fill(10, 10, 20, 20, 0xFF00FFFF),
+                        image("res/drawable-mdpi/ic_launcher2_foreground.png", 108, 108)
+                                .fill(40, 40, 70, 70, 0xFFFFFF00))
                 .issues(ICON_EXPECTED_SIZE)
                 .run()
                 .expect(expected);
