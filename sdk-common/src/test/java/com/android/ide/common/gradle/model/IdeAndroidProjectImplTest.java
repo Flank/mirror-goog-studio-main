@@ -114,7 +114,6 @@ public class IdeAndroidProjectImplTest {
         IdeAndroidProject androidProject =
                 new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
         expectUnsupportedOperationException(androidProject::getBuildToolsVersion);
-        expectUnsupportedOperationException(androidProject::getPluginGeneration);
     }
 
     @Test

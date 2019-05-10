@@ -15,13 +15,11 @@
  */
 package com.android.ide.common.gradle.model;
 
-import static com.android.builder.model.AndroidProject.GENERATION_ORIGINAL;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.NativeToolchain;
@@ -48,7 +46,7 @@ import java.util.function.Consumer;
 public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidProject {
     // Increase the value when adding/removing fields or when changing the
     // serialization/deserialization mechanism.
-    private static final long serialVersionUID = 6L;
+    private static final long serialVersionUID = 7L;
 
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
@@ -75,7 +73,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @Nullable private final String myResourcePrefix;
     @NonNull private final boolean mySupportsPluginGeneration;
     private final int myApiVersion;
-    private final boolean myLibrary;
     private final int myProjectType;
     private final boolean myBaseSplit;
     private final int myHashCode;
@@ -174,7 +171,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myBuildFolder = project.getBuildFolder();
         myResourcePrefix = project.getResourcePrefix();
         myApiVersion = project.getApiVersion();
-        myLibrary = project.isLibrary();
         myProjectType = getProjectType(project, myParsedModelVersion);
         mySupportsPluginGeneration = copyNewProperty(project::getPluginGeneration, null) != null;
         //noinspection ConstantConditions
@@ -300,12 +296,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myFlavorDimensions;
     }
 
-    @Deprecated // Need to clean up IdeAndroidProjectImplTest
-    @NonNull
-    public Collection<ArtifactMetaData> getExtraArtifacts() {
-        throw new UnusedModelMethodException("getExtraArtifacts");
-    }
-
     @Override
     @NonNull
     public String getCompileTarget() {
@@ -316,18 +306,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull
     public Collection<String> getBootClasspath() {
         return myBootClassPath;
-    }
-
-    @Deprecated // Need to clean up IdeAndroidProjectImplTest
-    @NonNull
-    public Collection<File> getFrameworkSources() {
-        throw new UnusedModelMethodException("getFrameworkSources");
-    }
-
-    @Override
-    @NonNull
-    public Collection<NativeToolchain> getNativeToolchains() {
-        return myNativeToolchains;
     }
 
     @Override
@@ -378,24 +356,9 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myApiVersion;
     }
 
-    @Deprecated
-    @Override
-    public boolean isLibrary() {
-        return myLibrary;
-    }
-
     @Override
     public int getProjectType() {
         return myProjectType;
-    }
-
-    @Override
-    public int getPluginGeneration() {
-        if (!mySupportsPluginGeneration) {
-            throw new UnsupportedOperationException(
-                    "Unsupported method: AndroidProject.getPluginGeneration()");
-        }
-        return GENERATION_ORIGINAL;
     }
 
     @Override
@@ -448,7 +411,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         }
         IdeAndroidProjectImpl project = (IdeAndroidProjectImpl) o;
         return myApiVersion == project.myApiVersion
-                && myLibrary == project.myLibrary
                 && myProjectType == project.myProjectType
                 && myBaseSplit == project.myBaseSplit
                 && mySupportsPluginGeneration == project.mySupportsPluginGeneration
@@ -506,7 +468,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myBuildFolder,
                 myResourcePrefix,
                 myApiVersion,
-                myLibrary,
                 myProjectType,
                 mySupportsPluginGeneration,
                 myAaptOptions,
@@ -564,8 +525,6 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + '\''
                 + ", myApiVersion="
                 + myApiVersion
-                + ", myLibrary="
-                + myLibrary
                 + ", myProjectType="
                 + myProjectType
                 + ", mySupportsPluginGeneration="

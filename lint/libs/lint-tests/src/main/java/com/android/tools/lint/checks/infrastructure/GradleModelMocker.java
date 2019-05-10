@@ -690,13 +690,11 @@ public class GradleModelMocker {
         if (line.equals("apply plugin: 'com.android.library'")
                 || line.equals("apply plugin: 'android-library'")) {
             //noinspection deprecation
-            when(project.isLibrary()).thenReturn(true);
             when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_LIBRARY);
             return;
         } else if (line.equals("apply plugin: 'com.android.application'")
                 || line.equals("apply plugin: 'android'")) {
             //noinspection deprecation
-            when(project.isLibrary()).thenReturn(false);
             when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_APP);
             return;
         } else if (line.equals("apply plugin: 'com.android.feature'")) {

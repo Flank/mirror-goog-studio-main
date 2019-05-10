@@ -21,7 +21,6 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
@@ -74,15 +73,6 @@ public interface IdeAndroidProject extends Serializable {
      */
     @NonNull
     String getName();
-
-    /**
-     * Returns whether this is a library.
-     *
-     * @return true for a library module.
-     * @deprecated use {@link #getProjectType()} instead.
-     */
-    @Deprecated
-    boolean isLibrary();
 
     /**
      * Returns the type of project: Android application, library, feature, instantApp.
@@ -176,14 +166,6 @@ public interface IdeAndroidProject extends Serializable {
     @NonNull
     Collection<String> getBootClasspath();
 
-    /**
-     * Returns the collection of toolchains used to create any native libraries.
-     *
-     * @return collection of toolchains.
-     */
-    @NonNull
-    Collection<NativeToolchain> getNativeToolchains();
-
     /** Returns a list of {@link SigningConfig}. */
     @NonNull
     Collection<SigningConfig> getSigningConfigs();
@@ -247,15 +229,6 @@ public interface IdeAndroidProject extends Serializable {
      */
     @NonNull
     String getBuildToolsVersion();
-
-    /**
-     * Returns the generation of the plugin.
-     *
-     * <p>1 is original plugin, 2 is component based plugin (AKA experimental, not used anymore)
-     *
-     * @return the generation value
-     */
-    int getPluginGeneration();
 
     /**
      * Returns true if this is the base feature split.
