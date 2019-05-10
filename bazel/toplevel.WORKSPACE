@@ -36,3 +36,10 @@ bazel_toolchains_repositories()
 setup_external_sdk(
       name = "externsdk",
 )
+
+local_repository(
+  name = "cov",
+  path = "tools/base/bazel/coverage"
+)
+load("@cov//:results.bzl", "setup_testlogs_loop_repo")
+setup_testlogs_loop_repo()

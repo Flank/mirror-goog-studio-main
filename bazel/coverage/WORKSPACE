@@ -1,0 +1,6 @@
+# This is a separate workspace where coverage report related targets
+# can live without getting picked up by the expansion of //tools/...
+#
+# This is necessary because coverage reports require tests to have passed
+# before they can process the coverage data. This dependency is not expressible
+# in Bazel and requires using two separate invocations (first test, then report).
