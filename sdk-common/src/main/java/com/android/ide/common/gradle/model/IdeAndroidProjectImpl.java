@@ -24,7 +24,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
@@ -65,7 +64,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull private final Collection<String> myBootClassPath;
     @NonNull private final Collection<NativeToolchain> myNativeToolchains;
     @NonNull private final Collection<SigningConfig> mySigningConfigs;
-    @NonNull private final LintOptions myLintOptions;
+    @NonNull private final IdeLintOptions myLintOptions;
     @NonNull private final Collection<String> myUnresolvedDependencies;
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
@@ -345,7 +344,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
 
     @Override
     @NonNull
-    public LintOptions getLintOptions() {
+    public IdeLintOptions getLintOptions() {
         return myLintOptions;
     }
 

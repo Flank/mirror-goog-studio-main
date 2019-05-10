@@ -38,7 +38,6 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
@@ -101,7 +100,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.openapi.util.Computable;
@@ -378,7 +376,8 @@ public class TestLintClient extends LintCliClient {
             mocker = task.projectMocks.get(dir);
         }
         if (mocker != null && mocker.getProject() != null) {
-            syncLintOptionsToFlags(mocker.getProject().getLintOptions(), flags);
+            mocker.syncFlagsTo(flags);
+            flags.setFatalOnly(task.vital);
             if (task.variantName != null) {
                 mocker.setVariantName(task.variantName);
             }
@@ -422,68 +421,13 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("StringBufferField")
     private StringBuilder output = null;
 
-    private void syncLintOptionsToFlags(@NonNull LintOptions options, @NonNull LintCliFlags flags) {
-        flags.getSuppressedIds().addAll(options.getDisable());
-        flags.getEnabledIds().addAll(options.getEnable());
-        if (options.getCheck() != null && !options.getCheck().isEmpty()) {
-            flags.setExactCheckedIds(options.getCheck());
-        }
-        flags.setSetExitCode(options.isAbortOnError());
-        flags.setFullPath(options.isAbsolutePaths());
-        flags.setShowSourceLines(!options.isNoLines());
-        flags.setQuiet(options.isQuiet());
-        flags.setCheckAllWarnings(options.isCheckAllWarnings());
-        flags.setIgnoreWarnings(options.isIgnoreWarnings());
-        flags.setWarningsAsErrors(options.isWarningsAsErrors());
-        flags.setCheckTestSources(options.isCheckTestSources());
-        flags.setCheckGeneratedSources(options.isCheckGeneratedSources());
-        flags.setShowEverything(options.isShowAll());
-        flags.setDefaultConfiguration(options.getLintConfig());
-        flags.setExplainIssues(options.isExplainIssues());
-        flags.setBaselineFile(options.getBaselineFile());
-        flags.setFatalOnly(task.vital);
-
-        Map<String, Integer> severityOverrides = options.getSeverityOverrides();
-        if (severityOverrides != null) {
-            Map<String, Severity> overrides = Maps.newHashMap();
-            for (Map.Entry<String, Integer> entry : severityOverrides.entrySet()) {
-                String id = entry.getKey();
-                Severity severity;
-                switch (entry.getValue()) {
-                    case LintOptions.SEVERITY_FATAL:
-                        severity = Severity.FATAL;
-                        break;
-                    case LintOptions.SEVERITY_ERROR:
-                        severity = Severity.ERROR;
-                        break;
-                    case LintOptions.SEVERITY_WARNING:
-                        severity = Severity.WARNING;
-                        break;
-                    case LintOptions.SEVERITY_INFORMATIONAL:
-                        severity = Severity.INFORMATIONAL;
-                        break;
-                    case LintOptions.SEVERITY_IGNORE:
-                        severity = Severity.IGNORE;
-                        break;
-                    case LintOptions.SEVERITY_DEFAULT_ENABLED:
-                        severity = Severity.WARNING;
-                        break;
-                    default:
-                        continue;
-                }
-                overrides.put(id, severity);
-            }
-            flags.setSeverityOverrides(overrides);
-        }
-    }
-
     public String analyze(List<File> files, List<Issue> issues) throws Exception {
         // We'll sync lint options to flags later when the project is created, but try
         // to do it early before the driver is initialized
         if (!files.isEmpty()) {
             GradleModelMocker mocker = task.projectMocks.get(files.get(0));
             if (mocker != null) {
-                syncLintOptionsToFlags(mocker.getProject().getLintOptions(), flags);
+                mocker.syncFlagsTo(flags);
             }
         }
 

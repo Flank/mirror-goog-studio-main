@@ -41,6 +41,33 @@ public class ModelCache {
         }
     }
 
+    /**
+     * Adds a mapping to the model cache, throwing if the value is already present and is a
+     * different object.
+     *
+     * <p>Used in Ide* model copy constructors to validate that those objects should have been
+     * constructed rather than got from the cache.
+     *
+     * @throws IllegalStateException if the given key exists in the map with a different value.
+     */
+    synchronized void putDisallowingReplacement(@NonNull Object key, @NonNull Object value) {
+        Object cacheValue = myData.get(value);
+        if (cacheValue == null) {
+            myData.put(key, value);
+            return;
+        }
+        if (cacheValue != value) {
+            throw new IllegalStateException(
+                    "Model cache unexpectedly already contains object!"
+                            + "\n key = "
+                            + key
+                            + "\n cache value = "
+                            + cacheValue
+                            + "\n new value = "
+                            + value);
+        }
+    }
+
     @NonNull
     @VisibleForTesting
     Map<Object, Object> getData() {

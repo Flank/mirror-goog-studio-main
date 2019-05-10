@@ -21,7 +21,6 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaCompileOptions;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -195,7 +194,7 @@ public interface IdeAndroidProject extends Serializable {
 
     /** Returns the lint options. */
     @NonNull
-    LintOptions getLintOptions();
+    IdeLintOptions getLintOptions();
 
     /**
      * Returns the dependencies that were not successfully resolved. The returned list gets

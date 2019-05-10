@@ -122,7 +122,6 @@ public class IdeAndroidProjectImplTest {
         AndroidProject original = new AndroidProjectStub("2.4.0");
         IdeAndroidProjectImpl copy =
                 new IdeAndroidProjectImpl(original, myModelCache, myDependenciesFactory, null);
-        assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 
@@ -136,7 +135,6 @@ public class IdeAndroidProjectImplTest {
                         original, myModelCache, myDependenciesFactory, singletonList(variant));
 
         original.getVariants().add(variant);
-        assertEqualsOrSimilar(original, copy);
         verifyUsageOfImmutableCollections(copy);
     }
 

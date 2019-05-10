@@ -40,7 +40,6 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -52,10 +51,13 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
+import com.android.tools.lint.LintCliFlags;
+import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
@@ -78,7 +80,9 @@ import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -109,7 +113,8 @@ public class GradleModelMocker {
     private final List<JavaLibrary> allJavaLibraries = Lists.newArrayList();
     private ProductFlavor mergedFlavor;
     private ProductFlavor defaultFlavor;
-    private LintOptions lintOptions;
+    private IdeLintOptions lintOptions;
+    private final LintCliFlags flags = new LintCliFlags();
     private File projectDir = new File("");
     private final List<ProductFlavor> productFlavors = Lists.newArrayList();
     private final Multimap<String, String> splits = ArrayListMultimap.create();
@@ -132,6 +137,7 @@ public class GradleModelMocker {
 
     public GradleModelMocker(@Language("Groovy") String gradle) {
         this.gradle = gradle;
+        this.flags.setSeverityOverrides(new HashMap<>());
     }
 
     @NonNull
@@ -243,6 +249,29 @@ public class GradleModelMocker {
         return globalLibraryMap;
     }
 
+    public void syncFlagsTo(LintCliFlags to) {
+        ensureInitialized();
+        to.getSuppressedIds().clear();
+        to.getSuppressedIds().addAll(flags.getSuppressedIds());
+        to.getEnabledIds().clear();
+        to.getEnabledIds().addAll(flags.getEnabledIds());
+        to.setExactCheckedIds(flags.getExactCheckedIds());
+        to.setSetExitCode(flags.isSetExitCode());
+        to.setFullPath(flags.isFullPath());
+        to.setShowSourceLines(flags.isShowSourceLines());
+        to.setQuiet(flags.isQuiet());
+        to.setCheckAllWarnings(flags.isCheckAllWarnings());
+        to.setIgnoreWarnings(flags.isIgnoreWarnings());
+        to.setWarningsAsErrors(flags.isWarningsAsErrors());
+        to.setCheckTestSources(flags.isCheckTestSources());
+        to.setCheckGeneratedSources(flags.isCheckGeneratedSources());
+        to.setShowEverything(flags.isShowEverything());
+        to.setDefaultConfiguration(flags.getDefaultConfiguration());
+        to.setExplainIssues(flags.isExplainIssues());
+        to.setBaselineFile(flags.getBaselineFile());
+        ;
+    }
+
     private void initialize() {
         project = mock(IdeAndroidProject.class);
 
@@ -253,8 +282,8 @@ public class GradleModelMocker {
 
         variant = mock(Variant.class);
 
-        lintOptions = createLintOptions();
-        when(project.getLintOptions()).thenReturn(lintOptions);
+        lintOptions = new IdeLintOptions();
+        when(project.getLintOptions()).thenAnswer(invocation -> lintOptions);
 
         compileOptions = mock(JavaCompileOptions.class);
         when(compileOptions.getSourceCompatibility()).thenReturn("1.7");
@@ -393,29 +422,6 @@ public class GradleModelMocker {
                 when(artifact.getGeneratedSourceFolders()).thenReturn(generatedSources);
             }
         }
-    }
-
-    private static LintOptions createLintOptions() {
-        LintOptions options = mock(LintOptions.class);
-        // Configure default (and make it mutable, e.g. lists that we can append to)
-        when(options.getEnable()).thenReturn(Sets.newHashSet());
-        when(options.getDisable()).thenReturn(Sets.newHashSet());
-        when(options.getCheck()).thenReturn(Sets.newHashSet());
-        when(options.getEnable()).thenReturn(Sets.newHashSet());
-        when(options.getSeverityOverrides()).thenReturn(Maps.newHashMap());
-
-        // Set the same defaults as the Gradle side
-        when(options.isAbortOnError()).thenReturn(true);
-        when(options.isCheckReleaseBuilds()).thenReturn(true);
-        when(options.getHtmlReport()).thenReturn(true);
-        when(options.getXmlReport()).thenReturn(true);
-
-        /* These are true in lint in general, but we want them to be false in the unit tests
-        when(options.isAbsolutePaths()).thenReturn(true);
-        when(options.isExplainIssues()).thenReturn(true);
-        */
-
-        return options;
     }
 
     @NonNull
@@ -1027,154 +1033,117 @@ public class GradleModelMocker {
 
             switch (key) {
                 case "quiet":
-                    when(lintOptions.isQuiet()).thenReturn(Boolean.valueOf(arg));
+                    flags.setQuiet(toBoolean(arg));
                     break;
                 case "abortOnError":
-                    when(lintOptions.isAbortOnError()).thenReturn(Boolean.valueOf(arg));
+                    flags.setSetExitCode(toBoolean(arg));
                     break;
                 case "checkReleaseBuilds":
-                    when(lintOptions.isCheckReleaseBuilds()).thenReturn(Boolean.valueOf(arg));
+                    error("Test framework doesn't support lint DSL flag checkReleaseBuilds");
                     break;
                 case "ignoreWarnings":
-                    when(lintOptions.isIgnoreWarnings()).thenReturn(Boolean.valueOf(arg));
+                    flags.setIgnoreWarnings(toBoolean(arg));
                     break;
                 case "absolutePaths":
-                    when(lintOptions.isAbsolutePaths()).thenReturn(Boolean.valueOf(arg));
+                    flags.setFullPath(toBoolean(arg));
                     break;
                 case "checkAllWarnings":
-                    when(lintOptions.isCheckAllWarnings()).thenReturn(Boolean.valueOf(arg));
+                    flags.setCheckAllWarnings(toBoolean(arg));
                     break;
                 case "warningsAsErrors":
-                    when(lintOptions.isWarningsAsErrors()).thenReturn(Boolean.valueOf(arg));
+                    flags.setWarningsAsErrors(toBoolean(arg));
                     break;
                 case "noLines":
-                    when(lintOptions.isNoLines()).thenReturn(Boolean.valueOf(arg));
+                    flags.setShowSourceLines(!toBoolean(arg));
                     break;
                 case "showAll":
-                    when(lintOptions.isShowAll()).thenReturn(Boolean.valueOf(arg));
+                    flags.setShowEverything(toBoolean(arg));
                     break;
                 case "explainIssues":
-                    when(lintOptions.isExplainIssues()).thenReturn(Boolean.valueOf(arg));
+                    flags.setExplainIssues(toBoolean("explainIssues"));
                     break;
                 case "textReport":
-                    when(lintOptions.getTextReport()).thenReturn(Boolean.valueOf(arg));
+                    error("Test framework doesn't support lint DSL flag textReport");
                     break;
                 case "xmlReport":
-                    when(lintOptions.getXmlReport()).thenReturn(Boolean.valueOf(arg));
+                    error("Test framework doesn't support lint DSL flag xmlReport");
                     break;
                 case "htmlReport":
-                    when(lintOptions.getHtmlReport()).thenReturn(Boolean.valueOf(arg));
+                    error("Test framework doesn't support lint DSL flag htmlReport");
                     break;
                 case "checkTestSources":
-                    when(lintOptions.isCheckTestSources()).thenReturn(Boolean.valueOf(arg));
+                    flags.setCheckTestSources(toBoolean(arg));
                     break;
                 case "checkGeneratedSources":
-                    when(lintOptions.isCheckGeneratedSources()).thenReturn(Boolean.valueOf(arg));
+                    flags.setCheckGeneratedSources(toBoolean(arg));
                     break;
                 case "enable":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions.getEnable().add(stripQuotes(s, true));
-                        }
-                        break;
-                    }
+                    flags.getEnabledIds().addAll(parseListDsl(arg));
+                    break;
                 case "disable":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions.getDisable().add(stripQuotes(s, true));
-                        }
-                        break;
-                    }
+                    flags.getSuppressedIds().addAll(parseListDsl(arg));
+                    break;
                 case "check":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions.getCheck().add(stripQuotes(s, true));
-                        }
-                        break;
-                    }
+                    flags.setExactCheckedIds(parseListDsl(arg));
+                    break;
                 case "fatal":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions
-                                    .getSeverityOverrides()
-                                    .put(stripQuotes(s, true), LintOptions.SEVERITY_FATAL);
-                        }
-                        break;
-                    }
+                    parseSeverityOverrideDsl(Severity.FATAL, arg);
+                    break;
                 case "error":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions
-                                    .getSeverityOverrides()
-                                    .put(stripQuotes(s, true), LintOptions.SEVERITY_ERROR);
-                        }
-                        break;
-                    }
+                    parseSeverityOverrideDsl(Severity.ERROR, arg);
+                    break;
                 case "warning":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions
-                                    .getSeverityOverrides()
-                                    .put(stripQuotes(s, true), LintOptions.SEVERITY_WARNING);
-                        }
-                        break;
-                    }
+                    parseSeverityOverrideDsl(Severity.WARNING, arg);
+                    break;
                 case "informational":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions
-                                    .getSeverityOverrides()
-                                    .put(stripQuotes(s, true), LintOptions.SEVERITY_INFORMATIONAL);
-                        }
-                        break;
-                    }
+                    parseSeverityOverrideDsl(Severity.INFORMATIONAL, arg);
+                    break;
                 case "ignore":
-                    {
-                        for (String s :
-                                Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
-                            lintOptions
-                                    .getSeverityOverrides()
-                                    .put(stripQuotes(s, true), LintOptions.SEVERITY_IGNORE);
-                        }
-                        break;
-                    }
-
+                    parseSeverityOverrideDsl(Severity.IGNORE, arg);
+                    break;
                 case "lintConfig":
-                    {
-                        when(lintOptions.getLintConfig()).thenReturn(file(arg, true));
-                        break;
-                    }
+                    flags.setDefaultConfiguration(file(arg, true));
+                    break;
                 case "textOutput":
-                    {
-                        when(lintOptions.getTextOutput()).thenReturn(file(arg, true));
-                        break;
-                    }
+                    error("Test framework doesn't support lint DSL flag textOutput");
+                    break;
                 case "xmlOutput":
-                    {
-                        when(lintOptions.getXmlOutput()).thenReturn(file(arg, true));
-                        break;
-                    }
+                    error("Test framework doesn't support lint DSL flag xmlOutput");
+                    break;
                 case "htmlOutput":
-                    {
-                        when(lintOptions.getHtmlOutput()).thenReturn(file(arg, true));
-                        break;
-                    }
+                    error("Test framework doesn't support lint DSL flag htmlOutput");
+                    break;
                 case "baseline":
-                    {
-                        when(lintOptions.getBaselineFile()).thenReturn(file(arg, true));
-                        break;
-                    }
+                    flags.setBaselineFile(file(arg, true));
+                    break;
             }
         } else {
             warn("ignored line: " + line + ", context=" + context);
         }
+    }
+
+    private static boolean toBoolean(String string) {
+        if (string.equalsIgnoreCase("true")) {
+            return true;
+        }
+        if (string.equalsIgnoreCase("false")) {
+            return false;
+        }
+        throw new IllegalArgumentException("String " + string + " should be 'true' or 'false'");
+    }
+
+    private void parseSeverityOverrideDsl(Severity severity, String dsl) {
+        for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(dsl)) {
+            flags.getSeverityOverrides().put(stripQuotes(s, true), severity);
+        }
+    }
+
+    private Set<String> parseListDsl(String dsl) {
+        Set<String> updates = new LinkedHashSet<>();
+        for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(dsl)) {
+            updates.add(stripQuotes(s, true));
+        }
+        return updates;
     }
 
     @NonNull

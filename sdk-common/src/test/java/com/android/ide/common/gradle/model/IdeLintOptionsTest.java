@@ -57,12 +57,11 @@ public class IdeLintOptionsTest {
     public void constructor() throws Throwable {
         LintOptions original = new LintOptionsStub();
         IdeLintOptions copy = new IdeLintOptions(original, myModelCache, myModelVersion);
-        assertEqualsOrSimilar(original, copy);
+        assertThat(copy.getBaselineFile()).isEqualTo(original.getBaselineFile());
+        assertThat(copy.getLintConfig()).isEqualTo(original.getLintConfig());
+        assertThat(copy.getSeverityOverrides()).isEqualTo(original.getSeverityOverrides());
+        assertThat(copy.isCheckTestSources()).isEqualTo(original.isCheckTestSources());
+        assertThat(copy.isCheckDependencies()).isEqualTo(original.isCheckDependencies());
         verifyUsageOfImmutableCollections(copy);
-    }
-
-    @Test
-    public void equalsAndHashCode() {
-        createEqualsVerifier(IdeLintOptions.class).verify();
     }
 }

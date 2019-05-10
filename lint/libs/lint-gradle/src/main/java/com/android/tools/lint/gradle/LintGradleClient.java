@@ -22,9 +22,9 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.ide.common.gradle.model.IdeLintOptions;
 import com.android.repository.Revision;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -112,7 +112,7 @@ public class LintGradleClient extends LintCliClient {
         // or via local lint.xml
         IdeAndroidProject gradleProjectModel = project.getGradleProjectModel();
         if (gradleProjectModel != null) {
-            LintOptions lintOptions = gradleProjectModel.getLintOptions();
+            IdeLintOptions lintOptions = gradleProjectModel.getLintOptions();
             File lintXml = lintOptions.getLintConfig();
             if (lintXml == null) {
                 lintXml = new File(project.getDir(), DefaultConfiguration.CONFIG_FILE_NAME);

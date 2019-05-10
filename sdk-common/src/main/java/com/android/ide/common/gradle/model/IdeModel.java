@@ -30,12 +30,7 @@ public abstract class IdeModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     protected IdeModel(@NonNull Object original, @NonNull ModelCache modelCache) {
-        Object copy =
-                modelCache.computeIfAbsent(
-                        original, (Function<Object, Object>) recursiveModel1 -> this);
-        if (copy != this) {
-            throw new IllegalStateException("An existing copy was found in the cache");
-        }
+        modelCache.putDisallowingReplacement(original, this);
     }
 
     @Nullable

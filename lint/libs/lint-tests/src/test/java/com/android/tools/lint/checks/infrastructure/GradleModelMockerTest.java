@@ -32,7 +32,6 @@ import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -42,6 +41,7 @@ import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
+import com.android.tools.lint.LintCliFlags;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.collect.Iterators;
@@ -1059,30 +1059,26 @@ public class GradleModelMockerTest {
                                 + "        noLines true\n"
                                 + "        showAll true\n"
                                 + "        lintConfig file(\"default-lint.xml\")\n"
-                                + "        textReport true\n"
-                                + "        textOutput 'stdout'\n"
-                                + "        xmlReport false\n"
-                                + "        xmlOutput file(\"lint-report.xml\")\n"
-                                + "        htmlReport true\n"
-                                + "        htmlOutput file(\"lint-report.html\")\n"
                                 + "        informational 'LogConditional'\n"
                                 + "        checkTestSources true\n"
                                 + "    }\n"
                                 + "}\n");
         assertThat(mocker).isNotNull();
-        IdeAndroidProject project = mocker.getProject();
-        assertThat(project).isNotNull();
-        LintOptions options = project.getLintOptions();
-        assertThat(options).isNotNull();
-        assertThat(options.isQuiet()).isTrue();
-        assertThat(options.isAbortOnError()).isFalse();
-        assertThat(options.isIgnoreWarnings()).isTrue();
-        assertThat(options.isCheckAllWarnings()).isTrue();
-        assertThat(options.isWarningsAsErrors()).isTrue();
-        assertThat(options.isAbsolutePaths()).isFalse();
-        assertThat(options.getDisable()).containsExactly("TypographyFractions", "TypographyQuotes");
-        assertThat(options.getEnable()).containsExactly("RtlHardcoded", "RtlCompat", "RtlEnabled");
-        assertThat(options.getCheck()).containsExactly("NewApi", "InlinedApi");
+
+        LintCliFlags flags = new LintCliFlags();
+        mocker.syncFlagsTo(flags);
+
+        assertThat(flags.isQuiet()).isTrue();
+        assertThat(flags.isSetExitCode()).isFalse();
+        assertThat(flags.isIgnoreWarnings()).isTrue();
+        assertThat(flags.isCheckAllWarnings()).isTrue();
+        assertThat(flags.isWarningsAsErrors()).isTrue();
+        assertThat(flags.isFullPath()).isFalse();
+        assertThat(flags.getSuppressedIds())
+                .containsExactly("TypographyFractions", "TypographyQuotes");
+        assertThat(flags.getEnabledIds())
+                .containsExactly("RtlHardcoded", "RtlCompat", "RtlEnabled");
+        assertThat(flags.getExactCheckedIds()).containsExactly("NewApi", "InlinedApi");
     }
 
     @Test
