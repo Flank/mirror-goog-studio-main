@@ -550,7 +550,7 @@ public abstract class ExternalNativeJsonGenerator {
     @Optional
     @Input
     public List<String> getcFlags() {
-        return variant.getCFlagList();
+        return variant.getCFlagsList();
     }
 
     @NonNull

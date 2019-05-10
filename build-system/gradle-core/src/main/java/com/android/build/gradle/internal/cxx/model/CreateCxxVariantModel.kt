@@ -40,7 +40,7 @@ fun createCxxVariantModel(
         override val buildTargetSet get() = buildSystem.targets
         override val module = module
         override val buildSystemArgumentList get() = buildSystem.arguments
-        override val cFlagList get() = buildSystem.cFlags
+        override val cFlagsList get() = buildSystem.cFlags
         override val cppFlagsList get() = buildSystem.cppFlags
         override val variantName get() = baseVariantData.name
         override val objFolder get() =

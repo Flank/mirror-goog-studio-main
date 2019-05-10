@@ -32,13 +32,13 @@ interface CxxVariantModel {
 
     /**
      * C flags forwarded to compiler
-     *   ex, android.defaultConfig.externalNativeBuild.cFlagList '-DTHIS_IS_C=1'
+     *   ex, android.defaultConfig.externalNativeBuild.cFlags '-DTHIS_IS_C=1'
      */
-    val cFlagList: List<String>
+    val cFlagsList: List<String>
 
     /**
      * C++ flags forwarded to compiler
-     *   ex, android.defaultConfig.externalNativeBuild.cppFlagsList '-DTHIS_IS_CPP=1'
+     *   ex, android.defaultConfig.externalNativeBuild.cppFlags '-DTHIS_IS_CPP=1'
      */
     val cppFlagsList: List<String>
 

@@ -152,7 +152,7 @@ private fun CxxCmakeModuleModel.toData() =
 internal data class CxxVariantModelData(
     override val module: CxxModuleModelData = CxxModuleModelData(),
     override val buildSystemArgumentList: List<String> = listOf(),
-    override val cFlagList: List<String> = listOf(),
+    override val cFlagsList: List<String> = listOf(),
     override val cppFlagsList: List<String> = listOf(),
     override val variantName: String = "",
     override val soFolder: File = File("."),
@@ -168,7 +168,7 @@ private fun CxxVariantModel.toData() =
     CxxVariantModelData(
         module = module.toData(),
         buildSystemArgumentList = buildSystemArgumentList,
-        cFlagList = cFlagList,
+        cFlagsList = cFlagsList,
         cppFlagsList = cppFlagsList,
         variantName = variantName,
         soFolder = soFolder,
