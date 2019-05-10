@@ -24,17 +24,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 
 /** Task to merge files. This appends all the files together into an output file. */
-public class MergeFileTask extends NonIncrementalTask {
+public abstract class MergeFileTask extends NonIncrementalTask {
 
     private FileCollection mInputFiles;
-
-    private Provider<RegularFile> mOutputFile;
 
     @Override
     protected void doTaskAction() throws IOException {
@@ -77,12 +74,5 @@ public class MergeFileTask extends NonIncrementalTask {
     }
 
     @OutputFile
-    public Provider<RegularFile> getOutputFile() {
-        return mOutputFile;
-    }
-
-    public void setOutputFile(Provider<RegularFile> outputFile) {
-        mOutputFile = outputFile;
-    }
-
+    public abstract RegularFileProperty getOutputFile();
 }

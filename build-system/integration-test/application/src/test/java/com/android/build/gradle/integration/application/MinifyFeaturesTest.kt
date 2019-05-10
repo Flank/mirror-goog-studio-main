@@ -686,10 +686,10 @@ class MinifyFeaturesTest(
         val aaptProguardFile =
             FileUtils.join(
                 project.getSubproject("baseModule").intermediatesDir,
-                "proguard-rules",
+                "aapt_proguard_file",
                 when (multiApkMode) {
                     MultiApkMode.DYNAMIC_APP -> "minified"
-                    MultiApkMode.INSTANT_APP -> FileUtils.join("feature", "minified")
+                    MultiApkMode.INSTANT_APP -> "minifiedFeature"
                 },
                 SdkConstants.FN_AAPT_RULES)
         assertThat(aaptProguardFile).exists()

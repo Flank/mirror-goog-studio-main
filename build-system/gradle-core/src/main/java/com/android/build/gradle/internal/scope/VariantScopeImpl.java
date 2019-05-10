@@ -1123,16 +1123,6 @@ public class VariantScopeImpl implements VariantScope {
         return intermediate("data-binding", name);
     }
 
-    @Override
-    @NonNull
-    public File getProcessAndroidResourcesProguardOutputFile() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "proguard-rules",
-                getDirName(),
-                SdkConstants.FN_AAPT_RULES);
-    }
-
     @NonNull
     @Override
     public File getFullApkPackagesOutputDirectory() {

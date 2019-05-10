@@ -244,9 +244,6 @@ public interface VariantScope extends TransformVariantScope {
     File getBundleArtifactFolderForDataBinding();
 
     @NonNull
-    File getProcessAndroidResourcesProguardOutputFile();
-
-    @NonNull
     File getFullApkPackagesOutputDirectory();
 
     @NonNull

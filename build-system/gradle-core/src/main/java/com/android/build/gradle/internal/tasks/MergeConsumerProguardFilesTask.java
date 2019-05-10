@@ -37,11 +37,10 @@ import java.util.Map;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.TaskProvider;
 
 /** Configuration action for a merge-Proguard-files task. */
-public class MergeConsumerProguardFilesTask extends MergeFileTask {
+public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
     private boolean isDynamicFeature;
     private boolean isBaseFeature;
@@ -103,7 +102,6 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
     public static class CreationAction extends TaskCreationAction<MergeConsumerProguardFilesTask> {
 
         @NonNull private final VariantScope variantScope;
-        private Provider<RegularFile> outputFile;
 
         public CreationAction(@NonNull VariantScope variantScope) {
             this.variantScope = variantScope;
@@ -121,17 +119,20 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
             return MergeConsumerProguardFilesTask.class;
         }
 
+
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            outputFile =
-                    variantScope
-                            .getArtifacts()
-                            .createArtifactFile(
-                                    InternalArtifactType.CONSUMER_PROGUARD_FILE,
-                                    BuildArtifactsHolder.OperationType.APPEND,
-                                    taskName,
-                                    SdkConstants.FN_PROGUARD_TXT);
+        public void handleProvider(
+                @NonNull TaskProvider<? extends MergeConsumerProguardFilesTask> taskProvider) {
+            super.handleProvider(taskProvider);
+
+            variantScope
+                    .getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.CONSUMER_PROGUARD_FILE,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            MergeConsumerProguardFilesTask::getOutputFile,
+                            SdkConstants.FN_PROGUARD_TXT);
         }
 
         @Override
@@ -139,7 +140,6 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
             task.setVariantName(variantScope.getFullVariantName());
             GlobalScope globalScope = variantScope.getGlobalScope();
             Project project = globalScope.getProject();
-            task.setOutputFile(outputFile);
 
             task.hasFeaturePlugin = project.getPlugins().hasPlugin(FeaturePlugin.class);
             task.isBaseFeature =
@@ -153,9 +153,7 @@ public class MergeConsumerProguardFilesTask extends MergeFileTask {
             ConfigurableFileCollection inputFiles =
                     project.files(
                             task.consumerProguardFiles,
-                            variantScope
-                                    .getArtifacts()
-                                    .getFinalArtifactFiles(GENERATED_PROGUARD_FILE));
+                            variantScope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE));
             if (variantScope.getType().isFeatureSplit()) {
                 inputFiles.from(
                         variantScope.getArtifactFileCollection(

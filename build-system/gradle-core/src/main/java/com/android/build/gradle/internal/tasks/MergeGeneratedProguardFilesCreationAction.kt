@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
@@ -34,22 +35,18 @@ class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 
-    private lateinit var outputFile: Provider<RegularFile>
-
-    override fun preConfigure(taskName: String) {
-        super.preConfigure(taskName)
-        outputFile =
-                variantScope.artifacts.createArtifactFile(
-                    InternalArtifactType.GENERATED_PROGUARD_FILE,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskName,
-                    SdkConstants.FN_PROGUARD_TXT)
+    override fun handleProvider(taskProvider: TaskProvider<out MergeFileTask>) {
+        super.handleProvider(taskProvider)
+        variantScope.artifacts.producesFile(
+            InternalArtifactType.GENERATED_PROGUARD_FILE,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            MergeFileTask::getOutputFile,
+            SdkConstants.FN_PROGUARD_TXT)
     }
 
     override fun configure(task: MergeFileTask) {
         super.configure(task)
-
-        task.outputFile = outputFile
 
         val allClasses =
             variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES).get()

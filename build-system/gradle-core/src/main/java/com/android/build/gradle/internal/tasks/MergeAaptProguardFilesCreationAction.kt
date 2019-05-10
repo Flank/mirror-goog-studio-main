@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 
 /** Configuration action for a task to merge aapt proguard files  */
 class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
@@ -34,27 +34,25 @@ class MergeAaptProguardFilesCreationAction(variantScope: VariantScope) :
     override val type: Class<MergeFileTask>
         get() = MergeFileTask::class.java
 
-    private lateinit var outputFile: Provider<RegularFile>
+    override fun handleProvider(taskProvider: TaskProvider<out MergeFileTask>) {
+        super.handleProvider(taskProvider)
 
-    override fun preConfigure(taskName: String) {
-        super.preConfigure(taskName)
-        outputFile =
-                variantScope.artifacts.createArtifactFile(
-                        InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
-                        BuildArtifactsHolder.OperationType.APPEND,
-                        taskName,
-                        SdkConstants.FN_MERGED_AAPT_RULES)
+        variantScope.artifacts.producesFile(
+            InternalArtifactType.MERGED_AAPT_PROGUARD_FILE,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            MergeFileTask::getOutputFile,
+            SdkConstants.FN_MERGED_AAPT_RULES)
     }
 
     override fun configure(task: MergeFileTask) {
         super.configure(task)
 
-        task.outputFile = outputFile
         val project = variantScope.globalScope.project
         val inputFiles =
             project
                 .files(
-                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.AAPT_PROGUARD_FILE),
+                    variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.AAPT_PROGUARD_FILE),
                     variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,

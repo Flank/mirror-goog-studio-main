@@ -3164,8 +3164,8 @@ public abstract class TaskManager {
         final ConfigurableFileCollection configurationFiles =
                 project.files(
                         proguardConfigFiles,
-                        scope.getArtifacts().getFinalArtifactFiles(aaptProguardFileType),
-                        scope.getArtifacts().getFinalArtifactFiles(GENERATED_PROGUARD_FILE),
+                        scope.getArtifacts().getFinalProduct(aaptProguardFileType),
+                        scope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE),
                         scope.getArtifactFileCollection(
                                 RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
 
