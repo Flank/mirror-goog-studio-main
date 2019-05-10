@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers.preferWorkers
@@ -27,12 +28,15 @@ import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.util.concurrent.MoreExecutors
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -68,6 +72,15 @@ abstract class LibraryDexingTask @Inject constructor(
     var minSdkVersion = 1
         private set
 
+    @get:Input
+    abstract val enableDesugaring: Property<Boolean>
+
+    @get:Classpath
+    abstract val bootClasspath: ConfigurableFileCollection
+
+    @get:Classpath
+    abstract val classpath: ConfigurableFileCollection
+
     @get:Internal
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
         private set
@@ -80,7 +93,10 @@ abstract class LibraryDexingTask @Inject constructor(
                     minSdkVersion,
                     errorFormatMode,
                     classes.get().asFile,
-                    output.get().asFile
+                    output.get().asFile,
+                    enableDesugaring = enableDesugaring.get(),
+                    bootClasspath = bootClasspath.files,
+                    classpath = classpath.files
                 )
             )
         }
@@ -99,11 +115,27 @@ abstract class LibraryDexingTask @Inject constructor(
 
         override fun configure(task: LibraryDexingTask) {
             super.configure(task)
-            scope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES, task.classes)
+            scope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.RUNTIME_LIBRARY_CLASSES,
+                task.classes
+            )
             task.minSdkVersion = scope.minSdkVersion.featureLevel
             task.output = output
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
+            if (scope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {
+                task.enableDesugaring.set(true)
+                task.bootClasspath.from(scope.globalScope.bootClasspath)
+                task.classpath.from(
+                    scope.getArtifactFileCollection(
+                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.CLASSES
+                    )
+                )
+            } else {
+                task.enableDesugaring.set(false)
+            }
         }
     }
 }
@@ -112,30 +144,37 @@ private class DexParams(
     val minSdkVersion: Int,
     val errorFormatMode: SyncOptions.ErrorFormatMode,
     val input: File,
-    val output: File
+    val output: File,
+    val enableDesugaring: Boolean,
+    val bootClasspath: Collection<File>,
+    val classpath: Collection<File>
 ) : Serializable
 
 private class DexingRunnable @Inject constructor(val params: DexParams) : Runnable {
     override fun run() {
-        val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
-            params.minSdkVersion,
-            true,
-            ClassFileProviderFactory(listOf()),
-            ClassFileProviderFactory(listOf()),
-            false,
-            MessageReceiverImpl(
-                params.errorFormatMode,
-                Logging.getLogger(LibraryDexingTask::class.java)
-            )
-        )
-
-        ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
-            classFileInput.entries { _ -> true }.use { classesInput ->
-                d8DexBuilder.convert(
-                    classesInput,
-                    params.output.toPath(),
-                    false
+        ClassFileProviderFactory(params.bootClasspath.map(File::toPath)).use { bootClasspath ->
+            ClassFileProviderFactory(params.classpath.map(File::toPath)).use { classpath ->
+                val d8DexBuilder = DexArchiveBuilder.createD8DexBuilder(
+                    params.minSdkVersion,
+                    true,
+                    bootClasspath,
+                    classpath,
+                    params.enableDesugaring,
+                    MessageReceiverImpl(
+                        params.errorFormatMode,
+                        Logging.getLogger(LibraryDexingTask::class.java)
+                    )
                 )
+
+                ClassFileInputs.fromPath(params.input.toPath()).use { classFileInput ->
+                    classFileInput.entries { _ -> true }.use { classesInput ->
+                        d8DexBuilder.convert(
+                            classesInput,
+                            params.output.toPath(),
+                            false
+                        )
+                    }
+                }
             }
         }
     }

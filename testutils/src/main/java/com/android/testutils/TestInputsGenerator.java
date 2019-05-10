@@ -19,8 +19,10 @@ package com.android.testutils;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.io.ByteStreams;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -96,10 +98,26 @@ public final class TestInputsGenerator {
         }
     }
 
+    /** Returns the bytes of a jar containing the specified classes */
+    @NonNull
+    public static byte[] jarWithClasses(@NonNull Collection<Class<?>> classes) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            jarWithClasses(byteArrayOutputStream, classes);
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
+
     /** Generates jar containing the specified classes. */
     private static void jarWithClasses(@NonNull Path path, @NonNull Collection<Class<?>> classes)
             throws IOException {
-        try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(path))) {
+        try (OutputStream fileOutputStream = Files.newOutputStream(path)) {
+            jarWithClasses(fileOutputStream, classes);
+        }
+    }
+
+    private static void jarWithClasses(
+            @NonNull OutputStream os, @NonNull Collection<Class<?>> classes) throws IOException {
+        try (ZipOutputStream outputStream = new ZipOutputStream(os)) {
             for (Class<?> klass : classes) {
                 byte[] data = getClassInput(klass);
 
@@ -116,6 +134,8 @@ public final class TestInputsGenerator {
             writeToDir(path, getClassInput(klass), getPath(klass));
         }
     }
+
+
 
     @NonNull
     public static String getPath(@NonNull Class<?> klass) {
