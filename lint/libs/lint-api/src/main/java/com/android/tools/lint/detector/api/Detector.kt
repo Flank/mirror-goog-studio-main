@@ -149,15 +149,6 @@ abstract class Detector {
      *
      * @param context the context for the check referencing the project, lint
      * client, etc
-     * @deprecated This method is deprecated because the semantics of
-     *  [beforeCheckLibraryProject] was unfortunate (it included all libraries
-     *  *except* the root project, and typically you want to either act
-     *  on each and every project, or just the root projects. Therefore,
-     *  there is a new method, [beforeCheckEachProject], which applies to each
-     *  project and [beforeCheckRootProject] which applies to just the root
-     *  projects; [beforeCheckProject] has a name that sounds like
-     *  [beforeCheckEachProject] but just reusing that name would have been
-     *  an incompatible change.
      */
     open fun beforeCheckRootProject(context: Context) {
         // Backwards compatibility for a while
