@@ -93,11 +93,13 @@ class CreateCxxAbiModelTest {
 
     @Test
     fun `round trip random instance`() {
-        val abi = RandomInstanceGenerator()
-            .synthetic(CxxAbiModelData::class.java)
-        val abiString = abi.toJsonString()
-        val recoveredAbi = createCxxAbiModelFromJson(abiString)
-        val recoveredAbiString = recoveredAbi.toJsonString()
-        assertThat(abiString).isEqualTo(recoveredAbiString)
+        RandomInstanceGenerator()
+            .synthetics(CxxAbiModelData::class.java)
+            .forEach { abi ->
+                val abiString = abi.toJsonString()
+                val recoveredAbi = createCxxAbiModelFromJson(abiString)
+                val recoveredAbiString = recoveredAbi.toJsonString()
+                assertThat(abiString).isEqualTo(recoveredAbiString)
+            }
     }
 }

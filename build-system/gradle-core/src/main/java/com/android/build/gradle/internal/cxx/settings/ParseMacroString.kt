@@ -67,10 +67,8 @@ fun tokenizeMacroString(value : String, receive: (Token) -> Unit ) {
             PARSING_MACRO -> {
                 when(c) {
                     '}' -> {
-                        if(sb.isNotEmpty()) {
-                            receive(MacroToken(sb.toString()))
-                            sb.setLength(0)
-                        }
+                        receive(MacroToken(sb.toString()))
+                        sb.setLength(0)
                         PARSING_LITERAL
                     }
                     else -> {
@@ -82,11 +80,13 @@ fun tokenizeMacroString(value : String, receive: (Token) -> Unit ) {
         }
         ++index
     }
-    if (sb.isNotEmpty()) {
-        when(state) {
-            PARSING_MACRO -> receive(LiteralToken("${'$'}{$sb"))
-            else -> receive(LiteralToken("$sb"))
-        }
+    when(state) {
+        PARSING_LITERAL_SAW_DOLLAR -> receive(LiteralToken("$sb$"))
+        PARSING_MACRO -> receive(LiteralToken("\${$sb"))
+        else ->
+            if (sb.isNotEmpty()) {
+                receive(LiteralToken("$sb"))
+            }
     }
 }
 

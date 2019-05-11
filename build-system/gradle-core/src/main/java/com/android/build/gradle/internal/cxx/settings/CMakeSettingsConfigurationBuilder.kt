@@ -34,7 +34,7 @@ class CMakeSettingsConfigurationBuilder {
     var buildCommandArgs : String = ""
     var ctestCommandArgs : String = ""
     var inheritedEnvironments = listOf<String>()
-    val variables = mutableMapOf<String, String>()
+    val variables = mutableListOf<CMakeSettingsVariable>()
 
     /**
      * Initialize this builder with the values from another [CMakeSettingsConfiguration]
@@ -52,7 +52,7 @@ class CMakeSettingsConfigurationBuilder {
         ctestCommandArgs = settings.ctestCommandArgs
         cmakeExecutable = settings.cmakeExecutable
         cmakeToolchain = settings.cmakeToolchain
-        variables.putAll(settings.variables.map { Pair(it.name, it.value)})
+        variables.addAll(settings.variables)
         return this
     }
 
@@ -60,7 +60,7 @@ class CMakeSettingsConfigurationBuilder {
      * Add a variable to the map of variables for this builder.
      */
     fun putVariable(property : CmakeProperty, arg : Any) : CMakeSettingsConfigurationBuilder {
-        variables[property.name] = arg.toString()
+        variables += CMakeSettingsVariable(property.name, arg.toString())
         return this
     }
 
@@ -81,7 +81,7 @@ class CMakeSettingsConfigurationBuilder {
             buildCommandArgs = buildCommandArgs,
             ctestCommandArgs = ctestCommandArgs,
             inheritEnvironments = inheritedEnvironments,
-            variables = variables.map { (key, value) ->
-                CMakeSettingsVariable(key, value)})
+            variables = variables.toList()
+        )
     }
 }

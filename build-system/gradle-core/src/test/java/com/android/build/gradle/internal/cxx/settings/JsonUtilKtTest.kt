@@ -88,28 +88,30 @@ class JsonUtilKtTest {
     
     @Test
     fun `round trip synthesize random with string property`() {
-        val sb = RandomInstanceGenerator()
-            .addFactory(PropertyValue::class.java) { sb ->
+        RandomInstanceGenerator()
+            .provide(PropertyValue::class.java) { sb ->
                 PropertyValue.StringPropertyValue(sb.synthetic(String::class.java))
             }
-
-        val settings = sb.synthetic(CMakeSettings::class.java)
-        val returnToString = settings.toJsonString()
-        val roundTrip = createCmakeSettingsJsonFromString(returnToString)
-        assertThat(settings).isEqualTo(roundTrip)
+            .synthetics(CMakeSettings::class.java, 5)
+            .forEach { settings ->
+                val returnToString = settings.toJsonString()
+                val roundTrip = createCmakeSettingsJsonFromString(returnToString)
+                assertThat(settings).isEqualTo(roundTrip)
+            }
     }
 
     @Test
     fun `round trip synthesize random with lookup property`() {
-        val sb = RandomInstanceGenerator()
-            .addFactory(PropertyValue::class.java) { sb ->
+        RandomInstanceGenerator()
+            .provide(PropertyValue::class.java) { sb ->
                 val result = sb.synthetic(String::class.java)
                 PropertyValue.LookupPropertyValue { result }
             }
-
-        val settings = sb.synthetic(CMakeSettings::class.java)
-        val returnToString = settings.toJsonString()
-        val roundTrip = createCmakeSettingsJsonFromString(returnToString)
-        assertThat(settings.toJsonString()).isEqualTo(roundTrip.toJsonString())
+            .synthetics(CMakeSettings::class.java)
+            .forEach { settings ->
+                val returnToString = settings.toJsonString()
+                val roundTrip = createCmakeSettingsJsonFromString(returnToString)
+                assertThat(settings.toJsonString()).isEqualTo(roundTrip.toJsonString())
+            }
     }
 }

@@ -26,53 +26,58 @@ class CMakeSettingsConfigurationBuilderTest {
 
     @Test
     fun `round trip through builder`() {
-        val initial =
-            RandomInstanceGenerator().synthetic(CMakeSettingsConfiguration::class.java)
-        val builder =
-            CMakeSettingsConfigurationBuilder().initialize(initial)
-        val recovered = builder.build()
-        assertThat(initial.toJsonString()).isEqualTo(recovered.toJsonString())
+        RandomInstanceGenerator().synthetics(CMakeSettingsConfiguration::class.java)
+            .forEach { initial ->
+                val builder =
+                    CMakeSettingsConfigurationBuilder().initialize(initial)
+                val recovered = builder.build()
+                assertThat(initial.toJsonString()).isEqualTo(recovered.toJsonString())
+            }
     }
 
     @Test
     fun `add property works`() {
-        val initial =
-            RandomInstanceGenerator().synthetic(CMakeSettingsConfiguration::class.java)
-        val builder =
-            CMakeSettingsConfigurationBuilder()
-                .initialize(initial)
-                .putVariable(CmakeProperty.ANDROID_ABI, "x86")
-        val recovered = builder.build()
-        assertThat(recovered.variables).contains(
-            CMakeSettingsVariable(
-                CmakeProperty.ANDROID_ABI.name,
-                "x86"
-            )
-        )
+        RandomInstanceGenerator()
+            .synthetics(CMakeSettingsConfiguration::class.java)
+            .forEach { initial ->
+                val builder =
+                    CMakeSettingsConfigurationBuilder()
+                        .initialize(initial)
+                        .putVariable(CmakeProperty.ANDROID_ABI, "x86")
+                val recovered = builder.build()
+                assertThat(recovered.variables).contains(
+                    CMakeSettingsVariable(
+                        CmakeProperty.ANDROID_ABI.name,
+                        "x86"
+                    )
+                )
+            }
     }
 
     @Test
     fun `exercise other properties`() {
-        val initial =
-            RandomInstanceGenerator().synthetic(CMakeSettingsConfiguration::class.java)
-        val builder =
-            CMakeSettingsConfigurationBuilder()
-                .initialize(initial)
-        builder.configurationType = "ddd"
-        builder.installRoot = "xxx"
-        builder.cmakeToolchain = "yyy"
-        builder.cmakeCommandArgs = "zzz"
-        builder.buildCommandArgs = "aaa"
-        builder.ctestCommandArgs = "bbb"
-        builder.inheritedEnvironments = listOf("ccc")
+        RandomInstanceGenerator()
+            .synthetics(CMakeSettingsConfiguration::class.java)
+            .forEach { initial ->
+                val builder =
+                    CMakeSettingsConfigurationBuilder()
+                        .initialize(initial)
+                builder.configurationType = "ddd"
+                builder.installRoot = "xxx"
+                builder.cmakeToolchain = "yyy"
+                builder.cmakeCommandArgs = "zzz"
+                builder.buildCommandArgs = "aaa"
+                builder.ctestCommandArgs = "bbb"
+                builder.inheritedEnvironments = listOf("ccc")
 
-        val recovered = builder.build()
-        assertThat(recovered.configurationType).isEqualTo("ddd")
-        assertThat(recovered.installRoot).isEqualTo("xxx")
-        assertThat(recovered.cmakeToolchain).isEqualTo("yyy")
-        assertThat(recovered.cmakeCommandArgs).isEqualTo("zzz")
-        assertThat(recovered.buildCommandArgs).isEqualTo("aaa")
-        assertThat(recovered.ctestCommandArgs).isEqualTo("bbb")
-        assertThat(recovered.inheritEnvironments).containsExactly("ccc")
+                val recovered = builder.build()
+                assertThat(recovered.configurationType).isEqualTo("ddd")
+                assertThat(recovered.installRoot).isEqualTo("xxx")
+                assertThat(recovered.cmakeToolchain).isEqualTo("yyy")
+                assertThat(recovered.cmakeCommandArgs).isEqualTo("zzz")
+                assertThat(recovered.buildCommandArgs).isEqualTo("aaa")
+                assertThat(recovered.ctestCommandArgs).isEqualTo("bbb")
+                assertThat(recovered.inheritEnvironments).containsExactly("ccc")
+            }
     }
 }

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.google.common.truth.Truth.*
 import com.android.build.gradle.internal.cxx.settings.Token.*
 import org.junit.Test
@@ -70,7 +71,7 @@ class ParseMacroStringKtTest {
         tokenizeMacroString("\$\$") { tokens += it }
         assertThat(tokens).hasSize(1)
         assertThat(tokens[0] is LiteralToken).isTrue()
-        assertThat(tokens[0].toString()).isEqualTo("\$")
+        assertThat(tokens[0].toString()).isEqualTo("\$\$")
     }
 
     @Test
@@ -89,5 +90,59 @@ class ParseMacroStringKtTest {
         assertThat(tokens).hasSize(1)
         assertThat(tokens[0] is LiteralToken).isTrue()
         assertThat(tokens[0].toString()).isEqualTo("\${x")
+    }
+
+    @Test
+    fun `dollar (found by fuzz)`() {
+        val text = "$"
+        val reconstructed = roundTrip(text)
+        assertThat(reconstructed.toString()).isEqualTo(text)
+    }
+
+    @Test
+    fun `trailing dollar (found by fuzz)`() {
+        val text = "trailing$"
+        val reconstructed = roundTrip(text)
+        assertThat(reconstructed.toString()).isEqualTo(text)
+    }
+
+    @Test
+    fun `trailing dollar curly (found by fuzz)`() {
+        val text = "trailing\${"
+        val reconstructed = roundTrip(text)
+        assertThat(reconstructed.toString()).isEqualTo(text)
+    }
+
+    @Test
+    fun `trailing dollar curly curly (found by fuzz)`() {
+        val text = "trailing\${}"
+        val reconstructed = roundTrip(text)
+        assertThat(reconstructed.toString()).isEqualTo(text)
+    }
+
+    @Test
+    fun fuzz() {
+        RandomInstanceGenerator()
+            .strings()
+            .forEach { text ->
+                val reconstructed = roundTrip(text)
+                assertThat(reconstructed.toString())
+                    .named("Parsing <<$text>>")
+                    .isEqualTo(text)
+            }
+    }
+
+    private fun roundTrip(text: String): StringBuilder {
+        val reconstructed = StringBuilder()
+        tokenizeMacroString(text) {
+            when (it) {
+                is LiteralToken -> {
+                    assertThat(it.literal).isNotEmpty()
+                    reconstructed.append(it.literal)
+                }
+                is MacroToken -> reconstructed.append("\${${it.macro}}")
+            }
+        }
+        return reconstructed
     }
 }
