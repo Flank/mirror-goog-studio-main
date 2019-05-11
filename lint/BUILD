@@ -19,6 +19,7 @@ iml_module(
         "//tools/base/sdk-common:studio.android.sdktools.sdk-common",
         "//tools/base/layoutlib-api:studio.android.sdktools.layoutlib-api",
         "//tools/idea/java/java-psi-api:intellij.java.psi",
+        "//tools/idea/java/java-psi-impl:intellij.java.psi.impl",
         "//tools/base/build-system:studio.android.sdktools.manifest-merger",
         "//tools/idea/uast/uast-common:intellij.platform.uast",
         "//tools/idea/uast/uast-java:intellij.java.uast",
