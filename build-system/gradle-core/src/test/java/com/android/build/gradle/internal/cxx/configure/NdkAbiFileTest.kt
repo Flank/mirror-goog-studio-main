@@ -109,6 +109,28 @@ class NdkAbiFileTest {
         return NdkAbiFile(file).abiInfoList
     }
 
+    private fun weirdBitness() : List<AbiInfo> {
+        val contents = "{\n" +
+                "  \"armeabi-v7a\": {\n" +
+                "    \"bitness\": 92,\n" +
+                "    \"default\": true,\n" +
+                "    \"deprecated\": false\n" +
+                "  }\n" +
+                "}"
+
+        val file = ndkMetaAbisFile(File(temporaryFolder.root, "./weird"))
+        file.parentFile.mkdirs()
+        file.writeText(contents)
+        return NdkAbiFile(file).abiInfoList
+    }
+
+    @Test
+    fun `read bitness from file`() {
+        val ndkAbiInfos = weirdBitness()
+        val first = ndkAbiInfos.first()
+        assertThat(first.bitness).isEqualTo(92)
+    }
+
     @Test
     fun testNdk14() {
         val ndkAbiInfos = ndkAbiInfosNdk14()

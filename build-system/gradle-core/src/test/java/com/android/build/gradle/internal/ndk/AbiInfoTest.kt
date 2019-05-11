@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,17 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.errorln
-import com.google.gson.annotations.SerializedName
+import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.google.common.truth.Truth
+import org.junit.Test
 
-/** Information about an ABI.  */
-data class AbiInfo(
-    val abi: Abi = Abi.X86,
-    @SerializedName("bitness")
-    val bitness: Int = 64,
-    @SerializedName("deprecated")
-    val isDeprecated: Boolean = false,
-    @SerializedName("default")
-    val isDefault: Boolean = true) {
-    init {
-        if (bitness != 32 && bitness != 64) {
-            errorln("ABI ${abi.tag} had an invalid value: $bitness")
+class AbiInfoTest {
+
+    @Test
+    fun `abi with wrong bitness`() {
+        RecordingLoggingEnvironment().use { log ->
+            AbiInfo(Abi.X86, 63, false, false)
+            Truth.assertThat(log.errors).hasSize(1)
         }
     }
 }
-

@@ -17,10 +17,11 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.gradle.api.logging.Logging
 import java.io.File
 import java.io.FileReader
 
@@ -43,7 +44,6 @@ import java.io.FileReader
  */
 class NdkAbiFile(abiFile: File) {
     private val mapTypeToken = object : TypeToken<Map<String, AbiInfo>>() {}.type
-    private val logger = Logging.getLogger(javaClass)
     val abiInfoList: List<AbiInfo>
 
     init {
@@ -53,25 +53,40 @@ class NdkAbiFile(abiFile: File) {
                     .entries.mapNotNull { entry ->
                     val abi = Abi.getByName(entry.key)
                     if (abi == null) {
-                        logger.warn(
+                        warnln(
                             "Ignoring invalid ABI '${entry.key}' found in ABI " +
                                     "metadata file '$abiFile'."
                         )
                         null
 
                     } else {
-                        AbiInfo(abi, entry.value.isDeprecated, entry.value.isDefault)
+                        AbiInfo(
+                            abi = abi,
+                            bitness = entry.value.bitness,
+                            isDeprecated = entry.value.isDeprecated,
+                            isDefault = entry.value.isDefault
+                        )
                     }
                 }
             } catch (e: Throwable) {
-                logger.error("Could not parse '$abiFile'.")
-                Abi.values().map { AbiInfo(it, false, true) }
+                errorln("Could not parse '$abiFile'.")
+                fallbackAbis()
             }
 
         } else {
-            Abi.values().map { AbiInfo(it, false, true) }
+            fallbackAbis()
         }
     }
+
+    /**
+     * Produce a default set of ABIs if there was a problem.
+     */
+    private fun fallbackAbis() = Abi.values().map { AbiInfo(
+        abi = it,
+        bitness = if(it.supports64Bits()) 64 else 32,
+        isDeprecated = false,
+        isDefault = true
+    ) }
 }
 
 /**
