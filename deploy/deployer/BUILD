@@ -94,14 +94,13 @@ coverage_java_test(
     name = "deployer.tests",
     size = "medium",
     srcs = glob(["src/test/java/**/*.java"]),
-    data = glob(["src/test/resource/**"]) +
-           select({
-               "//tools/base/bazel:windows": [],
-               "//conditions:default": [
-                   "//tools/base/deploy/installer:test-installer",
-                   "//tools/base/deploy/installer:bash_bridge",
-               ],
-           }),
+    data = glob(["src/test/resource/**"]) + select({
+        "//tools/base/bazel:windows": [],
+        "//conditions:default": [
+            "//tools/base/deploy/installer:test-installer",
+            "//tools/base/deploy/installer:bash_bridge",
+        ],
+    }),
     jvm_flags = ["-Dtest.suite.jar=deployer.tests.jar"],
     tags = [
         "no_rbe_windows",
