@@ -72,10 +72,6 @@ if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
   mkdir "${dist_dir}/coverage"
   cp -pv "./out/lcov" "${dist_dir}/coverage"
-  cp -pv "./out/worst" "${dist_dir}/coverage"
-  cp -pv "./out/worstNoFiles" "${dist_dir}/coverage"
-  cp -pv "./out/missing" "${dist_dir}/coverage"
-  cp -pv "./out/fake" "${dist_dir}/coverage"
   # HTML report needs to be zipped for fast uploads
   pushd "./out"
   zip -r "html.zip" "./html"

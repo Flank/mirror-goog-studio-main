@@ -152,7 +152,6 @@ def main():
   # we're using a filename -> directory path because it makes resolving to
   # sourcefiles very fast
   filetree = {}
-  pathset = set()
   # walk down the source file tree
   for (dirpath, _, filenames) in os.walk('./tools'):
     # ignore skipped directories
@@ -166,7 +165,6 @@ def main():
         filetree[name].add(dirpath)
       else:
         filetree[name] = set([dirpath])
-      pathset.add(os.path.join(dirpath, name))
 
   print 'parse jacoco xml report'
   root = ET.parse(
@@ -176,8 +174,6 @@ def main():
   # we're going to build a nest map like package -> (file -> path/coverage info)
   # this makes it easy to do package or file level sorting for output
   data = {}
-  matchedset = set()
-  fakeset = set()
   for pkg in root.iter('package'):
     pkg_name = pkg.get('name')
     for sfile in pkg.iter('sourcefile'):
@@ -205,20 +201,6 @@ def main():
               'instrumented': instrumented,
               'covered': covered,
           }
-          matchedset.add(os.path.join(path, pkg_name, sfile_name))
-        else:
-          fakeset.add(os.path.join(pkg_name, sfile_name))
-
-  print 'compute unmatched real paths'
-  unmatched = pathset - matchedset
-  missing = open('./out/missing', 'w')
-  for path in sorted(unmatched):
-    missing.write('{}\n'.format(path))
-
-  print 'write fake package/class list'
-  fake = open('./out/fake', 'w')
-  for path in sorted(fakeset):
-    fake.write('{}\n'.format(path))
 
   print 'write to lcov file'
   lcov = open('./out/lcov', 'w')
@@ -233,64 +215,6 @@ def main():
         lcov.write('DA:{},{}\n'.format(
             line_num, int(line_num in data[pkg_name][sfile_name]['covered'])))
       lcov.write('end_of_record\n')
-
-  print 'aggregate package level coverage'
-  # we need to aggregate data to the package level for reports
-  pkg_cov = {}
-  for pkg in data:
-    inst = 0
-    cov = 0
-    paths = set()
-    for sfile in data[pkg]:
-      inst += len(data[pkg][sfile]['instrumented'])
-      cov += len(data[pkg][sfile]['covered'])
-      paths.add(data[pkg][sfile]['path'])
-    pkg_cov[pkg] = {
-        'instrumented': inst,
-        'covered': cov,
-        'paths': list(paths),
-    }
-
-  print 'write worst (most uncovered lines) report'
-  # packages + classes by uncovered lines
-  worst = open('./out/worst', 'w')
-  # packages only
-  worst_no_files = open('./out/worstNoFiles', 'w')
-  worst.write('uncovered lines - cov% : (package @ [paths])|(file @ path)\n')
-  worst.write('path to file = path/package/file rooted at WORKSPACE\n')
-  worst.write('NB: omits files and packages with zero uncovered lines\n')
-  worst_no_files.write('uncovered lines - cov% : package @ [paths]\n')
-  worst_no_files.write('path to package = path/package rooted at WORKSPACE\n')
-  worst_no_files.write('NB: omits packages with zero uncovered lines\n')
-  for pkg in sorted(
-      pkg_cov,
-      key=lambda p: pkg_cov[p]['instrumented'] - pkg_cov[p]['covered'],
-      reverse=True):
-    cov = pkg_cov[pkg]['covered']
-    inst = pkg_cov[pkg]['instrumented']
-    if inst - cov == 0:  # no reason to list fully covered packages
-      continue
-    percent = round(100 * float(cov) / float(inst), 1)
-    worst.write('{} - {}% : {} @ {}\n'.format(inst - cov, percent, pkg,
-                                              pkg_cov[pkg]['paths']))
-    worst_no_files.write('{} - {}% : {} @ {}\n'.format(inst - cov, percent, pkg,
-                                                       pkg_cov[pkg]['paths']))
-
-    def uncovered_line_count(file_cov):
-      return len(file_cov['instrumented']) - len(file_cov['covered'])
-
-    for sfile in sorted(
-        data[pkg],
-        key=lambda f: uncovered_line_count(data[pkg][f]),
-        reverse=True):
-      cov = len(data[pkg][sfile]['covered'])
-      inst = len(data[pkg][sfile]['instrumented'])
-      if inst - cov == 0:
-        continue
-      percent = round(100 * float(cov) / float(inst), 1)
-      worst.write('    {} - {}% : {} @ {}\n'.format(inst - cov, percent, sfile,
-                                                    data[pkg][sfile]['path']))
-
 
 if __name__ == '__main__':
   main()
