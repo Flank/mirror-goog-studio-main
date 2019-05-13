@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.stripping.SymbolStripExecutableFinder
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.ide.common.process.ProcessInfo
 import com.android.ide.common.process.ProcessResult
@@ -27,6 +28,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -62,7 +64,7 @@ class StripDebugSymbolsTaskTest {
     private lateinit var armeabiDoNotStrip: File
     private lateinit var outputDir: File
     private lateinit var fakeExe: File
-    private lateinit var stripToolFinder: SymbolStripExecutableFinder
+    private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
     private lateinit var workers: WorkerExecutorFacade
 
     @Before
@@ -90,8 +92,9 @@ class StripDebugSymbolsTaskTest {
         outputDir = temporaryFolder.newFolder("outputDir")
 
         fakeExe = temporaryFolder.newFile("fake.exe")
-        stripToolFinder =
+        stripToolFinderProvider = FakeGradleProvider(
             SymbolStripExecutableFinder(mapOf(Pair(Abi.X86, fakeExe), Pair(Abi.ARMEABI, fakeExe)))
+        )
 
         workers = object: WorkerExecutorFacade {
             override fun submit(actionClass: Class<out Runnable>, parameter: Serializable) {
@@ -120,7 +123,7 @@ class StripDebugSymbolsTaskTest {
             inputDir,
             outputDir,
             excludePatterns,
-            stripToolFinder,
+            stripToolFinderProvider,
             processExecutor,
             null
         ).run()
@@ -173,7 +176,7 @@ class StripDebugSymbolsTaskTest {
             inputDir,
             outputDir,
             excludePatterns,
-            stripToolFinder,
+            stripToolFinderProvider,
             processExecutor,
             changedInputs
         ).run()

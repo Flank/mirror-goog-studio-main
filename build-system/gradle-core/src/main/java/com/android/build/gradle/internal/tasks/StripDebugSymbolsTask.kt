@@ -41,11 +41,11 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.nio.file.Paths
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import java.io.Serializable
@@ -55,24 +55,31 @@ import javax.inject.Inject
  * Task to remove debug symbols from native libraries.
  */
 @CacheableTask
-abstract class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory) :
-    IncrementalTask() {
+abstract class StripDebugSymbolsTask : IncrementalTask() {
 
     @get:Classpath
     abstract val inputDir: DirectoryProperty
 
     @get:OutputDirectory
-    val outputDir: DirectoryProperty = objects.directoryProperty()
+    abstract val outputDir: DirectoryProperty
 
     @get:Input
     lateinit var excludePatterns: List<String>
         private set
 
     @Input
-    fun getStripExecutablesMap(): Map<Abi, File> =
-        stripToolFinder.get().stripExecutables.toSortedMap()
+    @Optional
+    fun getStripExecutablesMap(): Map<Abi, File>? {
+        // if no input files, return null, because no need for executable(s), and we don't want to
+        // spend the extra time or print out NDK-related spam if not necessary.
+        return if (FileUtils.getAllFiles(inputDir.get().asFile).isEmpty) {
+            null
+        } else {
+            stripToolFinderProvider.get().stripExecutables.toSortedMap()
+        }
+    }
 
-    private lateinit var stripToolFinder: Provider<SymbolStripExecutableFinder>
+    private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
 
     /**
      * TODO(https://issuetracker.google.com/129217943)
@@ -91,7 +98,7 @@ abstract class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory)
             inputDir.get().asFile,
             outputDir.get().asFile,
             excludePatterns,
-            stripToolFinder.get(),
+            stripToolFinderProvider,
             GradleProcessExecutor(project),
             null
         ).run()
@@ -103,7 +110,7 @@ abstract class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory)
             inputDir.get().asFile,
             outputDir.get().asFile,
             excludePatterns,
-            stripToolFinder.get(),
+            stripToolFinderProvider,
             GradleProcessExecutor(project),
             changedInputs
         ).run()
@@ -137,7 +144,7 @@ abstract class StripDebugSymbolsTask @Inject constructor(objects: ObjectFactory)
             variantScope.artifacts.setTaskInputToFinalProduct(MERGED_NATIVE_LIBS, task.inputDir)
             task.excludePatterns =
                 variantScope.globalScope.extension.packagingOptions.doNotStrip.sorted()
-            task.stripToolFinder =
+            task.stripToolFinderProvider =
                 variantScope.globalScope.sdkComponents.stripExecutableFinderProvider
         }
     }
@@ -152,7 +159,7 @@ class StripDebugSymbolsDelegate(
     val inputDir: File,
     val outputDir: File,
     val excludePatterns: List<String>,
-    val stripToolFinder: SymbolStripExecutableFinder,
+    val stripToolFinderProvider: Provider<SymbolStripExecutableFinder>,
     val processExecutor: ProcessExecutor,
     val changedInputs: Map<File, FileStatus>?
 ) {
@@ -163,6 +170,10 @@ class StripDebugSymbolsDelegate(
         }
 
         val excludeMatchers = excludePatterns.map { compileGlob(it) }
+
+        // by lazy, because we don't want to spend the extra time or print out NDK-related spam if
+        // there are no .so files to strip
+        val stripToolFinder by lazy { stripToolFinderProvider.get() }
 
         if (changedInputs != null) {
             for (input in changedInputs.keys) {
