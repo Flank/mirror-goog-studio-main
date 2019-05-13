@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import java.io.File
 

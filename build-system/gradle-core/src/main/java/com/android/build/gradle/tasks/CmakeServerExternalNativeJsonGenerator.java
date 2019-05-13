@@ -23,6 +23,8 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeSourceFileNam
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseIndexingVisitorKt.indexCompilationDatabase;
 import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseToolchainVisitorKt.populateCompilationDatabaseToolchains;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
+import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,6 +57,8 @@ import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
 import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.cxx.json.StringTable;
+import com.android.build.gradle.internal.cxx.logging.PassThroughPrintWriterLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.ide.common.process.ProcessException;
@@ -159,22 +163,19 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
-        try (PrintWriter serverLogWriter = getCmakeServerLogWriter(abi.getCxxBuildFolder())) {
-            ILogger logger = LoggerWrapper.getLogger(CmakeServerExternalNativeJsonGenerator.class);
+        try (ThreadLoggingEnvironment ignore =
+                new PassThroughPrintWriterLoggingEnvironment(
+                        new PrintWriter(
+                                abi.getCmake().getCmakeServerLogFile().getAbsoluteFile(), "UTF-8"),
+                        CMAKE_SERVER_LOG_PREFIX)) {
             // Create a new cmake server for the given Cmake and configure the given project.
             ServerReceiver serverReceiver =
                     new ServerReceiver()
                             .setMessageReceiver(
                                     message ->
-                                            receiveInteractiveMessage(
-                                                    serverLogWriter,
-                                                    logger,
-                                                    message,
-                                                    getMakefile().getParentFile()))
-                            .setDiagnosticReceiver(
-                                    message ->
-                                            receiveDiagnosticMessage(
-                                                    serverLogWriter, logger, message));
+                                            logInteractiveMessage(
+                                                    message, getMakefile().getParentFile()))
+                            .setDiagnosticReceiver(message -> infoln(message));
             File cmakeBinFolder = cmake.getCmakeExe().getParentFile();
             Server cmakeServer = ServerFactory.create(cmakeBinFolder, serverReceiver);
             if (cmakeServer == null) {
@@ -233,38 +234,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         }
     }
 
-    /** Returns PrintWriter object to write CMake server logs. */
-    @NonNull
-    private static PrintWriter getCmakeServerLogWriter(@NonNull File outputFolder)
-            throws IOException {
-        return new PrintWriter(getCmakeServerLog(outputFolder).getAbsoluteFile(), "UTF-8");
-    }
-
-    /** Returns the CMake server log file using the given output folder. */
-    @NonNull
-    private static File getCmakeServerLog(@NonNull File outputFolder) {
-        return new File(outputFolder, "cmake_server_log.txt");
-    }
-
-    /** Processes an interactive message received from the CMake server. */
-    static void receiveInteractiveMessage(
-            @NonNull PrintWriter writer,
-            @NonNull ILogger logger,
-            @NonNull InteractiveMessage message,
-            @NonNull File makeFileDirectory) {
-        writer.println(CMAKE_SERVER_LOG_PREFIX + message.message);
-        logInteractiveMessage(logger, message, makeFileDirectory);
-    }
-
     /**
      * Logs info/warning/error for the given interactive message. Throws a RunTimeException in case
      * of an 'error' message type.
      */
-    @VisibleForTesting
-    static void logInteractiveMessage(
-            @NonNull ILogger logger,
-            @NonNull InteractiveMessage message,
-            @NonNull File makeFileDirectory) {
+    private static void logInteractiveMessage(
+            @NonNull InteractiveMessage message, @NonNull File makeFileDirectory) {
         // CMake error/warning prefix strings. The CMake errors and warnings are part of the
         // message type "message" even though CMake is reporting errors/warnings (Note: They could
         // have a title that says if it's an error or warning, we check that first before checking
@@ -277,8 +252,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // Note: This is not the same as a message with type "message" with error information, that
         // case is handled below.
         if (message.type != null && message.type.equals("error")) {
-            logger.error(
-                    null, makeCmakeMessagePathsAbsolute(message.errorMessage, makeFileDirectory));
+            errorln(makeCmakeMessagePathsAbsolute(message.errorMessage, makeFileDirectory));
             return;
         }
 
@@ -286,24 +260,17 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         if ((message.title != null && message.title.equals("Error"))
                 || message.message.startsWith(CMAKE_ERROR_PREFIX)) {
-            logger.error(null, correctedMessage);
+            errorln(correctedMessage);
             return;
         }
 
         if ((message.title != null && message.title.equals("Warning"))
                 || message.message.startsWith(CMAKE_WARNING_PREFIX)) {
-            logger.warning(correctedMessage);
+            warnln(correctedMessage);
             return;
         }
 
-        logger.info(correctedMessage);
-    }
-
-    /** Processes an diagnostic message received by/from the CMake server. */
-    static void receiveDiagnosticMessage(
-            @NonNull PrintWriter writer, @NonNull ILogger logger, @NonNull String message) {
-        writer.println(CMAKE_SERVER_LOG_PREFIX + message);
-        logger.info(message);
+        infoln(correctedMessage);
     }
 
     /**
