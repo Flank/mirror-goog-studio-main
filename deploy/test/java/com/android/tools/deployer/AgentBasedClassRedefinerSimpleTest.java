@@ -16,6 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -94,5 +95,28 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
 
         android.triggerMethod(ACTIVITY_CLASS, "printCounter");
         Assert.assertTrue(android.waitForInput("TestActivity.counter = 1", RETURN_VALUE_TIMEOUT));
+    }
+
+    @Test
+    public void testRedefineAddingClasses() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.SwapRequest request =
+                createRequest(
+                        ImmutableMap.of("app.Wrapper", "app/Wrapper.dex"),
+                        ImmutableMap.of(
+                                "app.NewClass",
+                                "app/NewClass.dex",
+                                "app.Wrapper$Inner",
+                                "app/Wrapper$Inner.dex"),
+                        false);
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
+
+        android.triggerMethod(ACTIVITY_CLASS, "getNewClassStatus");
+        Assert.assertTrue(android.waitForInput("public=1package=1", RETURN_VALUE_TIMEOUT));
     }
 }

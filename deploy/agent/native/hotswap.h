@@ -51,6 +51,9 @@ class HotSwap {
 
   // Finds a class definition by enumerating all loaded classes in the VM.
   jclass FindInLoadedClasses(const std::string& name) const;
+
+  // Adds new classes to the application class loader.
+  void DefineNewClasses(const proto::SwapRequest& message) const;
 };
 
 }  // namespace deploy

@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import com.android.tools.deployer.tasks.TaskRunner;
 import com.android.tools.deployer.tasks.TaskRunner.Task;
@@ -167,7 +166,7 @@ public class Deployer {
                 runner.create(Tasks.VERIFY, new SwapVerifier()::verify, diffs, restart);
 
         // Compare the local vs remote dex files.
-        Task<List<DexClass>> toSwap =
+        Task<DexComparator.ChangedClasses> toSwap =
                 runner.create(Tasks.COMPARE, new DexComparator()::compare, dexDiffs, splitter);
 
         // Do the swap

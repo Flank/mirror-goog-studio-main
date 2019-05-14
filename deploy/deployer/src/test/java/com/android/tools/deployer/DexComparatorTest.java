@@ -32,8 +32,9 @@ public class DexComparatorTest {
     public void testNoDiff() throws DeployerException {
         DexComparator comparator = new DexComparator();
         List<FileDiff> diffs = new ArrayList<>();
-        List<DexClass> classes = comparator.compare(diffs, new FakeDexSplitter());
-        assertTrue(classes.isEmpty());
+        DexComparator.ChangedClasses classes = comparator.compare(diffs, new FakeDexSplitter());
+        assertTrue(classes.newClasses.isEmpty());
+        assertTrue(classes.modifiedClasses.isEmpty());
     }
 
     @Test
@@ -51,8 +52,9 @@ public class DexComparatorTest {
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
 
-        List<DexClass> classes = comparator.compare(diffs, new FakeDexSplitter());
-        assertTrue(classes.isEmpty());
+        DexComparator.ChangedClasses classes = comparator.compare(diffs, new FakeDexSplitter());
+        assertTrue(classes.newClasses.isEmpty());
+        assertTrue(classes.modifiedClasses.isEmpty());
     }
 
     @Test
@@ -68,14 +70,15 @@ public class DexComparatorTest {
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
 
-        List<DexClass> classes = comparator.compare(diffs, new FakeDexSplitter());
-        assertEquals(1, classes.size());
-        assertEquals(0x0012, classes.get(0).checksum);
-        assertEquals("A", classes.get(0).name);
+        DexComparator.ChangedClasses classes = comparator.compare(diffs, new FakeDexSplitter());
+        assertTrue(classes.newClasses.isEmpty());
+        assertEquals(1, classes.modifiedClasses.size());
+        assertEquals(0x0012, classes.modifiedClasses.get(0).checksum);
+        assertEquals("A", classes.modifiedClasses.get(0).name);
     }
 
     @Test
-    public void testOneClassAdded() {
+    public void testOneClassAdded() throws DeployerException {
         DexComparator comparator = new DexComparator();
         List<FileDiff> diffs = new ArrayList<>();
 
@@ -87,19 +90,14 @@ public class DexComparatorTest {
 
         diffs.add(new FileDiff(oldFile, newFile, FileDiff.Status.MODIFIED));
 
-        try {
-            comparator.compare(diffs, new FakeDexSplitter());
-            fail();
-        } catch (DeployerException e) {
-            assertEquals(DeployerException.Error.CANNOT_SWAP_NEW_CLASS, e.getError());
-        }
+        DexComparator.ChangedClasses classes = comparator.compare(diffs, new FakeDexSplitter());
+        assertEquals(1, classes.newClasses.size());
     }
 
     static class FakeDexSplitter implements DexSplitter {
 
         @Override
-        public List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode)
-                throws DeployerException {
+        public List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) {
             ArrayList<DexClass> classes = new ArrayList<>();
             if (dex.checksum == 1) {
                 classes.add(new DexClass("A", 0x0011, new byte[0], dex));

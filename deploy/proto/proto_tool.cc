@@ -54,7 +54,7 @@ int HandleArgv(int argc, char** argv) {
   swap_request.set_restart_activity(std::stoi(argv[2]));
 
   for (int i = 3; i + 1 < argc; i += 2) {
-    proto::ClassDef* class_def = swap_request.add_classes();
+    proto::ClassDef* class_def = swap_request.add_modified_classes();
     class_def->set_name(argv[i]);
     class_def->set_dex(ReadFile(argv[i + 1]));
   }
@@ -80,7 +80,7 @@ int HandleStdin() {
   swap_request.set_restart_activity(std::stoi(should_restart));
 
   while (true) {
-    proto::ClassDef* class_def = swap_request.add_classes();
+    proto::ClassDef* class_def = swap_request.add_modified_classes();
     std::cout << "Name of class to swap? ";
     std::getline(std::cin, *class_def->mutable_name());
 

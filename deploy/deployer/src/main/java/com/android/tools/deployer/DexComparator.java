@@ -23,10 +23,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /** A comparator of dex files, that uses a dex splitter to obtain class information. */
 public class DexComparator {
+
+    public static class ChangedClasses {
+        public final List<DexClass> newClasses;
+        public final List<DexClass> modifiedClasses;
+
+        public ChangedClasses(List<DexClass> newClasses, List<DexClass> modifiedClasses) {
+            this.newClasses = newClasses;
+            this.modifiedClasses = modifiedClasses;
+        }
+    }
 
     /**
      * Compares a list of pair of files and returns the classes that were changed from the original
@@ -37,7 +46,7 @@ public class DexComparator {
      * @return the classes that have changed.
      */
     @Trace
-    public List<DexClass> compare(List<FileDiff> dexDiffs, DexSplitter splitter)
+    public ChangedClasses compare(List<FileDiff> dexDiffs, DexSplitter splitter)
             throws DeployerException {
         // Iterate through the list of .dex files which have changed. We cannot trust dex filenames to be stable
         // since there have been instances where we receive:
@@ -66,26 +75,32 @@ public class DexComparator {
             }
         }
 
-        List<DexClass> toSwap = new ArrayList<>();
+        List<DexClass> newClasses = new ArrayList<>();
+        List<DexClass> modifiedClasses = new ArrayList<>();
+
         for (FileDiff diff : dexDiffs) {
             // Memory optimization to discard not needed code
             Predicate<DexClass> keepCode =
                     (DexClass clz) -> {
                         Long oldChecksum = oldChecksums.get(clz.name);
-                        return oldChecksum != null && clz.checksum != oldChecksum;
+                        // Keep the class if it is new or modifiedClasses.
+                        return oldChecksum == null || clz.checksum != oldChecksum;
                     };
 
-            List<DexClass> newClasses = splitter.split(diff.newFile, keepCode);
-            for (DexClass klass : newClasses) {
-                if (!oldChecksums.containsKey(klass.name)) {
-                    // This is a new class. This is not supported.
-                    throw DeployerException.addedNewClass(klass.name);
+            List<DexClass> klasses = splitter.split(diff.newFile, keepCode);
+            for (DexClass klass : klasses) {
+                if (klass.code == null) {
+                    continue;
+                }
+
+                if (oldChecksums.containsKey(klass.name)) {
+                    modifiedClasses.add(klass);
+                } else {
+                    newClasses.add(klass);
                 }
             }
-
-            toSwap.addAll(
-                    newClasses.stream().filter(c -> c.code != null).collect(Collectors.toList()));
         }
-        return toSwap;
+
+        return new ChangedClasses(newClasses, modifiedClasses);
     }
 }

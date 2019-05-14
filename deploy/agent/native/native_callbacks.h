@@ -56,6 +56,11 @@ void Native_FixActivityContext(JNIEnv* jni, jobject object,
 // This method is bound to ActivityThreadInstrumentation#updateApplicationInfo()
 void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
                                   jobject activity_thread);
+
+// This method is bound to DexUtility#makeInMemoryDexElements()
+jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
+                                      jarray dex_files,
+                                      jobject suppressed_exceptions);
 }  // namespace deploy
 
 #endif

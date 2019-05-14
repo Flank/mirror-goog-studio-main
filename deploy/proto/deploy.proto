@@ -14,17 +14,18 @@ message SwapRequest {
   bool restart_activity = 2;
 
   // The classes to be hot-swapped.
-  repeated ClassDef classes = 3;
+  repeated ClassDef new_classes = 3;
+  repeated ClassDef modified_classes = 4;
 
   // The session id where the new apk have been staged.
-  string session_id = 4;
+  string session_id = 5;
 
   // The processes to code swap.
-  repeated int32 process_ids = 5;
+  repeated int32 process_ids = 6;
 
   // The number of extra agents that the server should wait for.
   // Those are agents that the server is not responsible to start.
-  int32 extra_agents = 6;
+  int32 extra_agents = 7;
 }
 
 message ResumeRequest {}

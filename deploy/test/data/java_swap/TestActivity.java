@@ -79,4 +79,9 @@ public class TestActivity extends Activity {
     public void getLambdaFailedTargetStatus() {
         System.out.println(new LambdaFailedTarget().getStatus());
     }
+
+    public void getNewClassStatus() {
+        System.out.println(
+                "public=" + new Wrapper().getPublic() + "package=" + new Wrapper().getPackage());
+    }
 }

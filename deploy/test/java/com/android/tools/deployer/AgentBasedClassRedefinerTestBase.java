@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -77,11 +78,37 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
                         .build();
         Deploy.SwapRequest request =
                 Deploy.SwapRequest.newBuilder()
-                        .addClasses(classDef)
+                        .addModifiedClasses(classDef)
                         .setPackageName(PACKAGE)
                         .setRestartActivity(restart)
                         .build();
         return request;
+    }
+
+    protected Deploy.SwapRequest createRequest(
+            Map<String, String> modifiedClasses, Map<String, String> newClasses, boolean restart)
+            throws IOException {
+
+        Deploy.SwapRequest.Builder request =
+                Deploy.SwapRequest.newBuilder().setPackageName(PACKAGE).setRestartActivity(restart);
+
+        for (String name : modifiedClasses.keySet()) {
+            request.addModifiedClasses(
+                    Deploy.ClassDef.newBuilder()
+                            .setName(name)
+                            .setDex(
+                                    ByteString.copyFrom(
+                                            getSplittedDex(modifiedClasses.get(name)))));
+        }
+
+        for (String name : newClasses.keySet()) {
+            request.addNewClasses(
+                    Deploy.ClassDef.newBuilder()
+                            .setName(name)
+                            .setDex(ByteString.copyFrom(getSplittedDex(newClasses.get(name)))));
+        }
+
+        return request.build();
     }
 
     protected static class LocalTestAgentBasedClassRedefiner {

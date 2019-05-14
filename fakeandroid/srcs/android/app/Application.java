@@ -25,6 +25,8 @@ public class Application {
 
     Set<ActivityLifecycleCallbacks> myCallbacks = new HashSet<>();
 
+    LoadedApk mLoadedApk = null;
+
     public interface ActivityLifecycleCallbacks {
         void onActivityCreated(Activity activity, Bundle savedInstanceState);
 
@@ -50,6 +52,7 @@ public class Application {
     }
 
     public void registerActivity(Activity activity) {
+        mLoadedApk = new LoadedApk(activity.getClass().getClassLoader());
         for (ActivityLifecycleCallbacks callback : myCallbacks) {
             callback.onActivityCreated(activity, null);
             callback.onActivityStarted(activity);

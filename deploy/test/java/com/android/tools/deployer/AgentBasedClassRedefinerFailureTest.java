@@ -16,7 +16,7 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deploy.protobuf.ByteString;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -83,23 +83,15 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED 0", RETURN_VALUE_TIMEOUT));
 
-        Deploy.ClassDef classDef1 =
-                Deploy.ClassDef.newBuilder()
-                        .setName("app.FailedTarget")
-                        .setDex(ByteString.copyFrom(getSplittedDex("app/FailedTarget.dex")))
-                        .build();
-        Deploy.ClassDef classDef2 =
-                Deploy.ClassDef.newBuilder()
-                        .setName("app.Target")
-                        .setDex(ByteString.copyFrom(getSplittedDex("app/Target.dex")))
-                        .build();
         Deploy.SwapRequest request =
-                Deploy.SwapRequest.newBuilder()
-                        .addClasses(classDef1)
-                        .addClasses(classDef2)
-                        .setPackageName(PACKAGE)
-                        .setRestartActivity(false)
-                        .build();
+                createRequest(
+                        ImmutableMap.of(
+                                "app.FailedTarget",
+                                "app/FailedTarget.dex",
+                                "app.Target",
+                                "app/Target.dex"),
+                        ImmutableMap.of(),
+                        false);
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();

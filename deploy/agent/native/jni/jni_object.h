@@ -64,10 +64,9 @@ class JniObject {
     NO_DEFAULT_SPECIALIZATION(T)
   }
 
-  template <typename T>
-  void SetField(const JniSignature& field, T value) {
+  void SetField(const JniSignature& field, jobject value) {
     jfieldID id = jni_->GetFieldID(class_, field.name, field.signature);
-    JniSetField(id, value);
+    jni_->SetObjectField(object_, id, value);
   }
 
  private:
@@ -96,6 +95,12 @@ inline JniObject JniObject::CallMethod(const JniSignature& method,
                                        jvalue* args) {
   jobject object = CallMethod<jobject>(method, args);
   return JniObject(jni_, object);
+}
+
+template <>
+inline jobject JniObject::GetField(const JniSignature& field) {
+  jfieldID id = jni_->GetFieldID(class_, field.name, field.signature);
+  return jni_->GetObjectField(object_, id);
 }
 
 template <>

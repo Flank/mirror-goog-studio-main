@@ -50,7 +50,10 @@ public class ApkSwapper {
      * @param sessionId the installation session
      * @param toSwap the actual dex classes to swap.
      */
-    public boolean swap(ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
+    public boolean swap(
+            ApplicationDumper.Dump dump,
+            String sessionId,
+            DexComparator.ChangedClasses changedClasses)
             throws DeployerException {
 
         // The application dump contains a map of [package name --> process ids]. If there are no
@@ -68,7 +71,7 @@ public class ApkSwapper {
         }
 
         // TODO: Add a new installer command? Add a new flag?
-        Deploy.SwapRequest swapRequest = buildSwapRequest(dump, sessionId, toSwap);
+        Deploy.SwapRequest swapRequest = buildSwapRequest(dump, sessionId, changedClasses);
         boolean needAgents = isSwapRequestInstallOnly(swapRequest);
         Thread t = null;
 
@@ -115,7 +118,9 @@ public class ApkSwapper {
     }
 
     private Deploy.SwapRequest buildSwapRequest(
-            ApplicationDumper.Dump dump, String sessionId, List<DexClass> toSwap)
+            ApplicationDumper.Dump dump,
+            String sessionId,
+            DexComparator.ChangedClasses changedClasses)
             throws DeployerException {
         Map.Entry<String, List<Integer>> onlyPackage =
                 Iterables.getOnlyElement(dump.packagePids.entrySet());
@@ -126,8 +131,15 @@ public class ApkSwapper {
                         .setRestartActivity(restart)
                         .setSessionId(sessionId);
 
-        for (DexClass clazz : toSwap) {
-            request.addClasses(
+        for (DexClass clazz : changedClasses.newClasses) {
+            request.addNewClasses(
+                    Deploy.ClassDef.newBuilder()
+                            .setName(clazz.name)
+                            .setDex(ByteString.copyFrom(clazz.code)));
+        }
+
+        for (DexClass clazz : changedClasses.modifiedClasses) {
+            request.addModifiedClasses(
                     Deploy.ClassDef.newBuilder()
                             .setName(clazz.name)
                             .setDex(ByteString.copyFrom(clazz.code)));

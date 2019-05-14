@@ -87,7 +87,7 @@ public class JdiBasedClassRedefiner implements ClassRedefiner {
     public Deploy.SwapResponse redefine(Deploy.SwapRequest request) throws DeployerException {
         Map<ReferenceType, byte[]> redefinitionRequest = new HashMap<>();
 
-        for (Deploy.ClassDef redefinition : request.getClassesList()) {
+        for (Deploy.ClassDef redefinition : request.getModifiedClassesList()) {
             List<ReferenceType> classes = getReferenceTypeByName(redefinition.getName());
             for (ReferenceType classRef : classes) {
                 redefinitionRequest.put(classRef, redefinition.getDex().toByteArray());

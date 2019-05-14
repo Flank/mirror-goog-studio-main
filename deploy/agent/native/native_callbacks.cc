@@ -139,4 +139,20 @@ void Native_UpdateApplicationInfo(JNIEnv* jni, jobject object,
                                   &arg);
 }
 
+// Simple wrapper around DexPathList#makeInMemoryDexElements.
+jarray Native_MakeInMemoryDexElements(JNIEnv* jni, jobject object,
+                                      jarray dex_files,
+                                      jobject suppressed_exceptions) {
+  // return DexPathList.makeInMemoryDexElements(dexFiles, suppressedExceptions);
+  JniClass dex_path_list(jni, "dalvik/system/DexPathList");
+  jvalue args[2];
+  args[0].l = dex_files;
+  args[1].l = suppressed_exceptions;
+  return (jarray)dex_path_list.CallStaticMethod<jobject>(
+      {"makeInMemoryDexElements",
+       "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ldalvik/system/"
+       "DexPathList$Element;"},
+      args);
+}
+
 }  // namespace deploy

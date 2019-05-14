@@ -17,15 +17,15 @@
 
 #include "tools/base/deploy/agent/native/hotswap.h"
 
-#include <algorithm>
-#include <fstream>
-#include <iostream>
-
 #include <dirent.h>
 #include <jni.h>
 #include <jvmti.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <algorithm>
+#include <fstream>
+#include <iostream>
 
 #include "tools/base/deploy/agent/native/dex_verify.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
@@ -41,6 +41,15 @@ jobject GetThreadClassLoader(JNIEnv* env) {
       .CallStaticMethod<JniObject>({"currentThread", "()Ljava/lang/Thread;"})
       .CallMethod<jobject>(
           {"getContextClassLoader", "()Ljava/lang/ClassLoader;"});
+}
+
+jobject GetApplicationClassLoader(JNIEnv* env) {
+  JniClass activity_thread(env, "android/app/ActivityThread");
+  return activity_thread
+      .CallStaticMethod<JniObject>(
+          {"currentApplication", "()Landroid/app/Application;"})
+      .GetField<JniObject>({"mLoadedApk", "Landroid/app/LoadedApk;"})
+      .CallMethod<jobject>({"getClassLoader", "()Ljava/lang/ClassLoader;"});
 }
 
 jclass HotSwap::FindInClassLoader(jobject class_loader,
@@ -131,15 +140,20 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
   SwapResult result;
 
-  size_t total_classes = swap_request.classes_size();
-  jvmtiClassDefinition* def = new jvmtiClassDefinition[total_classes];
+  // Define new classes before redefining existing classes.
+  if (swap_request.new_classes_size() != 0) {
+    DefineNewClasses(swap_request);
+  }
+
+  size_t modified_classes = swap_request.modified_classes_size();
+  jvmtiClassDefinition* def = new jvmtiClassDefinition[modified_classes];
 
   // Build a list of classes that we might need to check for detailed errors.
   const std::string& r_class_prefix = "/R$";
   std::vector<ClassInfo> detailed_error_classes;
 
-  for (size_t i = 0; i < total_classes; i++) {
-    const proto::ClassDef& class_def = swap_request.classes(i);
+  for (size_t i = 0; i < modified_classes; i++) {
+    const proto::ClassDef& class_def = swap_request.modified_classes(i);
     const std::string code = class_def.dex();
 
     // ART would do this for us, but we should do it here for consistency's sake
@@ -170,7 +184,7 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
   // we can ask the user for logcats.
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER,
                          true);  // Best Effort, ignore erros.
-  jvmtiError error_num = jvmti_->RedefineClasses(total_classes, def);
+  jvmtiError error_num = jvmti_->RedefineClasses(modified_classes, def);
   jvmti_->SetVerboseFlag(JVMTI_VERBOSE_OTHER, false);
 
   if (error_num == JVMTI_ERROR_NONE) {
@@ -189,13 +203,56 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
     jvmti_->Deallocate((unsigned char*)error);
   }
 
-  for (size_t i = 0; i < total_classes; i++) {
+  for (size_t i = 0; i < modified_classes; i++) {
     delete[] def[i].class_bytes;
   }
 
   delete[] def;
 
   return result;
+}
+
+void HotSwap::DefineNewClasses(const proto::SwapRequest& swap_request) const {
+  JniObject thread_loader(jni_, GetApplicationClassLoader(jni_));
+
+  jobjectArray dex_bytes_array = jni_->NewObjectArray(
+      swap_request.new_classes_size(), jni_->FindClass("[B"), nullptr);
+
+  for (size_t idx = 0; idx < swap_request.new_classes_size(); ++idx) {
+    const std::string& dex_file = swap_request.new_classes(idx).dex();
+    jbyteArray dex_bytes = jni_->NewByteArray(dex_file.size());
+    jni_->SetByteArrayRegion(dex_bytes, 0, dex_file.size(),
+                             (const jbyte*)dex_file.c_str());
+    jni_->SetObjectArrayElement(dex_bytes_array, idx, dex_bytes);
+    jni_->DeleteLocalRef(dex_bytes);
+  }
+
+  jobject dex_elements =
+      thread_loader
+          .GetField<JniObject>({"pathList", "Ldalvik/system/DexPathList;"})
+          .GetField<jobject>({"dexElements",
+                              "[Ldalvik/system/"
+                              "DexPathList$Element;"});
+  jvalue loader_args[2];
+  loader_args[0].l = dex_bytes_array;
+  loader_args[1].l = dex_elements;
+
+  jobject new_dex_elements =
+      JniClass(jni_, "com/android/tools/deploy/instrument/DexUtility")
+          .CallStaticMethod<jobject>(
+              {"createNewDexElements",
+               "([[B[Ljava/lang/Object;)[Ljava/lang/Object;"},
+              loader_args);
+
+  jni_->DeleteLocalRef(dex_bytes_array);
+
+  thread_loader.GetField<JniObject>({"pathList", "Ldalvik/system/DexPathList;"})
+      .SetField({"dexElements",
+                 "[Ldalvik/system/"
+                 "DexPathList$Element;"},
+                new_dex_elements);
+
+  jni_->DeleteLocalRef(new_dex_elements);
 }
 
 }  // namespace deploy

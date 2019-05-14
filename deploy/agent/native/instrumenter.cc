@@ -38,6 +38,8 @@ const char* kBreadcrumbClass = "com/android/tools/deploy/instrument/Breadcrumb";
 const char* kHandlerWrapperClass =
     "com/android/tools/deploy/instrument/ActivityThreadInstrumentation";
 
+const char* kDexUtilityClass = "com/android/tools/deploy/instrument/DexUtility";
+
 const std::string kInstrumentationJarName =
     "instruments-"_s + instrumentation_jar_hash + ".jar";
 
@@ -285,6 +287,12 @@ bool InstrumentApplication(jvmtiEnv* jvmti, JNIEnv* jni,
   RegisterNative(
       jni, {kHandlerWrapperClass, "updateApplicationInfo",
             "(Ljava/lang/Object;)V", (void*)&Native_UpdateApplicationInfo});
+
+  // Register utility methods.
+  RegisterNative(jni,
+                 {kDexUtilityClass, "makeInMemoryDexElements",
+                  "([Ljava/nio/ByteBuffer;Ljava/util/List;)[Ljava/lang/Object;",
+                  (void*)&Native_MakeInMemoryDexElements});
 
   return true;
 }
