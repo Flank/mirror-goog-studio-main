@@ -32,7 +32,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
@@ -108,7 +107,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ArtifactCollection manifests;
-    private BuildableArtifact autoNamespacedManifests;
     private ArtifactCollection featureManifests;
     private FileCollection microApkManifest;
     private FileCollection packageManifest;
@@ -385,10 +383,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
         }
 
-        if (autoNamespacedManifests != null) {
+        if (getAutoNamespacedManifests().isPresent()) {
             // We do not have resolved artifact results here, we need to find the artifact name
             // based on the file name.
-            File directory = BuildableArtifactUtil.singleFile(autoNamespacedManifests);
+            File directory = getAutoNamespacedManifests().get().getAsFile();
             Preconditions.checkState(
                     directory.isDirectory(),
                     "Auto namespaced manifests should be a directory.",
@@ -533,6 +531,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         return featureNameSupplier != null ? featureNameSupplier.get() : null;
     }
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
+    public abstract DirectoryProperty getAutoNamespacedManifests();
+
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public abstract RegularFileProperty getApkList();
@@ -663,10 +666,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                task.autoNamespacedManifests =
-                        variantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_MANIFESTS);
+                variantScope
+                        .getArtifacts()
+                        .setTaskInputToFinalProduct(
+                                InternalArtifactType.NAMESPACED_MANIFESTS,
+                                task.getAutoNamespacedManifests());
             }
 
             // optional manifest files too.

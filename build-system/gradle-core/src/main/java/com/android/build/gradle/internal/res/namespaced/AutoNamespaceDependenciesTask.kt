@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -47,7 +48,9 @@ import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -58,6 +61,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -74,7 +78,7 @@ import java.util.concurrent.ForkJoinTask
  *    them in to a static library.
  */
 @CacheableTask
-open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
+abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
     private lateinit var rFiles: ArtifactCollection
     private lateinit var nonNamespacedManifests: ArtifactCollection
@@ -138,12 +142,10 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             }
         )
 
-    @get:OutputDirectory
-    lateinit var outputStaticLibraries: File
-        private set
-    @get:OutputFile lateinit var outputClassesJar: File private set
-    @get:OutputFile lateinit var outputRClassesJar: File private set
-    @get:OutputDirectory lateinit var outputRewrittenManifests: File private set
+    @get:OutputFile abstract val outputClassesJar: RegularFileProperty
+    @get:OutputFile abstract val outputRClassesJar: RegularFileProperty
+    @get:OutputDirectory abstract val outputRewrittenManifests: DirectoryProperty
+    @get:OutputDirectory abstract val outputStaticLibraries: DirectoryProperty
     @get:OutputDirectory lateinit var intermediateDirectory: File private set
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -160,10 +162,10 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         notNamespacedResources: ArtifactCollection = this.externalNotNamespacedResources,
         staticLibraryDependencies: ArtifactCollection = this.externalResStaticLibraries,
         intermediateDirectory: File = this.intermediateDirectory,
-        outputStaticLibraries: File = this.outputStaticLibraries,
-        outputClassesJar: File = this.outputClassesJar,
-        outputRClassesJar: File = this.outputRClassesJar,
-        outputManifests: File = this.outputRewrittenManifests,
+        outputStaticLibraries: File = this.outputStaticLibraries.get().asFile,
+        outputClassesJar: File = this.outputClassesJar.get().asFile,
+        outputRClassesJar: File = this.outputRClassesJar.get().asFile,
+        outputManifests: File = this.outputRewrittenManifests.get().asFile,
         publicFiles: ArtifactCollection = this.publicFiles
     ) {
 
@@ -309,8 +311,8 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         // NON_NAMESPACED_CLASSES artifacts. Only try to rewrite non-namespaced libraries' classes.
         if (dependency.id !is ProjectComponentIdentifier && inputClasses != null) {
             Preconditions.checkNotNull(
-                    manifest,
-                    "Manifest missing for library $dependency")
+                manifest,
+                "Manifest missing for library $dependency")
 
             // The rewriting algorithm uses ordered symbol tables, with this library's table at the
             // top of the list. It looks up resources starting from the top of the list, trying to
@@ -322,19 +324,19 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
             // Brittle, relies on the AAR expansion logic that makes sure all jars have unique names
             try {
-            inputClasses.forEach {
-                val out = File(
-                    outputClassesDirectory,
-                    "namespaced-${dependency.sanitizedName}-${it.name}"
-                )
-                rewriter.rewriteJar(it, out)
-            }
+                inputClasses.forEach {
+                    val out = File(
+                        outputClassesDirectory,
+                        "namespaced-${dependency.sanitizedName}-${it.name}"
+                    )
+                    rewriter.rewriteJar(it, out)
+                }
             } catch (e: Exception) {
                 throw IOException("Failed to transform jar + ${dependency.getTransitiveFiles(ArtifactType.DEFINED_ONLY_SYMBOL_LIST)}", e)
             }
             rewriter.rewriteManifest(
-                    manifest!!.toPath(),
-                    outputManifests.toPath().resolve("${dependency.sanitizedName}_AndroidManifest.xml"))
+                manifest!!.toPath(),
+                outputManifests.toPath().resolve("${dependency.sanitizedName}_AndroidManifest.xml"))
             if (resources != null) {
                 rewriter.rewriteAarResources(
                     resources.toPath(),
@@ -348,10 +350,10 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
             // Also generate fake R classes for compilation.
             rewriter.writeRClass(
-                    File(
-                            outputRClassesDirectory,
-                            "namespaced-${dependency.sanitizedName}-R.jar"
-                    ).toPath()
+                File(
+                    outputRClassesDirectory,
+                    "namespaced-${dependency.sanitizedName}-R.jar"
+                ).toPath()
             )
         }
     }
@@ -416,29 +418,35 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
         override val type: Class<AutoNamespaceDependenciesTask>
             get() = AutoNamespaceDependenciesTask::class.java
 
-        private lateinit var outputClassesJar: File
-        private lateinit var outputRClassesJar: File
-        private lateinit var outputStaticLibraries: File
-        private lateinit var outputRewrittenManifests: File
+        override fun handleProvider(taskProvider: TaskProvider<out AutoNamespaceDependenciesTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.NAMESPACED_CLASSES_JAR,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                AutoNamespaceDependenciesTask::outputClassesJar,
+                "namespaced-classes.jar")
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputClassesJar = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.NAMESPACED_CLASSES_JAR, taskName, "namespaced-classes.jar")
-
-            outputRClassesJar = variantScope.artifacts.appendArtifact(
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
-                taskName,
-                "namespaced-R.jar")
-
-            outputStaticLibraries = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
-                taskName
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                AutoNamespaceDependenciesTask::outputRClassesJar,
+                "namespaced-R.jar"
             )
 
-            outputRewrittenManifests = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.NAMESPACED_MANIFESTS, taskName)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                AutoNamespaceDependenciesTask::outputStaticLibraries)
+
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.NAMESPACED_MANIFESTS,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                AutoNamespaceDependenciesTask::outputRewrittenManifests
+            )
 
         }
 
@@ -446,36 +454,31 @@ open class AutoNamespaceDependenciesTask : NonIncrementalTask() {
             super.configure(task)
 
             task.rFiles = variantScope.getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.EXTERNAL,
-                    ArtifactType.DEFINED_ONLY_SYMBOL_LIST
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.DEFINED_ONLY_SYMBOL_LIST
             )
 
             task.jarFiles = variantScope.getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.EXTERNAL,
-                    ArtifactType.NON_NAMESPACED_CLASSES
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.NON_NAMESPACED_CLASSES
             )
 
             task.nonNamespacedManifests = variantScope.getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.EXTERNAL,
-                    ArtifactType.NON_NAMESPACED_MANIFEST
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.NON_NAMESPACED_MANIFEST
             )
 
             task.publicFiles = variantScope.getArtifactCollection(
-                    ConsumedConfigType.RUNTIME_CLASSPATH,
-                    ArtifactScope.EXTERNAL,
-                    ArtifactType.PUBLIC_RES
+                ConsumedConfigType.RUNTIME_CLASSPATH,
+                ArtifactScope.EXTERNAL,
+                ArtifactType.PUBLIC_RES
             )
 
-            task.outputRewrittenManifests = outputRewrittenManifests
-            task.outputClassesJar = outputClassesJar
-            task.outputRClassesJar = outputRClassesJar
-            task.outputStaticLibraries = outputStaticLibraries
-
             task.dependencies =
-                    variantScope.variantData.variantDependency.runtimeClasspath.incoming
+                variantScope.variantData.variantDependency.runtimeClasspath.incoming
 
             task.externalNotNamespacedResources = variantScope.getArtifactCollection(
                 ConsumedConfigType.RUNTIME_CLASSPATH,

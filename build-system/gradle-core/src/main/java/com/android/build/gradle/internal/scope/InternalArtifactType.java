@@ -31,7 +31,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Javac task output.
     JAVAC,
     // Rewritten classes from non-namespaced dependencies put together into one JAR.
-    NAMESPACED_CLASSES_JAR,
+    NAMESPACED_CLASSES_JAR(Kind.FILE),
     // Tested code classes
     TESTED_CODE_CLASSES,
     // Classes with recalculated stack frames information (RecalculateStackFrames task)
@@ -137,7 +137,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Compiled R class jar (for compilation only, packaged in AAR)
     COMPILE_ONLY_NAMESPACED_R_CLASS_JAR(Kind.FILE),
     // JAR file containing all of the auto-namespaced classes from dependencies.
-    COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR,
+    COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR(Kind.FILE),
     // Classes JAR files from dependencies that need to be auto-namespaced.
     NON_NAMESPACED_CLASSES,
     // Final R class sources (to package)

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.api.artifact.singlePath
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -73,11 +72,12 @@ abstract class ProcessAndroidAppResourcesTask
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: BuildableArtifact private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    var convertedLibraryDependencies: BuildableArtifact? = null
-        private set
+    abstract val convertedLibraryDependencies: DirectoryProperty
+
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection private set
@@ -96,8 +96,8 @@ abstract class ProcessAndroidAppResourcesTask
     override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
-        convertedLibraryDependencies?.singlePath()?.let { convertedDir ->
-            Files.list(convertedDir).use { convertedLibraries ->
+        if (convertedLibraryDependencies.isPresent) {
+            Files.list(convertedLibraryDependencies.get().asFile.toPath()).use { convertedLibraries ->
                 convertedLibraries.forEach { staticLibraries.add(it.toFile()) }
             }
         }
@@ -173,11 +173,9 @@ abstract class ProcessAndroidAppResourcesTask
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
             if (variantScope.globalScope.extension.aaptOptions.namespaced &&
                 variantScope.globalScope.projectOptions.get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                task.convertedLibraryDependencies =
-                        variantScope
-                            .artifacts
-                            .getArtifactFiles(
-                                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
+                    task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
                     variantScope.getArtifactFileCollection(

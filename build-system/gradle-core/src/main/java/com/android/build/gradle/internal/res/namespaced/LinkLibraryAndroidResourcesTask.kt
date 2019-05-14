@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -32,6 +31,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -53,7 +53,7 @@ import javax.inject.Inject
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
@@ -63,8 +63,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    var convertedLibraryDependencies: BuildableArtifact? = null
-        private set
+    abstract val convertedLibraryDependencies: DirectoryProperty
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: BuildableArtifact? = null; private set
@@ -93,7 +92,7 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
         // Link against library dependencies
         imports.addAll(libraryDependencies.files)
         convertedLibraryDependencies?.let {
-            it.singleFile().listFiles().forEach { imports.add(it) }
+            it.get().asFile.listFiles().forEach { imports.add(it) }
         }
         imports.addAll(sharedLibraryDependencies.files)
 
@@ -154,10 +153,11 @@ open class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: W
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
-            if (variantScope.artifacts.hasArtifact(InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
-                task.convertedLibraryDependencies = variantScope.artifacts.getArtifactFiles(
-                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
-                )
+            if (variantScope.artifacts.hasFinalProduct(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)) {
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
+                    task.convertedLibraryDependencies)
             }
             task.sharedLibraryDependencies =
                     variantScope.getArtifactFileCollection(

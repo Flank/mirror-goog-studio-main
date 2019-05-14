@@ -49,6 +49,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.Directory
 import java.io.File
 
 fun ResolvedArtifactResult.getVariantName(): String? {
@@ -177,20 +178,11 @@ fun findResStaticLibrary(
             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)
     ) {
         val artifacts = variantScope.artifacts
-        if (artifacts.hasArtifact(
-                InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
-            )
-        ) {
-            // If it will be auto-namespaced.
-            val convertedDirectory = Iterables.get(
-                artifacts.getFinalArtifactFiles(
-                    InternalArtifactType
-                        .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
-                ),
-                0
-            )
+        val convertedDirectory =
+            artifacts.getFinalProduct<Directory>(InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES)
+        if (convertedDirectory.isPresent) {
             return File(
-                convertedDirectory,
+                convertedDirectory.get().asFile,
                 getAutoNamespacedLibraryFileName(
                     explodedAar.componentIdentifier
                 )

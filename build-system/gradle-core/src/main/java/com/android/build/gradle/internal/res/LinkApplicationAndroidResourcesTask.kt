@@ -220,8 +220,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    var convertedLibraryDependencies: BuildableArtifact? = null
-        private set
+    abstract val convertedLibraryDependencies: DirectoryProperty
 
     @get:InputFiles
     @get:Optional
@@ -684,12 +683,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES
                 )
             ) {
-                task.convertedLibraryDependencies = variantScope
-                    .artifacts
-                    .getArtifactFiles(
-                        InternalArtifactType
-                            .RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES
-                    )
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
+                    task.convertedLibraryDependencies)
             }
 
             task.dependenciesFileCollection =
@@ -926,8 +922,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val incrementalFolder: File = task.incrementalFolder!!
         val androidJarPath: String =
             task.androidJar.get().absolutePath
-        val convertedLibraryDependenciesFile: File? =
-            task.convertedLibraryDependencies?.singleFile()
+        val convertedLibraryDependenciesFile= task.convertedLibraryDependencies.orNull?.asFile
         val inputResourcesDir: File? = task.inputResourcesDir?.singleFile()
         val mergeBlameFolder: File = task.mergeBlameLogFolder
         val isLibrary: Boolean = task.isLibrary

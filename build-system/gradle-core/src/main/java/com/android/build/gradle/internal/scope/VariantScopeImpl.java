@@ -48,7 +48,6 @@ import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.ProguardFileType;
-import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.OldPostProcessingOptions;
@@ -644,19 +643,21 @@ public class VariantScopeImpl implements VariantScope {
             if (globalScope
                     .getProjectOptions()
                     .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                FileCollection namespacedClasses =
-                        artifacts
-                                .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_CLASSES_JAR)
-                                .get();
-                mainCollection = mainCollection.plus(namespacedClasses);
+                mainCollection =
+                        mainCollection.plus(
+                                getProject()
+                                        .files(
+                                                artifacts.getFinalProduct(
+                                                        InternalArtifactType
+                                                                .NAMESPACED_CLASSES_JAR)));
 
-                FileCollection namespacedRClasses =
-                        artifacts
-                                .getFinalArtifactFiles(
-                                        InternalArtifactType
-                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR)
-                                .get();
-                mainCollection = mainCollection.plus(namespacedRClasses);
+                mainCollection =
+                        mainCollection.plus(
+                                getProject()
+                                        .files(
+                                                artifacts.getFinalProduct(
+                                                        InternalArtifactType
+                                                                .COMPILE_ONLY_NAMESPACED_DEPENDENCIES_R_JAR)));
             }
 
             if (tested != null) {

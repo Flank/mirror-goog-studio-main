@@ -27,6 +27,7 @@ import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -108,7 +109,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 classesToFix.from(
                     variantScope
                         .artifacts
-                        .getFinalArtifactFiles(InternalArtifactType.NAMESPACED_CLASSES_JAR))
+                        .getFinalProduct<RegularFile>(InternalArtifactType.NAMESPACED_CLASSES_JAR))
             }
 
 

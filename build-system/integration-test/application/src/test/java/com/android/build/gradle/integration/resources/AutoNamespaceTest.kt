@@ -72,7 +72,6 @@ class AutoNamespaceTest {
                         project.intermediatesDir,
                         "namespaced_classes_jar",
                         "debug",
-                        "autoNamespaceDebugDependencies",
                         "namespaced-classes.jar"))
             .exists()
 
@@ -81,7 +80,6 @@ class AutoNamespaceTest {
                         project.intermediatesDir,
                         "compile_only_namespaced_dependencies_r_jar",
                         "debug",
-                        "autoNamespaceDebugDependencies",
                         "namespaced-R.jar"))
             .exists()
 
