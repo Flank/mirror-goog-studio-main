@@ -22,9 +22,9 @@ import java.io.File
 import java.io.Reader
 
 data class NdkMetaPlatforms(
-    val min : Int,
-    val max : Int,
-    val aliases : Map<String, Int>) {
+    val min : Int = 0,
+    val max : Int = 0,
+    val aliases : Map<String, Int> = mapOf()) {
 
     companion object {
         /**
