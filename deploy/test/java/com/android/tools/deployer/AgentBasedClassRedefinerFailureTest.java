@@ -111,4 +111,19 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
         Assert.assertTrue(android.waitForInput("NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
     }
+
+    @Test
+    public void testUnparseableSwapRequest() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
+        Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
+
+        // Send a garbage swap request.
+        redefiner.redefine(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+    }
 }

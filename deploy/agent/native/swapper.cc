@@ -22,7 +22,6 @@
 #include "tools/base/deploy/agent/native/hotswap.h"
 #include "tools/base/deploy/agent/native/instrumenter.h"
 #include "tools/base/deploy/agent/native/jni/jni_class.h"
-
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/socket.h"
@@ -53,28 +52,34 @@ void Swapper::Initialize(jvmtiEnv* jvmti, std::unique_ptr<Socket> socket) {
   socket_ = std::move(socket);
 }
 
-void Swapper::StartSwap(JNIEnv* jni) {
+void Swapper::Swap(JNIEnv* jni) {
+  proto::AgentSwapResponse response;
+  response.set_pid(getpid());
+
   std::string request_bytes;
   if (!socket_->Read(&request_bytes)) {
     LogEvent("Could not read request from socket");
+    response.set_status(proto::AgentSwapResponse::ERROR);
+    SendResponse(response);
     return;
   }
 
   request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
   if (!request_->ParseFromString(request_bytes)) {
     LogEvent("Could not parse swap request");
+    response.set_status(proto::AgentSwapResponse::ERROR);
+    SendResponse(response);
     return;
   }
 
   if (!InstrumentApplication(jvmti_, jni, request_->package_name())) {
     LogEvent("Could not instrument application");
+    response.set_status(proto::AgentSwapResponse::ERROR);
+    SendResponse(response);
     return;
   }
 
   HotSwap code_swap(jvmti_, jni);
-
-  proto::AgentSwapResponse response;
-  response.set_pid(getpid());
 
   SwapResult result = code_swap.DoHotSwap(*request_);
   if (!result.success) {
@@ -99,7 +104,6 @@ void Swapper::StartSwap(JNIEnv* jni) {
   }
 
   SendResponse(response);
-  Reset();
 }
 
 void Swapper::Reset() {

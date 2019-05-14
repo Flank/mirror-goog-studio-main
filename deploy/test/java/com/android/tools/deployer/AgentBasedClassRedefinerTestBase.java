@@ -98,6 +98,10 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
         }
 
         protected void redefine(Deploy.SwapRequest request, boolean unused) {
+            redefine(request.toByteArray());
+        }
+
+        protected void redefine(byte[] message) {
             try {
                 // Start a new agent server that will connect to a single agent.
                 System.out.println("Starting agent server");
@@ -115,7 +119,6 @@ public abstract class AgentBasedClassRedefinerTestBase extends ClassRedefinerTes
                 }
 
                 // Convert the request into bytes prepended by the request size.
-                byte[] message = request.toByteArray();
                 byte[] size =
                         ByteBuffer.allocate(4)
                                 .order(ByteOrder.LITTLE_ENDIAN)

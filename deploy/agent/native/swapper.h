@@ -17,11 +17,11 @@
 #ifndef SWAP_ACTION_H_
 #define SWAP_ACTION_H_
 
-#include <memory>
-#include <string>
-
 #include <jni.h>
 #include <jvmti.h>
+
+#include <memory>
+#include <string>
 
 namespace proto {
 class SwapRequest;
@@ -42,7 +42,11 @@ class Swapper {
   // Reads a SwapRequest from the underlying socket, then performs a swap using
   // the specified JNI environment, which should be the JNI environment attached
   // to the currently executing thread.
-  void StartSwap(JNIEnv* jni);
+  void Swap(JNIEnv* jni);
+
+  // Frees the memory associated with the socket and request objects, and closes
+  // the socket. Destroys the JVMTI environment.
+  void Reset();
 
   // Returns the current swapper instance.
   static Swapper& Instance();
@@ -59,10 +63,6 @@ class Swapper {
   Swapper& operator=(const Swapper&) = delete;
 
   void SendResponse(proto::AgentSwapResponse& response);
-
-  // Frees the memory associated with the socket and request objects, and closes
-  // the socket. Destroys the JVMTI environment.
-  void Reset();
 };
 }  // namespace deploy
 

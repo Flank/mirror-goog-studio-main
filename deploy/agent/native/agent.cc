@@ -71,7 +71,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* input,
 
   Swapper& swapper = Swapper::Instance();
   swapper.Initialize(jvmti, std::move(socket));
-  swapper.StartSwap(jni);
+  swapper.Swap(jni);
+  swapper.Reset();
 
   // We return JNI_OK even if the hot swap fails, since returning JNI_ERR just
   // causes ART to attempt to re-attach the agent with a null classloader.
