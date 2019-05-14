@@ -103,7 +103,7 @@ class SdkDirectLoadingStrategyTest {
         </ns2:repository>
     """.trimIndent()
 
-    private val PLATFORM_28_XML = """
+    private fun getPlatformXml(version: Int = 28) = """
         <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
         <ns2:repository
             xmlns:ns2="http://schemas.android.com/repository/android/common/01"
@@ -113,14 +113,14 @@ class SdkDirectLoadingStrategyTest {
             xmlns:ns6="http://schemas.android.com/sdk/android/repo/sys-img2/01">
 
             <license id="android-sdk-license" type="text">Very valid license</license>
-            <localPackage path="platforms;android-28" obsolete="false">
+            <localPackage path="platforms;android-$version" obsolete="false">
                 <type-details xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns5:platformDetailsType">
-                    <api-level>28</api-level>
+                    <api-level>$version</api-level>
                     <codename></codename>
                     <layoutlib api="15"/>
                 </type-details>
                 <revision><major>6</major></revision>
-                <display-name>Android SDK Platform 28</display-name>
+                <display-name>Android SDK Platform $version</display-name>
                 <uses-license ref="android-sdk-license"/>
             </localPackage>
         </ns2:repository>
@@ -250,9 +250,20 @@ class SdkDirectLoadingStrategyTest {
     }
 
     @Test
-    fun load_missingSupportTools() {
-        configureSdkDirectory(configureSupportTools = false)
-        val directLoader = getDirectLoader()
+    fun load_missingSupportTools_apiGreaterThan16() {
+        configureSdkDirectory(
+            platformDirectory = "android-16", platformApiLevel = 16, configureSupportTools = false)
+        val directLoader = getDirectLoader("android-16")
+
+        assertThat(directLoader.loadedSuccessfully()).isTrue()
+        assertAllComponentsArePresent(directLoader, "android-16")
+    }
+
+    @Test
+    fun load_missingSupportTools_apiLessThan16() {
+        configureSdkDirectory(
+            platformDirectory = "android-15", platformApiLevel = 15, configureSupportTools = false)
+        val directLoader = getDirectLoader("android-15")
 
         assertThat(directLoader.loadedSuccessfully()).isFalse()
         assertAllComponentsAreNull(directLoader)
@@ -273,10 +284,11 @@ class SdkDirectLoadingStrategyTest {
     private fun configureSdkDirectory(
         configurePlatform: Boolean = true,
         platformDirectory: String = "android-28",
+        platformApiLevel: Int = 28,
         configureBuildTools: Boolean = true,
         buildToolsDirectory: String = SdkConstants.CURRENT_BUILD_TOOLS_VERSION,
         configurePlatformTools: Boolean = true,
-        configureSupportTools: Boolean = true): File {
+        configureSupportTools: Boolean = true) {
 
         val sdkDir = SdkLocator.sdkTestDirectory!!
 
@@ -286,7 +298,7 @@ class SdkDirectLoadingStrategyTest {
 
             val platformPackageXml = platformRoot.resolve("package.xml")
             platformPackageXml.createNewFile()
-            platformPackageXml.writeText(PLATFORM_28_XML, Charsets.UTF_8)
+            platformPackageXml.writeText(getPlatformXml(platformApiLevel), Charsets.UTF_8)
 
             val optionalDir = platformRoot.resolve("optional")
             optionalDir.mkdir()
@@ -321,8 +333,6 @@ class SdkDirectLoadingStrategyTest {
             supportToolsPackageXml.createNewFile()
             supportToolsPackageXml.writeText(SUPPORT_TOOLS_XML, Charsets.UTF_8)
         }
-
-        return sdkDir
     }
 
     private fun assertAllComponentsAreNull(sdkDirectLoadingStrategy: SdkDirectLoadingStrategy) {
@@ -346,7 +356,7 @@ class SdkDirectLoadingStrategyTest {
         assertThat(sdkDirectLoadingStrategy.getSupportBlasLibFolder()).isNull()
     }
 
-    private fun assertAllComponentsArePresent(sdkDirectLoadingStrategy: SdkDirectLoadingStrategy) {
+    private fun assertAllComponentsArePresent(sdkDirectLoadingStrategy: SdkDirectLoadingStrategy, platformHash: String = "android-28") {
         val sdkRoot = testFolder.root.resolve("sdk")
 
         assertThat(sdkDirectLoadingStrategy.getAdbExecutable()).isEqualTo(
@@ -356,16 +366,16 @@ class SdkDirectLoadingStrategyTest {
             sdkRoot.resolve("tools/support/${SdkConstants.FN_ANNOTATIONS_JAR}"))
 
         assertThat(sdkDirectLoadingStrategy.getAidlFramework()).isEqualTo(
-            sdkRoot.resolve("platforms/android-28/${SdkConstants.FN_FRAMEWORK_AIDL}"))
+            sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_AIDL}"))
         assertThat(sdkDirectLoadingStrategy.getAndroidJar()).isEqualTo(
-            sdkRoot.resolve("platforms/android-28/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
+            sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
         assertThat(sdkDirectLoadingStrategy.getAdditionalLibraries()).isEmpty()
         assertThat(sdkDirectLoadingStrategy.getOptionalLibraries()!!.map { it.jar })
-            .containsExactlyElementsIn(getExpectedOptionalJars())
+            .containsExactlyElementsIn(getExpectedOptionalJars(platformHash))
         assertThat(sdkDirectLoadingStrategy.getTargetPlatformVersion()!!).isEqualTo(
-            AndroidTargetHash.getVersionFromHash("android-28"))
+            AndroidTargetHash.getVersionFromHash(platformHash))
         assertThat(sdkDirectLoadingStrategy.getTargetBootClasspath()).containsExactly(
-            sdkRoot.resolve("platforms/android-28/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
+            sdkRoot.resolve("platforms/$platformHash/${SdkConstants.FN_FRAMEWORK_LIBRARY}"))
 
         val buildToolDirectory = sdkRoot.resolve("build-tools/28.0.3")
         assertThat(sdkDirectLoadingStrategy.getBuildToolsRevision()).isEqualTo(
@@ -385,8 +395,8 @@ class SdkDirectLoadingStrategyTest {
             RenderScriptProcessor.getSupportBlasLibFolder(buildToolDirectory))
     }
 
-    private fun getExpectedOptionalJars(): List<File> {
-        val optionalDir = testFolder.root.resolve("sdk/platforms/android-28/optional/")
+    private fun getExpectedOptionalJars(platformHash: String): List<File> {
+        val optionalDir = testFolder.root.resolve("sdk/platforms/$platformHash/optional/")
         return listOf(
             "org.apache.http.legacy.jar",
             "android.test.mock.jar",

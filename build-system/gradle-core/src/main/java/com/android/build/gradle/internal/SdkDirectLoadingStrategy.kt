@@ -95,7 +95,7 @@ class SdkDirectLoadingStrategy(
         val sdkDirectory = sdkLocation.directory!!
 
         val platformTools = PlatformToolsComponents.build(sdkDirectory)
-        val supportTools = SupportToolsComponents.build(sdkDirectory)
+        val supportTools = SupportToolsComponents.build(sdkDirectory, targetHash)
 
         val buildTools = buildToolsCache.getOrPut(buildToolRevision) {
             Optional.ofNullable(buildBuildTools(sdkDirectory, buildToolRevision))
@@ -200,9 +200,13 @@ private class SupportToolsComponents(
     internal val annotationsJar: File) {
 
     companion object {
-        internal fun build(sdkDirectory: File): SupportToolsComponents? {
+        internal fun build(sdkDirectory: File, targetHash: String): SupportToolsComponents? {
             val supportToolsPackageXml = sdkDirectory.resolve(SdkConstants.FD_TOOLS).resolve("package.xml")
-            if (!supportToolsPackageXml.exists()) {
+            val apiLevelLessThan16 = AndroidTargetHash.getVersionFromHash(targetHash)?.apiLevel?.let { it < 16 } ?: false
+
+            // We only require tools/support package to exist if we are targeting api < 16, otherwise
+            // the annotations included in the annotations.jar are already inside android.jar.
+            if (!supportToolsPackageXml.exists() && apiLevelLessThan16) {
                 return null
             }
             return SupportToolsComponents(
