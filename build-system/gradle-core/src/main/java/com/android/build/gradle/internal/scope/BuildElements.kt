@@ -21,6 +21,7 @@ import com.android.ide.common.workers.WorkerExecutorException
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.tooling.BuildException
 import java.io.File
 import java.io.FileWriter
@@ -116,6 +117,10 @@ open class BuildElements(val elements: Collection<BuildOutput>) : Iterable<Build
         }
         return this
     }
+
+    fun save(directoryProperty: DirectoryProperty): BuildElements =
+        save(directoryProperty.get().asFile)
+
 
     @Deprecated(
         "", ReplaceWith(

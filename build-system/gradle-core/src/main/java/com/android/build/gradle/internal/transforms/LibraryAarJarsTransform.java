@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -56,6 +55,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Provider;
 
 /**
  * A Transforms that takes the project/project local streams for CLASSES and RESOURCES, and
@@ -75,14 +77,14 @@ public class LibraryAarJarsTransform extends Transform {
     @Nullable private String packagePath;
     @NonNull private final Supplier<String> packageNameSupplier;
     protected final boolean packageBuildConfig;
-    @Nullable protected final BuildableArtifact typedefRecipe;
+    @Nullable protected final Provider<RegularFile> typedefRecipe;
 
     @Nullable protected Supplier<List<String>> excludeListProvider = null;
 
     public LibraryAarJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File localJarsLocation,
-            @Nullable BuildableArtifact typedefRecipe,
+            @Nullable Provider<RegularFile> typedefRecipe,
             @NonNull Supplier<String> packageNameSupplier,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;
@@ -132,7 +134,7 @@ public class LibraryAarJarsTransform extends Transform {
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
         if (typedefRecipe != null) {
-            return ImmutableList.of(SecondaryFile.nonIncremental(typedefRecipe));
+            return ImmutableList.of(SecondaryFile.nonIncremental(typedefRecipe.get().getAsFile()));
         } else {
             return ImmutableList.of();
         }
@@ -159,8 +161,8 @@ public class LibraryAarJarsTransform extends Transform {
         if (localJarsLocation != null) {
             FileUtils.deleteDirectoryContents(localJarsLocation);
         }
-        if (typedefRecipe != null && !Iterables.getOnlyElement(typedefRecipe).exists()) {
-            throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
+        if (typedefRecipe != null && !typedefRecipe.get().getAsFile().exists()) {
+            throw new IllegalStateException("Type def recipe not found: " + typedefRecipe.get().getAsFile());
         }
 
         List<Pattern> patterns = computeExcludeList();
@@ -194,7 +196,7 @@ public class LibraryAarJarsTransform extends Transform {
                 archivePath -> checkEntry(patterns, archivePath),
                 typedefRecipe != null
                         ? new TypedefRemover()
-                                .setTypedefFile(Iterables.getOnlyElement(typedefRecipe))
+                                .setTypedefFile(typedefRecipe.get().getAsFile())
                         : null);
 
         // process local scope

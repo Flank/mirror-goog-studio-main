@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
@@ -73,8 +74,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         private set
 
     @get:InputFiles
-    lateinit var mergedManifests: BuildableArtifact
-        private set
+    abstract val mergedManifests: DirectoryProperty
 
     private lateinit var mainSplit: ApkData
 
@@ -199,8 +199,10 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                             .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                     else
                         null
-            task.mergedManifests = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.BUNDLE_MANIFEST)
+
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BUNDLE_MANIFEST,
+                task.mergedManifests)
         }
     }
 }

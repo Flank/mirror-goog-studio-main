@@ -182,13 +182,13 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             File metadataFeatureManifestOutputFile =
                     FileUtils.join(
-                            getMetadataFeatureManifestOutputDirectory(),
+                            getMetadataFeatureManifestOutputDirectory().get().getAsFile(),
                             apkData.getDirName(),
                             ANDROID_MANIFEST_XML);
 
             File bundleManifestOutputFile =
                     FileUtils.join(
-                            getBundleManifestOutputDirectory(),
+                            getBundleManifestOutputDirectory().get().getAsFile(),
                             apkData.getDirName(),
                             ANDROID_MANIFEST_XML);
 
@@ -277,14 +277,15 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
         }
         new BuildElements(mergedManifestOutputs.build())
-                .save(getManifestOutputDirectory().get().getAsFile());
+                .save(getManifestOutputDirectory());
         new BuildElements(metadataFeatureMergedManifestOutputs.build())
                 .save(getMetadataFeatureManifestOutputDirectory());
-        new BuildElements(bundleManifestOutputs.build()).save(getBundleManifestOutputDirectory());
+        new BuildElements(bundleManifestOutputs.build()).save(
+                getBundleManifestOutputDirectory());
 
         if (getInstantAppManifestOutputDirectory().isPresent()) {
             new BuildElements(instantAppManifestOutputs.build())
-                    .save(getInstantAppManifestOutputDirectory().get().getAsFile());
+                    .save(getInstantAppManifestOutputDirectory());
         }
     }
 
@@ -546,8 +547,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
         private File reportFile;
-        private File featureManifestOutputDirectory;
-        private File bundleManifestOutputDirectory;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -587,17 +586,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             artifacts.republish(
                     InternalArtifactType.MERGED_MANIFESTS, InternalArtifactType.MANIFEST_METADATA);
-
-            featureManifestOutputDirectory =
-                    artifacts.appendArtifact(
-                            InternalArtifactType.METADATA_FEATURE_MANIFEST,
-                            taskName,
-                            "metadata-feature");
-
-            bundleManifestOutputDirectory =
-                    artifacts.appendArtifact(
-                            InternalArtifactType.BUNDLE_MANIFEST, taskName, "bundle-manifest");
-
         }
 
         @Override
@@ -606,8 +594,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             super.handleProvider(taskProvider);
             variantScope.getTaskContainer().setProcessManifestTask(taskProvider);
 
-            variantScope
-                    .getArtifacts()
+            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            artifacts
                     .producesDir(
                             InternalArtifactType.MERGED_MANIFESTS,
                             BuildArtifactsHolder.OperationType.INITIAL,
@@ -615,8 +603,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ManifestProcessorTask::getManifestOutputDirectory,
                             "");
 
-            variantScope
-                    .getArtifacts()
+            artifacts
                     .producesDir(
                             InternalArtifactType.INSTANT_APP_MANIFEST,
                             BuildArtifactsHolder.OperationType.INITIAL,
@@ -624,8 +611,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ManifestProcessorTask::getInstantAppManifestOutputDirectory,
                             "");
 
-            getVariantScope()
-                    .getArtifacts()
+            artifacts
                     .producesFile(
                             InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
                             BuildArtifactsHolder.OperationType.INITIAL,
@@ -634,6 +620,20 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             "manifest-merger-blame-"
                                     + variantScope.getVariantConfiguration().getBaseName()
                                     + "-report.txt");
+
+            artifacts.producesDir(
+                    InternalArtifactType.METADATA_FEATURE_MANIFEST,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessApplicationManifest::getMetadataFeatureManifestOutputDirectory,
+                    "metadata-feature");
+
+            artifacts.producesDir(
+                    InternalArtifactType.BUNDLE_MANIFEST,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessApplicationManifest::getBundleManifestOutputDirectory,
+                    "bundle-manifest");
         }
 
         @Override
@@ -700,9 +700,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             task.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
-
-            task.setMetadataFeatureManifestOutputDirectory(featureManifestOutputDirectory);
-            task.setBundleManifestOutputDirectory(bundleManifestOutputDirectory);
 
             task.setReportFile(reportFile);
             task.optionalFeatures =

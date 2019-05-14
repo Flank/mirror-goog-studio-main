@@ -172,7 +172,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "processDebugManifest",
             "bundle-manifest",
             "AndroidManifest.xml")
         FileSubject.assertThat(bundleManifest).isFile()
@@ -192,7 +191,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "processDebugManifest",
             "bundle-manifest",
             "AndroidManifest.xml")
         FileSubject.assertThat(baseBundleManifest).isFile()
@@ -259,7 +257,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "processDebugManifest",
             "bundle-manifest",
             "AndroidManifest.xml")
         assertThat(featureBundleManifest).isFile()
@@ -269,7 +266,6 @@ class DynamicAppTest {
             "intermediates",
             "bundle_manifest",
             "debug",
-            "processDebugManifest",
             "bundle-manifest",
             "AndroidManifest.xml")
         assertThat(baseBundleManifest).isFile()

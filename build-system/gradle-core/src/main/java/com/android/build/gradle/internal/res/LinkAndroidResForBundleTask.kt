@@ -46,6 +46,7 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -69,7 +70,7 @@ import javax.inject.Inject
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
-open class LinkAndroidResForBundleTask
+abstract class LinkAndroidResForBundleTask
 @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
@@ -200,8 +201,7 @@ open class LinkAndroidResForBundleTask
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var manifestFiles: BuildableArtifact
-        private set
+    abstract val manifestFiles: DirectoryProperty
 
     private var inputResourcesDir: BuildableArtifact? = null
 
@@ -275,8 +275,9 @@ open class LinkAndroidResForBundleTask
 
             task.mainSplit = variantData.outputScope.mainSplit
 
-            task.manifestFiles = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.BUNDLE_MANIFEST)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BUNDLE_MANIFEST,
+                task.manifestFiles)
 
             task.inputResourcesDir =
                     variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)

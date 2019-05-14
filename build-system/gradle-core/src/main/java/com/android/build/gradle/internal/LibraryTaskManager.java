@@ -296,8 +296,8 @@ public class LibraryTaskManager extends TaskManager {
                 new LibraryAarJarsTransform(
                         classesJar,
                         libsDirectory,
-                        artifacts.hasArtifact(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
-                                ? artifacts.getFinalArtifactFiles(
+                        artifacts.hasFinalProduct(InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
+                                ? artifacts.getFinalProduct(
                                         InternalArtifactType.ANNOTATIONS_TYPEDEF_FILE)
                                 : null,
                         variantConfig::getPackageFromManifest,

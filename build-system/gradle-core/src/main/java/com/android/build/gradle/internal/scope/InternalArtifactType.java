@@ -234,10 +234,10 @@ public enum InternalArtifactType implements ArtifactType {
     LINT_PUBLISH_JAR,
 
     // the zip file output of the extract annotation class.
-    ANNOTATIONS_ZIP,
+    ANNOTATIONS_ZIP(Kind.FILE),
     // Optional recipe file (only used for libraries) which describes typedefs defined in the
     // library, and how to process them (typically which typedefs to omit during packaging).
-    ANNOTATIONS_TYPEDEF_FILE,
+    ANNOTATIONS_TYPEDEF_FILE(Kind.FILE),
     // the associated proguard file
     ANNOTATIONS_PROGUARD,
     // The classes.jar for the AAR

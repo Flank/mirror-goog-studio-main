@@ -59,10 +59,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     @Nonnull private final DirectoryProperty aaptFriendlyManifestOutputDirectory;
 
-    private File metadataFeatureManifestOutputDirectory;
-
-    private File bundleManifestOutputDirectory;
-
     @Nonnull private final DirectoryProperty instantAppManifestOutputDirectory;
 
     private File reportFile;
@@ -113,13 +109,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
      */
     @OutputDirectory
     @Optional
-    public File getBundleManifestOutputDirectory() {
-        return bundleManifestOutputDirectory;
-    }
-
-    protected void setBundleManifestOutputDirectory(File bundleManifestOutputDirectory) {
-        this.bundleManifestOutputDirectory = bundleManifestOutputDirectory;
-    }
+    public abstract DirectoryProperty getBundleManifestOutputDirectory();
 
     /**
      * The feature manifest which is consumed by its base feature (as opposed to the one packaged
@@ -128,14 +118,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
      */
     @OutputDirectory
     @Optional
-    public File getMetadataFeatureManifestOutputDirectory() {
-        return metadataFeatureManifestOutputDirectory;
-    }
-
-    protected void setMetadataFeatureManifestOutputDirectory(
-            File metadataFeatureManifestOutputDirectory) {
-        this.metadataFeatureManifestOutputDirectory = metadataFeatureManifestOutputDirectory;
-    }
+    public abstract DirectoryProperty getMetadataFeatureManifestOutputDirectory();
 
     /** The instant app manifest which is used if we are deploying the app as an instant app. */
     @OutputDirectory
