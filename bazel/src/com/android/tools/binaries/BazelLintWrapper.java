@@ -232,7 +232,7 @@ public class BazelLintWrapper {
             // just disable the LintBaseline check, since we do want to fail if the baseline gets
             // out of date and contains issues which are no longer in the project.
             if ("LintBaseline".equals(id) && message != null) {
-                if (message.contains("were filtered out")) {
+                if (message.contains("filtered out because")) {
                     // Ignore these.
                     continue;
                 }
