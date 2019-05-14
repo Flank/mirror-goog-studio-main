@@ -109,12 +109,14 @@ fun ResourceRepository.getLocales(): SortedSet<LocaleQualifier> {
     // are no translations for it.
     val locales = TreeSet<LocaleQualifier>()
 
-    accept {
-        val locale = it.configuration.localeQualifier
-        if (locale != null) {
-            locales.add(locale)
+    for (repository in leafResourceRepositories) {
+        repository.accept {
+            val locale = it.configuration.localeQualifier
+            if (locale != null) {
+                locales.add(locale)
+            }
+            ResourceVisitor.VisitResult.CONTINUE
         }
-        ResourceVisitor.VisitResult.CONTINUE
     }
 
     return locales
