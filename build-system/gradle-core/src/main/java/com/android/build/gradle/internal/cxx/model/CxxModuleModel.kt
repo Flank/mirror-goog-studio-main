@@ -30,41 +30,6 @@ import java.io.File
 interface CxxModuleModel {
 
     /**
-     * Folder of project-level build.gradle file
-     *   ex, source-root/
-     */
-    val rootBuildGradleFolder: File
-
-    /**
-     * Folder storing build attribution data for the entire project
-     *   ex, source-root/.cxx/attribution
-     */
-    val buildAttributionFolder: File get() = join(rootBuildGradleFolder, ".cxx", "attribution")
-
-    /**
-     * Install folder of SDK
-     *   ex, sdk.dir=/path/to/sdk
-     */
-    val sdkFolder: File
-
-    /**
-     * Whether compiler settings cache is enabled
-     *   default -pandroid.enableNativeCompilerSettingsCache=false
-     */
-    val isNativeCompilerSettingsCacheEnabled: Boolean
-
-    /**
-     * Whether to build a single ABI for IDE
-     *   default -pandroid.buildOnlyTargetAbi=true
-     */
-    val isBuildOnlyTargetAbiEnabled: Boolean
-
-    /** The ABIs to build for IDE
-     *   example -pandroid.injected.build.abi="x86,x86_64"
-     */
-    val ideBuildTargetAbi: String?
-
-    /**
      * The abiFilters from build.gradle
      *   ex, android.splits.abiFilters 'x86', 'x86_64'
      */
@@ -99,12 +64,6 @@ interface CxxModuleModel {
      *   ex, CMAKE
      */
     val buildSystem: NativeBuildSystem
-
-    /**
-     * Location of project-wide compiler settings cache
-     *   ex, $projectRoot/.cxx
-     */
-    val compilerSettingsCacheFolder: File
 
     /**
      * The module level .cxx folder
@@ -149,6 +108,15 @@ interface CxxModuleModel {
     val cmake: CxxCmakeModuleModel?
 
     /**
+     * Map describing the locations of STL shared objects for each STL/ABI pair.
+     *
+     * Note that no entry will be present for STLs that do not support packaging (static STLs, the
+     * system STL, and the "none" STL) or for STLs that are not supported by the given NDK. ABIs not
+     * supported by the given NDK will also not be present in the map.
+     */
+    val stlSharedObjectMap: Map<Stl, Map<Abi, File>>
+
+    /**
      * Service provider entry for module-level services. These are services naturally
      * scoped at the module level. If there are services that are more naturally
      * applicable to variant or ABI levels then a service provider should be added
@@ -157,12 +125,8 @@ interface CxxModuleModel {
     val services: CxxServiceRegistry
 
     /**
-     * Map describing the locations of STL shared objects for each STL/ABI pair.
-     *
-     * Note that no entry will be present for STLs that do not support packaging (static STLs, the
-     * system STL, and the "none" STL) or for STLs that are not supported by the given NDK. ABIs not
-     * supported by the given NDK will also not be present in the map.
+     * The project for this module
      */
-    val stlSharedObjectMap: Map<Stl, Map<Abi, File>>
+    val project: CxxProjectModel
 }
 

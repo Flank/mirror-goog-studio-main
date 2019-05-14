@@ -579,7 +579,7 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getSdkFolder() {
-        return variant.getModule().getSdkFolder();
+        return variant.getModule().getProject().getSdkFolder();
     }
 
     @Input

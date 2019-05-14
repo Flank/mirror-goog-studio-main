@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
+import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
 import com.android.build.gradle.internal.cxx.services.registerAbi
@@ -62,9 +63,11 @@ class UtilsKtTest {
         `when`(mockAbiModel.ninjaLogFile).thenReturn(testDir.root.resolve(".ninja_log"))
         `when`(mockAbiModel.variant).thenReturn(mockVariantModel)
         val mockModuleModel = mock(CxxModuleModel::class.java)
+        val mockProjectModel = mock(CxxProjectModel::class.java)
         `when`(mockVariantModel.variantName).thenReturn("debug")
         `when`(mockVariantModel.module).thenReturn(mockModuleModel)
-        `when`(mockModuleModel.buildAttributionFolder).thenReturn(buildAttributionFolder)
+        `when`(mockModuleModel.project).thenReturn(mockProjectModel)
+        `when`(mockProjectModel.buildAttributionFolder).thenReturn(buildAttributionFolder)
         `when`(mockModuleModel.gradleModulePathName).thenReturn(":app")
     }
 

@@ -59,8 +59,8 @@ fun createCxxVariantModel(
                 buildSystem.externalNativeBuildAbiFilters,
                 buildSystem.ndkAbiFilters,
                 module.splitsAbiFilterSet,
-                module.isBuildOnlyTargetAbiEnabled,
-                module.ideBuildTargetAbi
+                module.project.isBuildOnlyTargetAbiEnabled,
+                module.project.ideBuildTargetAbi
             ).validAbis.toList()
         }
     }

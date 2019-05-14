@@ -23,17 +23,11 @@ import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
-import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE
-import com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI
-import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.options.StringOption.IDE_BUILD_TARGET_ABI
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
@@ -93,14 +87,13 @@ fun tryCreateCxxModuleModel(
     val (buildSystem, makeFile, buildStagingDirectory) =
         getProjectPath(global.extension.externalNativeBuild) ?: return null
 
-    fun option(option: BooleanOption) = global.projectOptions.get(option)
-    fun option(option: StringOption) = global.projectOptions.get(option)
     fun localPropertyFile(property : String) : File? {
         val path = gradleLocalProperties(global.project.rootDir)
             .getProperty(property) ?: return null
         return File(path)
     }
     return object : CxxModuleModel {
+        override val project by lazy { createCxxProjectModel(global) }
         override val services by lazy { createDefaultServiceRegistry(global) }
         private val ndkHandler by lazy {
             val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
@@ -117,8 +110,6 @@ fun tryCreateCxxModuleModel(
             }
             ndkHandler
         }
-        override val rootBuildGradleFolder
-            get() = global.project.rootDir
         override val cmake
             get() =
                 if (buildSystem == CMAKE) {
@@ -174,18 +165,6 @@ fun tryCreateCxxModuleModel(
         }
         override val makeFile = makeFile
         override val buildSystem = buildSystem
-        override val sdkFolder by lazy {
-            global.sdkComponents.getSdkFolder()!!
-        }
-        override val isNativeCompilerSettingsCacheEnabled by lazy {
-            option(ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
-        }
-        override val isBuildOnlyTargetAbiEnabled by lazy {
-            option(BUILD_ONLY_TARGET_ABI)
-        }
-        override val ideBuildTargetAbi by lazy {
-            option(IDE_BUILD_TARGET_ABI)
-        }
         override val splitsAbiFilterSet by lazy {
             global.extension.splits.abiFilters
         }
@@ -197,10 +176,6 @@ fun tryCreateCxxModuleModel(
         }
         override val moduleRootFolder by lazy {
             global.project.projectDir
-        }
-        override val compilerSettingsCacheFolder by lazy {
-            localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
-            join(global.project.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
         }
         override val cxxFolder by lazy {
             findCxxFolder(

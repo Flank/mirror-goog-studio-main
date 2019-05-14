@@ -75,6 +75,31 @@ private class RevisionTypeAdapter : TypeAdapter<Revision>() {
 }
 
 /**
+ * Private data-backed implementation of [CxxProjectModel] that Gson can
+ * use to read and write.
+ */
+@VisibleForTesting
+data class CxxProjectModelData(
+    override val rootBuildGradleFolder: File = File("."),
+    override val sdkFolder: File = File("."),
+    override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
+    override val isBuildOnlyTargetAbiEnabled: Boolean = false,
+    override val ideBuildTargetAbi: String? = null,
+    override val compilerSettingsCacheFolder: File = File("."),
+    override val cxxFolder: File = File(".")
+) : CxxProjectModel
+
+private fun CxxProjectModel.toData() = CxxProjectModelData(
+    rootBuildGradleFolder = rootBuildGradleFolder,
+    sdkFolder = sdkFolder,
+    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
+    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
+    ideBuildTargetAbi = ideBuildTargetAbi,
+    compilerSettingsCacheFolder = compilerSettingsCacheFolder,
+    cxxFolder = cxxFolder
+)
+
+/**
  * Private data-backed implementation of [CxxModuleModel] that Gson can
  * use to read and write.
  */
@@ -82,18 +107,12 @@ private class RevisionTypeAdapter : TypeAdapter<Revision>() {
 // TODO retaining JSON read/write? They're a pain to maintain.
 @VisibleForTesting
 data class CxxModuleModelData(
-    override val rootBuildGradleFolder: File = File("."),
-    override val sdkFolder: File = File("."),
-    override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
-    override val isBuildOnlyTargetAbiEnabled: Boolean = false,
-    override val ideBuildTargetAbi: String? = null,
     override val splitsAbiFilterSet: Set<String> = setOf(),
     override val intermediatesFolder: File = File("."),
     override val gradleModulePathName: String = "",
     override val moduleRootFolder: File = File("."),
     override val makeFile: File = File("."),
     override val buildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE,
-    override val compilerSettingsCacheFolder: File = File("."),
     override val cxxFolder: File = File("."),
     override val ndkFolder: File = File("."),
     override val ndkVersion: Revision = Revision.parseRevision("0.0.0"),
@@ -101,25 +120,20 @@ data class CxxModuleModelData(
     override val ndkDefaultAbiList: List<Abi> = listOf(),
     override val cmake: CxxCmakeModuleModelData? = null,
     override val cmakeToolchainFile: File = File("."),
-    override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap()
+    override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap(),
+    override val project: CxxProjectModelData = CxxProjectModelData()
 ) : CxxModuleModel {
     override val services: CxxServiceRegistry
         get() = throw RuntimeException("Cannot use services from deserialized CxxModuleModel")
 }
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
-    rootBuildGradleFolder = rootBuildGradleFolder,
-    sdkFolder = sdkFolder,
-    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
-    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
-    ideBuildTargetAbi = ideBuildTargetAbi,
     splitsAbiFilterSet = splitsAbiFilterSet,
     intermediatesFolder = intermediatesFolder,
     gradleModulePathName = gradleModulePathName,
     moduleRootFolder = moduleRootFolder,
     makeFile = makeFile,
     buildSystem = buildSystem,
-    compilerSettingsCacheFolder = compilerSettingsCacheFolder,
     cxxFolder = cxxFolder,
     ndkFolder = ndkFolder,
     ndkVersion = ndkVersion,
@@ -127,7 +141,8 @@ private fun CxxModuleModel.toData() = CxxModuleModelData(
     ndkDefaultAbiList = ndkDefaultAbiList,
     cmake = cmake?.toData(),
     cmakeToolchainFile = cmakeToolchainFile,
-    stlSharedObjectMap = stlSharedObjectMap
+    stlSharedObjectMap = stlSharedObjectMap,
+    project = project.toData()
 )
 
 @VisibleForTesting

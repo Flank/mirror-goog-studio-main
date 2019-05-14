@@ -105,7 +105,7 @@ fun wrapCmakeListsForCompilerSettingsCaching(
             commandLine.removeProperty(ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED)
                 .map { it.sourceArgument })
     }
-    val cache = CmakeCompilerSettingsCache(abi.variant.module.compilerSettingsCacheFolder)
+    val cache = CmakeCompilerSettingsCache(abi.variant.module.project.compilerSettingsCacheFolder)
     val fileWriter = IdempotentFileWriter()
     val cacheKey = makeCmakeCompilerCacheKey(commandLine)
 
@@ -229,7 +229,7 @@ fun writeCompilerSettingsToCache(
         var cacheUseStatus = false
         try {
 
-            if (abi.variant.module.compilerSettingsCacheFolder.isDirectory && compilerCacheUseFile.isFile) {
+            if (abi.variant.module.project.compilerSettingsCacheFolder.isDirectory && compilerCacheUseFile.isFile) {
                 // We check for cacheRootFolder existence just in case it is removed manually
                 // by user after we record the cache as being used, in which case we take that to
                 // mean user might want to not use the cache.
@@ -293,7 +293,7 @@ fun writeCompilerSettingsToCache(
                 .sorted()
                 .joinToString("\n")
 
-            val cache = CmakeCompilerSettingsCache(abi.variant.module.compilerSettingsCacheFolder)
+            val cache = CmakeCompilerSettingsCache(abi.variant.module.project.compilerSettingsCacheFolder)
             cache.saveKeyValue(key, compilerCheckVariables)
             cacheWriteStatus = ""
         } finally {

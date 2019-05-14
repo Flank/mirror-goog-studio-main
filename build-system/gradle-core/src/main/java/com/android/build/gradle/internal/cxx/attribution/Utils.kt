@@ -59,7 +59,7 @@ internal fun collectNinjaLogs(cxxBuildModel: CxxBuildModel) {
     // buildAttributionFolder property should go under a new CxxProjectModel and by that time this
     // code can be refactored to do it in a more natural way.
     val buildAttributionFolder =
-        cxxBuildModel.allAbis().first().variant.module.buildAttributionFolder
+        cxxBuildModel.allAbis().first().variant.module.project.buildAttributionFolder
     val zipFile =
         buildAttributionFolder.resolve("ninja_build_log_${Clock.systemUTC().millis()}.zip")
     zipFile.parentFile.mkdirs()

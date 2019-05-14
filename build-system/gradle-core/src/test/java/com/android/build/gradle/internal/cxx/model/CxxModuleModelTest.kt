@@ -42,7 +42,8 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
     CxxVariantModel::class.java,
     CxxAbiModel::class.java,
     CxxCmakeModuleModel::class.java,
-    CxxModuleModel::class.java
+    CxxModuleModel::class.java,
+    CxxProjectModel::class.java
 )
 
 private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(

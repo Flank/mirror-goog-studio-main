@@ -103,7 +103,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     @Override
     void processBuildOutput(@NonNull String buildOutput, @NonNull CxxAbiModel abi) {
-        if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
+        if (variant.getModule().getProject().isNativeCompilerSettingsCacheEnabled()) {
             writeCompilerSettingsToCache(abi);
         }
     }
@@ -132,7 +132,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
         // Add user provided build arguments
         processBuilderArgs.addAll(getBuildArguments());
-        if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
+        if (variant.getModule().getProject().isNativeCompilerSettingsCacheEnabled()) {
             return wrapCmakeListsForCompilerSettingsCaching(abi, processBuilderArgs).getArgs();
         }
         return processBuilderArgs;

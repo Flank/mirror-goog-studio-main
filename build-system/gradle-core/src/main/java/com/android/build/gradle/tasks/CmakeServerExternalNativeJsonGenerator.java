@@ -194,7 +194,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cacheArgumentsList.addAll(getBuildArguments());
                 ConfigureCommandResult configureCommandResult;
                 File cmakeListsFolder = variant.getModule().getMakeFile().getParentFile();
-                if (variant.getModule().isNativeCompilerSettingsCacheEnabled()) {
+                if (variant.getModule().getProject().isNativeCompilerSettingsCacheEnabled()) {
                     // Configure extensions
                     CmakeExecutionConfiguration executableConfiguration =
                             wrapCmakeListsForCompilerSettingsCaching(abi, cacheArgumentsList);

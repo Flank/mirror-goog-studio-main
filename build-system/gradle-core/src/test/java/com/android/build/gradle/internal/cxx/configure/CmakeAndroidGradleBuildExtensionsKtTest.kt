@@ -116,7 +116,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
 
     @Test
     fun cmakeRunWithDeletedCacheFolder() {
-        val deleteableRootFolder = abi.variant.module.compilerSettingsCacheFolder
+        val deleteableRootFolder = abi.variant.module.project.compilerSettingsCacheFolder
         fun wrap() {
             wrapCmakeListsForCompilerSettingsCaching(
                 abi,
