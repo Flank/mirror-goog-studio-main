@@ -105,6 +105,7 @@ enum class BooleanOption(
     ENABLE_PARALLEL_NATIVE_JSON_GEN("android.enableParallelJsonGen", true),
     ENABLE_SIDE_BY_SIDE_CMAKE("android.enableSideBySideCmake", true),
     ENABLE_NATIVE_COMPILER_SETTINGS_CACHE("android.enableNativeCompilerSettingsCache", false),
+    ENABLE_CMAKE_BUILD_COHABITATION("android.enableCmakeBuildCohabitation", false),
     ENABLE_PROGUARD_RULES_EXTRACTION("android.proguard.enableRulesExtraction", true),
     ENABLE_UNCOMPRESSED_NATIVE_LIBS_IN_BUNDLE("android.bundle.enableUncompressedNativeLibs", true),
     USE_DEPENDENCY_CONSTRAINTS("android.dependency.useConstraints", true),

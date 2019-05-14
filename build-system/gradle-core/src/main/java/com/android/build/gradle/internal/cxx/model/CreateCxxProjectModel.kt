@@ -55,6 +55,9 @@ fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
         override val ideBuildTargetAbi by lazy {
             option(StringOption.IDE_BUILD_TARGET_ABI)
         }
+        override val isCmakeBuildCohabitationEnabled by lazy {
+            option(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
+        }
         override val compilerSettingsCacheFolder by lazy {
             localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
             join(global.project.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)

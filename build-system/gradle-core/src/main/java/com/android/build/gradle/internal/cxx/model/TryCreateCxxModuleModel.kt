@@ -33,6 +33,7 @@ import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
 import com.android.build.gradle.internal.ndk.Stl
+import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
 import com.android.utils.FileUtils

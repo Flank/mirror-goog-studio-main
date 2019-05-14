@@ -86,7 +86,8 @@ data class CxxProjectModelData(
     override val isBuildOnlyTargetAbiEnabled: Boolean = false,
     override val ideBuildTargetAbi: String? = null,
     override val compilerSettingsCacheFolder: File = File("."),
-    override val cxxFolder: File = File(".")
+    override val cxxFolder: File = File("."),
+    override val isCmakeBuildCohabitationEnabled: Boolean = false
 ) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(
@@ -96,7 +97,8 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
     isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
     ideBuildTargetAbi = ideBuildTargetAbi,
     compilerSettingsCacheFolder = compilerSettingsCacheFolder,
-    cxxFolder = cxxFolder
+    cxxFolder = cxxFolder,
+    isCmakeBuildCohabitationEnabled = isCmakeBuildCohabitationEnabled
 )
 
 /**

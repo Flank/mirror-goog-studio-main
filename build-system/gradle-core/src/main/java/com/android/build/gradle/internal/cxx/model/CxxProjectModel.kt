@@ -69,4 +69,9 @@ interface CxxProjectModel {
      *   example -pandroid.injected.build.abi="x86,x86_64"
      */
     val ideBuildTargetAbi: String?
+
+    /**
+     * When true, CMake Build Cohabitation is turned on.
+     */
+    val isCmakeBuildCohabitationEnabled: Boolean
 }
