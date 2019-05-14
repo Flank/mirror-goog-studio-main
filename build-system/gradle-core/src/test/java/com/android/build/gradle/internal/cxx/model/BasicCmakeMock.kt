@@ -34,10 +34,14 @@ class BasicCmakeMock : BasicModuleModelMock() {
     init {
         doReturn(coreExternalNativeCmakeOptions).`when`(coreExternalNativeBuildOptions).externalNativeCmakeOptions
         doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).abiFilters
-        doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).arguments
-        doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).getcFlags()
-        doReturn(listOf<String>()).`when`(coreExternalNativeCmakeOptions).cppFlags
+        doReturn(listOf("-DCMAKE_ARG=1")).`when`(coreExternalNativeCmakeOptions).arguments
+        doReturn(listOf("-DC_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).getcFlags()
+        doReturn(listOf("-DCPP_FLAG_DEFINED")).`when`(coreExternalNativeCmakeOptions).cppFlags
         doReturn(setOf<String>()).`when`(coreExternalNativeCmakeOptions).targets
-        doReturn(join(projectRootDir, "CMakeLists.txt")).`when`(cmake).path
+        val makefile = join(allPlatformsProjectRootDir, "CMakeLists.txt")
+        doReturn(makefile).`when`(cmake).path
+        projectRootDir.mkdirs()
+        makefile.writeText("# written by ${BasicCmakeMock::class}")
+
     }
 }

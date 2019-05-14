@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -42,7 +43,9 @@ class JsonUtilTest {
             val writtenBackJson = writtenBackAbi.toJsonString()
             assertThat(json).isEqualTo(writtenBackJson)
             assertThat(writtenBackAbi.variant.module.cxxFolder.path).endsWith(".cxx")
-            assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo("19.2.3")
+            assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo(
+                ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+            )
         }
     }
 }
