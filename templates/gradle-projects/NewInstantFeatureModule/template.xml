@@ -10,11 +10,5 @@
     <thumbs>
         <thumb>feature-module.png</thumb>
     </thumbs>
-    
-    <parameter
-        id="minApi"
-        name="Minimum API level"
-        type="string"
-        constraints="apilevel"
-        default="8" />
+
 </template>

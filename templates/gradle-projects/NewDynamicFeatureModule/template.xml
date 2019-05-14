@@ -7,22 +7,15 @@
 
     <category value="Application" />
 
-    <thumbs>
-        <thumb>dynamic-feature-module.png</thumb>
-    </thumbs>
-
-    <parameter
-        id="projectName"
-        name="Module name"
-        type="string"
-        constraints="nonempty|module|unique"
-        default="dynamic-feature"/>
-
     <parameter
         id="makeIgnore"
         name="Create .gitignore file"
         type="boolean"
         default="true" />
+
+    <thumbs>
+        <thumb>dynamic-feature-module.png</thumb>
+    </thumbs>
 
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
