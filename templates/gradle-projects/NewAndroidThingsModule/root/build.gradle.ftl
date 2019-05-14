@@ -55,6 +55,5 @@ android {
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
-    ${getConfigurationName("provided")} 'com.google.android.things:androidthings:+'
     <@kt.addKotlinDependencies />
 }

@@ -27,6 +27,7 @@
 
 <dependency mavenUrl="com.android.support.test:runner:+" gradleConfiguration="androidTestCompile" />
 <dependency mavenUrl="com.android.support.test.espresso:espresso-core:+" gradleConfiguration="androidTestCompile" />
+<dependency mavenUrl="com.google.android.things:androidthings:+" gradleConfiguration="provided" />
 
 <#if !createActivity>
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
