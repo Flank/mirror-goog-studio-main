@@ -81,8 +81,16 @@ message SwapResponse {
   enum Status {
     UNKNOWN = 0;
     OK = 1;     // The swap completed successfully.
-    ERROR = 2;  // The swap did not succeed.
-    INSTALLATION_FAILED = 3;
+    AGENT_ERROR = 2; // One or more of the agents reported failure
+    INSTALLATION_FAILED = 3; // Calling install-commit failed
+    ACTIVITY_RESTART_FAILED = 4; // Calling update-appinfo failed
+    SETUP_FAILED = 5; // Could not copy files
+    START_SERVER_FAILED = 6; // Could not start the server
+    AGENT_ATTACH_FAILED = 7; // Could not attach agents
+    MISSING_AGENT_RESPONSES = 8; // Not all agents responded
+    WRITE_TO_SERVER_FAILED = 9; // Could not communicate with the server
+    UNPARSEABLE_AGENT_RESPONSE = 10; // An agent responded in an unexpected way
+    NO_DEBUGGER_SESSIONS = 11; // Could not swap with debugger
   }
 
   Status status = 1;

@@ -18,6 +18,8 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deploy.protobuf.ByteString;
 import com.android.tools.deployer.model.DexClass;
+import com.google.common.base.Enums;
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import java.util.List;
 import java.util.Map;
@@ -170,15 +172,20 @@ public class ApkSwapper {
     private static void sendSwapRequest(Deploy.SwapRequest request, ClassRedefiner redefiner)
             throws DeployerException {
         Deploy.SwapResponse swapResponse = redefiner.redefine(request);
+
         if (swapResponse.getStatus() != Deploy.SwapResponse.Status.OK) {
+            // If there are no errors from JVMTI, just report the error code and return.
             if (swapResponse.getJvmtiErrorCodeCount() == 0) {
-                // TODO: We probably want to start reporting actual errors from the device.
-                throw DeployerException.swapFailed("Unknown error");
+                throw DeployerException.swapFailed(swapResponse.getStatus());
             }
 
+            // If there are no detailed errors, report the JVMTI error code and return.
             if (swapResponse.getJvmtiErrorDetailsCount() == 0) {
                 // TODO: How to properly handle multiple errors? Multiple errors can only occur in multiprocess apps.
-                throw DeployerException.jvmtiError(swapResponse.getJvmtiErrorCodeList().get(0));
+                Optional<JvmtiError> errorCode =
+                        Enums.getIfPresent(
+                                JvmtiError.class, swapResponse.getJvmtiErrorCodeList().get(0));
+                throw DeployerException.jvmtiError(errorCode.or(JvmtiError.UNKNOWN_JVMTI_ERROR));
             }
 
             // TODO: Currently, all detailed errors are add/remove resource related. Revisit.

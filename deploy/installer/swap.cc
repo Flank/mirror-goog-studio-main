@@ -15,7 +15,10 @@
  */
 
 #include "tools/base/deploy/installer/swap.h"
-#include "tools/base/bazel/native/matryoshka/doll.h"
+
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <algorithm>
 #include <fstream>
@@ -25,10 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
+#include "tools/base/bazel/native/matryoshka/doll.h"
 #include "tools/base/deploy/common/log.h"
 #include "tools/base/deploy/common/message_pipe_wrapper.h"
 #include "tools/base/deploy/common/socket.h"
@@ -86,12 +86,9 @@ void SwapCommand::Run() {
   std::string output;
 
   if (install_session.compare("<SKIPPED-INSTALLATION>") == 0) {
-    if (request_.restart_activity()) {
-      if (cmd.UpdateAppInfo("all", request_.package_name(), &output)) {
-        response_->set_status(proto::SwapResponse::OK);
-      } else {
-        response_->set_status(proto::SwapResponse::ERROR);
-      }
+    if (request_.restart_activity() &&
+        !cmd.UpdateAppInfo("all", request_.package_name(), &output)) {
+      response_->set_status(proto::SwapResponse::ACTIVITY_RESTART_FAILED);
     } else {
       response_->set_status(proto::SwapResponse::OK);
     }
@@ -101,25 +98,28 @@ void SwapCommand::Run() {
   LogEvent("Got swap request for:" + request_.package_name());
 
   if (!Setup()) {
-    response_->set_status(proto::SwapResponse::ERROR);
+    response_->set_status(proto::SwapResponse::SETUP_FAILED);
     ErrEvent("Unable to setup workspace");
     return;
   }
 
-  if (Swap()) {
-    if (cmd.CommitInstall(install_session, &output)) {
-      // Swap and commit have both succeeded.
-      response_->set_status(proto::SwapResponse::OK);
-      LogEvent("Successfully installed package: " + request_.package_name());
-    } else {
-      // Swap succeeded but installation failed to complete.
-      response_->set_status(proto::SwapResponse::INSTALLATION_FAILED);
-    }
-  } else {
-    // Swap failed; abort the installation.
+  proto::SwapResponse::Status swap_status = Swap();
+
+  // If the swap fails, abort the installation.
+  if (swap_status != proto::SwapResponse::OK) {
     cmd.AbortInstall(install_session, &output);
-    response_->set_status(proto::SwapResponse::ERROR);
+    response_->set_status(swap_status);
+    return;
   }
+
+  // If the swap succeeds but the commit fails, report a failed install.
+  if (!cmd.CommitInstall(install_session, &output)) {
+    response_->set_status(proto::SwapResponse::INSTALLATION_FAILED);
+    return;
+  }
+
+  LogEvent("Successfully installed package: " + request_.package_name());
+  response_->set_status(proto::SwapResponse::OK);
 }
 
 bool SwapCommand::Setup() noexcept {
@@ -258,12 +258,11 @@ bool SwapCommand::WriteArrayToDisk(const unsigned char* array,
   return true;
 }
 
-bool SwapCommand::Swap() {
+proto::SwapResponse::Status SwapCommand::Swap() const {
   // Don't bother with the server if we have no work to do.
   if (request_.process_ids().empty() && request_.extra_agents() <= 0) {
-    response_->set_status(proto::SwapResponse::OK);
     LogEvent("No PIDs needs to be swapped");
-    return true;
+    return proto::SwapResponse::OK;
   }
 
   // Start the server and wait for it to begin listening for connections.
@@ -271,25 +270,22 @@ bool SwapCommand::Swap() {
   if (!WaitForServer(request_.process_ids().size() + request_.extra_agents(),
                      &agent_server_pid, &read_fd, &write_fd)) {
     ErrEvent("Unable to start server");
-    response_->set_status(proto::SwapResponse::ERROR);
-    return false;
+    return proto::SwapResponse::START_SERVER_FAILED;
   }
 
   OwnedMessagePipeWrapper server_input(write_fd);
   OwnedMessagePipeWrapper server_output(read_fd);
 
   if (!AttachAgents()) {
-    response_->set_status(proto::SwapResponse::ERROR);
-    ErrEvent("One or more agents failed to attach");
+    ErrEvent("Could not attach agents");
     waitpid(agent_server_pid, &status, 0);
-    return false;
+    return proto::SwapResponse::AGENT_ATTACH_FAILED;
   }
 
   if (!server_input.Write(request_bytes_)) {
-    response_->set_status(proto::SwapResponse::ERROR);
     ErrEvent("Could not write to agent proxy server");
     waitpid(agent_server_pid, &status, 0);
-    return false;
+    return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
   }
 
   std::string response_bytes;
@@ -299,11 +295,11 @@ bool SwapCommand::Swap() {
              request_.process_ids().size() + request_.extra_agents() &&
          server_output.Read(&response_bytes)) {
     proto::AgentSwapResponse agent_response;
+
     if (!agent_response.ParseFromString(response_bytes)) {
-      response_->set_status(proto::SwapResponse::ERROR);
       ErrEvent("Received unparseable response from agent");
       waitpid(agent_server_pid, &status, 0);
-      return false;
+      return proto::SwapResponse::UNPARSEABLE_AGENT_RESPONSE;
     }
 
     if (agent_responses.size() == 0) {
@@ -329,15 +325,20 @@ bool SwapCommand::Swap() {
         agent_response.jvmti_error_details());
   }
 
+  // Cleanup zombie agent-server status from the kernel.
+  waitpid(agent_server_pid, &status, 0);
+
   // Ensure all of the agents have responded.
   if (agent_responses.size() <
       request_.process_ids().size() + request_.extra_agents()) {
-    overall_status = proto::AgentSwapResponse::ERROR;
+    return proto::SwapResponse::MISSING_AGENT_RESPONSES;
   }
 
-  // Cleanup zombie agent-server status from the kernel.
-  waitpid(agent_server_pid, &status, 0);
-  return overall_status == proto::AgentSwapResponse::OK;
+  if (overall_status != proto::AgentSwapResponse::OK) {
+    return proto::SwapResponse::AGENT_ERROR;
+  }
+
+  return proto::SwapResponse::OK;
 }
 
 bool SwapCommand::WaitForServer(int agent_count, int* server_pid, int* read_fd,

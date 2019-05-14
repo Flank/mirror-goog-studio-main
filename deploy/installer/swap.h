@@ -49,8 +49,10 @@ class SwapCommand : public Command {
   // - Make sure the  configuration file to app data folder.
   bool Setup() noexcept;
 
-  // Performs a swap by starting the server and attaching agents.
-  bool Swap();
+  // Performs a swap by starting the server and attaching agents. Returns
+  // SwapResponse::Status::OK if the swap succeeds; returns an appropriate error
+  // code otherwise.
+  proto::SwapResponse::Status Swap() const;
 
   // Starts the server and waits for it to start listening. The sync is
   // performed by opening a pipe and passing the write end to the server

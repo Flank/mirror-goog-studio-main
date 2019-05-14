@@ -16,6 +16,7 @@
 
 package com.android.tools.deployer;
 
+import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -161,11 +162,7 @@ public class DeployerException extends Exception {
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
-        UNKNOWN_JVMTI_ERROR(
-                "Unknown JVMTI error code",
-                "",
-                "Reinstall and restart app",
-                ResolutionAction.RUN_APP),
+        JVMTI_ERROR("JVMTI error: %s", "", "Reinstall and restart app", ResolutionAction.RUN_APP),
 
         // Catch-all errors for when an arbitrary failure may occur.
 
@@ -179,7 +176,7 @@ public class DeployerException extends Exception {
                 "The application could not be installed%s", "%s", "Retry", ResolutionAction.RETRY),
 
         SWAP_FAILED(
-                "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
+                "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
         PARSE_FAILED(
                 "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
@@ -217,18 +214,17 @@ public class DeployerException extends Exception {
     private static String[] NO_ARGS = {};
 
     private DeployerException(Error error) {
-        this(error, "", NO_ARGS, NO_ARGS);
+        this(error, null, NO_ARGS, NO_ARGS);
     }
 
     private DeployerException(Error error, String[] messageArgs, String... detailArgs) {
-        this(error, "", messageArgs, detailArgs);
+        this(error, null, messageArgs, detailArgs);
     }
 
-    private DeployerException(
-            Error error, String code, String[] messageArgs, String... detailArgs) {
+    private DeployerException(Error error, Enum code, String[] messageArgs, String... detailArgs) {
         super(String.format(error.message, (Object[]) messageArgs));
         this.error = error;
-        this.code = error.name() + (code.isEmpty() ? "" : ".") + code;
+        this.code = error.name() + (code == null ? "" : ".") + code;
         this.details = String.format(error.details, (Object[]) detailArgs);
     }
 
@@ -289,32 +285,36 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.CANNOT_REMOVE_RESOURCE, NO_ARGS, name, type);
     }
 
-    private static final ImmutableMap<String, Error> ERROR_CODE_TO_ERROR =
-            ImmutableMap.<String, Error>builder()
+    // JVMTI error codes for which we have specific error messages.
+    private static final ImmutableMap<JvmtiError, Error> ERROR_CODE_TO_ERROR =
+            ImmutableMap.<JvmtiError, Error>builder()
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_ADDED",
+                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_ADDED,
                             Error.CANNOT_ADD_METHOD)
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED",
+                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED,
                             Error.CANNOT_MODIFY_FIELDS)
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_HIERARCHY_CHANGED",
+                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_HIERARCHY_CHANGED,
                             Error.CANNOT_CHANGE_INHERITANCE)
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_DELETED",
+                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_DELETED,
                             Error.CANNOT_DELETE_METHOD)
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_CLASS_MODIFIERS_CHANGED",
+                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_CLASS_MODIFIERS_CHANGED,
                             Error.CANNOT_CHANGE_CLASS_MODIFIERS)
                     .put(
-                            "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED",
+                            JvmtiError
+                                    .JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED,
                             Error.CANNOT_CHANGE_METHOD_MODIFIERS)
-                    .put("JVMTI_ERROR_FAILS_VERIFICATION", Error.VERIFICATION_ERROR)
+                    .put(JvmtiError.JVMTI_ERROR_FAILS_VERIFICATION, Error.VERIFICATION_ERROR)
                     .build();
 
-    public static DeployerException jvmtiError(String jvmtiErrorCode) {
-        return new DeployerException(
-                ERROR_CODE_TO_ERROR.getOrDefault(jvmtiErrorCode, Error.UNKNOWN_JVMTI_ERROR));
+    public static DeployerException jvmtiError(JvmtiError code) {
+        if (ERROR_CODE_TO_ERROR.containsKey(code)) {
+            return new DeployerException(ERROR_CODE_TO_ERROR.get(code));
+        }
+        return new DeployerException(Error.JVMTI_ERROR, code, new String[] {code.name()});
     }
 
     public static DeployerException dumpFailed(String reason) {
@@ -330,18 +330,18 @@ public class DeployerException extends Exception {
     }
 
     public static DeployerException installFailed(AdbClient.InstallStatus code, String reason) {
-        if (code != AdbClient.InstallStatus.UNKNOWN_ERROR) {
-            return new DeployerException(
-                    Error.INSTALL_FAILED, new String[] {": " + code.name()}, reason);
-        } else {
-            // If the error is unknown, rather than including "UNKNOWN_ERROR" in the error
-            // string, omit the error code entirely.
-            return new DeployerException(Error.INSTALL_FAILED, new String[] {"."}, reason);
-        }
+        String suffix = code != AdbClient.InstallStatus.UNKNOWN_ERROR ? ": " + code.name() : ".";
+        return new DeployerException(Error.INSTALL_FAILED, code, new String[] {suffix}, reason);
     }
 
+    public static DeployerException swapFailed(Deploy.SwapResponse.Status code) {
+        String suffix = code != Deploy.SwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
+        return new DeployerException(Error.SWAP_FAILED, code, new String[] {suffix}, "");
+    }
+
+    // TODO: There are things calling swapFailed() that should have a more specific error. Once we fix those, remove this overload.
     public static DeployerException swapFailed(String reason) {
-        return new DeployerException(Error.SWAP_FAILED, NO_ARGS, reason);
+        return new DeployerException(Error.SWAP_FAILED, new String[] {"."}, reason);
     }
 
     public static DeployerException interrupted(String reason) {

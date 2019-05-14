@@ -24,7 +24,7 @@ public class DeployerErrorMessagePresenterTest {
     public void testJvmtiFailure() {
         DeployerException deployerException =
                 DeployerException.jvmtiError(
-                        "JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED");
+                        JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED);
         Assert.assertEquals(
                 deployerException.getError(),
                 DeployerException.Error.CANNOT_CHANGE_METHOD_MODIFIERS);
