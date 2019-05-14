@@ -179,7 +179,7 @@ platform_filegroup(
 platform_filegroup(
     name = "platforms/android-Q",
     visibility = [
-        "//tools/base/build-system/integration-test:__subpackages__"
+        "//tools/base/build-system/integration-test:__subpackages__",
     ],
 )
 
@@ -253,7 +253,7 @@ filegroup(
 filegroup(
     name = "ndk",
     srcs = sdk_glob(
-        include = ["ndk/**"],
+        include = ["ndk/19.0.5232133/**"],
     ),
     visibility = ["//visibility:public"],
 )
