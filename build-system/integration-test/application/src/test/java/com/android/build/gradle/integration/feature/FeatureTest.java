@@ -238,7 +238,6 @@ public class FeatureTest {
                 featureProject.getIntermediateFile(
                         "metadata_feature_declaration",
                         "releaseFeature",
-                        "featureReleaseFeatureWriter",
                         "out",
                         "feature-split.json");
         assertThat(featureSplit).exists();

@@ -36,7 +36,6 @@ import com.android.utils.Pair
 import com.google.common.base.Joiner
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Ordering
 import com.google.common.truth.Truth.assertThat
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
@@ -80,9 +79,7 @@ class CompatibleScreensManifestTest {
         `when`(scope.artifacts).thenReturn(buildArtifactsHolder)
         `when`(scope.taskContainer).thenReturn(taskContainer)
         `when`(taskContainer.preBuildTask).thenReturn(project.tasks.register("preBuildTask"))
-        `when`(buildArtifactsHolder.appendArtifact(
-                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, task.name))
-            .thenReturn(temporaryFolder.root)
+        task.outputFolder.set(temporaryFolder.root)
         `when`<ApiVersion>(productFlavor.minSdkVersion).thenReturn(DefaultApiVersion(21))
         `when`<ProductFlavor>(variantConfiguration.mergedFlavor).thenReturn(productFlavor)
         `when`(variantConfiguration.baseName).thenReturn("baseName")
@@ -97,14 +94,13 @@ class CompatibleScreensManifestTest {
                 scope, setOf("xxhpi", "xxxhdpi")
         )
 
-        configAction.preConfigure(task.name)
         configAction.configure(task)
 
         assertThat(task.variantName).isEqualTo("fullVariantName")
         assertThat(task.name).isEqualTo("test")
         assertThat(task.minSdkVersion.get()).isEqualTo("21")
         assertThat(task.screenSizes).containsExactly("xxhpi", "xxxhdpi")
-        assertThat(task.outputFolder).isEqualTo(temporaryFolder.root)
+        assertThat(task.outputFolder.get().asFile).isEqualTo(temporaryFolder.root)
     }
 
     @Test
@@ -115,7 +111,6 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(mainApk))
 
         task.variantName = "variant"
-        task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("mdpi", "xhdpi")
 
@@ -143,7 +138,6 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
-        task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "22" }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
@@ -176,7 +170,6 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(splitApk))
 
         task.variantName = "variant"
-        task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { null }
         task.screenSizes = ImmutableSet.of("xhdpi")
 
@@ -215,7 +208,6 @@ class CompatibleScreensManifestTest {
         writeApkList(listOf(xhdpiSplit, xxhdpiSplit))
 
         task.variantName = "variant"
-        task.outputFolder = temporaryFolder.root
         task.minSdkVersion = task.project.provider { "23" }
         task.screenSizes = ImmutableSet.of("xhdpi", "xxhdpi")
 

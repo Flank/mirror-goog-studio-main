@@ -44,7 +44,7 @@ public class FeatureSplitDeclarationWriterTaskTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", FeatureSplitDeclarationWriterTask.class);
-        task.outputDirectory = outputDirectory;
+        task.getOutputDirectory().set(outputDirectory);
     }
 
     @After

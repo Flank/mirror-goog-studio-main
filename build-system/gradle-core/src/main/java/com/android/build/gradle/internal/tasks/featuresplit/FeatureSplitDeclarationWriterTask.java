@@ -17,25 +17,26 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.File;
 import java.io.IOException;
 import java.util.function.Supplier;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task that writes the FeatureSplitDeclaration file and publish it for other modules to consume.
  */
-public class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
+public abstract class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
 
     @VisibleForTesting String uniqueIdentifier;
     @VisibleForTesting Supplier<String> originalApplicationIdSupplier;
-    @VisibleForTesting File outputDirectory;
 
     @Input
     public String getUniqueIdentifier() {
@@ -48,21 +49,17 @@ public class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
     }
 
     @OutputDirectory
-    public File getOutputDirectory() {
-        return outputDirectory;
-    }
+    public abstract DirectoryProperty getOutputDirectory();
 
     @Override
     protected void doTaskAction() throws IOException {
         FeatureSplitDeclaration declaration =
                 new FeatureSplitDeclaration(uniqueIdentifier, getApplicationId());
-        declaration.save(outputDirectory);
+        declaration.save(getOutputDirectory().get().getAsFile());
     }
 
     public static class CreationAction
             extends VariantTaskCreationAction<FeatureSplitDeclarationWriterTask> {
-
-        private File outputDirectory;
 
         public CreationAction(@NonNull VariantScope variantScope) {
             super(variantScope);
@@ -81,15 +78,18 @@ public class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            outputDirectory =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.METADATA_FEATURE_DECLARATION,
-                                    taskName,
-                                    "out");
+        public void handleProvider(
+                @NonNull TaskProvider<? extends FeatureSplitDeclarationWriterTask> taskProvider) {
+            super.handleProvider(taskProvider);
+
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.METADATA_FEATURE_DECLARATION,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            FeatureSplitDeclarationWriterTask::getOutputDirectory,
+                            "out");
         }
 
         @Override
@@ -99,7 +99,6 @@ public class FeatureSplitDeclarationWriterTask extends NonIncrementalTask {
             task.uniqueIdentifier = getVariantScope().getGlobalScope().getProject().getPath();
             task.originalApplicationIdSupplier =
                     getVariantScope().getVariantConfiguration()::getOriginalApplicationId;
-            task.outputDirectory = outputDirectory;
         }
     }
 }

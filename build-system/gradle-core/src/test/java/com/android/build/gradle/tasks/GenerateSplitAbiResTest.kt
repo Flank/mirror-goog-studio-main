@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.dsl.CoreBuildType
 import com.android.build.gradle.internal.dsl.Splits
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputFactory
 import com.android.build.gradle.internal.scope.OutputScope
@@ -34,8 +33,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.variant.FeatureVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
-import com.android.sdklib.BuildToolInfo
-import com.android.sdklib.IAndroidTarget
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.collect.ImmutableSet
 import com.google.common.io.Files
@@ -73,8 +70,6 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var provider: FeatureSetMetadata.SupplierProvider
     @Mock private lateinit var projectOptionsMock: ProjectOptions
     @Mock private lateinit var mockedSdkComponents: SdkComponents
-    @Mock private lateinit var mockedAndroidTarget: IAndroidTarget
-    @Mock private lateinit var mockedBuildToolInfo: BuildToolInfo
 
     private val apkData = OutputFactory.ConfigurationSplitApkData(
             VariantOutput.FilterType.ABI,
@@ -232,13 +227,9 @@ class GenerateSplitAbiResTest {
         initCommonFields()
         initializationLambda(configAction)
 
-        val task = project!!.tasks.create("test", GenerateSplitAbiRes::class.java)
+        val task = project.tasks.create("test", GenerateSplitAbiRes::class.java)
+        task.outputDirectory.set(temporaryFolder.newFolder())
 
-        `when`(mockedArtifacts.appendArtifact(
-            InternalArtifactType.ABI_PROCESSED_SPLIT_RES, task.name, "out"))
-            .thenReturn(temporaryFolder.newFolder())
-
-        configAction.preConfigure(task.name)
         configAction.configure(task)
 
         return task

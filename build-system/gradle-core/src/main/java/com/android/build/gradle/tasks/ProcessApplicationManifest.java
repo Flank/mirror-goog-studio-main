@@ -83,6 +83,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -110,7 +111,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     private BuildableArtifact autoNamespacedManifests;
     private ArtifactCollection featureManifests;
     private FileCollection microApkManifest;
-    private BuildableArtifact compatibleScreensManifest;
     private FileCollection packageManifest;
     private Supplier<EnumSet<Feature>> optionalFeatures;
 
@@ -129,7 +129,8 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         // read the output of the compatible screen manifest.
         BuildElements compatibleScreenManifests =
                 ExistingBuildElements.from(
-                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST, compatibleScreensManifest);
+                        InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                        getCompatibleScreensManifest().get().getAsFile());
 
         ModuleMetadata moduleMetadata = null;
         if (packageManifest != null && !packageManifest.isEmpty()) {
@@ -517,9 +518,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getCompatibleScreensManifest() {
-        return compatibleScreensManifest;
-    }
+    public abstract DirectoryProperty getCompatibleScreensManifest();
 
     @InputFiles
     @Optional
@@ -676,9 +675,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                 task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
             }
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-            task.compatibleScreensManifest =
-                    artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST);
+            artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
+                    task.getCompatibleScreensManifest());
 
             task.minSdkVersion =
                     TaskInputHelper.memoize(

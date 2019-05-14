@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.ApkData;
@@ -64,8 +63,6 @@ import org.gradle.workers.WorkerExecutor;
 /** Package a abi dimension specific split APK */
 public abstract class PackageSplitAbi extends NonIncrementalTask {
 
-    private BuildableArtifact processedAbiResources;
-
     private boolean jniDebuggable;
 
     private FileCollection signingConfig;
@@ -92,9 +89,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
     }
 
     @InputFiles
-    public BuildableArtifact getProcessedAbiResources() {
-        return processedAbiResources;
-    }
+    public abstract DirectoryProperty getProcessedAbiResources();
 
     @OutputDirectory
     public abstract DirectoryProperty getOutputDirectory();
@@ -144,7 +139,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         FileUtils.cleanOutputDir(incrementalDir);
 
         ExistingBuildElements.from(
-                        InternalArtifactType.ABI_PROCESSED_SPLIT_RES, processedAbiResources)
+                        InternalArtifactType.ABI_PROCESSED_SPLIT_RES, getProcessedAbiResources())
                 .transform(
                         workers,
                         PackageSplitAbiTransformRunnable.class,
@@ -248,7 +243,6 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<PackageSplitAbi> {
 
-        private File outputDirectory;
         private final boolean packageCustomClassDependencies;
 
         public CreationAction(VariantScope scope, boolean packageCustomClassDependencies) {
@@ -289,9 +283,10 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
             final GlobalScope globalScope = scope.getGlobalScope();
 
             VariantConfiguration config = scope.getVariantConfiguration();
-            task.processedAbiResources =
-                    scope.getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.ABI_PROCESSED_SPLIT_RES);
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.ABI_PROCESSED_SPLIT_RES,
+                            task.getProcessedAbiResources());
             task.signingConfig = scope.getSigningConfigFileCollection();
             task.minSdkVersion = config.getMinSdkVersion();
             task.incrementalDir = scope.getIncrementalDir(task.getName());

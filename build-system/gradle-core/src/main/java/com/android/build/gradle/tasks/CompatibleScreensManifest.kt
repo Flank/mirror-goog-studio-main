@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks
 import com.android.SdkConstants
 import com.android.build.VariantOutput
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -33,6 +34,7 @@ import com.android.resources.Density
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.io.Files
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -59,8 +61,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
         internal set
 
     @get:OutputDirectory
-    lateinit var outputFolder: File
-        internal set
+    abstract val outputFolder: DirectoryProperty
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -79,7 +80,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
                 BuildOutput(COMPATIBLE_SCREEN_MANIFEST, it, generatedManifest)
             else
                 null
-        }.toList()).save(outputFolder)
+        }.toList()).save(outputFolder.get().asFile)
     }
 
     private fun generate(apkData: ApkData): File? {
@@ -112,7 +113,7 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
                 "    </compatible-screens>\n" + "</manifest>"
         )
 
-        val splitFolder = File(outputFolder, apkData.dirName)
+        val splitFolder = File(outputFolder.get().asFile, apkData.dirName)
         FileUtils.mkdirs(splitFolder)
         val manifestFile = File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML)
 
@@ -142,19 +143,20 @@ abstract class CompatibleScreensManifest : NonIncrementalTask() {
         override val type: Class<CompatibleScreensManifest>
             get() = CompatibleScreensManifest::class.java
 
-        private lateinit var outputFolder: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputFolder = variantScope.artifacts
-                .appendArtifact(COMPATIBLE_SCREEN_MANIFEST, taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out CompatibleScreensManifest>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                COMPATIBLE_SCREEN_MANIFEST,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                CompatibleScreensManifest::outputFolder
+            )
         }
 
         override fun configure(task: CompatibleScreensManifest) {
             super.configure(task)
 
             task.screenSizes = screenSizes
-            task.outputFolder = outputFolder
 
             variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST,
                 task.apkList)
