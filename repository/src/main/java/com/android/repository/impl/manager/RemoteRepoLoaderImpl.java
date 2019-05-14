@@ -18,7 +18,17 @@ package com.android.repository.impl.manager;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.repository.api.*;
+import com.android.repository.api.Channel;
+import com.android.repository.api.DelegatingProgressIndicator;
+import com.android.repository.api.Downloader;
+import com.android.repository.api.FallbackRemoteRepoLoader;
+import com.android.repository.api.ProgressIndicator;
+import com.android.repository.api.ProgressIndicatorAdapter;
+import com.android.repository.api.RemotePackage;
+import com.android.repository.api.Repository;
+import com.android.repository.api.RepositorySource;
+import com.android.repository.api.RepositorySourceProvider;
+import com.android.repository.api.SettingsController;
 import com.android.repository.impl.meta.SchemaModuleUtil;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Lists;
@@ -28,7 +38,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -54,14 +63,6 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
     private static final String FETCH_PACKAGES_WAITING_MESSAGE =
             "Still waiting for package manifests to be fetched remotely.";
 
-    /** Whether or not NDK side by side redirection is enabled. */
-    private static final boolean ENABLE_SIDE_BY_SIDE_NDK = true;
-
-    /**
-     * The name of NDK packages that should be redirected if ENABLE_SIDE_BY_SIDE_NDK is set to true.
-     */
-    private static final String NDK_BUNDLE_PACKAGE_NAME = "ndk-bundle";
-
     /**
      * {@link FallbackRemoteRepoLoader} to use if we get an XML file we can't parse.
      */
@@ -71,9 +72,6 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
      * The {@link RepositorySourceProvider}s to load from.
      */
     private final Collection<RepositorySourceProvider> mSourceProviders;
-
-    /** If true then present NDK packages as legacy and side-by-side */
-    private final boolean mEnableSideBySideNdk;
 
     /**
      * Constructor
@@ -85,16 +83,8 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
      */
     public RemoteRepoLoaderImpl(@NonNull Collection<RepositorySourceProvider> sources,
             @Nullable FallbackRemoteRepoLoader fallback) {
-        this(sources, fallback, ENABLE_SIDE_BY_SIDE_NDK);
-    }
-
-    public RemoteRepoLoaderImpl(
-            @NonNull Collection<RepositorySourceProvider> sources,
-            @Nullable FallbackRemoteRepoLoader fallback,
-            boolean enableSideBySideNdk) {
         mSourceProviders = sources;
         mFallback = fallback;
-        mEnableSideBySideNdk = enableSideBySideNdk;
     }
 
     @Override
@@ -273,22 +263,7 @@ public class RemoteRepoLoaderImpl implements RemoteRepoLoader {
         }
 
         if (parsedPackages != null && !parsedPackages.isEmpty()) {
-            // Synthesize NDK packages
-            Collection<RemotePackage> packages = new ArrayList<>();
-            if (mEnableSideBySideNdk) {
-                for (RemotePackage pkg : parsedPackages) {
-                    if (pkg.getPath().equals(NDK_BUNDLE_PACKAGE_NAME)) {
-                        packages.add(new NdkLegacyPackage(pkg));
-                        packages.add(new NdkSideBySidePackage(pkg));
-                    } else {
-                        packages.add(pkg);
-                    }
-                }
-            } else {
-                packages.addAll(parsedPackages);
-            }
-
-            for (RemotePackage pkg : packages) {
+            for (RemotePackage pkg : parsedPackages) {
                 RemotePackage existing = result.get(pkg.getPath());
                 if (existing != null) {
                     int compare = existing.getVersion().compareTo(pkg.getVersion());
