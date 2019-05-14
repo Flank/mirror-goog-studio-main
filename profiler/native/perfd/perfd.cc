@@ -19,6 +19,7 @@
 #include "daemon/daemon.h"
 #include "perfd/commands/begin_session.h"
 #include "perfd/commands/end_session.h"
+#include "perfd/commands/get_cpu_core_config.h"
 #include "perfd/common_profiler_component.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/energy/energy_profiler_component.h"
@@ -75,6 +76,8 @@ int Perfd::Initialize(Daemon* daemon) {
                                  &BeginSession::Create);
   daemon->RegisterCommandHandler(proto::Command::END_SESSION,
                                  &EndSession::Create);
+  daemon->RegisterCommandHandler(proto::Command::GET_CPU_CORE_CONFIG,
+                                 &GetCpuCoreConfig::Create);
 
   return 0;
 }
