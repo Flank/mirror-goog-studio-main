@@ -38,9 +38,12 @@ import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -54,18 +57,14 @@ import javax.inject.Inject
 open class MergeNativeLibsTask
 @Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
 
-    // @get:InputFiles more appropriate here, but incorrect incremental info from Gradle currently:
-    // https://github.com/gradle/gradle/issues/9320
-    @get:Classpath
+    // PathSensitivity.ABSOLUTE necessary here because of incorrect incremental info from Gradle
+    // when using RELATIVE or NAME_ONLY: https://github.com/gradle/gradle/issues/9320, and we can't
+    // use @Classpath because we need support for changing .so file names. A better solution will be
+    // custom snapshots from gradle: https://github.com/gradle/gradle/issues/8503
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
     val projectNativeLibs: FileCollection
         get() = getProjectNativeLibs(variantScope).asFileTree.filter(spec)
-
-    // We need this input as long as
-    // (1) we're using @Classpath for projectNativeLibs, to support renaming .so files, and
-    // (2) projectNativeLibs is a FileTree, to support changing .so file relative paths
-    @get:Input
-    val projectNativeLibRelativePaths: Collection<String>
-        get() = getRelativePaths(projectNativeLibs.files, unfilteredProjectNativeLibs.files)
 
     @get:Classpath
     @get:Optional
