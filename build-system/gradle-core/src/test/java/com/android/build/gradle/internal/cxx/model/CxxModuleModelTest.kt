@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
 import com.google.common.reflect.ClassPath
 import com.google.common.truth.Truth.assertThat
@@ -47,6 +50,8 @@ private val ALLOWED_MODEL_INTERFACES = setOf(
 )
 
 private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
+    AbiInfo::class.java,
+    NdkMetaPlatforms::class.java,
     CxxServiceRegistry::class.java,
     UUID::class.java,
     List::class.java,

@@ -24,7 +24,10 @@ import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
+import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -40,6 +43,7 @@ import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import org.gradle.api.InvalidUserDataException
 import java.io.File
+import java.io.FileReader
 import java.io.IOException
 import java.util.function.Consumer
 
@@ -110,6 +114,17 @@ fun tryCreateCxxModuleModel(
                 ndkHandler.writeNdkLocatorRecord(locatorRecord)
             }
             ndkHandler
+        }
+        override val ndkMetaPlatforms by lazy {
+            val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
+            if (ndkMetaPlatformsFile.isFile) {
+                NdkMetaPlatforms.fromReader(FileReader(ndkMetaPlatformsFile))
+            } else {
+                null
+            }
+        }
+        override val ndkMetaAbiList by lazy {
+            NdkAbiFile(ndkMetaAbisFile(ndkFolder)).abiInfoList
         }
         override val cmake
             get() =

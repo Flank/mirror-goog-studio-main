@@ -197,7 +197,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
      */
     private fun assertStateNotWrapped() {
         with(abi.cmake!!) {
-            assertThat(abi.gradleBuildOutputFolder.isDirectory).isFalse()
+            assertThat(cmakeWrappingBaseFolder.isDirectory).isFalse()
             assertThat(cacheKeyFile.isFile).isFalse()
 
             assertThat(buildGenerationStateFile.isFile).isFalse()
@@ -217,7 +217,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private fun assertStateReadyToBuildCache(executionState : CmakeExecutionConfiguration) {
         with(abi.cmake!!) {
             // Things that exist on disk
-            assertThat(abi.gradleBuildOutputFolder.isDirectory).isTrue()
+            assertThat(cmakeWrappingBaseFolder.isDirectory).isTrue()
             assertThat(cacheKeyFile.isFile).isTrue()
             assertThat(cmakeListsWrapperFile.isFile).isTrue()
             // Things that don't exist on disk
@@ -229,14 +229,14 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
 
             assertThat(executionState.cmakeListsFolder)
                 .named("CMakeLists.txt was not wrapped in the expected location")
-                .isEqualTo(abi.gradleBuildOutputFolder)
+                .isEqualTo(cmakeWrappingBaseFolder)
 
             val parsed = parseCmakeArguments(executionState.args)
             val cmakeListsFromArgs = parsed.getCmakeListsPathValue()
 
             assertThat(File(cmakeListsFromArgs))
                 .named("CMakeLists.txt was not wrapped in the expected location")
-                .isEqualTo(abi.gradleBuildOutputFolder)
+                .isEqualTo(cmakeWrappingBaseFolder)
 
             val cmakeToolChainFile = parsed.getCmakeProperty(CMAKE_TOOLCHAIN_FILE)
             assertThat(File(cmakeToolChainFile))
@@ -260,7 +260,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     private fun assertStateWroteCache(ensureClean: Boolean = true) {
         with(abi.cmake!!) {
             // Things that exist on disk
-            assertThat(abi.gradleBuildOutputFolder.isDirectory).isTrue()
+            assertThat(cmakeWrappingBaseFolder.isDirectory).isTrue()
             assertThat(cacheKeyFile.isFile).isTrue()
             assertThat(cmakeListsWrapperFile.isFile).isTrue()
             assertThat(buildGenerationStateFile.isFile).isTrue()
@@ -290,7 +290,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
      */
     private fun assertStateUsedCacheToWrap() {
         with(abi.cmake!!) {
-            assertThat(abi.gradleBuildOutputFolder.isDirectory).isTrue()
+            assertThat(cmakeWrappingBaseFolder.isDirectory).isTrue()
             assertThat(cacheKeyFile.isFile).isTrue()
             assertThat(buildGenerationStateFile.isFile).isTrue()
             assertThat(compilerCacheUseFile.isFile).isTrue()
@@ -303,7 +303,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
 
     private fun assertAfterCmakeSuccessfullyUsedCache() {
         with(abi.cmake!!) {
-            assertThat(abi.gradleBuildOutputFolder.isDirectory).isTrue()
+            assertThat(cmakeWrappingBaseFolder.isDirectory).isTrue()
             assertThat(cacheKeyFile.isFile).isTrue()
             assertThat(buildGenerationStateFile.isFile).isTrue()
             assertThat(compilerCacheUseFile.isFile).isTrue()

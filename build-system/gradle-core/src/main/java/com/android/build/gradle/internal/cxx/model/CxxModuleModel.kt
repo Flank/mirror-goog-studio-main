@@ -17,7 +17,9 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
@@ -94,6 +96,17 @@ interface CxxModuleModel {
      *   ex, x86_64
      */
     val ndkDefaultAbiList: List<Abi>
+
+    /**
+     * Information about minimum and maximum platform along with mapping between platform
+     * and platform code. Will be null if the NDK is so old it doesn't have meta/platforms.json.
+     */
+    val ndkMetaPlatforms : NdkMetaPlatforms?
+
+    /**
+     * Information about all ABIs
+     */
+    val ndkMetaAbiList : List<AbiInfo>
 
     /**
      * Path to the CMake toolchain in NDK

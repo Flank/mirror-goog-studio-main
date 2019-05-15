@@ -490,7 +490,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cmake.getCmakeExe(),
                 abi.getCxxBuildFolder(),
                 isDebuggable(),
-                new JsonReader(new FileReader(abi.getCompileCommandsJsonFile())),
+                new JsonReader(new FileReader(abi.getCmake().getCompileCommandsJsonFile())),
                 abi.getAbi().getTag(),
                 workingDirectory,
                 target,
@@ -693,7 +693,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 continue;
             }
 
-            if (sourceFile.getPath().startsWith(config.getGradleBuildOutputFolder().getPath())) {
+            if (sourceFile
+                    .getPath()
+                    .startsWith(config.getCmake().getCmakeWrappingBaseFolder().getPath())) {
                 // Skip files in .cxx/cmake/x86
                 continue;
             }
@@ -744,7 +746,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         File cCompilerExecutable = null;
         File cppCompilerExecutable = null;
 
-        File compilationDatabase = abi.getCompileCommandsJsonFile();
+        File compilationDatabase = abi.getCmake().getCompileCommandsJsonFile();
         if (compilationDatabase.exists()) {
             CompilationDatabaseToolchain toolchain =
                     populateCompilationDatabaseToolchains(

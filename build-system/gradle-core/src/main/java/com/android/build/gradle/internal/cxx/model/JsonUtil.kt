@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.repository.Revision
@@ -109,6 +111,8 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
 // TODO retaining JSON read/write? They're a pain to maintain.
 @VisibleForTesting
 data class CxxModuleModelData(
+    override val ndkMetaPlatforms: NdkMetaPlatforms? = NdkMetaPlatforms(),
+    override val ndkMetaAbiList: List<AbiInfo> = listOf(),
     override val splitsAbiFilterSet: Set<String> = setOf(),
     override val intermediatesFolder: File = File("."),
     override val gradleModulePathName: String = "",
@@ -130,7 +134,9 @@ data class CxxModuleModelData(
 }
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
-    splitsAbiFilterSet = splitsAbiFilterSet,
+    ndkMetaPlatforms = ndkMetaPlatforms,
+    ndkDefaultAbiList = ndkDefaultAbiList,
+    ndkMetaAbiList = ndkMetaAbiList,
     intermediatesFolder = intermediatesFolder,
     gradleModulePathName = gradleModulePathName,
     moduleRootFolder = moduleRootFolder,
@@ -140,7 +146,6 @@ private fun CxxModuleModel.toData() = CxxModuleModelData(
     ndkFolder = ndkFolder,
     ndkVersion = ndkVersion,
     ndkSupportedAbiList = ndkSupportedAbiList,
-    ndkDefaultAbiList = ndkDefaultAbiList,
     cmake = cmake?.toData(),
     cmakeToolchainFile = cmakeToolchainFile,
     stlSharedObjectMap = stlSharedObjectMap,
@@ -205,17 +210,17 @@ private fun CxxVariantModel.toData() =
 internal data class CxxAbiModelData(
     override val variant: CxxVariantModelData = CxxVariantModelData(),
     override val abi: Abi = Abi.X86,
+    override val info: AbiInfo = AbiInfo(),
     override val abiPlatformVersion: Int = 0,
     override val cxxBuildFolder: File = File("."),
     override val jsonFile: File = File("."),
-    override val gradleBuildOutputFolder: File = File("."),
+    override val soFolder: File = File("."),
     override val objFolder: File = File("."),
     override val buildCommandFile: File = File("."),
     override val buildOutputFile: File = File("."),
     override val modelOutputFile: File = File("."),
     override val cmake: CxxCmakeAbiModelData? = null,
-    override val jsonGenerationLoggingRecordFile: File = File("."),
-    override val compileCommandsJsonFile: File = File(".")
+    override val jsonGenerationLoggingRecordFile: File = File(".")
 ) : CxxAbiModel
 
 private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
@@ -224,13 +229,12 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     abiPlatformVersion = abiPlatformVersion,
     cxxBuildFolder = cxxBuildFolder,
     jsonFile = jsonFile,
-    gradleBuildOutputFolder = gradleBuildOutputFolder,
+    soFolder = soFolder,
     objFolder = objFolder,
     buildCommandFile = buildCommandFile,
     buildOutputFile = buildOutputFile,
     modelOutputFile = modelOutputFile,
     jsonGenerationLoggingRecordFile = jsonGenerationLoggingRecordFile,
-    compileCommandsJsonFile = compileCommandsJsonFile,
     cmake = cmake?.toData()
 )
 
@@ -247,10 +251,14 @@ internal data class CxxCmakeAbiModelData(
     override val compilerCacheUseFile: File,
     override val compilerCacheWriteFile: File,
     override val toolchainSettingsFromCacheFile: File,
+    override val cmakeArtifactsBaseFolder: File,
+    override val compileCommandsJsonFile: File,
     override val cmakeWrappingBaseFolder: File
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
+    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
+    cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
     cmakeListsWrapperFile = cmakeListsWrapperFile,
     toolchainWrapperFile = toolchainWrapperFile,
     buildGenerationStateFile = buildGenerationStateFile,
@@ -258,6 +266,6 @@ private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
     compilerCacheUseFile = compilerCacheUseFile,
     compilerCacheWriteFile = compilerCacheWriteFile,
     toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile,
-    cmakeWrappingBaseFolder = cmakeWrappingBaseFolder
+    compileCommandsJsonFile = compileCommandsJsonFile
 )
 

@@ -77,7 +77,7 @@ class CreateCxxAbiModelTest {
             assertThat(abi.cxxBuildFolder.path
                     .replace("\\", "/"))
                 .endsWith(".cxx/cmake/debug/x86")
-            assertThat(abi.gradleBuildOutputFolder.path
+            assertThat(abi.cmake!!.cmakeWrappingBaseFolder.path
                     .replace("\\", "/"))
                 .doesNotContain("cmake/debug/cxx/debug")
             assertThat(

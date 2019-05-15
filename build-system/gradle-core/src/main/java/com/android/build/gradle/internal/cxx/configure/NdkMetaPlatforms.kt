@@ -27,6 +27,7 @@ data class NdkMetaPlatforms(
     val aliases : Map<String, Int> = mapOf()) {
 
     companion object {
+
         /**
          * Given an NDK root file path, return the name of the platforms metadata JSON file.
          */

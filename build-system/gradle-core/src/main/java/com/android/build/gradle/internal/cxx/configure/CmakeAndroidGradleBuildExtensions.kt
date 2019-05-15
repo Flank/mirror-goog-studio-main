@@ -201,7 +201,7 @@ private fun replaceCmakeListsWithWrapper(
                             cmakeListsWrapperFile.path,
                             wrapCmakeLists(
                                 originalCmakeListsFolder = File(arg.path),
-                                gradleBuildOutputFolder = abi.gradleBuildOutputFolder,
+                                gradleBuildOutputFolder = cmakeWrappingBaseFolder,
                                 buildGenerationStateFile = buildGenerationStateFile
                             )
                         )

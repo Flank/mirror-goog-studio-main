@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.sdklib.AndroidVersion
+import com.android.utils.FileUtils.join
 import java.io.File
 
 /**
@@ -34,6 +35,9 @@ fun createCxxAbiModel(
     return object : CxxAbiModel {
         override val variant = variant
         override val abi = abi
+        override val info by lazy {
+            variant.module.ndkMetaAbiList.single { it.abi == abi }
+        }
         override val abiPlatformVersion by lazy {
             val minSdkVersion =
                 baseVariantData.variantConfiguration.mergedFlavor.minSdkVersion
@@ -54,7 +58,9 @@ fun createCxxAbiModel(
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 object : CxxCmakeAbiModel {
                     override val cmakeWrappingBaseFolder: File
-                        get() = gradleBuildOutputFolder
+                        get() = join(variant.gradleBuildOutputFolder, abi.tag)
+                    override val cmakeArtifactsBaseFolder: File
+                        get() = join(variant.jsonFolder, abi.tag)
                 }
             } else {
                 null
