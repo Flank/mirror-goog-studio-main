@@ -421,12 +421,15 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
             super.handleProvider(taskProvider);
 
+            // NOTE : This task will be created per device provider, assume several tasks instances
+            // will exist in the variant scope.
+
             if (deviceProvider instanceof ConnectedDeviceProvider) {
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE,
-                                BuildArtifactsHolder.OperationType.INITIAL,
+                                BuildArtifactsHolder.OperationType.APPEND,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
@@ -435,7 +438,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.DEVICE_PROVIDER_CODE_COVERAGE,
-                                BuildArtifactsHolder.OperationType.INITIAL,
+                                BuildArtifactsHolder.OperationType.APPEND,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
