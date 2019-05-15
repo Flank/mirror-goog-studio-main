@@ -403,7 +403,9 @@ class ActionsXmlDetector : ResourceXmlDetector() {
             severity = Severity.FATAL,
             implementation = Implementation(
                 ActionsXmlDetector::class.java, Scope.RESOURCE_FILE_SCOPE
-            )
+            ),
+            // Disabled by default for now because the grammar is actively evolving: b/132733887
+            enabledByDefault = false
         )
 
         private const val TAG_ACTIONS = "actions"
