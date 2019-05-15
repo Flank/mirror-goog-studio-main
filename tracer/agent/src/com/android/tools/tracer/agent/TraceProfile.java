@@ -101,6 +101,7 @@ class TraceProfile {
             return "/tmp/report.json";
         }
     }
+
     private static String initJvmArgs(String path) {
         // We assume that the agent is called "trace_agent.jar"
         RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
@@ -129,6 +130,13 @@ class TraceProfile {
         }
 
         return "";
+    }
+
+    public boolean shouldTransform(String className) {
+        return !annotations.isEmpty()
+                || trace.containsClass(className)
+                || flush.containsClass(className)
+                || start.containsClass(className);
     }
 
     public boolean shouldInstrument(String annotation) {
@@ -231,6 +239,18 @@ class TraceProfile {
                         && (packageMethods.contains(methodName) || packageMethods.contains("*"))) {
                     return true;
                 }
+            }
+            return false;
+        }
+
+        boolean containsClass(String className) {
+            if (classes.get(className) != null) {
+                return true;
+            }
+            int ix = className.lastIndexOf('/');
+            if (ix != -1) {
+                String pkg = className.substring(0, ix);
+                return packages.get(pkg) != null;
             }
             return false;
         }

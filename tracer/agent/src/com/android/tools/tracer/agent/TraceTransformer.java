@@ -38,7 +38,7 @@ class TraceTransformer implements ClassFileTransformer, Opcodes {
             ProtectionDomain protectionDomain,
             byte[] classfileBuffer) {
         try {
-            if (className == null) {
+            if (className == null || !profile.shouldTransform(className)) {
                 return classfileBuffer;
             }
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
