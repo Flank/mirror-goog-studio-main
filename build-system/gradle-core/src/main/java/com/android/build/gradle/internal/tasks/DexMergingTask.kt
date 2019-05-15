@@ -62,12 +62,15 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
 import java.util.Collections
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipFile
 import javax.inject.Inject
 
 /**
@@ -436,8 +439,25 @@ class DexMergingTaskRunnable @Inject constructor(
                     params.isDebuggable
                 ).call()
             } else {
-                for (file in getAllRegularFiles(dexFiles).withIndex()) {
-                    file.value.copyTo(params.outputDir.resolve("classes_${file.index}.${SdkConstants.EXT_DEX}"))
+                val outputPath =
+                    { id: Int -> params.outputDir.resolve("classes_$id.${SdkConstants.EXT_DEX}") }
+                var index = 0
+                for (file in getAllRegularFiles(dexFiles)) {
+                    if (file.extension == SdkConstants.EXT_JAR) {
+                        // Dex files can also come from jars when dexing is not done in artifact
+                        // transforms. See b/130965921 for details.
+                        ZipFile(file).use {
+                            for (entry in it.entries()) {
+                                BufferedInputStream(it.getInputStream(entry)).use { inputStream ->
+                                    BufferedOutputStream(outputPath(index++).outputStream()).use { outputStream ->
+                                        inputStream.copyTo(outputStream)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        file.copyTo(outputPath(index++))
+                    }
                 }
             }
         } catch (e: Exception) {
