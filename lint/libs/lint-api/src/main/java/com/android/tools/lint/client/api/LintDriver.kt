@@ -2273,7 +2273,7 @@ class LintDriver
 
         override fun findGlobalRuleJars(): List<File> = delegate.findGlobalRuleJars()
 
-        override fun findRuleJars(project: Project): List<File> = delegate.findRuleJars(project)
+        override fun findRuleJars(project: Project): Iterable<File> = delegate.findRuleJars(project)
 
         override fun isProjectDirectory(dir: File): Boolean = delegate.isProjectDirectory(dir)
 

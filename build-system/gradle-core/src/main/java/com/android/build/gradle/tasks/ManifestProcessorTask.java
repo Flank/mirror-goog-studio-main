@@ -61,8 +61,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     @Nonnull private final DirectoryProperty instantAppManifestOutputDirectory;
 
-    private File reportFile;
-
     @SuppressWarnings("unused")
     protected BuildableArtifact checkManifestResult;
 
@@ -130,13 +128,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     @OutputFile
     @Optional
-    public File getReportFile() {
-        return reportFile;
-    }
-
-    public void setReportFile(File reportFile) {
-        this.reportFile = reportFile;
-    }
+    public abstract RegularFileProperty getReportFile();
 
     @OutputFile
     @Optional

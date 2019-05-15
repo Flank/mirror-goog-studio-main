@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.gradle.api
 
+import org.gradle.api.file.FileCollection
 import java.io.File
 
 interface VariantInputs {
@@ -23,7 +24,7 @@ interface VariantInputs {
     val name: String
 
     /** The lint rule jars, if any */
-    val ruleJars: List<File>
+    val ruleJars: FileCollection
 
     /** The merged manifest of the current module  */
     val mergedManifest: File?

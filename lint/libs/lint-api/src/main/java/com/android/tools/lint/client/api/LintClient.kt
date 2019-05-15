@@ -1143,7 +1143,7 @@ abstract class LintClient {
      *
      * @return a list of rule jars (possibly empty).
      */
-    open fun findRuleJars(project: Project): List<File> {
+    open fun findRuleJars(project: Project): Iterable<File> {
         if (project.isGradleProject) {
             if (project.isLibrary && project.gradleLibraryModel != null) {
                 val model = project.gradleLibraryModel
@@ -1170,7 +1170,7 @@ abstract class LintClient {
                         // don't need to have hardcoded paths (b/66166521)
                         val lintPaths = arrayOf(
                             Paths.get("intermediates", "lint"),
-                            Paths.get("intermediates", "lint_jar", "global", "prepareLintJar")
+                            Paths.get("intermediates", "lint_jar", "global")
                         )
                         for (lintPath in lintPaths) {
                             val lintFolder = File(it, lintPath.toString())
@@ -1240,7 +1240,6 @@ abstract class LintClient {
                     "intermediates",
                     "lint_publish_jar",
                     "global",
-                    "prepareLintJarForPublish",
                     SdkConstants.FN_LINT_JAR
                 )
             )

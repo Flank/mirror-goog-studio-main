@@ -29,7 +29,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGE
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -42,17 +41,14 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.model.Version;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Streams;
 import java.io.File;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -152,11 +148,9 @@ public abstract class LintBaseTask extends DefaultTask {
 
     public static class VariantInputs implements com.android.tools.lint.gradle.api.VariantInputs {
         @NonNull private final String name;
-        @NonNull private final BuildableArtifact localLintJarCollection;
-        @NonNull private final FileCollection dependencyLintJarCollection;
         @NonNull private final Provider<? extends FileSystemLocation> mergedManifest;
-        @Nullable private final BuildableArtifact mergedManifestReport;
-        private List<File> lintRuleJars;
+        @NonNull private final Provider<RegularFile> mergedManifestReport;
+        @NonNull private final FileCollection lintRuleJars;
 
         private final ConfigurableFileCollection allInputs;
 
@@ -164,15 +158,21 @@ public abstract class LintBaseTask extends DefaultTask {
             name = variantScope.getFullVariantName();
             allInputs = variantScope.getGlobalScope().getProject().files();
 
+            Provider<RegularFile> localLintJarCollection;
             allInputs.from(
                     localLintJarCollection =
                             variantScope
                                     .getGlobalScope()
                                     .getArtifacts()
-                                    .getFinalArtifactFiles(LINT_JAR));
+                                    .getFinalProduct(LINT_JAR));
+            FileCollection dependencyLintJarCollection;
             allInputs.from(
                     dependencyLintJarCollection =
                             variantScope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, LINT));
+
+            lintRuleJars = variantScope.getGlobalScope().getProject().files(
+                    localLintJarCollection,
+                    dependencyLintJarCollection);
 
             BuildArtifactsHolder artifacts = variantScope.getArtifacts();
             Provider<? extends FileSystemLocation> tmpMergedManifest =
@@ -188,10 +188,9 @@ public abstract class LintBaseTask extends DefaultTask {
             mergedManifest = tmpMergedManifest;
             allInputs.from(mergedManifest);
 
-            if (artifacts.hasArtifact(MANIFEST_MERGE_REPORT)) {
-                allInputs.from(
-                        mergedManifestReport =
-                                artifacts.getFinalArtifactFiles(MANIFEST_MERGE_REPORT));
+            mergedManifestReport = artifacts.getFinalProduct(MANIFEST_MERGE_REPORT);
+            if (mergedManifest.isPresent()) {
+                allInputs.from(mergedManifestReport);
             } else {
                 throw new RuntimeException(
                         "VariantInputs initialized with no merged manifest report on: "
@@ -217,16 +216,7 @@ public abstract class LintBaseTask extends DefaultTask {
         /** the lint rule jars */
         @Override
         @NonNull
-        public List<File> getRuleJars() {
-            if (lintRuleJars == null) {
-                lintRuleJars =
-                        Streams.concat(
-                                        dependencyLintJarCollection.getFiles().stream(),
-                                        localLintJarCollection.getFiles().stream())
-                                .filter(File::isFile)
-                                .collect(Collectors.toList());
-            }
-
+        public FileCollection getRuleJars() {
             return lintRuleJars;
         }
 
@@ -275,11 +265,11 @@ public abstract class LintBaseTask extends DefaultTask {
         @Override
         @Nullable
         public File getManifestMergeReport() {
-            if (mergedManifestReport == null) {
+            if (mergedManifestReport.isPresent()) {
+                return mergedManifestReport.get().getAsFile();
+            } else {
                 return null;
             }
-
-            return Iterables.getOnlyElement(mergedManifestReport);
         }
     }
 

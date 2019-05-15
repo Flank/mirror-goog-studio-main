@@ -192,7 +192,7 @@ public enum InternalArtifactType implements ArtifactType {
     AAPT_FRIENDLY_MERGED_MANIFESTS,
     INSTANT_APP_MANIFEST,
     MANIFEST_METADATA,
-    MANIFEST_MERGE_REPORT,
+    MANIFEST_MERGE_REPORT(Kind.FILE),
     MANIFEST_MERGE_BLAME_FILE(Kind.FILE),
     // Simplified android manifest with original package name.
     // It's used to create namespaced res.apk static library.
@@ -229,9 +229,9 @@ public enum InternalArtifactType implements ArtifactType {
     DATA_BINDING_BASE_CLASS_SOURCE_OUT(Category.GENERATED),
 
     // The lint JAR to be used for the current module.
-    LINT_JAR,
+    LINT_JAR(Kind.FILE),
     // The lint JAR to be published in the AAR.
-    LINT_PUBLISH_JAR,
+    LINT_PUBLISH_JAR(Kind.FILE),
 
     // the zip file output of the extract annotation class.
     ANNOTATIONS_ZIP(Kind.FILE),

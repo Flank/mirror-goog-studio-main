@@ -230,7 +230,7 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ManifestMerger2.MergeType.APPLICATION,
                             variantConfiguration.getManifestPlaceholders(),
                             getOptionalFeatures(),
-                            getReportFile(),
+                            getReportFile().get().getAsFile(),
                             LoggerWrapper.getLogger(ProcessApplicationManifest.class));
 
             XmlDocument mergedXmlDocument =
@@ -546,7 +546,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
         protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
-        private File reportFile;
 
         public CreationAction(
                 @NonNull VariantScope scope,
@@ -563,22 +562,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-
-            reportFile =
-                    FileUtils.join(
-                            variantScope.getGlobalScope().getOutputsDir(),
-                            "logs",
-                            "manifest-merger-"
-                                    + variantScope.getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
-
-            // set outputs.
-            variantScope
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT,
-                            ImmutableList.of(reportFile),
-                            taskName);
 
             VariantType variantType = variantScope.getType();
             Preconditions.checkState(!variantType.isTestComponent());
@@ -634,6 +617,19 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     taskProvider,
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
+
+            variantScope.getArtifacts().producesFile(
+                    InternalArtifactType.MANIFEST_MERGE_REPORT,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessApplicationManifest::getReportFile,
+                    variantScope.getGlobalScope().getProject().getLayout().getBuildDirectory().dir(
+                            FileUtils.join(
+                                    variantScope.getGlobalScope().getOutputsDir(),
+                                    "logs").getAbsolutePath()),
+                    "manifest-merger-"
+                            + variantScope.getVariantConfiguration().getBaseName()
+                            + "-report.txt");
         }
 
         @Override
@@ -701,7 +697,6 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             task.maxSdkVersion =
                     TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
-            task.setReportFile(reportFile);
             task.optionalFeatures =
                     TaskInputHelper.memoize(
                             () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));

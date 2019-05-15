@@ -61,7 +61,7 @@ public class LintCustomRuleTest {
         // Until then: if this test fails, (1) update the test and (2) update the code in
         // LintClient#findRuleJars to use the new path to the lint.jar output.
         File buildDir = project.getSubproject("app").getBuildDir();
-        Path lintPath = Paths.get("intermediates", "lint_jar", "global", "prepareLintJar");
+        Path lintPath = Paths.get("intermediates", "lint_jar", "global");
         File lintFolder = new File(buildDir, lintPath.toString());
         assertThat(lintFolder).doesNotExist();
         project.executor().expectFailure().run("clean", ":app:lintDebug");

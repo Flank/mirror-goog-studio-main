@@ -167,7 +167,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setMainManifestFile",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setOutputFile",
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setSecondaryManifestFiles",
-                "com.android.build.gradle.tasks.ManifestProcessorTask::setReportFile",
                 "com.android.build.gradle.tasks.LintPerVariantTask::setVariantName",
                 "com.android.build.gradle.tasks.MergeResources::setBlameLogFolder",
                 "com.android.build.gradle.tasks.MergeResources::setOutputDir",

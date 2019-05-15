@@ -40,7 +40,6 @@ import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -121,7 +120,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             getMaxSdkVersion(),
                             manifestOutputFile.get().getAsFile(),
                             variantConfiguration.getManifestPlaceholders(),
-                            getReportFile(),
+                            getReportFile().get().getAsFile(),
                             getMergeBlameFile().get().getAsFile(),
                             manifestOutputDirectory.isPresent()
                                     ? manifestOutputDirectory.get().getAsFile()
@@ -367,7 +366,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
 
         VariantScope scope;
-        private File reportFile;
 
         /**
          * {@code EagerTaskCreationAction} for the library process manifest task.
@@ -377,26 +375,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         public CreationAction(@NonNull VariantScope scope) {
             super(scope, scope.getTaskName("process", "Manifest"), ProcessLibraryManifest.class);
             this.scope = scope;
-        }
-
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            reportFile =
-                    FileUtils.join(
-                            getVariantScope().getGlobalScope().getOutputsDir(),
-                            "logs",
-                            "manifest-merger-"
-                                    + getVariantScope().getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
-
-            getVariantScope()
-                    .getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.MANIFEST_MERGE_REPORT,
-                            ImmutableList.of(reportFile),
-                            taskName);
         }
 
         @Override
@@ -439,6 +417,19 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
                             "manifest-merger-blame-"
                                     + getVariantScope().getVariantConfiguration().getBaseName()
                                     + "-report.txt");
+
+            getVariantScope().getArtifacts().producesFile(
+                    InternalArtifactType.MANIFEST_MERGE_REPORT,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessLibraryManifest::getReportFile,
+                    getVariantScope().getGlobalScope().getProject().getLayout().getBuildDirectory().dir(
+                            FileUtils.join(
+                                    getVariantScope().getGlobalScope().getOutputsDir(),
+                                    "logs").getAbsolutePath()),
+                    "manifest-merger-"
+                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + "-report.txt");
         }
 
         @Override
@@ -480,8 +471,6 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
             task.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
             task.outputScope = getVariantScope().getOutputScope();
-
-            task.setReportFile(reportFile);
 
             task.isNamespaced =
                     getVariantScope()

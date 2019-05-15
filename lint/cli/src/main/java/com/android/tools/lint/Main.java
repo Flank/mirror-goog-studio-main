@@ -361,7 +361,7 @@ public class Main {
 
                     @NonNull
                     @Override
-                    public List<File> findRuleJars(@NonNull Project project) {
+                    public Iterable<File> findRuleJars(@NonNull Project project) {
                         if (metadata != null) {
                             List<File> jars = metadata.getLintChecks().get(project);
                             if (jars != null) {

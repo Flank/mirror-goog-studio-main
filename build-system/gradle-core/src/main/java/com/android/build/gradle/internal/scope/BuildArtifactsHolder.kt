@@ -173,7 +173,7 @@ abstract class BuildArtifactsHolder(
      * This does not remove the original elements from the source [BuildArtifactsHolder].
      *
      * @param artifactType artifact type to copy to this holder.
-     * @param from souce [BuildArtifactsHolder] to copy the produced artifacts from.
+     * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
      */
     fun copy(artifactType: ArtifactType, from: BuildArtifactsHolder) {
         getProducerMap(artifactType).copy(artifactType,

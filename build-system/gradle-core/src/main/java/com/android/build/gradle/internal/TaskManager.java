@@ -499,14 +499,8 @@ public abstract class TaskManager {
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
-        BuildableArtifact lintJar =
-                globalScope.getArtifacts().getFinalArtifactFiles(LINT_PUBLISH_JAR);
         for (VariantScope scope : variants) {
-            scope.getArtifacts()
-                    .createBuildableArtifact(
-                            InternalArtifactType.LINT_PUBLISH_JAR,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            lintJar);
+            scope.getArtifacts().copy(LINT_PUBLISH_JAR, globalScope.getArtifacts());
         }
     }
 

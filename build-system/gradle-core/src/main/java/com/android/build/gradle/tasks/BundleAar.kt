@@ -139,7 +139,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 prependToCopyPath(SdkConstants.FD_JNI)
             )
             task.from(variantScope.globalScope.artifacts
-                .getFinalArtifactFiles(InternalArtifactType.LINT_PUBLISH_JAR))
+                .getFinalProduct<RegularFile>(InternalArtifactType.LINT_PUBLISH_JAR))
             task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.ANNOTATIONS_ZIP))
             task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.AAR_MAIN_JAR))
             task.from(

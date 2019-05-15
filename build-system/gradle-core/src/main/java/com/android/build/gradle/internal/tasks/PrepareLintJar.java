@@ -20,6 +20,7 @@ import static com.android.SdkConstants.FN_LINT_JAR;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
@@ -31,9 +32,11 @@ import java.io.IOException;
 import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Task that takes the configuration result, and check that it's correct.
@@ -42,11 +45,10 @@ import org.gradle.api.tasks.TaskAction;
  * publishing is done at config time when we don't know yet what lint.jar file we're going to
  * publish, we have to do this.
  */
-public class PrepareLintJar extends DefaultTask {
+public abstract class PrepareLintJar extends DefaultTask {
     public static final String NAME = "prepareLintJar";
 
     private FileCollection lintChecks;
-    private File outputLintJar;
 
     @Classpath
     public FileCollection getLintChecks() {
@@ -54,9 +56,7 @@ public class PrepareLintJar extends DefaultTask {
     }
 
     @OutputFile
-    public File getOutputLintJar() {
-        return outputLintJar;
-    }
+    public abstract RegularFileProperty getOutputLintJar();
 
     @TaskAction
     public void prepare() throws IOException {
@@ -71,20 +71,17 @@ public class PrepareLintJar extends DefaultTask {
                             + "' configuration. Only one file is supported. If using a separate Gradle project, make sure compilation dependencies are using compileOnly");
         }
 
-        if (files.isEmpty()) {
-            if (outputLintJar.isFile()) {
-                FileUtils.delete(outputLintJar);
-            }
-        } else {
-            FileUtils.mkdirs(outputLintJar.getParentFile());
-            Files.copy(Iterables.getOnlyElement(files), outputLintJar);
+        if (!files.isEmpty()) {
+            File outputDir = getOutputLintJar().get().getAsFile();
+            FileUtils.deleteRecursivelyIfExists(outputDir);
+            FileUtils.mkdirs(outputDir.getParentFile());
+            Files.copy(Iterables.getOnlyElement(files), outputDir);
         }
     }
 
     public static class CreationAction extends TaskCreationAction<PrepareLintJar> {
 
         @NonNull private final GlobalScope scope;
-        private File outputLintJar;
 
         public CreationAction(@NonNull GlobalScope scope) {
             this.scope = scope;
@@ -103,16 +100,18 @@ public class PrepareLintJar extends DefaultTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            outputLintJar =
-                    scope.getArtifacts()
-                            .appendArtifact(InternalArtifactType.LINT_JAR, taskName, FN_LINT_JAR);
+        public void handleProvider(
+                @NonNull TaskProvider<? extends PrepareLintJar> taskProvider) {
+            super.handleProvider(taskProvider);
+            scope.getArtifacts().producesFile(InternalArtifactType.LINT_JAR,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    PrepareLintJar::getOutputLintJar,
+                    FN_LINT_JAR);
         }
 
         @Override
         public void configure(@NonNull PrepareLintJar task) {
-            task.outputLintJar = outputLintJar;
             task.lintChecks = scope.getLocalCustomLintChecks();
         }
     }

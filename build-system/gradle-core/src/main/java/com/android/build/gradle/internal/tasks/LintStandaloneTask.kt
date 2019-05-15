@@ -31,6 +31,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Optional
@@ -59,8 +60,8 @@ open class LintStandaloneTask : DefaultTask() {
     var autoFix: Boolean = false
 
     /** This resolves the dependency of the lintChecks configuration */
-    private fun computeLocalChecks(): List<File> {
-        val configuration = lintChecks ?: return emptyList()
+    private fun computeLocalChecks(): FileCollection {
+        val configuration = lintChecks ?: return project.files()
         val attributes = Action { container: AttributeContainer ->
             // Query for JAR instead of PROCESSED_JAR as this task is executed without the AGP
             container.attribute(ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.type)
@@ -71,8 +72,6 @@ open class LintStandaloneTask : DefaultTask() {
                 .artifactView { config -> config.attributes(attributes) }
                 .artifacts
                 .artifactFiles
-                .files
-                .toList()
     }
 
     @TaskAction
@@ -94,7 +93,7 @@ open class LintStandaloneTask : DefaultTask() {
                 override fun getVariantInputs(variantName: String): VariantInputs? {
                     return object : VariantInputs {
                         override val name: String = ""
-                        override val ruleJars: List<File> = computeLocalChecks()
+                        override val ruleJars: FileCollection = computeLocalChecks()
                         override val mergedManifest: File? = null
                         override val manifestMergeReport: File? = null
                     }

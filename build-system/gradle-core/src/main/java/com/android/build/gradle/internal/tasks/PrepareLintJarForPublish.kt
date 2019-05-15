@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_LINT_JAR
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -24,9 +25,11 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
@@ -37,11 +40,10 @@ import javax.inject.Inject
  * publishing is done at config time when we don't know yet what lint.jar file we're going to
  * publish, we have to do this.
  */
-open class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
+abstract class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
     @get:InputFiles lateinit var lintChecks: FileCollection
         private set
-    @get:OutputFile lateinit var outputLintJar: File
-        private set
+    @get:OutputFile abstract val outputLintJar: RegularFileProperty
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     companion object {
@@ -54,27 +56,27 @@ open class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerEx
             it.submit(
                 PublishLintJarWorkerRunnable::class.java, PublishLintJarRequest(
                     files = lintChecks.files,
-                    outputLintJar = outputLintJar
+                    outputLintJar = outputLintJar.get().asFile
                 )
             )
         }
     }
 
     class CreationAction(private val scope: GlobalScope) : TaskCreationAction<PrepareLintJarForPublish>() {
-        private lateinit var outputLintJar: File
         override val name = NAME
         override val type = PrepareLintJarForPublish::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputLintJar =
-                    scope.artifacts
-                        .appendArtifact(
-                            InternalArtifactType.LINT_PUBLISH_JAR, taskName, FN_LINT_JAR)
+        override fun handleProvider(taskProvider: TaskProvider<out PrepareLintJarForPublish>) {
+            super.handleProvider(taskProvider)
+            scope.artifacts.producesFile(
+                InternalArtifactType.LINT_PUBLISH_JAR,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                PrepareLintJarForPublish::outputLintJar,
+                FN_LINT_JAR)
         }
 
         override fun configure(task: PrepareLintJarForPublish) {
-            task.outputLintJar = outputLintJar
             task.lintChecks = scope.publishedCustomLintChecks
         }
     }
