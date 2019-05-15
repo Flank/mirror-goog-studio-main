@@ -88,8 +88,8 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
         context: JavaContext
     ) {
         val evaluator = context.evaluator
-        if (relevantClasses.any { evaluator.isMemberInClass(member, it) }
-                && isRelevantCaller(expression, evaluator)) {
+        if (relevantClasses.any { evaluator.isMemberInClass(member, it) } &&
+                isRelevantCaller(expression, evaluator)) {
             context.report(
                 ISSUE,
                 expression,
@@ -101,7 +101,7 @@ class ExternalAnnotationsDetector : Detector(), SourceCodeScanner {
 
     private fun isRelevantCaller(node: UExpression, evaluator: JavaEvaluator): Boolean {
         val callerClass = node.getContainingUMethod()?.containingClass ?: return false
-        return evaluator.inheritsFrom(callerClass, Detector::class.java.name, false)
-                || callerClass.qualifiedName.orEmpty().startsWith("com.android.tools.lint.")
+        return evaluator.inheritsFrom(callerClass, Detector::class.java.name, false) ||
+                callerClass.qualifiedName.orEmpty().startsWith("com.android.tools.lint.")
     }
 }
