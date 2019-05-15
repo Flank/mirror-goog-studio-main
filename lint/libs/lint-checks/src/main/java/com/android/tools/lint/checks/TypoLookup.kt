@@ -34,6 +34,7 @@ import java.nio.ByteOrder
 import java.nio.channels.FileChannel.MapMode
 import java.util.ArrayList
 import java.util.Arrays
+import java.util.Random
 import java.util.WeakHashMap
 
 /** Database of common typos / misspellings.  */
@@ -569,8 +570,14 @@ class TypoLookup private constructor(
             val b = ByteArray(size)
             buffer.rewind()
             buffer.get(b)
-            val sink = Files.asByteSink(file)
-            sink.write(b)
+            // Write to a different file and swap it in last minute.
+            // This helps in scenarios where multiple simultaneous Gradle
+            // threads are attempting to access the file before it's ready.
+            val tmp = File(file.path + "." + Random().nextInt())
+            Files.asByteSink(tmp).write(b)
+            if (!tmp.renameTo(file)) {
+                tmp.delete()
+            }
         }
 
         /** Comparison function: *only* used for ASCII strings  */
