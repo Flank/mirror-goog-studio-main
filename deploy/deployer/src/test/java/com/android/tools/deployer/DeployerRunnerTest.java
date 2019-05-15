@@ -1032,8 +1032,7 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         bytes = new byte[size];
                         ByteStreams.readFully(stdin, bytes);
                         CodedInputStream cis = CodedInputStream.newInstance(bytes);
-                        Deploy.DeltaPreinstallRequest request =
-                                Deploy.DeltaPreinstallRequest.parser().parseFrom(cis);
+                        Deploy.InstallInfo info = Deploy.InstallInfo.parser().parseFrom(cis);
 
                         Deploy.DeltaPreinstallResponse.Builder preinstall =
                                 Deploy.DeltaPreinstallResponse.newBuilder();

@@ -126,8 +126,7 @@ public class ApkPreInstaller {
                 pairs.add(Pair.of(localApk.getValue(), remoteApks.get(localApk.getValue().name)));
             }
 
-            Deploy.DeltaPreinstallRequest.Builder pushRequestBuilder =
-                    Deploy.DeltaPreinstallRequest.newBuilder();
+            Deploy.InstallInfo.Builder pushRequestBuilder = Deploy.InstallInfo.newBuilder();
             List<Deploy.PatchInstruction> patches =
                     new PatchSetGenerator().generateFromPairs(pairs);
             if (patches.isEmpty()) {
@@ -139,14 +138,14 @@ public class ApkPreInstaller {
             pushRequestBuilder.setInherit(inherit);
             pushRequestBuilder.setPackageName(packageName);
 
-            Deploy.DeltaPreinstallRequest request = pushRequestBuilder.build();
+            Deploy.InstallInfo info = pushRequestBuilder.build();
             // Don't push more than 40 MiB delta since it has to fit in RAM on the device.
-            if (request.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
+            if (info.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
                 throw new DeltaPreInstallException("Patches too big.");
             }
 
             // Send the deltaPreinstall request here.
-            Deploy.DeltaPreinstallResponse response = installer.deltaPreinstall(request);
+            Deploy.DeltaPreinstallResponse response = installer.deltaPreinstall(info);
             if (response.getStatus().equals(Deploy.DeltaPreinstallResponse.Status.OK)) {
                 return response.getSessionId();
             } else {

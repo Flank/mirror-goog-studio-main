@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef DEPLOYER_DELTA_INSTALL_H
-#define DEPLOYER_DELTA_INSTALL_H
+#ifndef DEPLOYER_BASE_INSTALL_H
+#define DEPLOYER_BASE_INSTALL_H
 
-#include "tools/base/deploy/installer/base_install.h"
 #include "tools/base/deploy/installer/command.h"
-#include "tools/base/deploy/proto/deploy.pb.h"
+
+#include <string>
+#include <vector>
 
 namespace deploy {
 
-class DeltaInstallCommand : public BaseInstallCommand {
+class BaseInstallCommand : public Command {
  public:
-  explicit DeltaInstallCommand(Workspace& workspace);
-  virtual ~DeltaInstallCommand() = default;
+  BaseInstallCommand(Workspace& workspace);
+  virtual ~BaseInstallCommand() = default;
   virtual void ParseParameters(int argc, char** argv);
-  virtual void Run();
+
+ protected:
+  bool CreateInstallSession(std::string* output,
+                            std::vector<std::string>* options);
+  bool SendApksToPackageManager(const std::string& session_id);
+  proto::InstallInfo install_info_;
 
  private:
-  // Install using pm install interface which requires temporary hard storage.
-  void Install();
-  // Install using pm install-create, install-write, install-commit streaming
-  // API where data is streamed directely to the Package Manager.
-  void StreamInstall();
+  bool SendApkToPackageManager(const proto::PatchInstruction& patch,
+                               const std::string& session_id);
 };
 
 }  // namespace deploy
 
-#endif  // DEPLOYER_DELTA_INSTALL_H
+#endif  // DEPLOYER_BASE_INSTALL

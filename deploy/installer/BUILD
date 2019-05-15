@@ -133,6 +133,7 @@ cc_library(
     name = "installer_lib",
     srcs = [
         "apk_archive.cc",
+        "base_install.cc",
         "command.cc",
         "command_cmd.cc",
         "delta_install.cc",
@@ -148,6 +149,7 @@ cc_library(
     ],
     hdrs = [
         "apk_archive.h",
+        "base_install.h",
         "command.h",
         "command_cmd.h",
         "delta_install.h",

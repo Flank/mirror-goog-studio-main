@@ -34,67 +34,10 @@
 
 namespace deploy {
 
-void DeltaPreinstallCommand::ParseParameters(int argc, char** argv) {
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-
-  BeginMetric("DELTAPREINSTALL_UPLOAD");
-  if (!wrapper.Read(&data)) {
-    ErrEvent("Unable to read data on stdin.");
-    EndPhase();
-    return;
-  }
-  EndPhase();
-
-  BeginPhase("Parsing input ");
-  if (!request_.ParseFromString(data)) {
-    ErrEvent("Unable to parse protobuffer request object.");
-    EndPhase();
-    return;
-  }
-  EndPhase();
-
-  ready_to_run_ = true;
-}
-
-bool DeltaPreinstallCommand::SendApkToPackageManager(
-    const proto::PatchInstruction& patch, const std::string& session_id) {
-  Phase p("Write to PM");
-
-  // Open a stream to the package manager to write to.
-  std::string output;
-  std::string error;
-  std::vector<std::string> parameters;
-  parameters.push_back("package");
-  parameters.push_back("install-write");
-  parameters.push_back("-S");
-  parameters.push_back(to_string(patch.dst_filesize()));
-  parameters.push_back(session_id);
-  std::string apk = patch.src_absolute_path();
-  parameters.push_back(apk.substr(apk.rfind("/") + 1));
-
-  int pm_stdout, pm_stderr, pm_stdin, pid;
-  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
-                                       &pm_stderr, &pid);
-
-  PatchApplier patchApplier(workspace_.GetRoot());
-  patchApplier.ApplyPatchToFD(patch, pm_stdin);
-
-  // Clean up
-  close(pm_stdin);
-  close(pm_stdout);
-  close(pm_stderr);
-  int status;
-  waitpid(pid, &status, 0);
-
-  return WIFEXITED(status) && (WEXITSTATUS(status) == 0);
-}
-
 void DeltaPreinstallCommand::Run() {
   Metric m("DELTAPREINSTALL_WRITE");
 
-  proto::DeltaPreinstallResponse* response =
-      new proto::DeltaPreinstallResponse();
+  auto response = new proto::DeltaPreinstallResponse();
   workspace_.GetResponse().set_allocated_deltapreinstall_response(response);
 
   // Create a session
@@ -103,30 +46,26 @@ void DeltaPreinstallCommand::Run() {
   std::string session_id;
 
   std::vector<std::string> options;
+  for (const std::string& option : install_info_.options()) {
+    options.emplace_back(option);
+  }
   options.emplace_back("-t");
   options.emplace_back("-r");
   options.emplace_back("--dont-kill");
 
-  if (request_.inherit()) {
-    options.emplace_back("-p");
-    options.emplace_back(request_.package_name());
-  }
-
-  if (!cmd.CreateInstallSession(&output, options)) {
+  bool session_created = CreateInstallSession(&output, &options);
+  if (session_created) {
+    session_id = output;
+    response->set_session_id(session_id);
+  } else {
     ErrEvent(output);
     response->set_status(proto::DeltaPreinstallResponse::ERROR);
     return;
-  } else {
-    session_id = output;
-    response->set_session_id(session_id);
   }
 
-  for (const proto::PatchInstruction& patch : request_.patchinstructions()) {
-    // Skip if we are inheriting and no delta
-    if (request_.inherit() && patch.patches().size() == 0) {
-      continue;
-    }
-    SendApkToPackageManager(patch, session_id);
+  if (!SendApksToPackageManager(session_id)) {
+    response->set_status(proto::DeltaPreinstallResponse::ERROR);
+    return;
   }
 
   response->set_status(proto::DeltaPreinstallResponse::OK);

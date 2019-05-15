@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-#include "delta_install.h"
+#include "tools/base/deploy/installer/delta_install.h"
 
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "delta_install.h"
 #include "tools/base/deploy/common/event.h"
 #include "tools/base/deploy/common/utils.h"
 #include "tools/base/deploy/installer/command_cmd.h"
@@ -43,36 +44,17 @@ int GetAPILevel() { return 21; }
 namespace deploy {
 
 DeltaInstallCommand::DeltaInstallCommand(Workspace& workspace)
-    : Command(workspace) {}
+    : BaseInstallCommand(workspace) {}
 
 void DeltaInstallCommand::ParseParameters(int argc, char** argv) {
-  Phase p("DeltaInstallCommand::ParseParameters");
-  deploy::MessagePipeWrapper wrapper(STDIN_FILENO);
-  std::string data;
-
-  BeginMetric("DELTAINSTALL_UPLOAD");
-  if (!wrapper.Read(&data)) {
-    ErrEvent("Unable to read data on stdin.");
-    EndPhase();
-    return;
-  }
-  EndPhase();
-
-  BeginPhase("Parsing input ");
-  if (!request_.ParseFromString(data)) {
-    ErrEvent("Unable to parse protobuffer request object.");
-    EndPhase();
-    return;
-  }
-  EndPhase();
-
-  ready_to_run_ = true;
+  Metric m("DELTAINSTALL_UPLOAD");
+  BaseInstallCommand::ParseParameters(argc, argv);
 }
 
 void DeltaInstallCommand::Run() {
   Metric m("DELTAINSTALL_INSTALL");
 
-  proto::DeltaInstallResponse* response = new proto::DeltaInstallResponse();
+  auto response = new proto::DeltaInstallResponse();
   workspace_.GetResponse().set_allocated_deltainstall_response(response);
 
   int api_level = GetAPILevel();
@@ -84,52 +66,9 @@ void DeltaInstallCommand::Run() {
   }
 }
 
-bool DeltaInstallCommand::SendApkToPackageManager(
-    const proto::PatchInstruction& patch, const std::string& session_id) {
-  Phase p("DeltaInstallCommand::SendApkToPackageManager");
-
-  // Open a stream to the package manager to write to.
-  std::string output;
-  std::string error;
-  std::vector<std::string> parameters;
-  parameters.push_back("package");
-  parameters.push_back("install-write");
-  parameters.push_back("-S");
-  parameters.push_back(to_string(patch.dst_filesize()));
-  parameters.push_back(session_id);
-  std::string apk = patch.src_absolute_path();
-  parameters.push_back(apk.substr(apk.rfind("/") + 1));
-
-  for (std::string& parameter : parameters) {
-    LogEvent(parameter);
-  }
-
-  int pm_stdout, pm_stderr, pm_stdin, pid;
-  workspace_.GetExecutor().ForkAndExec("cmd", parameters, &pm_stdin, &pm_stdout,
-                                       &pm_stderr, &pid);
-
-  PatchApplier patchApplier(workspace_.GetRoot());
-  patchApplier.ApplyPatchToFD(patch, pm_stdin);
-
-  // Clean up
-  close(pm_stdin);
-  close(pm_stdout);
-  close(pm_stderr);
-  int status;
-  waitpid(pid, &status, 0);
-
-  bool successs = WIFEXITED(status) && (WEXITSTATUS(status) == 0);
-  if (!successs) {
-    ErrEvent("Error while sending APKs to PM");
-    ErrEvent(output);
-    return false;
-  }
-  return true;
-}
-
 void DeltaInstallCommand::Install() {
   Phase p("DeltaInstallCommand::Install");
-  if (request_.patchinstructions().size() != 1) {
+  if (install_info_.patchinstructions().size() != 1) {
     // TODO: ERROR GOES HERE
     return;
   }
@@ -142,7 +81,7 @@ void DeltaInstallCommand::Install() {
   // Write content of the tmp apk
   PatchApplier patchApplier(workspace_.GetRoot());
   bool patch_result =
-      patchApplier.ApplyPatchToFD(request_.patchinstructions()[0], dst_fd);
+      patchApplier.ApplyPatchToFD(install_info_.patchinstructions()[0], dst_fd);
   if (!patch_result) {
     close(dst_fd);
     unlink(tmp_apk_path.c_str());
@@ -154,7 +93,7 @@ void DeltaInstallCommand::Install() {
   std::string output;
   PackageManager pm(workspace_);
   std::vector<std::string> options;
-  for (const std::string& option : request_.options()) {
+  for (const std::string& option : install_info_.options()) {
     options.emplace_back(option);
   }
   pm.Install(tmp_apk_path, options, &output);
@@ -172,42 +111,29 @@ void DeltaInstallCommand::StreamInstall() {
       workspace_.GetResponse().mutable_deltainstall_response();
   // Create session
   CmdCommand cmd(workspace_);
+
   std::string session_id;
   std::string output;
   std::vector<std::string> options;
-  for (const std::string& option : request_.options()) {
+  for (const std::string& option : install_info_.options()) {
     options.emplace_back(option);
   }
 
-  // Use inheritance so we can skip unchanged APKs in cases where
-  // the application uses splits.
-  if (request_.inherit()) {
-    options.emplace_back("-p");
-    options.emplace_back(request_.package_name());
-  }
-
-  if (!cmd.CreateInstallSession(&output, options)) {
+  bool session_created = CreateInstallSession(&output, &options);
+  if (session_created) {
+    session_id = output;
+  } else {
     ErrEvent("Unable to create session"_s + output);
     response->set_status(proto::DeltaInstallResponse_Status_ERROR);
     response->set_install_output(output);
     return;
-  } else {
-    session_id = output;
   }
+
   LogEvent("DeltaInstall created session: '"_s + session_id + "'");
 
-  // For all apks involved, stream the patched content to the Package Manager
-  for (const proto::PatchInstruction& patch : request_.patchinstructions()) {
-    // Skip if we are inheriting and no delta
-    if (request_.inherit() && patch.patches().size() == 0) {
-      continue;
-    }
-    bool send_result = SendApkToPackageManager(patch, session_id);
-    if (!send_result) {
-      std::string abort_output;
-      cmd.AbortInstall(session_id, &abort_output);
-      return;
-    }
+  if (!SendApksToPackageManager(session_id)) {
+    response->set_status(proto::DeltaInstallResponse::ERROR);
+    return;
   }
 
   // Commit session (and gather output)
@@ -221,5 +147,4 @@ void DeltaInstallCommand::StreamInstall() {
   // succedded.
   response->set_status(proto::DeltaInstallResponse_Status_OK);
 }
-
 }  // namespace deploy

@@ -241,7 +241,7 @@ public class ApkInstaller {
         }
 
         // Send deltaInstall request
-        Deploy.DeltaInstallRequest.Builder builder = Deploy.DeltaInstallRequest.newBuilder();
+        Deploy.InstallInfo.Builder builder = Deploy.InstallInfo.newBuilder();
         builder.addAllOptions(options.getFlags());
         // We need to match what happens in ddmlib implementation of installPackages where
         // a "-r" is added.
@@ -264,16 +264,16 @@ public class ApkInstaller {
         builder.addAllPatchInstructions(patches);
         builder.setPackageName(packageName);
 
-        Deploy.DeltaInstallRequest request = builder.build();
+        Deploy.InstallInfo info = builder.build();
         // Check that size if not beyond the limit.
-        if (request.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
+        if (info.getSerializedSize() > PatchSetGenerator.MAX_PATCHSET_SIZE) {
             return new DeltaInstallResult(DeltaInstallStatus.PATCH_SIZE_EXCEEDED);
         }
 
         // Send delta install request.
         Deploy.DeltaInstallResponse res;
         try {
-            res = installer.deltaInstall(request);
+            res = installer.deltaInstall(info);
         } catch (IOException e) {
             return new DeltaInstallResult(DeltaInstallStatus.UNKNOWN);
         }

@@ -193,16 +193,9 @@ message PatchInstruction {
   int64 dst_filesize = 4;
 }
 
-message DeltaPreinstallRequest {
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  Status status = 1;
-
+message InstallInfo {
+  repeated string options = 1;
   repeated PatchInstruction patchInstructions = 2;
-
   bool inherit = 3;
   string package_name = 4;
 }
@@ -215,19 +208,6 @@ message DeltaPreinstallResponse {
   }
   Status status = 1;
   string session_id = 2;
-}
-
-message DeltaInstallRequest {
-  enum Status {
-    UNKNOWN = 0;
-    OK = 1;
-    ERROR = 2;
-  }
-  repeated string options = 2;
-  repeated PatchInstruction patchInstructions = 3;
-
-  bool inherit = 4;
-  string package_name = 5;
 }
 
 message DeltaInstallResponse {

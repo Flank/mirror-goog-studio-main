@@ -107,10 +107,10 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
-    public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.DeltaPreinstallRequest request)
+    public Deploy.DeltaPreinstallResponse deltaPreinstall(Deploy.InstallInfo info)
             throws IOException {
         String[] cmd = buildCmd(new String[] {"deltapreinstall"});
-        ByteArrayInputStream inputStream = wrap(request);
+        ByteArrayInputStream inputStream = wrap(info);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.DeltaPreinstallResponse response = installerResponse.getDeltapreinstallResponse();
         logger.verbose("installer deltapreinstall: " + response.getStatus().toString());
@@ -118,10 +118,9 @@ public class AdbInstaller implements Installer {
     }
 
     @Override
-    public Deploy.DeltaInstallResponse deltaInstall(Deploy.DeltaInstallRequest request)
-            throws IOException {
+    public Deploy.DeltaInstallResponse deltaInstall(Deploy.InstallInfo info) throws IOException {
         String[] cmd = buildCmd(new String[] {"deltainstall"});
-        ByteArrayInputStream inputStream = wrap(request);
+        ByteArrayInputStream inputStream = wrap(info);
         Deploy.InstallerResponse installerResponse = invokeRemoteCommand(cmd, inputStream);
         Deploy.DeltaInstallResponse response = installerResponse.getDeltainstallResponse();
         logger.verbose("installer deltainstall: " + response.getStatus().toString());
