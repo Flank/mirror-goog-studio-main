@@ -27,6 +27,7 @@ import com.android.builder.desugaring.samples.FunInterface;
 import com.android.builder.desugaring.samples.FunInterfaceSubtype;
 import com.android.builder.desugaring.samples.LambdaClass;
 import com.android.builder.desugaring.samples.LambdaOfSubtype;
+import com.android.builder.desugaring.samples.OuterClass;
 import com.android.builder.desugaring.samples.SampleClass;
 import com.android.builder.desugaring.samples.SampleInterface;
 import com.google.common.collect.ImmutableMap;
@@ -39,6 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -186,6 +188,69 @@ public class DesugaringClassAnalyzerTest {
         Files.createFile(inputDir.resolve("module-info.class"));
         List<DesugaringData> analyze = DesugaringClassAnalyzer.analyze(inputDir);
         assertThat(analyze).isEmpty();
+    }
+
+    @Test
+    public void testNestBasedAccessControl() throws IOException, ClassNotFoundException {
+        // We cannot access type, but javac generates stable name OuterClass$1MethodInner.
+        Class<?> methodLocalClass =
+                this.getClass()
+                        .getClassLoader()
+                        .loadClass(OuterClass.class.getName() + "$1MethodInner");
+        Class<?> methodAnonymousClass =
+                this.getClass().getClassLoader().loadClass(OuterClass.class.getName() + "$1");
+
+        DesugaringGraph graph =
+                analyze(
+                        OuterClass.class,
+                        OuterClass.Inner.class,
+                        OuterClass.Inner.DoubleInner.class,
+                        OuterClass.InnerStatic.class,
+                        methodLocalClass,
+                        methodAnonymousClass);
+
+        ImmutableMap.Builder<Class<?>, Set<Class<?>>> directDependencies = ImmutableMap.builder();
+        directDependencies.put(
+                Object.class,
+                ImmutableSet.of(
+                        OuterClass.class,
+                        OuterClass.Inner.class,
+                        OuterClass.Inner.DoubleInner.class,
+                        OuterClass.InnerStatic.class,
+                        methodLocalClass,
+                        methodAnonymousClass));
+        directDependencies.put(
+                OuterClass.class,
+                ImmutableSet.of(
+                        OuterClass.Inner.class,
+                        OuterClass.InnerStatic.class,
+                        methodLocalClass,
+                        methodAnonymousClass));
+        directDependencies.put(
+                OuterClass.Inner.class,
+                ImmutableSet.of(OuterClass.class, OuterClass.Inner.DoubleInner.class));
+        directDependencies.put(
+                OuterClass.Inner.DoubleInner.class, ImmutableSet.of(OuterClass.Inner.class));
+        directDependencies.put(OuterClass.InnerStatic.class, ImmutableSet.of(OuterClass.class));
+        directDependencies.put(methodLocalClass, ImmutableSet.of(OuterClass.class));
+        directDependencies.put(methodAnonymousClass, ImmutableSet.of(OuterClass.class));
+
+        assertDirectDependencyGraph(directDependencies.build(), graph);
+
+        // Every class depends on every other.
+        ImmutableSet<Class<?>> allClasses =
+                ImmutableSet.of(
+                        OuterClass.class,
+                        OuterClass.Inner.class,
+                        OuterClass.Inner.DoubleInner.class,
+                        OuterClass.InnerStatic.class,
+                        methodLocalClass,
+                        methodAnonymousClass);
+        for (Class<?> clazz : allClasses) {
+            Sets.SetView<Class<?>> allOtherClasses =
+                    Sets.difference(allClasses, Collections.singleton(clazz));
+            assertFullDependentGraph(clazz, allOtherClasses, graph);
+        }
     }
 
     @NonNull

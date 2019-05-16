@@ -207,6 +207,36 @@ public class DesugaringClassAnalyzer {
 
             return new LambdaSeeker(dependencies, methodVisitor);
         }
+
+        @Override
+        public void visitOuterClass(String owner, String name, String desc) {
+            // Add dependency to support nest-based access control - b/130578767.
+            // Invoked only for local/anonymous classes with EnclosingMethod attribute -
+            // https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.7
+            if (owner != null) {
+                dependencies.add(owner);
+            }
+            super.visitOuterClass(owner, name, desc);
+        }
+
+        @Override
+        public void visitInnerClass(String name, String outerName, String innerName, int access) {
+            // Need inner class handling because of the nest-based access control - b/130578767.
+            if (type.equals(outerName)) {
+                // Name denotes an inner class enclosed by this type => depend on it.
+                dependencies.add(name);
+            } else if (type.equals(name)) {
+                // We are in an inner class, and outerName contains where it was declared if it is
+                // not null => depend on it. OuterName will be null for local/anonymous classes
+                if (outerName != null) {
+                    dependencies.add(outerName);
+                }
+            } else if (outerName == null) {
+                // Name is a non-member class => depend on it.
+                dependencies.add(name);
+            }
+            super.visitInnerClass(name, outerName, innerName, access);
+        }
     }
 
     private static class LambdaSeeker extends MethodVisitor {
