@@ -363,7 +363,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                         // It will cause ExternalNativeJsonGenerator#create to be invoked.
                         // This function does work, like trying to located the NDK, that
                         // can trigger sync messages.
-                        provider.get();
+                        provider.get().build(false);
                     }
                 }
             }

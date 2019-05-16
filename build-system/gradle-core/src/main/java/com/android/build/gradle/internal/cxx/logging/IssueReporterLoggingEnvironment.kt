@@ -23,8 +23,8 @@ import com.android.builder.errors.EvalIssueReporter.Severity.WARNING
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
 
-// Change to false when b/130363042 is fixed.
-private const val FORCE_EXCEPTION_ON_ERROR = true
+// See b/130363042, not all errors from C++ can be seen at sync time.
+private const val FORCE_EXCEPTION_ON_ERROR = false
 
 /**
  * A logging environment that will report errors and warnings to an [EvalIssueReporter].

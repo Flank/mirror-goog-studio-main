@@ -22,6 +22,7 @@ import com.android.SdkConstants.NDK_SYMLINK_DIR
 import com.android.SdkConstants.PLATFORM_WINDOWS
 import com.android.build.gradle.external.cmake.CmakeUtils
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
@@ -34,6 +35,7 @@ import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
+import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.options.BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION
@@ -105,7 +107,19 @@ fun tryCreateCxxModuleModel(
             val locatorRecord = join(cxxFolder, "ndk_locator_record.json")
             try {
                 if (!ndkHandler.ndkPlatform.isConfigured) {
-                    global.sdkComponents.installNdk(ndkHandler)
+                    if (ndkHandler.userExplicityRequestedNdkVersion) {
+                        global.sdkComponents.installNdk(ndkHandler)
+                    } else {
+                        // Don't auto-download if the user has not explicitly specified an NDK
+                        // version in build.gradle. The default version may not be the one that
+                        // the user prefers but he hasn't had a chance yet to set
+                        // android.ndkVersion. We don't want to auto-download a massive NDK without
+                        // confirmation that it's the right one.
+                        infoln("NDK auto-download is disabled. To enable auto-download, " +
+                                "set an explicit version in build.gradle by setting " +
+                                "android.ndkVersion. The preferred NDK version is " +
+                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'.")
+                    }
                     if (!ndkHandler.ndkPlatform.isConfigured) {
                         throw InvalidUserDataException("NDK not configured. Download it with SDK manager. Log: $locatorRecord")
                     }

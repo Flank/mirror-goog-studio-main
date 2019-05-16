@@ -26,7 +26,6 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Ignore
 import java.io.File
 
-@Ignore("Disabled pending outcome of b/130363042")
 class UnresolveableNdkVersionTest {
 
     @Rule

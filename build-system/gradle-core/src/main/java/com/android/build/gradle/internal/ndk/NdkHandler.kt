@@ -101,6 +101,11 @@ class NdkHandler(
     private var ndkInstallStatus: NdkInstallStatus? = null
     private var sideBySideLocatorRecord: NdkLocatorRecord? = null
 
+    /**
+     * Return true if the user specific an explicit NDK version in build.gradle.
+     */
+    val userExplicityRequestedNdkVersion = ndkVersionFromDsl != null
+
     private fun findNdk(): File? {
         return if (enableSideBySideNdk) {
             val record = findNdkPath(evalIssueReporter, ndkVersionFromDsl,
