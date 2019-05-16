@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dexing.DexerTool;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import java.io.File;
@@ -33,6 +34,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -47,6 +49,7 @@ public class JacocoTask extends AndroidVariantTask {
     private File output;
     private Provider<Directory> outputJars;
     private JacocoTaskDelegate delegate;
+    private WorkerExecutorFacade.IsolationMode isolationMode;
 
     @Inject
     public JacocoTask(@NonNull WorkerExecutor workers) {
@@ -61,6 +64,11 @@ public class JacocoTask extends AndroidVariantTask {
     @InputFiles
     public BuildableArtifact getInputClasses() {
         return inputClasses;
+    }
+
+    @Input
+    public WorkerExecutorFacade.IsolationMode getIsolationMode() {
+        return isolationMode;
     }
 
     @OutputDirectory
@@ -154,12 +162,19 @@ public class JacocoTask extends AndroidVariantTask {
                             scope.getGlobalScope().getProject(), getJacocoVersion(scope));
             task.output = output;
             task.outputJars = outputJars;
+            task.isolationMode =
+                    scope.getGlobalScope()
+                                    .getProjectOptions()
+                                    .get(BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS)
+                            ? WorkerExecutorFacade.IsolationMode.PROCESS
+                            : WorkerExecutorFacade.IsolationMode.CLASSLOADER;
             task.delegate =
                     new JacocoTaskDelegate(
                             task.jacocoAntTaskConfiguration,
                             task.output,
                             task.outputJars,
-                            task.inputClasses);
+                            task.inputClasses,
+                            task.isolationMode);
         }
     }
 }

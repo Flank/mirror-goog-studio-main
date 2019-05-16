@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.fixtures.FakeIncrementalTaskInputs
 import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.tasks.JacocoTaskDelegate
 import com.android.build.gradle.internal.tasks.Workers
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.FileSubject.assertThat
 import com.google.common.truth.Truth
@@ -77,7 +78,12 @@ class JacocoTest {
         Truth.assertThat(outputJarDir.listFiles()).isEmpty()
 
         val jacocoDelegate = JacocoTaskDelegate(
-            FakeFileCollection(), outputDir, outputJarDirProvider, createBuildArtifact(inputDir, inputJar))
+            FakeFileCollection(),
+            outputDir,
+            outputJarDirProvider,
+            createBuildArtifact(inputDir, inputJar),
+            WorkerExecutorFacade.IsolationMode.CLASSLOADER
+        )
 
         jacocoDelegate.run(
             Workers.preferWorkers("test", "test", workerExecutor),

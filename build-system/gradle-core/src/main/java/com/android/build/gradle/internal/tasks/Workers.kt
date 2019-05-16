@@ -314,6 +314,7 @@ object Workers {
         when(this) {
             WorkerExecutorFacade.IsolationMode.NONE -> IsolationMode.NONE
             WorkerExecutorFacade.IsolationMode.CLASSLOADER -> IsolationMode.CLASSLOADER
+            WorkerExecutorFacade.IsolationMode.PROCESS -> IsolationMode.PROCESS
             else -> throw IllegalArgumentException("$this is not a handled isolation mode")
         }
 

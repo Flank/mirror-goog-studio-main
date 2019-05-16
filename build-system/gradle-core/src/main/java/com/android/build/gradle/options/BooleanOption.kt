@@ -83,6 +83,8 @@ enum class BooleanOption(
     USE_NON_FINAL_RES_IDS("android.nonFinalResIds", false),
     ENABLE_SIDE_BY_SIDE_NDK("android.enableSideBySideNdk", true),
     PRECOMPILE_REMOTE_RESOURCES("android.precompileRemoteResources", false),
+    // Flag added to work around b/130596259.
+    FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

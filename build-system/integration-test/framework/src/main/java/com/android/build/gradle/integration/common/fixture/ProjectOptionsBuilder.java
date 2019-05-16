@@ -22,6 +22,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.Option;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import java.util.EnumMap;
@@ -51,6 +52,7 @@ public class ProjectOptionsBuilder {
 
     List<String> getArguments() {
         injectWarningSuppression(strings, suppressWarnings);
+        injectBazelSpecificOptions(booleans);
         ImmutableList.Builder<String> args = ImmutableList.builder();
         addArgs(args, booleans);
         addArgs(args, optionalBooleans);
@@ -79,6 +81,14 @@ public class ProjectOptionsBuilder {
                         .map(Option::getPropertyName)
                         .collect(Collectors.joining(","));
         strings.put(StringOption.SUPPRESS_UNSUPPORTED_OPTION_WARNINGS, suppressionProperty);
+    }
+
+    /** See b/130596259 for details, we need to run out of process when running with Bazel. */
+    private static void injectBazelSpecificOptions(
+            @NonNull EnumMap<BooleanOption, Boolean> booleans) {
+        if (TestUtils.runningFromBazel()) {
+            booleans.put(BooleanOption.FORCE_JACOCO_OUT_OF_PROCESS, true);
+        }
     }
 
     /** Returns true of the option is not stable (i.e. experimental, deprecated, or removed). */

@@ -72,17 +72,20 @@ public class JacocoTaskDelegate {
     @NonNull private final FileCollection jacocoAntTaskConfiguration;
     @NonNull private final File output;
     @NonNull private final BuildableArtifact inputClasses;
+    @NonNull private final WorkerExecutorFacade.IsolationMode isolationMode;
     @NonNull private final Provider<Directory> outputJars;
 
     public JacocoTaskDelegate(
             @NonNull FileCollection jacocoAntTaskConfiguration,
             @NonNull File output,
             @NonNull Provider<Directory> outputJars,
-            @NonNull BuildableArtifact inputClasses) {
+            @NonNull BuildableArtifact inputClasses,
+            @NonNull WorkerExecutorFacade.IsolationMode isolationMode) {
         this.jacocoAntTaskConfiguration = jacocoAntTaskConfiguration;
         this.output = output;
         this.outputJars = outputJars;
         this.inputClasses = inputClasses;
+        this.isolationMode = isolationMode;
     }
 
     public static class WorkerItemParameter implements Serializable {
@@ -118,7 +121,7 @@ public class JacocoTaskDelegate {
                             JacocoWorkerAction.class,
                             new WorkerExecutorFacade.Configuration(
                                     parameter,
-                                    WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                                    isolationMode,
                                     jacocoAntTaskConfiguration.getFiles()));
                 } else { // We expect *.jar files here
                     if (!file.getName().endsWith(SdkConstants.DOT_JAR)) {
@@ -128,7 +131,7 @@ public class JacocoTaskDelegate {
                             JacocoJarWorkerAction.class,
                             new WorkerExecutorFacade.Configuration(
                                     new WorkerItemParameter(null, file, outputJarsFolder),
-                                    WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                                    isolationMode,
                                     jacocoAntTaskConfiguration.getFiles()));
                 }
             }
@@ -227,7 +230,7 @@ public class JacocoTaskDelegate {
                     JacocoWorkerAction.class,
                     new WorkerExecutorFacade.Configuration(
                             new WorkerItemParameter(toProcess, basePath.toFile(), output),
-                            WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                            isolationMode,
                             jacocoAntTaskConfiguration.getFiles()));
         }
 
@@ -236,7 +239,7 @@ public class JacocoTaskDelegate {
                     JacocoJarWorkerAction.class,
                     new WorkerExecutorFacade.Configuration(
                             new WorkerItemParameter(null, jarToProcess, outputJarsFolder),
-                            WorkerExecutorFacade.IsolationMode.CLASSLOADER,
+                            isolationMode,
                             jacocoAntTaskConfiguration.getFiles()));
         }
     }
