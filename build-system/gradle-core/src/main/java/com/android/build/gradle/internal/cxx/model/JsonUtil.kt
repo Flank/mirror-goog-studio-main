@@ -82,25 +82,25 @@ private class RevisionTypeAdapter : TypeAdapter<Revision>() {
  */
 @VisibleForTesting
 data class CxxProjectModelData(
-    override val rootBuildGradleFolder: File = File("."),
-    override val sdkFolder: File = File("."),
-    override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
-    override val isBuildOnlyTargetAbiEnabled: Boolean = false,
-    override val ideBuildTargetAbi: String? = null,
     override val compilerSettingsCacheFolder: File = File("."),
     override val cxxFolder: File = File("."),
-    override val isCmakeBuildCohabitationEnabled: Boolean = false
+    override val ideBuildTargetAbi: String? = null,
+    override val isBuildOnlyTargetAbiEnabled: Boolean = false,
+    override val isCmakeBuildCohabitationEnabled: Boolean = false,
+    override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
+    override val rootBuildGradleFolder: File = File("."),
+    override val sdkFolder: File = File(".")
 ) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(
-    rootBuildGradleFolder = rootBuildGradleFolder,
-    sdkFolder = sdkFolder,
-    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
-    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
-    ideBuildTargetAbi = ideBuildTargetAbi,
     compilerSettingsCacheFolder = compilerSettingsCacheFolder,
     cxxFolder = cxxFolder,
-    isCmakeBuildCohabitationEnabled = isCmakeBuildCohabitationEnabled
+    ideBuildTargetAbi = ideBuildTargetAbi,
+    isBuildOnlyTargetAbiEnabled = isBuildOnlyTargetAbiEnabled,
+    isCmakeBuildCohabitationEnabled = isCmakeBuildCohabitationEnabled,
+    isNativeCompilerSettingsCacheEnabled = isNativeCompilerSettingsCacheEnabled,
+    rootBuildGradleFolder = rootBuildGradleFolder,
+    sdkFolder = sdkFolder
 )
 
 /**
@@ -111,45 +111,46 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
 // TODO retaining JSON read/write? They're a pain to maintain.
 @VisibleForTesting
 data class CxxModuleModelData(
-    override val ndkMetaPlatforms: NdkMetaPlatforms? = NdkMetaPlatforms(),
-    override val ndkMetaAbiList: List<AbiInfo> = listOf(),
-    override val splitsAbiFilterSet: Set<String> = setOf(),
-    override val intermediatesFolder: File = File("."),
-    override val gradleModulePathName: String = "",
-    override val moduleRootFolder: File = File("."),
-    override val makeFile: File = File("."),
     override val buildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE,
-    override val cxxFolder: File = File("."),
-    override val ndkFolder: File = File("."),
-    override val ndkVersion: Revision = Revision.parseRevision("0.0.0"),
-    override val ndkSupportedAbiList: List<Abi> = listOf(),
-    override val ndkDefaultAbiList: List<Abi> = listOf(),
     override val cmake: CxxCmakeModuleModelData? = null,
     override val cmakeToolchainFile: File = File("."),
-    override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap(),
-    override val project: CxxProjectModelData = CxxProjectModelData()
+    override val cxxFolder: File = File("."),
+    override val gradleModulePathName: String = "",
+    override val intermediatesFolder: File = File("."),
+    override val makeFile: File = File("."),
+    override val moduleRootFolder: File = File("."),
+    override val ndkDefaultAbiList: List<Abi> = listOf(),
+    override val ndkFolder: File = File("."),
+    override val ndkMetaAbiList: List<AbiInfo> = listOf(),
+    override val ndkMetaPlatforms: NdkMetaPlatforms? = NdkMetaPlatforms(),
+    override val ndkSupportedAbiList: List<Abi> = listOf(),
+    override val ndkVersion: Revision = Revision.parseRevision("0.0.0"),
+    override val project: CxxProjectModelData = CxxProjectModelData(),
+    override val splitsAbiFilterSet: Set<String> = setOf(),
+    override val stlSharedObjectMap: Map<Stl, Map<Abi, File>> = emptyMap()
 ) : CxxModuleModel {
     override val services: CxxServiceRegistry
         get() = throw RuntimeException("Cannot use services from deserialized CxxModuleModel")
 }
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
-    ndkMetaPlatforms = ndkMetaPlatforms,
-    ndkDefaultAbiList = ndkDefaultAbiList,
-    ndkMetaAbiList = ndkMetaAbiList,
-    intermediatesFolder = intermediatesFolder,
-    gradleModulePathName = gradleModulePathName,
-    moduleRootFolder = moduleRootFolder,
-    makeFile = makeFile,
     buildSystem = buildSystem,
-    cxxFolder = cxxFolder,
-    ndkFolder = ndkFolder,
-    ndkVersion = ndkVersion,
-    ndkSupportedAbiList = ndkSupportedAbiList,
     cmake = cmake?.toData(),
     cmakeToolchainFile = cmakeToolchainFile,
-    stlSharedObjectMap = stlSharedObjectMap,
-    project = project.toData()
+    cxxFolder = cxxFolder,
+    gradleModulePathName = gradleModulePathName,
+    intermediatesFolder = intermediatesFolder,
+    makeFile = makeFile,
+    moduleRootFolder = moduleRootFolder,
+    ndkDefaultAbiList = ndkDefaultAbiList,
+    ndkFolder = ndkFolder,
+    ndkMetaAbiList = ndkMetaAbiList,
+    ndkMetaPlatforms = ndkMetaPlatforms,
+    ndkSupportedAbiList = ndkSupportedAbiList,
+    ndkVersion = ndkVersion,
+    project = project.toData(),
+    splitsAbiFilterSet = splitsAbiFilterSet,
+    stlSharedObjectMap = stlSharedObjectMap
 )
 
 @VisibleForTesting
@@ -172,34 +173,34 @@ private fun CxxCmakeModuleModel.toData() =
  */
 @VisibleForTesting
 internal data class CxxVariantModelData(
-    override val module: CxxModuleModelData = CxxModuleModelData(),
     override val buildSystemArgumentList: List<String> = listOf(),
+    override val buildTargetSet: Set<String> = setOf(),
     override val cFlagsList: List<String> = listOf(),
     override val cppFlagsList: List<String> = listOf(),
-    override val variantName: String = "",
-    override val soFolder: File = File("."),
-    override val objFolder: File = File("."),
-    override val jsonFolder: File = File("."),
     override val gradleBuildOutputFolder: File = File("."),
     override val isDebuggableEnabled: Boolean = false,
+    override val jsonFolder: File = File("."),
+    override val module: CxxModuleModelData = CxxModuleModelData(),
+    override val objFolder: File = File("."),
+    override val soFolder: File = File("."),
     override val validAbiList: List<Abi> = listOf(),
-    override val buildTargetSet: Set<String> = setOf()
+    override val variantName: String = ""
 ) : CxxVariantModel
 
 private fun CxxVariantModel.toData() =
     CxxVariantModelData(
-        module = module.toData(),
         buildSystemArgumentList = buildSystemArgumentList,
+        buildTargetSet = buildTargetSet,
         cFlagsList = cFlagsList,
         cppFlagsList = cppFlagsList,
-        variantName = variantName,
-        soFolder = soFolder,
-        objFolder = objFolder,
-        jsonFolder = jsonFolder,
         gradleBuildOutputFolder = gradleBuildOutputFolder,
         isDebuggableEnabled = isDebuggableEnabled,
+        jsonFolder = jsonFolder,
+        module = module.toData(),
+        objFolder = objFolder,
+        soFolder = soFolder,
         validAbiList = validAbiList,
-        buildTargetSet = buildTargetSet
+        variantName = variantName
     )
 
 /**
@@ -208,34 +209,34 @@ private fun CxxVariantModel.toData() =
  */
 @VisibleForTesting
 internal data class CxxAbiModelData(
-    override val variant: CxxVariantModelData = CxxVariantModelData(),
     override val abi: Abi = Abi.X86,
-    override val info: AbiInfo = AbiInfo(),
     override val abiPlatformVersion: Int = 0,
-    override val cxxBuildFolder: File = File("."),
-    override val jsonFile: File = File("."),
-    override val soFolder: File = File("."),
-    override val objFolder: File = File("."),
     override val buildCommandFile: File = File("."),
     override val buildOutputFile: File = File("."),
-    override val modelOutputFile: File = File("."),
     override val cmake: CxxCmakeAbiModelData? = null,
-    override val jsonGenerationLoggingRecordFile: File = File(".")
+    override val cxxBuildFolder: File = File("."),
+    override val info: AbiInfo = AbiInfo(),
+    override val jsonFile: File = File("."),
+    override val jsonGenerationLoggingRecordFile: File = File("."),
+    override val modelOutputFile: File = File("."),
+    override val objFolder: File = File("."),
+    override val soFolder: File = File("."),
+    override val variant: CxxVariantModelData = CxxVariantModelData()
 ) : CxxAbiModel
 
 private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
-    variant = variant.toData(),
     abi = abi,
     abiPlatformVersion = abiPlatformVersion,
-    cxxBuildFolder = cxxBuildFolder,
-    jsonFile = jsonFile,
-    soFolder = soFolder,
-    objFolder = objFolder,
     buildCommandFile = buildCommandFile,
     buildOutputFile = buildOutputFile,
-    modelOutputFile = modelOutputFile,
+    cmake = cmake?.toData(),
+    cxxBuildFolder = cxxBuildFolder,
+    jsonFile = jsonFile,
     jsonGenerationLoggingRecordFile = jsonGenerationLoggingRecordFile,
-    cmake = cmake?.toData()
+    modelOutputFile = modelOutputFile,
+    objFolder = objFolder,
+    soFolder = soFolder,
+    variant = variant.toData()
 )
 
 /**
@@ -244,28 +245,28 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
  */
 @VisibleForTesting
 internal data class CxxCmakeAbiModelData(
-    override val cmakeListsWrapperFile: File,
-    override val toolchainWrapperFile: File,
     override val buildGenerationStateFile: File,
     override val cacheKeyFile: File,
+    override val cmakeArtifactsBaseFolder: File,
+    override val cmakeListsWrapperFile: File,
+    override val cmakeWrappingBaseFolder: File,
+    override val compileCommandsJsonFile: File,
     override val compilerCacheUseFile: File,
     override val compilerCacheWriteFile: File,
     override val toolchainSettingsFromCacheFile: File,
-    override val cmakeArtifactsBaseFolder: File,
-    override val compileCommandsJsonFile: File,
-    override val cmakeWrappingBaseFolder: File
+    override val toolchainWrapperFile: File
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
-    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
-    cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
-    cmakeListsWrapperFile = cmakeListsWrapperFile,
-    toolchainWrapperFile = toolchainWrapperFile,
     buildGenerationStateFile = buildGenerationStateFile,
     cacheKeyFile = cacheKeyFile,
+    cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
+    cmakeListsWrapperFile = cmakeListsWrapperFile,
+    cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
+    compileCommandsJsonFile = compileCommandsJsonFile,
     compilerCacheUseFile = compilerCacheUseFile,
     compilerCacheWriteFile = compilerCacheWriteFile,
     toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile,
-    compileCommandsJsonFile = compileCommandsJsonFile
+    toolchainWrapperFile = toolchainWrapperFile
 )
 
