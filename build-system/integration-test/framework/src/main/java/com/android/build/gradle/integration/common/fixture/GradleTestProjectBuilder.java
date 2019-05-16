@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.MavenRepoGenerator;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -82,6 +83,7 @@ public final class GradleTestProjectBuilder {
 
     /** Whether or not to output the log of the last build result when a test fails */
     private boolean outputLogOnFailure = true;
+    private MavenRepoGenerator additionalMavenRepo;
 
     /** Create a GradleTestProject. */
     @NonNull
@@ -159,12 +161,18 @@ public final class GradleTestProjectBuilder {
                 withIncludedBuilds,
                 testDir,
                 repoDirectories,
+                additionalMavenRepo,
                 androidHome,
                 androidNdkHome,
                 gradleDistributionDirectory,
                 gradleBuildCacheDirectory,
                 kotlinVersion,
                 outputLogOnFailure);
+    }
+
+    public GradleTestProjectBuilder withAdditionalMavenRepo(@NonNull MavenRepoGenerator mavenRepo) {
+        additionalMavenRepo = mavenRepo;
+        return this;
     }
 
     /** Policy for setting Heap Size for Gradle process */
