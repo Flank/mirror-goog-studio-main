@@ -9,7 +9,7 @@
     You can also add your credentials to an existing key, using these values:
 
     Package name:
-    ${debugKeystoreSha1}
+    ${packageName}
 
     SHA-1 certificate fingerprint:
     ${debugKeystoreSha1}
