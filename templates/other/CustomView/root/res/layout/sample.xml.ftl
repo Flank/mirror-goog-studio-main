@@ -1,10 +1,6 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-<#if !isLibraryProject && (!(isGradle??) || !isGradle) >
-    xmlns:app="http://schemas.android.com/apk/res/${packageName}"
-<#else>
     xmlns:app="http://schemas.android.com/apk/res-auto"
-</#if>
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
