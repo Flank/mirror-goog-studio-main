@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 <template
     format="5"
-    revision="1"
+    revision="2"
     name="Benchmark Module"
+    minApi="14"
     description="Creates a new benchmark module.">
 
     <category value="Application" />
@@ -24,27 +25,6 @@
         type="string"
         constraints="nonempty|package"
         default="com.example"/>
-
-    <parameter
-            id="minApi"
-            name="Minimum API level"
-            type="string"
-            constraints="apilevel"
-            default="18" />
-
-    <parameter
-            id="targetApi"
-            name="Target API level"
-            type="string"
-            constraints="apilevel"
-            default="28" />
-
-    <parameter
-            id="buildApi"
-            name="Build API level"
-            type="string"
-            constraints="apilevel"
-            default="28" />
 
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
