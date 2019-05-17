@@ -280,7 +280,7 @@ public enum InternalArtifactType implements ArtifactType {
     // file containing the metadata for the full feature set. This contains the feature names,
     // the res ID offset, both tied to the feature module path. Published by the base for the
     // other features to consume and find their own metadata.
-    FEATURE_SET_METADATA,
+    FEATURE_SET_METADATA(Kind.FILE),
     // file containing the module information (like its application ID) to synchronize all base
     // and dynamic feature. This is published by the base feature and installed application module.
     METADATA_BASE_MODULE_DECLARATION,

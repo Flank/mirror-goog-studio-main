@@ -119,7 +119,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             } else {
                 // In namespaced projects the bundled manifest needs to have stripped resource
                 // references for backwards compatibility.
-                task.from(artifacts.getFinalArtifactFiles(
+                task.from(artifacts.getFinalProduct<RegularFile>(
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
             }
             task.from(

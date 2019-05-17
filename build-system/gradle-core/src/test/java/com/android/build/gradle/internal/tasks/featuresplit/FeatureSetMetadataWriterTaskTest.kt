@@ -74,7 +74,7 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         task = project.tasks.create("test", FeatureSetMetadataWriterTask::class.java)
-        task.outputFile = File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME)
+        task.outputFile.set(File(temporaryFolder.newFolder(), FeatureSetMetadata.OUTPUT_FILE_NAME))
         task.inputFiles = fileCollection
         task.minSdkVersion = minSdkVersion
 
@@ -97,9 +97,8 @@ class FeatureSetMetadataWriterTaskTest(val minSdkVersion: Int) {
         files.addAll(inputDirs.build())
 
         task.doTaskAction()
-        FileSubject.assertThat(task.outputFile).isFile()
 
-        val loaded = FeatureSetMetadata.load(task.outputFile)
+        val loaded = FeatureSetMetadata.load(task.outputFile.get().asFile)
         for (i in 0..4) {
             assertThat(loaded.getResOffsetFor("id_$i")).isEqualTo(
                 if (minSdkVersion < AndroidVersion.VersionCodes.O)

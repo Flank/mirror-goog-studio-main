@@ -166,7 +166,6 @@ public class FeatureTest {
                 baseProject.getIntermediateFile(
                         "feature_set_metadata",
                         "debugFeature",
-                        "generateDebugFeatureFeatureMetadata",
                         "feature-metadata.json");
         assertThat(idsList).exists();
         FeatureSetMetadata packageIds = FeatureSetMetadata.load(idsList);

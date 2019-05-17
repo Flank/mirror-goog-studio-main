@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -30,6 +31,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -44,8 +46,7 @@ abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(worker
     : NonIncrementalTask() {
 
     @get:OutputFile
-    lateinit var outputStrippedManifestFile: File
-    private set
+    abstract val outputStrippedManifestFile: RegularFileProperty
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -58,7 +59,7 @@ abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(worker
             it.submit(
                 CreateNonNamespacedLibraryManifestRunnable::class.java,
                 CreateNonNamespacedLibraryManifestRequest(
-                    libraryManifest.get().asFile, outputStrippedManifestFile)
+                    libraryManifest.get().asFile, outputStrippedManifestFile.get().asFile)
             )
         }
     }
@@ -72,20 +73,19 @@ abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(worker
         override val type: Class<CreateNonNamespacedLibraryManifestTask>
             get() = CreateNonNamespacedLibraryManifestTask::class.java
 
-        private lateinit var outputStrippedManifestFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputStrippedManifestFile = variantScope.artifacts.appendArtifact(
+        override fun handleProvider(taskProvider: TaskProvider<out CreateNonNamespacedLibraryManifestTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST,
-                taskName,
-                SdkConstants.ANDROID_MANIFEST_XML)
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                CreateNonNamespacedLibraryManifestTask::outputStrippedManifestFile,
+                SdkConstants.ANDROID_MANIFEST_XML
+            )
         }
 
         override fun configure(task: CreateNonNamespacedLibraryManifestTask) {
             super.configure(task)
-            task.outputStrippedManifestFile = outputStrippedManifestFile
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LIBRARY_MANIFEST, task.libraryManifest)
         }

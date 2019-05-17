@@ -31,8 +31,10 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -57,7 +59,7 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
     NonIncrementalTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDirectories: BuildableArtifact private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val inputResourcesDirectories: ListProperty<Directory>
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
 
     @get:InputFiles
@@ -100,7 +102,8 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = manifestFile.single(),
                 options = AaptOptions(null, false, null),
-                resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.asIterable()),
+                resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.get().stream()
+                    .map(Directory::getAsFile).iterator()),
                 staticLibrary = true,
                 imports = imports.build(),
                 resourceOutputApk = staticLibApk,
@@ -146,8 +149,10 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
 
             task.manifestFile = variantScope.artifacts.getFinalArtifactFiles(
                 InternalArtifactType.STATIC_LIBRARY_MANIFEST)
-            task.inputResourcesDirectories = variantScope.artifacts
-                .getFinalArtifactFiles(InternalArtifactType.RES_COMPILED_FLAT_FILES)
+
+            variantScope.artifacts.setTaskInputToFinalProducts(
+                InternalArtifactType.RES_COMPILED_FLAT_FILES,
+                task.inputResourcesDirectories)
             task.libraryDependencies =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,

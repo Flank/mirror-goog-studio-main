@@ -51,8 +51,8 @@ import javax.inject.Inject
  *
  * The link step handles resource overlays.
  */
-open class CompileSourceSetResources
-@Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
+abstract class CompileSourceSetResources
+@Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var aapt2FromMaven: FileCollection
@@ -69,10 +69,10 @@ open class CompileSourceSetResources
     var isPseudoLocalize: Boolean = false
         private set
     @get:OutputDirectory
-    lateinit var outputDirectory: File
-        private set
+    abstract val outputDirectory: DirectoryProperty
+
     @get:OutputDirectory
-    val partialRDirectory: DirectoryProperty = objects.directoryProperty()
+    abstract val partialRDirectory: DirectoryProperty
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -82,7 +82,7 @@ open class CompileSourceSetResources
         get() = true
 
     override fun doFullTaskAction() {
-        FileUtils.cleanOutputDir(outputDirectory)
+        FileUtils.cleanOutputDir(outputDirectory.get().asFile)
         val requests = mutableListOf<CompileResourceRequest>()
         val addedFiles = mutableMapOf<Path, Path>()
         for (inputDirectory in inputDirectories) {
@@ -142,7 +142,7 @@ open class CompileSourceSetResources
                 workers.submit(
                     Aapt2CompileDeleteRunnable::class.java,
                     Aapt2CompileDeleteRunnable.Params(
-                        outputDirectory = outputDirectory,
+                        outputDirectory = outputDirectory.get().asFile,
                         deletedInputs = deletes,
                         partialRDirectory = partialRDirectory.get().asFile
                     )
@@ -155,7 +155,7 @@ open class CompileSourceSetResources
     private fun compileRequest(file: File, inputDirectoryName: String = file.parentFile.name) =
             CompileResourceRequest(
                     inputFile = file,
-                    outputDirectory = outputDirectory,
+                    outputDirectory = outputDirectory.get().asFile,
                     inputDirectoryName = inputDirectoryName,
                     isPseudoLocalize = isPseudoLocalize,
                     isPngCrunching = isPngCrunching,
@@ -196,16 +196,6 @@ open class CompileSourceSetResources
         override val type: Class<CompileSourceSetResources>
             get() = CompileSourceSetResources::class.java
 
-        private lateinit var outputDirectory: File
-
-        private lateinit var partialRDirectory: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputDirectory = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.RES_COMPILED_FLAT_FILES, taskName)
-        }
-
         override fun handleProvider(taskProvider: TaskProvider<out CompileSourceSetResources>) {
             super.handleProvider(taskProvider)
 
@@ -214,13 +204,19 @@ open class CompileSourceSetResources
                 BuildArtifactsHolder.OperationType.APPEND,
                 taskProvider,
                 CompileSourceSetResources::partialRDirectory)
+
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.RES_COMPILED_FLAT_FILES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                CompileSourceSetResources::outputDirectory
+            )
         }
 
         override fun configure(task: CompileSourceSetResources) {
             super.configure(task)
 
             task.inputDirectories = inputDirectories
-            task.outputDirectory = outputDirectory
             task.isPngCrunching = variantScope.isCrunchPngs
             task.isPseudoLocalize =
                     variantScope.variantData.variantConfiguration.buildType.isPseudoLocalesEnabled

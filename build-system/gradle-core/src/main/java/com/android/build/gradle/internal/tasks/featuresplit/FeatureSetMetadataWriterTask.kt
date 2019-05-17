@@ -19,6 +19,7 @@
 package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -26,10 +27,12 @@ import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -40,7 +43,7 @@ import javax.inject.Inject
 
 /** Task to write the FeatureSetMetadata file.  */
 @CacheableTask
-open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
@@ -50,8 +53,7 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
         internal set
 
     @get:OutputFile
-    lateinit var outputFile: File
-        internal set
+    abstract val outputFile: RegularFileProperty
 
     @get:Input
     var minSdkVersion: Int = 1
@@ -68,7 +70,7 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
                 Params(inputFiles.asFileTree.files,
                     minSdkVersion,
                     maxNumberOfFeaturesBeforeOreo,
-                    outputFile
+                    outputFile.get().asFile
                 )
             )
         }
@@ -115,15 +117,15 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
         override val type: Class<FeatureSetMetadataWriterTask>
             get() = FeatureSetMetadataWriterTask::class.java
 
-        private lateinit var outputFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputFile = variantScope.artifacts.appendArtifact(
+        override fun handleProvider(taskProvider: TaskProvider<out FeatureSetMetadataWriterTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.FEATURE_SET_METADATA,
-                taskName,
-                FeatureSetMetadata.OUTPUT_FILE_NAME)
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                FeatureSetMetadataWriterTask::outputFile,
+                FeatureSetMetadata.OUTPUT_FILE_NAME
+            )
         }
 
         override fun configure(task: FeatureSetMetadataWriterTask) {
@@ -131,7 +133,6 @@ open class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: Work
 
             task.minSdkVersion = variantScope.minSdkVersion.apiLevel
 
-            task.outputFile = outputFile
             task.inputFiles = variantScope.getArtifactFileCollection(
                 AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                 AndroidArtifacts.ArtifactScope.PROJECT,

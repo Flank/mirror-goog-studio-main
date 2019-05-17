@@ -400,7 +400,6 @@ class NamespacedFeaturesTest {
                         .getIntermediateFile(
                             "feature_set_metadata",
                             "debugFeature",
-                            "generateDebugFeatureFeatureMetadata",
                             "feature-metadata.json")
         FileSubject.assertThat(idsList).exists()
         val featureSetMetadata = FeatureSetMetadata.load(idsList)
