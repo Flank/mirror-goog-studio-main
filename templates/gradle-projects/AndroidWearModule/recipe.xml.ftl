@@ -3,9 +3,7 @@
 <recipe>
 <@kt.addKotlinToBaseProject />
 
-<#if !createActivity>
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
-</#if>
 
     <dependency mavenUrl="com.google.android.support:wearable:+" />
     <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" />

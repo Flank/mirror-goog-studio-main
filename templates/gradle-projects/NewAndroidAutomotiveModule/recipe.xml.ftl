@@ -27,9 +27,7 @@
     <dependency mavenUrl="com.android.support.test.espresso:espresso-core:+" gradleConfiguration="androidTestCompile" />
 </#if>
 
-<#if !createActivity>
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
-</#if>
 
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
