@@ -27,6 +27,14 @@ Annotation: org.gradle.api.tasks.TaskAction
 Trace: com.android.builder.internal.aapt.v2.Aapt2DaemonImpl::*
 Trace: com.android.builder.internal.aapt.compiler.*
 
+### Compilers ###
+# Javac in-process.
+Trace: org.gradle.api.tasks.compile.JavaCompile::compile
+# Kotlin Compile Task that is in-process of gradle.
+Trace: org.jetbrains.kotlin.gradle.plugin.AbstractKotlinCompile::execute
+# Kotlin Daemon (Unless you modify how Kotlin daemon is started, you need to see _JAVA_OPTIONS for this)
+Trace: org.jetbrains.kotlin.daemon.CompileServiceImpl::execIncrementalCompiler
+
 # Apk step
 Trace: com.android.build.gradle.tasks.PackageAndroidArtifact::doIncrementalTaskAction
 Trace: com.android.build.gradle.tasks.PackageAndroidArtifact::doFullTaskAction
