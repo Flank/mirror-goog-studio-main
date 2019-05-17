@@ -24,7 +24,7 @@ apply plugin: 'kotlin-android-extensions'
     <#if !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
         <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"/>
         <merge from="root://activities/common/kotlin.gradle.ftl"
-                 to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
+                 to="${escapeXmlAttribute(topOut)}/build.gradle" />
     </#if>
   </#if>
 </#macro>
@@ -32,6 +32,6 @@ apply plugin: 'kotlin-android-extensions'
 <#macro addKotlinToBaseProject>
   <#if (language!'Java')?string == 'Kotlin'>
     <merge from="root://activities/common/kotlin.gradle.ftl"
-             to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
+             to="${escapeXmlAttribute(topOut)}/build.gradle" />
   </#if>
 </#macro>

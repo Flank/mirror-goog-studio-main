@@ -4,7 +4,7 @@
     <@kt.addKotlinToBaseProject />
 
     <merge from="root/base_build.gradle.ftl"
-           to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
+           to="${escapeXmlAttribute(topOut)}/build.gradle" />
 
     <merge from="root/settings.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
