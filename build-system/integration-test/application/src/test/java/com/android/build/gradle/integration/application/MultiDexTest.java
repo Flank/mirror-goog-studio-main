@@ -146,7 +146,6 @@ public class MultiDexTest {
                                 project.getIntermediateFile(
                                                 "apks_from_bundle",
                                                 "icsDebug",
-                                                "makeApkFromBundleForIcsDebug",
                                                 "bundle.apks")
                                         .toPath());
                 BufferedOutputStream out =

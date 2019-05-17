@@ -23,6 +23,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
@@ -37,12 +38,14 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -58,8 +61,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var outputDir: File
-        private set
+    abstract val outputDir: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -102,8 +104,8 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
         get() = fileNameSupplier.get()
 
     public override fun doTaskAction() {
-        FileUtils.cleanOutputDir(outputDir)
-        val jarMerger = JarMerger(File(outputDir, fileName).toPath())
+        FileUtils.cleanOutputDir(outputDir.get().asFile)
+        val jarMerger = JarMerger(File(outputDir.get().asFile, fileName).toPath())
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
@@ -182,14 +184,12 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
         override val type: Class<PerModuleBundleTask>
             get() = PerModuleBundleTask::class.java
 
-        private lateinit var outputDir: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputDir = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.MODULE_BUNDLE, taskName)
-
+        override fun handleProvider(taskProvider: TaskProvider<out PerModuleBundleTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(InternalArtifactType.MODULE_BUNDLE,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                PerModuleBundleTask::outputDir)
         }
 
         override fun configure(task: PerModuleBundleTask) {
@@ -204,9 +204,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                 Supplier { "${featureName.get()}.zip"}
             }
 
-            task.outputDir = outputDir
-
-             artifacts.setTaskInputToFinalProduct(
+            artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
             task.resFiles = artifacts.getFinalArtifactFiles(
                     if (variantScope.useResourceShrinker()) {

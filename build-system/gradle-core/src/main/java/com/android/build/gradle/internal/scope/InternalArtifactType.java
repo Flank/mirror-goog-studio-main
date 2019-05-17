@@ -269,7 +269,7 @@ public enum InternalArtifactType implements ArtifactType {
     // This is only valid for the base module.
     INTERMEDIARY_BUNDLE(Category.INTERMEDIATES, Kind.FILE),
     // APK Set archive with APKs generated from a bundle.
-    APKS_FROM_BUNDLE,
+    APKS_FROM_BUNDLE(Kind.FILE),
     // output of ExtractApks applied to APKS_FROM_BUNDLE and a device config.
     EXTRACTED_APKS,
     // Universal APK from the bundle

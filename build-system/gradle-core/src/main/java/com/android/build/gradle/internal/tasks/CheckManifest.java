@@ -17,21 +17,22 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import java.io.File;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Class that checks the presence of the manifest. */
-public class CheckManifest extends NonIncrementalTask {
+public abstract class CheckManifest extends NonIncrementalTask {
 
     private File manifest;
     private Boolean isOptional;
-    private File fakeOutputDir;
 
     @Optional
     @Input // we don't care about the content, just that the file is there.
@@ -58,9 +59,7 @@ public class CheckManifest extends NonIncrementalTask {
     }
 
     @OutputDirectory
-    public File getFakeOutputDir() {
-        return fakeOutputDir;
-    }
+    public abstract DirectoryProperty getFakeOutputDir();
 
     @Override
     protected void doTaskAction() {
@@ -75,7 +74,6 @@ public class CheckManifest extends NonIncrementalTask {
     public static class CreationAction extends VariantTaskCreationAction<CheckManifest> {
 
         private final boolean isManifestOptional;
-        private File output;
 
         public CreationAction(@NonNull VariantScope scope, boolean isManifestOptional) {
             super(scope);
@@ -98,16 +96,15 @@ public class CheckManifest extends NonIncrementalTask {
         public void handleProvider(@NonNull TaskProvider<? extends CheckManifest> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope().getTaskContainer().setCheckManifestTask(taskProvider);
-        }
 
-        @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            output =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.CHECK_MANIFEST_RESULT, taskName, "out");
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.CHECK_MANIFEST_RESULT,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            CheckManifest::getFakeOutputDir,
+                            "out");
         }
 
         @Override
@@ -117,7 +114,6 @@ public class CheckManifest extends NonIncrementalTask {
 
             task.setOptional(isManifestOptional);
             task.manifest = scope.getVariantConfiguration().getMainManifest();
-            task.fakeOutputDir = output;
         }
     }
 }

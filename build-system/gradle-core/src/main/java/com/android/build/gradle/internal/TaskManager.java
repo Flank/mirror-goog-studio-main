@@ -2943,8 +2943,7 @@ public abstract class TaskManager {
                             "Assembles bundle for variant "
                                     + scope.getVariantConfiguration().getFullName());
                     task.dependsOn(
-                            scope.getArtifacts()
-                                    .getFinalArtifactFiles(InternalArtifactType.BUNDLE));
+                            scope.getArtifacts().getFinalProduct(InternalArtifactType.BUNDLE));
                 },
                 taskProvider -> scope.getTaskContainer().setBundleTask(taskProvider));
     }

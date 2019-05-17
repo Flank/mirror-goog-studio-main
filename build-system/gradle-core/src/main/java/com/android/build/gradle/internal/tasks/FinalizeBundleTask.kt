@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.apksig.ApkSigner
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -27,15 +25,14 @@ import com.android.build.gradle.options.StringOption
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -47,15 +44,14 @@ import javax.inject.Inject
  *     <li>Signing the bundle if credentials are available and it's not a debuggable variant.
  * </ul>
  */
-open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    lateinit var intermediaryBundleFile: BuildableArtifact
-        private set
+    abstract val intermediaryBundleFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.ABSOLUTE)
@@ -63,23 +59,20 @@ open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor
     var signingConfig: FileCollection? = null
         private set
 
-    @get:OutputDirectory
-    @get:PathSensitive(PathSensitivity.NONE)
-    val finalBundleLocation: File
-        get() = finalBundleFile.get().asFile.parentFile
-
     @get:Input
     val finalBundleFileName: String
         get() = finalBundleFile.get().asFile.name
 
-    private lateinit var finalBundleFile: Provider<RegularFile>
+    @get:OutputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val finalBundleFile: RegularFileProperty
 
     override fun doTaskAction() {
         workers.use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(
-                    intermediaryBundleFile = intermediaryBundleFile.singleFile(),
+                    intermediaryBundleFile = intermediaryBundleFile.get().asFile,
                     finalBundleFile = finalBundleFile.get().asFile,
                     signingConfig = SigningConfigMetadata.getOutputFile(signingConfig)
                 )
@@ -133,37 +126,41 @@ open class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor
         override val type: Class<FinalizeBundleTask>
             get() = FinalizeBundleTask::class.java
 
-        private lateinit var finalBundleFile: Provider<RegularFile>
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out FinalizeBundleTask>) {
+            super.handleProvider(taskProvider)
 
             val bundleName = "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}.aab"
             val apkLocationOverride = variantScope.globalScope.projectOptions.get(StringOption.IDE_APK_LOCATION)
-
-            finalBundleFile = if (apkLocationOverride == null)
-                variantScope.artifacts.createArtifactFile(
+            if (apkLocationOverride == null) {
+                variantScope.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
                     BuildArtifactsHolder.OperationType.INITIAL,
-                    taskName,
-                    bundleName)
-            else
-                variantScope.artifacts.createArtifactFile(
+                    taskProvider,
+                    FinalizeBundleTask::finalBundleFile,
+                    bundleName
+                )
+            } else {
+                variantScope.artifacts.producesFile(
                     InternalArtifactType.BUNDLE,
                     BuildArtifactsHolder.OperationType.INITIAL,
-                    taskName,
-                    FileUtils.join(
-                        variantScope.globalScope.project.file(apkLocationOverride),
-                        variantScope.variantConfiguration.dirName,
-                        bundleName))
+                    taskProvider,
+                    FinalizeBundleTask::finalBundleFile,
+                    variantScope.globalScope.project.layout.buildDirectory.dir(
+                        FileUtils.join(
+                            variantScope.globalScope.project.file(apkLocationOverride),
+                            variantScope.variantConfiguration.dirName).absolutePath
+                    ),
+                    bundleName
+                )
+            }
         }
 
         override fun configure(task: FinalizeBundleTask) {
             super.configure(task)
 
-            task.intermediaryBundleFile = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.INTERMEDIARY_BUNDLE)
-            task.finalBundleFile = finalBundleFile
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.INTERMEDIARY_BUNDLE,
+                task.intermediaryBundleFile)
 
             // Don't sign debuggable bundles.
             if (!variantScope.variantConfiguration.buildType.isDebuggable) {

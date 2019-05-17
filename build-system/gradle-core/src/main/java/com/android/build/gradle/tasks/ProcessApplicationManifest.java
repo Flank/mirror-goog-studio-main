@@ -30,7 +30,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.core.VariantConfiguration;
@@ -635,11 +634,12 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         @Override
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
-            task.checkManifestResult =
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFilesIfPresent(
-                                    InternalArtifactType.CHECK_MANIFEST_RESULT);
+
+            variantScope
+                    .getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.CHECK_MANIFEST_RESULT,
+                            task.getCheckManifestResult());
 
             final BaseVariantData variantData = variantScope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();

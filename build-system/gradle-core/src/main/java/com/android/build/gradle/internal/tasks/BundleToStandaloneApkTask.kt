@@ -17,8 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -31,13 +29,13 @@ import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -52,12 +50,11 @@ import javax.inject.Inject
 /**
  * Task that generates the standalone from a bundle.
  */
-open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundle: BuildableArtifact
-        private set
+    abstract val bundle: RegularFileProperty
 
     @get:InputFiles
     @get:org.gradle.api.tasks.Optional
@@ -90,7 +87,7 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(
-                    bundle.singleFile(),
+                    bundle.get().asFile,
                     File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
                     outputFile.get().asFile,
                     tempDirectory,
@@ -198,7 +195,8 @@ open class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerE
             super.configure(task)
 
             task.outputFile = outputFile
-            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.INTERMEDIARY_BUNDLE)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.tempDirectory = variantScope.getIncrementalDir(name)
             task.signingConfig = variantScope.signingConfigFileCollection

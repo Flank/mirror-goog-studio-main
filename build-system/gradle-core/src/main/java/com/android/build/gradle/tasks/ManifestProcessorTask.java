@@ -17,7 +17,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.manifmerger.MergingReport;
 import com.android.utils.FileUtils;
@@ -61,15 +60,10 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     @Nonnull private final DirectoryProperty instantAppManifestOutputDirectory;
 
-    @SuppressWarnings("unused")
-    protected BuildableArtifact checkManifestResult;
-
     @InputFiles
     @PathSensitive(PathSensitivity.NONE)
     @Optional
-    public BuildableArtifact getCheckManifestResult() {
-        return checkManifestResult;
-    }
+    public abstract DirectoryProperty getCheckManifestResult();
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some

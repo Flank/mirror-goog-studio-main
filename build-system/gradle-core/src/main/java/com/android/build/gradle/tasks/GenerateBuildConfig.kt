@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -71,8 +70,7 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
-    var checkManifestResult: BuildableArtifact? = null
-        private set
+    abstract val checkManifestResult: DirectoryProperty
 
     @get:Input
     var isLibrary: Boolean = false
@@ -255,10 +253,10 @@ abstract class GenerateBuildConfig : NonIncrementalTask() {
 
             task.sourceOutputDir = variantScope.buildConfigSourceOutputDir
 
-            task.checkManifestResult = variantScope.artifacts
-                .getFinalArtifactFilesIfPresent(
-                    InternalArtifactType.CHECK_MANIFEST_RESULT
-                )
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.CHECK_MANIFEST_RESULT,
+                task.checkManifestResult)
+
             if (variantScope.variantConfiguration.type.isTestComponent) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.MERGED_MANIFESTS, task.mergedManifests

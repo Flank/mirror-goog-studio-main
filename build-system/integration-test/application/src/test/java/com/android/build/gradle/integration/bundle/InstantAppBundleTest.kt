@@ -325,6 +325,6 @@ class InstantAppBundleTest {
 
     private fun getApkFolder(variantName: String): File {
         return File(project.getSubproject(":base").buildDir,
-            FileUtils.join("intermediates", "extracted_apks", variantName + "Feature", "extractApksForDebugFeature", "out"))
+            FileUtils.join("intermediates", "extracted_apks", variantName + "Feature", "out"))
     }
 }

@@ -17,9 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -28,11 +27,12 @@ import com.android.tools.build.bundletool.model.Aapt2Command
 import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -42,12 +42,11 @@ import javax.inject.Inject
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
-open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundle: BuildableArtifact
-        private set
+    abstract val bundle: RegularFileProperty
 
     @get:InputFiles
     @get:org.gradle.api.tasks.Optional
@@ -61,8 +60,7 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         private set
 
     @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    abstract val outputFile: RegularFileProperty
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -72,9 +70,9 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(
-                    bundle.singleFile(),
+                    bundle.get().asFile,
                     File(aapt2FromMaven.singleFile, SdkConstants.FN_AAPT2),
-                    outputFile,
+                    outputFile.get().asFile,
                     config?.storeFile,
                     config?.storePassword,
                     config?.keyAlias,
@@ -123,14 +121,13 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         override val type: Class<BundleToApkTask>
             get() = BundleToApkTask::class.java
 
-        private lateinit var outputFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputFile = variantScope.artifacts.appendArtifact(
+        override fun handleProvider(taskProvider: TaskProvider<out BundleToApkTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.APKS_FROM_BUNDLE,
-                taskName,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                BundleToApkTask::outputFile,
                 "bundle.apks"
             )
         }
@@ -138,8 +135,8 @@ open class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) :
         override fun configure(task: BundleToApkTask) {
             super.configure(task)
 
-            task.outputFile = outputFile
-            task.bundle = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.INTERMEDIARY_BUNDLE)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.signingConfig = variantScope.signingConfigFileCollection
         }
