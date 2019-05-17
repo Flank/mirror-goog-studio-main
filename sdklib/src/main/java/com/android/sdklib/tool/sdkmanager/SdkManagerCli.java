@@ -128,7 +128,7 @@ public class SdkManagerCli {
     }
 
     private static void usage(@NonNull PrintStream out) {
-        out.println("Usage: ");
+        out.println("Usage:");
         out.println(
                 "  sdkmanager [--uninstall] [<common args>] "
                         + "[--package_file=<file>] [<packages>...]");
@@ -159,7 +159,7 @@ public class SdkManagerCli {
         out.println("With --version, prints the current version of sdkmanager.");
         out.println();
         out.println("Common Arguments:");
-        out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK ");
+        out.println("    --sdk_root=<sdkRootPath>: Use the specified SDK root instead of the SDK");
         out.println("                              containing this tool");
         out.println();
         out.println("    --channel=<channelId>: Include packages in channels up to <channelId>.");

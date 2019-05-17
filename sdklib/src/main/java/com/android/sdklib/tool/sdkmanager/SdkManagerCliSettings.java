@@ -49,6 +49,12 @@ import java.util.function.Function;
 @VisibleForTesting
 class SdkManagerCliSettings implements SettingsController {
 
+    private static final class ShowUsageException extends Exception {
+        public ShowUsageException() {
+            super();
+        }
+    }
+
     private static final String CHANNEL_ARG = "--channel=";
     private static final String SDK_ROOT_ARG = "--sdk_root=";
     private static final String INCLUDE_OBSOLETE_ARG = "--include_obsolete";
@@ -144,6 +150,8 @@ class SdkManagerCliSettings implements SettingsController {
                 };
         try {
             return new SdkManagerCliSettings(args, fileSystem, environment, progress);
+        } catch (ShowUsageException ignored) {
+            return null;
         } catch (Exception e) {
             progress.logWarning("Could not create settings", e);
             return null;
@@ -328,7 +336,8 @@ class SdkManagerCliSettings implements SettingsController {
             @NonNull List<String> args,
             @NonNull FileSystem fileSystem,
             @NonNull Map<String, String> environment,
-            @NonNull ProgressIndicator progress) {
+            @NonNull ProgressIndicator progress)
+            throws ShowUsageException {
         mFileSystem = fileSystem;
         mEnvironment = environment;
 
@@ -350,7 +359,7 @@ class SdkManagerCliSettings implements SettingsController {
                 }
                 argIter.remove();
             } else if (arg.equals(HELP_ARG)) {
-                throw new IllegalArgumentException();
+                throw new ShowUsageException();
             } else if (arg.equals(NO_HTTPS_ARG)) {
                 setForceHttp(true);
                 argIter.remove();
