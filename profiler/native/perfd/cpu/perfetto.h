@@ -23,7 +23,6 @@
 
 #include "protos/perfetto/config/perfetto_config.grpc.pb.h"
 #include "utils/clock.h"
-#include "utils/fs/file_system.h"
 #include "utils/nonblocking_command_runner.h"
 
 namespace profiler {
@@ -42,6 +41,14 @@ struct PerfettoArgs {
 // perfetto recording.
 class Perfetto {
  public:
+  // This is used to determine what fails to launch when run is called.
+  using LaunchStatus = int;
+  static const int LAUNCH_STATUS_SUCCESS = 0;
+  static const int FAILED_LAUNCH_PERFETTO = 1;
+  static const int FAILED_LAUNCH_TRACED = 2;
+  static const int FAILED_LAUNCH_TRACED_PROBES = 4;
+  static const int FAILED_LAUNCH_TRACER = 8;
+  
   explicit Perfetto();
   virtual ~Perfetto() { Shutdown(); }
 
@@ -50,7 +57,7 @@ class Perfetto {
   // perfetto. The output is written to the |output_file_path| howver this has
   // to be located in the /data/misc/perfetto-traces/ directory for security
   // reasons.
-  virtual void Run(const PerfettoArgs& run_args);
+  virtual Perfetto::LaunchStatus Run(const PerfettoArgs& run_args);
 
   // Checks to see if perfetto is running, it does this by checking if we
   // launched perfetto as well as checking to see traced, and traced_probs
@@ -85,6 +92,19 @@ class Perfetto {
   // if perfetto has a bug and does not close the ftrace pipe.
   // True is returned if tracer was stopped successfully.
   virtual void ForceStopTracer();
+
+  // Helper function to launch a process and block waiting for the
+  // /proc/[pid]/cmdline to be populated with the process path.
+  // If the cmdline does not match the expected process path the process is
+  // killed (if running) and the returned NonBlockingCommandRunning::IsRunning
+  // will return false.
+  std::unique_ptr<NonBlockingCommandRunner> LaunchProcessAndBlockTillStart(
+      const PerfettoArgs& run_args, const char* process_name,
+      const char* const env_args[]);
+
+  // Check the stats of tracer, while it does not match |is_tracer_running|
+  // sleep then try again up until a retry limit is reached.
+  void WaitForTracerStatus(bool expected_tracer_running);
 };
 
 }  // namespace profiler

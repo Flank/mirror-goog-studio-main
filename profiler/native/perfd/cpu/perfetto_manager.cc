@@ -36,8 +36,6 @@ bool PerfettoManager::StartProfiling(
     const std::string& app_name, const std::string& abi_arch,
     const perfetto::protos::TraceConfig& config, std::string* trace_path,
     std::string* error) {
-  // TODO: Add check if atrace is running, if so perfetto with our current
-  // config will fail.
   if (perfetto_->IsPerfettoRunning()) {
     error->append("Perfetto is already running unable to start new trace.");
     return false;
@@ -50,21 +48,21 @@ bool PerfettoManager::StartProfiling(
   // Point trace path to entry's trace path so the trace can be pulled later.
   *trace_path =
       CurrentProcess::dir() + GetFileBaseName(app_name) + ".perfetto.trace";
-  perfetto_->Run({config, abi_arch, *trace_path});
-
-  // Assume the run command succeeded.
-  bool start_succeeded = true;
-
-  // Trust but verify
-  if (!perfetto_->IsPerfettoRunning()) {
-    error->append("Failed to launch perfetto.");
-    start_succeeded = false;
+  Perfetto::LaunchStatus status =
+      perfetto_->Run({config, abi_arch, *trace_path});
+  if ((status & Perfetto::FAILED_LAUNCH_PERFETTO) != 0) {
+    error->append("Failed to launch perfetto.\n");
   }
-  if (!perfetto_->IsTracerRunning()) {
-    error->append("Failed to launch tracer.");
-    start_succeeded = false;
+  if ((status & Perfetto::FAILED_LAUNCH_TRACER) != 0) {
+    error->append("Failed to launch tracer.\n");
   }
-  return start_succeeded;
+  if ((status & Perfetto::FAILED_LAUNCH_TRACED) != 0) {
+    error->append("Failed to launch traced.\n");
+  }
+  if ((status & Perfetto::FAILED_LAUNCH_TRACED_PROBES) != 0) {
+    error->append("Failed to launch traced_probes.");
+  }
+  return status == Perfetto::LAUNCH_STATUS_SUCCESS;
 }
 
 CpuProfilingAppStopResponse::Status PerfettoManager::StopProfiling(

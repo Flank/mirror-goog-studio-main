@@ -35,12 +35,20 @@ class FakePerfetto : public Perfetto {
         shutdown_(false) {}
   ~FakePerfetto() override {}
 
-  void Run(const PerfettoArgs& run_args) override {
+  Perfetto::LaunchStatus Run(const PerfettoArgs& run_args) override {
     perfetto_state_ = perfetto_run_state_;
     tracer_state_ = tracer_run_state_;
     abi_arch_ = run_args.abi_arch;
     output_file_path_ = run_args.output_file_path;
     config_ = run_args.config;
+    Perfetto::LaunchStatus launch_status = LAUNCH_STATUS_SUCCESS;
+    if (!tracer_state_) {
+      launch_status |= FAILED_LAUNCH_TRACER;
+    }
+    if (!perfetto_state_) {
+      launch_status |= FAILED_LAUNCH_PERFETTO;
+    }
+    return launch_status;
   }
   bool IsPerfettoRunning() override { return perfetto_state_; }
   bool IsTracerRunning() override { return tracer_state_; }
@@ -48,7 +56,10 @@ class FakePerfetto : public Perfetto {
     perfetto_state_ = perfetto_stop_state_;
     tracer_state_ = tracer_stop_state_;
   }
-  void Shutdown() override { Stop(); shutdown_ = true; }
+  void Shutdown() override {
+    Stop();
+    shutdown_ = true;
+  }
   bool IsShutdown() { return shutdown_; }
   void ForceStopTracer() override { tracer_state_ = false; }
 

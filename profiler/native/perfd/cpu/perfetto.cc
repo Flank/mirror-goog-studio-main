@@ -17,8 +17,10 @@
 #include "perfetto.h"
 #include "utils/current_process.h"
 
+#include <fcntl.h>  // library for fcntl function
 #include <unistd.h>
 #include <memory>
+#include <sstream>
 
 #include "utils/bash_command.h"
 #include "utils/current_process.h"
@@ -36,33 +38,47 @@ const int kRetryCount = 20;
 const int kSleepMsPerRetry = 100;
 Perfetto::Perfetto() {}
 
-void Perfetto::Run(const PerfettoArgs &run_args) {
+std::unique_ptr<NonBlockingCommandRunner>
+Perfetto::LaunchProcessAndBlockTillStart(const PerfettoArgs &run_args,
+                                         const char *process_name,
+                                         const char *const env_args[]) {
+  string process_path = GetPath(process_name, run_args.abi_arch);
+  const char *process_args[] = {process_path.c_str(), nullptr};
+  std::unique_ptr<NonBlockingCommandRunner> runner(
+      new NonBlockingCommandRunner(process_path, true));
+  runner->Run(process_args, string(), env_args);
+  if (!runner->BlockUntilChildprocessExec()) {
+    runner->Kill();
+  }
+  return runner;
+}
+
+Perfetto::LaunchStatus Perfetto::Run(const PerfettoArgs &run_args) {
+  std::string lib_path =
+      string("LD_LIBRARY_PATH=") + CurrentProcess::dir() + run_args.abi_arch;
   const char *env_args[] = {
       "PERFETTO_CONSUMER_SOCK_NAME=@perfetto_perfd_profiler_consumer",
       "PERFETTO_PRODUCER_SOCK_NAME=@perfetto_perfd_profiler_producer",
       // Path to libperfetto.so
-      (string("LD_LIBRARY_PATH=") + CurrentProcess::dir() + run_args.abi_arch)
-          .c_str(),
-      NULL};
-
+      lib_path.c_str(), NULL};
+  LaunchStatus launch_status = LAUNCH_STATUS_SUCCESS;
   // Run traced before running the probes as this is the server
   // and traced_probes is the cilent. The server host the data and
   // the client collects the data.
   if (traced_.get() == nullptr || !traced_->IsRunning()) {
-    string tracedPath = GetPath(kTracedExecutable, run_args.abi_arch);
-    const char *tracedArgs[] = {tracedPath.c_str(), nullptr};
-    traced_ = std::unique_ptr<NonBlockingCommandRunner>(
-        new NonBlockingCommandRunner(tracedPath, true));
-    traced_->Run(tracedArgs, string(), env_args);
+    traced_ =
+        LaunchProcessAndBlockTillStart(run_args, kTracedExecutable, env_args);
+    if (!traced_->IsRunning()) {
+      launch_status |= FAILED_LAUNCH_TRACED;
+    }
   }
 
   if (traced_probes_.get() == nullptr || !traced_probes_->IsRunning()) {
-    string tracedProbesPath =
-        GetPath(kTracedProbesExecutable, run_args.abi_arch);
-    const char *tracedProbeArgs[] = {tracedProbesPath.c_str(), nullptr};
-    traced_probes_ = std::unique_ptr<NonBlockingCommandRunner>(
-        new NonBlockingCommandRunner(tracedProbesPath, true));
-    traced_probes_->Run(tracedProbeArgs, string(), env_args);
+    traced_probes_ = LaunchProcessAndBlockTillStart(
+        run_args, kTracedProbesExecutable, env_args);
+    if (!traced_probes_->IsRunning()) {
+      launch_status |= FAILED_LAUNCH_TRACED_PROBES;
+    }
   }
 
   // Run perfetto as the interface to configure the traced and traced_probes
@@ -71,7 +87,6 @@ void Perfetto::Run(const PerfettoArgs &run_args) {
   string perfettoPath = GetPath(kPerfettoExecutable, run_args.abi_arch);
   command_ = std::unique_ptr<NonBlockingCommandRunner>(
       new NonBlockingCommandRunner(perfettoPath, true));
-
   // Serialize the config as a binary proto.
   std::ostringstream binary_config;
   run_args.config.SerializeToOstream(&binary_config);
@@ -93,12 +108,16 @@ void Perfetto::Run(const PerfettoArgs &run_args) {
   // A sleep is needed to block until perfetto can start tracer.
   // Sometimes this can fail in the event it fails its better to
   // inform the user ASAP instead of when the trace is stopped.
-  for (int i = 0; i < kRetryCount && !IsTracerRunning(); i++) {
-    usleep(Clock::ms_to_us(kSleepMsPerRetry));
+  WaitForTracerStatus(true);
+
+  if (!command_->IsRunning()) {
+    launch_status |= FAILED_LAUNCH_PERFETTO;
   }
   if (!IsTracerRunning()) {
     Stop();
+    launch_status |= FAILED_LAUNCH_TRACER;
   }
+  return launch_status;
 }
 
 void Perfetto::Stop() {
@@ -113,6 +132,18 @@ void Perfetto::Stop() {
     // If the pipe is not closed then the user is unable to run perfett/atrace
     // until they reboot the phone or close the pipe manually via the shell.
     ForceStopTracer();
+  }
+  // Sometimes stopping (even when forced) isn't instant. As such we wait and
+  // let the system clean up.
+  // Perfetto manager will check the status of the capture and report in the
+  // event this timesout.
+  WaitForTracerStatus(false);
+}
+
+void Perfetto::WaitForTracerStatus(bool expected_tracer_running) {
+  for (int i = 0; i < kRetryCount && expected_tracer_running != IsTracerRunning();
+       i++) {
+    usleep(Clock::ms_to_us(kSleepMsPerRetry));
   }
 }
 

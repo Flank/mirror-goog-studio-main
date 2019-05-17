@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef UTILS_FS_MEMORY_FILE_SYSTEM_H_
+#define UTILS_FS_MEMORY_FILE_SYSTEM_H_
+
 #include "utils/fs/file_system.h"
 
 #include <set>
@@ -73,3 +77,5 @@ class MemoryFileSystem final : public FileSystem {
   std::shared_ptr<Clock> clock_;
 };
 }  // namespace profiler
+
+#endif  // UTILS_FS_MEMORY_FILE_SYSTEM_H_
