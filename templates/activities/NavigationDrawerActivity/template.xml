@@ -45,14 +45,6 @@
         help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher" />
 
     <parameter
-        id="parentActivityClass"
-        name="Hierarchical Parent"
-        type="string"
-        constraints="activity|exists"
-        default=""
-        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
-
-    <parameter
         id="packageName"
         name="Package name"
         type="string"

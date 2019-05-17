@@ -9,12 +9,7 @@
             <#else>
             android:label="@string/title_${collection_name}"
             </#if>
-            android:theme="@style/${themeNameNoActionBar}"
-            <#if buildApi gte 16 && parentActivityClass != "">android:parentActivityName="${parentActivityClass}"</#if>>
-            <#if parentActivityClass != "">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="${parentActivityClass}" />
-            </#if>
+            android:theme="@style/${themeNameNoActionBar}">
             <@manifestMacros.commonActivityBody />
         </activity>
 

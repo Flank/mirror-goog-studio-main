@@ -5,10 +5,6 @@ import ${superClassFqcn}
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
-<#if parentActivityClass?has_content>
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
-import android.view.MenuItem
-</#if>
 <#if applicationPackage??>
 import ${applicationPackage}.R
 </#if>
@@ -79,18 +75,6 @@ class ${activityClass} : AppCompatActivity() {
         delayedHide(100)
     }
 
-<#if parentActivityClass?has_content>
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val id = item.itemId
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button.
-            NavUtils.navigateUpFromSameTask(this)
-            return true
-        }
-        return super.onOptionsItemSelected(item)
-    }
-
-</#if>
     private fun toggle() {
         if (mVisible) {
             hide()
