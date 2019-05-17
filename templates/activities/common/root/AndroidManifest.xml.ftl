@@ -14,14 +14,7 @@
                 android:theme="@style/${themeNameNoActionBar}"
             <#elseif (requireTheme!false) && !hasApplicationTheme >
                 android:theme="@style/${themeName}"
-            </#if>
-            <#if buildApi gte 16 && parentActivityClass != "">
-                android:parentActivityName="${parentActivityClass}"
             </#if>>
-            <#if parentActivityClass != "">
-                <meta-data android:name="android.support.PARENT_ACTIVITY"
-                    android:value="${parentActivityClass}" />
-            </#if>
             <@manifestMacros.commonActivityBody />
         </activity>
     </application>

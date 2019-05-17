@@ -72,14 +72,6 @@
             help="The name of the App Bar layout to create for the activity"/>
 
     <parameter
-            id="parentActivityClass"
-            name="Hierarchical Parent"
-            type="string"
-            constraints="activity|exists|empty"
-            default=""
-            help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button"/>
-
-    <parameter
             id="fragmentLayoutName"
             name="Fragment Layout Name"
             type="string"

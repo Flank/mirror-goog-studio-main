@@ -7,10 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
-<#if parentActivityClass != "">
-import android.view.MenuItem;
-import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)};
-</#if>
 <#if applicationPackage??>
 import ${applicationPackage}.R;
 </#if>
@@ -47,12 +43,6 @@ public class ${activityClass} extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.${layoutName});
-        <#if parentActivityClass != "">
-            ActionBar actionBar = getSupportActionBar();
-            if (actionBar != null) {
-                actionBar.setDisplayHomeAsUpEnabled(true);
-            }
-        </#if>
 
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
@@ -83,19 +73,6 @@ public class ${activityClass} extends AppCompatActivity {
         delayedHide(100);
     }
 
-    <#if parentActivityClass != "">
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == android.R.id.home) {
-            // This ID represents the Home or Up button.
-            NavUtils.navigateUpFromSameTask(this);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    </#if>
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away

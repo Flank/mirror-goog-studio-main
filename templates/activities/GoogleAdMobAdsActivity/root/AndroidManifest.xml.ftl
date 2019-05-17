@@ -11,12 +11,7 @@
             android:label="@string/app_name"
             <#else>
             android:label="@string/title_${activityToLayout(activityClass)}"
-            </#if>
-            <#if buildApi gte 16 && parentActivityClass != "">android:parentActivityName="${parentActivityClass}"</#if>>
-            <#if parentActivityClass != "">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="${parentActivityClass}" />
-            </#if>
+            </#if>>
             <@manifestMacros.commonActivityBody />
         </activity>
         <!--Include the AdActivity configChanges and theme. -->

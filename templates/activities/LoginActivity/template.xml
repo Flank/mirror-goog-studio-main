@@ -38,14 +38,6 @@
         help="The name of the activity." />
 
     <parameter
-        id="parentActivityClass"
-        name="Hierarchical Parent"
-        type="string"
-        constraints="activity|exists|empty"
-        default=""
-        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button" />
-
-    <parameter
         id="packageName"
         name="Package name"
         type="string"
