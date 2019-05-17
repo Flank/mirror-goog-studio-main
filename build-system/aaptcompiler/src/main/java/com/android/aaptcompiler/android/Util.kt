@@ -58,6 +58,16 @@ fun Int.hostToDevice() = if (littleEndian) this else java.lang.Integer.reverseBy
 fun Int.isTruthy() = this != 0
 
 /**
+ * Returns true if the short reflects a "truthy" value in C++ for use in conditionals.
+ */
+fun Short.isTruthy() = this != 0.toShort()
+
+/**
+ * Returns true if the byte reflects a "truthy" value in C++ for use in conditionals.
+ */
+fun Byte.isTruthy() = this != 0.toByte()
+
+/**
  * Returns true if the "pointer" reflects a "truthy" value in C++ for use in conditionals.
  */
 fun Any?.isTruthy() = this != null
