@@ -14,982 +14,772 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms;
+package com.android.build.gradle.internal.transforms
 
-import static com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.INSTANCE;
-
-import com.android.SdkConstants;
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.QualifiedContent.ContentType;
-import com.android.build.api.transform.QualifiedContent.Scope;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.InternalScope;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.crash.PluginCrashReporter;
-import com.android.build.gradle.internal.errors.MessageReceiverImpl;
-import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry;
-import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.core.DexOptions;
-import com.android.builder.dexing.ClassFileEntry;
-import com.android.builder.dexing.ClassFileInput;
-import com.android.builder.dexing.ClassFileInputs;
-import com.android.builder.dexing.DexArchiveBuilder;
-import com.android.builder.dexing.DexArchiveBuilderConfig;
-import com.android.builder.dexing.DexArchiveBuilderException;
-import com.android.builder.dexing.DexerTool;
-import com.android.builder.dexing.r8.ClassFileProviderFactory;
-import com.android.builder.utils.FileCache;
-import com.android.dx.command.dexer.DxContext;
-import com.android.ide.common.blame.Message;
-import com.android.ide.common.blame.MessageReceiver;
-import com.android.ide.common.blame.ParsingProcessOutputHandler;
-import com.android.ide.common.blame.parser.DexParser;
-import com.android.ide.common.blame.parser.ToolOutputParser;
-import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessOutput;
-import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.utils.FileUtils;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Streams;
-import java.io.Closeable;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.annotation.Nonnull;
-import javax.inject.Inject;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.Logging;
-import org.gradle.tooling.BuildException;
-import org.gradle.workers.IsolationMode;
+import com.android.SdkConstants
+import com.android.build.api.transform.Context
+import com.android.build.api.transform.DirectoryInput
+import com.android.build.api.transform.Format
+import com.android.build.api.transform.JarInput
+import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.QualifiedContent.ContentType
+import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.api.transform.Status
+import com.android.build.api.transform.Transform
+import com.android.build.api.transform.TransformException
+import com.android.build.api.transform.TransformInput
+import com.android.build.api.transform.TransformInvocation
+import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.InternalScope
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.crash.PluginCrashReporter
+import com.android.build.gradle.internal.errors.MessageReceiverImpl
+import com.android.build.gradle.internal.pipeline.ExtendedContentType
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
+import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry.Companion.INSTANCE
+import com.android.build.gradle.options.SyncOptions
+import com.android.builder.core.DefaultDexOptions
+import com.android.builder.core.DexOptions
+import com.android.builder.dexing.ClassFileEntry
+import com.android.builder.dexing.ClassFileInputs
+import com.android.builder.dexing.DexArchiveBuilder
+import com.android.builder.dexing.DexArchiveBuilderConfig
+import com.android.builder.dexing.DexArchiveBuilderException
+import com.android.builder.dexing.DexerTool
+import com.android.builder.dexing.r8.ClassFileProviderFactory
+import com.android.builder.utils.FileCache
+import com.android.dx.command.dexer.DxContext
+import com.android.ide.common.blame.Message
+import com.android.ide.common.blame.MessageReceiver
+import com.android.ide.common.blame.ParsingProcessOutputHandler
+import com.android.ide.common.blame.parser.DexParser
+import com.android.ide.common.blame.parser.ToolOutputParser
+import com.android.ide.common.internal.WaitableExecutor
+import com.android.ide.common.process.ProcessException
+import com.android.ide.common.process.ProcessOutput
+import com.android.utils.FileUtils
+import com.google.common.base.Preconditions
+import com.google.common.base.Throwables
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Iterables
+import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.Logging
+import org.gradle.tooling.BuildException
+import org.gradle.workers.IsolationMode
+import java.io.File
+import java.io.IOException
+import java.io.OutputStream
+import java.io.Serializable
+import java.net.URI
+import java.net.URISyntaxException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util.ArrayList
+import javax.inject.Inject
 
 /**
- * Transform that converts CLASS files to dex archives, {@link
- * com.android.builder.dexing.DexArchive}. This will consume {@link TransformManager#CONTENT_CLASS},
- * and for each of the inputs, corresponding dex archive will be produced.
+ * Transform that converts CLASS files to dex archives, [com.android.builder.dexing.DexArchive].
+ * This will consume [TransformManager.CONTENT_CLASS], and for each of the inputs, corresponding dex
+ * archive will be produced.
  *
- * <p>This transform is incremental, only changed streams will be converted again. Additionally, if
+ *
+ * This transform is incremental, only changed streams will be converted again. Additionally, if
  * an input stream is able to provide a list of individual files that were changed, only those files
  * will be processed. Their corresponding dex archives will be updated.
  */
-public class DexArchiveBuilderTransform extends Transform {
+class DexArchiveBuilderTransform internal constructor(
+    private val androidJarClasspath: FileCollection,
+    private val dexOptions: DexOptions,
+    private val messageReceiver: MessageReceiver,
+    private val errorFormatMode: SyncOptions.ErrorFormatMode,
+    userLevelCache: FileCache?,
+    private val minSdkVersion: Int,
+    private val dexer: DexerTool,
+    private val useGradleWorkers: Boolean,
+    inBufferSize: Int?,
+    outBufferSize: Int?,
+    private val isDebuggable: Boolean,
+    private val java8LangSupportType: VariantScope.Java8LangSupport,
+    private val projectVariant: String,
+    numberOfBuckets: Int?,
+    private val includeFeaturesInScopes: Boolean,
+    private val enableDexingArtifactTransform: Boolean
+) : Transform() {
+    private val executor: WaitableExecutor = WaitableExecutor.useGlobalSharedThreadPool()
+    private val cacheHandler: DexArchiveBuilderCacheHandler = DexArchiveBuilderCacheHandler(
+        userLevelCache, dexOptions, minSdkVersion, isDebuggable, dexer
+    )
+    private val inBufferSize: Int = (inBufferSize ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
+    private val outBufferSize: Int = (outBufferSize ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
+    private val numberOfBuckets: Int = numberOfBuckets ?: DEFAULT_NUM_BUCKETS
 
     /**
      * Classpath resources provider is shared between invocations, and this key uniquely identifies
      * it.
      */
-    public static final class ClasspathServiceKey
-            implements WorkerActionServiceRegistry.ServiceKey<ClassFileProviderFactory> {
-        private final long id;
+    data class ClasspathServiceKey(private val id: Long) :
+        WorkerActionServiceRegistry.ServiceKey<ClassFileProviderFactory> {
 
-        public ClasspathServiceKey(long id) {
-            this.id = id;
-        }
-
-        @NonNull
-        @Override
-        public Class<ClassFileProviderFactory> getType() {
-            return ClassFileProviderFactory.class;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            ClasspathServiceKey that = (ClasspathServiceKey) o;
-            return id == that.id;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(id);
-        }
+        override val type = ClassFileProviderFactory::class.java
     }
 
-    /** Wrapper around the {@link com.android.builder.dexing.r8.ClassFileProviderFactory}. */
-    public static final class ClasspathService
-            implements WorkerActionServiceRegistry.RegisteredService<ClassFileProviderFactory> {
+    /** Wrapper around the [com.android.builder.dexing.r8.ClassFileProviderFactory].  */
+    class ClasspathService(override val service: ClassFileProviderFactory) :
+        WorkerActionServiceRegistry.RegisteredService<ClassFileProviderFactory> {
 
-        private final ClassFileProviderFactory providerFactory;
-
-        public ClasspathService(ClassFileProviderFactory providerFactory) {
-            this.providerFactory = providerFactory;
-        }
-
-        @NonNull
-        @Override
-        public ClassFileProviderFactory getService() {
-            return providerFactory;
-        }
-
-        @Override
-        public void shutdown() {
+        override fun shutdown() {
             // nothing to be done, as providerFactory is a closable
         }
     }
 
-    private static final LoggerWrapper logger =
-            LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
-
-    public static final int DEFAULT_BUFFER_SIZE_IN_KB = 100;
-
-    public static final int NUMBER_OF_SLICES_FOR_PROJECT_CLASSES = 10;
-
-    private static final int DEFAULT_NUM_BUCKETS =
-            Math.max(Runtime.getRuntime().availableProcessors() / 2, 1);
-
-    @NonNull private final FileCollection androidJarClasspath;
-    @NonNull private final DexOptions dexOptions;
-    @NonNull private final MessageReceiver messageReceiver;
-    @NonNull private final SyncOptions.ErrorFormatMode errorFormatMode;
-    @VisibleForTesting @NonNull final WaitableExecutor executor;
-    private final int minSdkVersion;
-    @NonNull private final DexerTool dexer;
-    @NonNull private String projectVariant;
-    @NonNull private final DexArchiveBuilderCacheHandler cacheHandler;
-    private final boolean useGradleWorkers;
-    private final int inBufferSize;
-    private final int outBufferSize;
-    private final boolean isDebuggable;
-    @NonNull private final VariantScope.Java8LangSupport java8LangSupportType;
-    private final int numberOfBuckets;
-    private final boolean includeFeaturesInScopes;
-
-    private boolean enableDexingArtifactTransform;
-
-    DexArchiveBuilderTransform(
-            @NonNull FileCollection androidJarClasspath,
-            @NonNull DexOptions dexOptions,
-            @NonNull MessageReceiver messageReceiver,
-            @NonNull SyncOptions.ErrorFormatMode errorFormatMode,
-            @Nullable FileCache userLevelCache,
-            int minSdkVersion,
-            @NonNull DexerTool dexer,
-            boolean useGradleWorkers,
-            @Nullable Integer inBufferSize,
-            @Nullable Integer outBufferSize,
-            boolean isDebuggable,
-            @NonNull VariantScope.Java8LangSupport java8LangSupportType,
-            @NonNull String projectVariant,
-            @Nullable Integer numberOfBuckets,
-            boolean includeFeaturesInScopes,
-            boolean enableDexingArtifactTransform) {
-        this.androidJarClasspath = androidJarClasspath;
-        this.dexOptions = dexOptions;
-        this.messageReceiver = messageReceiver;
-        this.errorFormatMode = errorFormatMode;
-        this.minSdkVersion = minSdkVersion;
-        this.dexer = dexer;
-        this.projectVariant = projectVariant;
-        this.executor = WaitableExecutor.useGlobalSharedThreadPool();
-        this.cacheHandler =
-                new DexArchiveBuilderCacheHandler(
-                        userLevelCache, dexOptions, minSdkVersion, isDebuggable, dexer);
-        this.useGradleWorkers = useGradleWorkers;
-        this.inBufferSize =
-                (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;
-        this.outBufferSize =
-                (outBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : outBufferSize) * 1024;
-        this.isDebuggable = isDebuggable;
-        this.java8LangSupportType = java8LangSupportType;
-        this.numberOfBuckets = numberOfBuckets == null ? DEFAULT_NUM_BUCKETS : numberOfBuckets;
-        this.includeFeaturesInScopes = includeFeaturesInScopes;
-        this.enableDexingArtifactTransform = enableDexingArtifactTransform;
+    override fun getName(): String {
+        return "dexBuilder"
     }
 
-    @NonNull
-    @Override
-    public String getName() {
-        return "dexBuilder";
+    override fun getInputTypes(): Set<ContentType> {
+        return TransformManager.CONTENT_CLASS
     }
 
-    @NonNull
-    @Override
-    public Set<ContentType> getInputTypes() {
-        return TransformManager.CONTENT_CLASS;
+    override fun getOutputTypes(): Set<ContentType> {
+        return ImmutableSet.of<ContentType>(ExtendedContentType.DEX_ARCHIVE)
     }
 
-    @NonNull
-    @Override
-    public Set<ContentType> getOutputTypes() {
-        return ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE);
-    }
-
-    @NonNull
-    @Override
-    public Set<? super Scope> getScopes() {
-        if (enableDexingArtifactTransform) {
-            return Sets.immutableEnumSet(Scope.PROJECT);
-        } else if (includeFeaturesInScopes) {
-            return TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES;
-        } else {
-            return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
+    override fun getScopes(): ImmutableSet<in Scope> {
+        return when {
+            enableDexingArtifactTransform -> ImmutableSet.of(Scope.PROJECT)
+            includeFeaturesInScopes -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES)
+            else -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING)
         }
     }
 
-    @NonNull
-    @Override
-    public Set<? super Scope> getReferencedScopes() {
-        Set<? super QualifiedContent.ScopeType> referenced =
-                Sets.newHashSet(Scope.PROVIDED_ONLY, Scope.TESTED_CODE);
-        if (enableDexingArtifactTransform) {
-            referenced.add(Scope.SUB_PROJECTS);
-            referenced.add(Scope.EXTERNAL_LIBRARIES);
-            referenced.add(InternalScope.MAIN_SPLIT);
-            if (includeFeaturesInScopes) {
-                referenced.add(InternalScope.FEATURES);
-            }
-        }
-
-        return referenced;
-    }
-
-    @NonNull
-    @Override
-    public Map<String, Object> getParameterInputs() {
-        try {
-            Map<String, Object> params = Maps.newHashMapWithExpectedSize(6);
-            params.put("optimize", !dexOptions.getAdditionalParameters().contains("--no-optimize"));
-            params.put("jumbo", dexOptions.getJumboMode());
-            params.put("min-sdk-version", minSdkVersion);
-            params.put("dex-builder-tool", dexer.name());
-            params.put("enable-dexing-artifact-transform", enableDexingArtifactTransform);
-
-            return params;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public boolean isIncremental() {
-        return true;
-    }
-
-    @Override
-    public void transform(@NonNull TransformInvocation transformInvocation)
-            throws TransformException, IOException, InterruptedException {
-        TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
-        Preconditions.checkNotNull(outputProvider, "Missing output provider.");
-        if (dexOptions.getAdditionalParameters().contains("--no-optimize")) {
-            logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
-        }
-
-        logger.verbose("Task is incremental : %b ", transformInvocation.isIncremental());
-
-        if (!transformInvocation.isIncremental()) {
-            outputProvider.deleteAll();
-        }
-
-        Set<File> additionalPaths;
-        DesugarIncrementalTransformHelper desugarIncrementalTransformHelper;
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            additionalPaths = ImmutableSet.of();
-            desugarIncrementalTransformHelper = null;
-        } else {
-            desugarIncrementalTransformHelper =
-                    new DesugarIncrementalTransformHelper(
-                            projectVariant, transformInvocation, executor);
-            additionalPaths =
-                    desugarIncrementalTransformHelper
-                            .getAdditionalPaths()
-                            .stream()
-                            .map(Path::toFile)
-                            .collect(Collectors.toSet());
-        }
-
-        List<DexArchiveBuilderCacheHandler.CacheableItem> cacheableItems = new ArrayList<>();
-        boolean isIncremental = transformInvocation.isIncremental();
-        List<Path> classpath =
-                getClasspath(transformInvocation, java8LangSupportType)
-                        .stream()
-                        .map(Paths::get)
-                        .collect(Collectors.toList());
-        List<Path> bootclasspath =
-                getBootClasspath(androidJarClasspath, java8LangSupportType)
-                        .stream()
-                        .map(Paths::get)
-                        .collect(Collectors.toList());
-
-        ClasspathServiceKey bootclasspathServiceKey = null;
-        ClasspathServiceKey classpathServiceKey = null;
-        try (ClassFileProviderFactory bootClasspathProvider =
-                        new ClassFileProviderFactory(bootclasspath);
-                ClassFileProviderFactory libraryClasspathProvider =
-                        new ClassFileProviderFactory(classpath)) {
-            bootclasspathServiceKey = new ClasspathServiceKey(bootClasspathProvider.getId());
-            classpathServiceKey = new ClasspathServiceKey(libraryClasspathProvider.getId());
-            INSTANCE.registerService(
-                    bootclasspathServiceKey, () -> new ClasspathService(bootClasspathProvider));
-            INSTANCE.registerService(
-                    classpathServiceKey, () -> new ClasspathService(libraryClasspathProvider));
-
-            for (TransformInput input : transformInvocation.getInputs()) {
-
-                for (DirectoryInput dirInput : input.getDirectoryInputs()) {
-                    logger.verbose("Dir input %s", dirInput.getFile().toString());
-                    convertToDexArchive(
-                            transformInvocation.getContext(),
-                            dirInput,
-                            outputProvider,
-                            isIncremental,
-                            bootclasspathServiceKey,
-                            classpathServiceKey,
-                            additionalPaths);
+    override fun getReferencedScopes(): ImmutableSet<in Scope> {
+        return ImmutableSet.Builder<QualifiedContent.ScopeType>().also {
+            it.add(Scope.TESTED_CODE, Scope.PROVIDED_ONLY)
+            if (enableDexingArtifactTransform) {
+                it.add(Scope.SUB_PROJECTS)
+                it.add(Scope.EXTERNAL_LIBRARIES)
+                if (includeFeaturesInScopes) {
+                    it.add(InternalScope.FEATURES)
                 }
+            }
+        }.build()
+    }
 
-                for (JarInput jarInput : input.getJarInputs()) {
-                    logger.verbose("Jar input %s", jarInput.getFile().toString());
+    override fun getParameterInputs(): Map<String, Any> = mapOf(
+        "optimize" to !dexOptions.additionalParameters.contains("--no-optimize"),
+        "jumbo" to dexOptions.jumboMode,
+        "min-sdk-version" to minSdkVersion,
+        "dex-builder-tool" to dexer.name,
+        "enable-dexing-artifact-transform" to enableDexingArtifactTransform
+    )
 
-                    D8DesugaringCacheInfo cacheInfo =
-                            getD8DesugaringCacheInfo(
-                                    desugarIncrementalTransformHelper,
-                                    bootclasspath,
-                                    classpath,
-                                    jarInput);
+    override fun isIncremental() = true
 
-                    List<File> dexArchives =
-                            processJarInput(
-                                    transformInvocation.getContext(),
-                                    isIncremental,
-                                    jarInput,
-                                    outputProvider,
-                                    bootclasspathServiceKey,
-                                    classpathServiceKey,
-                                    additionalPaths,
-                                    cacheInfo);
-                    if (cacheInfo != D8DesugaringCacheInfo.DONT_CACHE && !dexArchives.isEmpty()) {
-                        cacheableItems.add(
-                                new DexArchiveBuilderCacheHandler.CacheableItem(
+    override fun transform(transformInvocation: TransformInvocation) {
+        val outputProvider =
+            checkNotNull(transformInvocation.outputProvider) { "Missing output provider." }
+        if ("--no-optimize" in dexOptions.additionalParameters) {
+            logger.warning(DefaultDexOptions.OPTIMIZE_WARNING)
+        }
+
+        logger.verbose("Task is incremental : %b ", transformInvocation.isIncremental)
+        if (!transformInvocation.isIncremental) {
+            outputProvider.deleteAll()
+        }
+
+        val desugarIncrementalTransformHelper: DesugarIncrementalTransformHelper? =
+            DesugarIncrementalTransformHelper(
+                projectVariant, transformInvocation, executor
+            ).takeIf { java8LangSupportType == VariantScope.Java8LangSupport.D8 }
+
+        val additionalPaths: Set<File> =
+            desugarIncrementalTransformHelper?.additionalPaths?.map { it.toFile() }?.toSet()
+                ?: emptySet()
+
+        val cacheableItems = mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
+
+        val classpath =
+            getClasspath(transformInvocation, java8LangSupportType).map { Paths.get(it) }
+        val bootclasspath =
+            getBootClasspath(androidJarClasspath, java8LangSupportType).map { Paths.get(it) }
+
+        var bootclasspathServiceKey: ClasspathServiceKey? = null
+        var classpathServiceKey: ClasspathServiceKey? = null
+        try {
+            ClassFileProviderFactory(bootclasspath).use { bootClasspathProvider ->
+                ClassFileProviderFactory(classpath).use { libraryClasspathProvider ->
+                    bootclasspathServiceKey = ClasspathServiceKey(bootClasspathProvider.id)
+                    classpathServiceKey = ClasspathServiceKey(libraryClasspathProvider.id)
+                    INSTANCE.registerService(
+                        bootclasspathServiceKey!!
+                    ) { ClasspathService(bootClasspathProvider) }
+                    INSTANCE.registerService(
+                        classpathServiceKey!!
+                    ) { ClasspathService(libraryClasspathProvider) }
+
+                    for (input in transformInvocation.inputs) {
+
+                        for (dirInput in input.directoryInputs) {
+                            logger.verbose("Dir input %s", dirInput.file.toString())
+                            convertToDexArchive(
+                                transformInvocation.context,
+                                dirInput,
+                                outputProvider,
+                                transformInvocation.isIncremental,
+                                bootclasspathServiceKey!!,
+                                classpathServiceKey!!,
+                                additionalPaths
+                            )
+                        }
+
+                        for (jarInput in input.jarInputs) {
+                            logger.verbose("Jar input %s", jarInput.file.toString())
+
+                            val cacheInfo = getD8DesugaringCacheInfo(
+                                desugarIncrementalTransformHelper,
+                                bootclasspath,
+                                classpath,
+                                jarInput
+                            )
+
+                            val dexArchives = processJarInput(
+                                transformInvocation.context,
+                                transformInvocation.isIncremental,
+                                jarInput,
+                                outputProvider,
+                                bootclasspathServiceKey!!,
+                                classpathServiceKey!!,
+                                additionalPaths,
+                                cacheInfo
+                            )
+                            if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
+                                cacheableItems.add(
+                                    DexArchiveBuilderCacheHandler.CacheableItem(
                                         jarInput,
                                         dexArchives,
-                                        cacheInfo.orderedD8DesugaringDependencies));
+                                        cacheInfo.orderedD8DesugaringDependencies
+                                    )
+                                )
+                            }
+                        }
                     }
+
+                    // all work items have been submitted, now wait for completion.
+                    if (useGradleWorkers) {
+                        transformInvocation.context.workerExecutor.await()
+                    } else {
+                        executor.waitForTasksWithQuickFail<Any>(true)
+                    }
+
+                    // if we are in incremental mode, delete all removed files.
+                    if (transformInvocation.isIncremental) {
+                        for (transformInput in transformInvocation.inputs) {
+                            removeDeletedEntries(outputProvider, transformInput)
+                        }
+                    }
+
+                    // and finally populate the caches.
+                    if (cacheableItems.isNotEmpty()) {
+                        cacheHandler.populateCache(cacheableItems)
+                    }
+
+                    logger.verbose("Done with all dex archive conversions")
                 }
             }
-
-            // all work items have been submitted, now wait for completion.
-            if (useGradleWorkers) {
-                transformInvocation.getContext().getWorkerExecutor().await();
-            } else {
-                executor.waitForTasksWithQuickFail(true);
-            }
-
-            // if we are in incremental mode, delete all removed files.
-            if (transformInvocation.isIncremental()) {
-                for (TransformInput transformInput : transformInvocation.getInputs()) {
-                    removeDeletedEntries(outputProvider, transformInput);
-                }
-            }
-
-            // and finally populate the caches.
-            if (!cacheableItems.isEmpty()) {
-                cacheHandler.populateCache(cacheableItems);
-            }
-
-            logger.verbose("Done with all dex archive conversions");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new TransformException(e);
-        } catch (Exception e) {
-            PluginCrashReporter.maybeReportException(e);
-            logger.error(null, Throwables.getStackTraceAsString(e));
-            throw new TransformException(e);
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            throw TransformException(e)
+        } catch (e: Exception) {
+            PluginCrashReporter.maybeReportException(e)
+            logger.error(null, Throwables.getStackTraceAsString(e))
+            throw TransformException(e)
         } finally {
-            if (classpathServiceKey != null) {
-                INSTANCE.removeService(classpathServiceKey);
-            }
-            if (bootclasspathServiceKey != null) {
-                INSTANCE.removeService(bootclasspathServiceKey);
-            }
+            classpathServiceKey?.let { INSTANCE.removeService(it) }
+            bootclasspathServiceKey?.let { INSTANCE.removeService(it) }
         }
     }
 
-    @NonNull
-    private D8DesugaringCacheInfo getD8DesugaringCacheInfo(
-            @Nullable DesugarIncrementalTransformHelper desugarIncrementalTransformHelper,
-            @NonNull List<Path> bootclasspath,
-            @NonNull List<Path> classpath,
-            @NonNull JarInput jarInput) {
+    private fun getD8DesugaringCacheInfo(
+        desugarIncrementalTransformHelper: DesugarIncrementalTransformHelper?,
+        bootclasspath: List<Path>,
+        classpath: List<Path>,
+        jarInput: JarInput
+    ): D8DesugaringCacheInfo {
 
         if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            return D8DesugaringCacheInfo.NO_INFO;
+            return DesugaringNoInfoCache
         }
+        desugarIncrementalTransformHelper as DesugarIncrementalTransformHelper
 
-        Preconditions.checkNotNull(desugarIncrementalTransformHelper);
-
-        Set<Path> unorderedD8DesugaringDependencies =
-                desugarIncrementalTransformHelper.getDependenciesPaths(jarInput.getFile().toPath());
+        val unorderedD8DesugaringDependencies =
+            desugarIncrementalTransformHelper.getDependenciesPaths(jarInput.file.toPath())
 
         // Don't cache libraries depending on class files in folders:
         // Folders content is expected to change often so probably not worth paying the cache cost
         // if we frequently need to rebuild anyway.
         // Supporting dependency to class files would also require special care to respect order.
         if (unorderedD8DesugaringDependencies
-                .stream()
-                .anyMatch(path -> !path.toString().endsWith(SdkConstants.DOT_JAR))) {
-            return D8DesugaringCacheInfo.DONT_CACHE;
+                .any { path -> !path.toString().endsWith(SdkConstants.DOT_JAR) }
+        ) {
+            return DesugaringDontCache
         }
 
         // DesugaringGraph is not calculating the bootclasspath dependencies so just keep the full
         // bootclasspath for now.
-        List<Path> bootclasspathPaths =
-                bootclasspath
-                        .stream()
-                        .distinct()
-                        .collect(Collectors.toList());
+        val bootclasspathPaths = bootclasspath.distinct()
 
-        List<Path> classpathJars =
-                classpath
-                        .stream()
-                        .distinct()
-                        .filter(unorderedD8DesugaringDependencies::contains)
-                        .collect(Collectors.toList());
+        val classpathJars =
+            classpath.distinct().filter { unorderedD8DesugaringDependencies.contains(it) }
 
-        List<Path> allDependencies =
-                new ArrayList<>(bootclasspathPaths.size() + classpathJars.size());
+        val allDependencies = ArrayList<Path>(bootclasspathPaths.size + classpathJars.size)
 
-        allDependencies.addAll(bootclasspathPaths);
-        allDependencies.addAll(classpathJars);
-        return new D8DesugaringCacheInfo(allDependencies);
+        allDependencies.addAll(bootclasspathPaths)
+        allDependencies.addAll(classpathJars)
+        return D8DesugaringCacheInfo(allDependencies)
     }
 
-    private void removeDeletedEntries(
-            @NonNull TransformOutputProvider outputProvider, @NonNull TransformInput transformInput)
-            throws IOException {
-        for (DirectoryInput input : transformInput.getDirectoryInputs()) {
-            for (Map.Entry<File, Status> entry : input.getChangedFiles().entrySet()) {
-                if (entry.getValue() != Status.REMOVED) {
-                    continue;
+    private fun removeDeletedEntries(
+        outputProvider: TransformOutputProvider, transformInput: TransformInput
+    ) {
+        for (input in transformInput.directoryInputs) {
+            for ((file, value) in input.changedFiles) {
+                if (value != Status.REMOVED) {
+                    continue
                 }
-                File file = entry.getKey();
 
-                Path relativePath = input.getFile().toPath().relativize(file.toPath());
+                val relativePath = input.file.toPath().relativize(file.toPath())
 
-                String fileToDelete;
-                if (file.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                    fileToDelete = ClassFileEntry.withDexExtension(relativePath.toString());
+                val fileToDelete = if (file.name.endsWith(SdkConstants.DOT_CLASS)) {
+                    ClassFileEntry.withDexExtension(relativePath.toString())
                 } else {
-                    fileToDelete = relativePath.toString();
+                    relativePath.toString()
                 }
 
-                File outputFile = getOutputForDir(outputProvider, input);
+                val outputFile = getOutputForDir(outputProvider, input)
                 FileUtils.deleteRecursivelyIfExists(
-                        outputFile.toPath().resolve(fileToDelete).toFile());
+                    outputFile.toPath().resolve(fileToDelete).toFile()
+                )
             }
         }
     }
 
-    @NonNull
-    private List<File> processJarInput(
-            @NonNull Context context,
-            boolean isIncremental,
-            @NonNull JarInput jarInput,
-            @NonNull TransformOutputProvider transformOutputProvider,
-            @NonNull ClasspathServiceKey bootclasspath,
-            @NonNull ClasspathServiceKey classpath,
-            @NonNull Set<File> additionalPaths,
-            @NonNull D8DesugaringCacheInfo cacheInfo)
-            throws Exception {
+    private fun processJarInput(
+        context: Context,
+        isIncremental: Boolean,
+        jarInput: JarInput,
+        transformOutputProvider: TransformOutputProvider,
+        bootclasspath: ClasspathServiceKey,
+        classpath: ClasspathServiceKey,
+        additionalPaths: Set<File>,
+        cacheInfo: D8DesugaringCacheInfo
+    ): List<File> {
         if (!isIncremental) {
             Preconditions.checkState(
-                    jarInput.getFile().exists(),
-                    "File %s does not exist, yet it is reported as input. Try \n"
-                            + "cleaning the build directory.",
-                    jarInput.getFile().toString());
+                jarInput.file.exists(),
+                "File %s does not exist, yet it is reported as input. Try \n" + "cleaning the build directory.",
+                jarInput.file.toString()
+            )
             return convertJarToDexArchive(
+                context,
+                jarInput,
+                transformOutputProvider,
+                bootclasspath,
+                classpath,
+                cacheInfo
+            )
+        } else if (jarInput.status != Status.NOTCHANGED || additionalPaths.contains(jarInput.file)) {
+            // delete all preDex jars if they exists.
+            for (bucketId in 0 until numberOfBuckets) {
+                val shardedOutput = getOutputForJar(transformOutputProvider, jarInput, bucketId)
+                FileUtils.deleteIfExists(shardedOutput)
+                if (jarInput.status != Status.REMOVED) {
+                    FileUtils.mkdirs(shardedOutput.parentFile)
+                }
+            }
+            val nonShardedOutput = getOutputForJar(transformOutputProvider, jarInput, null)
+            FileUtils.deleteIfExists(nonShardedOutput)
+            if (jarInput.status != Status.REMOVED) {
+                FileUtils.mkdirs(nonShardedOutput.parentFile)
+            }
+
+            // and perform dexing if necessary.
+            if (jarInput.status == Status.ADDED
+                || jarInput.status == Status.CHANGED
+                || additionalPaths.contains(jarInput.file)
+            ) {
+                return convertJarToDexArchive(
                     context,
                     jarInput,
                     transformOutputProvider,
                     bootclasspath,
                     classpath,
-                    cacheInfo);
-        } else if (jarInput.getStatus() != Status.NOTCHANGED
-                || additionalPaths.contains(jarInput.getFile())) {
-            // delete all preDex jars if they exists.
-            for (int bucketId = 0; bucketId < numberOfBuckets; bucketId++) {
-                File shardedOutput = getOutputForJar(transformOutputProvider, jarInput, bucketId);
-                FileUtils.deleteIfExists(shardedOutput);
-                if (jarInput.getStatus() != Status.REMOVED) {
-                    FileUtils.mkdirs(shardedOutput.getParentFile());
-                }
-            }
-            File nonShardedOutput = getOutputForJar(transformOutputProvider, jarInput, null);
-            FileUtils.deleteIfExists(nonShardedOutput);
-            if (jarInput.getStatus() != Status.REMOVED) {
-                FileUtils.mkdirs(nonShardedOutput.getParentFile());
-            }
-
-            // and perform dexing if necessary.
-            if (jarInput.getStatus() == Status.ADDED
-                    || jarInput.getStatus() == Status.CHANGED
-                    || additionalPaths.contains(jarInput.getFile())) {
-                return convertJarToDexArchive(
-                        context,
-                        jarInput,
-                        transformOutputProvider,
-                        bootclasspath,
-                        classpath,
-                        cacheInfo);
+                    cacheInfo
+                )
             }
         }
-        return ImmutableList.of();
+        return listOf()
     }
 
-    private List<File> convertJarToDexArchive(
-            @NonNull Context context,
-            @NonNull JarInput toConvert,
-            @NonNull TransformOutputProvider transformOutputProvider,
-            @NonNull ClasspathServiceKey bootclasspath,
-            @NonNull ClasspathServiceKey classpath,
-            @NonNull D8DesugaringCacheInfo cacheInfo)
-            throws Exception {
+    private fun convertJarToDexArchive(
+        context: Context,
+        toConvert: JarInput,
+        transformOutputProvider: TransformOutputProvider,
+        bootclasspath: ClasspathServiceKey,
+        classpath: ClasspathServiceKey,
+        cacheInfo: D8DesugaringCacheInfo
+    ): List<File> {
 
-        if (cacheInfo != D8DesugaringCacheInfo.DONT_CACHE) {
-            File cachedVersion =
-                    cacheHandler.getCachedVersionIfPresent(
-                            toConvert, cacheInfo.orderedD8DesugaringDependencies);
+        if (cacheInfo !== DesugaringDontCache) {
+            val cachedVersion = cacheHandler.getCachedVersionIfPresent(
+                toConvert, cacheInfo.orderedD8DesugaringDependencies
+            )
             if (cachedVersion != null) {
-                File outputFile = getOutputForJar(transformOutputProvider, toConvert, null);
+                val outputFile = getOutputForJar(transformOutputProvider, toConvert, null)
                 Files.copy(
-                        cachedVersion.toPath(),
-                        outputFile.toPath(),
-                        StandardCopyOption.REPLACE_EXISTING);
+                    cachedVersion.toPath(),
+                    outputFile.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING
+                )
                 // no need to try to cache an already cached version.
-                return ImmutableList.of();
+                return listOf()
             }
         }
         return convertToDexArchive(
-                context,
-                toConvert,
-                transformOutputProvider,
-                false,
-                bootclasspath,
-                classpath,
-                ImmutableSet.of());
+            context,
+            toConvert,
+            transformOutputProvider,
+            false,
+            bootclasspath,
+            classpath,
+            ImmutableSet.of()
+        )
     }
 
-    public static class DexConversionParameters implements Serializable {
-        private final QualifiedContent input;
-        private final ClasspathServiceKey bootClasspath;
-        private final ClasspathServiceKey classpath;
-        private final String output;
-        private final int numberOfBuckets;
-        private final int buckedId;
-        private final int minSdkVersion;
-        private final List<String> dexAdditionalParameters;
-        private final int inBufferSize;
-        private final int outBufferSize;
-        private final DexerTool dexer;
-        private final boolean isDebuggable;
-        private final boolean isIncremental;
-        private final VariantScope.Java8LangSupport java8LangSupportType;
-        @NonNull private final Set<File> additionalPaths;
-        @Nonnull private final SyncOptions.ErrorFormatMode errorFormatMode;
+    class DexConversionParameters(
+        internal val input: QualifiedContent,
+        internal val bootClasspath: ClasspathServiceKey,
+        internal val classpath: ClasspathServiceKey,
+        output: File,
+        private val numberOfBuckets: Int,
+        private val buckedId: Int,
+        internal val minSdkVersion: Int,
+        internal val dexAdditionalParameters: List<String>,
+        internal val inBufferSize: Int,
+        internal val outBufferSize: Int,
+        internal val dexer: DexerTool,
+        internal val isDebuggable: Boolean,
+        internal val isIncremental: Boolean,
+        internal val java8LangSupportType: VariantScope.Java8LangSupport,
+        internal val additionalPaths: Set<File>,
+        internal val errorFormatMode: SyncOptions.ErrorFormatMode
+    ) : Serializable {
+        internal val output: String = output.toURI().toString()
 
-        public DexConversionParameters(
-                @NonNull QualifiedContent input,
-                @NonNull ClasspathServiceKey bootClasspath,
-                @NonNull ClasspathServiceKey classpath,
-                @NonNull File output,
-                int numberOfBuckets,
-                int buckedId,
-                int minSdkVersion,
-                @NonNull List<String> dexAdditionalParameters,
-                int inBufferSize,
-                int outBufferSize,
-                @NonNull DexerTool dexer,
-                boolean isDebuggable,
-                boolean isIncremental,
-                @NonNull VariantScope.Java8LangSupport java8LangSupportType,
-                @NonNull Set<File> additionalPaths,
-                @Nonnull SyncOptions.ErrorFormatMode errorFormatMode) {
-            this.input = input;
-            this.bootClasspath = bootClasspath;
-            this.classpath = classpath;
-            this.numberOfBuckets = numberOfBuckets;
-            this.buckedId = buckedId;
-            this.output = output.toURI().toString();
-            this.minSdkVersion = minSdkVersion;
-            this.dexAdditionalParameters = dexAdditionalParameters;
-            this.inBufferSize = inBufferSize;
-            this.outBufferSize = outBufferSize;
-            this.dexer = dexer;
-            this.isDebuggable = isDebuggable;
-            this.isIncremental = isIncremental;
-            this.java8LangSupportType = java8LangSupportType;
-            this.additionalPaths = additionalPaths;
-            this.errorFormatMode = errorFormatMode;
-        }
+        val isDirectoryBased = input is DirectoryInput
 
-        public boolean belongsToThisBucket(String path) {
-            return getBucketForFile(input, path, numberOfBuckets) == buckedId;
-        }
-
-        public boolean isDirectoryBased() {
-            return input instanceof DirectoryInput;
+        fun belongsToThisBucket(path: String): Boolean {
+            return getBucketForFile(input, path, numberOfBuckets) == buckedId
         }
     }
 
-    public static class DexConversionWorkAction implements Runnable {
+    class DexConversionWorkAction @Inject
+    constructor(private val dexConversionParameters: DexConversionParameters) : Runnable {
 
-        private final DexConversionParameters dexConversionParameters;
-
-        @Inject
-        public DexConversionWorkAction(@NonNull DexConversionParameters dexConversionParameters) {
-            this.dexConversionParameters = dexConversionParameters;
-        }
-
-        @Override
-        public void run() {
+        override fun run() {
             try {
                 launchProcessing(
-                        dexConversionParameters,
-                        System.out,
-                        System.err,
-                        new MessageReceiverImpl(
-                                dexConversionParameters.errorFormatMode,
-                                Logging.getLogger(DexArchiveBuilderTransform.class)));
-            } catch (Exception e) {
-                throw new BuildException(e.getMessage(), e);
+                    dexConversionParameters,
+                    System.out,
+                    System.err,
+                    MessageReceiverImpl(
+                        dexConversionParameters.errorFormatMode,
+                        Logging.getLogger(DexArchiveBuilderTransform::class.java)
+                    )
+                )
+            } catch (e: Exception) {
+                throw BuildException(e.message, e)
             }
         }
     }
 
-    private static class D8DesugaringCacheInfo {
+    private open class D8DesugaringCacheInfo constructor(val orderedD8DesugaringDependencies: List<Path>)
+    private object DesugaringNoInfoCache : D8DesugaringCacheInfo(emptyList())
+    private object DesugaringDontCache : D8DesugaringCacheInfo(emptyList())
 
-        @NonNull
-        private static final D8DesugaringCacheInfo NO_INFO =
-                new D8DesugaringCacheInfo(Collections.emptyList());
+    private fun convertToDexArchive(
+        context: Context,
+        input: QualifiedContent,
+        outputProvider: TransformOutputProvider,
+        isIncremental: Boolean,
+        bootClasspath: ClasspathServiceKey,
+        classpath: ClasspathServiceKey,
+        additionalPaths: Set<File>
+    ): List<File> {
+        logger.verbose("Dexing %s", input.file.absolutePath)
 
-        @NonNull
-        private static final D8DesugaringCacheInfo DONT_CACHE =
-                new D8DesugaringCacheInfo(Collections.emptyList());
+        val dexArchives = mutableListOf<File>()
+        for (bucketId in 0 until numberOfBuckets) {
 
-        @NonNull private final List<Path> orderedD8DesugaringDependencies;
-
-        private D8DesugaringCacheInfo(@NonNull List<Path> orderedD8DesugaringDependencies) {
-            this.orderedD8DesugaringDependencies = orderedD8DesugaringDependencies;
-        }
-    }
-
-    private static DexArchiveBuilder getDexArchiveBuilder(
-            int minSdkVersion,
-            @NonNull List<String> dexAdditionalParameters,
-            int inBufferSize,
-            int outBufferSize,
-            @NonNull ClasspathServiceKey bootClasspath,
-            @NonNull ClasspathServiceKey classpath,
-            @NonNull DexerTool dexer,
-            boolean isDebuggable,
-            boolean d8DesugaringEnabled,
-            @NonNull OutputStream outStream,
-            @NonNull OutputStream errStream,
-            @NonNull MessageReceiver messageReceiver) {
-
-        DexArchiveBuilder dexArchiveBuilder;
-        switch (dexer) {
-            case DX:
-                boolean optimizedDex = !dexAdditionalParameters.contains("--no-optimize");
-                DxContext dxContext = new DxContext(outStream, errStream);
-                DexArchiveBuilderConfig config =
-                        new DexArchiveBuilderConfig(
-                                dxContext,
-                                optimizedDex,
-                                inBufferSize,
-                                minSdkVersion,
-                                DexerTool.DX,
-                                outBufferSize,
-                                DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx());
-
-                dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config);
-                break;
-            case D8:
-                dexArchiveBuilder =
-                        DexArchiveBuilder.createD8DexBuilder(
-                                minSdkVersion,
-                                isDebuggable,
-                                INSTANCE.getService(bootClasspath).getService(),
-                                INSTANCE.getService(classpath).getService(),
-                                d8DesugaringEnabled,
-                                messageReceiver);
-                break;
-            default:
-                throw new AssertionError("Unknown dexer type: " + dexer.name());
-        }
-        return dexArchiveBuilder;
-    }
-
-    private List<File> convertToDexArchive(
-            @NonNull Context context,
-            @NonNull QualifiedContent input,
-            @NonNull TransformOutputProvider outputProvider,
-            boolean isIncremental,
-            @NonNull ClasspathServiceKey bootClasspath,
-            @NonNull ClasspathServiceKey classpath,
-            @NonNull Set<File> additionalPaths) {
-
-        logger.verbose("Dexing %s", input.getFile().getAbsolutePath());
-
-        ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
-        for (int bucketId = 0; bucketId < numberOfBuckets; bucketId++) {
-
-            File preDexOutputFile;
-            if (input instanceof DirectoryInput) {
-                preDexOutputFile = getOutputForDir(outputProvider, (DirectoryInput) input);
-                FileUtils.mkdirs(preDexOutputFile);
+            val preDexOutputFile = if (input is DirectoryInput) {
+                getOutputForDir(outputProvider, input).also { it.mkdirs() }
             } else {
-                preDexOutputFile = getOutputForJar(outputProvider, (JarInput) input, bucketId);
+                getOutputForJar(outputProvider, input as JarInput, bucketId)
             }
 
-            dexArchives.add(preDexOutputFile);
-            DexConversionParameters parameters =
-                    new DexConversionParameters(
-                            input,
-                            bootClasspath,
-                            classpath,
-                            preDexOutputFile,
-                            numberOfBuckets,
-                            bucketId,
-                            minSdkVersion,
-                            dexOptions.getAdditionalParameters(),
-                            inBufferSize,
-                            outBufferSize,
-                            dexer,
-                            isDebuggable,
-                            isIncremental,
-                            java8LangSupportType,
-                            additionalPaths,
-                            errorFormatMode);
+            dexArchives.add(preDexOutputFile)
+            val parameters = DexConversionParameters(
+                input,
+                bootClasspath,
+                classpath,
+                preDexOutputFile,
+                numberOfBuckets,
+                bucketId,
+                minSdkVersion,
+                dexOptions.additionalParameters,
+                inBufferSize,
+                outBufferSize,
+                dexer,
+                isDebuggable,
+                isIncremental,
+                java8LangSupportType,
+                additionalPaths,
+                errorFormatMode
+            )
 
             if (useGradleWorkers) {
-                context.getWorkerExecutor()
-                        .submit(
-                                DexConversionWorkAction.class,
-                                configuration -> {
-                                    configuration.setIsolationMode(IsolationMode.NONE);
-                                    configuration.setParams(parameters);
-                                });
+                context.workerExecutor
+                    .submit(
+                        DexConversionWorkAction::class.java
+                    ) { configuration ->
+                        configuration.isolationMode = IsolationMode.NONE
+                        configuration.setParams(parameters)
+                    }
             } else {
-                executor.execute(
-                        () -> {
-                            ProcessOutputHandler outputHandler =
-                                    new ParsingProcessOutputHandler(
-                                            new ToolOutputParser(
-                                                    new DexParser(), Message.Kind.ERROR, logger),
-                                            new ToolOutputParser(new DexParser(), logger),
-                                            messageReceiver);
-                            ProcessOutput output = null;
-                            try (Closeable ignored = output = outputHandler.createOutput()) {
-                                launchProcessing(
-                                        parameters,
-                                        output.getStandardOutput(),
-                                        output.getErrorOutput(),
-                                        messageReceiver);
-                            } finally {
-                                if (output != null) {
-                                    try {
-                                        outputHandler.handleOutput(output);
-                                    } catch (ProcessException e) {
-                                        // ignore this one
-                                    }
-                                }
-                            }
-                            return null;
-                        });
-            }
-        }
-        return dexArchives.build();
-    }
-
-    private static void launchProcessing(
-            @NonNull DexConversionParameters dexConversionParameters,
-            @NonNull OutputStream outStream,
-            @NonNull OutputStream errStream,
-            @NonNull MessageReceiver receiver)
-            throws IOException, URISyntaxException {
-        DexArchiveBuilder dexArchiveBuilder =
-                getDexArchiveBuilder(
-                        dexConversionParameters.minSdkVersion,
-                        dexConversionParameters.dexAdditionalParameters,
-                        dexConversionParameters.inBufferSize,
-                        dexConversionParameters.outBufferSize,
-                        dexConversionParameters.bootClasspath,
-                        dexConversionParameters.classpath,
-                        dexConversionParameters.dexer,
-                        dexConversionParameters.isDebuggable,
-                        VariantScope.Java8LangSupport.D8
-                                == dexConversionParameters.java8LangSupportType,
-                        outStream,
-                        errStream,
-                        receiver);
-
-        Path inputPath = dexConversionParameters.input.getFile().toPath();
-        Predicate<String> bucketFilter = dexConversionParameters::belongsToThisBucket;
-
-        boolean hasIncrementalInfo =
-                dexConversionParameters.isDirectoryBased() && dexConversionParameters.isIncremental;
-        Predicate<String> toProcess =
-                hasIncrementalInfo
-                        ? path -> {
-                            File resolved = inputPath.resolve(path).toFile();
-                            if (dexConversionParameters.additionalPaths.contains(resolved)) {
-                                return true;
-                            }
-                            Map<File, Status> changedFiles =
-                                    ((DirectoryInput) dexConversionParameters.input)
-                                            .getChangedFiles();
-
-                            Status status = changedFiles.get(resolved);
-                            return status == Status.ADDED || status == Status.CHANGED;
+                executor.execute<Any> {
+                    val outputHandler = ParsingProcessOutputHandler(
+                        ToolOutputParser(
+                            DexParser(), Message.Kind.ERROR, logger
+                        ),
+                        ToolOutputParser(DexParser(), logger),
+                        messageReceiver
+                    )
+                    var output: ProcessOutput? = null
+                    try {
+                        outputHandler.createOutput().use {
+                            output = it
+                            launchProcessing(
+                                parameters,
+                                output!!.standardOutput,
+                                output!!.errorOutput,
+                                messageReceiver
+                            )
                         }
-                        : path -> true;
-
-        bucketFilter = bucketFilter.and(toProcess);
-
-        logger.verbose("Dexing '" + inputPath + "' to '" + dexConversionParameters.output + "'");
-
-        try (ClassFileInput input = ClassFileInputs.fromPath(inputPath);
-                Stream<ClassFileEntry> entries = input.entries(bucketFilter)) {
-            dexArchiveBuilder.convert(
-                    entries,
-                    Paths.get(new URI(dexConversionParameters.output)),
-                    dexConversionParameters.isDirectoryBased());
-        } catch (DexArchiveBuilderException ex) {
-            throw new DexArchiveBuilderException("Failed to process " + inputPath.toString(), ex);
-        }
-    }
-
-    @NonNull
-    private static List<String> getClasspath(
-            @NonNull TransformInvocation transformInvocation,
-            @NonNull VariantScope.Java8LangSupport java8LangSupportType) {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            return Collections.emptyList();
-        }
-        ImmutableList.Builder<String> classpathEntries = ImmutableList.builder();
-
-        Iterable<TransformInput> dependencies =
-                Iterables.concat(
-                        transformInvocation.getInputs(), transformInvocation.getReferencedInputs());
-        classpathEntries.addAll(
-                TransformInputUtil.getDirectories(dependencies)
-                        .stream()
-                        .map(File::getPath)
-                        .distinct()
-                        .iterator());
-
-        classpathEntries.addAll(
-                Streams.stream(dependencies)
-                        .flatMap(transformInput -> transformInput.getJarInputs().stream())
-                        .filter(jarInput -> jarInput.getStatus() != Status.REMOVED)
-                        .map(jarInput -> jarInput.getFile().getPath())
-                        .distinct()
-                        .iterator());
-
-        return classpathEntries.build();
-    }
-
-    @NonNull
-    private static List<String> getBootClasspath(
-            @NonNull FileCollection androidJarClasspath,
-            @NonNull VariantScope.Java8LangSupport java8LangSupportType) {
-
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            return Collections.emptyList();
-        }
-        ImmutableList.Builder<String> classpathEntries = ImmutableList.builder();
-        classpathEntries.addAll(
-                androidJarClasspath.getFiles().stream().map(File::getPath).iterator());
-
-        return classpathEntries.build();
-    }
-
-    @NonNull
-    private static File getOutputForJar(
-            @NonNull TransformOutputProvider output,
-            @NonNull JarInput qualifiedContent,
-            @Nullable Integer bucketId) {
-        return output.getContentLocation(
-                qualifiedContent.getFile().toString() + (bucketId == null ? "" : ("-" + bucketId)),
-                ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
-                qualifiedContent.getScopes(),
-                Format.JAR);
-    }
-
-    @NonNull
-    private File getOutputForDir(
-            @NonNull TransformOutputProvider output, @NonNull DirectoryInput directoryInput) {
-        return output.getContentLocation(
-                directoryInput.getFile().toString(),
-                ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
-                directoryInput.getScopes(),
-                Format.DIRECTORY);
-    }
-
-    public static String getSliceName(int bucketId) {
-        return "slice_" + bucketId;
-    }
-
-    /**
-     * Returns the bucket for the specified path. For jar inputs, path in the jar file should be
-     * specified (both relative and absolute path work). For directories, absolute path should be
-     * specified.
-     */
-    private static int getBucketForFile(
-            @NonNull QualifiedContent content, @NonNull String path, int numberOfBuckets) {
-        if (!(content instanceof DirectoryInput)) {
-            return Math.abs(path.hashCode()) % numberOfBuckets;
-        } else {
-            Path filePath = Paths.get(path);
-            Preconditions.checkArgument(filePath.isAbsolute(), "Path should be absolute: " + path);
-            Path packagePath = filePath.getParent();
-            if (packagePath == null) {
-                return 0;
+                    } finally {
+                        output?.let {
+                            try {
+                                outputHandler.handleOutput(it)
+                            } catch (e: ProcessException) {
+                                // ignore this one
+                            }
+                        }
+                    }
+                    null
+                }
             }
-            return Math.abs(packagePath.toString().hashCode()) % numberOfBuckets;
         }
+        return dexArchives
+    }
+
+    private fun getOutputForDir(
+        output: TransformOutputProvider, directoryInput: DirectoryInput
+    ): File {
+        return output.getContentLocation(
+            directoryInput.file.toString(),
+            setOf(ExtendedContentType.DEX_ARCHIVE),
+            directoryInput.scopes,
+            Format.DIRECTORY
+        )
+    }
+
+    private fun getClasspath(
+        transformInvocation: TransformInvocation,
+        java8LangSupportType: VariantScope.Java8LangSupport
+    ): List<String> {
+        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+            return emptyList()
+        }
+        val classpathEntries = mutableListOf<String>()
+
+        val dependencies = Iterables.concat(
+            transformInvocation.inputs, transformInvocation.referencedInputs
+        )
+
+        classpathEntries.addAll(TransformInputUtil.getDirectories(dependencies).distinct().map { it.path })
+
+        classpathEntries.addAll(
+            dependencies
+                .flatMap { transformInput -> transformInput.jarInputs }
+                .filter { jarInput -> jarInput.status != Status.REMOVED }
+                .map { jarInput -> jarInput.file.path }
+                .distinct())
+
+        return classpathEntries
+    }
+
+    private fun getBootClasspath(
+        androidJarClasspath: FileCollection,
+        java8LangSupportType: VariantScope.Java8LangSupport
+    ): List<String> {
+        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+            return emptyList()
+        }
+        return androidJarClasspath.files.map { it.path }
+    }
+
+    private fun getOutputForJar(
+        output: TransformOutputProvider,
+        qualifiedContent: JarInput,
+        bucketId: Int?
+    ): File {
+        return output.getContentLocation(
+            qualifiedContent.file.toString() + ("-$bucketId".takeIf { bucketId != null } ?: ""),
+            setOf(ExtendedContentType.DEX_ARCHIVE),
+            qualifiedContent.scopes,
+            Format.JAR
+        )
     }
 }
+
+/**
+ * Returns the bucket for the specified path. For jar inputs, path in the jar file should be
+ * specified (both relative and absolute path work). For directories, absolute path should be
+ * specified.
+ */
+private fun getBucketForFile(
+    content: QualifiedContent, path: String, numberOfBuckets: Int
+): Int {
+    if (content !is DirectoryInput) {
+        return Math.abs(path.hashCode()) % numberOfBuckets
+    } else {
+        val filePath = Paths.get(path)
+        Preconditions.checkArgument(filePath.isAbsolute, "Path should be absolute: $path")
+        val packagePath = filePath.parent ?: return 0
+        return Math.abs(packagePath.toString().hashCode()) % numberOfBuckets
+    }
+}
+
+@Throws(IOException::class, URISyntaxException::class)
+private fun launchProcessing(
+    dexConversionParameters: DexArchiveBuilderTransform.DexConversionParameters,
+    outStream: OutputStream,
+    errStream: OutputStream,
+    receiver: MessageReceiver
+) {
+    val dexArchiveBuilder = getDexArchiveBuilder(
+        dexConversionParameters.minSdkVersion,
+        dexConversionParameters.dexAdditionalParameters,
+        dexConversionParameters.inBufferSize,
+        dexConversionParameters.outBufferSize,
+        dexConversionParameters.bootClasspath,
+        dexConversionParameters.classpath,
+        dexConversionParameters.dexer,
+        dexConversionParameters.isDebuggable,
+        VariantScope.Java8LangSupport.D8 == dexConversionParameters.java8LangSupportType,
+        outStream,
+        errStream,
+        receiver
+    )
+
+    val inputPath = dexConversionParameters.input.file.toPath()
+
+    val hasIncrementalInfo =
+        dexConversionParameters.isDirectoryBased && dexConversionParameters.isIncremental
+
+    fun toProcess(path: String): Boolean {
+        if (!dexConversionParameters.belongsToThisBucket(path)) return false
+
+        if (!hasIncrementalInfo) {
+            return true
+        }
+
+        val resolved = inputPath.resolve(path).toFile()
+        if (dexConversionParameters.additionalPaths.contains(resolved)) {
+            return true
+        }
+        val changedFiles = (dexConversionParameters.input as DirectoryInput)
+            .changedFiles
+
+        val status = changedFiles[resolved]
+        return status == Status.ADDED || status == Status.CHANGED
+    }
+
+    val bucketFilter = { name: String -> toProcess(name) }
+    logger.verbose("Dexing '" + inputPath + "' to '" + dexConversionParameters.output + "'")
+
+    try {
+        ClassFileInputs.fromPath(inputPath).use { input ->
+            input.entries(bucketFilter).use { entries ->
+                dexArchiveBuilder.convert(
+                    entries,
+                    Paths.get(URI(dexConversionParameters.output)),
+                    dexConversionParameters.isDirectoryBased
+                )
+            }
+        }
+    } catch (ex: DexArchiveBuilderException) {
+        throw DexArchiveBuilderException("Failed to process $inputPath", ex)
+    }
+}
+
+private fun getDexArchiveBuilder(
+    minSdkVersion: Int,
+    dexAdditionalParameters: List<String>,
+    inBufferSize: Int,
+    outBufferSize: Int,
+    bootClasspath: DexArchiveBuilderTransform.ClasspathServiceKey,
+    classpath: DexArchiveBuilderTransform.ClasspathServiceKey,
+    dexer: DexerTool,
+    isDebuggable: Boolean,
+    d8DesugaringEnabled: Boolean,
+    outStream: OutputStream,
+    errStream: OutputStream,
+    messageReceiver: MessageReceiver
+): DexArchiveBuilder {
+
+    val dexArchiveBuilder: DexArchiveBuilder
+    when (dexer) {
+        DexerTool.DX -> {
+            val optimizedDex = !dexAdditionalParameters.contains("--no-optimize")
+            val dxContext = DxContext(outStream, errStream)
+            val config = DexArchiveBuilderConfig(
+                dxContext,
+                optimizedDex,
+                inBufferSize,
+                minSdkVersion,
+                DexerTool.DX,
+                outBufferSize,
+                DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx()
+            )
+
+            dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config)
+        }
+        DexerTool.D8 -> dexArchiveBuilder = DexArchiveBuilder.createD8DexBuilder(
+            minSdkVersion,
+            isDebuggable,
+            INSTANCE.getService(bootClasspath).service,
+            INSTANCE.getService(classpath).service,
+            d8DesugaringEnabled,
+            messageReceiver
+        )
+        else -> throw AssertionError("Unknown dexer type: " + dexer.name)
+    }
+    return dexArchiveBuilder
+}
+
+private const val DEFAULT_BUFFER_SIZE_IN_KB = 100
+private val DEFAULT_NUM_BUCKETS = Math.max(Runtime.getRuntime().availableProcessors() / 2, 1)
+private val logger = LoggerWrapper.getLogger(DexArchiveBuilderTransform::class.java)
