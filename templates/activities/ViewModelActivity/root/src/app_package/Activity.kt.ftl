@@ -2,9 +2,6 @@ package ${escapeKotlinIdentifiers(packageName)}
 
 import ${superClassFqcn}
 import android.os.Bundle
-<#if includeCppSupport!false>
-import kotlinx.android.synthetic.main.${layoutName}.*
-</#if>
 import ${escapeKotlinIdentifiers(packageName)}.${escapeKotlinIdentifiers(fragmentPackage)}.${fragmentClass}
 
 class ${activityClass} : AppCompatActivity() {
@@ -17,8 +14,5 @@ class ${activityClass} : AppCompatActivity() {
                 .replace(R.id.container, ${fragmentClass}.newInstance())
                 .commitNow()
         }
-<#include "../../../../common/jni_code_usage.kt.ftl">
     }
-<#include "../../../../common/jni_code_snippet.kt.ftl">
-
 }

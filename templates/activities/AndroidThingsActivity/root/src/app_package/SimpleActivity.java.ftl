@@ -2,9 +2,6 @@ package ${packageName};
 
 import ${superClassFqcn};
 import android.os.Bundle;
-<#if includeCppSupport!false>
-import android.widget.TextView;
-</#if>
 
 /**
  * Skeleton of an Android Things activity.
@@ -31,7 +28,5 @@ public class ${activityClass} extends AppCompatActivity {
 <#if generateLayout>
         setContentView(R.layout.${layoutName});
 </#if>
-<#include "../../../../common/jni_code_usage.java.ftl">
     }
-<#include "../../../../common/jni_code_snippet.java.ftl">
 }

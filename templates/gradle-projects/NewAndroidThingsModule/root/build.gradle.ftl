@@ -21,14 +21,6 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-    <#if (includeCppSupport!false) && cppFlags != "">
-        externalNativeBuild {
-            cmake {
-                cppFlags "${cppFlags}"
-            }
-        }
-    </#if>
     }
 <#if javaVersion?? && (javaVersion != "1.6" && buildApi lt 21 || javaVersion != "1.7")>
 
@@ -39,14 +31,6 @@ android {
 </#if>
 
 <@proguard.proguardConfig />
-
-<#if includeCppSupport!false>
-    externalNativeBuild {
-        cmake {
-            path "src/main/cpp/CMakeLists.txt"
-        }
-    }
-</#if>
 
     lintOptions {
         disable ('AllowBackup', 'GoogleAppIndexingWarning', 'MissingApplicationIcon')

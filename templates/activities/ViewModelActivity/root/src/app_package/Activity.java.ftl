@@ -2,9 +2,6 @@ package ${packageName};
 
 import ${superClassFqcn};
 import android.os.Bundle;
-<#if includeCppSupport!false>
-import android.widget.TextView;
-</#if>
 import ${packageName}.${fragmentPackage}.${fragmentClass};
 
 public class ${activityClass} extends AppCompatActivity {
@@ -18,7 +15,5 @@ public class ${activityClass} extends AppCompatActivity {
                 .replace(R.id.container, ${fragmentClass}.newInstance())
                 .commitNow();
         }
-<#include "../../../../common/jni_code_usage.java.ftl">
     }
-<#include "../../../../common/jni_code_snippet.java.ftl">
 }
