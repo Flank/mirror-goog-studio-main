@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.ResourceNamespace;
 import com.android.ide.common.rendering.api.ResourceReference;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.ResourceValueImpl;
@@ -35,7 +34,6 @@ import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Collection;
 import java.util.Collections;
@@ -99,12 +97,14 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         ANDROID,
                         new Object[] {
                             "values/strings.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
                                             + "    <string name=\"ok\">Ok</string>\n"
                                             + "</resources>\n",
                             "values/themes.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -118,6 +118,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "    </style>\n"
                                             + "</resources>\n",
                             "values/colors.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -127,6 +128,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "    <color name=\"bright_foreground_light\">@android:color/background_dark</color>\n"
                                             + "</resources>\n",
                             "values/ids.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -151,6 +153,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                             "mipmap-xhdpi/ic_launcher.png",
                             new byte[0],
                             "values/styles.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -173,6 +176,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "    </style>"
                                     + "</resources>\n",
                             "values/strings.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -187,12 +191,14 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                     + "    <string name=\"wallpaper_instructions\">Tap picture to set portrait wallpaper</string>\n"
                                     + "</resources>\n",
                             "values-es/strings.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
                                     + "    <string name=\"show_all_apps\">Todo</string>\n"
                                     + "</resources>\n",
                             "values/arrays.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -459,6 +465,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -503,6 +510,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -565,6 +573,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/styles.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -576,6 +585,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "    </style>\n"
                                             + "</resources>\n",
                             "layouts/layout.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -638,6 +648,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         ANDROID,
                         new Object[] {
                             "values/themes.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -657,6 +668,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "    <style name=\"Theme.DeviceDefault\" parent=\"Theme.Holo\"/>\n"
                                             + "</resources>\n",
                             "values/styles.xml",
+                                    // language=XML
                                     ""
                                             + "<resources>\n"
                                             + "    <style name=\"Widget.Button.Small\">\n"
@@ -681,6 +693,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/themes.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -751,6 +764,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         ANDROID,
                         new Object[] {
                             "values/themes.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -763,6 +777,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/themes.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -816,6 +831,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         ANDROID,
                         new Object[] {
                             "values/themes.xml",
+                            // language=XML
                             ""
                                     + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                     + "<resources>\n"
@@ -827,6 +843,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                         RES_AUTO,
                         new Object[] {
                             "values/colors.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -836,6 +853,7 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
                                             + "    <style name=\"MyStyle\"/>\n"
                                             + "</resources>\n",
                             "values/styles.xml",
+                                    // language=XML
                                     ""
                                             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                             + "<resources>\n"
@@ -885,60 +903,5 @@ public class ResourceResolverNoNamespacesTest extends TestCase {
         assertNull(resolver.findResValue("@android:color/doesnt_exist", false));
         assertNull(resolver.getTheme("NoTheme", false));
         assertNull(resolver.getTheme("NoTheme", true));
-    }
-
-    public void testResolverIds() throws Exception {
-        TestResourceRepository projectRepository =
-                resourceFixture.createTestResources(
-                        RES_AUTO,
-                        new Object[] {
-                            "layout/layout1.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout/layout2.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout-land/layout1.xml",
-                            "<!--contents doesn't matter-->",
-                            "layout-land/onlyLand.xml",
-                            "<!--contents doesn't matter-->",
-                            "layouts/layout.xml",
-                            ""
-                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                    + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                    + "    android:layout_width=\"match_parent\"\n"
-                                    + "    android:layout_height=\"match_parent\">\n"
-                                    + "\n"
-                                    + "    <TextView\n"
-                                    + "        android:id=\"@+id/new_id\"\n"
-                                    + "        style=\"@style/ButtonStyle\"\n"
-                                    + "        android:layout_width=\"wrap_content\"\n"
-                                    + "        android:layout_height=\"wrap_content\" />\n"
-                                    + "\n"
-                                    + "</RelativeLayout>\n",
-                        });
-        assertEquals(
-                Collections.singleton(RES_AUTO), projectRepository.getNamespaces());
-        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
-        assertNotNull(config);
-        Map<ResourceType, ResourceValueMap> projectResources =
-                ResourceRepositoryUtil.getConfiguredResources(projectRepository, config)
-                        .row(RES_AUTO);
-        assertNotNull(projectResources);
-
-        ResourceResolver resolver =
-                nonNamespacedResolver(projectResources, projectResources, "ButtonStyle");
-        assertNotNull(resolver);
-
-        ImmutableSet<String> libraryIds = ImmutableSet.of("lib_id1", "lib_id2");
-        resolver.setProjectIdChecker(ref -> libraryIds.contains(ref.getName()));
-
-        assertNull(resolver.findResValue("@id/not_found", false));
-        assertNull(resolver.findResValue("@id/new_id", false));
-        assertNull(resolver.findResValue("@id/framework_id1", false));
-        assertNotNull(resolver.findResValue("@android:id/framework_id1", false));
-        assertNotNull(resolver.findResValue("@id/lib_id1", false));
-
-        // See the comment in ResourceResolver#dereference. We need to fix this.
-        assertNotNull(resolver.findResValue("@id/lib_id1", true));
-        assertNotNull(resolver.findResValue("@android:id/lib_id1", false));
     }
 }

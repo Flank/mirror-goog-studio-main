@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.symbols;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -23,11 +24,11 @@ import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceVisibility;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -128,6 +129,23 @@ public final class SymbolIo {
     }
 
     /**
+     * Loads a symbol table from a symbol file created by aapt, but ignores all the resource values.
+     * It will also ignore any styleable children that are not under their parents.
+     *
+     * @param reader the reader for reading the symbol file
+     * @param filename the name of the symbol file for use in error messages
+     * @param tablePackage the package name associated with the table
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readFromAaptNoValues(
+            @NonNull BufferedReader reader, @NonNull String filename, @Nullable String tablePackage)
+            throws IOException {
+        return read(reader.lines(), filename, tablePackage, ReadConfiguration.AAPT_NO_VALUES);
+    }
+
+    /**
      * Loads a symbol table from a partial symbol file created by aapt during compilation.
      *
      * @param file the partial symbol file
@@ -153,18 +171,27 @@ public final class SymbolIo {
             @Nullable String tablePackage,
             @NonNull ReadConfiguration readConfiguration)
             throws IOException {
-        SymbolTable.Builder table;
-        try (Stream<String> lines = Files.lines(file.toPath(), Charsets.UTF_8)) {
-            Iterator<String> linesIterator = lines.iterator();
-            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, file.toPath());
-            table =
-                    new SymbolLineReader(readConfiguration, linesIterator, file.toPath(), startLine)
-                            .readLines();
+        String filename = file.getAbsolutePath();
+        try (Stream<String> lines = Files.lines(file.toPath())) {
+            return read(lines, filename, tablePackage, readConfiguration);
         }
+    }
+
+    @NonNull
+    private static SymbolTable read(
+            @NonNull Stream<String> lines,
+            @NonNull String filename,
+            @Nullable String tablePackage,
+            @NonNull ReadConfiguration readConfiguration)
+            throws IOException {
+        Iterator<String> linesIterator = lines.iterator();
+        int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filename);
+        SymbolTable.Builder table =
+                new SymbolLineReader(readConfiguration, linesIterator, filename, startLine)
+                        .readLines();
         if (tablePackage != null) {
             table.tablePackage(tablePackage);
         }
-
         return table.build();
     }
 
@@ -197,30 +224,29 @@ public final class SymbolIo {
     @NonNull
     private static SymbolTable readWithPackage(
             @NonNull Path file, @NonNull ReadConfiguration readConfiguration) throws IOException {
-        String tablePackage;
-        SymbolTable.Builder table;
-        try (Stream<String> lines = Files.lines(file, Charsets.UTF_8)) {
+        try (Stream<String> lines = Files.lines(file, UTF_8)) {
             Iterator<String> linesIterator = lines.iterator();
-            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, file);
+            String filePath = file.toString();
+            int startLine = checkFileTypeHeader(linesIterator, readConfiguration, filePath);
             if (!linesIterator.hasNext()) {
                 throw new IOException(
                         "Internal error: Symbol file with package cannot be empty. File located at: "
                                 + file);
             }
-            tablePackage = linesIterator.next().trim();
-            table =
-                    new SymbolLineReader(readConfiguration, linesIterator, file, startLine + 1)
+            String tablePackage = linesIterator.next().trim();
+            SymbolTable.Builder table =
+                    new SymbolLineReader(readConfiguration, linesIterator, filePath, startLine + 1)
                             .readLines();
-        }
 
-        table.tablePackage(tablePackage);
-        return table.build();
+            table.tablePackage(tablePackage);
+            return table.build();
+        }
     }
 
     private static int checkFileTypeHeader(
             @NonNull Iterator<String> lines,
             @NonNull ReadConfiguration readConfiguration,
-            @NonNull Path path)
+            @NonNull String filename)
             throws IOException {
         if (readConfiguration.fileTypeHeader == null) {
             return 1;
@@ -228,7 +254,7 @@ public final class SymbolIo {
         if (!lines.hasNext()) {
             throw new IOException(
                     "Internal Error: Invalid symbol file '"
-                            + path
+                            + filename
                             + "', cannot be empty for type '"
                             + readConfiguration
                             + "'");
@@ -237,7 +263,7 @@ public final class SymbolIo {
         if (!lines.hasNext() || !readConfiguration.fileTypeHeader.equals(firstLine)) {
             throw new IOException(
                     "Internal Error: Invalid symbol file '"
-                            + path
+                            + filename
                             + "', first line is incorrect for type '"
                             + readConfiguration
                             + "'.\n Expected '"
@@ -253,7 +279,7 @@ public final class SymbolIo {
         @NonNull private final SymbolTable.Builder table = SymbolTable.builder();
 
         @NonNull private final Iterator<String> lines;
-        @NonNull private final Path file;
+        @NonNull private final String filename;
         @NonNull private final ReadConfiguration readConfiguration;
 
         // Current line number and content
@@ -266,11 +292,11 @@ public final class SymbolIo {
         SymbolLineReader(
                 @NonNull ReadConfiguration readConfiguration,
                 @NonNull Iterator<String> lines,
-                @NonNull Path file,
+                @NonNull String filename,
                 int startLine) {
             this.readConfiguration = readConfiguration;
             this.lines = lines;
-            this.file = file;
+            this.filename = filename;
             currentLineNumber = startLine - 1;
         }
 
@@ -347,7 +373,7 @@ public final class SymbolIo {
                 throw new IOException(
                         String.format(
                                 "File format error reading %1$s line %2$d: '%3$s'",
-                                file.toString(), currentLineNumber, currentLineContent),
+                                filename, currentLineNumber, currentLineContent),
                         e);
             }
 

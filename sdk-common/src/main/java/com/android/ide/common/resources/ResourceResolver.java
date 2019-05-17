@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,7 +86,6 @@ public class ResourceResolver extends RenderResources {
     /** The resources should be searched in all the themes in the list in order. */
     @NonNull private final List<StyleResourceValue> mThemes;
 
-    @NonNull private Predicate<ResourceReference> mProjectIdChecker = res -> false;
     private LayoutLog mLogger;
 
     /** Contains the default parent for DeviceDefault styles (e.g. for API 18, "Holo") */
@@ -157,7 +155,6 @@ public class ResourceResolver extends RenderResources {
 
         ResourceResolver resolver =
                 new ResourceResolver(original.mResources, original.mDefaultTheme);
-        resolver.mProjectIdChecker = original.mProjectIdChecker;
         resolver.mLogger = original.mLogger;
         resolver.mStyleInheritanceMap.putAll(original.mStyleInheritanceMap);
         resolver.mReverseStyleInheritanceMap.putAll(original.mReverseStyleInheritanceMap);
@@ -285,16 +282,6 @@ public class ResourceResolver extends RenderResources {
     @Deprecated // TODO(namespaces)
     public Map<ResourceType, ResourceValueMap> getFrameworkResources() {
         return mResources.get(ResourceNamespace.ANDROID);
-    }
-
-    /**
-     * Provides a mechanism to check if a given resource of type {@link ResourceType#ID} is defined
-     * in the project.
-     *
-     * <p>TODO(namespaces): stop relying on R.txt and remove this.
-     */
-    public void setProjectIdChecker(@NonNull Predicate<ResourceReference> predicate) {
-        mProjectIdChecker = predicate;
     }
 
     // ---- RenderResources Methods
@@ -494,27 +481,6 @@ public class ResourceResolver extends RenderResources {
 
             if (value.getValue().startsWith(NEW_ID_PREFIX)) {
                 return null;
-            }
-
-            if (reference.getResourceType() == ResourceType.ID) {
-                // If it was not found and the type is an id, it is possible that the ID was
-                // generated dynamically (by the '@+' syntax) when compiling the framework
-                // resources or in a library, in which case it was not in the repositories.
-                // See FileResourceRepository#myAarDeclaredIds.
-                //
-                // TODO(namespaces): In the past we asked Bridge for the numeric id of the resource
-                // in question, which always returned a non-null ID (potentially generating a new
-                // one). In effect we assumed {@link ResourceType#ID} resources in the framework
-                // namespace always exist. The repo for framework resources needs to know which ids
-                // exist and which don't, so we can get rid of this.
-                boolean idExists =
-                        ResourceNamespace.ANDROID.equals(reference.getNamespace())
-                                || mProjectIdChecker.test(reference);
-
-                if (idExists) {
-                    // TODO(namespaces): Cache these?
-                    return new ResourceValueImpl(reference, null);
-                }
             }
 
             // Didn't find the resource anywhere.

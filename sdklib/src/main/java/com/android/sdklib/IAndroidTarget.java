@@ -17,7 +17,6 @@ package com.android.sdklib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +43,11 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     int MANIFEST_ATTRIBUTES = 9;
     /** OS path to the "data/layoutlib.jar" library. */
     int LAYOUT_LIB          = 10;
-    /** OS path to the "data/res" folder. */
-    int RESOURCES           = 11;
+    /**
+     * For render resources this is the OS path to framework_res.jar. For other framework resources
+     * this is the OS path to the "data/res" folder.
+     */
+    int RESOURCES = 11;
     /** OS path to the "data/fonts" folder. */
     int FONTS               = 12;
     /** OS path to the "data/widgets.txt" file. */
