@@ -65,9 +65,7 @@
             to="${destination}/mipmap-xxxhdpi/${icon}" />
 </#macro>
 
-<#if copyIcons>
-    <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
-</#if>
+<@copyIconCommands destination=escapeXmlAttribute(resOut)/>
 
 <#if !isLibraryProject>
     <instantiate from="root/res/values/styles.xml.ftl"

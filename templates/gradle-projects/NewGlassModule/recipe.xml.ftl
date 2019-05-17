@@ -11,7 +11,6 @@
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
-<#if copyIcons>
     <mkdir  at="${escapeXmlAttribute(resOut)}/drawable" />
     <copy from="root/res/mipmap-hdpi"
             to="${escapeXmlAttribute(resOut)}/mipmap-hdpi" />
@@ -21,7 +20,6 @@
             to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi" />
     <copy from="root/res/mipmap-xxhdpi"
             to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi" />
-</#if>
 <#if makeIgnore>
     <copy from="root://gradle-projects/common/gitignore"
             to="${escapeXmlAttribute(projectOut)}/.gitignore" />

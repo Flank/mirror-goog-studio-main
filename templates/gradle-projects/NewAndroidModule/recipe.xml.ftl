@@ -118,12 +118,10 @@
             to="${destination}/mipmap-xxxhdpi/${icon}" />
 </#macro>
 
-<#if copyIcons>
-    <#if !isLibraryProject>
-        <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
-    <#elseif hasInstantAppWrapper || isBaseFeature>
-        <@copyIconCommands destination=escapeXmlAttribute(baseFeatureResOut)/>
-    </#if>
+<#if !isLibraryProject>
+  <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
+<#elseif hasInstantAppWrapper || isBaseFeature>
+  <@copyIconCommands destination=escapeXmlAttribute(baseFeatureResOut)/>
 </#if>
 
 <#if !isLibraryProject>

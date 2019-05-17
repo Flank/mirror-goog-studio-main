@@ -20,10 +20,9 @@
             dist:instant="true" />
         </#if>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
-        android:label="@string/app_name"<#if copyIcons>
+        android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"<#if buildApi gte 25 && targetApi gte 25>
-        android:roundIcon="@mipmap/ic_launcher_round"</#if><#elseif assetName??>
-        android:icon="@drawable/${assetName}"</#if><#if buildApi gte 17>
+        android:roundIcon="@mipmap/ic_launcher_round"</#if><#if buildApi gte 17>
         android:supportsRtl="true"</#if>
         android:theme="@style/AppTheme"/>
 </manifest></#if>

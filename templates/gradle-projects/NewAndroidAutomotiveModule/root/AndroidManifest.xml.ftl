@@ -7,11 +7,9 @@
 
     <application
             android:allowBackup="true"
-            android:label="@string/app_name"<#if copyIcons>
+            android:label="@string/app_name"
             android:icon="@mipmap/ic_launcher"
-            android:roundIcon="@mipmap/ic_launcher_round"<#elseif assetName??>
-            android:icon="@drawable/${assetName}"</#if>
-            android:supportsRtl="true"
+            android:roundIcon="@mipmap/ic_launcher_round"            android:supportsRtl="true"
             android:theme="@style/AppTheme"/>
 
 </manifest>
