@@ -8,12 +8,6 @@
 
     <category value="Application" />
 
-    <parameter
-        id="makeIgnore"
-        name="Create .gitignore file"
-        type="boolean"
-        default="true" />
-
     <thumbs>
         <thumb>jetpack-benchmark-module.png</thumb>
     </thumbs>
