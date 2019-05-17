@@ -10,12 +10,6 @@
     <category value="Application" />
     <formfactor value="Automotive" />
 
-    <parameter
-        id="makeIgnore"
-        name="Create .gitignore file"
-        type="boolean"
-        default="true" />
-
     <thumbs>
         <thumb>car-module.png</thumb>
     </thumbs>

@@ -40,11 +40,6 @@
 
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
-<#if makeIgnore>
-    <copy from="root://gradle-projects/common/gitignore"
-            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
-</#if>
-
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#if hasMonolithicAppWrapper>
@@ -53,20 +48,12 @@
                    to="${monolithicAppOut}/src/main/AndroidManifest.xml" />
     <instantiate from="root/monolithic-build.gradle.ftl"
                    to="${monolithicAppOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root://gradle-projects/common/gitignore"
-                to="${monolithicAppOut}/.gitignore" />
-    </#if>
 </#if>
 
 <#if hasInstantAppWrapper>
     <mkdir at="${instantAppOut}" />
     <instantiate from="root/instantApp-build.gradle.ftl"
                    to="${instantAppOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root://gradle-projects/common/gitignore"
-                to="${instantAppOut}/.gitignore" />
-    </#if>
 
     <mkdir at="${baseFeatureOut}" />
     <instantiate from="root/baseFeature-AndroidManifest.xml.ftl"
@@ -76,10 +63,6 @@
 
     <instantiate from="root/baseFeature-build.gradle.ftl"
                    to="${baseFeatureOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root://gradle-projects/common/gitignore"
-                to="${baseFeatureOut}/.gitignore" />
-    </#if>
 <#elseif isInstantApp && !isBaseFeature>
     <merge from="root/baseFeatureDependency-build.gradle.ftl"
              to="${baseFeatureOut}/build.gradle" />

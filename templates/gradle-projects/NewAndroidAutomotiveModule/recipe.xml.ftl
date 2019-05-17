@@ -31,11 +31,6 @@
 
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
-<#if makeIgnore>
-    <copy from="root://gradle-projects/common/gitignore"
-            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
-</#if>
-
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#macro copyIconCommands destination>

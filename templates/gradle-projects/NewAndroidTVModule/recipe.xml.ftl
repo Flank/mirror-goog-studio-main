@@ -24,10 +24,6 @@
             to="${escapeXmlAttribute(resOut)}/mipmap-xhdpi" />
     <copy from="root/res/mipmap-xxhdpi"
             to="${escapeXmlAttribute(resOut)}/mipmap-xxhdpi" />
-<#if makeIgnore>
-    <copy from="root://gradle-projects/common/gitignore"
-            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
-</#if>
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
     <instantiate from="root/res/values/styles.xml"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
