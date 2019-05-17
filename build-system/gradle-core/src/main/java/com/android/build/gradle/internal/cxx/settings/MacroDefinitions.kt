@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
+import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.settings.Environment.*
 
 /**
@@ -40,127 +42,127 @@ enum class Macro(
     val example: String) {
 
     MIN_PLATFORM(
-        description = "The minimum Android platform supported by the current Android NDK",
+        description = "The minimum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "minPlatform",
         example = "16"),
     MAX_PLATFORM(
-        description = "The maximum Android platform supported by the current Android NDK",
+        description = "The maximum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "maxPlatform",
-        example = "28"),
+        example = "29"),
     PLATFORM_SYSTEM_VERSION(
         description = "The currently targeted Android system version, suitable for passing to " +
-                "CMake in CMAKE_SYSTEM_VERSION",
+                "CMake in CMAKE_SYSTEM_VERSION.",
         environment = NDK_PLATFORM,
         tag = "systemVersion",
-        example = "28"),
+        example = "19"),
     PLATFORM(
         description = "The currently targeted Android platform string, that can be passed to " +
-                "CMake in ANDROID_PLATFORM",
+                "CMake in ANDROID_PLATFORM.",
         environment = NDK_PLATFORM,
         tag = "platform",
-        example = "android-28"),
+        example = "android-19"),
     PLATFORM_CODE(
-        description = "The currently targeted Android platform code name",
+        description = "The currently targeted Android platform code name.",
         environment = NDK_PLATFORM,
         tag = "platformCode",
-        example = "Q"),
+        example = "K"),
     ABI_BITNESS(
-        description = "The bitness of the targeted ABI",
+        description = "The bitness of the targeted ABI.",
         environment = NDK_ABI,
         tag = "abiBitness",
         example = "64"),
     ABI_IS_64_BITS(
-        description = "Whether the targeted ABI is 64-bits",
+        description = "Whether the targeted ABI is 64-bits.",
         environment = NDK_ABI,
         tag = "abiIs64Bits",
         example = "1"),
     ABI_IS_DEFAULT(
-        description = "Whether the targeted ABI is a default ABI in the current Android NDK",
+        description = "Whether the targeted ABI is a default ABI in the current Android NDK.",
         environment = NDK_ABI,
         tag = "abiIsDefault",
         example = "1"),
     ABI_IS_DEPRECATED(
-        description = "True if the targeted ABI is deprecated in the current Android NDK",
+        description = "True if the targeted ABI is deprecated in the current Android NDK.",
         environment = NDK_ABI,
         tag = "abiIsDeprecated",
         example = "0"),
     ABI(
-        description = "Currently targeted ABI",
+        description = "Currently targeted ABI.",
         environment = GRADLE,
         tag = "abi",
         example = "x86_64"),
     SDK_DIR(
-        description = "Folder of the current Android SDK",
+        description = "Folder of the current Android SDK.",
         environment = GRADLE,
         tag = "sdkDir",
-        example = "/path/to/sdk"),
+        example = "\$HOME/Library/Android/sdk"),
     NDK_DIR(
-        description = "Folder of the current Android NDK",
+        description = "Folder of the current Android NDK.",
         environment = NDK,
         tag = "dir",
-        example = "${SDK_DIR.ref}/ndk/19.2.5345600"),
+        example = "${SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION"),
     NDK_CMAKE_TOOLCHAIN(
-        description = "Path to the current Android NDK's CMake toolchain",
+        description = "Path to the current Android NDK's CMake toolchain.",
         environment = NDK,
         tag = "toolchain",
-        example = "${NDK_DIR.ref}/cmake/android.toolchain.cmake"),
+        example = "${NDK_DIR.ref}/build/cmake/android.toolchain.cmake"),
     CMAKE_EXE(
-        description = "Path to CMake executable",
+        description = "Path to CMake executable.",
         environment = NDK,
         tag = "cmakeExecutable",
-        example = "/path/to/cmake.exe"),
+        example = "${SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake"),
     NINJA_EXE(
-        description = "Path to Ninja executable if one was found",
+        description = "Path to Ninja executable if one was found.",
         environment = NDK,
         tag = "ninjaExecutable",
-        example = "/path/to/ninja.exe"),
+        example = "${SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja"),
     NDK_VERSION(
-        description = "Version of NDK",
+        description = "Version of NDK.",
         environment = NDK,
         tag = "version",
-        example = "19.0.5232133"),
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION),
     NDK_VERSION_MAJOR(
-        description = "Version number major part",
+        description = "Version number major part.",
         environment = NDK,
         tag = "versionMajor",
         example = "19"),
     NDK_VERSION_MINOR(
-        description = "Version number minor part",
+        description = "Version number minor part.",
         environment = NDK,
         tag = "versionMinor",
-        example = "0"),
+        example = "2"),
     GRADLE_PROJECT_DIR(
-        description = "Folder of the gradle root project build.gradle",
+        description = "Folder of the gradle root project build.gradle.",
         environment = GRADLE,
         tag = "projectDir",
-        example = "/path/to/project"),
+        example = "\$PROJECTS/MyProject/Source/Android"),
     GRADLE_MODULE_DIR(
-        description = "Folder of the module level build.gradle",
+        description = "Folder of the module level build.gradle.",
         environment = GRADLE,
         tag = "moduleDir",
-        example = "${GRADLE_PROJECT_DIR.ref}/app1"),
+        example = "\$PROJECTS/MyProject/Source/Android/app1"),
     GRADLE_VARIANT_NAME(
-        description = "Name of the gradle variant",
+        description = "Name of the gradle variant.",
         environment = GRADLE,
         tag = "variantName",
         example = "debug"),
     GRADLE_MODULE_NAME(
-        description = "Name of the gradle module",
+        description = "Name of the gradle module.",
         environment = GRADLE,
         tag = "moduleName",
         example = "app1"),
     GRADLE_BUILD_ROOT(
-        description = "The default CMake build root that gradle uses",
+        description = "The default CMake build root that gradle uses.",
         environment = GRADLE,
         tag = "buildRoot",
-        example = "${GRADLE_MODULE_DIR.ref}/.cxx/debug/x86"),
+        example = "${GRADLE_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64"),
     GRADLE_LIBRARY_OUTPUT_DIRECTORY(
-        description = "The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses",
+        description = "The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.",
         environment = GRADLE,
         tag = "libraryOutputDir",
-        example = "${GRADLE_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86"),
+        example = "${GRADLE_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
     GRADLE_CMAKE_BUILD_TYPE(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",
@@ -168,27 +170,27 @@ enum class Macro(
         tag = "buildType",
         example = "Debug"),
     BUILT_IN_THIS_FILE(
-        description = "Path to this CMakeSettings.json file",
+        description = "Path to this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFile",
-        example = "${GRADLE_MODULE_DIR.ref}/cmake/CMakeSettings.json"),
+        example = "\$PROJECTS/MyProject/CMakeSettings.json"),
     BUILT_IN_THIS_FILE_DIR(
-        description = "Folder of this CMakeSettings.json file",
+        description = "Folder of this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFileDir",
-        example = "${GRADLE_MODULE_DIR.ref}/cmake"),
+        example = "\$PROJECTS/MyProject"),
     BUILT_IN_WORKSPACE_ROOT(
-        description = "Folder of the project level build.gradle file",
+        description = "Folder of the project level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "workspaceRoot",
-        example = "path/to/project"),
+        example = "\$PROJECTS/MyProject/Source/Android"),
     BUILT_IN_PROJECT_DIR(
-        description = "Folder of the module level build.gradle file",
+        description = "Folder of the module level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "projectDir",
-        example = "${BUILT_IN_WORKSPACE_ROOT.ref}/path/to/project/app"),
+        example = "\$PROJECTS/MyProject/Source/Android/app1"),
     GRADLE_IS_HOSTING(
-        description = "True if Android Gradle Plugin is hosting this CMakeSettings.json",
+        description = "True if Android Gradle Plugin is hosting this CMakeSettings.json.",
         environment = NDK_EXPOSED_BY_HOST,
         tag = "androidGradleIsHosting",
         example = "1");
@@ -200,6 +202,27 @@ enum class Macro(
     val ref =
         if (environment.namespace == "env") "\${$tag}"
         else "\${${environment.namespace}.$tag}"
+
+    /**
+     * The namespace-qualified name of this macro.
+     */
+    val qualifiedName get() = "${environment.namespace}.$tag"
+
+    companion object {
+        /**
+         * Look up the [Macro] enum for [name]. If [name] doesn't have a namespace then 'env' is
+         * used. If [name] cannot be found then null is returned.
+         */
+        @JvmStatic
+        fun lookup(name: String): Macro? {
+            val qualifiedName =
+                when {
+                    name.contains(".") -> name
+                    else -> "env.$name"
+                }
+            return values().singleOrNull { it.qualifiedName == qualifiedName }
+        }
+    }
 }
 
 /**
@@ -236,9 +259,9 @@ enum class Environment(
     NDK_ABI("android-ndk-abi-\${gradle.abi}", "ndk"),
     /**
      * Environment for macros exposed by Android Gradle Plugin. For example, ${gradle.ABI} is the
-     * name of the ABI that is currentlhy being built.
+     * name of the ABI that is currently being built.
      */
-    GRADLE("android-gradle", "gradle"),
+    GRADLE("android-gradle", "ndk"),
     /**
      * This is a special purpose environment that inherits from the others in the defined order.
      *
