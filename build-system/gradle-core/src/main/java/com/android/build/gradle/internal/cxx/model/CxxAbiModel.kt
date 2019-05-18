@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
@@ -117,4 +118,10 @@ interface CxxAbiModel {
      * The variant for this ABI
      */
     val variant: CxxVariantModel
+
+    /**
+     * Service provider entry for abi-level services. These are services naturally
+     * scoped at the module level.
+     */
+    val services: CxxServiceRegistry
 }

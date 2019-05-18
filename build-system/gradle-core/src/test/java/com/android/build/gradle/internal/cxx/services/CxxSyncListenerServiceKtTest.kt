@@ -16,23 +16,23 @@
 
 package com.android.build.gradle.internal.cxx.services
 
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
+import com.google.common.truth.Truth
 
-/**
- * Create the default service registry.
- */
-fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
-    val registry = CxxServiceRegistryBuilder()
-    createProcessJunctionService(global, registry)
-    createEvalIssueReporterService(global, registry)
-    return registry.build()
-}
+import org.junit.Test
 
-/**
- * Create the default module-level service registry.
- */
-fun createDefaultAbiServiceRegistry() : CxxServiceRegistry {
-    val registry = CxxServiceRegistryBuilder()
-    createSyncListenerService(registry)
-    return registry.build()
+class CxxSyncListenerServiceKtTest {
+
+    @Test
+    fun `validate that call to doAfterJsonGeneration is idempotent`() {
+        BasicCmakeMock().let {
+            val key = object : CxxAbiListenerServiceKey { }
+            var calls = 0
+            it.abi.doAfterJsonGeneration(key) { ++calls }
+            it.abi.doAfterJsonGeneration(key) { ++calls }
+            Truth.assertThat(calls).isEqualTo(0)
+            it.abi.executeListenersOnceAfterJsonGeneration()
+            Truth.assertThat(calls).isEqualTo(1)
+        }
+    }
 }

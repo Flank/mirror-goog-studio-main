@@ -19,15 +19,16 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
 import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.isCmakeForkVersion;
+import static com.android.build.gradle.internal.cxx.configure.ExternalNativeJsonGenerationUtilKt.registerWriteModelAfterJsonGeneration;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.createCxxAbiModel;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
-import static com.android.build.gradle.internal.cxx.model.JsonUtilKt.writeJsonToFile;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
+import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -325,7 +326,7 @@ public abstract class ExternalNativeJsonGenerator {
                 Files.write(
                         abi.getJsonGenerationLoggingRecordFile().toPath(),
                         toJsonString(recorder.getRecord()).getBytes(Charsets.UTF_8));
-                writeJsonToFile(abi);
+                executeListenersOnceAfterJsonGeneration(abi);
             }
         }
     }
@@ -432,6 +433,11 @@ public abstract class ExternalNativeJsonGenerator {
                     createCxxAbiModel(variant, abi, scope.getGlobalScope(), scope.getVariantData());
             abis.add(model);
             registerAbi(cxxBuildModel, model);
+
+            // Register callback to write Json after generation finishes.
+            // We don't write it now because sync configuration is executing. We want to defer
+            // until model building.
+            registerWriteModelAfterJsonGeneration(model);
         }
 
         GradleBuildVariant.Builder stats =

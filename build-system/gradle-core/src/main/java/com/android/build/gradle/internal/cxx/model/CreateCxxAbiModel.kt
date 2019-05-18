@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.services.createDefaultAbiServiceRegistry
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -33,6 +34,7 @@ fun createCxxAbiModel(
     global: GlobalScope,
     baseVariantData: BaseVariantData) : CxxAbiModel {
     return object : CxxAbiModel {
+        override val services by lazy { createDefaultAbiServiceRegistry() }
         override val variant = variant
         override val abi = abi
         override val info by lazy {

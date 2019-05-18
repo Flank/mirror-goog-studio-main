@@ -30,7 +30,7 @@ internal fun createFinishListenerService(services: CxxServiceRegistryBuilder) {
 
 /**
  * Registers a listener that runs when the build finishes.
- * @param key to identify listeners. Registering listeners with the same key would overwrite the
+ * @param key to identify afterSyncListeners. Registering afterSyncListeners with the same key would overwrite the
  *   previous listener registered under this key
  * @param listener the listener to be executed when build completes. If the listener throws an
  *   exception, it would bubble up and cause the gradle build to fail. So if it's OK for the
@@ -40,7 +40,7 @@ fun CxxBuildModel.runWhenBuildFinishes(key: String, listener: () -> Unit) {
     services[FINISH_LISTENER_SERVICE_KEY].finishListeners[key] = listener
 }
 
-/** Invokes all the registered listeners. This is invoked by Gradle when the build completes. */
+/** Invokes all the registered afterSyncListeners. This is invoked by Gradle when the build completes. */
 internal fun CxxBuildModel.runFinishListeners() {
     services[FINISH_LISTENER_SERVICE_KEY].finishListeners.forEach { (key, listener) ->
         infoln("Invoking finish listener '$key'...")

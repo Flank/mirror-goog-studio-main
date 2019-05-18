@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions
 import com.android.utils.FileUtils.join
 import org.mockito.Mockito.doReturn
@@ -25,6 +26,11 @@ import org.mockito.Mockito.mock
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
 class BasicCmakeMock : BasicModuleModelMock() {
+
+    // Walk all vals in the model and invoke them
+    val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
+    val variant by lazy { createCxxVariantModel(module, baseVariantData) }
+    val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
 
     val coreExternalNativeCmakeOptions = mock(
         CoreExternalNativeCmakeOptions::class.java,
@@ -42,6 +48,5 @@ class BasicCmakeMock : BasicModuleModelMock() {
         doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
-
     }
 }
