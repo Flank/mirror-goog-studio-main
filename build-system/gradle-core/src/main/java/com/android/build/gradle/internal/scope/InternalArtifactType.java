@@ -114,8 +114,8 @@ public enum InternalArtifactType implements ArtifactType {
     INSTANT_RUN_PACKAGED_RESOURCES,
     INSTANT_RUN_SPLIT_APK_RESOURCES,
     // linked res for the unified bundle
-    LINKED_RES_FOR_BUNDLE,
-    SHRUNK_LINKED_RES_FOR_BUNDLE,
+    LINKED_RES_FOR_BUNDLE(Kind.FILE),
+    SHRUNK_LINKED_RES_FOR_BUNDLE(Kind.FILE),
 
     // Artifacts for legacy multidex
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
@@ -248,7 +248,7 @@ public enum InternalArtifactType implements ArtifactType {
     ABI_PACKAGED_SPLIT,
     FULL_APK,
     APK,
-    APK_FOR_LOCAL_TEST,
+    APK_FOR_LOCAL_TEST(Kind.FILE),
     APK_MAPPING,
     AAR,
     INSTANTAPP_BUNDLE,
@@ -286,7 +286,7 @@ public enum InternalArtifactType implements ArtifactType {
     METADATA_BASE_MODULE_DECLARATION,
     // file containing only the application ID. It is used to synchronize all feature plugins
     // with the application module's application ID.
-    METADATA_APPLICATION_ID,
+    METADATA_APPLICATION_ID(Kind.FILE),
     FEATURE_RESOURCE_PKG,
     // File containing the list of transitive dependencies of a given feature. This is consumed
     // by other features to avoid repackaging the same thing.

@@ -89,11 +89,6 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
         Mockito.`when`(variantConfiguration.supportedAbis).thenReturn(setOf())
 
-        Mockito.`when`(artifacts.getFinalArtifactFiles(InternalArtifactType.LINKED_RES_FOR_BUNDLE))
-            .thenReturn(resFiles)
-        Mockito.`when`(resFiles.iterator()).thenReturn(
-            listOf(testFolder.newFile("res")).iterator())
-
         Mockito.`when`(variantScope.needsMergedJavaResStream).thenReturn(false)
         Mockito.`when`(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.MERGED_JAVA_RES))
             .thenReturn(javaResProvider)
@@ -141,6 +136,8 @@ class PerModuleBundleTaskTest {
         }
 
         Mockito.`when`(featureSetMetadata.singleFile).thenReturn(featureMetadata)
+
+        task.resFiles.set(testFolder.newFile("res"))
         task.outputDir.set(testFolder.newFolder("out"))
 
 

@@ -111,7 +111,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 // TODO: this should be unconditional b/69358522
                 task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.SYMBOL_LIST))
                 task.from(
-                    artifacts.getFinalArtifactFiles(InternalArtifactType.PACKAGED_RES),
+                    artifacts.getFinalProduct<Directory>(InternalArtifactType.PACKAGED_RES),
                     prependToCopyPath(SdkConstants.FD_RES)
                 )
                 // In non-namespaced projects bundle the library manifest straight to the AAR.

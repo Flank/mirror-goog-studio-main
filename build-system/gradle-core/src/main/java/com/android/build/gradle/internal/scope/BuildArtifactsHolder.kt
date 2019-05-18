@@ -176,8 +176,22 @@ abstract class BuildArtifactsHolder(
      * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
      */
     fun copy(artifactType: ArtifactType, from: BuildArtifactsHolder) {
+        copy(artifactType, from, artifactType)
+    }
+
+    /**
+     * Copies a published [ArtifactType] from another instance of [BuildArtifactsHolder] to this
+     * instance.
+     * This does not remove the original elements from the source [BuildArtifactsHolder].
+     *
+     * @param artifactType artifact type to copy to this holder.
+     * @param from source [BuildArtifactsHolder] to copy the produced artifacts from.
+     * @param originalArtifactType artifact type under which the producers are registered in the
+     * source [BuildArtifactsHolder], by default is the same [artifactType]
+     */
+    fun copy(artifactType: ArtifactType, from: BuildArtifactsHolder, originalArtifactType: ArtifactType = artifactType) {
         getProducerMap(artifactType).copy(artifactType,
-            from.getProducerMap(artifactType))
+            from.getProducerMap(originalArtifactType).getProducers(originalArtifactType))
     }
 
     /**
@@ -225,7 +239,6 @@ abstract class BuildArtifactsHolder(
     ) {
 
         val settableProperty = project.objects.fileProperty()
-
         produces(artifactType,
             fileProducersMap,
             operationType,

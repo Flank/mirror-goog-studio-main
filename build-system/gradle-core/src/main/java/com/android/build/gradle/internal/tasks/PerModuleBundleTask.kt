@@ -40,6 +40,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -73,10 +74,9 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
     lateinit var featureDexFiles: FileCollection
         private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var resFiles: BuildableArtifact
-        private set
+    abstract val resFiles: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -122,7 +122,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                 Relocator(FD_ASSETS)
             )
 
-            it.addJar(resFiles.single().toPath(), null, ResRelocator())
+            it.addJar(resFiles.get().asFile.toPath(), null, ResRelocator())
 
             // dex files
             val dexFilesSet = if (hasFeatureDexFiles()) featureDexFiles.files else dexFiles.files
@@ -206,12 +206,12 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
             artifacts.setTaskInputToFinalProduct(
                  InternalArtifactType.MERGED_ASSETS, task.assetsFiles)
-            task.resFiles = artifacts.getFinalArtifactFiles(
+            artifacts.setTaskInputToFinalProduct(
                     if (variantScope.useResourceShrinker()) {
                         InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE
                     } else {
                         InternalArtifactType.LINKED_RES_FOR_BUNDLE
-                    })
+                    }, task.resFiles)
             task.dexFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
                 StreamFilter.DEX)
             task.featureDexFiles =

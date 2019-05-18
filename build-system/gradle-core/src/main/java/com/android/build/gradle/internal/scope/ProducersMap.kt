@@ -81,7 +81,7 @@ class ProducersMap<T: FileSystemLocation>(
                 buildDirectory,
                 outputLocationResolver,
                 when (artifactType.kind()) {
-                    ArtifactType.Kind.DIRECTORY -> this.buildDirectory.dir("__EMPTY_DIR__")
+                    ArtifactType.Kind.DIRECTORY -> this.buildDirectory.dir("__EMPTY_DIR__$artifactType")
                     ArtifactType.Kind.FILE -> this.buildDirectory.file("__EMPTY_FILE__")
                 } as Provider<T>,
                 objectFactory.listProperty(
@@ -113,8 +113,8 @@ class ProducersMap<T: FileSystemLocation>(
      * @param artifactType the artifact type for the producers to be copied in this map.
      * @param source the originating producers map to copy from.
      */
-    fun copy(artifactType: ArtifactType, source: ProducersMap<out FileSystemLocation>) {
-        producersMap[artifactType] = source.getProducers(artifactType) as Producers<T>
+    fun copy(artifactType: ArtifactType, source: Producers<out FileSystemLocation>) {
+        producersMap[artifactType] = source as Producers<T>
     }
 
     /**

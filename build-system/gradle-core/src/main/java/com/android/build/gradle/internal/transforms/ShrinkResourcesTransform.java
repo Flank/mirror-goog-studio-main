@@ -102,7 +102,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final Logger logger;
 
     @NonNull private final Provider<RegularFile> lightRClasses;
-    @NonNull private final BuildableArtifact resourceDir;
+    @NonNull private final Provider<Directory> resourceDir;
     @Nullable private final BuildableArtifact mappingFileSrc;
     @NonNull private final Provider<Directory> mergedManifests;
     @NonNull private final Provider<Directory> uncompressedResources;
@@ -131,8 +131,10 @@ public class ShrinkResourcesTransform extends Transform {
                 artifacts.getFinalProduct(
                         InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
 
-        this.resourceDir = variantScope.getArtifacts().getFinalArtifactFiles(
-                InternalArtifactType.MERGED_NOT_COMPILED_RES);
+        this.resourceDir =
+                variantScope
+                        .getArtifacts()
+                        .getFinalProduct(InternalArtifactType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
                 variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
                         ? variantScope
@@ -197,7 +199,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         // FIXME use Task output to get FileCollection for sourceDir/resourceDir
         secondaryFiles.add(SecondaryFile.nonIncremental(lightRClasses.get().getAsFile()));
-        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir));
+        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir.get().getAsFile()));
 
         if (mappingFileSrc != null) {
             secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
@@ -427,7 +429,7 @@ public class ShrinkResourcesTransform extends Transform {
                     transform.variantData.getVariantConfiguration().getBuildType().getName();
 
             lightRClasses = transform.lightRClasses.get().getAsFile();
-            resourceDir = BuildableArtifactUtil.singleFile(transform.resourceDir);
+            resourceDir = transform.resourceDir.get().getAsFile();
             isInfoLoggingEnabled = transform.logger.isEnabled(LogLevel.INFO);
             isDebugLoggingEnabled = transform.logger.isEnabled(LogLevel.DEBUG);
         }

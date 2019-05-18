@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.TestOptions
 import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -36,6 +34,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -133,12 +132,12 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
         @get:Optional
-        val resourceApk: BuildableArtifact?
+        val resourceApk: Provider<RegularFile>?
 
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
         @get:Optional
-        val mergedResources: BuildableArtifact?
+        val mergedResources: Provider<Directory>?
 
         @get:InputFiles
         @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -165,14 +164,18 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = if (unitTestBinaryResourcesEnabled) {
-                scope.artifacts.getFinalArtifactFiles(APK_FOR_LOCAL_TEST)
+                if (scope.artifacts.hasFinalProduct(APK_FOR_LOCAL_TEST)) {
+                    scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
+                } else null
             } else {
                 null
             }
             mergedResources = if (unitTestBinaryResourcesEnabled) {
                 null
             } else {
-                scope.artifacts.getFinalArtifactFiles(MERGED_RES)
+                if (scope.artifacts.hasFinalProduct(MERGED_RES)) {
+                    scope.artifacts.getFinalProduct(MERGED_RES)
+                } else null
             }
             mergedAssets = testedScope.artifacts.getFinalProduct(MERGED_ASSETS)
             mergedManifest = testedScope.artifacts.getFinalProduct(MERGED_MANIFESTS)
@@ -193,8 +196,8 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
                     .element(mainApkInfo) ?: error("Unable to find manifest output")
 
             return TestConfigProperties(
-                resourceApk?.let { getRelativePathIfRequired(it.singleFile(), projectDir) },
-                mergedResources?.let { getRelativePathIfRequired(it.singleFile(), projectDir) },
+                resourceApk?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
+                mergedResources?.get()?.let { getRelativePathIfRequired(it.asFile, projectDir) },
                 getRelativePathIfRequired(mergedAssets.get().asFile, projectDir),
                 getRelativePathIfRequired(manifestOutput.outputFile, projectDir),
                 packageNameOfFinalRClass

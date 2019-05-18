@@ -17,9 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.google.common.annotations.VisibleForTesting
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.Aapt2ProcessResourcesRunnable
@@ -47,7 +45,6 @@ import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -76,7 +73,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     // Merged resources directory.
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var inputDirectory: BuildableArtifact private set
+    abstract val inputDirectory: DirectoryProperty
 
     lateinit var taskInputType: InternalArtifactType private set
 
@@ -116,7 +113,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         // Mark all files as NEW and continue with the verification.
         val fileStatusMap = HashMap<File, FileStatus>()
 
-        inputDirectory.singleFile().listFiles()
+        inputDirectory.get().asFile.listFiles()
                 .filter { it.isDirectory}
                 .forEach { dir ->
                     dir.listFiles()
@@ -151,7 +148,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 compiledDirectory,
                 facade,
                 aapt2ServiceKey,
-                inputDirectory.singleFile(),
+                inputDirectory.get().asFile,
                 errorFormatMode,
                 mergeBlameFolder
             )
@@ -203,8 +200,10 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
-            task.inputDirectory =
-                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_RES,
+                task.inputDirectory
+            )
 
             task.compiledDirectory = variantScope.compiledResourcesOutputDir
 

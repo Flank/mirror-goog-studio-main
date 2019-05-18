@@ -116,7 +116,6 @@ public class ShrinkResourcesTest {
                 return project.getIntermediateFile(
                         "shrunk_linked_res_for_bundle",
                         "release",
-                        "shrinkReleaseResources",
                         "shrunk-bundled-res.ap_");
         }
         throw new IllegalStateException();
@@ -134,7 +133,6 @@ public class ShrinkResourcesTest {
                 return project.getIntermediateFile(
                         "linked_res_for_bundle",
                         "release",
-                        "bundleReleaseResources",
                         "bundled-res.ap_");
         }
         throw new IllegalStateException();

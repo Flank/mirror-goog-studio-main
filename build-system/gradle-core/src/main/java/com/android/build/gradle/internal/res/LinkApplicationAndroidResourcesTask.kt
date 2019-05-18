@@ -21,10 +21,8 @@ import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
 import com.android.build.VariantOutput
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -225,8 +223,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var inputResourcesDir: BuildableArtifact? = null
-        private set
+    abstract val inputResourcesDir: DirectoryProperty
 
     private lateinit var variantScope: VariantScope
 
@@ -622,10 +619,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
                 )
-
-            task.inputResourcesDir = variantScope
-                .artifacts
-                .getFinalArtifactFiles(sourceArtifactType.outputType)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                sourceArtifactType.outputType,
+                task.inputResourcesDir
+            )
 
             @Suppress("UNCHECKED_CAST")
             task.textSymbolOutputDir = symbolLocation as Supplier<File?>
@@ -923,7 +920,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val androidJarPath: String =
             task.androidJar.get().absolutePath
         val convertedLibraryDependenciesFile= task.convertedLibraryDependencies.orNull?.asFile
-        val inputResourcesDir: File? = task.inputResourcesDir?.singleFile()
+        val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
         val mergeBlameFolder: File = task.mergeBlameLogFolder
         val isLibrary: Boolean = task.isLibrary
         val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile

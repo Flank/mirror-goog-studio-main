@@ -857,9 +857,6 @@ public abstract class TaskManager {
             @Nullable PreConfigAction preConfigCallback,
             @Nullable TaskConfigAction<MergeResources> configCallback) {
 
-        File mergedOutputDir = MoreObjects
-                .firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir());
-
         String taskNamePrefix = mergeType.name().toLowerCase(Locale.ENGLISH);
 
         File mergedNotCompiledDir =
@@ -876,7 +873,6 @@ public abstract class TaskManager {
                                 scope,
                                 mergeType,
                                 taskNamePrefix,
-                                mergedOutputDir,
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
@@ -886,17 +882,31 @@ public abstract class TaskManager {
                         null);
 
         scope.getArtifacts()
-                .appendArtifact(
+                .producesDir(
                         mergeType.getOutputType(),
-                        ImmutableList.of(mergedOutputDir),
-                        mergeResourcesTask.getName());
+                        BuildArtifactsHolder.OperationType.INITIAL,
+                        mergeResourcesTask,
+                        MergeResources::getOutputDir,
+                        project.getLayout()
+                                .getBuildDirectory()
+                                .dir(
+                                        MoreObjects.firstNonNull(
+                                                        outputLocation,
+                                                        scope.getDefaultMergeResourcesOutputDir())
+                                                .getAbsolutePath()),
+                        "");
 
         if (alsoOutputNotCompiledResources) {
             scope.getArtifacts()
-                    .appendArtifact(
-                            InternalArtifactType.MERGED_NOT_COMPILED_RES,
-                            ImmutableList.of(mergedNotCompiledDir),
-                            mergeResourcesTask.getName());
+                    .producesDir(
+                            MERGED_NOT_COMPILED_RES,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            mergeResourcesTask,
+                            MergeResources::getMergedNotCompiledResourcesOutputDirectory,
+                            project.getLayout()
+                                    .getBuildDirectory()
+                                    .dir(mergedNotCompiledDir.getAbsolutePath()),
+                            "");
         }
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
@@ -1509,12 +1519,10 @@ public abstract class TaskManager {
                     // TODO: don't implicitly subtract tested component in APKs, as that only
                     // makes sense for instrumentation tests. For now, rely on the production
                     // merged resources.
-                    artifacts.createBuildableArtifact(
+                    artifacts.copy(
                             InternalArtifactType.MERGED_RES,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            testedVariantScope
-                                    .getArtifacts()
-                                    .getFinalArtifactFiles(MERGED_NOT_COMPILED_RES));
+                            testedVariantScope.getArtifacts(),
+                            MERGED_NOT_COMPILED_RES);
                 }
             } else {
                 throw new IllegalStateException(

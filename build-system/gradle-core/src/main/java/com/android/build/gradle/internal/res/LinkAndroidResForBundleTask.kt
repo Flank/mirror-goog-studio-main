@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.res
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.dsl.convert
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -25,6 +24,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -49,6 +49,7 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -60,6 +61,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -96,8 +98,7 @@ abstract class LinkAndroidResForBundleTask
         private set
 
     @get:OutputFile
-    lateinit var bundledResFile: File
-        private set
+    abstract val bundledResFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -141,7 +142,8 @@ abstract class LinkAndroidResForBundleTask
                 ?.outputFile
                 ?: throw RuntimeException("Cannot find merged manifest file")
 
-        FileUtils.mkdirs(bundledResFile.parentFile)
+        val outputFile = bundledResFile.get().asFile
+        FileUtils.mkdirs(outputFile.parentFile)
 
         val featurePackagesBuilder = ImmutableList.builder<File>()
         for (featurePackage in featureResourcePackages) {
@@ -166,19 +168,19 @@ abstract class LinkAndroidResForBundleTask
             generateProtos = true,
             manifestFile = manifestFile,
             options = aaptOptions,
-            resourceOutputApk = bundledResFile,
+            resourceOutputApk = outputFile,
             variantType = VariantTypeImpl.BASE_APK,
             debuggable = debuggable,
             packageId = resOffset,
             allowReservedPackageId = minSdkVersion < AndroidVersion.VersionCodes.O,
             dependentFeatures = featurePackagesBuilder.build(),
             resourceDirs = ImmutableList.Builder<File>().addAll(compiledRemoteResourcesDirs).add(
-                checkNotNull(getInputResourcesDir()).single()
+                checkNotNull(getInputResourcesDir().orNull?.asFile)
             ).build(),
             resourceConfigs = ImmutableSet.copyOf(resConfig)
         )
         if (logger.isInfoEnabled) {
-            logger.info("Aapt output file {}", bundledResFile.absolutePath)
+            logger.info("Aapt output file {}", outputFile.absolutePath)
         }
 
         val aapt2ServiceKey = registerAaptService(
@@ -203,14 +205,10 @@ abstract class LinkAndroidResForBundleTask
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val manifestFiles: DirectoryProperty
 
-    private var inputResourcesDir: BuildableArtifact? = null
-
     @InputFiles
     @Optional
     @PathSensitive(PathSensitivity.RELATIVE)
-    fun getInputResourcesDir(): BuildableArtifact? {
-        return inputResourcesDir
-    }
+    abstract fun getInputResourcesDir(): DirectoryProperty
 
     @get:Input
     lateinit var resConfig: Collection<String> private set
@@ -243,14 +241,15 @@ abstract class LinkAndroidResForBundleTask
         override val type: Class<LinkAndroidResForBundleTask>
             get() = LinkAndroidResForBundleTask::class.java
 
-        private lateinit var bundledResFile: File
+        override fun handleProvider(taskProvider: TaskProvider<out LinkAndroidResForBundleTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                LinkAndroidResForBundleTask::bundledResFile,
+                "bundled-res.ap_")
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            bundledResFile = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.LINKED_RES_FOR_BUNDLE,
-                    taskName,
-                    "bundled-res.ap_")
         }
 
         override fun configure(task: LinkAndroidResForBundleTask) {
@@ -261,8 +260,6 @@ abstract class LinkAndroidResForBundleTask
             val projectOptions = variantScope.globalScope.projectOptions
 
             val config = variantData.variantConfiguration
-
-            task.bundledResFile = bundledResFile
 
             task.incrementalFolder = variantScope.getIncrementalDir(name)
 
@@ -279,8 +276,10 @@ abstract class LinkAndroidResForBundleTask
                 InternalArtifactType.BUNDLE_MANIFEST,
                 task.manifestFiles)
 
-            task.inputResourcesDir =
-                    variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.MERGED_RES)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_RES,
+                task.getInputResourcesDir()
+            )
 
             task.featureResourcePackages = variantScope.getArtifactFileCollection(
                 COMPILE_CLASSPATH, PROJECT, FEATURE_RESOURCE_PKG)

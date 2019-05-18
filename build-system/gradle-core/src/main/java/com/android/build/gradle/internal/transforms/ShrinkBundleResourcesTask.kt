@@ -20,6 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -31,11 +32,13 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.xml.sax.SAXException
 import java.io.File
 import java.io.IOException
@@ -47,13 +50,10 @@ import javax.xml.parsers.ParserConfigurationException
 abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
     @get:OutputFile
-    lateinit var compressedResourceFile: File
-        private set
+    abstract val compressedResources: RegularFileProperty
 
-
-    @get:InputFiles
-    lateinit var uncompressedResources: BuildableArtifact
-        private set
+    @get:InputFile
+    abstract val uncompressedResources: RegularFileProperty
 
     @get:InputFiles
     lateinit var dex: FileCollection
@@ -65,8 +65,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var resourceDir: BuildableArtifact
-        private set
+    abstract val resourceDir: DirectoryProperty
 
     @get:InputFiles
     @get:Optional
@@ -79,7 +78,8 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
     private lateinit var mainSplit: ApkData
 
     override fun doTaskAction() {
-        val uncompressedResourceFile = uncompressedResources.singleFile()
+        val uncompressedResourceFile = uncompressedResources.get().asFile
+        val compressedResourceFile= compressedResources.get().asFile
 
         val classes = dex.files
 
@@ -105,7 +105,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             classes,
             manifestFile,
             mappingFile,
-            resourceDir.singleFile(),
+            resourceDir.get().asFile,
             reportFile,
             ResourceUsageAnalyzer.ApkFormat.PROTO
         )
@@ -162,24 +162,23 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         override val type: Class<ShrinkBundleResourcesTask>
             get() = ShrinkBundleResourcesTask::class.java
 
-        private lateinit var outputLocation: File
-
-        override fun preConfigure(taskName: String) {
-            outputLocation =
-                    variantScope.artifacts
-                        .appendArtifact(
-                            InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
-                            taskName,
-                            "shrunk-bundled-res.ap_"
-                        )
+        override fun handleProvider(taskProvider: TaskProvider<out ShrinkBundleResourcesTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.SHRUNK_LINKED_RES_FOR_BUNDLE,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ShrinkBundleResourcesTask::compressedResources,
+                "shrunk-bundled-res.ap_"
+            )
         }
 
         override fun configure(task: ShrinkBundleResourcesTask) {
             super.configure(task)
 
-            task.compressedResourceFile = outputLocation
-            task.uncompressedResources = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.LINKED_RES_FOR_BUNDLE
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LINKED_RES_FOR_BUNDLE,
+                task.uncompressedResources
             )
             task.mainSplit = variantScope.variantData.outputScope.mainSplit
 
@@ -189,9 +188,9 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
                 task.lightRClasses
             )
-            task.resourceDir = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.MERGED_NOT_COMPILED_RES
-            )
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.MERGED_NOT_COMPILED_RES,
+                task.resourceDir)
             task.mappingFileSrc =
                     if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
                         variantScope
