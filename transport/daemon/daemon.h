@@ -129,6 +129,8 @@ class Daemon {
 
   // Registers a function callback for a specific command.
   // Each command may only be registered once.
+  // The registered handler is expected to return a pointer pointing to
+  // a location in the heap that can be wrapped by std::unqiue_ptr.
   void RegisterCommandHandler(
       proto::Command::CommandType type,
       const std::function<Command*(proto::Command)>& command) {
