@@ -125,8 +125,8 @@ struct TraceManagerTest : testing::Test {
     // Test does not validate trace output so we don't need to wait for trace
     // file.
     TraceStopStatus::Status status;
-    capture =
-        trace_manager->StopProfiling("fake_app", false, &status, &error_string);
+    capture = trace_manager->StopProfiling(1, "fake_app", false, &status,
+                                           &error_string);
     EXPECT_NE(capture, nullptr);
 
     // Validate state.
@@ -289,8 +289,8 @@ TEST_F(TraceManagerTest, StopBeforeStartsDoesNothing) {
 
   std::string error_string;
   TraceStopStatus::Status status;
-  auto* capture =
-      trace_manager->StopProfiling("fake_app", false, &status, &error_string);
+  auto* capture = trace_manager->StopProfiling(1, "fake_app", false, &status,
+                                               &error_string);
   EXPECT_EQ(capture, nullptr);
   EXPECT_EQ(status, TraceStopStatus::NO_ONGOING_PROFILING);
   EXPECT_NE(error_string, "");
@@ -324,8 +324,8 @@ TEST_F(TraceManagerTest, StartStopSequence) {
   clock_.SetCurrentTime(20);
   std::string error_string2;
   TraceStopStatus::Status status;
-  capture =
-      trace_manager->StopProfiling("fake_app", false, &status, &error_string2);
+  capture = trace_manager->StopProfiling(15, "fake_app", false, &status,
+                                         &error_string2);
   EXPECT_NE(capture, nullptr);
   EXPECT_EQ(error_string2, "");
   EXPECT_EQ(capture->start_timestamp, 10);
@@ -367,7 +367,7 @@ TEST_F(TraceManagerTest, GetOngoingCapture) {
   clock_.SetCurrentTime(20);
   std::string error_string2;
   TraceStopStatus::Status status;
-  trace_manager->StopProfiling("fake_app", false, &status, &error_string2);
+  trace_manager->StopProfiling(15, "fake_app", false, &status, &error_string2);
   capture = trace_manager->GetOngoingCapture("fake_app");
   EXPECT_EQ(capture, nullptr);
 
@@ -417,7 +417,7 @@ TEST_F(TraceManagerTest, GetCaptures) {
   clock_.SetCurrentTime(20);
   std::string error_string2;
   TraceStopStatus::Status status;
-  trace_manager->StopProfiling("fake_app1", false, &status, &error_string2);
+  trace_manager->StopProfiling(15, "fake_app1", false, &status, &error_string2);
 
   // In-range query 3 (finished capture)
   captures = trace_manager->GetCaptures("fake_app1", 11, 20);

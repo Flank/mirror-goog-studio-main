@@ -31,6 +31,7 @@
 #include "proto/transport.grpc.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/clock.h"
+#include "utils/count_down_latch.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/termination_service.h"
 #include "utils/time_value_buffer.h"
@@ -105,7 +106,8 @@ class TraceManager final {
   // trace (e.g. it stops any ongoing trace), the more correct logic would be
   // to pass in a |CpuTraceConfiguration| and validate we are stopping the
   // correct one.
-  ProfilingApp* StopProfiling(const std::string& app_name, bool need_trace,
+  ProfilingApp* StopProfiling(int64_t request_timestamp_ns,
+                              const std::string& app_name, bool need_trace,
                               proto::TraceStopStatus::Status* status,
                               std::string* error);
 

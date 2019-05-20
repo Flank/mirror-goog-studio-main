@@ -53,7 +53,6 @@ using profiler::proto::GetTraceInfoRequest;
 using profiler::proto::GetTraceInfoResponse;
 using profiler::proto::TraceStartStatus;
 using profiler::proto::TraceStopStatus;
-
 using std::map;
 using std::string;
 using std::vector;
@@ -201,8 +200,8 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
   proto::TraceStopStatus::Status status;
   string error;
   bool need_response = response != nullptr;
-  ProfilingApp* capture =
-      trace_manager_->StopProfiling(app_name, need_response, &status, &error);
+  ProfilingApp* capture = trace_manager_->StopProfiling(
+      clock_->GetCurrentTime(), app_name, need_response, &status, &error);
 
   if (need_response) {
     if (status == TraceStopStatus::SUCCESS) {

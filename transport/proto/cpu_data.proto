@@ -153,6 +153,28 @@ message CpuTraceInfo {
   CpuTraceConfiguration configuration = 4;
 }
 
+message CpuTraceData {
+  message TraceStarted {
+    CpuTraceInfo trace_info = 1;
+  }
+
+  message TraceEnded {
+    CpuTraceInfo trace_info = 1;
+  }
+
+  oneof union {
+    TraceStarted trace_started = 1;
+    TraceEnded trace_ended = 2;
+  }
+}
+
+message CpuTraceStatusData {
+  oneof union {
+    TraceStartStatus trace_start_status = 1;
+    TraceStopStatus trace_stop_status = 2;
+  }
+}
+
 message StartCpuTrace {
   // Agent is responsible for providing these additional info for API-
   // initiated tracing.
@@ -171,7 +193,7 @@ message StopCpuTrace {
     int64 stop_timestamp = 1;
     // The raw bytes of the trace. The daemon is responsible for storing
     // this in the generic cache that can be referenced via the trace's id.
-    string trace_content = 2;
+    bytes trace_content = 2;
   }
   CpuTraceConfiguration configuration = 1;
     // Set only if configuration's initiation_type is |INITIATED_BY_API|.

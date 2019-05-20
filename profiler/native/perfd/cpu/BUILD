@@ -5,6 +5,8 @@ cc_library(
     srcs = [
         "atrace.cc",
         "atrace_manager.cc",
+        "commands/start_cpu_trace.cc",
+        "commands/stop_cpu_trace.cc",
         "cpu_cache.cc",
         "cpu_collector.cc",
         "cpu_config.cc",
@@ -23,6 +25,8 @@ cc_library(
     hdrs = [
         "atrace.h",
         "atrace_manager.h",
+        "commands/start_cpu_trace.h",
+        "commands/stop_cpu_trace.h",
         "cpu_cache.h",
         "cpu_collector.h",
         "cpu_config.h",
@@ -51,6 +55,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd:perfd_internal_headers",
+        "//tools/base/transport/daemon",
         "//tools/base/transport/proto:cc_proto",
         "//tools/base/transport/utils",
         "@perfetto_repo//:cc_proto",
@@ -61,6 +66,7 @@ cc_test(
     name = "perfd_cpu_tests",
     srcs = [
         "atrace_manager_test.cc",
+        "commands/cpu_trace_commands_test.cc",
         "cpu_config_test.cc",
         "cpu_usage_sampler_test.cc",
         "fake_atrace.h",
@@ -89,6 +95,8 @@ cc_test(
         "//tools/base/profiler/native/perfd",
         "//tools/base/profiler/native/test:testutils",
         "//tools/base/transport/daemon",
+        "//tools/base/transport/proto:cc_proto",
+        "//tools/base/transport/utils",
         "@perfetto_repo//:cc_proto",
     ],
 )

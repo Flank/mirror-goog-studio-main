@@ -19,6 +19,7 @@
 #include <climits>
 #include <functional>
 #include <list>
+#include <map>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -27,6 +28,7 @@
 #include "perfd/sessions/session.h"
 #include "proto/common.pb.h"
 #include "proto/profiler.grpc.pb.h"
+#include "utils/producer_consumer_queue.h"
 
 namespace profiler {
 
@@ -51,12 +53,19 @@ class SessionsManager final {
   // Visible for testing.
   void ClearSessions();
 
+  // If a session associated with |app_name| is alive, send the events
+  // immeidately. Otherwise, the events will be queued and sent when the
+  // session is created.
+  void SendOrQueueEventsForSession(Daemon *daemon, const std::string &app_name,
+                                   const std::vector<proto::Event> &events);
+
  private:
   SessionsManager() = default;
   void DoEndSession(Daemon *daemon, profiler::Session *session,
                     int64_t timestamp_ns);
 
   std::vector<std::unique_ptr<profiler::Session>> sessions_;
+  std::map<std::string, ProducerConsumerQueue<proto::Event>> app_events_queue_;
 };
 
 }  // namespace profiler

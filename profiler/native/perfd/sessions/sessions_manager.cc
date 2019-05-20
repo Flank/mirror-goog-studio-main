@@ -18,6 +18,7 @@
 #include <algorithm>
 #include "daemon/daemon.h"
 #include "proto/profiler.pb.h"
+#include "utils/process_manager.h"
 
 namespace profiler {
 
@@ -35,12 +36,30 @@ void SessionsManager::BeginSession(Daemon* daemon, int64_t stream_id,
                                    int32_t pid,
                                    const proto::BeginSession& data) {
   int64_t now = daemon->clock()->GetCurrentTime();
-  for (const auto& component : daemon->GetProfilerComponents()) {
-    now = std::min(now, component->GetEarliestDataTime(pid));
-  }
-
   if (!sessions_.empty()) {
     DoEndSession(daemon, sessions_.back().get(), now);
+  }
+
+  bool unified_pipeline =
+      daemon->config()->GetConfig().common().profiler_unified_pipeline();
+  if (unified_pipeline) {
+    std::string app_name = ProcessManager::GetCmdlineForPid(pid);
+    // Drains and sends the queued events.
+    auto itr = app_events_queue_.find(app_name);
+    if (itr != app_events_queue_.end()) {
+      auto queue = itr->second.Drain();
+      while (!queue.empty()) {
+        auto& event = queue.front();
+        event.set_pid(pid);
+        daemon->buffer()->Add(event);
+        now = std::min(now, event.timestamp());
+        queue.pop_front();
+      }
+    }
+  } else {
+    for (const auto& component : daemon->GetProfilerComponents()) {
+      now = std::min(now, component->GetEarliestDataTime(pid));
+    }
   }
 
   std::unique_ptr<Session> session(new Session(stream_id, pid, now, daemon));
@@ -98,6 +117,40 @@ void SessionsManager::DoEndSession(Daemon* daemon, profiler::Session* session,
     event.set_kind(proto::Event::SESSION);
     event.set_is_ended(true);
     daemon->buffer()->Add(event);
+  }
+}
+
+void SessionsManager::SendOrQueueEventsForSession(
+    Daemon* daemon, const std::string& app_name,
+    const vector<proto::Event>& events) {
+  bool session_is_live = false;
+  ProcessManager process_manager;
+  int32_t pid = process_manager.GetPidForBinary(app_name);
+  if (pid >= 0) {
+    for (auto it = sessions_.begin(); it != sessions_.end(); it++) {
+      if ((*it)->info().pid() == pid && (*it)->IsActive()) {
+        session_is_live = true;
+        break;
+      }
+    }
+  }
+
+  if (session_is_live) {
+    for (auto it = events.begin(); it != events.end(); it++) {
+      proto::Event event_with_pid;
+      event_with_pid.CopyFrom(*it);
+      event_with_pid.set_pid(pid);
+      daemon->buffer()->Add(event_with_pid);
+    }
+  } else {
+    auto& queue =
+        app_events_queue_
+            .emplace(std::piecewise_construct, std::forward_as_tuple(app_name),
+                     std::forward_as_tuple(-1))  // -1 for unbounded queue.
+            .first->second;
+    for (auto it = events.begin(); it != events.end(); it++) {
+      queue.Push(*it);
+    }
   }
 }
 

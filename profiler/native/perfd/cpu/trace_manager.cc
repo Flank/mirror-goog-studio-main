@@ -98,7 +98,7 @@ ProfilingApp* TraceManager::StartProfiling(
 }
 
 ProfilingApp* TraceManager::StopProfiling(
-    const std::string& app_name, bool need_trace,
+    int64_t request_timestamp_ns, const std::string& app_name, bool need_trace,
     proto::TraceStopStatus::Status* status, std::string* error) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
@@ -113,8 +113,11 @@ ProfilingApp* TraceManager::StopProfiling(
 
   if (ongoing_capture->configuration.initiation_type() ==
       proto::INITIATED_BY_API) {
-    // Special no-op case for API-initiated tracing: only update the
+    // Special for API-initiated tracing: only update the
     // ProfilingApp record, as the trace logic is handled via the app.
+    // End timestamp should come from when the stop request was invoked
+    // in the app.
+    ongoing_capture->end_timestamp = request_timestamp_ns;
   } else {
     auto trace_type =
         ongoing_capture->configuration.user_options().trace_type();
@@ -133,9 +136,8 @@ ProfilingApp* TraceManager::StopProfiling(
           ongoing_capture->configuration.initiation_type() ==
               proto::INITIATED_BY_STARTUP);
     }
+    ongoing_capture->end_timestamp = clock_->GetCurrentTime();
   }
-
-  ongoing_capture->end_timestamp = clock_->GetCurrentTime();
 
   return ongoing_capture;
 }

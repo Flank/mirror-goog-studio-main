@@ -101,6 +101,7 @@ cc_test(
         "samplers/network_type_sampler_test.cc",
         "samplers/sampler_test.cc",
         "sessions/session_test.cc",
+        "sessions/sessions_manager_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

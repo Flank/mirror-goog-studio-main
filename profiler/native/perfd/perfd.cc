@@ -21,6 +21,8 @@
 #include "perfd/commands/end_session.h"
 #include "perfd/commands/get_cpu_core_config.h"
 #include "perfd/common_profiler_component.h"
+#include "perfd/cpu/commands/start_cpu_trace.h"
+#include "perfd/cpu/commands/stop_cpu_trace.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/cpu/trace_manager.h"
 #include "perfd/energy/energy_profiler_component.h"
@@ -28,6 +30,7 @@
 #include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
+#include "perfd/sessions/sessions_manager.h"
 #include "utils/current_process.h"
 #include "utils/daemon_config.h"
 #include "utils/termination_service.h"
@@ -83,6 +86,15 @@ int Perfd::Initialize(Daemon* daemon) {
                                  &EndSession::Create);
   daemon->RegisterCommandHandler(proto::Command::GET_CPU_CORE_CONFIG,
                                  &GetCpuCoreConfig::Create);
+  daemon->RegisterCommandHandler(
+      proto::Command::START_CPU_TRACE, [](proto::Command command) {
+        return StartCpuTrace::Create(command, &trace_manager,
+                                     SessionsManager::Instance());
+      });
+  daemon->RegisterCommandHandler(
+      proto::Command::STOP_CPU_TRACE, [](proto::Command command) {
+        return StopCpuTrace::Create(command, &trace_manager);
+      });
 
   return 0;
 }

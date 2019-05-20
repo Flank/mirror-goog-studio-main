@@ -75,8 +75,8 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     } else {
       TraceStopStatus::Status status;
       std::string error_string;
-      auto* capture = trace_manager_->StopProfiling(app_name, false, &status,
-                                                    &error_string);
+      auto* capture = trace_manager_->StopProfiling(
+          request->timestamp(), app_name, false, &status, &error_string);
       assert(capture != nullptr);
       std::ostringstream oss;
       oss << capture->trace_id;
