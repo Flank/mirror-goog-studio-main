@@ -31,7 +31,7 @@ abstract class NetworkCache constructor(
     private val baseUrl: String,
 
     /** Key used in cache directories to locate the network cache */
-    val cacheKey: String,
+    private val cacheKey: String,
 
     /** Location to search for cached repository content files */
     val cacheDir: File? = null,
@@ -45,7 +45,10 @@ abstract class NetworkCache constructor(
     /** Maximum allowed age of cached data; default is 7 days */
     private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt(),
 
-    /** If false, this repository won't make any network requests */
+    /**
+     * If false, this repository won't make any network requests - Make sure you make another call, maybe in a background thread,
+     * with enabled network if you want the cache to update properly
+     * */
     private val networkEnabled: Boolean = true
 ) {
 
@@ -68,10 +71,12 @@ abstract class NetworkCache constructor(
                     val now = System.currentTimeMillis()
                     val expiryMs = TimeUnit.HOURS.toMillis(cacheExpiryHours.toLong())
 
-                    if (lastModified == 0L || now - lastModified <= expiryMs) {
-                        // We found a cached file. Make sure it's actually newer than what the IDE
-                        // ships with? Not really necessary since within the cache expiry interval
-                        // it will be refreshed anyway
+                    if (!networkEnabled || lastModified == 0L || now - lastModified <= expiryMs) {
+                        // We found a cached file.
+                        // - Within the "cache expiry interval" we always assume we have something as fresh as the "Builtin index".
+                        // - Outside the "cache expiry interval" if a network connection is allowed we always try to download the
+                        // latest version (code bellow). If a network connection is not allowed, we assume the cache only exists
+                        // because it was (or will be) updated on a background task where a network connection is allowed.
                         return BufferedInputStream(FileInputStream(file))
                     }
                 }
@@ -94,7 +99,10 @@ abstract class NetworkCache constructor(
                         throw e
                     }
                     catch (e: Throwable) {
-                        // timeouts etc: fall through to use built-in data
+                        // timeouts etc: fall through to use "expired" data, if available, otherwise use the Builtin index
+                        if (file.exists()) {
+                            return BufferedInputStream(FileInputStream(file))
+                        }
                     }
                 }
             }
