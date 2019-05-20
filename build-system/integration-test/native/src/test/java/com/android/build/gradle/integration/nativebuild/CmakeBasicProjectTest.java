@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -46,61 +47,71 @@ import java.util.zip.ZipFile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Assemble tests for Cmake. */
+@RunWith(Parameterized.class)
 public class CmakeBasicProjectTest {
+    @Rule public final GradleTestProject project;
+    private final String moduleBody;
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(
-                            HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
-                    .setCmakeVersion("3.10.4819442")
-                    .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-                    .setWithCmakeDirInLocalProp(true)
-                    .create();
+    @Parameterized.Parameters(name = "model = {0}")
+    public static Object[][] data() {
+        return new Object[][] {
+            {"3.6.0"}, {"3.10.2"},
+        };
+    }
 
-    static final String moduleBody =
-            "\n"
-                    + "apply plugin: 'com.android.application'\n"
-                    + "\n"
-                    + "    android {\n"
-                    + "        compileSdkVersion "
-                    + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                    + "\n"
-                    + "        buildToolsVersion \""
-                    + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                    + "\"\n"
-                    + "        ndkVersion \""
-                    + DEFAULT_NDK_SIDE_BY_SIDE_VERSION
-                    + "\"\n"
-                    + "        defaultConfig {\n"
-                    + "          externalNativeBuild {\n"
-                    + "              cmake {\n"
-                    + "                abiFilters.addAll(\"armeabi-v7a\", \"x86_64\");\n"
-                    + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
-                    + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
-                    + "                targets.addAll(\"hello-jni\")\n"
-                    + "              }\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "        externalNativeBuild {\n"
-                    + "          cmake {\n"
-                    + "            path \"CMakeLists.txt\"\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "      // -----------------------------------------------------------------------\n"
-                    + "      // See b/131857476\n"
-                    + "      // -----------------------------------------------------------------------\n"
-                    + "      applicationVariants.all { variant ->\n"
-                    + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
-                    + "            println(\"externalNativeBuild objFolder = \" + task.objFolder)\n"
-                    + "            println(\"externalNativeBuild soFolder = \" + task.soFolder)\n"
-                    + "        }\n"
-                    + "      }\n"
-                    + "      // ------------------------------------------------------------------------\n"
-                    + "    }\n"
-                    + "\n";
+    public CmakeBasicProjectTest(@NonNull String cmakeVersionInDsl) {
+        this.project =
+                GradleTestProject.builder()
+                        .fromTestApp(
+                                HelloWorldJniApp.builder().withNativeDir("cxx").withCmake().build())
+                        .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
+                        .create();
+        this.moduleBody =
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        defaultConfig {\n"
+                        + "          externalNativeBuild {\n"
+                        + "              cmake {\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86_64\");\n"
+                        + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
+                        + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
+                        + "                targets.addAll(\"hello-jni\")\n"
+                        + "              }\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "        externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "            version \""
+                        + cmakeVersionInDsl
+                        + "\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "      // -----------------------------------------------------------------------\n"
+                        + "      // See b/131857476\n"
+                        + "      // -----------------------------------------------------------------------\n"
+                        + "      applicationVariants.all { variant ->\n"
+                        + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                        + "            println(\"externalNativeBuild objFolder = \" + task.objFolder)\n"
+                        + "            println(\"externalNativeBuild soFolder = \" + task.soFolder)\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "      // ------------------------------------------------------------------------\n"
+                        + "    }\n"
+                        + "\n";
+    }
 
     @Before
     public void setUp() throws IOException {
@@ -148,9 +159,7 @@ public class CmakeBasicProjectTest {
         project.model().fetchAndroidProjects(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().fetch(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getTag());
-        assertThat(model)
-                .hasExactBuildFilesShortNames(
-                        "platforms.cmake", "CMakeLists.txt", "android.toolchain.cmake");
+        assertThat(model).hasAtLeastBuildFilesShortNames("CMakeLists.txt");
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 2;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);

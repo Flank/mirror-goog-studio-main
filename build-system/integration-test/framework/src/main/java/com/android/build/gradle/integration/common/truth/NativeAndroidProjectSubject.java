@@ -238,6 +238,28 @@ public class NativeAndroidProjectSubject
     }
 
     /**
+     * Asserts that the this project has at least build files of names shortNames. This checks just
+     * the file name and not the path.
+     */
+    @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
+    public void hasAtLeastBuildFilesShortNames(String... shortNames) {
+        Set<String> expected = Sets.newHashSet();
+        for (File buildFile : actual().getBuildFiles()) {
+            expected.add(buildFile.getName());
+        }
+        Set<String> actual = Sets.newHashSet(shortNames);
+        for (String shortName : shortNames) {
+            if (!actual.contains(shortName)) {
+                failWithoutActual(
+                        Fact.simpleFact(
+                                String.format(
+                                        "Not true that %s build files contains <%s>. They are <%s>",
+                                        actualAsString(), shortName, actual)));
+            }
+        }
+    }
+
+    /**
      * Asseerts that the this project has build files of names shortNames and no others. This checks
      * just the file name and not the path.
      */
