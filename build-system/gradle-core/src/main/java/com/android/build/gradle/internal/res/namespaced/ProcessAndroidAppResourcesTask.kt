@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
@@ -70,7 +69,7 @@ abstract class ProcessAndroidAppResourcesTask
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: Provider<Directory> private set
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: BuildableArtifact private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val thisSubProjectStaticLibrary: RegularFileProperty
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
 
     @get:InputFiles
@@ -101,7 +100,7 @@ abstract class ProcessAndroidAppResourcesTask
                 convertedLibraries.forEach { staticLibraries.add(it.toFile()) }
             }
         }
-        staticLibraries.add(thisSubProjectStaticLibrary.single())
+        staticLibraries.add(thisSubProjectStaticLibrary.get().asFile)
         val config = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
@@ -164,8 +163,10 @@ abstract class ProcessAndroidAppResourcesTask
                             -> artifacts.getFinalProduct(InternalArtifactType.INSTANT_APP_MANIFEST)
                         else -> artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
                     }
-            task.thisSubProjectStaticLibrary = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.RES_STATIC_LIBRARY)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.RES_STATIC_LIBRARY,
+                task.thisSubProjectStaticLibrary
+            )
             task.libraryDependencies =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

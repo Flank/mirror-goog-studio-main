@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks.featuresplit
 
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -31,22 +32,22 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.OutputFile
-import java.io.File
+import org.gradle.api.tasks.TaskProvider
 import java.util.stream.Collectors
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
-open class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
+abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
 
     // list of runtime classpath.
     private lateinit var runtimeJars: ArtifactCollection
 
     @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    abstract val outputFile: RegularFileProperty
 
     // use CompileClasspath to get as little notifications as possible.
     // technically we only care when the list changes, not the content but there's no way
@@ -61,8 +62,8 @@ open class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
                 .map { artifact -> compIdToString(artifact) }
                 .collect(Collectors.toSet())
 
-        FileUtils.mkdirs(outputFile.parentFile)
-        Files.asCharSink(outputFile, Charsets.UTF_8)
+        FileUtils.mkdirs(outputFile.get().asFile.parentFile)
+        Files.asCharSink(outputFile.get().asFile, Charsets.UTF_8)
                 .write(Joiner.on(System.lineSeparator()).join(content))
     }
 
@@ -80,19 +81,20 @@ open class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
         override val type: Class<FeatureSplitTransitiveDepsWriterTask>
             get() = FeatureSplitTransitiveDepsWriterTask::class.java
 
-        private lateinit var outputFile: File
-
-        override fun preConfigure(taskName: String) {
-            outputFile = variantScope.artifacts
-                .appendArtifact(InternalArtifactType.FEATURE_TRANSITIVE_DEPS,
-                    taskName,
-                    "deps.txt")
+        override fun handleProvider(taskProvider: TaskProvider<out FeatureSplitTransitiveDepsWriterTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.FEATURE_TRANSITIVE_DEPS,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                FeatureSplitTransitiveDepsWriterTask::outputFile,
+                "deps.txt"
+            )
         }
 
         override fun configure(task: FeatureSplitTransitiveDepsWriterTask) {
             task.variantName = variantScope.fullVariantName
 
-            task.outputFile = outputFile
             task.runtimeJars = variantScope.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,

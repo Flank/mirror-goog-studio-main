@@ -118,7 +118,7 @@ public enum InternalArtifactType implements ArtifactType {
     SHRUNK_LINKED_RES_FOR_BUNDLE(Kind.FILE),
 
     // Artifacts for legacy multidex
-    LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+    LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES(Kind.FILE),
     LEGACY_MULTIDEX_MAIN_DEX_LIST(Kind.FILE),
 
     // The R class jar generated from R.txt for application and tests
@@ -131,7 +131,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Compiled resources (directory of .flat files) for the local library
     RES_COMPILED_FLAT_FILES,
     // An AAPT2 static library, containing only the current sub-project's resources.
-    RES_STATIC_LIBRARY,
+    RES_STATIC_LIBRARY(Kind.FILE),
     // A directory of AAPT2 static libraries generated from all non-namepaced remote dependencies.
     RES_CONVERTED_NON_NAMESPACED_REMOTE_DEPENDENCIES,
     // Compiled R class jar (for compilation only, packaged in AAR)
@@ -283,14 +283,14 @@ public enum InternalArtifactType implements ArtifactType {
     FEATURE_SET_METADATA(Kind.FILE),
     // file containing the module information (like its application ID) to synchronize all base
     // and dynamic feature. This is published by the base feature and installed application module.
-    METADATA_BASE_MODULE_DECLARATION,
+    METADATA_BASE_MODULE_DECLARATION(Kind.FILE),
     // file containing only the application ID. It is used to synchronize all feature plugins
     // with the application module's application ID.
     METADATA_APPLICATION_ID(Kind.FILE),
     FEATURE_RESOURCE_PKG,
     // File containing the list of transitive dependencies of a given feature. This is consumed
     // by other features to avoid repackaging the same thing.
-    FEATURE_TRANSITIVE_DEPS,
+    FEATURE_TRANSITIVE_DEPS(Kind.FILE),
     // The information about the features in the app that is necessary for the data binding
     // annotation processor (for base feature compilation). Created by the
     // DataBindingExportFeatureApplicationIdsTask and passed down to the annotation processor via
@@ -317,7 +317,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Project metadata
     METADATA_FEATURE_DECLARATION,
     METADATA_FEATURE_MANIFEST,
-    METADATA_INSTALLED_BASE_DECLARATION,
+    METADATA_INSTALLED_BASE_DECLARATION(Kind.FILE),
     // The metadata for the library dependencies, direct and indirect, published for each module.
     METADATA_LIBRARY_DEPENDENCIES_REPORT(Kind.FILE),
 

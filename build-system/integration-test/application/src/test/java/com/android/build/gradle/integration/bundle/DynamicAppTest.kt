@@ -718,7 +718,6 @@ class DynamicAppTest {
                 "intermediates",
                 "metadata_base_module_declaration",
                 "debug",
-                "writeDebugModuleMetadata",
                 "application-metadata.json")
         FileSubject.assertThat(appMetadataFile).isFile()
         FileSubject.assertThat(appMetadataFile).contains("\"versionCode\":\"12\"")

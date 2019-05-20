@@ -32,18 +32,17 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.multidex.D8MainDexList
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -60,10 +59,9 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
     abstract var errorFormat: SyncOptions.ErrorFormatMode
         protected set
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract var aaptGeneratedRules: FileCollection
-        protected set
+    abstract val aaptGeneratedRules: RegularFileProperty
 
     @get:Optional
     @get:InputFile
@@ -105,7 +103,7 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
             it.submit(
                 MainDexListRunnable::class.java,
                 MainDexListRunnable.Params(
-                    listOfNotNull(aaptGeneratedRules.singleFile, userMultidexProguardRules),
+                    listOfNotNull(aaptGeneratedRules.get().asFile, userMultidexProguardRules),
                     programClasses,
                     libraryFilesNotInInputs,
                     userMultidexKeepFile,
@@ -211,10 +209,10 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
             super.configure(task)
             task.output = output
 
-            task.aaptGeneratedRules =
-                variantScope.artifacts.getFinalArtifactFiles(
-                    InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES
-                ).get()
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                task.aaptGeneratedRules
+            )
             task.userMultidexProguardRules = variantScope.variantConfiguration.multiDexKeepProguard
             task.userMultidexKeepFile = variantScope.variantConfiguration.multiDexKeepFile
 

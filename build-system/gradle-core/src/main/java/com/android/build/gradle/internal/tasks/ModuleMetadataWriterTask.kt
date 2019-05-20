@@ -19,17 +19,19 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_BASE_MODULE_DECLARATION
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import java.io.File
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task responsible for publishing this module metadata (like its application ID) for other modules
@@ -43,7 +45,7 @@ import java.io.File
  * Both dynamic-feature and feature modules consumes it, from the application module and the base
  * feature module respectively.
  */
-open class ModuleMetadataWriterTask : NonIncrementalTask() {
+abstract class ModuleMetadataWriterTask : NonIncrementalTask() {
 
     @get:Input lateinit var applicationId: Provider<String> private set
 
@@ -68,8 +70,7 @@ open class ModuleMetadataWriterTask : NonIncrementalTask() {
         private set
 
     @get:OutputFile
-    lateinit var outputFile: File
-        private set
+    abstract val outputFile: RegularFileProperty
 
     override fun doTaskAction() {
         val declaration =
@@ -84,7 +85,7 @@ open class ModuleMetadataWriterTask : NonIncrementalTask() {
                 )
             }
 
-        declaration.save(outputFile)
+        declaration.save(outputFile.get().asFile)
     }
 
     class CreationAction(variantScope: VariantScope) :
@@ -95,24 +96,22 @@ open class ModuleMetadataWriterTask : NonIncrementalTask() {
         override val type: Class<ModuleMetadataWriterTask>
             get() = ModuleMetadataWriterTask::class.java
 
-        private lateinit var outputFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputFile = variantScope.artifacts.appendArtifact(
+        override fun handleProvider(taskProvider: TaskProvider<out ModuleMetadataWriterTask>) {
+            super.handleProvider(taskProvider)
+            // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
-                taskName,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ModuleMetadataWriterTask::outputFile,
                 ModuleMetadata.PERSISTED_FILE_NAME
             )
 
             if (!variantScope.type.isHybrid) {
                 //if this is the base application, publish the feature to the metadata config
-                variantScope.artifacts.appendArtifact(
-                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION,
-                    listOf(outputFile),
-                    taskName
-                )
+                variantScope.artifacts.republish(
+                    InternalArtifactType.METADATA_BASE_MODULE_DECLARATION,
+                    InternalArtifactType.METADATA_INSTALLED_BASE_DECLARATION)
             }
         }
 
@@ -128,9 +127,6 @@ open class ModuleMetadataWriterTask : NonIncrementalTask() {
             task.outputScope = variantScope.variantData.outputScope
 
             task.debuggable = variantScope.variantConfiguration.buildType.isDebuggable
-
-            // publish the ID for the dynamic features (whether it's hybrid or not) to consume.
-            task.outputFile = outputFile
 
             if (variantScope.type.isHybrid) {
                 //if this is a feature, get the Application ID from the metadata config
