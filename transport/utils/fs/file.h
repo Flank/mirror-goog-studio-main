@@ -45,6 +45,11 @@ class File final : public Path {
   // write.
   std::string Contents() const;
 
+  // If this file exists, return its contents (else, the empty string) as a
+  // null-terminating C style string which includes the bytes up to but not
+  // including the first '\0' character.
+  std::string ContentsTrimmed() const;
+
   // If this file exists and is not in write mode, and the target file doesn't
   // exist or it exists but isn't in write mode, move the contents of this file
   // to that file. After this operation is complete, this file will be deleted.

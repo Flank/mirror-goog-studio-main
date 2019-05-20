@@ -42,6 +42,12 @@ string File::Contents() const {
   }
 }
 
+string File::ContentsTrimmed() const {
+  std::string contents = Contents();
+  contents = contents.substr(0, contents.find_first_of('\0'));
+  return contents;
+}
+
 bool File::MoveContentsTo(shared_ptr<File> dest) {
   if (!Exists()) {
     return false;
