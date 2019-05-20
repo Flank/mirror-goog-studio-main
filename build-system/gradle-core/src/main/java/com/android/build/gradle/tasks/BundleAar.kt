@@ -126,7 +126,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 artifacts.getFinalArtifactFiles(InternalArtifactType.RENDERSCRIPT_HEADERS),
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
-            task.from(artifacts.getFinalArtifactFiles(InternalArtifactType.PUBLIC_RES))
+            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.PUBLIC_RES))
             if (artifacts.hasFinalProduct(InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
                 task.from(artifacts.getFinalProduct<RegularFile>(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))

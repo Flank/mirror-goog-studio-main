@@ -142,12 +142,11 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuil
 import com.android.build.gradle.internal.tasks.databinding.DataBindingGenBaseClassesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeBaseClassLogTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeDependencyArtifactsTask;
-import com.android.build.gradle.internal.tasks.factory.PreConfigAction;
-import com.android.build.gradle.internal.tasks.factory.TaskConfigAction;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.tasks.factory.TaskFactory;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryImpl;
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
+import com.android.build.gradle.internal.tasks.factory.TaskProviderCallback;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitUtils;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
@@ -818,7 +817,6 @@ public abstract class TaskManager {
                 processResources,
                 alsoOutputNotCompiledResources,
                 flags,
-                null /*preConfigCallback*/,
                 null /*configCallback*/);
     }
 
@@ -854,8 +852,7 @@ public abstract class TaskManager {
             final boolean processResources,
             boolean alsoOutputNotCompiledResources,
             @NonNull ImmutableSet<MergeResources.Flag> flags,
-            @Nullable PreConfigAction preConfigCallback,
-            @Nullable TaskConfigAction<MergeResources> configCallback) {
+            @Nullable TaskProviderCallback<MergeResources> taskProviderCallback) {
 
         String taskNamePrefix = mergeType.name().toLowerCase(Locale.ENGLISH);
 
@@ -877,9 +874,9 @@ public abstract class TaskManager {
                                 includeDependencies,
                                 processResources,
                                 flags),
-                        preConfigCallback,
-                        configCallback,
-                        null);
+                        null,
+                        null,
+                        taskProviderCallback);
 
         scope.getArtifacts()
                 .producesDir(

@@ -105,7 +105,7 @@ public enum InternalArtifactType implements ArtifactType {
     //Resources defined within the current module.
     LOCAL_ONLY_SYMBOL_LIST,
     // public.txt output
-    PUBLIC_RES,
+    PUBLIC_RES(Kind.FILE),
     SHRUNK_PROCESSED_RES,
     DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
     ABI_PROCESSED_SPLIT_RES,

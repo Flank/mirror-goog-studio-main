@@ -78,6 +78,7 @@ import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -104,8 +105,6 @@ public abstract class MergeResources extends ResourceAwareTask {
     /**
      * Optional file to write any publicly imported resource types and names to
      */
-    private File publicFile;
-
     private boolean processResources;
 
     private boolean crunchPng;
@@ -230,11 +229,13 @@ public abstract class MergeResources extends ResourceAwareTask {
                         }
                     });
 
+            File publicFile =
+                    getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
             MergedResourceWriter writer =
                     new MergedResourceWriter(
                             workerExecutorFacade,
                             destinationDir,
-                            getPublicFile(),
+                            publicFile,
                             mergingLog,
                             preprocessor,
                             resourceCompiler,
@@ -348,11 +349,13 @@ public abstract class MergeResources extends ResourceAwareTask {
                             processResources,
                             getLogger())) {
 
+                File publicFile =
+                        getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
                 MergedResourceWriter writer =
                         new MergedResourceWriter(
                                 workerExecutorFacade,
                                 getOutputDir().get().getAsFile(),
-                                getPublicFile(),
+                                publicFile,
                                 mergingLog,
                                 preprocessor,
                                 resourceCompiler,
@@ -506,13 +509,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     @Optional
     @OutputFile
-    public File getPublicFile() {
-        return publicFile;
-    }
-
-    public void setPublicFile(File publicFile) {
-        this.publicFile = publicFile;
-    }
+    public abstract RegularFileProperty getPublicFile();
 
     // Synthetic input: the validation flag is set on the resource sets in CreationAction.execute.
     @Input

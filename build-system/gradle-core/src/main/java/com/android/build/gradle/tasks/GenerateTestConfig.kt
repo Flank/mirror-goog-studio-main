@@ -164,9 +164,7 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
                 BooleanOption.USE_RELATIVE_PATH_IN_TEST_CONFIG
             )
             resourceApk = if (unitTestBinaryResourcesEnabled) {
-                if (scope.artifacts.hasFinalProduct(APK_FOR_LOCAL_TEST)) {
-                    scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
-                } else null
+                scope.artifacts.getFinalProduct(APK_FOR_LOCAL_TEST)
             } else {
                 null
             }

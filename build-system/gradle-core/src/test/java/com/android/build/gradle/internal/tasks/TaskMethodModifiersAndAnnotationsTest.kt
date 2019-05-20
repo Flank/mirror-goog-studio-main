@@ -169,7 +169,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.InvokeManifestMerger::setSecondaryManifestFiles",
                 "com.android.build.gradle.tasks.LintPerVariantTask::setVariantName",
                 "com.android.build.gradle.tasks.MergeResources::setBlameLogFolder",
-                "com.android.build.gradle.tasks.MergeResources::setPublicFile",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setAbiFilters",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
