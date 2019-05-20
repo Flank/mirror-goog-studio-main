@@ -52,7 +52,7 @@ class ZipMergingTaskTest {
 
         task.libraryInputFile.set(zip1)
         task.javaResInputFiles = BuildableArtifactImpl(project.files(zip2))
-        task.outputFile = output
+        task.outputFile.set(output)
         task.doTaskAction()
 
         assertThat(output).exists()
@@ -77,7 +77,7 @@ class ZipMergingTaskTest {
 
         task.libraryInputFile.set(zip1)
         task.javaResInputFiles= BuildableArtifactImpl(project.files(zip2))
-        task.outputFile = output
+        task.outputFile.set(output)
         task.doTaskAction()
 
         assertThat(output).exists()

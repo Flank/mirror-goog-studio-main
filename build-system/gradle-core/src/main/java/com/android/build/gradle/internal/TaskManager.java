@@ -995,7 +995,7 @@ public abstract class TaskManager {
                             useAaptToGenerateLegacyMultidexMainDexProguardRules);
 
             FileCollection rFiles =
-                    scope.getArtifacts().getFinalArtifactFiles(RUNTIME_R_CLASS_CLASSES).get();
+                    project.files(scope.getArtifacts().getFinalProduct(RUNTIME_R_CLASS_CLASSES));
 
             scope.getTransformManager()
                     .addStream(

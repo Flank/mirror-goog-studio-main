@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.ArtifactType;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.TestAndroidConfig;
@@ -37,7 +36,6 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.dependencies.BuildMappingUtils;
@@ -1196,7 +1194,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         boolean addDataBindingSources =
                 globalScope.getExtension().getDataBinding().isEnabled()
-                        && artifacts.hasArtifact(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                        && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
@@ -1223,9 +1221,11 @@ public class ModelBuilder<Extension extends AndroidConfig>
                             .getAsFile());
         }
         if (addDataBindingSources) {
-            BuildableArtifact output =
-                    scope.getArtifacts().getFinalArtifactFiles(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
-            folders.add(BuildableArtifactUtil.singleFile(output));
+            folders.add(
+                    scope.getArtifacts()
+                            .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)
+                            .get()
+                            .getAsFile());
         }
         return folders;
     }

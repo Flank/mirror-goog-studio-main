@@ -15,13 +15,18 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
 import java.io.File
 
@@ -34,10 +39,20 @@ import java.io.File
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
 @CacheableTask
-open class CompileRClassTask : JavaCompile(), VariantAwareTask {
+abstract class CompileRClassTask : JavaCompile(), VariantAwareTask {
+
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
 
     @Internal
     override lateinit var variantName: String
+
+
+    // Override without the OutputDirectory annotation, it is already present on the above property.
+    @Suppress("RedundantOverride")
+    override fun getDestinationDir(): File {
+        return super.getDestinationDir()
+    }
 
     class CreationAction(variantScope: VariantScope) :
         VariantTaskCreationAction<CompileRClassTask>(variantScope) {
@@ -47,15 +62,14 @@ open class CompileRClassTask : JavaCompile(), VariantAwareTask {
         override val type: Class<CompileRClassTask>
             get() = CompileRClassTask::class.java
 
-        private lateinit var destinationDir: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            destinationDir =
-                    variantScope.artifacts.appendArtifact(
-                        InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
-                        taskName
-                    )
+        override fun handleProvider(taskProvider: TaskProvider<out CompileRClassTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                CompileRClassTask::outputDirectory
+            )
         }
 
         override fun configure(task: CompileRClassTask) {
@@ -65,7 +79,7 @@ open class CompileRClassTask : JavaCompile(), VariantAwareTask {
             task.classpath = task.project.files()
             task.source(
                 artifacts.getFinalProduct<Directory>(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
-            task.destinationDir = destinationDir
+            task.setDestinationDir(task.outputDirectory.map { it.asFile })
         }
     }
 

@@ -106,7 +106,7 @@ public class appWithRuntimeDependencyTest {
 
         File outputJar =
                 project.getSubproject(":library2")
-                        .file("build/intermediates/full_jar/debug/createFullJarDebug/full.jar");
+                        .file("build/intermediates/full_jar/debug/full.jar");
         assertThat(runtimeOnlyClasses).contains(outputJar.getPath());
         assertThat(runtimeOnlyClasses.stream().anyMatch(it -> it.endsWith("guava-19.0.jar")))
                 .isTrue();

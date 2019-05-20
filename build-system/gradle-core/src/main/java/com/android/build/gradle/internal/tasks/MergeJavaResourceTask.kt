@@ -271,7 +271,7 @@ fun getProjectJavaRes(scope: VariantScope): FileCollection {
     javaRes.from(scope.variantData.allPreJavacGeneratedBytecode)
     javaRes.from(scope.variantData.allPostJavacGeneratedBytecode)
     javaRes.from(
-        scope.artifacts.getFinalArtifactFiles(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)
+        scope.artifacts.getFinalProduct<Directory>(InternalArtifactType.RUNTIME_R_CLASS_CLASSES)
     )
     return javaRes
 }

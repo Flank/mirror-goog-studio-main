@@ -88,8 +88,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     @get:OutputDirectory lateinit var logOutFolder: File
         private set
     // where to write the new files
-    @get:OutputDirectory lateinit var sourceOutFolder: File
-        private set
+    @get:OutputDirectory abstract val sourceOutFolder: DirectoryProperty
     @get:OutputDirectory abstract val classInfoBundleDir: DirectoryProperty
 
     @get:Input
@@ -112,7 +111,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             // invoked.
             // b/69652332
             val args = buildInputArgs(inputs)
-            CodeGenerator(args, sourceOutFolder, project.logger, encodeErrors).run()
+            CodeGenerator(args, sourceOutFolder.get().asFile, project.logger, encodeErrors).run()
         }
     }
 
@@ -143,7 +142,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             }
         } else {
             FileUtils.cleanOutputDir(logOutFolder)
-            FileUtils.cleanOutputDir(sourceOutFolder)
+            FileUtils.cleanOutputDir(sourceOutFolder.get().asFile)
         }
         return LayoutInfoInput.Args(
                 outOfDate = outOfDate,
@@ -168,16 +167,6 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         override val type: Class<DataBindingGenBaseClassesTask>
             get() = DataBindingGenBaseClassesTask::class.java
 
-        private lateinit var sourceOutFolder: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            val artifacts = variantScope.artifacts
-            sourceOutFolder = artifacts.appendArtifact(
-                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
-                taskName)
-        }
-
         override fun handleProvider(taskProvider: TaskProvider<out DataBindingGenBaseClassesTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesDir(
@@ -185,6 +174,12 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 DataBindingGenBaseClassesTask::classInfoBundleDir)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                DataBindingGenBaseClassesTask::sourceOutFolder
+            )
         }
 
         override fun configure(task: DataBindingGenBaseClassesTask) {
@@ -200,7 +195,6 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = variantScope.getIncrementalDir(task.name)
-            task.sourceOutFolder = sourceOutFolder
             task.useAndroidX = variantScope.globalScope.projectOptions[BooleanOption.USE_ANDROID_X]
             // needed to decide whether data binding should encode errors or not
             task.encodeErrors = variantScope.globalScope

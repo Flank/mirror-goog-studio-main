@@ -601,13 +601,11 @@ public abstract class BaseVariantData {
                                 .builtBy(
                                         scope.getTaskContainer()
                                                 .getDataBindingExportBuildInfoTask()));
-                BuildableArtifact baseClassSource =
+                Provider<FileSystemLocation> baseClassSource =
                         scope.getArtifacts()
-                                .getFinalArtifactFiles(
+                                .getFinalProduct(
                                         InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT);
-                sourceSets.add(
-                        project.fileTree(baseClassSource.get().getSingleFile())
-                                .builtBy(baseClassSource));
+                sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource));
             }
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()

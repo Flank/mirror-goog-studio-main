@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
 import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -31,6 +32,7 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.util.function.Predicate
 
@@ -48,11 +50,11 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         internal set
 
     @get:OutputFile
-    lateinit var outputFile: File
-        internal set
+    abstract val outputFile: RegularFileProperty
 
     public override fun doTaskAction() {
-        FileUtils.cleanOutputDir(outputFile.parentFile)
+        val destinationFile = outputFile.get().asFile
+        FileUtils.cleanOutputDir(destinationFile.parentFile)
         val usedNamesPredicate = object:Predicate<String> {
             val usedNames = mutableSetOf<String>()
 
@@ -61,7 +63,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             }
         }
 
-        JarMerger(outputFile.toPath(), usedNamesPredicate).use {
+        JarMerger(destinationFile.toPath(), usedNamesPredicate).use {
             val lib = libraryInputFile.get().asFile
             if (lib.exists()) {
                 it.addJar(lib.toPath())
@@ -78,12 +80,15 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         override val type: Class<ZipMergingTask>
             get() = ZipMergingTask::class.java
 
-        private lateinit var mainFullJar: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            mainFullJar = variantScope.artifacts.appendArtifact(InternalArtifactType.FULL_JAR,
-                taskName, FN_INTERMEDIATE_FULL_JAR)
+        override fun handleProvider(taskProvider: TaskProvider<out ZipMergingTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.FULL_JAR,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ZipMergingTask::outputFile,
+                FN_INTERMEDIATE_FULL_JAR
+                )
         }
 
         override fun configure(task: ZipMergingTask) {
@@ -92,7 +97,6 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             val buildArtifacts = variantScope.artifacts
             buildArtifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES, task.libraryInputFile)
             task.javaResInputFiles = buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES)
-            task.outputFile = mainFullJar
         }
     }
 }

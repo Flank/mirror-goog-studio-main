@@ -68,7 +68,7 @@ public enum InternalArtifactType implements ArtifactType {
     LIBRARY_JAVA_RES(Kind.FILE),
 
     // Full jar with both classes and java res.
-    FULL_JAR,
+    FULL_JAR(Kind.FILE),
 
     // A folder with classes instrumented with jacoco. Internal folder file structure reflects
     // the hierarchy of namespaces
