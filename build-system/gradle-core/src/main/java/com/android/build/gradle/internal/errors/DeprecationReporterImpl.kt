@@ -84,8 +84,9 @@ class DeprecationReporterImpl(
                 }
 
                 messageEnd = if (kotlin.isNotEmpty()) {
-                    "REASON: The Kotlin plugin is currently calling this API. We are working to solve this."
-
+                    "REASON: The Kotlin plugin is currently calling this deprecated API." +
+                            " Watch https://youtrack.jetbrains.com/issue/KT-25428 and, if possible," +
+                            " use a newer version of the Kotlin plugin that has fixed this issue."
                 } else {
                     // other cases.
                     // look to see if we get a fileName that's a full path and is a known gradle file.
