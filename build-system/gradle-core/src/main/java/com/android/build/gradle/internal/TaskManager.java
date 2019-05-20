@@ -3002,14 +3002,12 @@ public abstract class TaskManager {
                                     mappingFileCollection,
                                     (transform, taskName) -> {
                                         if (variantScope.getNeedsMainDexListForBundle()) {
-                                            File mainDexListFile =
+                                            Provider<RegularFile> mainDexListFile =
                                                     variantScope
                                                             .getArtifacts()
-                                                            .appendArtifact(
+                                                            .getFinalProduct(
                                                                     InternalArtifactType
-                                                                            .MAIN_DEX_LIST_FOR_BUNDLE,
-                                                                    taskName,
-                                                                    "mainDexList.txt");
+                                                                            .MAIN_DEX_LIST_FOR_BUNDLE);
                                             ((R8Transform) transform)
                                                     .setMainDexListOutput(mainDexListFile);
                                         }
@@ -3280,11 +3278,14 @@ public abstract class TaskManager {
                                 .getArtifacts()
                                 .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
                         : null;
-        BuildableArtifact mainDexList =
+        Provider<RegularFile> mainDexList =
                 variantScope
-                        .getArtifacts()
-                        .getFinalArtifactFilesIfPresent(
-                                InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE);
+                                .getArtifacts()
+                                .hasFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+                        ? variantScope
+                                .getArtifacts()
+                                .getFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
+                        : null;
 
         DexSplitterTransform transform =
                 new DexSplitterTransform(
@@ -3309,6 +3310,9 @@ public abstract class TaskManager {
 
         if (transformTask.isPresent()) {
             publishFeatureDex(variantScope);
+            if (mainDexList != null) {
+                transformTask.get().configure(it -> it.dependsOn(mainDexList));
+            }
         } else {
             globalScope
                     .getErrorHandler()

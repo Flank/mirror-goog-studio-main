@@ -123,7 +123,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                     InternalArtifactType.NON_NAMESPACED_LIBRARY_MANIFEST))
             }
             task.from(
-                artifacts.getFinalArtifactFiles(InternalArtifactType.RENDERSCRIPT_HEADERS),
+                artifacts.getFinalProduct<Directory>(InternalArtifactType.RENDERSCRIPT_HEADERS),
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT)
             )
             task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.PUBLIC_RES))

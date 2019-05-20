@@ -19,17 +19,14 @@ package com.android.build.gradle.tasks
 import com.google.common.truth.Truth.assertThat
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.builder.core.BuilderConstants
 import com.android.ide.common.resources.AssetSet
-import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import java.io.File
 import java.io.IOException
 import java.util.Arrays
 import java.util.HashSet
 import java.util.LinkedHashSet
-import java.util.function.Consumer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier
@@ -38,7 +35,6 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -116,8 +112,8 @@ class MergeSourceSetFoldersTest {
         val file = File("src/main")
         val mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file)
 
-        val shaderFile = File("shader")
-        setBuildableArtifact({ task.shadersOutputDir = it }, shaderFile)
+        val shaderFile = temporaryFolder.newFile("shader")
+        task.shadersOutputDir.set(shaderFile)
 
         assertThat(task.computeAssetSetList()).containsExactly(mainSet)
         // shader file should have been added to the main resource sets.
@@ -148,7 +144,7 @@ class MergeSourceSetFoldersTest {
         val librarySet2 = librarySets[1]
 
         val shaderFile = File("shader")
-        setBuildableArtifact({ task.shadersOutputDir = it }, shaderFile)
+        task.shadersOutputDir.set(shaderFile)
 
         assertThat(task.getLibraries()!!.files).containsExactly(libFile, libFile2)
         assertThat(task.computeAssetSetList())
@@ -165,13 +161,6 @@ class MergeSourceSetFoldersTest {
         mainSet.addSources(Arrays.asList(*files))
         folderSets?.add(mainSet)
         return mainSet
-    }
-
-    private fun setBuildableArtifact(setter: (BuildableArtifact) -> Unit, vararg files: File) {
-        val fileCollection = mock(BuildableArtifact::class.java)
-        val fileSet = ImmutableSet.copyOf(Arrays.asList(*files))
-        `when`(fileCollection.files).thenReturn(fileSet)
-        setter(fileCollection)
     }
 
     private fun setupLibraryDependencies(vararg objects: Any): List<AssetSet> {

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
@@ -28,11 +29,13 @@ import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.parseResourceSourceSetDirectory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -62,8 +65,7 @@ abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: Wor
     abstract val inputResourcesDir: DirectoryProperty
 
     @get:OutputFile
-    lateinit var librarySymbolsFile: File
-        private set
+    abstract val librarySymbolsFile: RegularFileProperty
 
     override fun doTaskAction() {
         workers.use {
@@ -72,7 +74,7 @@ abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: Wor
                 ParseResourcesParams(
                     inputResDir = inputResourcesDir.get().asFile,
                     platformAttrsRTxt = platformAttrRTxt.singleFile,
-                    librarySymbolsFile = librarySymbolsFile
+                    librarySymbolsFile = librarySymbolsFile.get().asFile
                 )
             )
         }
@@ -117,15 +119,15 @@ abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: Wor
         override val type: Class<ParseLibraryResourcesTask>
             get() = ParseLibraryResourcesTask::class.java
 
-        private lateinit var librarySymbolsFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            librarySymbolsFile = variantScope.artifacts.appendArtifact(
+        override fun handleProvider(taskProvider: TaskProvider<out ParseLibraryResourcesTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
-                taskName,
-                SdkConstants.FN_R_DEF_TXT)
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ParseLibraryResourcesTask::librarySymbolsFile,
+                SdkConstants.FN_R_DEF_TXT
+            )
         }
 
         override fun configure(task: ParseLibraryResourcesTask) {
@@ -137,8 +139,6 @@ abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: Wor
                 InternalArtifactType.PACKAGED_RES,
                 task.inputResourcesDir
             )
-
-            task.librarySymbolsFile = librarySymbolsFile
         }
     }
 }

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -50,6 +51,7 @@ import com.google.common.base.Throwables
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -61,6 +63,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -123,8 +126,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
     @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    var mainDexListFile: BuildableArtifact? = null
-        private set
+    abstract val mainDexListFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -161,7 +163,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                     minSdkVersion,
                     isDebuggable,
                     mergingThreshold,
-                    mainDexListFile?.singleFile(),
+                    mainDexListFile.orNull?.asFile,
                     dexFiles.files,
                     fileDependencyDexFiles.orNull?.asFile,
                     outputDir
@@ -192,6 +194,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
         private lateinit var output: File
 
         override fun preConfigure(taskName: String) {
+            super.preConfigure(taskName)
             output = variantScope.artifacts.appendArtifact(outputType, taskName)
         }
 
@@ -203,8 +206,9 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
 
             task.dexingType = dexingType
             if (DexMergingAction.MERGE_ALL == action && dexingType === DexingType.LEGACY_MULTIDEX) {
-                task.mainDexListFile =
-                        variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST)
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST,
+                    task.mainDexListFile)
             }
 
             task.errorFormatMode =

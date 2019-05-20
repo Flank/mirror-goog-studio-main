@@ -15,8 +15,6 @@
  */
 package com.android.build.gradle.internal.res
 
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -36,10 +34,12 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -84,10 +84,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
 
     @get:Input lateinit var applicationId: Provider<String> private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var localResourcesFile: BuildableArtifact
-        private set
+    abstract val localResourcesFile: RegularFileProperty
 
     @get:Input
     var namespacedRClass: Boolean = false
@@ -103,7 +102,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
             it.submit(
                 GenerateLibRFileRunnable::class.java,
                 GenerateLibRFileParams(
-                    localResourcesFile.singleFile(),
+                    localResourcesFile.get().asFile,
                     manifest,
                     platformAttrRTxt.singleFile,
                     dependencies.files,
@@ -214,8 +213,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
 
             task.outputScope = variantScope.outputScope
 
-            task.localResourcesFile = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LOCAL_ONLY_SYMBOL_LIST,
+                task.localResourcesFile)
         }
     }
 }

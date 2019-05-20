@@ -16,7 +16,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
@@ -85,8 +84,7 @@ abstract class MergeSourceSetFolders @Inject constructor(
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var shadersOutputDir: BuildableArtifact? = null
-        internal set
+    abstract val shadersOutputDir: DirectoryProperty
 
     @get:Input
     @get:Optional
@@ -249,7 +247,7 @@ abstract class MergeSourceSetFolders @Inject constructor(
         val assetSetList: List<AssetSet>
 
         val assetSets = assetSetSupplier.get()
-        if (shadersOutputDir == null
+        if (!shadersOutputDir.isPresent
             && ignoreAssets == null
             && libraryCollection == null
         ) {
@@ -280,8 +278,8 @@ abstract class MergeSourceSetFolders @Inject constructor(
             // add the generated folders to the first set of the folder-based sets.
             val generatedAssetFolders = Lists.newArrayList<File>()
 
-            if (shadersOutputDir != null) {
-                generatedAssetFolders.addAll(shadersOutputDir!!.files)
+            if (shadersOutputDir.isPresent) {
+                generatedAssetFolders.add(shadersOutputDir.get().asFile)
             }
 
             // add the generated files to the main set.
@@ -326,10 +324,6 @@ abstract class MergeSourceSetFolders @Inject constructor(
         override val name: String
             get() = variantScope.getTaskName("merge", "Assets")
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-        }
-
         override fun handleProvider(taskProvider: TaskProvider<out MergeSourceSetFolders>) {
             super.handleProvider(taskProvider)
 
@@ -357,8 +351,10 @@ abstract class MergeSourceSetFolders @Inject constructor(
             task.assetSetSupplier = Supplier { variantConfig.getSourceFilesAsAssetSets(assetDirFunction) }
             task.sourceFolderInputs = Supplier { variantConfig.getSourceFiles(assetDirFunction) }
 
-            task.shadersOutputDir =
-                scope.artifacts.getFinalArtifactFiles(InternalArtifactType.SHADER_ASSETS)
+            scope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.SHADER_ASSETS,
+                task.shadersOutputDir
+            )
 
             val options = scope.globalScope.extension.aaptOptions
             if (options != null) {

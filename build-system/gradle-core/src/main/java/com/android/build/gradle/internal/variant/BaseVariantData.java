@@ -69,6 +69,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.ConfigurableFileTree;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.logging.Logging;
@@ -611,13 +612,11 @@ public abstract class BaseVariantData {
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()
                     && taskContainer.getRenderscriptCompileTask() != null) {
-                // FIXME we need to get a configurableFileTree directly from the BuildableArtifact.
-                FileCollection rsFC =
+                Provider<Directory> rsFC =
                         scope.getArtifacts()
-                                .getFinalArtifactFiles(
-                                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
-                                .get();
-                sourceSets.add(project.fileTree(rsFC.getSingleFile()).builtBy(rsFC));
+                                .getFinalProduct(
+                                        InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR);
+                sourceSets.add(project.fileTree(rsFC).builtBy(rsFC));
             }
 
             defaultJavaSources = sourceSets.build();
@@ -652,8 +651,7 @@ public abstract class BaseVariantData {
         if (!variantConfiguration.getRenderscriptNdkModeEnabled()) {
             fc.from(
                     scope.getArtifacts()
-                            .getFinalArtifactFiles(
-                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR));
+                            .getFinalProduct(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR));
         }
 
         return fc;

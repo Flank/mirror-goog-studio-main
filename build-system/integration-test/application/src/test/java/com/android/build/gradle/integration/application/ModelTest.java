@@ -90,8 +90,7 @@ public class ModelTest {
                 project.file("build/generated/aidl_source_output_dir/debug/out"),
                 project.file("build/generated/ap_generated_sources/debug/out"),
                 project.file("build/generated/source/buildConfig/debug"),
-                project.file(
-                        "build/generated/renderscript_source_output_dir/debug/compileDebugRenderscript/out"));
+                project.file("build/generated/renderscript_source_output_dir/debug/out"));
 
         assertThat(debugArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedSourceFolders.build());
@@ -108,7 +107,7 @@ public class ModelTest {
                 project.file("build/generated/ap_generated_sources/debugAndroidTest/out"),
                 project.file("build/generated/source/buildConfig/androidTest/debug"),
                 project.file(
-                        "build/generated/renderscript_source_output_dir/debugAndroidTest/compileDebugAndroidTestRenderscript/out"));
+                        "build/generated/renderscript_source_output_dir/debugAndroidTest/out"));
 
         assertThat(androidTestArtifact.getGeneratedSourceFolders())
                 .containsExactlyElementsIn(expectedGeneratedTestSourceFolders.build());

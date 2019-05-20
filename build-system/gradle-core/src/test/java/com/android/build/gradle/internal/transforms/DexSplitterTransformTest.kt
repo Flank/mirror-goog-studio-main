@@ -24,6 +24,7 @@ import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.core.VariantTypeImpl
@@ -38,6 +39,8 @@ import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -151,13 +154,17 @@ class DexSplitterTransformTest {
         val primaryClasses = tmp.newFile("mainDexList.txt").also { file ->
             file.writeText(primaryDex.joinToString(separator = System.lineSeparator()) { "$it.class" })
         }
+        val regularFile = Mockito.mock(RegularFile::class.java)
+        `when`(regularFile.asFile).thenReturn(primaryClasses)
 
         runDexSplitter(
             File(r8OutputProviderDir, "main"),
             listOf(featureClasses),
             createBuildArtifact(baseSplit),
             mappingFileSrc = null,
-            mainDexList = createBuildArtifact(primaryClasses))
+
+
+            mainDexList = FakeGradleProvider(regularFile))
 
         assertThatDex(dexSplitterOutputProviderDir.resolve("splitDexFiles/classes.dex")).containsClassesIn(
             primaryDex.map { "L$it;" }
@@ -169,7 +176,7 @@ class DexSplitterTransformTest {
         featureJars: List<File>,
         baseJars: BuildableArtifact,
         mappingFileSrc: BuildableArtifact? = null,
-        mainDexList: BuildableArtifact? = null
+        mainDexList: Provider<RegularFile>? = null
     ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
         val dexSplitterInvocation =

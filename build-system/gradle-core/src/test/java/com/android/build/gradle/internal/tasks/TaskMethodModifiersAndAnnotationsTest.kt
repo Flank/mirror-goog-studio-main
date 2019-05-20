@@ -183,10 +183,8 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.RenderscriptCompile::setObjOutputDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setOptimLevel",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setResOutputDir",
-                "com.android.build.gradle.tasks.RenderscriptCompile::setSourceOutputDir",
                 "com.android.build.gradle.tasks.RenderscriptCompile::setSupportMode",
                 "com.android.build.gradle.tasks.ShaderCompile::setDefaultArgs",
-                "com.android.build.gradle.tasks.ShaderCompile::setOutputDir",
                 "com.android.build.gradle.tasks.ShaderCompile::setScopedArgs"
             )
 

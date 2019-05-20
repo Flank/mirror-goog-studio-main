@@ -16,15 +16,28 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 
 /** task packaging the rs headers */
-open class PackageRenderscriptTask : Sync(), VariantAwareTask {
+abstract class PackageRenderscriptTask : Sync(), VariantAwareTask {
+
+    @get:OutputDirectory
+    abstract val headersDir: DirectoryProperty
+
+    // Override to remove the @OutputDirectory, since it is captured by the above property
+    @Suppress("RedundantOverride")
+    override fun getDestinationDir(): File {
+        return super.getDestinationDir()
+    }
 
     @Internal
     override lateinit var variantName: String
@@ -37,13 +50,15 @@ open class PackageRenderscriptTask : Sync(), VariantAwareTask {
         override val type: Class<PackageRenderscriptTask>
             get() = PackageRenderscriptTask::class.java
 
-        private lateinit var headersDir: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            headersDir = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.RENDERSCRIPT_HEADERS, taskName, "out")
+        override fun handleProvider(taskProvider: TaskProvider<out PackageRenderscriptTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.RENDERSCRIPT_HEADERS,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                PackageRenderscriptTask::headersDir,
+                "out"
+            )
         }
 
         override fun configure(task: PackageRenderscriptTask) {
@@ -53,7 +68,7 @@ open class PackageRenderscriptTask : Sync(), VariantAwareTask {
             task
                 .from(variantScope.variantConfiguration.renderscriptSourceList)
                 .include("**/*.rsh")
-            task.into(headersDir)
+            task.into(task.headersDir)
         }
     }
 }

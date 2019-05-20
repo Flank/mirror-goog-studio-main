@@ -28,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -50,6 +51,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -63,11 +65,9 @@ import org.gradle.api.tasks.TaskProvider;
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
-public class RenderscriptCompile extends NdkTask {
+public abstract class RenderscriptCompile extends NdkTask {
 
     // ----- PUBLIC TASK API -----
-
-    private File sourceOutputDir;
 
     private File resOutputDir;
 
@@ -102,13 +102,7 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @OutputDirectory
-    public File getSourceOutputDir() {
-        return sourceOutputDir;
-    }
-
-    public void setSourceOutputDir(File sourceOutputDir) {
-        this.sourceOutputDir = sourceOutputDir;
-    }
+    public abstract DirectoryProperty getSourceOutputDir();
 
     @OutputDirectory
     public File getResOutputDir() {
@@ -199,7 +193,7 @@ public class RenderscriptCompile extends NdkTask {
     @Override
     protected void doTaskAction() throws IOException, InterruptedException, ProcessException {
         // this is full run (always), clean the previous outputs
-        File sourceDestDir = getSourceOutputDir();
+        File sourceDestDir = getSourceOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(sourceDestDir);
 
         File resDestDir = getResOutputDir();
@@ -328,7 +322,6 @@ public class RenderscriptCompile extends NdkTask {
 
     public static class CreationAction extends VariantTaskCreationAction<RenderscriptCompile> {
 
-        private File sourceOutputDir;
         private Provider<Directory> libOutputDir;
 
         public CreationAction(@NonNull VariantScope scope) {
@@ -351,10 +344,6 @@ public class RenderscriptCompile extends NdkTask {
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            sourceOutputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(RENDERSCRIPT_SOURCE_OUTPUT_DIR, taskName, "out");
             libOutputDir =
                     getVariantScope()
                             .getArtifacts()
@@ -366,6 +355,14 @@ public class RenderscriptCompile extends NdkTask {
                 @NonNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
             super.handleProvider(taskProvider);
             getVariantScope().getTaskContainer().setRenderscriptCompileTask(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            RENDERSCRIPT_SOURCE_OUTPUT_DIR,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            RenderscriptCompile::getSourceOutputDir,
+                            "out");
         }
 
         @Override
@@ -394,7 +391,6 @@ public class RenderscriptCompile extends NdkTask {
             renderscriptTask.importDirs = scope.getArtifactFileCollection(
                     COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
 
-            renderscriptTask.setSourceOutputDir(sourceOutputDir);
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
             renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
             renderscriptTask.libOutputDir = libOutputDir;

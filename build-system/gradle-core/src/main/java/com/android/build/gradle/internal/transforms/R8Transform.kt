@@ -42,6 +42,8 @@ import com.android.builder.dexing.runR8
 import com.android.ide.common.blame.MessageReceiver
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -77,7 +79,7 @@ class R8Transform(
     // This is a huge sledgehammer, but it is necessary until http://b/72683872 is fixed.
     private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
 
-    var mainDexListOutput: File? = null
+    var mainDexListOutput: Provider<RegularFile>? = null
 
     constructor(
         scope: VariantScope,
@@ -140,7 +142,7 @@ class R8Transform(
         )
 
     override fun getSecondaryFileOutputs(): MutableCollection<File> =
-        listOfNotNull(outputProguardMapping, mainDexListOutput).toMutableList()
+        listOfNotNull(outputProguardMapping, mainDexListOutput?.orNull?.asFile).toMutableList()
 
     override fun keep(keep: String) {
         proguardConfigurations.add("-keep $keep")
@@ -213,7 +215,7 @@ class R8Transform(
                 mainDexRulesFiles.files.map { it.toPath() },
                 mainDexListFiles.files.map { it.toPath() },
                 getPlatformRules(),
-                mainDexListOutput?.toPath()
+                mainDexListOutput?.orNull?.asFile?.toPath()
             )
         } else {
             MainDexListConfig()

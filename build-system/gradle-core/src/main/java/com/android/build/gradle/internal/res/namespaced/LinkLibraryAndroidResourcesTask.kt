@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
@@ -61,7 +60,7 @@ import javax.inject.Inject
 abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFile: BuildableArtifact private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val manifestFile: RegularFileProperty
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val inputResourcesDirectories: ListProperty<Directory>
     @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
 
@@ -103,7 +102,7 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
 
         val request = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
-                manifestFile = manifestFile.single(),
+                manifestFile = manifestFile.get().asFile,
                 options = AaptOptions(null, false, null),
                 resourceDirs = ImmutableList.copyOf(inputResourcesDirectories.get().stream()
                     .map(Directory::getAsFile).iterator()),
@@ -149,8 +148,10 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
         override fun configure(task: LinkLibraryAndroidResourcesTask) {
             super.configure(task)
 
-            task.manifestFile = variantScope.artifacts.getFinalArtifactFiles(
-                InternalArtifactType.STATIC_LIBRARY_MANIFEST)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.STATIC_LIBRARY_MANIFEST,
+                task.manifestFile
+            )
 
             variantScope.artifacts.setTaskInputToFinalProducts(
                 InternalArtifactType.RES_COMPILED_FLAT_FILES,

@@ -27,12 +27,12 @@ import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX
 import com.android.builder.dexing.DexSplitterTool
-import com.android.builder.packaging.JarMerger.MODULE_PATH
 import com.android.utils.FileUtils
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Files
-import java.util.jar.JarFile
 
 /**
  * Transform that splits dex files depending on their feature sources
@@ -42,7 +42,7 @@ class DexSplitterTransform(
         private val featureJars: FileCollection,
         private val baseJars: BuildableArtifact,
         private val mappingFileSrc: BuildableArtifact?,
-        private val mainDexList: BuildableArtifact?
+        private val mainDexList: Provider<RegularFile>?
 ) :
         Transform() {
 
@@ -62,7 +62,7 @@ class DexSplitterTransform(
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
         secondaryFiles.add(SecondaryFile.nonIncremental(baseJars))
         mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
-        mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
+        mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
         return secondaryFiles
     }
 
@@ -89,7 +89,7 @@ class DexSplitterTransform(
             FileUtils.deleteRecursivelyIfExists(outputDir)
 
             val builder = DexSplitterTool.Builder(
-                outputDir.toPath(), mappingFile?.toPath(), mainDexList?.singleFile()?.toPath()
+                outputDir.toPath(), mappingFile?.toPath(), mainDexList?.orNull?.asFile?.toPath()
             )
 
             for (dirInput in TransformInputUtil.getDirectories(transformInvocation.inputs)) {

@@ -103,7 +103,7 @@ public enum InternalArtifactType implements ArtifactType {
     // Resources defined within the AAR.
     DEFINED_ONLY_SYMBOL_LIST,
     //Resources defined within the current module.
-    LOCAL_ONLY_SYMBOL_LIST,
+    LOCAL_ONLY_SYMBOL_LIST(Kind.FILE),
     // public.txt output
     PUBLIC_RES(Kind.FILE),
     SHRUNK_PROCESSED_RES,
@@ -196,7 +196,7 @@ public enum InternalArtifactType implements ArtifactType {
     MANIFEST_MERGE_BLAME_FILE(Kind.FILE),
     // Simplified android manifest with original package name.
     // It's used to create namespaced res.apk static library.
-    STATIC_LIBRARY_MANIFEST,
+    STATIC_LIBRARY_MANIFEST(Kind.FILE),
 
     // List of annotation processors for metrics.
     ANNOTATION_PROCESSOR_LIST(Kind.FILE),

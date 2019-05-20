@@ -1218,10 +1218,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
         if (ndkMode == null || !ndkMode) {
             folders.add(
                     scope.getArtifacts()
-                            .getFinalArtifactFiles(
-                                    InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
+                            .getFinalProduct(InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR)
                             .get()
-                            .getSingleFile());
+                            .getAsFile());
         }
         if (addDataBindingSources) {
             BuildableArtifact output =

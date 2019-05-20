@@ -24,6 +24,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -52,6 +53,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile Shaders */
@@ -65,11 +67,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             .include("**/*." + ShaderProcessor.EXT_GEOM)
             .include("**/*." + ShaderProcessor.EXT_FRAG)
             .include("**/*." + ShaderProcessor.EXT_COMP);
-
-    // ----- PUBLIC TASK API -----
-
-    // ----- PRIVATE TASK API -----
-    private File outputDir;
 
     private final WorkerExecutorFacade workers;
 
@@ -115,13 +112,13 @@ public abstract class ShaderCompile extends NonIncrementalTask {
     @Override
     protected void doTaskAction() throws IOException {
         // this is full run, clean the previous output
-        File destinationDir = getOutputDir();
+        File destinationDir = getOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(destinationDir);
 
         try (WorkerExecutorFacade workers = this.workers) {
             compileAllShaderFiles(
                     getSourceDir().get().getAsFile(),
-                    getOutputDir(),
+                    destinationDir,
                     defaultArgs,
                     scopedArgs,
                     () -> ndkLocation.get(),
@@ -177,13 +174,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
 
 
     @OutputDirectory
-    public File getOutputDir() {
-        return outputDir;
-    }
-
-    public void setOutputDir(File sourceOutputDir) {
-        this.outputDir = sourceOutputDir;
-    }
+    public abstract DirectoryProperty getOutputDir();
 
     @NonNull
     @Input
@@ -207,8 +198,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<ShaderCompile> {
 
-        private File outputDir;
-
         public CreationAction(@NonNull VariantScope scope) {
             super(scope);
         }
@@ -226,12 +215,16 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-            outputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(InternalArtifactType.SHADER_ASSETS, taskName, "out");
+        public void handleProvider(@NonNull TaskProvider<? extends ShaderCompile> taskProvider) {
+            super.handleProvider(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.SHADER_ASSETS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            ShaderCompile::getOutputDir,
+                            "out");
         }
 
         @Override
@@ -243,7 +236,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
 
             task.ndkLocation = scope.getGlobalScope().getSdkComponents().getNdkFolderProvider();
             scope.getArtifacts().setTaskInputToFinalProduct(MERGED_SHADERS, task.getSourceDir());
-            task.setOutputDir(outputDir);
             task.setDefaultArgs(variantConfiguration.getDefautGlslcArgs());
             task.setScopedArgs(variantConfiguration.getScopedGlslcArgs());
 

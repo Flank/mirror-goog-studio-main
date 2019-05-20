@@ -148,14 +148,12 @@ class NonNamespacedApplicationLightRClassesTest {
             libFiles.getIntermediateFile(
                     "local_only_symbol_list",
                     "debug",
-                    "parseDebugLibraryResources",
                     "R-def.txt")).exists()
 
         assertThat(
             libFiles.getIntermediateFile(
                     "local_only_symbol_list",
                     "debug",
-                    "parseDebugLibraryResources",
                     "R-def.txt")).contains("lib_string")
 
         assertThat(

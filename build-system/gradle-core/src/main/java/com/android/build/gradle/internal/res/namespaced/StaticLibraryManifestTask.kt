@@ -17,18 +17,20 @@
 package com.android.build.gradle.internal.res.namespaced
 
 import com.android.SdkConstants
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.google.common.base.Suppliers
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
-import java.io.File
 import java.util.function.Supplier
 import javax.inject.Inject
 
@@ -36,12 +38,12 @@ import javax.inject.Inject
  * Task to write an android manifest for the res.apk static library
  */
 @CacheableTask
-open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
+abstract class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
     : NonIncrementalTask() {
 
     @get:Internal lateinit var packageNameSupplier: Supplier<String> private set
     @get:Input val packageName get() = packageNameSupplier.get()
-    @get:OutputFile lateinit var manifestFile: File private set
+    @get:OutputFile abstract val manifestFile: RegularFileProperty
 
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
@@ -49,7 +51,7 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
         workers.use {
             it.submit(
                 StaticLibraryManifestRunnable::class.java,
-                StaticLibraryManifestRequest(manifestFile, packageName)
+                StaticLibraryManifestRequest(manifestFile.get().asFile, packageName)
             )
         }
     }
@@ -63,18 +65,19 @@ open class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerE
         override val type: Class<StaticLibraryManifestTask>
             get() = StaticLibraryManifestTask::class.java
 
-        private lateinit var manifestFile: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            manifestFile = variantScope.artifacts.appendArtifact(InternalArtifactType.STATIC_LIBRARY_MANIFEST,
-                taskName,
-                SdkConstants.ANDROID_MANIFEST_XML)
+        override fun handleProvider(taskProvider: TaskProvider<out StaticLibraryManifestTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.STATIC_LIBRARY_MANIFEST,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                StaticLibraryManifestTask::manifestFile,
+                SdkConstants.ANDROID_MANIFEST_XML
+            )
         }
 
         override fun configure(task: StaticLibraryManifestTask) {
             super.configure(task)
-            task.manifestFile = manifestFile
             task.packageNameSupplier =
                     Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
         }

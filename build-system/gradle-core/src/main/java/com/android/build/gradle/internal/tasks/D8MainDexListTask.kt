@@ -31,10 +31,8 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.multidex.D8MainDexList
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
@@ -43,6 +41,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -88,8 +87,7 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
         protected set
 
     @get:OutputFile
-    abstract var output: Provider<RegularFile>
-        protected set
+    abstract val output: RegularFileProperty
 
     private val workers = Workers.preferWorkers(project.name, path, executor)
 
@@ -185,29 +183,29 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
                 }
         }
 
-        private lateinit var output: Provider<RegularFile>
-
         override val name: String =
             scope.getTaskName(if (includeDynamicFeatures) "bundleMultiDexList" else "multiDexList")
         override val type: Class<D8MainDexListTask> = D8MainDexListTask::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
+        override fun handleProvider(taskProvider: TaskProvider<out D8MainDexListTask>) {
+            super.handleProvider(taskProvider)
             val outputType =
                 if (includeDynamicFeatures) {
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
                 } else {
                     InternalArtifactType.LEGACY_MULTIDEX_MAIN_DEX_LIST
                 }
-            output = variantScope.artifacts.createArtifactFile(
-                outputType, BuildArtifactsHolder.OperationType.INITIAL, taskName, "mainDexList.txt"
+            variantScope.artifacts.producesFile(
+                outputType,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                D8MainDexListTask::output,
+                "mainDexList.txt"
             )
         }
 
         override fun configure(task: D8MainDexListTask) {
             super.configure(task)
-            task.output = output
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,

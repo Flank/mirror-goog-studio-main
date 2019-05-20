@@ -36,6 +36,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -71,11 +72,10 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
     lateinit var bundleDeps: BuildableArtifact
         private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:Optional
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    var mainDexList: BuildableArtifact? = null
-        private set
+    abstract val mainDexList: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
@@ -110,7 +110,7 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
                 Params(
                     baseModuleFile = baseModuleZip.get().asFileTree.singleFile,
                     featureFiles = featureZips.files,
-                    mainDexList = mainDexList?.singleFile(),
+                    mainDexList = mainDexList.orNull?.asFile,
                     obfuscationMappingFile = obsfuscationMappingFile?.singleFile(),
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
@@ -267,10 +267,9 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
             )
 
             if (variantScope.needsMainDexListForBundle) {
-                task.mainDexList =
-                        variantScope.artifacts.getFinalArtifactFiles(
-                            InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE
-                        )
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
+                    task.mainDexList)
                 // The dex files from this application are still processed for legacy multidex
                 // in this case, as if none of the dynamic features are fused the bundle tool will
                 // not reprocess the dex files.
