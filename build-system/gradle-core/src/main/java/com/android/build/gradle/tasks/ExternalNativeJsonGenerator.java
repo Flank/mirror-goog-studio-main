@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.isCmakeForkVersion;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
@@ -442,18 +443,9 @@ public abstract class ExternalNativeJsonGenerator {
                 return new NdkBuildExternalNativeJsonGenerator(variant, abis, stats);
             case CMAKE:
                 CxxCmakeModuleModel cmake = Objects.requireNonNull(variant.getModule().getCmake());
-
-                // parent of 'bin'
-                Revision cmakeRevision = cmake.getFoundCmakeVersion();
-
-                stats.setNativeCmakeVersion(cmakeRevision.toShortString());
-
-                // Custom Cmake shipped with Android studio has a fixed version, we'll just use that exact
-                // version to check.
-                if (cmakeRevision.equals(
-                        Revision.parseRevision(
-                                ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
-                                Revision.Precision.MICRO))) {
+                Revision cmakeRevision = cmake.getMinimumCmakeVersion();
+                stats.setNativeCmakeVersion(cmakeRevision.toString());
+                if (isCmakeForkVersion(cmakeRevision)) {
                     return new CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, stats);
                 }
 

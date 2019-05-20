@@ -281,7 +281,7 @@ private class CmakeSearchContext(
             try {
                 Revision.parseRevision(cmakeVersionFromDslNoPlus)
             } catch (e: NumberFormatException) {
-                error("CMake version '$cmakeVersionFromDsl' is not formatted correctly.")
+                errorln("CMake version '$cmakeVersionFromDsl' is not formatted correctly.")
                 defaultCmakeVersion
             }
         }
@@ -300,8 +300,8 @@ private class CmakeSearchContext(
             // it is a special case. Since we're trying to retire our fork the version
             // in the error message indicates the lowest non-deprecated version we can
             // work with.
-            error("CMake version '$requestedCmakeVersion' is too low. Use 3.7.0 or higher.")
-            requestedCmakeVersion = forkCmakeReportedVersion
+            errorln("CMake version '$requestedCmakeVersion' is too low. Use 3.7.0 or higher.")
+            requestedCmakeVersion = defaultCmakeVersion
         }
         return this
     }
@@ -311,8 +311,8 @@ private class CmakeSearchContext(
      */
     internal fun checkForCmakeVersionAdequatePrecision(): CmakeSearchContext {
         if (requestedCmakeVersion.toIntArray(true).size < 3) {
-            error("CMake version '$requestedCmakeVersion' does not have enough precision. Use major.minor.micro in version.")
-            requestedCmakeVersion = forkCmakeReportedVersion
+            errorln("CMake version '$requestedCmakeVersion' does not have enough precision. Use major.minor.micro in version.")
+            requestedCmakeVersion = defaultCmakeVersion
         }
         return this
     }
@@ -332,7 +332,7 @@ private class CmakeSearchContext(
         val binDir = File(pathFromLocalProperties, "bin")
         val version = cmakeVersionGetter(binDir)
         if (version == null) {
-            error("Could not get version from cmake.dir path '$pathFromLocalProperties'.")
+            errorln("Could not get version from cmake.dir path '$pathFromLocalProperties'.")
             return this
         }
 
@@ -343,7 +343,7 @@ private class CmakeSearchContext(
         } else {
             tryAcceptFoundCmake(pathFromLocalProperties, version, cmakeVersionGetter, "from cmake.dir")
             if (resultCmakeInstallFolder == null) {
-                error(
+                errorln(
                     "CMake '$version' found via cmake.dir='$pathFromLocalProperties' does not match " +
                             "requested version '$requestedCmakeVersion'."
                 )
@@ -594,6 +594,25 @@ fun findCmakePathLogic(
         .tryFindInPath(cmakeVersionGetter, canarySdkPaths, "in SDK canaries")
         .issueVersionNotFoundError()
 }
+
+/**
+ * Whether version is for fork CMake.
+ */
+fun Revision.isCmakeForkVersion() = major == 3 && minor == 6 && micro == 0
+
+/**
+ * Find the requested CMake version
+ */
+fun findCmakeVersion(
+    cmakeVersionFromDsl: String?
+): Revision {
+    val context = CmakeSearchContext(cmakeVersionFromDsl)
+        .useDefaultCmakeVersionIfNecessary()
+        .checkForCmakeVersionTooLow()
+        .checkForCmakeVersionAdequatePrecision()
+    return context.requestedCmakeVersion
+}
+
 
 /**
  * Locate CMake cmake path for the given build configuration.

@@ -55,7 +55,7 @@ import com.android.utils.FileUtils.join
  */
 @RunWith(Parameterized::class)
 class CmakeExtensionsTest(
-    cmakeVersion : String,
+    private val cmakeVersion : String,
     private val enableCaching : Boolean?,
     private val alternateCacheFolder : String?,
     private val errorInCmakeLists : Boolean) {
@@ -65,13 +65,13 @@ class CmakeExtensionsTest(
         @JvmStatic
         fun data(): Array<Array<Any?>> {
             return arrayOf(
-                arrayOf("3.10.4819442", true, null, true),
-                arrayOf<Any?>("3.6.4111459", true, ".cxx-alternate", true),
-                arrayOf("3.10.4819442", false, null, false),
-                arrayOf<Any?>("3.10.4819442", false, ".cxx-alternate", false),
-                arrayOf("3.6.4111459", false, null, false),
-                arrayOf("3.10.4819442", null, ".cxx-alternate", false),
-                arrayOf("3.6.4111459", null, null, false)
+                arrayOf("3.10.2", true, null, true),
+                arrayOf<Any?>("3.6.0", true, ".cxx-alternate", true),
+                arrayOf("3.10.2", false, null, false),
+                arrayOf<Any?>("3.10.2", false, ".cxx-alternate", false),
+                arrayOf("3.6.0", false, null, false),
+                arrayOf("3.10.2", null, ".cxx-alternate", false),
+                arrayOf("3.6.0", null, null, false)
             )
         }
     }
@@ -85,9 +85,7 @@ class CmakeExtensionsTest(
                 .useCppSource(true)
                 .build()
         )
-        .setCmakeVersion(cmakeVersion)
         .setSideBySideNdkVersion(DEFAULT_NDK_SIDE_BY_SIDE_VERSION)
-        .setWithCmakeDirInLocalProp(true)
         .create()
 
     @Before
@@ -97,6 +95,7 @@ class CmakeExtensionsTest(
                 apply plugin: 'com.android.application'
                 android.compileSdkVersion ${GradleTestProject.DEFAULT_COMPILE_SDK_VERSION}
                 android.externalNativeBuild.cmake.path "src/main/cpp/CMakeLists.txt"
+                android.externalNativeBuild.cmake.version "$cmakeVersion"
                 android.defaultConfig.ndk.abiFilters "x86_64"
                 """.trimIndent()
         )

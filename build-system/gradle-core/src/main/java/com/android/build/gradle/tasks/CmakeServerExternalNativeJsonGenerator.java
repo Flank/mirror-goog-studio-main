@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.ide.common.process.ProcessException;
+import com.android.repository.Revision;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -179,9 +180,16 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             File cmakeBinFolder = cmake.getCmakeExe().getParentFile();
             Server cmakeServer = ServerFactory.create(cmakeBinFolder, serverReceiver);
             if (cmakeServer == null) {
+                Revision actual = CmakeUtils.getVersion(cmakeBinFolder);
                 throw new RuntimeException(
-                        "Unable to create a Cmake server located at: "
-                                + cmakeBinFolder.getAbsolutePath());
+                        String.format(
+                                "Actual CMake version '%s.%s.%s' did not satisfy requested minimum or default "
+                                        + "CMake minimum version '%s'. Possibly cmake.dir doesn't match "
+                                        + "android.externalNativeBuild.cmake.version.",
+                                actual.getMajor(),
+                                actual.getMinor(),
+                                actual.getMicro(),
+                                cmake.getMinimumCmakeVersion()));
             }
 
             if (!cmakeServer.connect()) {

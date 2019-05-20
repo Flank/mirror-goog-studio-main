@@ -27,10 +27,9 @@ interface CxxCmakeModuleModel {
     val cmakeExe: File
 
     /**
-     * The version of CMake found by executing CMake --version
-     *   ex, 3.10.2
+     * The effective minimum version required.
      */
-    val foundCmakeVersion: Revision
+    val minimumCmakeVersion: Revision
 
     /**
      * Path to ninja.exe

@@ -26,8 +26,7 @@ class JsonUtilTest {
     fun `round trip`() {
         BasicCmakeMock().let {
             // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder,
-                it.cmakeVersionProvider)!!
+            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
             val variant = createCxxVariantModel(
                 module,
                 it.baseVariantData

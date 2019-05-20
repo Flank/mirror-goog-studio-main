@@ -257,8 +257,7 @@ class CmakeLocatorTest {
     @Test
     fun findByCmakeDirWrongVersion() {
         expectException(
-            "CMake '3.12.0' found via cmake.dir='${slash}a${slash}b${slash}c${slash}cmake' does not match " +
-                    "requested version '3.13.0'.$newline" +
+            "CMake '3.13.0' was not found in PATH or by cmake.dir property.$newline" +
                     "- CMake '3.12.0' found from cmake.dir did not match requested version '3.13.0'."
         ) {
             findCmakePath(
@@ -668,5 +667,40 @@ class CmakeLocatorTest {
         )
         assertThat(encounter.errors).hasSize(0)
         assertThat(encounter.downloadAttempts).isEqualTo(0)
+    }
+
+    @Test
+    fun `get default version`() {
+        assertThat(findCmakeVersion(null)).isEqualTo(defaultCmakeVersion)
+    }
+
+    @Test
+    fun `get specific version`() {
+        assertThat(findCmakeVersion("3.19.2"))
+            .isEqualTo(Revision.parseRevision("3.19.2"))
+    }
+
+    @Test
+    fun `get specific version +`() {
+        assertThat(findCmakeVersion("3.19.2+"))
+            .isEqualTo(Revision.parseRevision("3.19.2"))
+    }
+
+    @Test
+    fun `get fork version`() {
+        val version = findCmakeVersion("3.6.0")
+        assertThat(version.isCmakeForkVersion()).isTrue()
+    }
+
+    @Test
+    fun `get fork version +`() {
+        val version = findCmakeVersion("3.6.0+")
+        assertThat(version.isCmakeForkVersion()).isTrue()
+    }
+
+    @Test
+    fun `get version too low`() {
+        val version = findCmakeVersion("3.5.0+")
+        assertThat(version.isCmakeForkVersion()).isFalse()
     }
 }
