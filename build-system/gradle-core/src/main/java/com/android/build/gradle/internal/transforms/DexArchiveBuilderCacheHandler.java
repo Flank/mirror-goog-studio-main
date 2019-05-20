@@ -18,11 +18,8 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.builder.core.DexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -41,7 +38,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -55,12 +51,12 @@ import java.util.jar.JarOutputStream;
 class DexArchiveBuilderCacheHandler {
 
     static final class CacheableItem {
-        @NonNull final QualifiedContent input;
+        @NonNull final File input;
         @NonNull final Collection<File> cachable;
         @NonNull final List<Path> dependencies;
 
         CacheableItem(
-                @NonNull QualifiedContent input,
+                @NonNull File input,
                 @NonNull Collection<File> cachable,
                 @NonNull List<Path> dependencies) {
             this.input = input;
@@ -101,9 +97,9 @@ class DexArchiveBuilderCacheHandler {
     }
 
     @Nullable
-    File getCachedVersionIfPresent(@NonNull JarInput input, @NonNull List<Path> dependencies)
+    File getCachedVersionIfPresent(@NonNull File input, @NonNull List<Path> dependencies)
             throws IOException {
-        FileCache cache = getBuildCache(input.getFile(), isExternalLib(input), userLevelCache);
+        FileCache cache = getBuildCache(input, userLevelCache);
 
         if (cache == null) {
             return null;
@@ -111,7 +107,7 @@ class DexArchiveBuilderCacheHandler {
 
         FileCache.Inputs buildCacheInputs =
                 DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                        input.getFile(),
+                        input,
                         dexOptions,
                         dexer,
                         minSdkVersion,
@@ -129,13 +125,12 @@ class DexArchiveBuilderCacheHandler {
         for (CacheableItem cacheableItem : cacheableItems) {
             FileCache cache =
                     getBuildCache(
-                            cacheableItem.input.getFile(),
-                            isExternalLib(cacheableItem.input),
+                            cacheableItem.input,
                             userLevelCache);
             if (cache != null) {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                                cacheableItem.input.getFile(),
+                                cacheableItem.input,
                                 dexOptions,
                                 dexer,
                                 minSdkVersion,
@@ -196,16 +191,6 @@ class DexArchiveBuilderCacheHandler {
                 }
             }
         }
-    }
-
-    /** Returns if the qualified content is an external jar. */
-    private static boolean isExternalLib(@NonNull QualifiedContent content) {
-        return content.getFile().isFile()
-                && content.getScopes()
-                        .equals(Collections.singleton(QualifiedContent.Scope.EXTERNAL_LIBRARIES))
-                && content.getContentTypes()
-                        .equals(Collections.singleton(QualifiedContent.DefaultContentType.CLASSES))
-                && !content.getName().startsWith(OriginalStream.LOCAL_JAR_GROUPID);
     }
 
     /**
@@ -313,10 +298,10 @@ class DexArchiveBuilderCacheHandler {
      */
     @Nullable
     static FileCache getBuildCache(
-            @NonNull File inputFile, boolean isExternalLib, @Nullable FileCache buildCache) {
+            @NonNull File inputFile, @Nullable FileCache buildCache) {
         // We use the build cache only when it is enabled and the input file is a (non-snapshot)
         // external-library jar file
-        if (buildCache == null || !isExternalLib) {
+        if (buildCache == null) {
             return null;
         }
         // After the check above, here the build cache should be enabled and the input file is an

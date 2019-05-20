@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
+import com.android.build.gradle.internal.pipeline.OriginalStream
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
@@ -256,10 +257,12 @@ class DexArchiveBuilderTransform internal constructor(
                                 additionalPaths,
                                 cacheInfo
                             )
-                            if (cacheInfo != DesugaringDontCache && dexArchives.isNotEmpty()) {
+                            if (cacheInfo != DesugaringDontCache
+                                && dexArchives.isNotEmpty()
+                                && isExternalLib(jarInput)) {
                                 cacheableItems.add(
                                     DexArchiveBuilderCacheHandler.CacheableItem(
-                                        jarInput,
+                                        jarInput.file,
                                         dexArchives,
                                         cacheInfo.orderedD8DesugaringDependencies
                                     )
@@ -340,6 +343,14 @@ class DexArchiveBuilderTransform internal constructor(
         allDependencies.addAll(bootclasspathPaths)
         allDependencies.addAll(classpathJars)
         return D8DesugaringCacheInfo(allDependencies)
+    }
+
+    /** Returns if the qualified content is an external jar.  */
+    private fun isExternalLib(content: QualifiedContent): Boolean {
+        return (content.file.isFile
+                && content.scopes == setOf(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                && content.contentTypes == setOf(QualifiedContent.DefaultContentType.CLASSES)
+                && !content.name.startsWith(OriginalStream.LOCAL_JAR_GROUPID))
     }
 
     private fun removeDeletedEntries(
@@ -435,7 +446,7 @@ class DexArchiveBuilderTransform internal constructor(
 
         if (cacheInfo !== DesugaringDontCache) {
             val cachedVersion = cacheHandler.getCachedVersionIfPresent(
-                toConvert, cacheInfo.orderedD8DesugaringDependencies
+                toConvert.file, cacheInfo.orderedD8DesugaringDependencies
             )
             if (cachedVersion != null) {
                 val outputFile = getOutputForJar(transformOutputProvider, toConvert, null)
