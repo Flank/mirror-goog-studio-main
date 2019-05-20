@@ -42,67 +42,55 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/JavaPerformanceTest.java:32: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        String s = new String(\"bar\");\n"
                         + "                   ~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:106: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:95: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        new String(\"flag me\");\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:112: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:101: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        new String(\"flag me\");\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:115: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:104: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        Bitmap.createBitmap(100, 100, null);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:116: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:105: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        android.graphics.Bitmap.createScaledBitmap(null, 100, 100, false);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:117: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:106: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "        BitmapFactory.decodeFile(null);\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:119: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:108: Warning: Avoid object allocations during draw operations: Use Canvas.getClipBounds(Rect) instead of Canvas.getClipBounds() which allocates a temporary Rect [DrawAllocation]\n"
                         + "        canvas.getClipBounds(); // allocates on your behalf\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:143: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:132: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]\n"
                         + "            new String(\"foo\");\n"
                         + "            ~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:73: Warning: Use new SparseArray<String>(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, String> myMap = new HashMap<Integer, String>();\n"
-                        + "                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:75: Warning: Use new SparseBooleanArray(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, Boolean> myBoolMap = new HashMap<Integer, Boolean>();\n"
-                        + "                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:77: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, Integer> myIntMap = new java.util.HashMap<Integer, Integer>();\n"
-                        + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:193: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:182: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n"
                         + "        new SparseArray<Integer>(); // Use SparseIntArray instead\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:195: Warning: Use new SparseBooleanArray(...) instead for better performance [UseSparseArrays]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:184: Warning: Use new SparseBooleanArray(...) instead for better performance [UseSparseArrays]\n"
                         + "        new SparseArray<Boolean>(); // Use SparseBooleanArray instead\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:204: Warning: Use new SparseArray<String>(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Byte, String> myByteMap = new HashMap<Byte, String>();\n"
-                        + "                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "src/test/pkg/JavaPerformanceTest.java:36: Warning: Use Integer.valueOf(5) instead [UseValueOf]\n"
                         + "        Integer i = new Integer(5);\n"
                         + "                    ~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:148: Warning: Use Integer.valueOf(42) instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:137: Warning: Use Integer.valueOf(42) instead [UseValueOf]\n"
                         + "        Integer i1 = new Integer(42);\n"
                         + "                     ~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:149: Warning: Use Long.valueOf(42L) instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:138: Warning: Use Long.valueOf(42L) instead [UseValueOf]\n"
                         + "        Long l1 = new Long(42L);\n"
                         + "                  ~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:150: Warning: Use Boolean.valueOf(true) instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:139: Warning: Use Boolean.valueOf(true) instead [UseValueOf]\n"
                         + "        Boolean b1 = new Boolean(true);\n"
                         + "                     ~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:151: Warning: Use Character.valueOf('c') instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:140: Warning: Use Character.valueOf('c') instead [UseValueOf]\n"
                         + "        Character c1 = new Character('c');\n"
                         + "                       ~~~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:152: Warning: Use Float.valueOf(1.0f) instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:141: Warning: Use Float.valueOf(1.0f) instead [UseValueOf]\n"
                         + "        Float f1 = new Float(1.0f);\n"
                         + "                   ~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/JavaPerformanceTest.java:153: Warning: Use Double.valueOf(1.0) instead [UseValueOf]\n"
+                        + "src/test/pkg/JavaPerformanceTest.java:142: Warning: Use Double.valueOf(1.0) instead [UseValueOf]\n"
                         + "        Double d1 = new Double(1.0);\n"
                         + "                    ~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 22 warnings\n";
+                        + "0 errors, 18 warnings";
 
         //noinspection all // Sample code
         lint().files(
@@ -179,17 +167,6 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        new String(\"foo\");\n"
                                         + "        String s = new String(\"bar\");\n"
                                         + "        boolean b = Boolean.valueOf(true); // auto-boxing\n"
-                                        + "\n"
-                                        + "        // Sparse array candidates\n"
-                                        + "        Map<Integer, String> myMap = new HashMap<Integer, String>();\n"
-                                        + "        // Should use SparseBooleanArray\n"
-                                        + "        Map<Integer, Boolean> myBoolMap = new HashMap<Integer, Boolean>();\n"
-                                        + "        // Should use SparseIntArray\n"
-                                        + "        Map<Integer, Integer> myIntMap = new java.util.HashMap<Integer, Integer>();\n"
-                                        + "\n"
-                                        + "        // This one should not be reported:\n"
-                                        + "        @SuppressLint(\"UseSparseArrays\")\n"
-                                        + "        Map<Integer, Object> myOtherMap = new HashMap<Integer, Object>();\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec,\n"
@@ -336,84 +313,39 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 35: Replace with valueOf():\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 36: Replace with valueOf():\n"
                                 + "@@ -36 +36\n"
                                 + "-         Integer i = new Integer(5);\n"
                                 + "+         Integer i = Integer.valueOf(5);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 147: Replace with valueOf():\n"
-                                + "@@ -148 +148\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 137: Replace with valueOf():\n"
+                                + "@@ -137 +137\n"
                                 + "-         Integer i1 = new Integer(42);\n"
                                 + "+         Integer i1 = Integer.valueOf(42);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 148: Replace with valueOf():\n"
-                                + "@@ -149 +149\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 138: Replace with valueOf():\n"
+                                + "@@ -138 +138\n"
                                 + "-         Long l1 = new Long(42L);\n"
                                 + "+         Long l1 = Long.valueOf(42L);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 149: Replace with valueOf():\n"
-                                + "@@ -150 +150\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 139: Replace with valueOf():\n"
+                                + "@@ -139 +139\n"
                                 + "-         Boolean b1 = new Boolean(true);\n"
                                 + "+         Boolean b1 = Boolean.valueOf(true);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 150: Replace with valueOf():\n"
-                                + "@@ -151 +151\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 140: Replace with valueOf():\n"
+                                + "@@ -140 +140\n"
                                 + "-         Character c1 = new Character('c');\n"
                                 + "+         Character c1 = Character.valueOf('c');\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 151: Replace with valueOf():\n"
-                                + "@@ -152 +152\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 141: Replace with valueOf():\n"
+                                + "@@ -141 +141\n"
                                 + "-         Float f1 = new Float(1.0f);\n"
                                 + "+         Float f1 = Float.valueOf(1.0f);\n"
-                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 152: Replace with valueOf():\n"
-                                + "@@ -153 +153\n"
+                                + "Fix for src/test/pkg/JavaPerformanceTest.java line 142: Replace with valueOf():\n"
+                                + "@@ -142 +142\n"
                                 + "-         Double d1 = new Double(1.0);\n"
-                                + "+         Double d1 = Double.valueOf(1.0);\n");
-    }
-
-    public void testLongSparseArray() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "src/test/pkg/LongSparseArray.java:10: Warning: Use new LongSparseArray(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Long, String> myStringMap = new HashMap<Long, String>();\n"
-                        + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(manifest().minSdk(17), mLongSparseArray));
-    }
-
-    public void testLongSparseSupportLibArray() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-                ""
-                        + "src/test/pkg/LongSparseArray.java:10: Warning: Use new android.support.v4.util.LongSparseArray(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Long, String> myStringMap = new HashMap<Long, String>();\n"
-                        + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n",
-                lintProject(
-                        mLongSparseArray, jar("libs/android-support-v4.jar") // just a placeholder
-                        ));
+                                + "+         Double d1 = Double.valueOf(1.0);");
     }
 
     public void testNoLongSparseArray() throws Exception {
         //noinspection all // Sample code
         assertEquals("No warnings.", lintProject(manifest().minSdk(1), mLongSparseArray));
-    }
-
-    public void testSparseLongArray1() {
-        String expected =
-                ""
-                        + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseLongArray(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
-                        + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n";
-        lint().files(manifest().minSdk(19), mSparseLongArray).run().expect(expected);
-    }
-
-    public void testSparseLongArray2() {
-        // Note -- it's offering a SparseArray, not a SparseLongArray!
-        String expected =
-                ""
-                        + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
-                        + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n";
-        lint().files(manifest().minSdk(1), mSparseLongArray).run().expect(expected);
     }
 
     public void testNoSparseArrayOutsideAndroid() {
@@ -564,18 +496,6 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        java.lang.String(\"foo\")\n"
                                         + "        val s = java.lang.String(\"bar\")\n"
                                         + "        val b = java.lang.Boolean.valueOf(true)!! // auto-boxing\n"
-                                        + "\n"
-                                        + "\n"
-                                        + "        // Sparse array candidates\n"
-                                        + "        val myMap = /*Use `new SparseArray<String>(...)` instead for better performance*/HashMap<Int, String>()/**/\n"
-                                        + "        // Should use SparseBooleanArray\n"
-                                        + "        val myBoolMap = /*Use `new SparseBooleanArray(...)` instead for better performance*/HashMap<Int, Boolean>()/**/\n"
-                                        + "        // Should use SparseIntArray\n"
-                                        + "        val myIntMap = /*Use new `SparseIntArray(...)` instead for better performance*/java.util.HashMap<Int, Int>()/**/\n"
-                                        + "\n"
-                                        + "        // This one should not be reported:\n"
-                                        + "        @SuppressLint(\"UseSparseArrays\")\n"
-                                        + "        val myOtherMap = HashMap<Int, Any>()\n"
                                         + "    }\n"
                                         + "\n"
                                         + "    protected fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int,\n"
@@ -687,11 +607,6 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                         + "        // but only minSdkVersion >= 17 or if has v4 support lib\n"
                                         + "        val myStringMap = HashMap<Long, String>()\n"
                                         + "    }\n"
-                                        + "\n"
-                                        + "    fun byteSparseArray() {\n"
-                                        + "        // bytes easily apply to ints\n"
-                                        + "        val myByteMap = /*Use `new SparseArray<String>(...)` instead for better performance*/HashMap<Byte, String>()/**/\n"
-                                        + "    }\n"
                                         + "}\n"))
                 .run()
                 .expectInlinedMessages(true);
@@ -725,10 +640,10 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
     public void testWildcards() {
         String expected =
                 ""
-                        + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
-                        + "        Map<Integer, Long> myStringMap = new HashMap<>();\n"
-                        + "                                         ~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n";
+                        + "src/test/pkg/SparseLongArray.java:8: Warning: Use new SparseIntArray(...) instead for better performance [UseSparseArrays]\n"
+                        + "        SparseArray<Integer, String> myStringMap = new SparseArray<>();\n"
+                        + "                                                   ~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings";
         //noinspection all // Sample code
         lint().files(
                         manifest().minSdk(1),
@@ -736,14 +651,12 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                                 ""
                                         + "package test.pkg;\n"
                                         + "\n"
-                                        + "import java.util.HashMap;\n"
-                                        + "import java.util.Map;\n"
-                                        + "\n"
+                                        + "import android.util.SparseArray;\n"
                                         + "import android.content.Context;\n"
                                         + "\n"
                                         + "public class SparseLongArray {\n"
                                         + "    public void test() { // but only minSdkVersion >= 18\n"
-                                        + "        Map<Integer, Long> myStringMap = new HashMap<>();\n"
+                                        + "        SparseArray<Integer, String> myStringMap = new SparseArray<>();\n"
                                         + "    }\n"
                                         + "}\n"))
                 .run()

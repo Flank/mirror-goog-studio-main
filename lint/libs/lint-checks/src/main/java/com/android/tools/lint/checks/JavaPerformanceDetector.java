@@ -210,12 +210,7 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
             }
 
             if (!isArray && mCheckMaps) {
-                // TODO: Should we handle factory method constructions of HashMaps as well,
-                // e.g. via Guava? This is a bit trickier since we need to infer the type
-                // arguments from the calling context.
-                if (HASH_MAP.equals(typeName)) {
-                    checkHashMap(node);
-                } else if (SPARSE_ARRAY.equals(typeName)) {
+                if (SPARSE_ARRAY.equals(typeName)) {
                     checkSparseArray(node);
                 }
             }
@@ -483,7 +478,13 @@ public class JavaPerformanceDetector extends Detector implements SourceCodeScann
         /**
          * Checks whether the given constructor call and type reference refers to a HashMap
          * constructor call that is eligible for replacement by a SparseArray call instead
+         *
+         * <p>Deprecated because, while SparseArray is more memory efficient and cache friendly than
+         * HashMap, it is also generally slower than a HashMap because lookups require a binary
+         * search. It is also not intended to be appropriate for maps containing a large number of
+         * items. Thus it does not make sense to unconditionally recommend SparseArray.
          */
+        @Deprecated
         private void checkHashMap(@NonNull UCallExpression node) {
             if (!mContext.getProject().isAndroidProject()) {
                 return;
