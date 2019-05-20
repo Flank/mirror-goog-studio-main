@@ -19,9 +19,6 @@ package com.android.build.gradle.internal.transforms;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.transforms.testdata.Animal;
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
 import com.android.build.gradle.internal.transforms.testdata.Cat;
@@ -30,14 +27,15 @@ import com.android.build.gradle.internal.transforms.testdata.Toy;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.testutils.TestInputsGenerator;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
@@ -53,389 +51,267 @@ public class DesugarIncrementalTransformHelperTest {
     }
 
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         // remove any previous state first
-        getDesugarIncrementalTransformHelper(
-                        TransformTestHelper.invocationBuilder().setIncremental(false).build())
+        getDesugarIncrementalTransformHelper(false, Collections.emptySet(), Collections.emptySet())
                 .getAdditionalPaths();
-
     }
 
     @Test
-    public void testBasicFull() throws IOException, InterruptedException {
+    public void testBasicFull() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
     }
 
     @Test
-    public void testIncremental_baseInterfaceChange() throws IOException, InterruptedException {
+    public void testIncremental_baseInterfaceChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, CarbonForm.class))
-                        .build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, CarbonForm.class);
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Animal.class, Cat.class, Tiger.class));
     }
 
     @Test
-    public void testIncremental_intermediateInterfaceChange()
-            throws IOException, InterruptedException {
+    public void testIncremental_intermediateInterfaceChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, Animal.class))
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, Animal.class);
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Tiger.class));
     }
 
     @Test
-    public void testIncremental_functionalInterfaceChange()
-            throws IOException, InterruptedException {
+    public void testIncremental_functionalInterfaceChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, Toy.class))
-                        .build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, Toy.class);
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Tiger.class));
     }
 
     @Test
-    public void testIncremental_superClassChange() throws IOException, InterruptedException {
+    public void testIncremental_superClassChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, Cat.class))
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, Cat.class);
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths).containsExactlyElementsIn(getPaths(input, Tiger.class));
     }
 
     @Test
-    public void testIncremental_classChange() throws IOException, InterruptedException {
+    public void testIncremental_classChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, Tiger.class))
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, Tiger.class);
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
     }
 
     @Test
-    public void testIncremental_multipleChange() throws IOException, InterruptedException {
+    public void testIncremental_multipleChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, CarbonForm.class, Toy.class))
-                        .build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
+        Set<Path> changedPaths = getChangedPaths(input, CarbonForm.class, Toy.class);
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), changedPaths)
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths)
                 .containsExactlyElementsIn(getPaths(input, Cat.class, Animal.class, Tiger.class));
     }
 
     @Test
-    public void testIncremental_noneChange() throws IOException, InterruptedException {
+    public void testIncremental_noneChange() throws IOException {
         Path input = tmpDir.getRoot().toPath().resolve("input");
         initializeGraph(input);
 
-        TransformInput inputDir = TransformTestHelper.directoryBuilder(input.toFile()).build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), Collections.emptySet())
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
     }
 
     @Test
-    public void testDirAndJarInput_incremental() throws IOException, InterruptedException {
+    public void testDirAndJarInput_incremental() throws IOException {
         Path inputDir = tmpDir.getRoot().toPath().resolve("input_dir");
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
+        ImmutableSet<File> allInputs = ImmutableSet.of(inputDir.toFile(), inputJar.toFile());
 
         TestInputsGenerator.pathWithClasses(
                 inputDir, ImmutableList.of(Cat.class, Toy.class, Tiger.class));
         TestInputsGenerator.pathWithClasses(
                 inputJar, ImmutableList.of(Animal.class, CarbonForm.class));
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.emptySet())
+                                .getAdditionalPaths())
+                .isEmpty();
 
-        TransformInput transformDir =
-                TransformTestHelper.directoryBuilder(inputDir.toFile()).build();
-        TransformInput transformJar =
-                TransformTestHelper.singleJarBuilder(inputJar.toFile()).build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformDir)
-                        .addInput(transformJar)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
-
-        transformJar =
-                TransformTestHelper.singleJarBuilder(inputJar.toFile())
-                        .setStatus(Status.CHANGED)
-                        .build();
-
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformDir)
-                        .addInput(transformJar)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.singleton(inputJar))
+                                .getAdditionalPaths())
                 .containsExactlyElementsIn(getPaths(inputDir, Cat.class, Tiger.class));
 
-        transformDir =
-                TransformTestHelper.directoryBuilder(inputDir.toFile())
-                        .putChangedFiles(getChangedStatusMap(inputDir, Toy.class))
-                        .build();
-
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformDir)
-                        .addInput(transformJar)
-                        .setIncremental(true)
-                        .build();
-
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
+        Set<Path> changedPaths = getChangedPaths(inputDir, Toy.class);
+        assertThat(
+                        getDesugarIncrementalTransformHelper(true, allInputs, changedPaths)
+                                .getAdditionalPaths())
                 .containsExactlyElementsIn(getPaths(inputDir, Cat.class, Tiger.class));
     }
 
     @Test
-    public void testDirAndJarInput_incremental_jarDependsOnDir()
-            throws IOException, InterruptedException {
+    public void testDirAndJarInput_incremental_jarDependsOnDir() throws IOException {
         Path inputDir = tmpDir.getRoot().toPath().resolve("input_dir");
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
+        ImmutableSet<File> allInputs = ImmutableSet.of(inputDir.toFile(), inputJar.toFile());
 
         TestInputsGenerator.pathWithClasses(
                 inputDir, ImmutableList.of(Animal.class, CarbonForm.class));
         TestInputsGenerator.pathWithClasses(
                 inputJar, ImmutableList.of(Cat.class, Toy.class, Tiger.class));
 
-        TransformInput transformDir =
-                TransformTestHelper.directoryBuilder(inputDir.toFile()).build();
-        TransformInput transformJar =
-                TransformTestHelper.singleJarBuilder(inputJar.toFile()).build();
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.emptySet())
+                                .getAdditionalPaths())
+                .isEmpty();
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformDir)
-                        .addInput(transformJar)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
-
-        transformJar =
-                TransformTestHelper.directoryBuilder(inputJar.toFile())
-                        .putChangedFiles(getChangedStatusMap(inputDir, Animal.class))
-                        .build();
-
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformDir)
-                        .addInput(transformJar)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
+        Set<Path> changedPaths = getChangedPaths(inputDir, Animal.class);
+        assertThat(
+                        getDesugarIncrementalTransformHelper(true, allInputs, changedPaths)
+                                .getAdditionalPaths())
                 .containsExactly(inputJar);
     }
 
     @Test
-    public void testTwoJars_incremental() throws IOException, InterruptedException {
+    public void testTwoJars_incremental() throws IOException {
         Path fstJar = tmpDir.getRoot().toPath().resolve("input1.jar");
         Path sndJar = tmpDir.getRoot().toPath().resolve("input2.jar");
+        ImmutableSet<File> allInputs = ImmutableSet.of(fstJar.toFile(), sndJar.toFile());
 
         TestInputsGenerator.pathWithClasses(
                 fstJar, ImmutableList.of(Cat.class, Toy.class, Tiger.class));
         TestInputsGenerator.pathWithClasses(
                 sndJar, ImmutableList.of(Animal.class, CarbonForm.class));
 
-        TransformInput transformFst = TransformTestHelper.singleJarBuilder(fstJar.toFile()).build();
-        TransformInput transformSnd = TransformTestHelper.singleJarBuilder(sndJar.toFile()).build();
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.emptySet())
+                                .getAdditionalPaths())
+                .isEmpty();
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformFst)
-                        .addInput(transformSnd)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
-
-        transformSnd =
-                TransformTestHelper.singleJarBuilder(sndJar.toFile())
-                        .setStatus(Status.CHANGED)
-                        .build();
-
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformFst)
-                        .addInput(transformSnd)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.singleton(sndJar))
+                                .getAdditionalPaths())
                 .containsExactly(fstJar);
     }
 
     @Test
-    public void test_typeInMultiplePaths() throws IOException, InterruptedException {
+    public void test_typeInMultiplePaths() throws IOException {
         Path fstJar = tmpDir.getRoot().toPath().resolve("input1.jar");
         Path sndJar = tmpDir.getRoot().toPath().resolve("input2.jar");
         Path trdJar = tmpDir.getRoot().toPath().resolve("input3.jar");
+        ImmutableSet<File> allInputs =
+                ImmutableSet.of(fstJar.toFile(), sndJar.toFile(), trdJar.toFile());
 
         TestInputsGenerator.pathWithClasses(fstJar, ImmutableList.of(Animal.class));
         TestInputsGenerator.pathWithClasses(sndJar, ImmutableList.of(Cat.class));
         TestInputsGenerator.pathWithClasses(trdJar, ImmutableList.of(Cat.class));
 
-        TransformInput transformFst = TransformTestHelper.singleJarBuilder(fstJar.toFile()).build();
-        TransformInput transformSnd = TransformTestHelper.singleJarBuilder(sndJar.toFile()).build();
-        TransformInput transformTrd = TransformTestHelper.singleJarBuilder(trdJar.toFile()).build();
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.emptySet())
+                                .getAdditionalPaths())
+                .isEmpty();
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformFst)
-                        .addInput(transformSnd)
-                        .addInput(transformTrd)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
-
-        transformFst =
-                TransformTestHelper.singleJarBuilder(fstJar.toFile())
-                        .setStatus(Status.CHANGED)
-                        .build();
-
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformFst)
-                        .addInput(transformSnd)
-                        .addInput(transformTrd)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths())
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true, allInputs, Collections.singleton(fstJar))
+                                .getAdditionalPaths())
                 .containsExactly(sndJar, trdJar);
     }
 
     @Test
-    public void test_incrementalDeletedNonInitialized() throws IOException, InterruptedException {
+    public void test_incrementalDeletedNonInitialized() {
         Path fstJar = tmpDir.getRoot().toPath().resolve("input1.jar");
 
-        TransformInput transformFst =
-                TransformTestHelper.singleJarBuilder(fstJar.toFile())
-                        .setStatus(Status.REMOVED)
-                        .build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(transformFst)
-                        .setIncremental(true)
-                        .build();
-        assertThat(getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths()).isEmpty();
+        assertThat(
+                        getDesugarIncrementalTransformHelper(
+                                        true,
+                                        Collections.singleton(fstJar.toFile()),
+                                        Collections.singleton(fstJar))
+                                .getAdditionalPaths())
+                .isEmpty();
     }
 
-    private static void initializeGraph(@NonNull Path input)
-            throws IOException, InterruptedException {
+    private static void initializeGraph(@NonNull Path input) throws IOException {
         TestInputsGenerator.pathWithClasses(
                 input,
                 ImmutableList.of(
                         Animal.class, CarbonForm.class, Cat.class, Toy.class, Tiger.class));
 
-        TransformInput inputDir = TransformTestHelper.directoryBuilder(input.toFile()).build();
-
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .addInput(inputDir)
-                        .setIncremental(true)
-                        .build();
         Set<Path> impactedPaths =
-                getDesugarIncrementalTransformHelper(invocation).getAdditionalPaths();
+                getDesugarIncrementalTransformHelper(
+                                true, Collections.singleton(input.toFile()), Collections.emptySet())
+                        .getAdditionalPaths();
 
         assertThat(impactedPaths).isEmpty();
     }
 
     @NonNull
     private static DesugarIncrementalTransformHelper getDesugarIncrementalTransformHelper(
-            TransformInvocation invocation) {
+            boolean isIncremental,
+            @NonNull Iterable<File> allInputs,
+            @NonNull Set<Path> changedPaths) {
         return new DesugarIncrementalTransformHelper(
-                PROJECT_VARIANT, invocation, WaitableExecutor.useDirectExecutor());
+                PROJECT_VARIANT,
+                isIncremental,
+                allInputs,
+                () -> changedPaths,
+                WaitableExecutor.useDirectExecutor());
     }
 
     @NonNull
-    private Map<File, Status> getChangedStatusMap(
-            @NonNull Path root, @NonNull Class<?>... classes) {
-        Map<File, Status> statusMap = new HashMap<>();
-        for (Path classPath : getPaths(root, classes)) {
-            statusMap.put(classPath.toFile(), Status.CHANGED);
-        }
-        return statusMap;
+    private static Set<Path> getChangedPaths(@NonNull Path root, @NonNull Class<?>... classes) {
+        return new HashSet<>(getPaths(root, classes));
     }
 
     @NonNull

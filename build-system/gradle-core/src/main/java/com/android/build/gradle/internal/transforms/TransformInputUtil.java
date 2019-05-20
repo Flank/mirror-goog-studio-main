@@ -16,14 +16,19 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
+import com.android.build.api.transform.TransformInvocation;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -84,5 +89,37 @@ public class TransformInputUtil {
         }
 
         return byStatus;
+    }
+
+    @NonNull
+    public static Iterable<TransformInput> getInputAndReferenced(
+            @NonNull TransformInvocation invocation) {
+        return Iterables.concat(invocation.getInputs(), invocation.getReferencedInputs());
+    }
+
+    @NonNull
+    public static Set<Path> findChangedPaths(@NonNull Iterable<TransformInput> transformInputs) {
+        Set<Path> changedPaths = Sets.newHashSet();
+        for (TransformInput input : transformInputs) {
+            for (DirectoryInput dirInput : input.getDirectoryInputs()) {
+                Map<Status, Set<File>> byStatus = TransformInputUtil.getByStatus(dirInput);
+                for (File modifiedFile :
+                        Iterables.concat(
+                                byStatus.get(Status.CHANGED),
+                                byStatus.get(Status.REMOVED),
+                                byStatus.get(Status.ADDED))) {
+                    if (modifiedFile.toString().endsWith(SdkConstants.DOT_CLASS)) {
+                        changedPaths.add(modifiedFile.toPath());
+                    }
+                }
+            }
+
+            for (JarInput jarInput : input.getJarInputs()) {
+                if (jarInput.getStatus() != Status.NOTCHANGED) {
+                    changedPaths.add(jarInput.getFile().toPath());
+                }
+            }
+        }
+        return changedPaths;
     }
 }

@@ -18,14 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import static com.android.builder.desugaring.DesugaringClassAnalyzer.analyze;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.desugaring.DesugaringClassAnalyzer;
 import com.android.builder.desugaring.DesugaringData;
@@ -42,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -59,23 +51,27 @@ class DesugarIncrementalTransformHelper {
             LoggerWrapper.getLogger(DesugarIncrementalTransformHelper.class);
 
     @NonNull private final String projectVariant;
-    @NonNull private final TransformInvocation invocation;
+    @NonNull private final Iterable<Path> allInputs;
     @NonNull private final WaitableExecutor executor;
 
-    @NonNull
-    private final Supplier<Set<Path>> changedPaths = Suppliers.memoize(this::findChangedPaths);
+    @NonNull private final Supplier<Set<Path>> changedPaths;
 
     @NonNull private final Supplier<DesugaringGraph> desugaringGraph;
+    private final boolean isIncremental;
 
     DesugarIncrementalTransformHelper(
             @NonNull String projectVariant,
-            @NonNull TransformInvocation invocation,
+            boolean isIncremental,
+            @NonNull Iterable<File> allInputs,
+            @NonNull Supplier<Set<Path>> changedPaths,
             @NonNull WaitableExecutor executor) {
         this.projectVariant = projectVariant;
-        this.invocation = invocation;
+        this.isIncremental = isIncremental;
+        this.allInputs = Iterables.transform(allInputs, File::toPath);
         this.executor = executor;
+        this.changedPaths = Suppliers.memoize(changedPaths::get);
         DesugaringGraph graph;
-        if (!invocation.isIncremental()) {
+        if (!isIncremental) {
             DesugaringGraphs.invalidate(projectVariant);
             graph = null;
         } else {
@@ -98,8 +94,8 @@ class DesugarIncrementalTransformHelper {
      * impacted, non-changed, paths will be returned as a result.
      */
     @NonNull
-    Set<Path> getAdditionalPaths() throws InterruptedException {
-        if (!invocation.isIncremental()) {
+    Set<Path> getAdditionalPaths() {
+        if (!isIncremental) {
             return ImmutableSet.of();
         }
 
@@ -124,38 +120,35 @@ class DesugarIncrementalTransformHelper {
 
     @NonNull
     private DesugaringGraph makeDesugaringGraph() {
-        if (!invocation.isIncremental()) {
+        if (!isIncremental) {
             // Rebuild totally the graph whatever the cache status
             return DesugaringGraphs.forVariant(
-                    projectVariant, getInitalGraphData(invocation, executor));
+                    projectVariant, getInitalGraphData(allInputs, executor));
         }
         return DesugaringGraphs.forVariant(
                 projectVariant,
-                () -> getInitalGraphData(invocation, executor),
+                () -> getInitalGraphData(allInputs, executor),
                 () -> getIncrementalData(changedPaths, executor));
     }
 
     @NonNull
     private static Collection<DesugaringData> getInitalGraphData(
-            @NonNull TransformInvocation invocation, @NonNull WaitableExecutor executor) {
+            @NonNull Iterable<Path> allInputs, @NonNull WaitableExecutor executor) {
         Set<DesugaringData> data = Sets.newConcurrentHashSet();
-        for (TransformInput input : getAllInputs(invocation)) {
-            for (QualifiedContent qualifiedContent :
-                    Iterables.concat(input.getDirectoryInputs(), input.getJarInputs())) {
-                executor.execute(
-                        () -> {
-                            Path toProcess = qualifiedContent.getFile().toPath();
-                            try {
-                                if (Files.exists(toProcess)) {
-                                    data.addAll(analyze(toProcess));
-                                }
-                                return null;
-                            } catch (Throwable t) {
-                                logger.error(t, "error processing %s", toProcess);
-                                throw t;
+
+        for (Path input : allInputs) {
+            executor.execute(
+                    () -> {
+                        try {
+                            if (Files.exists(input)) {
+                                data.addAll(analyze(input));
                             }
-                        });
-            }
+                            return null;
+                        } catch (Throwable t) {
+                            logger.error(t, "error processing %s", input);
+                            throw t;
+                        }
+                    });
         }
 
         try {
@@ -194,37 +187,6 @@ class DesugarIncrementalTransformHelper {
             throw new RuntimeException("Unable to get desugaring graph", e);
         }
         return data;
-    }
-
-    @NonNull
-    private Set<Path> findChangedPaths() {
-        Set<Path> changedPaths = Sets.newHashSet();
-        for (TransformInput input : getAllInputs(invocation)) {
-            for (DirectoryInput dirInput : input.getDirectoryInputs()) {
-                Map<Status, Set<File>> byStatus = TransformInputUtil.getByStatus(dirInput);
-                for (File modifiedFile :
-                        Iterables.concat(
-                                byStatus.get(Status.CHANGED),
-                                byStatus.get(Status.REMOVED),
-                                byStatus.get(Status.ADDED))) {
-                    if (modifiedFile.toString().endsWith(SdkConstants.DOT_CLASS)) {
-                        changedPaths.add(modifiedFile.toPath());
-                    }
-                }
-            }
-
-            for (JarInput jarInput : input.getJarInputs()) {
-                if (jarInput.getStatus() != Status.NOTCHANGED) {
-                    changedPaths.add(jarInput.getFile().toPath());
-                }
-            }
-        }
-        return changedPaths;
-    }
-
-    @NonNull
-    private static Iterable<TransformInput> getAllInputs(@NonNull TransformInvocation invocation) {
-        return Iterables.concat(invocation.getInputs(), invocation.getReferencedInputs());
     }
 
     public Set<Path> getDependenciesPaths(Path path) {

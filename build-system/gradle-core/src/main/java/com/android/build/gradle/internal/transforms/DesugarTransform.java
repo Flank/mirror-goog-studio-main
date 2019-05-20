@@ -253,7 +253,7 @@ public class DesugarTransform extends Transform {
 
     @Override
     public void transform(@NonNull TransformInvocation transformInvocation)
-            throws TransformException, InterruptedException, IOException {
+            throws TransformException {
         try {
             Set<File> additionalPaths = incrementalAnalysis(transformInvocation);
 
@@ -288,10 +288,17 @@ public class DesugarTransform extends Transform {
     }
 
     @NonNull
-    private Set<File> incrementalAnalysis(@NonNull TransformInvocation invocation)
-            throws InterruptedException {
+    private Set<File> incrementalAnalysis(@NonNull TransformInvocation invocation) {
+        Iterable<TransformInput> transformInputs =
+                TransformInputUtil.getInputAndReferenced(invocation);
+        Iterable<File> allInputs = TransformInputUtil.getAllFiles(transformInputs);
         DesugarIncrementalTransformHelper helper =
-                new DesugarIncrementalTransformHelper(projectVariant, invocation, waitableExecutor);
+                new DesugarIncrementalTransformHelper(
+                        projectVariant,
+                        invocation.isIncremental(),
+                        allInputs,
+                        () -> TransformInputUtil.findChangedPaths(transformInputs),
+                        waitableExecutor);
         Set<Path> additionalPaths = helper.getAdditionalPaths();
         return additionalPaths.stream().map(Path::toFile).collect(Collectors.toSet());
     }

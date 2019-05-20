@@ -123,10 +123,7 @@ class DexArchiveBuilderCacheHandler {
             throws IOException, ExecutionException {
 
         for (CacheableItem cacheableItem : cacheableItems) {
-            FileCache cache =
-                    getBuildCache(
-                            cacheableItem.input,
-                            userLevelCache);
+            FileCache cache = getBuildCache(cacheableItem.input, userLevelCache);
             if (cache != null) {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
@@ -297,16 +294,13 @@ class DexArchiveBuilderCacheHandler {
      * otherwise.
      */
     @Nullable
-    static FileCache getBuildCache(
-            @NonNull File inputFile, @Nullable FileCache buildCache) {
-        // We use the build cache only when it is enabled and the input file is a (non-snapshot)
-        // external-library jar file
+    static FileCache getBuildCache(@NonNull File inputFile, @Nullable FileCache buildCache) {
+        // We use the build cache only when it is enabled.
         if (buildCache == null) {
             return null;
         }
-        // After the check above, here the build cache should be enabled and the input file is an
-        // external-library jar file. We now check whether it is a snapshot version or not (to
-        // address http://b.android.com/228623).
+        // After the check above, here the build cache should be enabled. We now check whether it is
+        // a snapshot version or not (to address http://b.android.com/228623).
         // Note that the current check is based on the file path; if later on there is a more
         // reliable way to verify whether an input file is a snapshot, we should replace this check
         // with that.

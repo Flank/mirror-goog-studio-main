@@ -192,9 +192,15 @@ class DexArchiveBuilderTransform internal constructor(
             outputProvider.deleteAll()
         }
 
+        val transformInputs = TransformInputUtil.getInputAndReferenced(transformInvocation)
+        val allInputs = TransformInputUtil.getAllFiles(transformInputs)
         val desugarIncrementalTransformHelper: DesugarIncrementalTransformHelper? =
             DesugarIncrementalTransformHelper(
-                projectVariant, transformInvocation, executor
+                projectVariant,
+                transformInvocation.isIncremental,
+                allInputs,
+                { TransformInputUtil.findChangedPaths(transformInputs) },
+                executor
             ).takeIf { java8LangSupportType == VariantScope.Java8LangSupport.D8 }
 
         val additionalPaths: Set<File> =
