@@ -97,7 +97,7 @@ public class MultiDexTest {
         List<File> allClassesDex =
                 FileUtils.find(
                         project.getIntermediateFile("dex"),
-                        Pattern.compile("icsDebug/mergeDexIcsDebug/out/classes\\.dex"));
+                        Pattern.compile("icsDebug/out/classes\\.dex"));
         assertThat(allClassesDex).hasSize(1);
         File classesDex = allClassesDex.get(0);
 

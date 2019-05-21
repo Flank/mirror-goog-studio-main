@@ -83,7 +83,7 @@ public class DexArchivesTest {
 
         checkIntermediaryDexArchives(getInitialFolderDexEntries(), getInitialJarDexClasses());
 
-        File merged = project.getIntermediateFile("dex/debug/mergeDexDebug/out/");
+        File merged = project.getIntermediateFile("dex/debug/out/");
         assertThat(merged).isDirectory();
         assertThat(merged.list()).hasLength(1);
 

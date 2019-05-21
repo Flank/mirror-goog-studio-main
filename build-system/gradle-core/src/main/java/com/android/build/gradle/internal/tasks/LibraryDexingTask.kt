@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.Workers.preferWorkers
@@ -30,6 +31,7 @@ import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
@@ -43,6 +45,7 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -54,7 +57,6 @@ import javax.inject.Inject
  */
 @CacheableTask
 abstract class LibraryDexingTask @Inject constructor(
-    objectFactory: ObjectFactory,
     executor: WorkerExecutor) : NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade =
@@ -65,8 +67,7 @@ abstract class LibraryDexingTask @Inject constructor(
     abstract val classes: RegularFileProperty
 
     @get:OutputDirectory
-    var output: Provider<Directory> = objectFactory.directoryProperty()
-        private set
+    abstract val output: DirectoryProperty
 
     @get:Input
     var minSdkVersion = 1
@@ -107,10 +108,14 @@ abstract class LibraryDexingTask @Inject constructor(
         override val name = scope.getTaskName("dex")
         override val type = LibraryDexingTask::class.java
 
-        private lateinit var output: Provider<Directory>
-
-        override fun preConfigure(taskName: String) {
-            output = scope.artifacts.createDirectory(InternalArtifactType.DEX, taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out LibraryDexingTask>) {
+            super.handleProvider(taskProvider)
+            scope.artifacts.producesDir(
+                InternalArtifactType.DEX,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                LibraryDexingTask::output
+            )
         }
 
         override fun configure(task: LibraryDexingTask) {
@@ -120,7 +125,6 @@ abstract class LibraryDexingTask @Inject constructor(
                 task.classes
             )
             task.minSdkVersion = scope.minSdkVersion.featureLevel
-            task.output = output
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
             if (scope.java8LangSupportType == VariantScope.Java8LangSupport.D8) {

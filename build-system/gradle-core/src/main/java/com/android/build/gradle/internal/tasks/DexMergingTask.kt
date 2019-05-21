@@ -146,8 +146,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
         private set
 
     @get:OutputDirectory
-    lateinit var outputDir: File
-        private set
+    abstract val outputDir: DirectoryProperty
 
     @get:Internal
     lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
@@ -166,7 +165,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                     mainDexListFile.orNull?.asFile,
                     dexFiles.files,
                     fileDependencyDexFiles.orNull?.asFile,
-                    outputDir
+                    outputDir.get().asFile
                 )
             )
         }
@@ -191,11 +190,14 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
         override val name = internalName
         override val type = DexMergingTask::class.java
 
-        private lateinit var output: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            output = variantScope.artifacts.appendArtifact(outputType, taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out DexMergingTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                outputType,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                DexMergingTask::outputDir
+            )
         }
 
         override fun configure(task: DexMergingTask) {
@@ -229,7 +231,6 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
             } else {
                 task.fileDependencyDexFiles.set(null as Directory?)
             }
-            task.outputDir = output
         }
 
         private fun getDexFiles(action: DexMergingAction): FileCollection {
@@ -297,7 +298,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                                 // be dex'ed in a task, so we need to fetch the output directly.
                                 // Otherwise, it will be in the dex'ed in the dex builder transform.
                                 files.from(
-                                    testedVariantData.scope.artifacts.getFinalArtifactFiles(
+                                    testedVariantData.scope.artifacts.getFinalProducts<Directory>(
                                         InternalArtifactType.DEX
                                     )
                                 )
@@ -307,18 +308,28 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                         return files
                     }
                     DexMergingAction.MERGE_ALL -> {
-                        val external = if (dexingType == DexingType.LEGACY_MULTIDEX) {
-                            // we have to dex it
-                            forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
-                        } else {
-                            // we merge external dex in a separate task
-                            variantScope.artifacts
-                                .getFinalArtifactFiles(InternalArtifactType.EXTERNAL_LIBS_DEX)
-                                .get()
+                        // technically, the Provider<> may not be needed, but the code would
+                        // then assume that EXTERNAL_LIBS_DEX has already been registered by a
+                        // Producer. Better to execute as late as possible.
+                        val external = variantScope.globalScope.project.provider {
+                            if (dexingType == DexingType.LEGACY_MULTIDEX) {
+                                // we have to dex it
+                                forAction(DexMergingAction.MERGE_EXTERNAL_LIBS)
+                            } else {
+                                // we merge external dex in a separate task
+                                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.EXTERNAL_LIBS_DEX)) {
+                                    variantScope.globalScope.project.files(
+                                        variantScope.artifacts.getFinalProduct<Directory>(
+                                            InternalArtifactType.EXTERNAL_LIBS_DEX
+                                        )
+                                    )
+                                } else variantScope.globalScope.project.files()
+                            }
                         }
-                        return forAction(DexMergingAction.MERGE_PROJECT) +
-                                forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS) +
-                                external
+                        return variantScope.globalScope.project.files(
+                                forAction(DexMergingAction.MERGE_PROJECT),
+                                forAction(DexMergingAction.MERGE_LIBRARY_PROJECTS),
+                                external)
                     }
                 }
             }

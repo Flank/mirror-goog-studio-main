@@ -2350,10 +2350,11 @@ public abstract class TaskManager {
                                 .addContentTypes(ExtendedContentType.DEX)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
-                                        variantScope
-                                                .getArtifacts()
-                                                .getFinalArtifactFiles(InternalArtifactType.DEX)
-                                                .get())
+                                        variantScope.getGlobalScope().getProject().files(
+                                            variantScope
+                                                    .getArtifacts()
+                                                    .getFinalProducts(InternalArtifactType.DEX)
+                                        ))
                                 .build());
     }
 
