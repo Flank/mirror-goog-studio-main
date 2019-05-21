@@ -14,64 +14,48 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms;
+package com.android.build.gradle.internal.transforms
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent.ContentType;
-import com.android.build.api.transform.QualifiedContent.DefaultContentType;
-import com.android.build.api.transform.QualifiedContent.Scope;
-import com.android.build.api.transform.SecondaryFile;
-import com.android.build.api.transform.Transform;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.AaptOptions;
-import com.android.build.gradle.internal.pipeline.ExtendedContentType;
-import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.ApkData;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.BuildElements;
-import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
-import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.ExistingBuildElements;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.InternalArtifactType;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.Workers;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.MultiOutputPolicy;
-import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
-import com.android.builder.core.VariantType;
-import com.android.ide.common.workers.WorkerExecutorFacade;
-import com.android.utils.FileUtils;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.inject.Inject;
-import javax.xml.parsers.ParserConfigurationException;
-import org.gradle.api.file.Directory;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.logging.LogLevel;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
-import org.gradle.api.provider.Provider;
-import org.xml.sax.SAXException;
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.api.transform.QualifiedContent.ContentType
+import com.android.build.api.transform.QualifiedContent.DefaultContentType
+import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.api.transform.SecondaryFile
+import com.android.build.api.transform.Transform
+import com.android.build.api.transform.TransformInvocation
+import com.android.build.gradle.internal.api.artifact.*
+import com.android.build.gradle.internal.dsl.AaptOptions
+import com.android.build.gradle.internal.pipeline.ExtendedContentType
+import com.android.build.gradle.internal.pipeline.TransformManager
+import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildElements
+import com.android.build.gradle.internal.scope.BuildElementsTransformParams
+import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
+import com.android.build.gradle.internal.scope.BuildOutput
+import com.android.build.gradle.internal.scope.ExistingBuildElements
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.tasks.Workers
+import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.variant.MultiOutputPolicy
+import com.android.build.gradle.tasks.ResourceUsageAnalyzer
+import com.android.builder.core.VariantType
+import com.android.utils.FileUtils
+import com.google.common.base.Joiner
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Maps
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
+import javax.xml.parsers.ParserConfigurationException
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFile
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Provider
+import org.xml.sax.SAXException
 
 /**
  * Implementation of Resource Shrinking as a transform.
@@ -79,107 +63,76 @@ import org.xml.sax.SAXException;
  * Since this transform only reads the data from the stream but does not output anything
  * back into the stream, it is a no-op transform, asking only for referenced scopes, and not
  * "consumed" scopes.
- * <p>
- * To run the tests specifically related to resource shrinking:
- * <pre>
- * ./gradlew :base:int:test -Dtest.single=ShrinkResourcesTest
- * </pre>
  */
-public class ShrinkResourcesTransform extends Transform {
-
-    /** Whether we've already warned about how to turn off shrinking. Used to avoid
-     * repeating the same multi-line message for every repeated abi split. */
-    private static boolean ourWarned = true; // Logging disabled until shrinking is on by default.
-
+class ShrinkResourcesTransform(
     /**
      * Associated variant data that the strip task will be run against. Used to locate not only
      * locations the task needs (e.g. for resources and generated R classes) but also to obtain the
      * resource merging task, since we will run it a second time here to generate a new .ap_ file
      * with fewer resources
      */
-    @NonNull private final BaseVariantData variantData;
+    private val variantData: BaseVariantData,
+    private val uncompressedResources: Provider<Directory>,
+    private val logger: Logger
+) : Transform() {
 
-    @NonNull private final Logger logger;
+    private val lightRClasses: Provider<RegularFile>
+    private val resourceDir: Provider<Directory>
+    private val mappingFileSrc: BuildableArtifact?
+    private val mergedManifests: Provider<Directory>
 
-    @NonNull private final Provider<RegularFile> lightRClasses;
-    @NonNull private final Provider<Directory> resourceDir;
-    @Nullable private final BuildableArtifact mappingFileSrc;
-    @NonNull private final Provider<Directory> mergedManifests;
-    @NonNull private final Provider<Directory> uncompressedResources;
+    private val aaptOptions: AaptOptions
+    private val variantType: VariantType
+    private val isDebuggableBuildType: Boolean
+    private val multiOutputPolicy: MultiOutputPolicy
 
-    @NonNull private final AaptOptions aaptOptions;
-    @NonNull private final VariantType variantType;
-    private final boolean isDebuggableBuildType;
-    @NonNull private final MultiOutputPolicy multiOutputPolicy;
+    private var compressedResources: DirectoryProperty? = null
 
-    @NonNull private DirectoryProperty compressedResources;
+    init {
+        val variantScope = variantData.scope
 
-    public ShrinkResourcesTransform(
-            @NonNull BaseVariantData variantData,
-            @NonNull Provider<Directory> uncompressedResources,
-            @NonNull Logger logger) {
-        VariantScope variantScope = variantData.getScope();
-        GlobalScope globalScope = variantScope.getGlobalScope();
-        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+        val artifacts = variantScope.artifacts
 
-        this.variantData = variantData;
-        this.logger = logger;
+        this.lightRClasses = artifacts.getFinalProduct(
+            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+        )
 
-        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-
-        this.lightRClasses =
-                artifacts.getFinalProduct(
-                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
-
-        this.resourceDir =
-                variantScope
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.MERGED_NOT_COMPILED_RES);
+        this.resourceDir = variantScope
+            .artifacts
+            .getFinalProduct(InternalArtifactType.MERGED_NOT_COMPILED_RES)
         this.mappingFileSrc =
-                variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
-                        ? variantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
-                        : null;
-        this.mergedManifests = artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS);
-        this.uncompressedResources = uncompressedResources;
+            if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
+                variantScope
+                    .artifacts
+                    .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+            else
+                null
+        this.mergedManifests = artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
 
-        this.aaptOptions = globalScope.getExtension().getAaptOptions();
-        this.variantType = variantData.getType();
-        this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
-        this.multiOutputPolicy = variantData.getMultiOutputPolicy();
+        this.aaptOptions = variantScope.globalScope.extension.aaptOptions
+        this.variantType = variantData.type
+        this.isDebuggableBuildType = variantData.variantConfiguration.buildType.isDebuggable
+        this.multiOutputPolicy = variantData.multiOutputPolicy
     }
 
-    @NonNull
-    @Override
-    public String getName() {
-        return "shrinkRes";
+    override fun getName(): String {
+        return "shrinkRes"
     }
 
-    @NonNull
-    @Override
-    public Set<ContentType> getInputTypes() {
+    override fun getInputTypes(): Set<ContentType> {
         // When R8 produces dex files, this transform analyzes them. If R8 or Proguard produce
         // class files, this transform will analyze those. That is why both types are specified.
-        return ImmutableSet.of(ExtendedContentType.DEX, DefaultContentType.CLASSES);
+        return ImmutableSet.of(ExtendedContentType.DEX, DefaultContentType.CLASSES)
     }
 
-    @NonNull
-    @Override
-    public Set<ContentType> getOutputTypes() {
-        return ImmutableSet.of();
+    override fun getOutputTypes(): Set<ContentType> = setOf()
+
+    override fun getScopes(): MutableSet<in Scope> {
+        return TransformManager.EMPTY_SCOPES
     }
 
-    @NonNull
-    @Override
-    public Set<? super Scope> getScopes() {
-        return TransformManager.EMPTY_SCOPES;
-    }
-
-    @NonNull
-    @Override
-    public Set<? super Scope> getReferencedScopes() {
-        return TransformManager.SCOPE_FULL_PROJECT;
+    override fun getReferencedScopes(): MutableSet<in Scope> {
+        return TransformManager.SCOPE_FULL_PROJECT
     }
 
     /**
@@ -187,261 +140,236 @@ public class ShrinkResourcesTransform extends Transform {
      *
      * @param directory the output directory
      */
-    @Override
-    public void setOutputDirectory(DirectoryProperty directory) {
-        compressedResources = directory;
+    override fun setOutputDirectory(directory: DirectoryProperty) {
+        compressedResources = directory
     }
 
-    @NonNull
-    @Override
-    public Collection<SecondaryFile> getSecondaryFiles() {
-        Collection<SecondaryFile> secondaryFiles = Lists.newLinkedList();
+    override fun getSecondaryFiles(): Collection<SecondaryFile> {
+        val secondaryFiles = mutableListOf<SecondaryFile>()
 
         // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-        secondaryFiles.add(SecondaryFile.nonIncremental(lightRClasses.get().getAsFile()));
-        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir.get().getAsFile()));
+        secondaryFiles.add(SecondaryFile.nonIncremental(lightRClasses.get().asFile))
+        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir.get().asFile))
 
         if (mappingFileSrc != null) {
-            secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
+            secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc))
         }
 
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests.get().getAsFile()));
-        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources.get().getAsFile()));
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests.get().asFile))
+        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources.get().asFile))
 
-        return secondaryFiles;
+        return secondaryFiles
     }
 
-    @NonNull
-    @Override
-    public Map<String, Object> getParameterInputs() {
-        Map<String, Object> params = Maps.newHashMapWithExpectedSize(7);
-        params.put(
-                "aaptOptions",
-                Joiner.on(";")
-                        .join(
-                                aaptOptions.getIgnoreAssetsPattern() != null
-                                        ? aaptOptions.getIgnoreAssetsPattern()
-                                        : "",
-                                aaptOptions.getNoCompress() != null
-                                        ? Joiner.on(":").join(aaptOptions.getNoCompress())
-                                        : "",
-                                aaptOptions.getFailOnMissingConfigEntry(),
-                                aaptOptions.getAdditionalParameters() != null
-                                        ? Joiner.on(":").join(aaptOptions.getAdditionalParameters())
-                                        : "",
-                                aaptOptions.getCruncherProcesses()));
-        params.put("variantType", variantType.getName());
-        params.put("isDebuggableBuildType", isDebuggableBuildType);
-        params.put("splitHandlingPolicy", multiOutputPolicy);
+    override fun getParameterInputs(): Map<String, Any> {
+        val params = Maps.newHashMapWithExpectedSize<String, Any>(7)
+        params["aaptOptions"] = Joiner.on(";")
+            .join(
+                if (aaptOptions.ignoreAssetsPattern != null) {
+                    aaptOptions.ignoreAssetsPattern
+                } else {
+                    ""
+                },
+                if (aaptOptions.noCompress != null) {
+                    Joiner.on(":").join(aaptOptions.noCompress)
+                } else {
+                    ""
+                },
+                aaptOptions.failOnMissingConfigEntry,
+                if (aaptOptions.additionalParameters != null) {
+                    Joiner.on(":").join(aaptOptions.additionalParameters!!)
+                } else {
+                    ""
+                },
+                aaptOptions.cruncherProcesses
+            )
+        params["variantType"] = variantType.name
+        params["isDebuggableBuildType"] = isDebuggableBuildType
+        params["splitHandlingPolicy"] = multiOutputPolicy
 
-        return params;
+        return params
     }
 
-    @NonNull
-    @Override
-    public Collection<File> getSecondaryDirectoryOutputs() {
-        return ImmutableList.of(compressedResources.get().getAsFile());
+    override fun getSecondaryDirectoryOutputs(): Collection<File> {
+        return ImmutableList.of(compressedResources!!.get().asFile)
     }
 
-    @Override
-    public boolean isIncremental() {
-        return false;
+    override fun isIncremental(): Boolean {
+        return false
     }
 
-    @Override
-    public boolean isCacheable() {
-        return true;
+    override fun isCacheable(): Boolean {
+        return true
     }
 
-    @Override
-    public void transform(@NonNull TransformInvocation invocation) {
+    override fun transform(invocation: TransformInvocation) {
 
-        Collection<TransformInput> referencedInputs = invocation.getReferencedInputs();
-        List<File> classes = new ArrayList<>();
-        for (TransformInput transformInput : referencedInputs) {
-            for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                classes.add(directoryInput.getFile());
+        val referencedInputs = invocation.referencedInputs
+        val classes = mutableListOf<File>()
+        for (transformInput in referencedInputs) {
+            for (directoryInput in transformInput.directoryInputs) {
+                classes.add(directoryInput.file)
             }
-            for (JarInput jarInput : transformInput.getJarInputs()) {
-                classes.add(jarInput.getFile());
+            for (jarInput in transformInput.jarInputs) {
+                classes.add(jarInput.file)
             }
         }
 
-        BuildElements mergedManifestsOutputs =
-                ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests);
+        val mergedManifestsOutputs =
+            ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests)
 
-        try (WorkerExecutorFacade workers =
-                Workers.INSTANCE.preferWorkers(
-                        invocation.getContext().getProjectName(),
-                        invocation.getContext().getPath(),
-                        invocation.getContext().getWorkerExecutor())) {
+        Workers.preferWorkers(
+            invocation.context.projectName,
+            invocation.context.path,
+            invocation.context.workerExecutor
+        ).use { workers ->
             ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
-                    .transform(
-                            workers,
-                            SplitterRunnable.class,
-                            (ApkData apkInfo, File buildInput) ->
-                                    new SplitterParams(
-                                            apkInfo,
-                                            buildInput,
-                                            mergedManifestsOutputs,
-                                            classes,
-                                            this))
-                    .into(
-                            InternalArtifactType.SHRUNK_PROCESSED_RES,
-                            compressedResources.get().getAsFile());
+                .transform(
+                    workers,
+                    SplitterRunnable::class.java
+                ) { apkInfo: ApkData, buildInput: File ->
+                    SplitterParams(
+                        apkInfo,
+                        buildInput,
+                        mergedManifestsOutputs,
+                        classes,
+                        this
+                    )
+                }
+                .into(
+                    InternalArtifactType.SHRUNK_PROCESSED_RES,
+                    compressedResources!!.get().asFile
+                )
         }
     }
 
-    private static class SplitterRunnable extends BuildElementsTransformRunnable {
+    private inner class SplitterRunnable @Inject
+    constructor(params: SplitterParams) : BuildElementsTransformRunnable(params) {
 
-        @Inject
-        public SplitterRunnable(@NonNull SplitterParams params) {
-            super(params);
-        }
-
-        @Override
-        public void run() {
-            SplitterParams params = (SplitterParams) getParams();
-            File reportFile = null;
+        override fun run() {
+            val params = params as SplitterParams
+            var reportFile: File? = null
             if (params.mappingFile != null) {
-                File logDir = params.mappingFile.getParentFile();
+                val logDir = params.mappingFile.parentFile
                 if (logDir != null) {
-                    reportFile = new File(logDir, "resources.txt");
+                    reportFile = File(logDir, "resources.txt")
                 }
             }
 
-            FileUtils.mkdirs(params.compressedResourceFile.getParentFile());
+            FileUtils.mkdirs(params.output.parentFile)
 
             if (params.mergedManifest == null) {
                 try {
                     FileUtils.copyFile(
-                            params.uncompressedResourceFile, params.compressedResourceFile);
-                } catch (IOException e) {
-                    Logging.getLogger(ShrinkResourcesTransform.class)
-                            .error("Failed to copy uncompressed resource file :", e);
-                    throw new RuntimeException("Failed to copy uncompressed resource file", e);
+                        params.uncompressedResourceFile, params.output
+                    )
+                } catch (e: IOException) {
+                    Logging.getLogger(ShrinkResourcesTransform::class.java)
+                        .error("Failed to copy uncompressed resource file :", e)
+                    throw RuntimeException("Failed to copy uncompressed resource file", e)
                 }
 
-                return;
+                return
             }
 
             // Analyze resources and usages and strip out unused
-            ResourceUsageAnalyzer analyzer =
-                    new ResourceUsageAnalyzer(
-                            params.lightRClasses,
-                            params.classes,
-                            params.mergedManifest.getOutputFile(),
-                            params.mappingFile,
-                            params.resourceDir,
-                            reportFile,
-                            ResourceUsageAnalyzer.ApkFormat.BINARY);
+            val analyzer = ResourceUsageAnalyzer(
+                params.lightRClasses,
+                params.classes,
+                params.mergedManifest.outputFile,
+                params.mappingFile,
+                params.resourceDir,
+                reportFile,
+                ResourceUsageAnalyzer.ApkFormat.BINARY
+            )
             try {
-                analyzer.setVerbose(params.isInfoLoggingEnabled);
-                analyzer.setDebug(params.isDebugLoggingEnabled);
+                analyzer.isVerbose = params.isInfoLoggingEnabled
+                analyzer.isDebug = params.isDebugLoggingEnabled
                 try {
-                    analyzer.analyze();
-                } catch (IOException | ParserConfigurationException | SAXException e) {
-                    throw new RuntimeException(e);
+                    analyzer.analyze()
+                } catch (e: IOException) {
+                    throw RuntimeException(e)
+                } catch (e: ParserConfigurationException) {
+                    throw RuntimeException(e)
+                } catch (e: SAXException) {
+                    throw RuntimeException(e)
                 }
 
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
                 try {
                     analyzer.rewriteResourceZip(
-                            params.uncompressedResourceFile, params.compressedResourceFile);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                        params.uncompressedResourceFile, params.output
+                    )
+                } catch (e: IOException) {
+                    throw RuntimeException(e)
                 }
 
                 // Dump some stats
-                int unused = analyzer.getUnusedResourceCount();
+                val unused = analyzer.unusedResourceCount
                 if (unused > 0) {
-                    StringBuilder sb = new StringBuilder(200);
-                    sb.append("Removed unused resources");
+                    val sb = StringBuilder(200)
+                    sb.append("Removed unused resources")
 
                     // This is a bit misleading until we can strip out all resource types:
                     //int total = analyzer.getTotalResourceCount()
                     //sb.append("(" + unused + "/" + total + ")")
 
-                    long before = params.uncompressedResourceFile.length();
-                    long after = params.compressedResourceFile.length();
-                    long percent = (int) ((before - after) * 100 / before);
-                    sb.append(": Binary resource data reduced from ")
-                            .append(toKbString(before))
-                            .append("KB to ")
-                            .append(toKbString(after))
-                            .append("KB: Removed ")
-                            .append(percent)
-                            .append("%");
+                    val before = params.uncompressedResourceFile.length()
+                    val after = params.output.length()
+                    val percent = ((before - after) * 100 / before).toInt().toLong()
+                    sb.append(": Binary resource data reduced from ${toKbString(before)}")
+                        .append("KB to ${toKbString(after)}")
+                        .append("KB: Removed ${percent}%")
                     if (!ourWarned) {
-                        ourWarned = true;
-                        sb.append("\n")
-                                .append(
-                                        "Note: If necessary, you can disable resource shrinking by adding\n")
-                                .append("android {\n")
-                                .append("    buildTypes {\n")
-                                .append("        ")
-                                .append(params.buildTypeName)
-                                .append(" {\n")
-                                .append("            shrinkResources false\n")
-                                .append("        }\n")
-                                .append("    }\n")
-                                .append("}");
+                        ourWarned = true
+                        sb.append("""
+                            Note: If necessary, you can disable resource shrinking by adding
+                            android {
+                                buildTypes {
+                                    ${params.buildTypeName} {
+                                        shrinkResources false
+                                    }
+                                }
+                            }""".trimIndent())
                     }
 
-                    System.out.println(sb.toString());
+                    logger.log(LogLevel.INFO, sb.toString())
                 }
             } finally {
-                analyzer.dispose();
+                analyzer.dispose()
             }
         }
     }
 
-    private static class SplitterParams extends BuildElementsTransformParams {
-        @NonNull private final File uncompressedResourceFile;
-        @NonNull private final File compressedResourceFile;
-        @Nullable private final BuildOutput mergedManifest;
-        @NonNull private final List<File> classes;
-        @Nullable private final File mappingFile;
-        private final String buildTypeName;
-        private final File lightRClasses;
-        private final File resourceDir;
-        private final boolean isInfoLoggingEnabled;
-        private final boolean isDebugLoggingEnabled;
+    private inner class SplitterParams internal constructor(
+        apkInfo: ApkData,
+        val uncompressedResourceFile: File,
+        mergedManifests: BuildElements,
+        val classes: List<File>,
+        transform: ShrinkResourcesTransform
+    ) : BuildElementsTransformParams() {
+        override val output: File = File(
+            transform.compressedResources!!.get().asFile,
+            "resources-${apkInfo.baseName}-stripped.ap_"
+        )
+        val mergedManifest: BuildOutput? = mergedManifests.element(apkInfo)
+        val mappingFile: File? = transform.mappingFileSrc?.singleFile()
+        val buildTypeName: String = transform.variantData.variantConfiguration.buildType.name
+        val lightRClasses: File = transform.lightRClasses.get().asFile
+        val resourceDir: File = transform.resourceDir.get().asFile
+        val isInfoLoggingEnabled: Boolean = transform.logger.isEnabled(LogLevel.INFO)
+        val isDebugLoggingEnabled: Boolean = transform.logger.isEnabled(LogLevel.DEBUG)
 
-        SplitterParams(
-                @NonNull ApkData apkInfo,
-                @NonNull File uncompressedResourceFile,
-                @NonNull BuildElements mergedManifests,
-                @NonNull List<File> classes,
-                ShrinkResourcesTransform transform) {
-            this.uncompressedResourceFile = uncompressedResourceFile;
-            this.mergedManifest = mergedManifests.element(apkInfo);
-            this.classes = classes;
-            compressedResourceFile =
-                    new File(
-                            transform.compressedResources.get().getAsFile(),
-                            "resources-" + apkInfo.getBaseName() + "-stripped.ap_");
-            mappingFile =
-                    transform.mappingFileSrc != null
-                            ? BuildableArtifactUtil.singleFile(transform.mappingFileSrc)
-                            : null;
-            buildTypeName =
-                    transform.variantData.getVariantConfiguration().getBuildType().getName();
-
-            lightRClasses = transform.lightRClasses.get().getAsFile();
-            resourceDir = transform.resourceDir.get().getAsFile();
-            isInfoLoggingEnabled = transform.logger.isEnabled(LogLevel.INFO);
-            isDebugLoggingEnabled = transform.logger.isEnabled(LogLevel.DEBUG);
-        }
-
-        @NonNull
-        @Override
-        public File getOutput() {
-            return compressedResourceFile;
-        }
     }
 
-    private static String toKbString(long size) {
-        return Integer.toString((int)size/1024);
+    companion object {
+
+        /** Whether we've already warned about how to turn off shrinking. Used to avoid
+         * repeating the same multi-line message for every repeated abi split.  */
+        private var ourWarned = true // Logging disabled until shrinking is on by default.
+
+        private fun toKbString(size: Long): String {
+            return Integer.toString(size.toInt() / 1024)
+        }
     }
 }
