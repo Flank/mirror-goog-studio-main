@@ -48,7 +48,6 @@ import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
-import kotlin.reflect.KProperty1
 
 typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
 
@@ -621,20 +620,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Returns the final [BuildableArtifact] associated with the `artifactType` or `null` if no
-     * [BuildableArtifact] has been registered for this artifact type.
-     *
-     * See [getFinalArtifactFiles] for more details.
-     */
-    fun getFinalArtifactFilesIfPresent(artifactType: ArtifactType): BuildableArtifact? {
-        return if (hasArtifact(artifactType)) {
-            getFinalArtifactFiles(artifactType)
-        } else {
-            null
-        }
-    }
-
-    /**
      * Returns whether the artifactType exists in the holder.
      */
     fun hasArtifact(artifactType: ArtifactType) : Boolean {
@@ -725,31 +710,6 @@ abstract class BuildArtifactsHolder(
     @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
     fun appendArtifact(
         artifactType: ArtifactType,
-        task : Task,
-        fileName: String = "out") : File {
-        val output = createFile(task.name, artifactType, fileName)
-        doAppendArtifact(artifactType,
-            createFileCollection(
-                artifactType,
-                OperationType.APPEND,
-                listOf(output),
-                task.name))
-        return output
-    }
-
-    /**
-     * Append a new file or folder to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] the new file or folder will be classified under.
-     * @param task [Task] producing the file or folder.
-     * @param fileName expected file name for the file (location is determined by the build)
-     * @return [File] handle to use to create the file or folder (potentially with subfolders
-     * or multiple files)
-     */
-    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
-    fun appendArtifact(
-        artifactType: ArtifactType,
         taskName: String,
         fileName: String = "out") : File {
         val output = createFile(taskName, artifactType, fileName)
@@ -791,7 +751,7 @@ abstract class BuildArtifactsHolder(
      * @param taskName name of the producer task.
      * @param file file location to use, relative to the project build output.
      */
-    fun createArtifactFile(
+    private fun createArtifactFile(
         artifactType: ArtifactType,
         operationType: OperationType,
         taskName: String,

@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-8edb3f2408a3f0e6406542b14c413cccaa5dfbfad1bcc24d3b23d16a523cd6dd
+863101de5c4215901ecffc064bafa1197b31badc599a69aff0b5fd76f15dab40
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -324,12 +324,6 @@ com.android.build.api.dsl.options.AnnotationProcessorOptions.getIncludeCompileCl
 com.android.build.api.dsl.options.AnnotationProcessorOptions.setArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.options.AnnotationProcessorOptions.setClassNames: void (java.util.List<java.lang.String>)
 com.android.build.api.dsl.options.AnnotationProcessorOptions.setIncludeCompileClasspath: void (java.lang.Boolean)
-com.android.build.api.dsl.options.BuildArtifactsOptions
-com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
-com.android.build.api.dsl.options.BuildArtifactsOptions.appendTo: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
-com.android.build.api.dsl.options.BuildArtifactsOptions.builder: com.android.build.api.artifact.BuildArtifactTransformBuilder<T> (java.lang.String, java.lang.Class<T>)
-com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, com.android.build.api.artifact.BuildArtifactTransformBuilder$ConfigurationAction<? super T>)
-com.android.build.api.dsl.options.BuildArtifactsOptions.replace: void (com.android.build.api.artifact.ArtifactType, java.lang.String, java.lang.Class<T>, kotlin.jvm.functions.Function3<? super T, ? super com.android.build.api.artifact.BuildableArtifact, ? super java.io.File, kotlin.Unit>)
 com.android.build.api.dsl.options.DensitySplitOptions
 com.android.build.api.dsl.options.DensitySplitOptions.getCompatibleScreens: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.options.DensitySplitOptions.getStrict: boolean ()

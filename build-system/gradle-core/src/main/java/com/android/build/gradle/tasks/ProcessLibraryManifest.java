@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
@@ -362,10 +363,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
         return outputScope.getMainSplit().getFullName();
     }
 
-    public static class CreationAction
-            extends AnnotationProcessingTaskCreationAction<ProcessLibraryManifest> {
-
-        VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<ProcessLibraryManifest> {
 
         /**
          * {@code EagerTaskCreationAction} for the library process manifest task.
@@ -373,60 +371,75 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
          * @param scope The library variant scope.
          */
         public CreationAction(@NonNull VariantScope scope) {
-            super(scope, scope.getTaskName("process", "Manifest"), ProcessLibraryManifest.class);
-            this.scope = scope;
+            super(scope);
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return getVariantScope().getTaskName("process", "Manifest");
+        }
+
+        @NonNull
+        @Override
+        public Class<ProcessLibraryManifest> getType() {
+            return ProcessLibraryManifest.class;
         }
 
         @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessLibraryManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setProcessManifestTask(taskProvider);
+            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
 
-            scope.getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory,
-                            "aapt");
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            artifacts.producesDir(
+                    InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ManifestProcessorTask::getAaptFriendlyManifestOutputDirectory,
+                    "aapt");
 
-            scope.getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ManifestProcessorTask::getManifestOutputDirectory,
-                            "");
+            artifacts.producesDir(
+                    InternalArtifactType.MERGED_MANIFESTS,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ManifestProcessorTask::getManifestOutputDirectory,
+                    "");
 
-            scope.getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.LIBRARY_MANIFEST,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ProcessLibraryManifest::getManifestOutputFile,
-                            SdkConstants.ANDROID_MANIFEST_XML);
+            artifacts.producesFile(
+                    InternalArtifactType.LIBRARY_MANIFEST,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessLibraryManifest::getManifestOutputFile,
+                    SdkConstants.ANDROID_MANIFEST_XML);
 
-            getVariantScope()
-                    .getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ProcessLibraryManifest::getMergeBlameFile,
-                            "manifest-merger-blame-"
-                                    + getVariantScope().getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
+            artifacts.producesFile(
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessLibraryManifest::getMergeBlameFile,
+                    "manifest-merger-blame-"
+                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + "-report.txt");
 
-            getVariantScope().getArtifacts().producesFile(
+            artifacts.producesFile(
                     InternalArtifactType.MANIFEST_MERGE_REPORT,
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     ProcessLibraryManifest::getReportFile,
-                    getVariantScope().getGlobalScope().getProject().getLayout().getBuildDirectory().dir(
-                            FileUtils.join(
-                                    getVariantScope().getGlobalScope().getOutputsDir(),
-                                    "logs").getAbsolutePath()),
+                    getVariantScope()
+                            .getGlobalScope()
+                            .getProject()
+                            .getLayout()
+                            .getBuildDirectory()
+                            .dir(
+                                    FileUtils.join(
+                                                    getVariantScope()
+                                                            .getGlobalScope()
+                                                            .getOutputsDir(),
+                                                    "logs")
+                                            .getAbsolutePath()),
                     "manifest-merger-"
                             + getVariantScope().getVariantConfiguration().getBaseName()
                             + "-report.txt");

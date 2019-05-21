@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestProvider;
@@ -498,25 +499,33 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         return manifests.getArtifactFiles();
     }
 
-    public static class CreationAction
-            extends AnnotationProcessingTaskCreationAction<ProcessTestManifest> {
-
-        @NonNull
-        private final VariantScope scope;
+    public static class CreationAction extends VariantTaskCreationAction<ProcessTestManifest> {
 
         @NonNull private final FileCollection testTargetMetadata;
 
         public CreationAction(
                 @NonNull VariantScope scope, @NonNull FileCollection testTargetMetadata) {
-            super(scope, scope.getTaskName("process", "Manifest"), ProcessTestManifest.class);
-            this.scope = scope;
+            super(scope);
             this.testTargetMetadata = testTargetMetadata;
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return getVariantScope().getTaskName("process", "Manifest");
+        }
+
+        @NonNull
+        @Override
+        public Class<ProcessTestManifest> getType() {
+            return ProcessTestManifest.class;
         }
 
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
-            scope.getArtifacts()
+            getVariantScope()
+                    .getArtifacts()
                     .republish(
                             InternalArtifactType.MERGED_MANIFESTS,
                             InternalArtifactType.MANIFEST_METADATA);
@@ -526,25 +535,24 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessTestManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            scope.getTaskContainer().setProcessManifestTask(taskProvider);
+            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
 
-            scope.getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.MERGED_MANIFESTS,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ManifestProcessorTask::getManifestOutputDirectory,
-                            "");
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+            artifacts.producesDir(
+                    InternalArtifactType.MERGED_MANIFESTS,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ManifestProcessorTask::getManifestOutputDirectory,
+                    "");
 
-            scope.getArtifacts()
-                    .producesFile(
-                            InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ProcessTestManifest::getMergeBlameFile,
-                            "manifest-merger-blame-"
-                                    + scope.getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
+            artifacts.producesFile(
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessTestManifest::getMergeBlameFile,
+                    "manifest-merger-blame-"
+                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + "-report.txt");
         }
 
         @Override
@@ -558,17 +566,17 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
                             task.getCheckManifestResult());
 
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
-                    scope.getVariantConfiguration();
+                    getVariantScope().getVariantConfiguration();
 
             task.setTestManifestFile(config.getMainManifest());
-            task.outputScope = scope.getOutputScope();
+            task.outputScope = getVariantScope().getOutputScope();
 
             task.setTmpDir(
                     FileUtils.join(
-                            scope.getGlobalScope().getIntermediatesDir(),
+                            getVariantScope().getGlobalScope().getIntermediatesDir(),
                             "tmp",
                             "manifest",
-                            scope.getDirName()));
+                            getVariantScope().getDirName()));
 
             task.minSdkVersion =
                     TaskInputHelper.memoize(() -> config.getMinSdkVersion().getApiString());
@@ -590,7 +598,8 @@ public abstract class ProcessTestManifest extends ManifestProcessorTask {
             task.functionalTest = TaskInputHelper.memoize(config::getFunctionalTest);
             task.testLabel = TaskInputHelper.memoize(config::getTestLabel);
 
-            task.manifests = scope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests =
+                    getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             task.placeholdersValues = TaskInputHelper.memoize(config::getManifestPlaceholders);
         }

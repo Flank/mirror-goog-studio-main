@@ -20,7 +20,7 @@ import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.tasks.AnnotationProcessingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -58,14 +58,13 @@ open class SigningConfigWriterTask : NonIncrementalTask() {
         SigningConfigMetadata.save(out.get().asFile, signingConfig)
     }
 
-    class CreationAction(
-        variantScope: VariantScope) :
-        AnnotationProcessingTaskCreationAction<SigningConfigWriterTask>(
-            variantScope,
-            variantScope.getTaskName("signingConfigWriter"),
-            SigningConfigWriterTask::class.java
-        ) {
+    class CreationAction(variantScope: VariantScope) :
+        VariantTaskCreationAction<SigningConfigWriterTask>(variantScope) {
 
+        override val name: String
+            get() = variantScope.getTaskName("signingConfigWriter")
+        override val type: Class<SigningConfigWriterTask>
+            get() = SigningConfigWriterTask::class.java
         private var outputDirectory: Provider<Directory>? = null
 
         override fun preConfigure(taskName: String) {

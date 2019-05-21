@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -541,30 +542,37 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
     public abstract RegularFileProperty getApkList();
 
     public static class CreationAction
-            extends AnnotationProcessingTaskCreationAction<ProcessApplicationManifest> {
+            extends VariantTaskCreationAction<ProcessApplicationManifest> {
 
-        protected final VariantScope variantScope;
         protected final boolean isAdvancedProfilingOn;
 
         public CreationAction(
                 @NonNull VariantScope scope,
                 // TODO : remove this variable and find ways to access it from scope.
                 boolean isAdvancedProfilingOn) {
-            super(
-                    scope,
-                    scope.getTaskName("process", "Manifest"),
-                    ProcessApplicationManifest.class);
-            this.variantScope = scope;
+            super(scope);
             this.isAdvancedProfilingOn = isAdvancedProfilingOn;
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return getVariantScope().getTaskName("process", "Manifest");
+        }
+
+        @NonNull
+        @Override
+        public Class<ProcessApplicationManifest> getType() {
+            return ProcessApplicationManifest.class;
         }
 
         @Override
         public void preConfigure(@NonNull String taskName) {
             super.preConfigure(taskName);
 
-            VariantType variantType = variantScope.getType();
+            VariantType variantType = getVariantScope().getType();
             Preconditions.checkState(!variantType.isTestComponent());
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
 
             artifacts.republish(
                     InternalArtifactType.MERGED_MANIFESTS, InternalArtifactType.MANIFEST_METADATA);
@@ -574,9 +582,9 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
         public void handleProvider(
                 @NonNull TaskProvider<? extends ProcessApplicationManifest> taskProvider) {
             super.handleProvider(taskProvider);
-            variantScope.getTaskContainer().setProcessManifestTask(taskProvider);
+            getVariantScope().getTaskContainer().setProcessManifestTask(taskProvider);
 
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts
                     .producesDir(
                             InternalArtifactType.MERGED_MANIFESTS,
@@ -593,15 +601,14 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             ManifestProcessorTask::getInstantAppManifestOutputDirectory,
                             "");
 
-            artifacts
-                    .producesFile(
-                            InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            ProcessApplicationManifest::getMergeBlameFile,
-                            "manifest-merger-blame-"
-                                    + variantScope.getVariantConfiguration().getBaseName()
-                                    + "-report.txt");
+            artifacts.producesFile(
+                    InternalArtifactType.MANIFEST_MERGE_BLAME_FILE,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessApplicationManifest::getMergeBlameFile,
+                    "manifest-merger-blame-"
+                            + getVariantScope().getVariantConfiguration().getBaseName()
+                            + "-report.txt");
 
             artifacts.producesDir(
                     InternalArtifactType.METADATA_FEATURE_MANIFEST,
@@ -617,52 +624,67 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                     ProcessApplicationManifest::getBundleManifestOutputDirectory,
                     "bundle-manifest");
 
-            variantScope.getArtifacts().producesFile(
-                    InternalArtifactType.MANIFEST_MERGE_REPORT,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskProvider,
-                    ProcessApplicationManifest::getReportFile,
-                    variantScope.getGlobalScope().getProject().getLayout().getBuildDirectory().dir(
-                            FileUtils.join(
-                                    variantScope.getGlobalScope().getOutputsDir(),
-                                    "logs").getAbsolutePath()),
-                    "manifest-merger-"
-                            + variantScope.getVariantConfiguration().getBaseName()
-                            + "-report.txt");
+            getVariantScope()
+                    .getArtifacts()
+                    .producesFile(
+                            InternalArtifactType.MANIFEST_MERGE_REPORT,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            ProcessApplicationManifest::getReportFile,
+                            getVariantScope()
+                                    .getGlobalScope()
+                                    .getProject()
+                                    .getLayout()
+                                    .getBuildDirectory()
+                                    .dir(
+                                            FileUtils.join(
+                                                            getVariantScope()
+                                                                    .getGlobalScope()
+                                                                    .getOutputsDir(),
+                                                            "logs")
+                                                    .getAbsolutePath()),
+                            "manifest-merger-"
+                                    + getVariantScope().getVariantConfiguration().getBaseName()
+                                    + "-report.txt");
         }
 
         @Override
         public void configure(@NonNull ProcessApplicationManifest task) {
             super.configure(task);
 
-            variantScope
+            getVariantScope()
                     .getArtifacts()
                     .setTaskInputToFinalProduct(
                             InternalArtifactType.CHECK_MANIFEST_RESULT,
                             task.getCheckManifestResult());
 
-            final BaseVariantData variantData = variantScope.getVariantData();
+            final BaseVariantData variantData = getVariantScope().getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
-            GlobalScope globalScope = variantScope.getGlobalScope();
+            GlobalScope globalScope = getVariantScope().getGlobalScope();
 
-            VariantType variantType = variantScope.getType();
+            VariantType variantType = getVariantScope().getType();
 
             task.setVariantConfiguration(config);
 
             Project project = globalScope.getProject();
 
             // This includes the dependent libraries.
-            task.manifests = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+            task.manifests =
+                    getVariantScope().getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // Also include rewritten auto-namespaced manifests if there are any
             if (variantType
                             .isBaseModule() // TODO(b/112251836): Auto namespacing for dynamic features.
-                    && variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()
-                    && variantScope
+                    && getVariantScope()
+                            .getGlobalScope()
+                            .getExtension()
+                            .getAaptOptions()
+                            .getNamespaced()
+                    && getVariantScope()
                             .getGlobalScope()
                             .getProjectOptions()
                             .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
-                variantScope
+                getVariantScope()
                         .getArtifacts()
                         .setTaskInputToFinalProduct(
                                 InternalArtifactType.NAMESPACED_MANIFESTS,
@@ -670,11 +692,11 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
             }
 
             // optional manifest files too.
-            if (variantScope.getTaskContainer().getMicroApkTask() != null
+            if (getVariantScope().getTaskContainer().getMicroApkTask() != null
                     && config.getBuildType().isEmbedMicroApp()) {
-                task.microApkManifest = project.files(variantScope.getMicroApkManifestFile());
+                task.microApkManifest = project.files(getVariantScope().getMicroApkManifestFile());
             }
-            BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPATIBLE_SCREEN_MANIFEST,
                     task.getCompatibleScreensManifest());
@@ -699,38 +721,48 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
 
             task.optionalFeatures =
                     TaskInputHelper.memoize(
-                            () -> getOptionalFeatures(variantScope, isAdvancedProfilingOn));
+                            () -> getOptionalFeatures(getVariantScope(), isAdvancedProfilingOn));
 
             artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_LIST, task.getApkList());
 
             // set optional inputs per module type
             if (variantType.isBaseModule()) {
                 task.packageManifest =
-                        variantScope.getArtifactFileCollection(
-                                METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION);
+                        getVariantScope()
+                                .getArtifactFileCollection(
+                                        METADATA_VALUES, PROJECT, METADATA_BASE_MODULE_DECLARATION);
 
                 task.featureManifests =
-                        variantScope.getArtifactCollection(
-                                METADATA_VALUES, PROJECT, METADATA_FEATURE_MANIFEST);
+                        getVariantScope()
+                                .getArtifactCollection(
+                                        METADATA_VALUES, PROJECT, METADATA_FEATURE_MANIFEST);
 
             } else if (variantType.isFeatureSplit()) {
                 task.featureNameSupplier =
                         FeatureSetMetadata.getInstance()
-                                .getFeatureNameSupplierForTask(variantScope, task);
+                                .getFeatureNameSupplierForTask(getVariantScope(), task);
 
                 task.packageManifest =
-                        variantScope.getArtifactFileCollection(
-                                COMPILE_CLASSPATH, PROJECT, FEATURE_APPLICATION_ID_DECLARATION);
+                        getVariantScope()
+                                .getArtifactFileCollection(
+                                        COMPILE_CLASSPATH,
+                                        PROJECT,
+                                        FEATURE_APPLICATION_ID_DECLARATION);
             }
 
-            if (!variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced()) {
+            if (!getVariantScope()
+                    .getGlobalScope()
+                    .getExtension()
+                    .getAaptOptions()
+                    .getNamespaced()) {
                 task.navigationJsons =
                         project.files(
-                                variantScope
+                                getVariantScope()
                                         .getArtifacts()
                                         .getFinalProduct(InternalArtifactType.NAVIGATION_JSON),
-                                variantScope.getArtifactFileCollection(
-                                        RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
+                                getVariantScope()
+                                        .getArtifactFileCollection(
+                                                RUNTIME_CLASSPATH, ALL, NAVIGATION_JSON));
             }
             // TODO: here in the "else" block should be the code path for the namespaced pipeline
         }

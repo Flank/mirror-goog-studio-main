@@ -20,7 +20,7 @@ import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.tasks.AnnotationProcessingTaskCreationAction
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.core.BuilderConstants
 import com.android.builder.model.SigningConfig
 import com.android.builder.signing.DefaultSigningConfig
@@ -32,7 +32,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -131,12 +130,12 @@ open class ValidateSigningTask : NonIncrementalTask() {
         variantScope: VariantScope,
         private val defaultDebugKeystoreLocation: File
     ) :
-        AnnotationProcessingTaskCreationAction<ValidateSigningTask>(
-            variantScope,
-            variantScope.getTaskName("validateSigning"),
-            ValidateSigningTask::class.java
-        ) {
+        VariantTaskCreationAction<ValidateSigningTask>(variantScope) {
 
+        override val name: String
+            get() = variantScope.getTaskName("validateSigning")
+        override val type: Class<ValidateSigningTask>
+            get() = ValidateSigningTask::class.java
         private var outputDirectory: Provider<Directory>? = null
 
         override fun preConfigure(taskName: String) {
