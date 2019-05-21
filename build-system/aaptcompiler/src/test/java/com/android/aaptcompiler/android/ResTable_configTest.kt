@@ -8,7 +8,7 @@ class ResTable_configTest {
 
   @Test
   fun testBlockMethods() {
-    val config = ResTable_config(
+    val config = ResTableConfig(
       52.hostToDevice(),
       // imsi block
       0x01020304.hostToDevice(),
@@ -105,7 +105,7 @@ class ResTable_configTest {
   }
 
   private fun matchTestUnequal(
-    default: ResTable_config, first: ResTable_config, second: ResTable_config) {
+    default: ResTableConfig, first: ResTableConfig, second: ResTableConfig) {
     // Default should match everything.
     Truth.assertThat(default.match(first)).isTrue()
     Truth.assertThat(default.match(second)).isTrue()
@@ -121,7 +121,7 @@ class ResTable_configTest {
   }
 
   private fun matchTestOneWay(
-    default: ResTable_config, matches: ResTable_config, noMatch: ResTable_config) {
+    default: ResTableConfig, matches: ResTableConfig, noMatch: ResTableConfig) {
     // Default should match everything.
     Truth.assertThat(default.match(matches)).isTrue()
     Truth.assertThat(default.match(noMatch)).isTrue()
@@ -139,62 +139,62 @@ class ResTable_configTest {
 
   @Test
   fun testMatches() {
-    val default = ResTable_config()
+    val default = ResTableConfig()
 
-    val mcc1 = ResTable_config(mcc = 310)
-    val mcc2 = ResTable_config(mcc = 311)
+    val mcc1 = ResTableConfig(mcc = 310)
+    val mcc2 = ResTableConfig(mcc = 311)
 
     matchTestUnequal(default, mcc1, mcc2)
 
-    val mnc1 = ResTable_config(mnc = 1)
-    val mnc2 = ResTable_config(mnc = 2)
+    val mnc1 = ResTableConfig(mnc = 1)
+    val mnc2 = ResTableConfig(mnc = 2)
 
     matchTestUnequal(default, mnc1, mnc2)
 
-    val lang1 = ResTable_config(language = ResTable_config.ENGLISH)
-    val lang2 = ResTable_config(language = ResTable_config.FILIPINO)
+    val lang1 = ResTableConfig(language = ResTableConfig.ENGLISH)
+    val lang2 = ResTableConfig(language = ResTableConfig.FILIPINO)
 
     matchTestUnequal(default, lang1, lang2)
 
-    val layoutDir1 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.DIR_LTR)
-    val layoutDir2 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.DIR_RTL)
+    val layoutDir1 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.DIR_LTR)
+    val layoutDir2 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.DIR_RTL)
 
     matchTestUnequal(default, layoutDir1, layoutDir2)
 
-    val screenSize1 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.SIZE_SMALL)
-    val screenSize2 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.SIZE_LARGE)
+    val screenSize1 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.SIZE_SMALL)
+    val screenSize2 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.SIZE_LARGE)
 
     // Smaller screens can match larger ones.
     matchTestOneWay(default, screenSize1, screenSize2)
 
-    val screenLong1 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.SCREENLONG_NO)
-    val screenLong2 = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.SCREENLONG_YES)
+    val screenLong1 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.SCREENLONG_NO)
+    val screenLong2 = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.SCREENLONG_YES)
 
     matchTestUnequal(default, screenLong1, screenLong2)
 
     // test that having multiple specified layout values doesn't interfere with matching.
-    val screenLayout = ResTable_config(
-      screenLayout = (ResTable_config.SCREEN_LAYOUT.SIZE_LARGE.toInt() or
-        ResTable_config.SCREEN_LAYOUT.SCREENLONG_YES.toInt()).toByte())
+    val screenLayout = ResTableConfig(
+      screenLayout = (ResTableConfig.SCREEN_LAYOUT.SIZE_LARGE.toInt() or
+        ResTableConfig.SCREEN_LAYOUT.SCREENLONG_YES.toInt()).toByte())
 
     Truth.assertThat(screenSize1.match(screenLayout)).isTrue()
     Truth.assertThat(screenLayout.match(screenSize1)).isFalse()
     Truth.assertThat(screenLong2.match(screenLayout)).isTrue()
     Truth.assertThat(screenLayout.match(screenLong2)).isFalse()
 
-    val uiType1 = ResTable_config(uiMode = ResTable_config.UI_MODE.TYPE_VR_HEADSET)
-    val uiType2 = ResTable_config(uiMode = ResTable_config.UI_MODE.TYPE_APPLIANCE)
+    val uiType1 = ResTableConfig(uiMode = ResTableConfig.UI_MODE.TYPE_VR_HEADSET)
+    val uiType2 = ResTableConfig(uiMode = ResTableConfig.UI_MODE.TYPE_APPLIANCE)
 
     matchTestUnequal(default, uiType1, uiType2)
 
-    val uiNight1 = ResTable_config(uiMode = ResTable_config.UI_MODE.NIGHT_NO)
-    val uiNight2 = ResTable_config(uiMode = ResTable_config.UI_MODE.NIGHT_YES)
+    val uiNight1 = ResTableConfig(uiMode = ResTableConfig.UI_MODE.NIGHT_NO)
+    val uiNight2 = ResTableConfig(uiMode = ResTableConfig.UI_MODE.NIGHT_YES)
 
     matchTestUnequal(default, uiNight1, uiNight2)
 
-    val uiMode = ResTable_config(
-      uiMode = (ResTable_config.UI_MODE.NIGHT_YES.toInt() or
-        ResTable_config.UI_MODE.TYPE_APPLIANCE.toInt()).toByte())
+    val uiMode = ResTableConfig(
+      uiMode = (ResTableConfig.UI_MODE.NIGHT_YES.toInt() or
+        ResTableConfig.UI_MODE.TYPE_APPLIANCE.toInt()).toByte())
 
     // test that having multiple specified uiMode values doesn't interfere with matching.
     Truth.assertThat(uiType2.match(uiMode)).isTrue()
@@ -203,25 +203,25 @@ class ResTable_configTest {
     Truth.assertThat(uiMode.match(uiNight2)).isFalse()
 
     val screenRound1 =
-      ResTable_config(screenLayout2 = ResTable_config.SCREEN_LAYOUT2.SCREENROUND_YES)
+      ResTableConfig(screenLayout2 = ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_YES)
     val screenRound2 =
-      ResTable_config(screenLayout2 = ResTable_config.SCREEN_LAYOUT2.SCREENROUND_NO)
+      ResTableConfig(screenLayout2 = ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_NO)
 
     matchTestUnequal(default, screenRound1, screenRound2)
 
-    val hdr1 = ResTable_config(colorMode = ResTable_config.COLOR_MODE.HDR_YES)
-    val hdr2 = ResTable_config(colorMode = ResTable_config.COLOR_MODE.HDR_NO)
+    val hdr1 = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.HDR_YES)
+    val hdr2 = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.HDR_NO)
 
     matchTestUnequal(default, hdr1, hdr2)
 
-    val wideGamut1 = ResTable_config(colorMode = ResTable_config.COLOR_MODE.WIDE_GAMUT_YES)
-    val wideGamut2 = ResTable_config(colorMode = ResTable_config.COLOR_MODE.WIDE_GAMUT_NO)
+    val wideGamut1 = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.WIDE_GAMUT_YES)
+    val wideGamut2 = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.WIDE_GAMUT_NO)
 
     matchTestUnequal(default, wideGamut1, wideGamut2)
 
-    val colorMode = ResTable_config(
-      colorMode = (ResTable_config.COLOR_MODE.HDR_NO.toInt() or
-        ResTable_config.COLOR_MODE.WIDE_GAMUT_YES.toInt()).toByte())
+    val colorMode = ResTableConfig(
+      colorMode = (ResTableConfig.COLOR_MODE.HDR_NO.toInt() or
+        ResTableConfig.COLOR_MODE.WIDE_GAMUT_YES.toInt()).toByte())
 
     // test that having multiple specified colorMode values doesn't interfere with matching.
     Truth.assertThat(hdr2.match(colorMode)).isTrue()
@@ -229,84 +229,84 @@ class ResTable_configTest {
     Truth.assertThat(wideGamut1.match(colorMode)).isTrue()
     Truth.assertThat(colorMode.match(wideGamut1)).isFalse()
 
-    val screenWidthDp1 = ResTable_config(screenWidthDp = 480)
-    val screenWidthDp2 = ResTable_config(screenWidthDp = 960)
+    val screenWidthDp1 = ResTableConfig(screenWidthDp = 480)
+    val screenWidthDp2 = ResTableConfig(screenWidthDp = 960)
 
     // smaller widths match larger widths
     matchTestOneWay(default, screenWidthDp1, screenWidthDp2)
 
-    val screenHeightDp1 = ResTable_config(screenHeightDp = 640)
-    val screenHeightDp2 = ResTable_config(screenHeightDp = 1280)
+    val screenHeightDp1 = ResTableConfig(screenHeightDp = 640)
+    val screenHeightDp2 = ResTableConfig(screenHeightDp = 1280)
 
     // small heights match larger heights
     matchTestOneWay(default, screenHeightDp1, screenHeightDp2)
 
-    val orientation1 = ResTable_config(orientation = ResTable_config.ORIENTATION.LAND)
-    val orientation2 = ResTable_config(orientation = ResTable_config.ORIENTATION.PORT)
+    val orientation1 = ResTableConfig(orientation = ResTableConfig.ORIENTATION.LAND)
+    val orientation2 = ResTableConfig(orientation = ResTableConfig.ORIENTATION.PORT)
 
     matchTestUnequal(default, orientation1, orientation2)
 
-    val touchScreen1 = ResTable_config(touchscreen = ResTable_config.TOUCHSCREEN.FINGER)
-    val touchScreen2 = ResTable_config(touchscreen = ResTable_config.TOUCHSCREEN.NOTOUCH)
+    val touchScreen1 = ResTableConfig(touchscreen = ResTableConfig.TOUCHSCREEN.FINGER)
+    val touchScreen2 = ResTableConfig(touchscreen = ResTableConfig.TOUCHSCREEN.NOTOUCH)
 
     matchTestUnequal(default, touchScreen1, touchScreen2)
 
-    val navHidden1 = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.NAVHIDDEN_YES)
-    val navHidden2 = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.NAVHIDDEN_NO)
+    val navHidden1 = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.NAVHIDDEN_YES)
+    val navHidden2 = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.NAVHIDDEN_NO)
 
     matchTestUnequal(default, navHidden1, navHidden2)
 
-    val keysHidden1 = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_YES)
-    val keysHidden2 = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_SOFT)
+    val keysHidden1 = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_YES)
+    val keysHidden2 = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_SOFT)
 
     matchTestUnequal(default, keysHidden1, keysHidden2)
 
-    val keysHidden3 = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_NO)
+    val keysHidden3 = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_NO)
 
     // KEYSHIDDEN NO should match KEYSHIDDEN SOFT, but not the other way around.
     Truth.assertThat(keysHidden2.match(keysHidden3)).isFalse()
     Truth.assertThat(keysHidden3.match(keysHidden2)).isTrue()
 
-    val keyboard1 = ResTable_config(keyboard = ResTable_config.KEYBOARD.QWERTY)
-    val keyboard2 = ResTable_config(keyboard = ResTable_config.KEYBOARD.TWELVEKEY)
+    val keyboard1 = ResTableConfig(keyboard = ResTableConfig.KEYBOARD.QWERTY)
+    val keyboard2 = ResTableConfig(keyboard = ResTableConfig.KEYBOARD.TWELVEKEY)
 
     matchTestUnequal(default, keyboard1, keyboard2)
 
-    val navigation1 = ResTable_config(navigation = ResTable_config.NAVIGATION.DPAD)
-    val navigation2 = ResTable_config(navigation = ResTable_config.NAVIGATION.TRACKBALL)
+    val navigation1 = ResTableConfig(navigation = ResTableConfig.NAVIGATION.DPAD)
+    val navigation2 = ResTableConfig(navigation = ResTableConfig.NAVIGATION.TRACKBALL)
 
     matchTestUnequal(default, navigation1, navigation2)
 
-    val screenWidth1 = ResTable_config(screenWidth = 480)
-    val screenWidth2 = ResTable_config(screenWidth = 960)
+    val screenWidth1 = ResTableConfig(screenWidth = 480)
+    val screenWidth2 = ResTableConfig(screenWidth = 960)
 
     // Smaller widths will match.
     matchTestOneWay(default, screenWidth1, screenWidth2)
 
-    val screenHeight1 = ResTable_config(screenHeight = 360)
-    val screenHeight2 = ResTable_config(screenHeight = 720)
+    val screenHeight1 = ResTableConfig(screenHeight = 360)
+    val screenHeight2 = ResTableConfig(screenHeight = 720)
 
     // Smaller heights will match.
     matchTestOneWay(default, screenHeight1, screenHeight2)
 
-    val sdkVersion1 = ResTable_config(sdkVersion = 16)
-    val sdkVersion2 = ResTable_config(sdkVersion = 20)
+    val sdkVersion1 = ResTableConfig(sdkVersion = 16)
+    val sdkVersion2 = ResTableConfig(sdkVersion = 20)
 
     // Lower sdk versions will match.
     matchTestOneWay(default, sdkVersion1, sdkVersion2)
 
-    val minorVersion1 = ResTable_config(minorVersion = 1)
-    val minorVersion2 = ResTable_config(minorVersion = 2)
+    val minorVersion1 = ResTableConfig(minorVersion = 1)
+    val minorVersion2 = ResTableConfig(minorVersion = 2)
 
     matchTestUnequal(default, minorVersion1, minorVersion2)
   }
 
-  private fun testLocaleSpecificityGreater(greater: ResTable_config, lesser: ResTable_config) {
+  private fun testLocaleSpecificityGreater(greater: ResTableConfig, lesser: ResTableConfig) {
     Truth.assertThat(greater.isLocaleMoreSpecificThan(lesser)).isGreaterThan(0)
     Truth.assertThat(lesser.isLocaleMoreSpecificThan(greater)).isLessThan(0)
   }
 
-  private fun testLocaleSpecificityEqual(first: ResTable_config, second: ResTable_config) {
+  private fun testLocaleSpecificityEqual(first: ResTableConfig, second: ResTableConfig) {
     Truth.assertThat(first.isLocaleMoreSpecificThan(second)).isEqualTo(0)
     //  if they are the 'exact' same, there is no reason to retest.
     if (first !== second) {
@@ -316,19 +316,19 @@ class ResTable_configTest {
 
   @Test
   fun testLocaleIsMoreSpecificThan() {
-    val default = ResTable_config()
-    val languageOnly = ResTable_config(language = byteArrayOf('e'.toByte(), 'n'.toByte()))
-    val countryOnly = ResTable_config(country = byteArrayOf('U'.toByte(), 'S'.toByte()))
-    val languageAndCountry = ResTable_config(
+    val default = ResTableConfig()
+    val languageOnly = ResTableConfig(language = byteArrayOf('e'.toByte(), 'n'.toByte()))
+    val countryOnly = ResTableConfig(country = byteArrayOf('U'.toByte(), 'S'.toByte()))
+    val languageAndCountry = ResTableConfig(
       language = byteArrayOf('e'.toByte(), 'n'.toByte()),
       country = byteArrayOf('U'.toByte(), 'S'.toByte()))
-    val localeVariant = ResTable_config(
+    val localeVariant = ResTableConfig(
       localeVariant = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08))
-    val scriptComputed = ResTable_config(
+    val scriptComputed = ResTableConfig(
       localeScriptWasComputed = true, localeScript = byteArrayOf(0x01, 0x02, 0x03, 0x04))
-    val localeScript = ResTable_config(
+    val localeScript = ResTableConfig(
       localeScript = byteArrayOf(0x01, 0x02, 0x03, 0x04))
-    val numberingSystem = ResTable_config(
+    val numberingSystem = ResTableConfig(
       localeNumberSystem = byteArrayOf(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08))
 
     // configs are consistent with themselves.
@@ -383,12 +383,12 @@ class ResTable_configTest {
     testLocaleSpecificityGreater(numberingSystem, scriptComputed)
 
     // finally test that unequal but matching scripts do not have higher specificity.
-    val equalConfig1 = ResTable_config(language = ResTable_config.FILIPINO)
-    val equalConfig2 = ResTable_config(language = ResTable_config.TAGALOG)
+    val equalConfig1 = ResTableConfig(language = ResTableConfig.FILIPINO)
+    val equalConfig2 = ResTableConfig(language = ResTableConfig.TAGALOG)
     testLocaleSpecificityEqual(equalConfig1, equalConfig2)
   }
 
-  private fun testSpecificityTransitive(vararg greatestToLeast: ResTable_config) {
+  private fun testSpecificityTransitive(vararg greatestToLeast: ResTableConfig) {
     for (config in greatestToLeast) {
       // Configs are not more specific than themselves
       Truth.assertThat(config.isMoreSpecificThan(config)).isFalse()
@@ -412,30 +412,30 @@ class ResTable_configTest {
 
   @Test
   fun testIsMoreSpecificThan() {
-    val mcc = ResTable_config(mcc = 310)
-    val mnc = ResTable_config(mnc = 1)
-    val locale = ResTable_config(language = ResTable_config.ENGLISH)
-    val layoutDir = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.DIR_LTR)
-    val smallestScreenWidthDp = ResTable_config(smallestScreenWidthDp = 640)
-    val screenWidthDp = ResTable_config(screenWidthDp = 640)
-    val screenHeightDp = ResTable_config(screenHeightDp = 480)
+    val mcc = ResTableConfig(mcc = 310)
+    val mnc = ResTableConfig(mnc = 1)
+    val locale = ResTableConfig(language = ResTableConfig.ENGLISH)
+    val layoutDir = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.DIR_LTR)
+    val smallestScreenWidthDp = ResTableConfig(smallestScreenWidthDp = 640)
+    val screenWidthDp = ResTableConfig(screenWidthDp = 640)
+    val screenHeightDp = ResTableConfig(screenHeightDp = 480)
     val screenRound =
-      ResTable_config(screenLayout2 = ResTable_config.SCREEN_LAYOUT2.SCREENROUND_YES)
-    val hdr = ResTable_config(colorMode = ResTable_config.COLOR_MODE.HDR_YES)
-    val wideGamut = ResTable_config(colorMode = ResTable_config.COLOR_MODE.WIDE_GAMUT_NO)
-    val orientation = ResTable_config(orientation = ResTable_config.ORIENTATION.LAND)
-    val uiModeType = ResTable_config(uiMode = ResTable_config.UI_MODE.TYPE_VR_HEADSET)
-    val uiModeNight = ResTable_config(uiMode = ResTable_config.UI_MODE.NIGHT_YES)
-    val touchScreen = ResTable_config(touchscreen = ResTable_config.TOUCHSCREEN.FINGER)
-    val keysHidden = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_YES)
-    val navHidden = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.NAVHIDDEN_YES)
-    val keyboard = ResTable_config(keyboard = ResTable_config.KEYBOARD.QWERTY)
-    val navigation = ResTable_config(navigation = ResTable_config.NAVIGATION.DPAD)
-    val screenWidth = ResTable_config(screenWidth = 480)
-    val screenHeight = ResTable_config(screenHeight = 640)
-    val sdkVersion = ResTable_config(sdkVersion = 16)
-    val minorVersion = ResTable_config(minorVersion = 2)
-    val default = ResTable_config()
+      ResTableConfig(screenLayout2 = ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_YES)
+    val hdr = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.HDR_YES)
+    val wideGamut = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.WIDE_GAMUT_NO)
+    val orientation = ResTableConfig(orientation = ResTableConfig.ORIENTATION.LAND)
+    val uiModeType = ResTableConfig(uiMode = ResTableConfig.UI_MODE.TYPE_VR_HEADSET)
+    val uiModeNight = ResTableConfig(uiMode = ResTableConfig.UI_MODE.NIGHT_YES)
+    val touchScreen = ResTableConfig(touchscreen = ResTableConfig.TOUCHSCREEN.FINGER)
+    val keysHidden = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_YES)
+    val navHidden = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.NAVHIDDEN_YES)
+    val keyboard = ResTableConfig(keyboard = ResTableConfig.KEYBOARD.QWERTY)
+    val navigation = ResTableConfig(navigation = ResTableConfig.NAVIGATION.DPAD)
+    val screenWidth = ResTableConfig(screenWidth = 480)
+    val screenHeight = ResTableConfig(screenHeight = 640)
+    val sdkVersion = ResTableConfig(sdkVersion = 16)
+    val minorVersion = ResTableConfig(minorVersion = 2)
+    val default = ResTableConfig()
 
     // Test specificity by priority.
     testSpecificityTransitive(
@@ -464,7 +464,7 @@ class ResTable_configTest {
       default)
   }
 
-  private fun testLocaleCompareTransitive(vararg firstToLast: ResTable_config) {
+  private fun testLocaleCompareTransitive(vararg firstToLast: ResTableConfig) {
     for (config in firstToLast) {
       // Things should be equal to themselves.
       Truth.assertThat(config.compareLocales(config)).isEqualTo(0)
@@ -487,42 +487,42 @@ class ResTable_configTest {
 
   @Test
   fun testLocaleCompare() {
-    val default = ResTable_config()
-    val defaultWithVariant = ResTable_config(localeVariant = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
-    val localeNoCountry1 = ResTable_config(language = ResTable_config.ENGLISH)
-    val localeNoCountryWithScript1 = ResTable_config(
-      language = ResTable_config.ENGLISH, localeScript = byteArrayOf(1, 2, 3, 4))
-    val localeNoCountryWithScript2 = ResTable_config(
-      language = ResTable_config.ENGLISH, localeScript = byteArrayOf(1, 2, 3, 5))
-    val localeNoCountry2 = ResTable_config(language = byteArrayOf('f'.toByte(), 'r'.toByte()))
-    val localeNoCountryWithScript3 = ResTable_config(
+    val default = ResTableConfig()
+    val defaultWithVariant = ResTableConfig(localeVariant = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
+    val localeNoCountry1 = ResTableConfig(language = ResTableConfig.ENGLISH)
+    val localeNoCountryWithScript1 = ResTableConfig(
+      language = ResTableConfig.ENGLISH, localeScript = byteArrayOf(1, 2, 3, 4))
+    val localeNoCountryWithScript2 = ResTableConfig(
+      language = ResTableConfig.ENGLISH, localeScript = byteArrayOf(1, 2, 3, 5))
+    val localeNoCountry2 = ResTableConfig(language = byteArrayOf('f'.toByte(), 'r'.toByte()))
+    val localeNoCountryWithScript3 = ResTableConfig(
       language = byteArrayOf('f'.toByte(), 'r'.toByte()), localeScript = byteArrayOf(1, 2, 3, 4))
-    val localeNoLang = ResTable_config(country = ResTable_config.UNITED_STATES)
-    val localeBasic = ResTable_config(
-      language = ResTable_config.ENGLISH, country = ResTable_config.UNITED_STATES)
-    val localeBasicWithScript = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeNoLang = ResTableConfig(country = ResTableConfig.UNITED_STATES)
+    val localeBasic = ResTableConfig(
+      language = ResTableConfig.ENGLISH, country = ResTableConfig.UNITED_STATES)
+    val localeBasicWithScript = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScript = byteArrayOf(1, 2, 3, 4))
-    val localeBasicWithScriptAndVariant = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeBasicWithScriptAndVariant = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScript = byteArrayOf(1, 2, 3, 4),
       localeVariant = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
-    val localeBasicWithScriptAndVariant2 = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeBasicWithScriptAndVariant2 = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScript = byteArrayOf(1, 2, 3, 4),
       localeVariant = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18))
-    val localeBasicWithScriptVariantAndNumberSystem = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeBasicWithScriptVariantAndNumberSystem = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScript = byteArrayOf(1, 2, 3, 4),
       localeVariant = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18),
       localeNumberSystem = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8))
-    val localeBasicWithScriptVariantAndNumberSystem2 = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeBasicWithScriptVariantAndNumberSystem2 = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScript = byteArrayOf(1, 2, 3, 4),
       localeVariant = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18),
       localeNumberSystem = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18))
@@ -544,15 +544,15 @@ class ResTable_configTest {
       localeBasicWithScriptVariantAndNumberSystem2)
 
     // Ensure computed scripts do not affect results.
-    val localeBasicWithComputedScript = ResTable_config(
-      language = ResTable_config.ENGLISH,
-      country = ResTable_config.UNITED_STATES,
+    val localeBasicWithComputedScript = ResTableConfig(
+      language = ResTableConfig.ENGLISH,
+      country = ResTableConfig.UNITED_STATES,
       localeScriptWasComputed = true,
       localeScript = byteArrayOf(1, 2, 3, 4))
     Truth.assertThat(localeBasic.compareLocales(localeBasicWithComputedScript)).isEqualTo(0)
   }
 
-  private fun testCompareTransitive(vararg firstToLast: ResTable_config) {
+  private fun testCompareTransitive(vararg firstToLast: ResTableConfig) {
     for (config in firstToLast) {
       // Things should be equal to themselves.
       Truth.assertThat(config.compareTo(config)).isEqualTo(0)
@@ -575,24 +575,24 @@ class ResTable_configTest {
 
   @Test
   fun testCompare() {
-    val default = ResTable_config()
-    val screenSizeDp = ResTable_config(screenWidthDp = 240, screenHeightDp = 320)
-    val screenSizeDp2 = ResTable_config(screenWidthDp = 480, screenHeightDp = 640)
-    val smallestScreenWidthDp = ResTable_config(smallestScreenWidthDp = 480)
-    val smallestScreenWidthDp2 = ResTable_config(smallestScreenWidthDp = 960)
-    val uiMode = ResTable_config(uiMode = ResTable_config.UI_MODE.NIGHT_YES)
-    val colorMode = ResTable_config(colorMode = ResTable_config.COLOR_MODE.WIDE_GAMUT_NO)
-    val screenLayout2 = ResTable_config(
-      screenLayout2 = ResTable_config.SCREEN_LAYOUT2.SCREENROUND_YES)
-    val screenLayout = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.SIZE_LARGE)
-    val version = ResTable_config(sdkVersion = 22)
-    val screenSize = ResTable_config(screenWidth = 480, screenHeight = 320)
-    val input = ResTable_config(inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_YES)
-    val screenType = ResTable_config(orientation = ResTable_config.ORIENTATION.PORT)
+    val default = ResTableConfig()
+    val screenSizeDp = ResTableConfig(screenWidthDp = 240, screenHeightDp = 320)
+    val screenSizeDp2 = ResTableConfig(screenWidthDp = 480, screenHeightDp = 640)
+    val smallestScreenWidthDp = ResTableConfig(smallestScreenWidthDp = 480)
+    val smallestScreenWidthDp2 = ResTableConfig(smallestScreenWidthDp = 960)
+    val uiMode = ResTableConfig(uiMode = ResTableConfig.UI_MODE.NIGHT_YES)
+    val colorMode = ResTableConfig(colorMode = ResTableConfig.COLOR_MODE.WIDE_GAMUT_NO)
+    val screenLayout2 = ResTableConfig(
+      screenLayout2 = ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_YES)
+    val screenLayout = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.SIZE_LARGE)
+    val version = ResTableConfig(sdkVersion = 22)
+    val screenSize = ResTableConfig(screenWidth = 480, screenHeight = 320)
+    val input = ResTableConfig(inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_YES)
+    val screenType = ResTableConfig(orientation = ResTableConfig.ORIENTATION.PORT)
     // Ensure density matters for ordering.
-    val screenType2 = ResTable_config(density = 240)
-    val locale = ResTable_config(language = ResTable_config.ENGLISH)
-    val imsi = ResTable_config(mcc = 310)
+    val screenType2 = ResTableConfig(density = 240)
+    val locale = ResTableConfig(language = ResTableConfig.ENGLISH)
+    val imsi = ResTableConfig(mcc = 310)
 
     testCompareTransitive(
       default,
@@ -615,14 +615,14 @@ class ResTable_configTest {
 
   @Test
   fun testDiff() {
-    val default = ResTable_config()
-    val first = ResTable_config(mcc = 310, mnc = 10, screenWidth = 480, screenHeight = 640)
-    val second = ResTable_config(mcc = 310, language = ResTable_config.ENGLISH, screenHeight = 480)
-    val third = ResTable_config(
+    val default = ResTableConfig()
+    val first = ResTableConfig(mcc = 310, mnc = 10, screenWidth = 480, screenHeight = 640)
+    val second = ResTableConfig(mcc = 310, language = ResTableConfig.ENGLISH, screenHeight = 480)
+    val third = ResTableConfig(
       sdkVersion = 23,
       screenWidth = 480,
       screenHeight = 640,
-      screenLayout = ResTable_config.SCREEN_LAYOUT.SIZE_LARGE)
+      screenLayout = ResTableConfig.SCREEN_LAYOUT.SIZE_LARGE)
 
     Truth.assertThat(default.diff(default)).isEqualTo(0)
     Truth.assertThat(first.diff(first)).isEqualTo(0)
@@ -630,57 +630,57 @@ class ResTable_configTest {
     Truth.assertThat(third.diff(third)).isEqualTo(0)
 
     val firstDefault =
-      ResTable_config.CONFIG_MCC or ResTable_config.CONFIG_MNC or ResTable_config.CONFIG_SCREEN_SIZE
+      ResTableConfig.CONFIG_MCC or ResTableConfig.CONFIG_MNC or ResTableConfig.CONFIG_SCREEN_SIZE
     Truth.assertThat(first.diff(default)).isEqualTo(firstDefault)
     Truth.assertThat(default.diff(first)).isEqualTo(firstDefault)
 
     val secondDefault =
-      ResTable_config.CONFIG_MCC or
-        ResTable_config.CONFIG_LOCALE or
-        ResTable_config.CONFIG_SCREEN_SIZE
+      ResTableConfig.CONFIG_MCC or
+        ResTableConfig.CONFIG_LOCALE or
+        ResTableConfig.CONFIG_SCREEN_SIZE
     Truth.assertThat(second.diff(default)).isEqualTo(secondDefault)
     Truth.assertThat(default.diff(second)).isEqualTo(secondDefault)
 
     val thirdDefault =
-      ResTable_config.CONFIG_VERSION or
-        ResTable_config.CONFIG_SCREEN_SIZE or
-        ResTable_config.CONFIG_SCREEN_LAYOUT
+      ResTableConfig.CONFIG_VERSION or
+        ResTableConfig.CONFIG_SCREEN_SIZE or
+        ResTableConfig.CONFIG_SCREEN_LAYOUT
     Truth.assertThat(third.diff(default)).isEqualTo(thirdDefault)
     Truth.assertThat(default.diff(third)).isEqualTo(thirdDefault)
 
     val firstSecond =
-      ResTable_config.CONFIG_MNC or
-        ResTable_config.CONFIG_LOCALE or
-        ResTable_config.CONFIG_SCREEN_SIZE
+      ResTableConfig.CONFIG_MNC or
+        ResTableConfig.CONFIG_LOCALE or
+        ResTableConfig.CONFIG_SCREEN_SIZE
     Truth.assertThat(first.diff(second)).isEqualTo(firstSecond)
     Truth.assertThat(second.diff(first)).isEqualTo(firstSecond)
 
     val firstThird =
-      ResTable_config.CONFIG_MCC or
-        ResTable_config.CONFIG_MNC or
-        ResTable_config.CONFIG_VERSION or
-        ResTable_config.CONFIG_SCREEN_LAYOUT
+      ResTableConfig.CONFIG_MCC or
+        ResTableConfig.CONFIG_MNC or
+        ResTableConfig.CONFIG_VERSION or
+        ResTableConfig.CONFIG_SCREEN_LAYOUT
     Truth.assertThat(first.diff(third)).isEqualTo(firstThird)
     Truth.assertThat(third.diff(first)).isEqualTo(firstThird)
 
     val secondThird =
-      ResTable_config.CONFIG_MCC or
-        ResTable_config.CONFIG_LOCALE or
-        ResTable_config.CONFIG_SCREEN_SIZE or
-        ResTable_config.CONFIG_VERSION or
-        ResTable_config.CONFIG_SCREEN_LAYOUT
+      ResTableConfig.CONFIG_MCC or
+        ResTableConfig.CONFIG_LOCALE or
+        ResTableConfig.CONFIG_SCREEN_SIZE or
+        ResTableConfig.CONFIG_VERSION or
+        ResTableConfig.CONFIG_SCREEN_LAYOUT
     Truth.assertThat(second.diff(third)).isEqualTo(secondThird)
     Truth.assertThat(third.diff(second)).isEqualTo(secondThird)
 
-    // layout dir is separate from ResTable_config.CONFIG_SCREEN_LAYOUT
-    val layoutDir = ResTable_config(screenLayout = ResTable_config.SCREEN_LAYOUT.DIR_LTR)
-    val diff = ResTable_config.CONFIG_LAYOUTDIR
+    // layout dir is separate from ResTableConfig.CONFIG_SCREEN_LAYOUT
+    val layoutDir = ResTableConfig(screenLayout = ResTableConfig.SCREEN_LAYOUT.DIR_LTR)
+    val diff = ResTableConfig.CONFIG_LAYOUTDIR
     Truth.assertThat(default.diff(layoutDir)).isEqualTo(diff)
     Truth.assertThat(layoutDir.diff(default)).isEqualTo(diff)
   }
 
   private fun isBetterLocaleTransitive(
-    requested: ResTable_config, vararg leastToGreatest: ResTable_config) {
+    requested: ResTableConfig, vararg leastToGreatest: ResTableConfig) {
 
     for (config in leastToGreatest) {
       // no config is better than itself.
@@ -704,28 +704,28 @@ class ResTable_configTest {
 
   @Test
   fun testIsBetterLocale() {
-    val requested = ResTable_config(
-      language = ResTable_config.FILIPINO,
+    val requested = ResTableConfig(
+      language = ResTableConfig.FILIPINO,
       country = byteArrayOf(1, 2),
       localeVariant = byteArrayOf(3, 4, 5, 6, 7, 8, 9, 10),
       localeNumberSystem = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18))
 
-    val default = ResTable_config()
-    val country = ResTable_config(country = byteArrayOf(1, 2))
-    val language1 = ResTable_config(language = ResTable_config.TAGALOG)
-    val language2 = ResTable_config(language = ResTable_config.FILIPINO)
+    val default = ResTableConfig()
+    val country = ResTableConfig(country = byteArrayOf(1, 2))
+    val language1 = ResTableConfig(language = ResTableConfig.TAGALOG)
+    val language2 = ResTableConfig(language = ResTableConfig.FILIPINO)
     val languageAndCountry =
-      ResTable_config(language = ResTable_config.FILIPINO, country = byteArrayOf(1, 2))
-    val localeNumberSystem = ResTable_config(
-      language = ResTable_config.FILIPINO,
+      ResTableConfig(language = ResTableConfig.FILIPINO, country = byteArrayOf(1, 2))
+    val localeNumberSystem = ResTableConfig(
+      language = ResTableConfig.FILIPINO,
       country = byteArrayOf(1, 2),
       localeNumberSystem = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18))
-    val localeVariant = ResTable_config(
-      language = ResTable_config.FILIPINO,
+    val localeVariant = ResTableConfig(
+      language = ResTableConfig.FILIPINO,
       country = byteArrayOf(1, 2),
       localeVariant = byteArrayOf(3, 4, 5, 6, 7, 8, 9, 10))
-    val almostTotalMatch = ResTable_config(
-      language = ResTable_config.TAGALOG,
+    val almostTotalMatch = ResTableConfig(
+      language = ResTableConfig.TAGALOG,
       country = byteArrayOf(1, 2),
       localeVariant = byteArrayOf(3, 4, 5, 6, 7, 8, 9, 10),
       localeNumberSystem = byteArrayOf(11, 12, 13, 14, 15, 16, 17, 18))
@@ -743,8 +743,8 @@ class ResTable_configTest {
       requested)
 
     // Test that if the locale variant doesn't match it doesn't count.
-    val localeVariantFail = ResTable_config(
-      language = ResTable_config.FILIPINO,
+    val localeVariantFail = ResTableConfig(
+      language = ResTableConfig.FILIPINO,
       country = byteArrayOf(1, 2),
       localeVariant = byteArrayOf(3, 4, 5, 6, 7, 8, 9, 11))
 
@@ -754,7 +754,7 @@ class ResTable_configTest {
   }
 
   private fun isBetterTransitive(
-    requested: ResTable_config, vararg leastToGreatest: ResTable_config) {
+    requested: ResTableConfig, vararg leastToGreatest: ResTableConfig) {
 
     for (config in leastToGreatest) {
       // no config is better than itself.
@@ -778,7 +778,7 @@ class ResTable_configTest {
 
   @Test
   fun testIsBetterThan() {
-    val requested = ResTable_config(
+    val requested = ResTableConfig(
       52.hostToDevice(),
       // imsi block
       0x41424344.hostToDevice(),
@@ -805,64 +805,64 @@ class ResTable_configTest {
       // localeNumberSystem block
       byteArrayOf(0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38))
 
-    val default = ResTable_config()
-    val minorVersion = ResTable_config(minorVersion = requested.minorVersion)
-    val sdkVersion1 = ResTable_config(sdkVersion = 0x0020)
+    val default = ResTableConfig()
+    val minorVersion = ResTableConfig(minorVersion = requested.minorVersion)
+    val sdkVersion1 = ResTableConfig(sdkVersion = 0x0020)
     // higher sdkVersion will match better.
-    val sdkVersion2 = ResTable_config(sdkVersion = requested.sdkVersion)
-    val screenSize1 = ResTable_config(screenWidth = requested.screenWidth)
-    val screenSize2 = ResTable_config(
+    val sdkVersion2 = ResTableConfig(sdkVersion = requested.sdkVersion)
+    val screenSize1 = ResTableConfig(screenWidth = requested.screenWidth)
+    val screenSize2 = ResTableConfig(
       screenWidth = requested.screenWidth, screenHeight = requested.screenHeight)
-    val navigation = ResTable_config(navigation = requested.navigation)
-    val keyboard = ResTable_config(keyboard = requested.keyboard)
-    val navHidden = ResTable_config(
+    val navigation = ResTableConfig(navigation = requested.navigation)
+    val keyboard = ResTableConfig(keyboard = requested.keyboard)
+    val navHidden = ResTableConfig(
       inputFlags = (requested.inputFlags.toInt() and
-        ResTable_config.INPUT_FLAGS.NAVHIDDEN_MASK).toByte())
-    val keysHiddenAlmostMatch = ResTable_config(
-      inputFlags = ResTable_config.INPUT_FLAGS.KEYSHIDDEN_NO)
-    val keysHiddenMatch = ResTable_config(
+        ResTableConfig.INPUT_FLAGS.NAVHIDDEN_MASK).toByte())
+    val keysHiddenAlmostMatch = ResTableConfig(
+      inputFlags = ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_NO)
+    val keysHiddenMatch = ResTableConfig(
       inputFlags = (requested.inputFlags.toInt() and
-        ResTable_config.INPUT_FLAGS.KEYSHIDDEN_MASK).toByte())
-    val touchscreen = ResTable_config(touchscreen = requested.touchscreen)
+        ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_MASK).toByte())
+    val touchscreen = ResTableConfig(touchscreen = requested.touchscreen)
     // scaling up is worse than scaling down.
-    val densityLow = ResTable_config(density = requested.density - 20)
-    val densityHigh = ResTable_config(density = requested.density + 20)
-    val densityEqual = ResTable_config(density = requested.density)
-    val nightMode = ResTable_config(
+    val densityLow = ResTableConfig(density = requested.density - 20)
+    val densityHigh = ResTableConfig(density = requested.density + 20)
+    val densityEqual = ResTableConfig(density = requested.density)
+    val nightMode = ResTableConfig(
       uiMode = (requested.uiMode.toInt() and
-        ResTable_config.UI_MODE.NIGHT_MASK).toByte())
-    val uiType = ResTable_config(
+        ResTableConfig.UI_MODE.NIGHT_MASK).toByte())
+    val uiType = ResTableConfig(
       uiMode = (requested.uiMode.toInt() and
-        ResTable_config.UI_MODE.TYPE_MASK).toByte())
-    val orientation = ResTable_config(orientation = requested.orientation)
-    val hdr = ResTable_config(
+        ResTableConfig.UI_MODE.TYPE_MASK).toByte())
+    val orientation = ResTableConfig(orientation = requested.orientation)
+    val hdr = ResTableConfig(
       colorMode = (requested.colorMode.toInt() and
-        ResTable_config.COLOR_MODE.HDR_MASK).toByte())
-    val gamut = ResTable_config(
+        ResTableConfig.COLOR_MODE.HDR_MASK).toByte())
+    val gamut = ResTableConfig(
       colorMode = (requested.colorMode.toInt() and
-        ResTable_config.COLOR_MODE.WIDE_GAMUT_MASK).toByte())
-    val round = ResTable_config(
+        ResTableConfig.COLOR_MODE.WIDE_GAMUT_MASK).toByte())
+    val round = ResTableConfig(
       screenLayout2 = (requested.screenLayout2.toInt() and
-        ResTable_config.SCREEN_LAYOUT2.SCREENROUND_MASK).toByte())
-    val long = ResTable_config(
+        ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_MASK).toByte())
+    val long = ResTableConfig(
       screenLayout = (requested.screenLayout.toInt() and
-        ResTable_config.SCREEN_LAYOUT.SCREENLONG_MASK).toByte())
-    val sizeFlag = ResTable_config(
+        ResTableConfig.SCREEN_LAYOUT.SCREENLONG_MASK).toByte())
+    val sizeFlag = ResTableConfig(
       screenLayout = (requested.screenLayout.toInt() and
-        ResTable_config.SCREEN_LAYOUT.SIZE_MASK).toByte())
-    val screenSizeDp1 = ResTable_config(screenWidthDp = requested.screenWidthDp)
-    val screenSizeDp2 = ResTable_config(
+        ResTableConfig.SCREEN_LAYOUT.SIZE_MASK).toByte())
+    val screenSizeDp1 = ResTableConfig(screenWidthDp = requested.screenWidthDp)
+    val screenSizeDp2 = ResTableConfig(
       screenWidthDp = requested.screenWidthDp, screenHeightDp = requested.screenHeightDp)
-    val smallestScreenWidth1 = ResTable_config(
+    val smallestScreenWidth1 = ResTableConfig(
       smallestScreenWidthDp = requested.smallestScreenWidthDp - 20)
     // Closer to requested will match better.
-    val smallestScreenWidth2 = ResTable_config(
+    val smallestScreenWidth2 = ResTableConfig(
       smallestScreenWidthDp = requested.smallestScreenWidthDp)
-    val screenDir = ResTable_config(
+    val screenDir = ResTableConfig(
       screenLayout = (requested.screenLayout.toInt() and
-        ResTable_config.SCREEN_LAYOUT.DIR_MASK).toByte())
-    val mnc = ResTable_config(mnc = requested.mnc)
-    val mcc = ResTable_config(mcc = requested.mcc)
+        ResTableConfig.SCREEN_LAYOUT.DIR_MASK).toByte())
+    val mnc = ResTableConfig(mnc = requested.mnc)
+    val mcc = ResTableConfig(mcc = requested.mcc)
 
     isBetterTransitive(
       requested,
@@ -901,74 +901,74 @@ class ResTable_configTest {
 
   @Test
   fun testToString() {
-    val default = ResTable_config()
+    val default = ResTableConfig()
     Truth.assertThat(default.toString()).isEqualTo("DEFAULT")
 
-    val config1 = ResTable_config(mcc = 120)
+    val config1 = ResTableConfig(mcc = 120)
     Truth.assertThat(config1.toString()).isEqualTo("mcc120")
 
-    val config2 = ResTable_config(mnc = 120)
+    val config2 = ResTableConfig(mnc = 120)
     Truth.assertThat(config2.toString()).isEqualTo("mnc120")
 
-    val config3 = ResTable_config(language = ResTable_config.ENGLISH)
+    val config3 = ResTableConfig(language = ResTableConfig.ENGLISH)
     Truth.assertThat(config3.toString()).isEqualTo("en")
 
     val config4 =
-      ResTable_config(language = ResTable_config.ENGLISH, country =  ResTable_config.UNITED_STATES)
+      ResTableConfig(language = ResTableConfig.ENGLISH, country =  ResTableConfig.UNITED_STATES)
     Truth.assertThat(config4.toString()).isEqualTo("en-rUS")
 
     val config5 =
-      ResTable_config(
-        language = ResTable_config.ENGLISH,
+      ResTableConfig(
+        language = ResTableConfig.ENGLISH,
         localeScript = byteArrayOf('l'.toByte(), 'a'.toByte(), 't'.toByte(), 'n'.toByte()))
     Truth.assertThat(config5.toString()).isEqualTo("b+en+latn")
 
     val config6 =
-      ResTable_config(
-        language = ResTable_config.ENGLISH,
-        country = ResTable_config.UNITED_STATES,
+      ResTableConfig(
+        language = ResTableConfig.ENGLISH,
+        country = ResTableConfig.UNITED_STATES,
         localeScript = byteArrayOf('l'.toByte(), 'a'.toByte(), 't'.toByte(), 'n'.toByte()),
         localeVariant = byteArrayOf('h'.toByte(), 'i'.toByte(), 0, 0, 0, 0, 0, 0),
         localeNumberSystem = byteArrayOf(
           't'.toByte(), 'h'.toByte(), 'e'.toByte(), 'r'.toByte(), 'e'.toByte(), 0, 0, 0))
     Truth.assertThat(config6.toString()).isEqualTo("b+en+latn+US+hi+u+nu+there")
 
-    val config7 = ResTable_config(screenWidth = 480, screenHeight = 640)
+    val config7 = ResTableConfig(screenWidth = 480, screenHeight = 640)
     Truth.assertThat(config7.toString()).isEqualTo("480x640")
-    val config8 = ResTable_config(screenWidthDp = 480, screenHeightDp = 640)
+    val config8 = ResTableConfig(screenWidthDp = 480, screenHeightDp = 640)
     Truth.assertThat(config8.toString()).isEqualTo("w480dp-h640dp")
 
     val config9 =
-      ResTable_config(
+      ResTableConfig(
         52,
         310,
         100,
-        ResTable_config.ENGLISH,
-        ResTable_config.UNITED_STATES,
-        ResTable_config.ORIENTATION.LAND,
-        ResTable_config.TOUCHSCREEN.FINGER,
-        ResTable_config.DENSITY.XXHIGH,
-        ResTable_config.KEYBOARD.QWERTY,
-        ResTable_config.NAVIGATION.DPAD,
-        (ResTable_config.INPUT_FLAGS.NAVHIDDEN_YES.toInt() or
-          ResTable_config.INPUT_FLAGS.KEYSHIDDEN_SOFT.toInt()).toByte(),
+        ResTableConfig.ENGLISH,
+        ResTableConfig.UNITED_STATES,
+        ResTableConfig.ORIENTATION.LAND,
+        ResTableConfig.TOUCHSCREEN.FINGER,
+        ResTableConfig.DENSITY.XXHIGH,
+        ResTableConfig.KEYBOARD.QWERTY,
+        ResTableConfig.NAVIGATION.DPAD,
+        (ResTableConfig.INPUT_FLAGS.NAVHIDDEN_YES.toInt() or
+          ResTableConfig.INPUT_FLAGS.KEYSHIDDEN_SOFT.toInt()).toByte(),
         0,
         0,
         13,
         2,
-        (ResTable_config.SCREEN_LAYOUT.DIR_LTR.toInt() or
-          ResTable_config.SCREEN_LAYOUT.SIZE_LARGE.toInt() or
-          ResTable_config.SCREEN_LAYOUT.SCREENLONG_YES.toInt()).toByte(),
-        (ResTable_config.UI_MODE.NIGHT_NO.toInt() or
-          ResTable_config.UI_MODE.TYPE_DESK.toInt()).toByte(),
+        (ResTableConfig.SCREEN_LAYOUT.DIR_LTR.toInt() or
+          ResTableConfig.SCREEN_LAYOUT.SIZE_LARGE.toInt() or
+          ResTableConfig.SCREEN_LAYOUT.SCREENLONG_YES.toInt()).toByte(),
+        (ResTableConfig.UI_MODE.NIGHT_NO.toInt() or
+          ResTableConfig.UI_MODE.TYPE_DESK.toInt()).toByte(),
         480,
         480,
         640,
         byteArrayOf('l'.toByte(), 'a'.toByte(), 't'.toByte(), 'n'.toByte()),
         byteArrayOf('h'.toByte(), 'i'.toByte(), 0, 0, 0, 0, 0, 0),
-        ResTable_config.SCREEN_LAYOUT2.SCREENROUND_YES,
-        (ResTable_config.COLOR_MODE.HDR_YES.toInt() or
-          ResTable_config.COLOR_MODE.WIDE_GAMUT_YES.toInt()).toByte(),
+        ResTableConfig.SCREEN_LAYOUT2.SCREENROUND_YES,
+        (ResTableConfig.COLOR_MODE.HDR_YES.toInt() or
+          ResTableConfig.COLOR_MODE.WIDE_GAMUT_YES.toInt()).toByte(),
         false,
         byteArrayOf('t'.toByte(), 'h'.toByte(), 'e'.toByte(), 'r'.toByte(), 'e'.toByte(), 0, 0, 0))
     Truth.assertThat(config9.toString()).isEqualTo(

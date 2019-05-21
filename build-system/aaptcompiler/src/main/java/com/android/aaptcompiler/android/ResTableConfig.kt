@@ -30,51 +30,51 @@ import java.nio.ByteBuffer
  * https://android.googlesource.com/platform/frameworks/base/+/android-9.0.0_r12/libs/androidfw/ResourceTypes.cpp
  * *
  * https://android.googlesource.com/platform/frameworks/base/+/android-9.0.0_r12/libs/androidfw/include/ResourceTypes.h
- * (struct ResTable_config)
+ * (struct ResTableConfig)
  *
  *
  */
-class ResTable_config(
-  val size: Int = 0,
+open class ResTableConfig(
+  var size: Int = 0,
   // imsi block
-  val mcc: Short = 0,
-  val mnc: Short = 0,
+  var mcc: Short = 0,
+  var mnc: Short = 0,
   // locale block
   val language: ByteArray = ByteArray(2),
   val country: ByteArray = ByteArray(2),
   // screenType block
-  val orientation: Byte = 0,
-  val touchscreen: Byte = 0,
-  val density: Int = 0,
+  var orientation: Byte = 0,
+  var touchscreen: Byte = 0,
+  var density: Int = 0,
   // input block
-  val keyboard: Byte = 0,
-  val navigation: Byte = 0,
-  val inputFlags: Byte = 0,
+  var keyboard: Byte = 0,
+  var navigation: Byte = 0,
+  var inputFlags: Byte = 0,
   // padding: Byte,
   // screenSize block
-  val screenWidth: Int = 0,
-  val screenHeight: Int = 0,
+  var screenWidth: Int = 0,
+  var screenHeight: Int = 0,
   // version block
   var sdkVersion: Short = 0,
-  val minorVersion: Short = 0,
+  var minorVersion: Short = 0,
   // screenConfig block
-  val screenLayout: Byte = 0,
-  val uiMode: Byte = 0,
-  val smallestScreenWidthDp: Int = 0,
+  var screenLayout: Byte = 0,
+  var uiMode: Byte = 0,
+  var smallestScreenWidthDp: Int = 0,
   // screenSizeDp block
-  val screenWidthDp: Int = 0,
-  val screenHeightDp: Int = 0,
+  var screenWidthDp: Int = 0,
+  var screenHeightDp: Int = 0,
 
   val localeScript: ByteArray = ByteArray(4),
   val localeVariant: ByteArray = ByteArray(8),
   // screenConfig2 block
-  val screenLayout2: Byte = 0,
-  val colorMode: Byte = 0,
+  var screenLayout2: Byte = 0,
+  var colorMode: Byte = 0,
   // padding: Short,
 
   var localeScriptWasComputed: Boolean = false,
   val localeNumberSystem: ByteArray = ByteArray(8)
-): Comparable<ResTable_config> {
+): Comparable<ResTableConfig> {
 
   constructor(
     sizeFromDevice: Int,
@@ -175,6 +175,20 @@ class ResTable_config(
   fun getScreenConfig2() = ((screenLayout2.toInt() and 0xff) or
     ((colorMode.toInt() and 0xff) shl 8) or
     (0x0000 shl 16)).hostToDevice() // padding
+
+  fun layoutSize() = (screenLayout.toInt() and SCREEN_LAYOUT.SIZE_MASK).toByte()
+
+  fun layoutLong() = (screenLayout.toInt() and SCREEN_LAYOUT.SCREENLONG_MASK).toByte()
+
+  fun uiModeType() = (uiMode.toInt() and UI_MODE.TYPE_MASK).toByte()
+
+  fun uiModeNight() = (uiMode.toInt() and UI_MODE.NIGHT_MASK).toByte()
+
+  fun layoutRound() = (screenLayout2.toInt() and SCREEN_LAYOUT2.SCREENROUND_MASK).toByte()
+
+  fun wideColorGamut() = (colorMode.toInt() and COLOR_MODE.WIDE_GAMUT_MASK).toByte()
+
+  fun hdr() = (colorMode.toInt() and COLOR_MODE.HDR_MASK).toByte()
 
   override fun toString(): String {
     val result = StringBuilder()
@@ -455,10 +469,18 @@ class ResTable_config(
 
   fun unpackRegion() = unpackLanguageOrRegion(country, '0'.toByte())
 
+  fun packLanguage(value: String) {
+    packLanguageOrRegion(value, 'a'.toByte()).copyInto(language, 0, 0, 2)
+  }
+
+  fun packRegion(value: String) {
+    packLanguageOrRegion(value, '0'.toByte()).copyInto(country, 0, 0, 2)
+  }
+
   /**
    * Compare two configuration, returning CONFIG_* flags set for each value that is different.
    */
-  fun diff(other: ResTable_config): Int {
+  fun diff(other: ResTableConfig): Int {
     var result = 0
     if (mcc != other.mcc) {
       result = result or CONFIG_MCC
@@ -522,7 +544,7 @@ class ResTable_config(
     return result
   }
 
-  override fun compareTo(other: ResTable_config): Int {
+  override fun compareTo(other: ResTableConfig): Int {
     val imsi = getImsi().deviceToHost()
     val oImsi = other.getImsi().deviceToHost()
     when {
@@ -598,7 +620,7 @@ class ResTable_config(
     return 0
   }
 
-  fun compareLocales(other: ResTable_config): Int {
+  fun compareLocales(other: ResTableConfig): Int {
     val locale = getLocale().deviceToHost()
     val oLocale = other.getLocale().deviceToHost()
     // NOTE: This is the old behaviour with respect to comparison orders. The diff value here
@@ -632,7 +654,7 @@ class ResTable_config(
   /**
    * Return true if 'this' is more specific than, i.e. has more specified values than 'o'.
    */
-  fun isMoreSpecificThan(other: ResTable_config): Boolean {
+  fun isMoreSpecificThan(other: ResTableConfig): Boolean {
     // The order of the following tests defines the importance of one
     // configuration parameter over another.  Those tests first are more
     // important, trumping any values in those following them.
@@ -770,7 +792,7 @@ class ResTable_config(
    * Returns a positive integer if this config is more specific than |o| with respect to their
    * locales, a negative integer if |o| is more specific and 0 if they're equally specific.
    */
-  fun isLocaleMoreSpecificThan(other: ResTable_config): Int {
+  fun isLocaleMoreSpecificThan(other: ResTableConfig): Int {
     if (getLocale().isTruthy() || other.getLocale().isTruthy()) {
       when {
         language[0] != other.language[0] -> when {
@@ -815,7 +837,7 @@ class ResTable_config(
    * '==requested' will pass the match() call.  So if this is not generic,
    * it wins.  If this IS generic, 'other' wins (return false).
    */
-  fun isBetterThan(other: ResTable_config, requested: ResTable_config?): Boolean {
+  fun isBetterThan(other: ResTableConfig, requested: ResTableConfig?): Boolean {
     requested ?: return isMoreSpecificThan(other)
 
     if (getImsi().isTruthy() || other.getImsi().isTruthy()) {
@@ -1063,7 +1085,7 @@ class ResTable_config(
    * Similar to isBetterThan(), this assumes that match() has already been used to remove any
    * configurations that don't match the requested configuration at all.
    */
-  fun isLocaleBetterThan(other: ResTable_config, requested: ResTable_config): Boolean {
+  fun isLocaleBetterThan(other: ResTableConfig, requested: ResTableConfig): Boolean {
     if (requested.getLocale() == 0) {
       // The request doesn't have a locale, so no resource is better than the other.
       return false
@@ -1154,7 +1176,7 @@ class ResTable_config(
    * the default should not match odd specifics (ie, request with no mcc should not match a
    * particular mcc's data) settings is the requested settings
    */
-  fun match(settings: ResTable_config): Boolean {
+  fun match(settings: ResTableConfig): Boolean {
     if (mcc.isTruthy() && mcc != settings.mcc) {
       return false
     }
@@ -1383,6 +1405,26 @@ class ResTable_config(
       return 0
     }
 
+    internal fun packLanguageOrRegion(input: String?, base: Byte): ByteArray {
+      val result = ByteArray(2)
+      when {
+        input.isNullOrEmpty() -> {}
+        input.length <= 2 || input[2] == '-' -> {
+          result[0] = input[0].toByte()
+          result[1] = input[1].toByte()
+        }
+        else -> {
+          val first = (input[0].toByte() - base) and 0x7f
+          val second = (input[1].toByte() - base) and 0x7f
+          val third = (input[2].toByte() - base) and 0x7f
+
+          result[0] = (0x80 or (third shl 2) or (second ushr 3)).toByte()
+          result[1] = ((second shl 5) or first).toByte()
+        }
+      }
+      return result
+    }
+
     internal fun unpackLanguageOrRegion(input: ByteArray, base: Byte) =
       when {
         (input[0].toInt() and 0x80).isTruthy() -> {
@@ -1404,7 +1446,7 @@ class ResTable_config(
       }
 
     // TODO (daniellabar): Switch over to BigBuffer.BlockRef later
-    internal fun createConfig(buffer: ByteBuffer): ResTable_config {
+    internal fun createConfig(buffer: ByteBuffer): ResTableConfig {
       val startPosition = buffer.position()
       val sizeOnDevice = buffer.int
       val sizeOnHost = sizeOnDevice.deviceToHost()
@@ -1441,7 +1483,7 @@ class ResTable_config(
         buffer.position(startPosition + sizeOnHost)
       }
 
-      return ResTable_config(
+      return ResTableConfig(
         sizeOnDevice,
         imsi,
         locale,
