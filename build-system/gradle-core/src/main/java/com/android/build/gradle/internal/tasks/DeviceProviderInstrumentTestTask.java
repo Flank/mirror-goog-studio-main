@@ -45,7 +45,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.internal.testing.SimpleTestRunnable;
 import com.android.builder.model.TestOptions;
-import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
 import com.android.builder.testing.ShardedTestRunner;
 import com.android.builder.testing.SimpleTestRunner;
@@ -390,16 +389,24 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
         @NonNull
         private final DeviceProvider deviceProvider;
+        @NonNull private final Type type;
         @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
+
+        public enum Type {
+            INTERNAL_CONNECTED_DEVICE_PROVIDER,
+            CUSTOM_DEVICE_PROVIDER,
+        }
 
         public CreationAction(
                 @NonNull VariantScope scope,
                 @NonNull DeviceProvider deviceProvider,
+                @NonNull Type type,
                 @NonNull AbstractTestDataImpl testData,
                 @NonNull FileCollection testTargetManifests) {
             super(scope);
             this.deviceProvider = deviceProvider;
+            this.type = type;
             this.testData = testData;
             this.testTargetManifests = testTargetManifests;
         }
@@ -421,19 +428,18 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                 @NonNull TaskProvider<? extends DeviceProviderInstrumentTestTask> taskProvider) {
             super.handleProvider(taskProvider);
 
-            // NOTE : This task will be created per device provider, assume several tasks instances
-            // will exist in the variant scope.
-
-            if (deviceProvider instanceof ConnectedDeviceProvider) {
+            if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
                                 InternalArtifactType.CODE_COVERAGE,
-                                BuildArtifactsHolder.OperationType.APPEND,
+                                BuildArtifactsHolder.OperationType.INITIAL,
                                 taskProvider,
                                 DeviceProviderInstrumentTestTask::getCoverageDir,
                                 deviceProvider.getName());
             } else {
+                // NOTE : This task will be created per device provider, assume several tasks instances
+                // will exist in the variant scope.
                 getVariantScope()
                         .getArtifacts()
                         .producesDir(
@@ -446,7 +452,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
 
             VariantScope scope = getVariantScope();
             if (scope.getVariantData() instanceof TestVariantData) {
-                if (deviceProvider instanceof ConnectedDeviceProvider) {
+                if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                     scope.getTaskContainer().setConnectedTestTask(taskProvider);
                     // possible redundant with setConnectedTestTask?
                     scope.getTaskContainer().setConnectedTask(taskProvider);
@@ -464,16 +470,13 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             Project project = scope.getGlobalScope().getProject();
             ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
-            final boolean connected = deviceProvider instanceof ConnectedDeviceProvider;
-
-
             BaseVariantData testedVariantData = scope.getTestedVariantData();
 
             String variantName =
                     testedVariantData != null
                             ? testedVariantData.getName()
                             : scope.getVariantData().getName();
-            if (connected) {
+            if (type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER) {
                 task.setDescription("Installs and runs the tests for " + variantName +
                         " on connected devices.");
             } else {
@@ -540,7 +543,10 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = FD_FLAVORS + "/" + flavorFolder;
             }
-            String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
+            String providerFolder =
+                    type == Type.INTERNAL_CONNECTED_DEVICE_PROVIDER
+                            ? CONNECTED
+                            : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
             task.splitSelectExecProvider =

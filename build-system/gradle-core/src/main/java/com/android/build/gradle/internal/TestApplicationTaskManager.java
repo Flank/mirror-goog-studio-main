@@ -134,6 +134,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                                                         .get(),
                                         extension.getAdbOptions().getTimeOutInMs(),
                                         new LoggerWrapper(getLogger())),
+                                DeviceProviderInstrumentTestTask.CreationAction.Type
+                                        .INTERNAL_CONNECTED_DEVICE_PROVIDER,
                                 testData,
                                 testedManifestMetadata) {
                             @NonNull
