@@ -14,98 +14,73 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.builder.testing.ConnectedDevice;
-import com.android.builder.testing.api.DeviceConnector;
-import com.android.builder.testing.api.DeviceException;
-import com.android.builder.testing.api.DeviceProvider;
-import com.android.ddmlib.IDevice;
-import com.android.instantapp.provision.ProvisionException;
-import com.android.instantapp.provision.ProvisionListener;
-import com.android.instantapp.provision.ProvisionRunner;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import org.gradle.api.logging.Logger;
+import com.android.builder.testing.ConnectedDevice
+import com.android.builder.testing.api.DeviceProvider
+import com.android.instantapp.provision.ProvisionException
+import com.android.instantapp.provision.ProvisionListener
+import com.android.instantapp.provision.ProvisionRunner
+import com.google.common.annotations.VisibleForTesting
+import java.io.File
+import org.gradle.api.logging.Logger
+
+
 
 /**
- * Code consumed by {@link InstantAppProvisionTask}. In a separate class for testing without
+ * Code consumed by [@link InstantAppProvisionTask]. In a separate class for testing without
  * exposing methods.
  */
-public class InstantAppProvisioner {
-    @NonNull private final File instantAppSdk;
-    @NonNull private final DeviceProvider deviceProvider;
-    @NonNull private final Logger logger;
+class InstantAppProvisioner (
+    private val instantAppSdk: File,
+    private val deviceProvider: DeviceProvider,
+    private val logger: Logger
+) {
 
-    private ProvisionRunner fakeProvisionRunner;
+    private var fakeProvisionRunner: ProvisionRunner? = null
 
-    InstantAppProvisioner(
-            @NonNull File instantAppSdk,
-            @NonNull DeviceProvider deviceProvider,
-            @NonNull Logger logger) {
-        this.instantAppSdk = instantAppSdk;
-        this.deviceProvider = deviceProvider;
-        this.logger = logger;
-    }
+    fun provisionDevices() {
+        val listener = object : ProvisionListener {
+            override fun printMessage(message: String) {
+                logger.info(message)
+            }
 
-    void provisionDevices() throws ProvisionException, DeviceException, ExecutionException {
-        ProvisionListener listener =
-                new ProvisionListener() {
-                    @Override
-                    public void printMessage(@NonNull String message) {
-                        logger.info(message);
-                    }
+            override fun logMessage(
+                message: String, e: ProvisionException?
+            ) {
+                if (e == null) {
+                    logger.debug(message)
+                } else {
+                    logger.debug(message, e)
+                    logger.error(message, e)
+                }
+            }
 
-                    @Override
-                    public void logMessage(
-                            @NonNull String message, @Nullable ProvisionException e) {
-                        if (e == null) {
-                            logger.debug(message);
-                        } else {
-                            logger.debug(message, e);
-                            logger.error(message, e);
-                        }
-                    }
+            override fun setProgress(fraction: Double) {}
 
-                    @Override
-                    public void setProgress(double fraction) {}
+            override fun isCancelled(): Boolean {
+                return false
+            }
+        }
 
-                    @Override
-                    public boolean isCancelled() {
-                        return false;
-                    }
-                };
+        val provisionRunner: ProvisionRunner =
+            fakeProvisionRunner ?: ProvisionRunner(instantAppSdk, listener)
 
-        ProvisionRunner provisionRunner =
-                fakeProvisionRunner == null
-                        ? new ProvisionRunner(instantAppSdk, listener)
-                        : fakeProvisionRunner;
 
-        deviceProvider.use(
-                () -> {
-                    List<? extends DeviceConnector> devices = deviceProvider.getDevices();
-                    List<IDevice> iDevices = Lists.newArrayList();
-                    for (DeviceConnector device : devices) {
-                        if (device instanceof ConnectedDevice) {
-                            iDevices.add(((ConnectedDevice) device).getIDevice());
-                        }
-                    }
+        deviceProvider.use {
+            val devices = deviceProvider.devices
+            for (device in devices) {
+                if (device is ConnectedDevice) {
+                    provisionRunner.runProvision(device.iDevice)
+                }
+            }
 
-                    for (IDevice device : iDevices) {
-                        provisionRunner.runProvision(device);
-                    }
-
-                    return null;
-                });
+            null
+        }
     }
 
     @VisibleForTesting
-    void setFakeProvisionRunner(@NonNull ProvisionRunner fakeProvisionRunner) {
-        this.fakeProvisionRunner = fakeProvisionRunner;
+    fun setFakeProvisionRunner(fakeProvisionRunner: ProvisionRunner) {
+        this.fakeProvisionRunner = fakeProvisionRunner
     }
 }
