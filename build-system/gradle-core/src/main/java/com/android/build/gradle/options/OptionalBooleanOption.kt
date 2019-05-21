@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.options
 
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.options.Option.Status.STABLE
 import com.android.builder.model.AndroidProject
 
@@ -25,7 +26,7 @@ enum class OptionalBooleanOption(
     SIGNING_V1_ENABLED(AndroidProject.PROPERTY_SIGNING_V1_ENABLED, status = STABLE),
     SIGNING_V2_ENABLED(AndroidProject.PROPERTY_SIGNING_V2_ENABLED, status = STABLE),
     IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY, status = STABLE),
-    ENABLE_R8("android.enableR8", status = Option.Status.STABLE),
+    ENABLE_R8("android.enableR8", status = Option.Status.Deprecated(DeprecationReporter.DeprecationTarget.ENABLE_R8)),
 
     /**
      * This project property is read by the firebase plugin, and has no direct impact on AGP behavior.

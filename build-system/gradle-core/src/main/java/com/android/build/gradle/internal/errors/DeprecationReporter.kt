@@ -45,7 +45,9 @@ interface DeprecationReporter {
         TASK_ACCESS_VIA_VARIANT("at the end of 2019"),
         DSL_USE_PROGUARD(
             "soon. Use 'android.enableR8' in gradle.properties to switch between R8 and Proguard."
-        )
+        ),
+        ENABLE_R8("in a future version of the Android Gradle plugin, and will no longer " +
+                "allow you to disable R8"),
     }
 
     /**
