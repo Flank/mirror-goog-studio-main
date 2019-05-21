@@ -50,13 +50,15 @@ class DeterministicTaskOutputsTest {
             "app/build/intermediates/manifest_merge_blame_file/debug/manifest-merger-blame-debug-report.txt",
             "app/build/intermediates/merged_java_res/debug/out.jar",
             "app/build/intermediates/res/merged/debug",
-            "app/build/intermediates/transforms/dexBuilder/debug/__content__.json",
             "app/build/outputs/apk/debug/app-debug.apk",
             "app/build/outputs/logs/manifest-merger-debug-report.txt",
 
             // Test reports contain timestamps, which make them different across builds.
             "app/build/reports/tests/testDebugUnitTest",
-            "app/build/test-results/testDebugUnitTest/"
+            "app/build/test-results/testDebugUnitTest/",
+
+            // This is @LocalState for the dexing task
+            "app/build/intermediates/dex_archive_input_jar_hashes/debug/out"
         )
     }
 

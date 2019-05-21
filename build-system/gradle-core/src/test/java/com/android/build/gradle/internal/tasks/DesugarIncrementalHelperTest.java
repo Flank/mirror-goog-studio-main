@@ -26,8 +26,15 @@ import com.android.build.gradle.internal.transforms.testdata.Tiger;
 import com.android.build.gradle.internal.transforms.testdata.Toy;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.testutils.TestInputsGenerator;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,18 +44,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-public class DesugarIncrementalTransformHelperTest {
+public class DesugarIncrementalHelperTest {
 
     public static final String PROJECT_VARIANT = "app:debug";
     @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
-    public DesugarIncrementalTransformHelperTest() {
-    }
+    public DesugarIncrementalHelperTest() {}
 
     @Before
     public void setUp() {
@@ -297,11 +299,11 @@ public class DesugarIncrementalTransformHelperTest {
     }
 
     @NonNull
-    private static DesugarIncrementalTransformHelper getDesugarIncrementalTransformHelper(
+    private static DesugarIncrementalHelper getDesugarIncrementalTransformHelper(
             boolean isIncremental,
             @NonNull Iterable<File> allInputs,
             @NonNull Set<Path> changedPaths) {
-        return new DesugarIncrementalTransformHelper(
+        return new DesugarIncrementalHelper(
                 PROJECT_VARIANT,
                 isIncremental,
                 allInputs,

@@ -23,12 +23,15 @@ import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
 import com.android.build.gradle.internal.dependency.DexingWithClasspathTransform
+import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.getOutputDir
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.TestInputsGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class DexingArtifactTransformTest {
 
@@ -120,6 +123,13 @@ class DexingArtifactTransformTest {
         )
         executor().run("assembleDebug")
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG)).hasDexVersion(35)
+
+        assertThat(
+            File(
+                InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE.getOutputDir(project.buildDir),
+                "debug/out"
+            ).listFiles()
+        ).named("dexing task output for external libs").isEmpty()
 
         project.buildFile.appendText("\nandroid.defaultConfig.minSdkVersion = 26")
         executor().run("assembleDebug")

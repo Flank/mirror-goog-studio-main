@@ -36,6 +36,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.tasks.DesugarIncrementalHelper;
 import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.utils.FileCache;
@@ -44,6 +45,7 @@ import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -57,6 +59,10 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+
+import org.gradle.api.file.FileCollection;
+import org.gradle.workers.WorkerExecutor;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,8 +80,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
-import org.gradle.workers.WorkerExecutor;
 
 /**
  * Desugar all bytecode that is using Java 8 langauge features, using the desugar tool. This
@@ -292,8 +296,8 @@ public class DesugarTransform extends Transform {
         Iterable<TransformInput> transformInputs =
                 TransformInputUtil.getInputAndReferenced(invocation);
         Iterable<File> allInputs = TransformInputUtil.getAllFiles(transformInputs);
-        DesugarIncrementalTransformHelper helper =
-                new DesugarIncrementalTransformHelper(
+        DesugarIncrementalHelper helper =
+                new DesugarIncrementalHelper(
                         projectVariant,
                         invocation.isIncremental(),
                         allInputs,

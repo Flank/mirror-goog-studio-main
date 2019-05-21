@@ -22,12 +22,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.pipeline.SubStream;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -35,6 +36,7 @@ import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.MoreTruth;
+import com.android.testutils.truth.PathSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -75,6 +77,7 @@ public class DexArchivesTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .withGradleBuildCacheDirectory(new File("local-build-cache"))
                     .create();
 
     @Test
@@ -160,7 +163,7 @@ public class DexArchivesTest {
     public void testForReleaseVariants() throws IOException, InterruptedException {
         GradleBuildResult result = runTask("assembleRelease");
 
-        assertThat(result.getTask(":transformClassesWithDexBuilderForRelease")).didWork();
+        assertThat(result.getTask(":dexBuilderRelease")).didWork();
         assertThat(result.getTask(":mergeDexRelease")).didWork();
         assertThat(result.getTask(":mergeExtDexRelease")).didWork();
     }
@@ -184,6 +187,27 @@ public class DexArchivesTest {
         project.executor().run("assembleDebug");
     }
 
+    @Test
+    public void testWithCacheDoesNotLoadLocalState() throws IOException, InterruptedException {
+        GradleTaskExecutor executor = project.executor()
+                .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
+                .withArgument("--build-cache");
+
+        executor.run("assembleDebug");
+        File inputJarHashes =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.DEX_ARCHIVE_INPUT_JAR_HASHES,
+                                project.getBuildDir()),
+                        "debug/out");
+        assertThat(inputJarHashes).exists();
+        executor.run("clean");
+        GradleBuildResult result = executor.run("assembleDebug");
+
+        assertThat(result.getTask(":dexBuilderDebug")).wasFromCache();
+        assertThat(inputJarHashes).doesNotExist();
+    }
+
     private static Stream<String> getDexClasses(Path path) {
         try {
             return new Dex(path).getClasses().keySet().stream();
@@ -196,30 +220,37 @@ public class DexArchivesTest {
             @NonNull Collection<String> folderDexEntryNames,
             @NonNull Collection<String> jarsDexClasses)
             throws Exception {
-        TransformOutputContent content = new TransformOutputContent(builderDir());
+        File projectDexOut =
+                new File(
+                        ArtifactTypeUtil.getOutputDir(
+                                InternalArtifactType.PROJECT_DEX_ARCHIVE, project.getBuildDir()),
+                        "debug/out");
 
-        ArrayList<String> producedJarsDexClasses = new ArrayList<>(4);
-        for (SubStream stream : content) {
-            switch (stream.getFormat()) {
-                case DIRECTORY:
-                    ImmutableList<String> produced =
-                            FileUtils.getAllFiles(content.getLocation(stream))
-                                    .transform(File::getName)
-                                    .toList();
-                    assertThat(produced).containsExactlyElementsIn(folderDexEntryNames);
-                    break;
-                case JAR:
-                    try (Zip zip = new Zip(content.getLocation(stream))) {
-                        producedJarsDexClasses.addAll(
-                                zip.getEntries()
-                                        .stream()
-                                        .flatMap(DexArchivesTest::getDexClasses)
-                                        .collect(Collectors.toList()));
-                    }
-                    break;
-            }
+        List<String> dexInDirs = new ArrayList<>();
+        List<String> dexInJars = new ArrayList<>();
+        try (Stream<Path> files = Files.walk(projectDexOut.toPath())) {
+            files.forEach(
+                    f -> {
+                        if (f.toString().endsWith(".dex")) {
+                            dexInDirs.add(f.getFileName().toString());
+                        } else if (f.toString().endsWith(".jar")) {
+                            try (Zip zip = new Zip(f)) {
+                                dexInJars.addAll(
+                                        zip.getEntries().stream()
+                                                .flatMap(DexArchivesTest::getDexClasses)
+                                                .collect(Collectors.toList()));
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            PathSubject.assertThat(f)
+                                    .named("dexing output that is not dex nor jar")
+                                    .isDirectory();
+                        }
+                    });
         }
-        assertThat(producedJarsDexClasses).containsExactlyElementsIn(jarsDexClasses);
+        assertThat(dexInDirs).containsExactlyElementsIn(folderDexEntryNames);
+        assertThat(dexInJars).containsExactlyElementsIn(jarsDexClasses);
     }
 
     @NonNull
@@ -256,6 +287,9 @@ public class DexArchivesTest {
 
     @NonNull
     private File builderDir() {
-        return project.getIntermediateFile("transforms", "dexBuilder", "debug");
+        return new File(
+                ArtifactTypeUtil.getOutputDir(
+                        InternalArtifactType.PROJECT_DEX_ARCHIVE, project.getBuildDir()),
+                "debug/out");
     }
 }

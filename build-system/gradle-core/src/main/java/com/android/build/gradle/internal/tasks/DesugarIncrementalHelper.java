@@ -25,11 +25,13 @@ import com.android.builder.desugaring.DesugaringData;
 import com.android.builder.desugaring.DesugaringGraph;
 import com.android.builder.desugaring.DesugaringGraphs;
 import com.android.ide.common.internal.WaitableExecutor;
+
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,16 +42,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * This helper analyzes the transform inputs, updates the {@link DesugaringGraph} it owns, and its
- * main goal is to provide paths that should also be also considered out of date, in addition to the
+ * This helper analyzes the task inputs, updates the {@link DesugaringGraph} it owns, and its
+ * main goal is to provide paths that should also be considered out of date, in addition to the
  * changed files. See {@link #getAdditionalPaths()} for details.
  */
-class DesugarIncrementalTransformHelper {
+public class DesugarIncrementalHelper {
 
     @NonNull
     private static final LoggerWrapper logger =
-            LoggerWrapper.getLogger(
-                    DesugarIncrementalTransformHelper.class);
+            LoggerWrapper.getLogger(DesugarIncrementalHelper.class);
 
     @NonNull private final String projectVariant;
     @NonNull private final Iterable<Path> allInputs;
@@ -60,7 +61,7 @@ class DesugarIncrementalTransformHelper {
     @NonNull private final Supplier<DesugaringGraph> desugaringGraph;
     private final boolean isIncremental;
 
-    DesugarIncrementalTransformHelper(
+    public DesugarIncrementalHelper(
             @NonNull String projectVariant,
             boolean isIncremental,
             @NonNull Iterable<File> allInputs,
@@ -95,7 +96,7 @@ class DesugarIncrementalTransformHelper {
      * impacted, non-changed, paths will be returned as a result.
      */
     @NonNull
-    Set<Path> getAdditionalPaths() {
+    public Set<Path> getAdditionalPaths() {
         if (!isIncremental) {
             return ImmutableSet.of();
         }

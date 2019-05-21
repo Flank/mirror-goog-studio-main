@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
-import com.android.SdkConstants
-import com.android.build.api.transform.Context
-import com.android.build.api.transform.Format
-import com.android.build.api.transform.QualifiedContent
-import com.android.build.api.transform.Status
-import com.android.build.api.transform.TransformInput
-import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeFileChange
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Dog
+import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.core.DefaultDexOptions
 import com.android.builder.dexing.DexerTool
 import com.android.builder.utils.FileCache
 import com.android.builder.utils.FileCacheTestUtils
@@ -38,13 +32,17 @@ import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestInputsGenerator.dirWithEmptyClasses
 import com.android.testutils.TestInputsGenerator.jarWithEmptyClasses
 import com.android.testutils.apk.Dex
+import com.android.testutils.truth.FileSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThat
-import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.Iterables
 import com.google.common.io.ByteStreams
-import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Action
+import org.gradle.api.file.FileType
+import org.gradle.work.ChangeType
+import org.gradle.work.FileChange
 import org.gradle.workers.WorkerConfiguration
 import org.gradle.workers.WorkerExecutionException
 import org.gradle.workers.WorkerExecutor
@@ -57,11 +55,9 @@ import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.verify
 import java.io.File
 import java.io.FileFilter
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
@@ -69,20 +65,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-/** Testing the [DexArchiveBuilderTransform].  */
+/** Testing the [DexArchiveBuilderTaskDelegate].  */
 @RunWith(Parameterized::class)
-class DexArchiveBuilderTransformTest {
-    private var cacheDir: File? = null
-    private var userCache: FileCache? = null
+class  DexArchiveBuilderDelegateTest(private var dexerTool: DexerTool) {
+
+    private lateinit var cacheDir: File
+    private lateinit var userCache: FileCache
     private var expectedCacheEntryCount: Int = 0
     private var expectedCacheMisses: Int = 0
-
-    @JvmField
-    @Parameterized.Parameter
-    var dexerTool: DexerTool? = null
-
-    private lateinit var context: Context
-    private lateinit var outputProvider: TransformOutputProvider
     private lateinit var out: Path
 
     @JvmField
@@ -96,11 +86,11 @@ class DexArchiveBuilderTransformTest {
         ) {
             val workerConfiguration = Mockito.mock(WorkerConfiguration::class.java)
             val captor = ArgumentCaptor.forClass(
-                DexArchiveBuilderTransform.DexConversionParameters::class.java
+                DexArchiveBuilderTaskDelegate.DexConversionParameters::class.java
             )
             action.execute(workerConfiguration)
             verify(workerConfiguration).setParams(captor.capture())
-            val workAction = DexArchiveBuilderTransform.DexConversionWorkAction(
+            val workAction = DexArchiveBuilderTaskDelegate.DexConversionWorkAction(
                 captor.value
             )
             workAction.run()
@@ -113,39 +103,28 @@ class DexArchiveBuilderTransformTest {
     }
 
     @Before
-    @Throws(IOException::class)
     fun setUp() {
         expectedCacheEntryCount = 0
         expectedCacheMisses = 0
         cacheDir = FileUtils.join(tmpDir.root, "cache")
-        userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir!!)
-
-        context = Mockito.mock(Context::class.java)
-        `when`(context.workerExecutor).thenReturn(workerExecutor)
+        userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir)
 
         out = tmpDir.root.toPath().resolve("out")
         Files.createDirectories(out)
-        outputProvider = TestTransformOutputProvider(out)
     }
 
     @Test
-    @Throws(Exception::class)
     fun testInitialBuild() {
-        val dirInput = getDirInput(
-            tmpDir.root.toPath().resolve("dir_input"),
-            setOf("$PACKAGE/A")
-        )
-        val jarInput = getJarInput(
-            tmpDir.root.toPath().resolve("input.jar"),
-            setOf("$PACKAGE/B")
-        )
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setTransformOutputProvider(outputProvider)
-            .setInputs(setOf(dirInput, jarInput))
-            .setIncremental(true)
-            .build()
-        getTransform(null).transform(invocation)
+        val dirInput = tmpDir.root.toPath().resolve("dir_input")
+        dirWithEmptyClasses(dirInput, ImmutableList.of("$PACKAGE/A"))
+
+        val jarInput = tmpDir.root.toPath().resolve("input.jar")
+        jarWithEmptyClasses(jarInput, ImmutableList.of("$PACKAGE/B"))
+
+        getDelegate(
+            projectClasses = setOf(dirInput.toFile(), jarInput.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
 
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1)
         val jarDexArchives = FileUtils.find(out.toFile(), Pattern.compile(".*\\.jar"))
@@ -153,187 +132,123 @@ class DexArchiveBuilderTransformTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testCacheUsedForExternalLibOnly() {
-        val cacheDir = FileUtils.join(tmpDir.root, "cache")
-        val userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir)
+        val projectJar = tmpDir.root.toPath().resolve("projectInput.jar")
+        jarWithEmptyClasses(projectJar, ImmutableList.of("$PACKAGE/A"))
 
-        val dirInput = getDirInput(
-            tmpDir.root.toPath().resolve("dir_input"),
-            setOf("$PACKAGE/A")
-        )
-        val jarInput = getJarInput(
-            tmpDir.root.toPath().resolve("input.jar"),
-            setOf("$PACKAGE/B")
-        )
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(setOf(dirInput, jarInput))
-            .setTransformOutputProvider(outputProvider)
-            .setIncremental(true)
-            .build()
-        val transform = getTransform(userCache)
-        transform.transform(invocation)
+        val jarInput = tmpDir.root.toPath().resolve("input.jar")
+        jarWithEmptyClasses(jarInput, ImmutableList.of("$PACKAGE/B"))
 
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1)
+        getDelegate(
+            withCache = true,
+            projectClasses = setOf(projectJar.toFile()),
+            externalLibClasses = setOf(jarInput.toFile())
+        ).doProcess()
+
+        assertThat(cacheEntriesCount()).isEqualTo(1)
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testCacheUsedForLocalJars() {
-        val cacheDir = FileUtils.join(tmpDir.root, "cache")
-        val cache = FileCache.getInstanceWithSingleProcessLocking(cacheDir)
-
-        val inputJar = tmpDir.root.toPath().resolve("input.jar")
-        val input = getJarInput(inputJar, setOf("$PACKAGE/A"))
-
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(input)
-            .setTransformOutputProvider(outputProvider)
-            .setIncremental(true)
-            .build()
-        val transform = getTransform(cache)
-        transform.transform(invocation)
-
-        assertThat(cacheDir.listFiles(FileFilter { it.isDirectory() })).hasLength(1)
-    }
-
-    @Test
-    @Throws(Exception::class)
     fun testEntryRemovedFromTheArchive() {
         val inputDir = tmpDir.root.toPath().resolve("dir_input")
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
 
-        val dirTransformInput = getDirInput(inputDir, setOf("$PACKAGE/A", "$PACKAGE/B"))
-        val jarTransformInput = getJarInput(inputJar, setOf("$PACKAGE/C"))
+        dirWithEmptyClasses(inputDir, ImmutableList.of("$PACKAGE/A", "$PACKAGE/B"))
+        jarWithEmptyClasses(inputJar, ImmutableList.of("$PACKAGE/C"))
 
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(dirTransformInput, jarTransformInput)
-            .setTransformOutputProvider(outputProvider)
-            .setIncremental(true)
-            .build()
-        getTransform(null).transform(invocation)
+        getDelegate(
+            projectClasses = setOf(inputDir.toFile(), inputJar.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
+
         assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile()
 
-        // remove the class file
-        val deletedDirInput = TransformTestHelper.directoryBuilder(inputDir.toFile())
-            .putChangedFiles(
-                mapOf(
-                    inputDir.resolve("$PACKAGE/B.class").toFile() to Status.REMOVED
-                )
-            )
-            .setScope(QualifiedContent.Scope.PROJECT)
-            .build()
+        val toDelete = inputDir.resolve("$PACKAGE/B.class").toFile()
+        assertThat(toDelete.delete()).isTrue()
 
-        val unchangedJarInput = TransformTestHelper.singleJarBuilder(inputJar.toFile())
-            .setStatus(Status.NOTCHANGED)
-            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .build()
-        val secondInvocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(deletedDirInput, unchangedJarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setIncremental(true)
-            .build()
-        getTransform(null).transform(secondInvocation)
+        val change = FakeFileChange(
+            toDelete, ChangeType.REMOVED, FileType.FILE, "$PACKAGE/B.class"
+        )
+        getDelegate(
+            isIncremental = true,
+            projectChanges = setOf(change),
+            projectOutput = out.toFile()
+        ).doProcess()
+
         assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull()
         assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testNonIncremental() {
-        val dirInput = getDirInput(
-            tmpDir.root.toPath().resolve("dir_input"),
-            setOf("$PACKAGE/A")
-        )
+        val inputDir = tmpDir.root.toPath().resolve("dir_input")
+        dirWithEmptyClasses(inputDir, ImmutableList.of("$PACKAGE/A"))
 
-        val jarInput = getJarInput(
-            tmpDir.root.toPath().resolve("input.jar"),
-            setOf("$PACKAGE/B")
-        )
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(dirInput, jarInput)
-            .setIncremental(true)
-            .setTransformOutputProvider(outputProvider)
-            .build()
-        getTransform(null).transform(invocation)
+        val inputJar = tmpDir.root.toPath().resolve("input.jar")
+        jarWithEmptyClasses(inputJar, ImmutableList.of("$PACKAGE/B"))
 
-        val dir2Input = getDirInput(
-            tmpDir.root.toPath().resolve("dir_2_input"),
-            setOf("$PACKAGE/C")
-        )
-        val jar2Input = getJarInput(
-            tmpDir.root.toPath().resolve("input.jar"),
-            setOf("$PACKAGE/B")
-        )
-        val invocation2 = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(dir2Input, jar2Input)
-            .setIncremental(false)
-            .setTransformOutputProvider(outputProvider)
-            .build()
-        getTransform(null).transform(invocation2)
+        getDelegate(
+            projectClasses = setOf(inputDir.toFile(), inputJar.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
+
+        val inputDir2 = tmpDir.root.toPath().resolve("dir_2_input")
+        dirWithEmptyClasses(inputDir2, ImmutableList.of("$PACKAGE/C"))
+
+        getDelegate(
+            projectClasses = setOf(inputDir2.toFile(), inputJar.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
+
         assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isNull()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testCacheKeyInputsChanges() {
-        val cacheDir = FileUtils.join(tmpDir.root, "cache")
-        val userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir)
-
         val inputJar = tmpDir.root.toPath().resolve("input.jar")
-        val jarInput = getJarInput(inputJar, setOf())
-        val invocation = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
+        jarWithEmptyClasses(inputJar, ImmutableList.of())
 
-        val transform = getTransform(userCache, 19, true)
-        transform.transform(invocation)
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            minSdkVersion = 19
+        ).doProcess()
+        assertThat(cacheEntriesCount()).isEqualTo(1)
 
-        val minChangedTransform = getTransform(userCache, 20, true)
-        minChangedTransform.transform(invocation)
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(2)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            minSdkVersion = 20
+        ).doProcess()
+        assertThat(cacheEntriesCount()).isEqualTo(2)
 
-        val debuggableChangedTransform = getTransform(userCache, 19, false)
-        debuggableChangedTransform.transform(invocation)
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(3)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            minSdkVersion = 19,
+            isDebuggable = false
+        ).doProcess()
+        assertThat(cacheEntriesCount()).isEqualTo(3)
 
-        val minAndDebuggableChangedTransform = getTransform(userCache, 20, false)
-        minAndDebuggableChangedTransform.transform(invocation)
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            minSdkVersion = 20,
+            isDebuggable = false
+        ).doProcess()
+        assertThat(cacheEntriesCount()).isEqualTo(4)
 
-        val useDifferentDexerTransform = DexArchiveBuilderTransformBuilder()
-            .setAndroidJarClasspath(FakeFileCollection())
-            .setDexOptions(DefaultDexOptions())
-            .setMessageReceiver(NoOpMessageReceiver())
-            .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-            .setUserLevelCache(userCache)
-            .setMinSdkVersion(20)
-            .setDexer(if (dexerTool == DexerTool.DX) DexerTool.D8 else DexerTool.DX)
-            .setUseGradleWorkers(true)
-            .setInBufferSize(10)
-            .setOutBufferSize(10)
-            .setIsDebuggable(false)
-            .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
-            .setProjectVariant("myVariant")
-            .setIncludeFeaturesInScope(false)
-            .createDexArchiveBuilderTransform()
-        useDifferentDexerTransform.transform(invocation)
-        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            minSdkVersion = 19,
+            dexerTool = if (dexerTool == DexerTool.D8) DexerTool.DX else DexerTool.D8
+        ).doProcess()
+        assertThat(cacheEntriesCount()).isEqualTo(5)
     }
 
     @Test
-    @Throws(Exception::class)
     fun testD8DesugaringCacheKeys() {
-
         // Only for D8, Ignore DX
         Assume.assumeTrue(dexerTool == DexerTool.D8)
 
@@ -341,70 +256,65 @@ class DexArchiveBuilderTransformTest {
         val emptyLibDir = tmpDir.root.toPath().resolve("emptylibDir")
         val emptyLibJar = tmpDir.root.toPath().resolve("emptylib.jar")
         val carbonFormLibJar = tmpDir.root.toPath().resolve("carbonFormlib.jar")
+        val carbonFormLibJar2 = tmpDir.root.toPath().resolve("carbonFormlib2.jar")
         val animalLibDir = tmpDir.root.toPath().resolve("animalLibDir")
         val animalLibJar = tmpDir.root.toPath().resolve("animalLib.jar")
         TestInputsGenerator.pathWithClasses(
             carbonFormLibJar,
-            setOf(CarbonForm::class.java)
+            ImmutableList.of<Class<*>>(CarbonForm::class.java)
+        )
+        TestInputsGenerator.pathWithClasses(
+            carbonFormLibJar2, ImmutableList.of(CarbonForm::class.java, Toy::class.java)
         )
         TestInputsGenerator.pathWithClasses(
             animalLibDir,
-            setOf(Animal::class.java)
+            ImmutableList.of<Class<*>>(Animal::class.java)
         )
         TestInputsGenerator.pathWithClasses(
             animalLibJar,
-            setOf(Animal::class.java)
+            ImmutableList.of<Class<*>>(Animal::class.java)
         )
-        TestInputsGenerator.pathWithClasses(inputJar, setOf(Dog::class.java))
-        val jarInput = getJarInput(inputJar)
-        val emptyLibDirInput = getDirInput(emptyLibDir, setOf())
-        val emptyLibJarInput = getDirInput(emptyLibJar, setOf())
-        val carbonFormLibJarInput = getJarInput(carbonFormLibJar)
-        val animalLibJarInput = getJarInput(animalLibJar)
-        val animalLibDirInput = getJarInput(animalLibDir)
+        TestInputsGenerator.pathWithClasses(inputJar, ImmutableList.of<Class<*>>(Dog::class.java))
+        TestInputsGenerator.pathWithClasses(emptyLibDir, ImmutableList.of())
+        TestInputsGenerator.pathWithClasses(emptyLibJar, ImmutableList.of())
 
-        // Initial compilation: no lib
-        val inintialInvocation = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-            .transform(inintialInvocation)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8
+        ).doProcess()
         // Cache was empty so it's a miss and result was cached.
         expectedCacheEntryCount++
         expectedCacheMisses++
         checkCache()
 
-        // With a dependency to a class file in a directory
-        val invocation01 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(animalLibDirInput)
-            .addReferenceInput(carbonFormLibJarInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation01)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(animalLibDir.toFile(), carbonFormLibJar.toFile())
+        ).doProcess()
         // The directory dependency should disable caching
         checkCache()
 
         // Rerun initial invocation with D8 desugaring
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
-            .transform(inintialInvocation)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8
+        ).doProcess()
         // Exact same run as inintialInvocation: should be a hit
         checkCache()
 
         // With the dependencies as jar and an empty directory
-        val invocation02 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(animalLibJarInput)
-            .addReferenceInput(carbonFormLibJarInput)
-            .addReferenceInput(emptyLibDirInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation02)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(
+                animalLibJar.toFile(), carbonFormLibJar.toFile(), emptyLibDir.toFile()
+            )
+        ).doProcess()
         // The dir without dependency doesn't prevent caching, presence of the dependencies
         // changes the cache key
         expectedCacheMisses++
@@ -412,50 +322,46 @@ class DexArchiveBuilderTransformTest {
         checkCache()
 
         // Same as invocation02 without the empty directory
-        val invocation03 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(animalLibJarInput)
-            .addReferenceInput(carbonFormLibJarInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation03)
+
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(animalLibJar.toFile(), carbonFormLibJar.toFile())
+        ).doProcess()
         // Removing the empty directory doesn't change the cache key
         checkCache()
 
         // Same as invocation03 with empty jar
-        val invocation04 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(animalLibJarInput)
-            .addReferenceInput(carbonFormLibJarInput)
-            .addReferenceInput(emptyLibJarInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation04)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(
+                animalLibJar.toFile(), carbonFormLibJar.toFile(), emptyLibJar.toFile()
+            )
+        ).doProcess()
         // Adding the empty jar doesn't change the cache key
         checkCache()
 
         // Same as invocation03 without Animal
-        val invocation05 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(carbonFormLibJarInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation05)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(carbonFormLibJar.toFile())
+        ).doProcess()
         // Without Animal we can not see the dependency to animalLibJarInput so it's a hit
         // on "initial invocation with D8 desugaring"
         checkCache()
 
         // Same as invocation03 without CarbonForm
-        val invocation06 = TransformTestHelper.invocationBuilder()
-            .addInput(jarInput)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .addReferenceInput(animalLibJarInput)
-            .build()
-        getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8).transform(invocation06)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(inputJar.toFile()),
+            java8Desugaring = VariantScope.Java8LangSupport.D8,
+            desugaringClasspath = setOf(animalLibJar.toFile())
+        ).doProcess()
         // Even with incomplete hierarchy we should still be able to identify the dependency to the
         // one available classpath entry.
         expectedCacheMisses++
@@ -464,111 +370,86 @@ class DexArchiveBuilderTransformTest {
     }
 
     @Test
-    @Throws(Exception::class)
     fun testIncrementalUnchangedDirInput() {
         val input = tmpDir.newFolder("classes").toPath()
-        dirWithEmptyClasses(input, setOf("test/A", "test/B"))
+        dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
 
-        val dirInput = TransformTestHelper.directoryBuilder(input.toFile())
-            .putChangedFiles(emptyMap())
-            .build()
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setInputs(setOf(dirInput))
-            .setIncremental(true)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-        getTransform(null, 21, true).transform(invocation)
-        Truth.assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty()
+        getDelegate(
+            isIncremental = true,
+            projectClasses = setOf(input.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
+
+        assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty()
     }
 
     /** Regression test for b/65241720.  */
     @Test
-    @Throws(Exception::class)
     fun testIncrementalWithSharding() {
-        val cacheDir = FileUtils.join(tmpDir.root, "cache")
-        val userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir)
         val input = tmpDir.root.toPath().resolve("classes.jar")
-        jarWithEmptyClasses(input, setOf("test/A", "test/B"))
+        jarWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"))
 
-        val jarInput = TransformTestHelper.singleJarBuilder(input.toFile())
-            .setStatus(Status.ADDED)
-            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-            .build()
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(input.toFile()),
+            externalLibsOutput = out.toFile()
+        ).doProcess()
 
-        val noCacheInvocation = TransformTestHelper.invocationBuilder()
-            .setInputs(jarInput)
-            .setIncremental(false)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-
-        val noCacheTransform = getTransform(userCache)
-        noCacheTransform.transform(noCacheInvocation)
-        assertThat(out.resolve("classes.jar.jar")).doesNotExist()
+        assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*_\\d\\.jar")).size)
+            .isAtLeast(1)
 
         // clean the output of the previous transform
         FileUtils.cleanOutputDir(out.toFile())
 
-        val fromCacheInvocation = TransformTestHelper.invocationBuilder()
-            .setInputs(jarInput)
-            .setIncremental(true)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-        val fromCacheTransform = getTransform(userCache)
-        fromCacheTransform.transform(fromCacheInvocation)
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(input.toFile()),
+            externalLibsOutput = out.toFile()
+        ).doProcess()
+
         assertThat(FileUtils.getAllFiles(out.toFile())).hasSize(1)
-        assertThat(out.resolve("classes.jar.jar")).exists()
+        assertThat(out.toFile().listFiles()!!.size).isEqualTo(1)
+        val onlyDexOutput = out.toFile().listFiles()!![0]
 
         // modify the file so it is not a build cache hit any more
         Files.deleteIfExists(input)
-        jarWithEmptyClasses(input, setOf("test/C"))
+        jarWithEmptyClasses(input, ImmutableList.of("test/C"))
 
-        val changedInput = TransformTestHelper.singleJarBuilder(input.toFile())
-            .setStatus(Status.CHANGED)
-            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-            .build()
-        val changedInputInvocation = TransformTestHelper.invocationBuilder()
-            .setInputs(changedInput)
-            .setIncremental(true)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-        val changedInputTransform = getTransform(userCache)
-        changedInputTransform.transform(changedInputInvocation)
-        assertThat(out.resolve("classes.jar.jar")).doesNotExist()
+        getDelegate(
+            withCache = true,
+            externalLibClasses = setOf(input.toFile()),
+            externalLibsOutput = out.toFile(),
+            externalLibChanges = setOf(FakeFileChange(input.toFile(), ChangeType.MODIFIED, FileType.FILE, ""))
+        ).doProcess()
+
+        assertThat(onlyDexOutput).doesNotExist()
     }
 
     /** Regression test for b/65241720.  */
     @Test
-    @Throws(Exception::class)
     fun testDirectoryRemovedInIncrementalBuild() {
         val input = tmpDir.root.toPath().resolve("classes")
         val nestedDir = input.resolve("nested_dir")
         Files.createDirectories(nestedDir)
-        val nestedDirOutput = out.resolve("classes/nested_dir")
+        val nestedDirOutput = out.resolve("nested_dir")
         Files.createDirectories(nestedDirOutput)
 
-        val dirInput = TransformTestHelper.directoryBuilder(input.toFile())
-            .putChangedFiles(mapOf(nestedDir.toFile() to Status.REMOVED))
-            .build()
+        getDelegate(
+            isIncremental = true,
+            projectClasses = setOf(input.toFile()),
+            projectOutput = out.toFile(),
+            projectChanges = setOf(FakeFileChange(
+                nestedDir.toFile(),
+                ChangeType.REMOVED,
+                FileType.DIRECTORY,
+                "nested_dir"
+            ))
+        ).doProcess()
 
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setInputs(dirInput)
-            .setIncremental(true)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-        val noCacheTransform = getTransform(null)
-        noCacheTransform.transform(invocation)
-        assertThat(nestedDirOutput).doesNotExist()
+        assertThat(nestedDirOutput.toFile()).doesNotExist()
     }
 
     @Test
-    @Throws(Exception::class)
     fun testMultiReleaseJar() {
         val input = tmpDir.root.toPath().resolve("classes.jar")
         ZipOutputStream(Files.newOutputStream(input)).use { stream ->
@@ -586,217 +467,117 @@ class DexArchiveBuilderTransformTest {
             stream.closeEntry()
         }
 
-        val dirInput = TransformTestHelper.singleJarBuilder(input.toFile()).build()
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setInputs(setOf(dirInput))
-            .setIncremental(false)
-            .setTransformOutputProvider(outputProvider)
-            .setContext(context)
-            .build()
-        getTransform(null, 21, true).transform(invocation)
+        getDelegate(
+            projectClasses = setOf(input.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
 
         // verify output contains only test/A
-        val jarWithDex = FileUtils.getAllFiles(out.toFile()).toList().single()
+        val jarWithDex = Iterables.getOnlyElement(FileUtils.getAllFiles(out.toFile()))
         ZipFile(jarWithDex).use { zipFile ->
             assertThat(zipFile.size()).isEqualTo(1)
             val inputStream = zipFile.getInputStream(zipFile.entries().nextElement())
 
             val dex = Dex(ByteStreams.toByteArray(inputStream), "unknown")
-            assertThat(dex).containsExactlyClassesIn(setOf("Ltest/A;"))
+            assertThat(dex).containsExactlyClassesIn(ImmutableList.of("Ltest/A;"))
         }
     }
 
     @Test
-    @Throws(Exception::class)
-    fun testChangingStreamName() {
-        // make output provider that outputs based on name
-        outputProvider = object : TestTransformOutputProvider(out) {
-            override fun getContentLocation(
-                name: String,
-                types: MutableSet<QualifiedContent.ContentType>,
-                scopes: MutableSet<in QualifiedContent.Scope>,
-                format: Format
-            ): File {
-                return out.resolve(name.hashCode().toLong().toString()).toFile()
-            }
-        }
-
-        val folder = tmpDir.root.toPath().resolve("dir_input")
-        dirWithEmptyClasses(
-            folder, setOf("$PACKAGE/A", "$PACKAGE/B", "$PACKAGE/C")
+    fun testJarNameDoesNotImpactOutput() {
+        val inputJar1 = tmpDir.root.toPath().resolve("input_1.jar")
+        jarWithEmptyClasses(
+            inputJar1, ImmutableList.of("$PACKAGE/A", "$PACKAGE/B", "$PACKAGE/C")
         )
-        var dirInput = TransformTestHelper.directoryBuilder(folder.toFile())
-            .setName("first-run")
-            .setScope(QualifiedContent.Scope.PROJECT)
-            .build()
-        var invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(setOf(dirInput))
-            .setTransformOutputProvider(outputProvider)
-            .build()
-        val transform = DexArchiveBuilderTransformBuilder()
-            .setAndroidJarClasspath(FakeFileCollection())
-            .setDexOptions(DefaultDexOptions())
-            .setMessageReceiver(NoOpMessageReceiver())
-            .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-            .setMinSdkVersion(21)
-            .setDexer(dexerTool!!)
-            .setIsDebuggable(true)
-            .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
-            .setProjectVariant("myVariant")
-            .createDexArchiveBuilderTransform()
-        transform.transform(invocation)
 
-        dirInput = TransformTestHelper.directoryBuilder(folder.toFile())
-            .setName("second-run")
-            .setScope(QualifiedContent.Scope.PROJECT)
-            .putChangedFiles(
-                mapOf(
-                    folder.resolve("$PACKAGE/A.class").toFile() to Status.REMOVED
-                )
-            )
-            .build()
-        invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setInputs(setOf(dirInput))
-            .setTransformOutputProvider(outputProvider)
-            .setIncremental(true)
-            .build()
-        transform.transform(invocation)
+        getDelegate(
+            projectClasses = setOf(inputJar1.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
 
-        val dexA = FileUtils.find(out.toFile(), "B.dex").get()!!
-        assertThat(dexA.toPath().resolveSibling("A.dex")).doesNotExist()
-        assertThat(dexA.toPath().resolveSibling("C.dex")).exists()
-    }
+        val outputNames = out.toFile().list()
 
-    @Test
-    @Throws(Exception::class)
-    fun testDexingArtifactTransformOnlyProjectDexed() {
-        val folder = tmpDir.root.toPath().resolve("dir_input")
-        dirWithEmptyClasses(folder, setOf("$PACKAGE/A"))
-        val projectInput = TransformTestHelper.directoryBuilder(folder.toFile())
-            .setScope(QualifiedContent.Scope.PROJECT)
-            .build()
-        val folderExternal = tmpDir.root.toPath().resolve("external")
-        dirWithEmptyClasses(folderExternal, setOf("$PACKAGE/B"))
-        val externalInput = TransformTestHelper.directoryBuilder(folderExternal.toFile())
-            .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .build()
+        val inputJar2 = inputJar1.resolveSibling("input_2.jar")
+        Files.copy(inputJar1, inputJar2)
 
-        val invocation = TransformTestHelper.invocationBuilder()
-            .setContext(context)
-            .setTransformOutputProvider(outputProvider)
-            .setInputs(setOf(projectInput, externalInput))
-            .setIncremental(false)
-            .build()
+        getDelegate(
+            projectClasses = setOf(inputJar2.toFile()),
+            projectOutput = out.toFile()
+        ).doProcess()
 
-        val transform = DexArchiveBuilderTransformBuilder()
-            .setAndroidJarClasspath(FakeFileCollection())
-            .setDexOptions(DefaultDexOptions())
-            .setMessageReceiver(NoOpMessageReceiver())
-            .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-            .setUserLevelCache(userCache)
-            .setMinSdkVersion(21)
-            .setDexer(dexerTool!!)
-            .setUseGradleWorkers(false)
-            .setInBufferSize(10)
-            .setOutBufferSize(10)
-            .setIsDebuggable(true)
-            .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
-            .setProjectVariant("myVariant")
-            .setIncludeFeaturesInScope(false)
-            .setEnableDexingArtifactTransform(true)
-            .createDexArchiveBuilderTransform()
-
-        transform.transform(invocation)
-
-        val dex = FileUtils.find(out.toFile(), "A.dex").get()!!
-        assertThat(dex.toPath().resolveSibling("A.dex")).exists()
-        assertThat(dex.toPath().resolveSibling("B.dex")).doesNotExist()
-    }
-
-    private fun getTransform(
-        userCache: FileCache?,
-        minSdkVersion: Int = 1,
-        isDebuggable: Boolean = true,
-        java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED
-    ): DexArchiveBuilderTransform {
-
-        return DexArchiveBuilderTransformBuilder()
-            .setAndroidJarClasspath(FakeFileCollection())
-            .setDexOptions(DefaultDexOptions())
-            .setMessageReceiver(NoOpMessageReceiver())
-            .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-            .setUserLevelCache(userCache)
-            .setMinSdkVersion(minSdkVersion)
-            .setDexer(dexerTool!!)
-            .setUseGradleWorkers(true)
-            .setInBufferSize(10)
-            .setOutBufferSize(10)
-            .setIsDebuggable(isDebuggable)
-            .setJava8LangSupportType(java8Support)
-            .setProjectVariant("myVariant")
-            .setIncludeFeaturesInScope(false)
-            .createDexArchiveBuilderTransform()
-    }
-
-    private fun cacheEntriesCount(cacheDir: File): Int {
-        val files = cacheDir.listFiles(FileFilter { it.isDirectory })
-        return files!!.size
-
-    }
-
-    @Throws(Exception::class)
-    private fun getDirInput(path: Path, classes: Collection<String>): TransformInput {
-        dirWithEmptyClasses(path, classes)
-        return getDirInput(path)
-    }
-
-    @Throws(IOException::class)
-    private fun getDirInput(path: Path): TransformInput {
-        return TransformTestHelper.directoryBuilder(path.toFile())
-            .setContentType(QualifiedContent.DefaultContentType.CLASSES)
-            .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .putChangedFiles(
-                path.toFile().walkTopDown()
-                    .filter { it.isFile && it.extension == SdkConstants.EXT_CLASS }.associate { it to Status.ADDED }
-            )
-            .build()
-    }
-
-    @Throws(Exception::class)
-    private fun getJarInput(path: Path, classes: Collection<String>): TransformInput {
-        jarWithEmptyClasses(path, classes)
-        return getJarInput(path)
-    }
-
-    @Throws(Exception::class)
-    private fun getJarInput(path: Path): TransformInput {
-        return TransformTestHelper.singleJarBuilder(path.toFile())
-            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-            .setStatus(Status.ADDED)
-            .build()
+        assertThat(out.toFile().list()).isEqualTo(outputNames)
     }
 
     private fun checkCache() {
-        val entriesCount = cacheEntriesCount(userCache!!.cacheDirectory)
+        val entriesCount = cacheEntriesCount()
         assertThat(entriesCount).named("Cache entry count").isEqualTo(expectedCacheEntryCount)
         // Misses occurs when filling the cache
-        assertThat(FileCacheTestUtils.getMisses(userCache!!))
+        assertThat(FileCacheTestUtils.getMisses(userCache))
             .named("Cache misses")
             .isEqualTo(expectedCacheMisses)
     }
 
-    companion object {
-
-        @JvmStatic
-        @Parameterized.Parameters
-        fun setups(): Iterable<Array<DexerTool>> {
-            return setOf(arrayOf(DexerTool.DX), arrayOf(DexerTool.D8))
-        }
-
-        private val PACKAGE = "com/example/tools"
+    private fun getDelegate(
+        isIncremental: Boolean = false,
+        withCache: Boolean = false,
+        isDebuggable: Boolean = true,
+        minSdkVersion: Int = 1,
+        dexerTool: DexerTool = this.dexerTool,
+        projectClasses: Set<File> = emptySet(),
+        projectChanges: Set<FileChange> = emptySet(),
+        externalLibClasses: Set<File> = emptySet(),
+        externalLibChanges: Set<FileChange> = emptySet(),
+        projectOutput: File = tmpDir.newFolder(),
+        externalLibsOutput: File = tmpDir.newFolder(),
+        java8Desugaring: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
+        desugaringClasspath: Set<File> = emptySet()
+    ): DexArchiveBuilderTaskDelegate {
+        return DexArchiveBuilderTaskDelegate(
+            isIncremental = isIncremental,
+            androidJarClasspath = emptySet(),
+            projectClasses = projectClasses,
+            projectChangedClasses = projectChanges,
+            subProjectClasses = emptySet(),
+            subProjectChangedClasses = emptySet(),
+            externalLibClasses = externalLibClasses,
+            externalLibChangedClasses = externalLibChanges,
+            mixedScopeClasses = emptySet(),
+            mixedScopeChangedClasses = emptySet(),
+            projectOutputDex = projectOutput,
+            subProjectOutputDex = tmpDir.newFolder(),
+            externalLibsOutputDex = externalLibsOutput,
+            mixedScopeOutputDex = tmpDir.newFolder(),
+            inputJarHashesFile = tmpDir.newFile(),
+            desugaringClasspathClasses = desugaringClasspath,
+            desugaringClasspathChangedClasses = emptySet(),
+            errorFormatMode = SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+            minSdkVersion = minSdkVersion,
+            dexer = dexerTool,
+            useGradleWorkers = false,
+            inBufferSize = 10,
+            outBufferSize = 10,
+            isDebuggable = isDebuggable,
+            java8LangSupportType = java8Desugaring,
+            projectVariant = "myVariant",
+            numberOfBuckets = 1,
+            isDxNoOptimizeFlagPresent = false,
+            messageReceiver = NoOpMessageReceiver(),
+            userLevelCache = userCache.takeIf { withCache },
+            workerExecutor = workerExecutor
+        )
     }
 
+    companion object {
+        @JvmStatic
+        @Parameterized.Parameters
+        fun setups(): Collection<Array<DexerTool>> {
+            return listOf(arrayOf(DexerTool.DX), arrayOf(DexerTool.D8))
+        }
+    }
+
+    private fun cacheEntriesCount(): Int {
+        return userCache.cacheDirectory.listFiles(FileFilter { it.isDirectory })!!.size
+    }
 }
+
+private const val PACKAGE = "com/example/tools"

@@ -89,7 +89,8 @@ class CacheabilityTest {
                     ":app:mergeDebugNativeLibs",
                     ":app:mergeDexDebug",
                     ":app:stripDebugDebugSymbols",
-                    ":app:extractDeepLinksDebug"
+                    ":app:extractDeepLinksDebug",
+                    ":app:dexBuilderDebug"
                 ),
                 /*
                  * Tasks that should be cacheable but are not yet cacheable.
@@ -98,7 +99,6 @@ class CacheabilityTest {
                  */
                 DID_WORK to setOf(
                     ":app:checkDebugManifest" /* Bug 74595857 */,
-                    ":app:transformClassesWithDexBuilderForDebug" /* Bug 74595921 */,
                     ":app:packageDebug" /* Bug 74595859 */
                 ),
                 SKIPPED to setOf(

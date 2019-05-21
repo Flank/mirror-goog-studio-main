@@ -51,11 +51,13 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.PROCE
 import static com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import android.databinding.tool.DataBindingBuilder;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -107,6 +109,7 @@ import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask;
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
 import com.android.build.gradle.internal.tasks.DexMergingAction;
 import com.android.build.gradle.internal.tasks.DexMergingTask;
@@ -153,8 +156,6 @@ import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
-import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
-import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
@@ -166,10 +167,8 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AnalyzeDependenciesTask;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
@@ -219,6 +218,7 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -229,17 +229,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -272,6 +262,18 @@ import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /** Manages tasks creation. */
 public abstract class TaskManager {
@@ -2162,39 +2164,10 @@ public abstract class TaskManager {
                         && supportsDesugaring
                         && !appliesCustomClassTransforms(variantScope, projectOptions);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
-        DexArchiveBuilderTransform preDexTransform =
-                new DexArchiveBuilderTransformBuilder()
-                        .setAndroidJarClasspath(globalScope.getFilteredBootClasspath())
-                        .setDexOptions(dexOptions)
-                        .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
-                        .setErrorFormatMode(
-                                SyncOptions.getErrorFormatMode(
-                                        variantScope.getGlobalScope().getProjectOptions()))
-                        .setUserLevelCache(userLevelCache)
-                        .setMinSdkVersion(
-                                variantScope
-                                        .getVariantConfiguration()
-                                        .getMinSdkVersionWithTargetDeviceApi()
-                                        .getFeatureLevel())
-                        .setDexer(variantScope.getDexer())
-                        .setUseGradleWorkers(
-                                projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
-                        .setInBufferSize(projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE))
-                        .setOutBufferSize(
-                                projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE))
-                        .setIsDebuggable(
-                                variantScope
-                                        .getVariantConfiguration()
-                                        .getBuildType()
-                                        .isDebuggable())
-                        .setJava8LangSupportType(java8SLangSupport)
-                        .setProjectVariant(getProjectVariantId(variantScope))
-                        .setNumberOfBuckets(
-                                projectOptions.get(IntegerOption.DEXING_NUMBER_OF_BUCKETS))
-                        .setIncludeFeaturesInScope(variantScope.consumesFeatureJars())
-                        .setEnableDexingArtifactTransform(enableDexingArtifactTransform)
-                        .createDexArchiveBuilderTransform();
-        transformManager.addTransform(taskFactory, variantScope, preDexTransform);
+
+        taskFactory.register(
+                new DexArchiveBuilderTask.CreationAction(
+                        dexOptions, enableDexingArtifactTransform, userLevelCache, variantScope));
 
         createDexMergingTasks(variantScope, dexingType, enableDexingArtifactTransform);
     }

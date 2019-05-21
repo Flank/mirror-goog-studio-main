@@ -17,14 +17,11 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
-import com.android.build.gradle.internal.pipeline.ExtendedContentType
-import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -249,11 +246,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                                 attributes
                             )
                         } else {
-                            variantScope.globalScope.project.files(
-                                variantScope.transformManager.getPipelineOutputAsFileCollection(
-                                    StreamFilter.DEX_ARCHIVE,
-                                    StreamFilter {_, scopes -> scopes == setOf(QualifiedContent.Scope.EXTERNAL_LIBRARIES) }
-                                ))
+                            variantScope.artifacts.getFinalProductAsFileCollection(InternalArtifactType.EXTERNAL_LIBS_DEX_ARCHIVE).get()
                         }
                     }
                     DexMergingAction.MERGE_LIBRARY_PROJECTS -> {
@@ -265,26 +258,16 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                                 attributes
                             )
                         } else {
-                            variantScope.globalScope.project.files(
-                                variantScope.transformManager.getPipelineOutputAsFileCollection(
-                                    StreamFilter.DEX_ARCHIVE,
-                                    StreamFilter {_, scopes ->
-                                        scopes == setOf(QualifiedContent.Scope.SUB_PROJECTS)
-                                                || scopes == setOf(
-                                            QualifiedContent.Scope.SUB_PROJECTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES
-                                        )}
-                                ))
+                            variantScope.artifacts.getFinalProductAsFileCollection(InternalArtifactType.SUB_PROJECT_DEX_ARCHIVE).get()
                         }
                     }
                     DexMergingAction.MERGE_PROJECT -> {
                         val files =
                             variantScope.globalScope.project.files(
-                                variantScope.transformManager.getPipelineOutputAsFileCollection { types, scopes ->
-                                    types.contains(ExtendedContentType.DEX_ARCHIVE) && scopes.contains(
-                                        QualifiedContent.Scope.PROJECT
-                                    )
-                                }
+                                variantScope.artifacts.getFinalProductAsFileCollection(InternalArtifactType.PROJECT_DEX_ARCHIVE),
+                                variantScope.artifacts.getFinalProductAsFileCollection(InternalArtifactType.MIXED_SCOPE_DEX_ARCHIVE)
                             )
+
                         val variantType = variantScope.type
                         if (variantType.isTestComponent && variantType.isApk) {
                             val testedVariantData =
@@ -434,7 +417,16 @@ class DexMergingTaskRunnable @Inject constructor(
         var processOutput: ProcessOutput? = null
         try {
             processOutput = outputHandler.createOutput()
-            val dexFiles = params.getAllDexFiles()
+
+
+            // Analyze top-level inputs, and find all jars in dirs. These jars will be part of the
+            // input dex files to merge.
+            val jarsInInput = params.getAllDexFiles().filter { it.isDirectory }.flatMap {
+                it.walkTopDown()
+                    .filter { it.isFile && it.extension == SdkConstants.EXT_JAR }
+                    .toSet()
+            }
+            val dexFiles = params.getAllDexFiles() + jarsInInput
             FileUtils.cleanOutputDir(params.outputDir)
 
             if (dexFiles.isEmpty()) {

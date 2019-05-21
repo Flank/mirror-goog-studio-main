@@ -24,10 +24,12 @@ import com.android.builder.core.DexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteStreams;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -66,13 +68,13 @@ class DexArchiveBuilderCacheHandler {
     }
 
     private static final LoggerWrapper logger =
-            LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
+            LoggerWrapper.getLogger(DexArchiveBuilderCacheHandler.class);
 
     // Increase this if we might have generated broken cache entries to invalidate them.
     private static final int CACHE_KEY_VERSION = 4;
 
     @Nullable private final FileCache userLevelCache;
-    @NonNull private final DexOptions dexOptions;
+    private final boolean isDxNoOptimizeFlagPresent;
     private final int minSdkVersion;
     private final boolean isDebuggable;
     @NonNull private final DexerTool dexer;
@@ -85,12 +87,12 @@ class DexArchiveBuilderCacheHandler {
 
     DexArchiveBuilderCacheHandler(
             @Nullable FileCache userLevelCache,
-            @NonNull DexOptions dexOptions,
+            boolean isDxNoOptimizeFlagPresent,
             int minSdkVersion,
             boolean isDebuggable,
             @NonNull DexerTool dexer) {
         this.userLevelCache = userLevelCache;
-        this.dexOptions = dexOptions;
+        this.isDxNoOptimizeFlagPresent = isDxNoOptimizeFlagPresent;
         this.minSdkVersion = minSdkVersion;
         this.isDebuggable = isDebuggable;
         this.dexer = dexer;
@@ -108,7 +110,7 @@ class DexArchiveBuilderCacheHandler {
         FileCache.Inputs buildCacheInputs =
                 DexArchiveBuilderCacheHandler.getBuildCacheInputs(
                         input,
-                        dexOptions,
+                        isDxNoOptimizeFlagPresent,
                         dexer,
                         minSdkVersion,
                         isDebuggable,
@@ -128,7 +130,7 @@ class DexArchiveBuilderCacheHandler {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
                                 cacheableItem.input,
-                                dexOptions,
+                                isDxNoOptimizeFlagPresent,
                                 dexer,
                                 minSdkVersion,
                                 isDebuggable,
@@ -234,7 +236,7 @@ class DexArchiveBuilderCacheHandler {
     @NonNull
     public static FileCache.Inputs getBuildCacheInputs(
             @NonNull File inputFile,
-            @NonNull DexOptions dexOptions,
+            @NonNull boolean isDxNoOptimizeFlagPresent,
             @NonNull DexerTool dexerTool,
             int minSdkVersion,
             boolean isDebuggable,
@@ -254,9 +256,7 @@ class DexArchiveBuilderCacheHandler {
                         FileCache.FileProperties.PATH_HASH)
                 .putString(FileCacheInputParams.DX_VERSION.name(), Version.VERSION)
                 .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), isJumboModeEnabledForDx())
-                .putBoolean(
-                        FileCacheInputParams.OPTIMIZE.name(),
-                        !dexOptions.getAdditionalParameters().contains("--no-optimize"))
+                .putBoolean(FileCacheInputParams.OPTIMIZE.name(), !isDxNoOptimizeFlagPresent)
                 .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
                 .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION)
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)

@@ -1,6 +1,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.utils.AssumeBuildToolsUtil.assumeBuildToolsGreaterThan;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
@@ -13,13 +14,16 @@ import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.FileUtils;
+
 import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Tests to ensure that changing the build tools version in the build.gradle will trigger
@@ -39,8 +43,8 @@ public class BuildToolsTest {
     private static final List<String> JAVAC_TASKS =
             ImmutableList.<String>builder()
                     .addAll(COMMON_TASKS)
-                    .add(":transformClassesWithDexBuilderForDebug")
-                    .add(":transformClassesWithDexBuilderForRelease")
+                    .add(":dexBuilderDebug")
+                    .add(":dexBuilderRelease")
                     .add(":mergeDexDebug")
                     .add(":mergeExtDexDebug")
                     .add(":mergeDexRelease")
