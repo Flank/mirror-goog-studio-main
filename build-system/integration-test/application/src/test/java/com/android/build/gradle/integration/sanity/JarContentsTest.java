@@ -955,6 +955,7 @@ public class JarContentsTest {
                 "com/android/tools/proguard/",
                 "com/android/utils/",
                 "com/android/utils/concurrency/",
+                "com/android/utils/reflection/",
                 "com/android/xml/",
                 "migrateToAndroidx/",
                 "migrateToAndroidx/migration.xml",

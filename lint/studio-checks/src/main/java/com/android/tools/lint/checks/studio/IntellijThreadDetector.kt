@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
+import com.android.utils.reflection.qualifiedName
 import com.intellij.openapi.util.Key
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiElement
@@ -357,7 +358,7 @@ class IntellijThreadDetector : Detector(), SourceCodeScanner {
             Scope.JAVA_FILE_SCOPE
         )
 
-        private val CHECKED = Key.create<Boolean>(IntellijThreadDetector::class.java.name + ".CHECKED")
+        private val CHECKED: Key<Boolean> = Key.create(::CHECKED.qualifiedName)
 
         /** Calling methods on the wrong thread  */
         @JvmField

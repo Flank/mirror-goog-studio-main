@@ -277,6 +277,7 @@ kotlin_library(
         ":tools.lint-api",
         "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
     ],
 )
 
