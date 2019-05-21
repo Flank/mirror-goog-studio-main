@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.api.artifact.ArtifactType;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -71,7 +72,7 @@ public final class BuildOutput implements OutputFile, Serializable {
             @NonNull Map<String, String> properties) {
         this.outputType = outputType;
         this.apkData = apkData;
-        this.path = outputPath.toString();
+        this.path = FileUtils.toSystemIndependentPath(outputPath.toString());
         this.properties = properties;
     }
 

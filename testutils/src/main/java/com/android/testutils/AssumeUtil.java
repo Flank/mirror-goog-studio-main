@@ -21,6 +21,10 @@ import org.junit.Assume;
 
 public class AssumeUtil {
 
+    public static void assumeWindows() {
+        Assume.assumeTrue(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
+    }
+
     public static void assumeNotWindows() {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
     }
