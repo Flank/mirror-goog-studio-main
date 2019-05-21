@@ -78,6 +78,7 @@ class NdkLocatorKtTest {
         assertThat(getNdkVersionInfo(versionRoot)).isNull()
     }
 
+    // TODO Reenable tests that are disabled in a follow-up CL
     fun `non-existing ndk dir without NDK version in DSL (bug 129789776)`() {
         val (_, record) =
             findNdkPathWithRecord(

@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.builder.errors.EvalIssueReporter
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
+import org.gradle.api.InvalidUserDataException
 import java.io.File
 import java.io.FileNotFoundException
 import java.lang.RuntimeException
@@ -271,11 +272,12 @@ private fun findNdkPathImpl(
                     versionedLocations
                         .sortedBy { (_, version) -> version.revision }
                         .joinToString(", ") { (_, version) -> version.revision.toString() }
-                errorln("No version of NDK matched the requested version $ndkVersionOrDefault. Versions available locally: $available")
+                // Throw InvalidUserDataException to allow Android Studio to recognize the error and
+                // provide hyperlink fix.
+                throw InvalidUserDataException("No version of NDK matched the requested version $ndkVersionOrDefault. Versions available locally: $available")
             } else {
-                errorln("No version of NDK matched the requested version $ndkVersionOrDefault")
+                throw InvalidUserDataException("No version of NDK matched the requested version $ndkVersionOrDefault")
             }
-            return highest.first.ndkRoot
         }
 
         // There could be multiple. Choose the preferred location and if there are multiple in that

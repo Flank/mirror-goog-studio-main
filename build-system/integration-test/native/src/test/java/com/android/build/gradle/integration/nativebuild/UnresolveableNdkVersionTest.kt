@@ -23,6 +23,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import com.google.common.truth.Truth.assertThat
+import org.gradle.api.InvalidUserDataException
+import org.gradle.tooling.BuildActionFailureException
 import org.junit.Ignore
 import java.io.File
 
@@ -70,8 +72,14 @@ class UnresolveableNdkVersionTest {
         // The point of this test is to ensure that a sync error from C/C++ will get
         // reported to Android Studio. Don't make any change that would trigger this in a
         // way that's different from Android Studio just to get this test to pass.
-        val androidProject = project.model().fetchAndroidProjectsAllowSyncIssues().onlyModel
-        assertThat(androidProject.syncIssues).hasSize(1)
+        try {
+            project.model().fetchAndroidProjectsAllowSyncIssues().onlyModel
+            throw RuntimeException("Expected BuildActionFailureException")
+        } catch (e1: BuildActionFailureException) {
+            val message = e1.cause!!.message
+            assertThat(message).contains("NDK")
+            assertThat(message).contains("192")
+        }
         // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }
