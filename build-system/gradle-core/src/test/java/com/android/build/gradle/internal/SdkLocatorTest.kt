@@ -89,7 +89,7 @@ class SdkLocatorTest {
     fun localPropertiesSdkDir_relative() {
         val sourceSet = getLocationSourceSet(localSdkDir = validSdkDirectory.relativeTo(projectRootDir).path)
         val sdkLocation = SdkLocator.getSdkLocation(sourceSet)
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
+        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
 
@@ -113,7 +113,7 @@ class SdkLocatorTest {
     fun localPropertiesAndroidDir_relative() {
         val sourceSet = getLocationSourceSet(localAndroidDir = validSdkDirectory.relativeTo(projectRootDir).path)
         val sdkLocation = SdkLocator.getSdkLocation(sourceSet)
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
+        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.PLATFORM)
     }
 
@@ -137,7 +137,7 @@ class SdkLocatorTest {
     fun envVariablesAndroidHome_relative() {
         val sourceSet = getLocationSourceSet(envAndroidHome = validSdkDirectory.relativeTo(projectRootDir).path)
         val sdkLocation = SdkLocator.getSdkLocation(sourceSet)
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
+        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
 
@@ -161,7 +161,7 @@ class SdkLocatorTest {
     fun envVariablesSdkRoot_relative() {
         val sourceSet = getLocationSourceSet(envSdkRoot = validSdkDirectory.relativeTo(projectRootDir).path)
         val sdkLocation = SdkLocator.getSdkLocation(sourceSet)
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
+        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
 
@@ -185,7 +185,7 @@ class SdkLocatorTest {
     fun systemPropertiesAndroidHome_relative() {
         val sourceSet = getLocationSourceSet(systemAndroidHome = validSdkDirectory.relativeTo(projectRootDir).path)
         val sdkLocation = SdkLocator.getSdkLocation(sourceSet)
-        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory)
+        assertThat(sdkLocation.directory).isEqualTo(validSdkDirectory.canonicalFile)
         assertThat(sdkLocation.type).isEquivalentAccordingToCompareTo(SdkType.REGULAR)
     }
 
