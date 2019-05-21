@@ -242,7 +242,9 @@ private fun findNdkPathImpl(
                                 "version $ndkVersionOrDefault"
                     )
                 } else {
-                    errorln(
+                    // TODO(130363042): Revert to errorln() once all Studio is using the new model
+                    //                  for sync issues.
+                    throw InvalidUserDataException(
                         "Requested NDK version $ndkVersionOrDefault did not match the version " +
                                 "${version.revision} requested by $NDK_DIR_PROPERTY at ${location.ndkRoot}"
                     )
@@ -274,8 +276,12 @@ private fun findNdkPathImpl(
                         .joinToString(", ") { (_, version) -> version.revision.toString() }
                 // Throw InvalidUserDataException to allow Android Studio to recognize the error and
                 // provide hyperlink fix.
+                // TODO(130363042): Revert to errorln() once all Studio is using the new model
+                //                  for sync issues.
                 throw InvalidUserDataException("No version of NDK matched the requested version $ndkVersionOrDefault. Versions available locally: $available")
             } else {
+                // TODO(130363042): Revert to errorln() once all Studio is using the new model
+                //                  for sync issues.
                 throw InvalidUserDataException("No version of NDK matched the requested version $ndkVersionOrDefault")
             }
         }
