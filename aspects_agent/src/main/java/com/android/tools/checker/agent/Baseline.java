@@ -23,12 +23,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,6 +50,11 @@ import java.util.logging.Logger;
 public class Baseline {
     private static final Logger LOGGER = Logger.getLogger(Baseline.class.getName());
 
+    /**
+     * Guards the {@link #activeStackTracesLog} to make sure we don't log duplicate stack traces.
+     */
+    private static final Object ACTIVE_STACK_TRACES_LOCK = new Object();
+
     private static Baseline instance;
 
     /**
@@ -59,7 +66,18 @@ public class Baseline {
     // TODO: allow whitelisting stack traces for specific rules.
     @NonNull private Set<String> whitelist = new HashSet<>();
 
-    private Baseline() {}
+    /**
+     * Keeps track of the active stack traces, i.e. the ones that are actually being called in the
+     * tests. This is helpful in case we want to remove stale stack traces from the baseline.
+     */
+    @NonNull private Set<String> activeWhitelistEntries = new HashSet<>();
+
+    private File activeStackTracesLog;
+
+    @VisibleForTesting
+    Baseline(File activeStackTracesLog) {
+        this.activeStackTracesLog = activeStackTracesLog;
+    }
 
     /** Parses the baseline content into a {@link Set<String>}. */
     public void parse(@Nullable InputStream input) {
@@ -89,7 +107,7 @@ public class Baseline {
     @VisibleForTesting
     public static Baseline getInstance(boolean createNewInstance) {
         if (instance == null || createNewInstance) {
-            instance = new Baseline();
+            instance = new Baseline(null);
         }
         return instance;
     }
@@ -103,7 +121,37 @@ public class Baseline {
      * TODO: allow whitelisting callstacks for specific annotations/rules.
      */
     public boolean isWhitelisted(@NonNull StackTraceElement[] stackTrace) {
-        return whitelist.contains(stackTraceToString(stackTrace));
+        String parsedStackTrace = stackTraceToString(stackTrace);
+        boolean isWhitelisted = whitelist.contains(parsedStackTrace);
+        if (isWhitelisted) {
+            logActiveStackTrace(parsedStackTrace);
+        }
+        return isWhitelisted;
+    }
+
+    /**
+     * Writes the stack trace to {@link #activeStackTracesLog} in case it was not written yet. This
+     * method's content is synchronized in case we try to write the same stack trace simultaneously
+     * from different threads.
+     */
+    private void logActiveStackTrace(String parsedStackTrace) {
+        synchronized (ACTIVE_STACK_TRACES_LOCK) {
+            if (activeWhitelistEntries.contains(parsedStackTrace)) {
+                return;
+            }
+            File activeStackTraceFile = getBaselineActiveStackTraceFile();
+            if (activeStackTraceFile != null) {
+                try {
+                    Files.write(
+                            activeStackTraceFile.toPath(),
+                            Collections.singleton(parsedStackTrace),
+                            StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            activeWhitelistEntries.add(parsedStackTrace);
+        }
     }
 
     public void whitelistStackTrace(StackTraceElement[] stackTrace) {
@@ -149,5 +197,22 @@ public class Baseline {
                     }
                 };
         Runtime.getRuntime().addShutdownHook(new Thread(writeBaselineToFile));
+    }
+
+    @Nullable
+    private File getBaselineActiveStackTraceFile() {
+        if (activeStackTracesLog != null) {
+            return activeStackTracesLog;
+        }
+        String logPath = System.getenv("ASPECTS_ACTIVE_BASELINE_STACKTRACES");
+        if (logPath == null) {
+            return null; // Variable not set.
+        }
+        activeStackTracesLog = new File(logPath);
+        if (!activeStackTracesLog.exists()) {
+            // The file path provided in $ASPECTS_ACTIVE_BASELINE_STACKTRACES does not exist
+            activeStackTracesLog = null;
+        }
+        return activeStackTracesLog;
     }
 }

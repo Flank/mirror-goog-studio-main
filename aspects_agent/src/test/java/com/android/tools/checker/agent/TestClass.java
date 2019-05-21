@@ -28,4 +28,7 @@ public class TestClass {
 
     @BlockingTest
     public void blockingMethod() {}
+
+    @BlockingTest
+    public void blockingMethod2() {}
 }
