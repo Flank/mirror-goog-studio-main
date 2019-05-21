@@ -42,8 +42,12 @@ public enum Density implements ResourceEnum {
     DPI_300("300dpi",  "300 DPI Density",  300, 25), //$NON-NLS-1$
     DPI_340("340dpi",  "340 DPI Density",  340, 25), //$NON-NLS-1$
     HIGH(   "hdpi",    "High Density",     240,  4), //$NON-NLS-1$
+    DPI_220("220dpi",  "220 DPI Density",  220, 29),
     TV(     "tvdpi",   "TV Density",       213, 13), //$NON-NLS-1$
+    DPI_200("200dpi",  "200 DPI Density",  200, 29),
+    DPI_180("180dpi",  "180 DPI Density",  180, 29),
     MEDIUM( "mdpi",    "Medium Density",   160,  4), //$NON-NLS-1$
+    DPI_140("140dpi",  "140 DPI Density",  140, 29),
     LOW(    "ldpi",    "Low Density",      120,  4), //$NON-NLS-1$
     ANYDPI( "anydpi",  "Any Density",   0xFFFE, 21), // 0xFFFE is the value used by the framework.
     NODPI(  "nodpi",   "No Density",    0xFFFF,  4); // 0xFFFF is the value used by the framework.
@@ -162,6 +166,10 @@ public enum Density implements ResourceEnum {
     public boolean isRecommended() {
         switch (this) {
             case TV:
+            case DPI_140:
+            case DPI_180:
+            case DPI_200:
+            case DPI_220:
             case DPI_260:
             case DPI_280:
             case DPI_300:
