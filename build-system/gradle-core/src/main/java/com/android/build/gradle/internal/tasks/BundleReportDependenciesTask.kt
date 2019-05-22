@@ -27,16 +27,13 @@ import com.android.tools.build.libraries.metadata.LibraryDependencies
 import com.android.tools.build.libraries.metadata.ModuleDependencies
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
-import java.io.File
 import java.io.FileOutputStream
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import java.io.BufferedInputStream
 import java.io.FileInputStream
 import java.util.LinkedList
@@ -56,8 +53,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         internal set
 
     @get:OutputFile
-    lateinit var dependenciesList: File
-        internal set
+    abstract val dependenciesList: RegularFileProperty
 
     public override fun doTaskAction() {
 
@@ -124,7 +120,7 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
             .addAllModuleDependencies(moduleDeps)
             .build()
 
-        appDeps.writeDelimitedTo(FileOutputStream(dependenciesList))
+        appDeps.writeDelimitedTo(FileOutputStream(dependenciesList.get().asFile))
     }
 
 
@@ -134,17 +130,15 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
         override val name: String = variantScope.getTaskName("configure", "Dependencies")
         override val type: Class<BundleReportDependenciesTask> = BundleReportDependenciesTask::class.java
 
-        private lateinit var dependenciesList : Provider<RegularFile>
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            dependenciesList = variantScope
-                .artifacts
-                .createArtifactFile(
-                    InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskName,
-                    "dependencies.pb"
-                )
+        override fun handleProvider(taskProvider: TaskProvider<out BundleReportDependenciesTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                BundleReportDependenciesTask::dependenciesList,
+                "dependencies.pb"
+            )
         }
 
         override fun configure(task: BundleReportDependenciesTask) {
@@ -156,7 +150,6 @@ abstract class BundleReportDependenciesTask : NonIncrementalTask() {
                 AndroidArtifacts.ArtifactScope.ALL,
                 AndroidArtifacts.ArtifactType.LIB_DEPENDENCIES
             )
-            task.dependenciesList = dependenciesList.get().asFile
         }
     }
 }

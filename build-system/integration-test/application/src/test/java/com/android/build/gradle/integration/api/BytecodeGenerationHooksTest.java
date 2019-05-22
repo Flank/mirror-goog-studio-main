@@ -114,8 +114,7 @@ public class BytecodeGenerationHooksTest {
         assertThat(apk).contains("META-INF/test.kotlin_module");
 
         // also verify that the app's jar used by test compilation contains the kotlin module files
-        File classesJar =
-                appProject.getIntermediateFile("app_classes/debug/bundleDebugClasses/classes.jar");
+        File classesJar = appProject.getIntermediateFile("app_classes/debug/classes.jar");
         assertThat(classesJar).isFile();
         try (Zip classesZip = new Zip(classesJar)) {
             assertThat(classesZip).contains("META-INF/app.kotlin_module");
@@ -126,7 +125,7 @@ public class BytecodeGenerationHooksTest {
                     result,
                     "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
                     true,
-                    "app/build/intermediates/app_classes/debug/bundleDebugClasses/classes.jar",
+                    "app/build/intermediates/app_classes/debug/classes.jar",
                     "library/build/intermediates/compile_library_classes/debug/classes.jar",
                     "jar/build/libs/jar.jar");
         }
@@ -188,7 +187,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:test:generateBytecodeFordebug): ",
                 true,
-                "app/build/intermediates/app_classes/debug/bundleDebugClasses/classes.jar",
+                "app/build/intermediates/app_classes/debug/classes.jar",
                 "jar/build/libs/jar.jar",
                 "library/build/intermediates/compile_library_classes/debug/classes.jar");
     }

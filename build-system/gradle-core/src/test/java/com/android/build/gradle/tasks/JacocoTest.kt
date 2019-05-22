@@ -79,7 +79,7 @@ class JacocoTest {
 
         val jacocoDelegate = JacocoTaskDelegate(
             FakeFileCollection(),
-            outputDir,
+            FakeGradleProvider(FakeGradleDirectory(outputDir)),
             outputJarDirProvider,
             createBuildArtifact(inputDir, inputJar),
             WorkerExecutorFacade.IsolationMode.CLASSLOADER

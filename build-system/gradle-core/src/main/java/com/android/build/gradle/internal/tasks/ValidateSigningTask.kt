@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.packaging.createDefaultDebugStore
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -29,9 +30,12 @@ import com.android.utils.FileUtils
 import com.google.common.base.Preconditions.checkState
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -46,18 +50,17 @@ import java.util.concurrent.ExecutionException
  * not present.
  */
 @CacheableTask
-open class ValidateSigningTask : NonIncrementalTask() {
+abstract class ValidateSigningTask : NonIncrementalTask() {
 
     /**
      * Output directory to allow this task to be up-to-date, despite the the signing config file
      * not being modelled directly as an input or an output.
      */
     @get:OutputDirectory
-    var dummyOutputDirectory: Provider<Directory>? = null
-        private set
+    abstract val dummyOutputDirectory: DirectoryProperty
 
-    private lateinit var signingConfig: SigningConfig
-    private lateinit var defaultDebugKeystoreLocation: File
+    @get:Internal internal lateinit var signingConfig: SigningConfig
+    @get:Internal internal lateinit var defaultDebugKeystoreLocation: File
 
     override fun doTaskAction() = when {
         signingConfig.storeFile == null -> throw InvalidUserDataException(
@@ -136,13 +139,14 @@ open class ValidateSigningTask : NonIncrementalTask() {
             get() = variantScope.getTaskName("validateSigning")
         override val type: Class<ValidateSigningTask>
             get() = ValidateSigningTask::class.java
-        private var outputDirectory: Provider<Directory>? = null
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputDirectory = variantScope.artifacts.createDirectory(
+        override fun handleProvider(taskProvider: TaskProvider<out ValidateSigningTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
-                taskName
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                ValidateSigningTask::dummyOutputDirectory
             )
         }
 
@@ -152,7 +156,6 @@ open class ValidateSigningTask : NonIncrementalTask() {
             task.signingConfig = variantScope.variantConfiguration.signingConfig ?: throw IllegalStateException(
                 "No signing config configured for variant " + variantScope.fullVariantName)
             task.defaultDebugKeystoreLocation = defaultDebugKeystoreLocation
-            task.dummyOutputDirectory = outputDirectory
             task.outputs.upToDateWhen { !task.forceRerun() }
         }
     }

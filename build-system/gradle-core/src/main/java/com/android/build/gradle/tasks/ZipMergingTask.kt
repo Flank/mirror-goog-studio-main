@@ -17,7 +17,6 @@
 package com.android.build.gradle.tasks
 
 import com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -28,12 +27,11 @@ import com.android.utils.FileUtils
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.io.File
 import java.util.function.Predicate
 
 /** Task to merge the res/classes intermediate jars from a library into a single one  */
@@ -44,10 +42,10 @@ abstract class ZipMergingTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val libraryInputFile: RegularFileProperty
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var javaResInputFiles: BuildableArtifact
-        internal set
+    @get:Optional
+    abstract val javaResInputFile: RegularFileProperty
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -68,7 +66,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             if (lib.exists()) {
                 it.addJar(lib.toPath())
             }
-            javaResInputFiles.files.forEach { jar -> it.addJar(jar.toPath()) }
+            if (javaResInputFile.isPresent) {
+                it.addJar(javaResInputFile.get().asFile.toPath())
+            }
         }
     }
 
@@ -96,7 +96,10 @@ abstract class ZipMergingTask : NonIncrementalTask() {
 
             val buildArtifacts = variantScope.artifacts
             buildArtifacts.setTaskInputToFinalProduct(InternalArtifactType.RUNTIME_LIBRARY_CLASSES, task.libraryInputFile)
-            task.javaResInputFiles = buildArtifacts.getOptionalFinalArtifactFiles(InternalArtifactType.LIBRARY_JAVA_RES)
+            buildArtifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.LIBRARY_JAVA_RES,
+                task.javaResInputFile
+            )
         }
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThatZip
 import org.gradle.testfixtures.ProjectBuilder
@@ -51,7 +50,7 @@ class ZipMergingTaskTest {
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
         task.libraryInputFile.set(zip1)
-        task.javaResInputFiles = BuildableArtifactImpl(project.files(zip2))
+        task.javaResInputFile.set(zip2)
         task.outputFile.set(output)
         task.doTaskAction()
 
@@ -76,7 +75,7 @@ class ZipMergingTaskTest {
         val task = project.tasks.create("test", ZipMergingTask::class.java)
 
         task.libraryInputFile.set(zip1)
-        task.javaResInputFiles= BuildableArtifactImpl(project.files(zip2))
+        task.javaResInputFile.set(zip2)
         task.outputFile.set(output)
         task.doTaskAction()
 

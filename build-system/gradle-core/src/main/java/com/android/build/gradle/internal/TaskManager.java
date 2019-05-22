@@ -2125,11 +2125,12 @@ public abstract class TaskManager {
                                     .addContentTypes(TransformManager.CONTENT_CLASS)
                                     .addScope(Scope.EXTERNAL_LIBRARIES)
                                     .setFileCollection(
-                                            variantScope
-                                                    .getArtifacts()
-                                                    .getFinalArtifactFiles(
-                                                            InternalArtifactType.FIXED_STACK_FRAMES)
-                                                    .get()
+                                            project.files(
+                                                            variantScope
+                                                                    .getArtifacts()
+                                                                    .getFinalProduct(
+                                                                            InternalArtifactType
+                                                                                    .FIXED_STACK_FRAMES))
                                                     .getAsFileTree())
                                     .build());
 
@@ -2458,16 +2459,14 @@ public abstract class TaskManager {
                 project.files(
                         variantScope
                                 .getArtifacts()
-                                .getFinalArtifactFiles(
-                                        InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES)
-                                .get(),
-                        variantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(
-                                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS)
-                                .get()
+                                .getFinalProduct(InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
+                        project.files(
+                                        variantScope
+                                                .getArtifacts()
+                                                .getFinalProduct(
+                                                        InternalArtifactType
+                                                                .JACOCO_INSTRUMENTED_JARS))
                                 .getAsFileTree());
-
         variantScope
                 .getTransformManager()
                 .addStream(

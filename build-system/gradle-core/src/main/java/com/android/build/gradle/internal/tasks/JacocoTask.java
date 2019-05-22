@@ -26,28 +26,25 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.dexing.DexerTool;
 import com.android.ide.common.workers.WorkerExecutorFacade;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import javax.inject.Inject;
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
-public class JacocoTask extends AndroidVariantTask {
+public abstract class JacocoTask extends AndroidVariantTask {
     @NonNull private final WorkerExecutorFacade workers;
     private FileCollection jacocoAntTaskConfiguration;
     private BuildableArtifact inputClasses;
-    private File output;
-    private Provider<Directory> outputJars;
     private JacocoTaskDelegate delegate;
     private WorkerExecutorFacade.IsolationMode isolationMode;
 
@@ -72,14 +69,10 @@ public class JacocoTask extends AndroidVariantTask {
     }
 
     @OutputDirectory
-    public File getOutput() {
-        return output;
-    }
+    public abstract DirectoryProperty getOutput();
 
     @OutputDirectory
-    public Provider<Directory> getOutputJars() {
-        return outputJars;
-    }
+    public abstract DirectoryProperty getOutputJars();
 
     /** Returns which Jacoco version to use. */
     @NonNull
@@ -109,9 +102,6 @@ public class JacocoTask extends AndroidVariantTask {
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoTask> {
 
-        private File output;
-        private Provider<Directory> outputJars;
-
         public CreationAction(@NonNull VariantScope scope) {
             super(scope);
         }
@@ -129,25 +119,25 @@ public class JacocoTask extends AndroidVariantTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
+        public void handleProvider(@NonNull TaskProvider<? extends JacocoTask> taskProvider) {
+            super.handleProvider(taskProvider);
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            JacocoTask::getOutput,
+                            "out");
 
-            output =
-                    getVariantScope()
-                            .getArtifacts()
-                            .appendArtifact(
-                                    InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES,
-                                    taskName,
-                                    "out");
-
-            outputJars =
-                    getVariantScope()
-                            .getArtifacts()
-                            .createDirectory(
-                                    InternalArtifactType.JACOCO_INSTRUMENTED_JARS,
-                                    BuildArtifactsHolder.OperationType.INITIAL,
-                                    taskName,
-                                    "out");
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            JacocoTask::getOutputJars,
+                            "out");
         }
 
         @Override
@@ -160,8 +150,6 @@ public class JacocoTask extends AndroidVariantTask {
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             scope.getGlobalScope().getProject(), getJacocoVersion(scope));
-            task.output = output;
-            task.outputJars = outputJars;
             task.isolationMode =
                     scope.getGlobalScope()
                                     .getProjectOptions()
@@ -171,8 +159,8 @@ public class JacocoTask extends AndroidVariantTask {
             task.delegate =
                     new JacocoTaskDelegate(
                             task.jacocoAntTaskConfiguration,
-                            task.output,
-                            task.outputJars,
+                            task.getOutput(),
+                            task.getOutputJars(),
                             task.inputClasses,
                             task.isolationMode);
         }

@@ -19,12 +19,14 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.IOException
 import java.util.concurrent.ForkJoinPool
@@ -43,14 +46,13 @@ import javax.inject.Inject
  * is not especially user friendly. Moreover, we would like to fail fast.
  */
 @CacheableTask
-open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private lateinit var classesArtifacts: ArtifactCollection
 
     @get:OutputDirectory
-    var dummyOutputDirectory: Provider<Directory>? = null
-        private set
+    abstract val dummyOutputDirectory: DirectoryProperty
 
     @Classpath
     fun getClassesFiles(): FileCollection = classesArtifacts.artifactFiles
@@ -64,17 +66,19 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
     class CreationAction(scope: VariantScope)
         : VariantTaskCreationAction<CheckDuplicateClassesTask>(scope) {
 
-        private lateinit var output: Provider<Directory>
-
         override val type = CheckDuplicateClassesTask::class.java
 
         override val name = variantScope.getTaskName("check", "DuplicateClasses")
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out CheckDuplicateClassesTask>) {
+            super.handleProvider(taskProvider)
 
-            output = variantScope.artifacts.createDirectory(
-                InternalArtifactType.DUPLICATE_CLASSES_CHECK, taskName)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.DUPLICATE_CLASSES_CHECK,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                CheckDuplicateClassesTask::dummyOutputDirectory
+            )
         }
 
         override fun configure(task: CheckDuplicateClassesTask) {
@@ -82,8 +86,6 @@ open class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerE
 
             task.classesArtifacts =
                     variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
-
-            task.dummyOutputDirectory = output
         }
     }
 }

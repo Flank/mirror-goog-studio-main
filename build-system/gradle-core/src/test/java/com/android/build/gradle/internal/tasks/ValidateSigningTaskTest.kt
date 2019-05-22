@@ -16,36 +16,21 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.SigningConfig
 import com.android.build.gradle.internal.dsl.SigningConfigFactory
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.MutableTaskContainer
-import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.factory.registerTask
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.capitalize
 import com.google.common.hash.Hashing
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.AfterClass
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.ClassRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.anyString
-import org.mockito.junit.MockitoJUnit
 import java.io.File
 import java.nio.file.Files
 
@@ -75,57 +60,20 @@ class ValidateSigningTaskTest {
         }
     }
 
-    @Rule
-    @JvmField
-    var mockitoJUnit = MockitoJUnit.rule()!!
-
-    @Mock
-    lateinit var variantScope: VariantScope
-    @Mock
-    lateinit var variantConfiguration : GradleVariantConfiguration
-    @Mock
-    lateinit var artifacts : BuildArtifactsHolder
-    @Mock
-    lateinit var outputDirectoryProvider : Provider<Directory>
-    @Mock
-    lateinit var outputDirectoryMock : Directory
     lateinit var outputDirectory : File
-
     private lateinit var defaultDebugKeystore: File
 
     @Before
     fun createDebugKeystoreFile() {
         defaultDebugKeystore = File(temporaryFolder.newFolder(), "debug.keystore")
-
-    }
-
-    fun initPackagingScope(variantName: String) {
         outputDirectory = temporaryFolder.newFolder()
-        `when`(variantScope.artifacts).thenReturn(artifacts)
-        `when`(artifacts
-            .createDirectory(
-                InternalArtifactType.VALIDATE_SIGNING_CONFIG,
-                "validateSigning" + variantName.capitalize()))
-            .thenReturn(outputDirectoryProvider)
-
-        `when`(outputDirectoryProvider.get()).thenReturn(outputDirectoryMock)
-        `when`(outputDirectoryMock.asFile).thenReturn(outputDirectory)
-        `when`(variantScope.variantConfiguration).thenReturn(variantConfiguration)
-        `when`(variantScope.fullVariantName).thenReturn(variantName)
-        `when`(variantScope.getTaskName("validateSigning"))
-            .thenReturn("validateSigning" + variantName.capitalize())
-        `when`(variantScope.taskContainer).thenReturn(MutableTaskContainer())
-
-        variantScope.taskContainer.preBuildTask = project!!.tasks.named(PRE_BUILD_TASKNAME)
     }
 
     @Test
     fun testErrorIfNoKeystoreFileSet() {
-        initPackagingScope(variantName = "blueRelease")
-        `when`(variantConfiguration.signingConfig).thenReturn(SigningConfig("release"))
-        val configAction =
-                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks.registerTask(configAction, null, null, null).get()
+        val task= project!!.tasks.create("validateSigning", ValidateSigningTask::class.java)
+        task.dummyOutputDirectory.set(outputDirectory)
+        task.signingConfig= SigningConfig("release")
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
         try {
@@ -139,7 +87,6 @@ class ValidateSigningTaskTest {
 
     @Test
     fun testErrorIfCustomKeystoreFileDoesNotExist() {
-        initPackagingScope(variantName = "greenRelease")
         val dslSigningConfig = SigningConfigFactory(project!!.objects,
                 temporaryFolder.newFile()).create("release")
         dslSigningConfig.storeFile = File(temporaryFolder.newFolder(), "does_not_exist")
@@ -147,10 +94,12 @@ class ValidateSigningTaskTest {
         dslSigningConfig.keyAlias = "key alias"
         dslSigningConfig.keyPassword = "key password"
         assertThat(dslSigningConfig.isSigningReady).named("signing is ready").isTrue()
-        `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
-        val configAction =
-                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks.registerTask(configAction, null, null, null).get()
+
+        val task = project!!.tasks.create("validateGreenSigning", ValidateSigningTask::class.java)
+        task.signingConfig = dslSigningConfig
+        task.dummyOutputDirectory.set(outputDirectory)
+
+
         assertThat(task.forceRerun()).named("forceRerun").isTrue()
         // If no config file set, throws InvalidUserDataException
         try {
@@ -160,18 +109,16 @@ class ValidateSigningTaskTest {
             assertThat(e.message)
                     .matches("^Keystore file .* not found for signing config 'release'.$")
         }
-
     }
 
     @Test
     fun testDefaultDebugKeystoreIsCreatedAutomatically() {
-        initPackagingScope(variantName = "redDebug")
         val dslSigningConfig =
                 SigningConfigFactory(project!!.objects, defaultDebugKeystore).create("debug")
-        `when`(variantConfiguration.signingConfig).thenReturn(dslSigningConfig)
-        val configAction =
-                ValidateSigningTask.CreationAction(variantScope, defaultDebugKeystore)
-        val task = project!!.tasks.registerTask(configAction, null, null, null).get()
+        val task = project!!.tasks.create("validateRedSigning", ValidateSigningTask::class.java)
+        task.signingConfig = dslSigningConfig
+        task.dummyOutputDirectory.set(outputDirectory)
+        task.defaultDebugKeystoreLocation = defaultDebugKeystore
 
         // Sanity check
         assertThat(defaultDebugKeystore).doesNotExist()

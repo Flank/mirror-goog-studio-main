@@ -142,8 +142,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
     @get:Optional
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var duplicateClassesCheck: BuildableArtifact? = null
-        private set
+    abstract val duplicateClassesCheck: DirectoryProperty
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -219,8 +218,9 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
             task.minSdkVersion = variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
             task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
             if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
-                task.duplicateClassesCheck = variantScope.artifacts.getFinalArtifactFiles(
-                    InternalArtifactType.DUPLICATE_CLASSES_CHECK
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.DUPLICATE_CLASSES_CHECK,
+                    task.duplicateClassesCheck
                 )
             }
             if (separateFileDependenciesDexingTask) {

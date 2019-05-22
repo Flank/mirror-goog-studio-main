@@ -89,8 +89,6 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(artifacts.appendArtifact(InternalArtifactType.APP_CLASSES,
-            task.name, "classes.jar")).thenReturn(testFolder.newFile("classes.jar"))
         Mockito.`when`(artifacts.getFinalProduct<RegularFile>(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(rClasses)
 
@@ -98,6 +96,7 @@ class BundleAllClassesTest {
         configAction.preConfigure(task.name)
         configAction.configure(task)
         task.javacClasses.set(testFolder.newFolder())
+        task.outputJar.set(testFolder.newFile("classes.jar"))
     }
 
     @After
@@ -108,6 +107,6 @@ class BundleAllClassesTest {
     @Test
     fun testBasic() {
         task.doTaskAction()
-        FileSubject.assertThat(task.outputJar).exists()
+        FileSubject.assertThat(task.outputJar.get().asFile).exists()
     }
 }

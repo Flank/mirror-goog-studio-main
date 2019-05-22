@@ -60,9 +60,6 @@ class ProcessLibraryManifestTest {
     @Mock lateinit var outputScope: OutputScope
     @Mock lateinit var variantConfiguration : GradleVariantConfiguration
     @Mock lateinit var buildArtifactsHolder : BuildArtifactsHolder
-    @Mock lateinit var mergedManifestsProvider : Provider<Directory>
-    @Mock lateinit var mergedManifests : Directory
-    @Mock lateinit var androidManifest: RegularFile
     @Mock lateinit var variantData : BaseVariantData
     @Mock lateinit var mainSplit: ApkData
     @Mock lateinit var mergedFlavor: ProductFlavor
@@ -103,15 +100,6 @@ class ProcessLibraryManifestTest {
         )
 
         variantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
-
-        `when`(buildArtifactsHolder.createDirectory(
-            InternalArtifactType.MERGED_MANIFESTS,
-            "processManifest",
-            "")).thenReturn(mergedManifestsProvider)
-
-        `when`(mergedManifestsProvider.get()).thenReturn(mergedManifests)
-        `when`(mergedManifests.file(SdkConstants.FN_ANDROID_MANIFEST_XML))
-            .thenReturn(androidManifest)
 
         configAction.preConfigure(taskProvider.name)
         task = taskProvider.get()

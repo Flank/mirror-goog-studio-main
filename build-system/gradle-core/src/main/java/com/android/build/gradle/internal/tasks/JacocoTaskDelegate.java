@@ -70,14 +70,14 @@ public class JacocoTaskDelegate {
             Pattern.compile("^META-INF/.*\\.kotlin_module$");
 
     @NonNull private final FileCollection jacocoAntTaskConfiguration;
-    @NonNull private final File output;
+    @NonNull private final Provider<Directory> output;
     @NonNull private final BuildableArtifact inputClasses;
     @NonNull private final WorkerExecutorFacade.IsolationMode isolationMode;
     @NonNull private final Provider<Directory> outputJars;
 
     public JacocoTaskDelegate(
             @NonNull FileCollection jacocoAntTaskConfiguration,
-            @NonNull File output,
+            @NonNull Provider<Directory> output,
             @NonNull Provider<Directory> outputJars,
             @NonNull BuildableArtifact inputClasses,
             @NonNull WorkerExecutorFacade.IsolationMode isolationMode) {
@@ -108,14 +108,15 @@ public class JacocoTaskDelegate {
             processIncrementally(executor, inputs);
         } else {
             File outputJarsFolder = outputJars.get().getAsFile();
-            FileUtils.cleanOutputDir(output);
+            FileUtils.cleanOutputDir(output.get().getAsFile());
             FileUtils.cleanOutputDir(outputJarsFolder);
             for (File file : inputClasses.getFiles()) {
                 if (file.isDirectory()) {
                     Map<Action, List<File>> nonIncToProcess =
                             getFilesForInstrumentationNonIncrementally(file);
                     WorkerItemParameter parameter =
-                            new WorkerItemParameter(nonIncToProcess, file, output);
+                            new WorkerItemParameter(
+                                    nonIncToProcess, file, output.get().getAsFile());
 
                     executor.submit(
                             JacocoWorkerAction.class,
@@ -201,7 +202,8 @@ public class JacocoTaskDelegate {
                     continue;
                 }
 
-                Path outputPath = getOutputPath(basePath, toRemove, output.toPath());
+                Path outputPath =
+                        getOutputPath(basePath, toRemove, output.get().getAsFile().toPath());
                 PathUtils.deleteRecursivelyIfExists(outputPath);
             }
         }
@@ -229,7 +231,8 @@ public class JacocoTaskDelegate {
             executor.submit(
                     JacocoWorkerAction.class,
                     new WorkerExecutorFacade.Configuration(
-                            new WorkerItemParameter(toProcess, basePath.toFile(), output),
+                            new WorkerItemParameter(
+                                    toProcess, basePath.toFile(), output.get().getAsFile()),
                             isolationMode,
                             jacocoAntTaskConfiguration.getFiles()));
         }

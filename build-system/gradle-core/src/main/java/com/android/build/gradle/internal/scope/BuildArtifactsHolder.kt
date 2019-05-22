@@ -698,26 +698,6 @@ abstract class BuildArtifactsHolder(
     }
 
     /**
-     * Append a new file or folder to a specified artifact type. The new content will be added
-     * after any existing content.
-     *
-     * @param artifactType [ArtifactType] the new file or folder will be classified under.
-     * @param task [Task] producing the file or folder.
-     * @param fileName expected file name for the file (location is determined by the build)
-     * @return [File] handle to use to create the file or folder (potentially with subfolders
-     * or multiple files)
-     */
-    @Deprecated("Use createBuildableArtifact/createDirectory/createArtifactFile APIs")
-    fun appendArtifact(
-        artifactType: ArtifactType,
-        taskName: String,
-        fileName: String = "out") : File {
-        val output = createFile(taskName, artifactType, fileName)
-        appendArtifact(artifactType, listOf(output), taskName)
-        return output
-    }
-
-    /**
      * Create a [Provider] of [RegularFile] that can be used as a task output.
      *
      * @param artifactType the intended artifact type stored in the directory.

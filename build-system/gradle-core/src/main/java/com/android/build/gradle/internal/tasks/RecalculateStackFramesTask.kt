@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.AnchorOutputType
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -26,21 +27,22 @@ import com.android.builder.utils.FileCache
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
 
-open class RecalculateStackFramesTask @Inject
+abstract class RecalculateStackFramesTask @Inject
 constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     @get:OutputDirectory
-    var outFolder: Provider<Directory>? = null
-        private set
+    abstract val outFolder: DirectoryProperty
 
     @get:InputFiles
     lateinit var bootClasspath: FileCollection
@@ -81,14 +83,14 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         override val name = variantScope.getTaskName("fixStackFrames")
         override val type = RecalculateStackFramesTask::class.java
 
-        private lateinit var outFolder: Provider<Directory>
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outFolder = variantScope
-                .artifacts
-                .createDirectory(InternalArtifactType.FIXED_STACK_FRAMES, taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out RecalculateStackFramesTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.FIXED_STACK_FRAMES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                RecalculateStackFramesTask::outFolder
+            )
         }
 
         override fun configure(task: RecalculateStackFramesTask) {
@@ -122,10 +124,11 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
             if (isTestCoverageEnabled) {
                 referencedClasses.from(
-                    variantScope.artifacts.getFinalArtifactFiles(
+                    variantScope.artifacts.getFinalProduct<Directory>(
                         InternalArtifactType.JACOCO_INSTRUMENTED_CLASSES),
-                    variantScope.artifacts.getFinalArtifactFiles(
-                        InternalArtifactType.JACOCO_INSTRUMENTED_JARS).get().asFileTree)
+                    variantScope.globalScope.project.files(
+                        variantScope.artifacts.getFinalProduct<Directory>(
+                            InternalArtifactType.JACOCO_INSTRUMENTED_JARS)).asFileTree)
             } else {
                 referencedClasses.from(
                     variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES))
@@ -147,8 +150,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
             task.classesToFix = classesToFix
 
             task.referencedClasses = referencedClasses
-
-            task.outFolder = outFolder
 
             task.userCache = userCache
         }

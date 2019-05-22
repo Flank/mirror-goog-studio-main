@@ -34,8 +34,10 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
@@ -62,7 +64,8 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
     lateinit var aapt2FromMaven: FileCollection
         private set
 
-    private lateinit var outputFile: Provider<RegularFile>
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
 
     @get:OutputDirectory
     val outputDirectory: File
@@ -176,17 +179,15 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
         override val type: Class<BundleToStandaloneApkTask>
             get() = BundleToStandaloneApkTask::class.java
 
-        private lateinit var outputFile: Provider<RegularFile>
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
+        override fun handleProvider(taskProvider: TaskProvider<out BundleToStandaloneApkTask>) {
+            super.handleProvider(taskProvider)
             // Mirrors logic in OutputFactory.getOutputFileName, but without splits.
             val suffix = if (variantScope.variantConfiguration.isSigningReady) SdkConstants.DOT_ANDROID_PACKAGE else "-unsigned.apk"
-            outputFile = variantScope.artifacts.createArtifactFile(
+            variantScope.artifacts.producesFile(
                 InternalArtifactType.UNIVERSAL_APK,
                 BuildArtifactsHolder.OperationType.INITIAL,
-                taskName,
+                taskProvider,
+                BundleToStandaloneApkTask::outputFile,
                 "${variantScope.globalScope.projectBaseName}-${variantScope.variantConfiguration.baseName}-universal$suffix"
             )
         }
@@ -194,7 +195,6 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
         override fun configure(task: BundleToStandaloneApkTask) {
             super.configure(task)
 
-            task.outputFile = outputFile
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.INTERMEDIARY_BUNDLE, task.bundle)
             task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)

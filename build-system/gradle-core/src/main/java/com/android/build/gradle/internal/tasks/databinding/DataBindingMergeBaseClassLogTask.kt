@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedCon
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
@@ -28,21 +29,22 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
 
-open class DataBindingMergeBaseClassLogTask @Inject
-constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): IncrementalTask() {
+abstract class DataBindingMergeBaseClassLogTask @Inject
+constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
 
     @get:OutputDirectory
-    var outFolder: Provider<Directory> = objectFactory.directoryProperty()
-        private set
+    abstract val outFolder: DirectoryProperty
 
     @get:InputFiles
     lateinit var moduleClassLog: FileCollection
@@ -73,21 +75,18 @@ constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory): Incre
         override val name = variantScope.getTaskName("dataBindingMergeGenClasses")
         override val type = DataBindingMergeBaseClassLogTask::class.java
 
-        private lateinit var outFolder: Provider<Directory>
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outFolder = variantScope
-                .artifacts
-                .createDirectory(
-                    InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
-                    taskName)
+        override fun handleProvider(taskProvider: TaskProvider<out DataBindingMergeBaseClassLogTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                DataBindingMergeBaseClassLogTask::outFolder
+            )
         }
 
         override fun configure(task: DataBindingMergeBaseClassLogTask) {
             super.configure(task)
-
-            task.outFolder = outFolder
 
             // data binding related artifacts for external libs
             task.moduleClassLog = variantScope.getArtifactFileCollection(

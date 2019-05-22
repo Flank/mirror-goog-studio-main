@@ -21,25 +21,25 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.ReproducibleFileVisitor
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
@@ -57,8 +57,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
-    lateinit var outputJar: File
-        private set
+    abstract val outputJar: RegularFileProperty
 
     @get:InputFiles
     abstract val javacClasses: DirectoryProperty
@@ -104,7 +103,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
 
         workers.use {
             it.submit(
-                JarWorkerRunnable::class.java, JarRequest(toFile = outputJar,
+                JarWorkerRunnable::class.java, JarRequest(toFile = outputJar.get().asFile,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
                     fromFiles = files)
             )
@@ -119,18 +118,19 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
         override val type: Class<BundleAllClasses>
             get() = BundleAllClasses::class.java
 
-        private lateinit var outputJar: File
-
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-
-            outputJar = variantScope.artifacts.appendArtifact(
-                InternalArtifactType.APP_CLASSES, taskName, "classes.jar")
+        override fun handleProvider(taskProvider: TaskProvider<out BundleAllClasses>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.APP_CLASSES,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                BundleAllClasses::outputJar,
+                "classes.jar"
+            )
         }
 
         override fun configure(task: BundleAllClasses) {
             super.configure(task)
-            task.outputJar = outputJar
             variantScope.artifacts.setTaskInputToFinalProduct(InternalArtifactType.JAVAC, task.javacClasses)
             task.preJavacClasses = variantScope.variantData.allPreJavacGeneratedBytecode
             task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode

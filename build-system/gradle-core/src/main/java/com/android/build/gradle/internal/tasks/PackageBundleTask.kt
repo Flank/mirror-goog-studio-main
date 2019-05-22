@@ -67,10 +67,9 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
     lateinit var featureZips: FileCollection
         private set
 
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var bundleDeps: BuildableArtifact
-        private set
+    abstract val bundleDeps: RegularFileProperty
 
     @get:InputFile
     @get:Optional
@@ -116,7 +115,7 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
                     bundleFile = bundleFile.get().asFile,
-                    bundleDeps = bundleDeps.singleFile()
+                    bundleDeps = bundleDeps.get().asFile
                 )
             )
         }
@@ -249,7 +248,10 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
                 AndroidArtifacts.ArtifactType.MODULE_BUNDLE
             )
 
-            task.bundleDeps = variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.BUNDLE_DEPENDENCY_REPORT)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
+                task.bundleDeps
+            )
 
             task.aaptOptionsNoCompress =
                     variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()

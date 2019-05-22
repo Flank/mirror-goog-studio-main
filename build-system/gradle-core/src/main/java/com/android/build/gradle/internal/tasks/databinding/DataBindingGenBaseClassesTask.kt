@@ -21,10 +21,8 @@ import android.databinding.tool.DataBindingBuilder
 import android.databinding.tool.processing.ScopedException
 import android.databinding.tool.store.LayoutInfoInput
 import android.databinding.tool.util.L
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
@@ -76,8 +74,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
     // list of artifacts from dependencies
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var mergedArtifactsFromDependencies: BuildableArtifact
-        private set
+    abstract val mergedArtifactsFromDependencies: DirectoryProperty
     // list of v1 artifacts from dependencies
     @get:Optional
     @get:InputFiles
@@ -148,7 +145,7 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
                 outOfDate = outOfDate,
                 removed = removed,
                 infoFolder = layoutInfoDir,
-                dependencyClassesFolder = mergedArtifactsFromDependencies.single(),
+                dependencyClassesFolder = mergedArtifactsFromDependencies.get().asFile,
                 logFolder = logOutFolder,
                 incremental = inputs.isIncremental,
                 packageName = packageName,
@@ -190,8 +187,10 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
             task.packageNameSupplier = variantData.variantConfiguration::getOriginalApplicationId
-            task.mergedArtifactsFromDependencies = artifacts.getFinalArtifactFiles(
-                    DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS)
+            artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.DATA_BINDING_BASE_CLASS_LOGS_DEPENDENCY_ARTIFACTS,
+                task.mergedArtifactsFromDependencies
+            )
             artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS, task.v1Artifacts)
             task.logOutFolder = variantScope.getIncrementalDir(task.name)

@@ -73,7 +73,7 @@ class BundleReportDependenciesTaskTest {
         val testDir = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
         task = project.tasks.create("test", BundleReportDependenciesTask::class.java)
-        task.dependenciesList = dependenciesFile
+        task.dependenciesList.set(dependenciesFile)
     }
 
     @Test
@@ -190,7 +190,7 @@ class BundleReportDependenciesTaskTest {
         task.featureDeps = featureDeps
 
         task.doTaskAction()
-        val allDeps = AppDependencies.parseDelimitedFrom(FileInputStream(task.dependenciesList))
+        val allDeps = AppDependencies.parseDelimitedFrom(FileInputStream(task.dependenciesList.get().asFile))
         assertThat(allDeps).isEqualTo(expected)
     }
 }

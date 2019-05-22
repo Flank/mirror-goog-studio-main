@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
@@ -35,7 +36,7 @@ import org.gradle.api.tasks.PathSensitivity
  * Task that writes the SigningConfig information and publish it for dynamic-feature modules.
  */
 @CacheableTask
-open class SigningConfigWriterTask : NonIncrementalTask() {
+abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:OutputDirectory
     var outputDirectory: Provider<Directory>? = null
@@ -43,8 +44,7 @@ open class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
-    lateinit var validatedSigningOutput: BuildableArtifact
-        internal set
+    abstract val validatedSigningOutput: DirectoryProperty
 
     @get:Nested
     @get:Optional
@@ -79,8 +79,10 @@ open class SigningConfigWriterTask : NonIncrementalTask() {
             super.configure(task)
 
             task.outputDirectory = outputDirectory
-            task.validatedSigningOutput = variantScope.artifacts
-                .getFinalArtifactFiles(InternalArtifactType.VALIDATE_SIGNING_CONFIG)
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                InternalArtifactType.VALIDATE_SIGNING_CONFIG,
+                task.validatedSigningOutput
+            )
 
             // convert to a serializable signing config. Objects from DSL are not serializable.
             task.signingConfig = variantScope.variantConfiguration.signingConfig?.let {

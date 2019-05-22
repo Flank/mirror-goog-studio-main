@@ -27,12 +27,14 @@ import com.android.builder.packaging.JarMerger
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
@@ -41,14 +43,13 @@ import java.util.function.Predicate
 import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
-open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecutor) :
+abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecutor) :
     NonIncrementalTask() {
 
     private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
-    var output: Provider<RegularFile>? = null
-        private set
+    abstract val output: RegularFileProperty
 
     @get:InputFiles
     @get:Optional
@@ -89,27 +90,24 @@ open class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecut
             null
         }
 
-        private lateinit var output: Provider<RegularFile>
-
         override val name: String = scope.getTaskName("bundleLibRes")
 
         override val type: Class<BundleLibraryJavaRes> = BundleLibraryJavaRes::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            output =
-                    variantScope.artifacts.createArtifactFile(
-                        InternalArtifactType.LIBRARY_JAVA_RES,
-                        BuildArtifactsHolder.OperationType.APPEND,
-                        taskName,
-                        FN_INTERMEDIATE_RES_JAR
-                    )
+        override fun handleProvider(taskProvider: TaskProvider<out BundleLibraryJavaRes>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.LIBRARY_JAVA_RES,
+                BuildArtifactsHolder.OperationType.APPEND,
+                taskProvider,
+                BundleLibraryJavaRes::output,
+                FN_INTERMEDIATE_RES_JAR
+            )
         }
 
         override fun configure(task: BundleLibraryJavaRes) {
             super.configure(task)
 
-            task.output = output
             // we should have two tasks with each input and ensure that only one runs for any build.
             if (projectJavaResFromStreams != null) {
                 task.resourcesAsJars = projectJavaResFromStreams
