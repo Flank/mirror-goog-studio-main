@@ -61,14 +61,6 @@ service CpuService {
       returns (CpuProfilingAppStopResponse) {
   }
 
-  // Checks whether an app is being profiled using StartProfilingApp and
-  // StopProfilingApp calls in this service at a given moment, assuming no
-  // other means have been used to start or stop profiling the app (such
-  // as 'am' command line tool or through DDMS).
-  rpc CheckAppProfilingState(ProfilingStateRequest)
-      returns (ProfilingStateResponse) {
-  }
-
   rpc StartStartupProfiling(StartupProfilingRequest)
       returns (StartupProfilingResponse) {
   }
@@ -214,22 +206,6 @@ message CpuProfilingAppStopResponse {
   string error_message = 2;
   // Trace ID should be unique within an app.
   int64 trace_id = 3;
-}
-
-message ProfilingStateRequest {
-  Session session = 1;
-}
-
-message ProfilingStateResponse {
-  // True means the app in the request is being profiled by an earlier
-  // StartProfilingApp call that's successful, and a subsequent StopProfilingApp
-  // call hasn't happened.
-  bool being_profiled = 1;
-  CpuTraceConfiguration configuration = 2;
-  // The timestamp when the profiling started if the app is being profiled.
-  int64 start_timestamp = 3;
-  // The timestamp when the profiling state was checked.
-  int64 check_timestamp = 4;
 }
 
 message CpuCoreConfigRequest {

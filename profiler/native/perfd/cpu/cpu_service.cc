@@ -51,8 +51,6 @@ using profiler::proto::GetThreadsRequest;
 using profiler::proto::GetThreadsResponse;
 using profiler::proto::GetTraceInfoRequest;
 using profiler::proto::GetTraceInfoResponse;
-using profiler::proto::ProfilingStateRequest;
-using profiler::proto::ProfilingStateResponse;
 using std::map;
 using std::string;
 using std::vector;
@@ -130,9 +128,7 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
       app_name, request->from_timestamp(), request->to_timestamp());
   for (const auto& datum : data) {
     CpuTraceInfo* info = response->add_trace_info();
-    info->set_trace_type(datum.configuration.user_options().trace_type());
-    info->set_trace_mode(datum.configuration.user_options().trace_mode());
-    info->set_initiation_type(datum.configuration.initiation_type());
+    info->mutable_configuration()->CopyFrom(datum.configuration);
     info->set_from_timestamp(datum.start_timestamp);
     info->set_to_timestamp(datum.end_timestamp);
     info->set_trace_id(datum.trace_id);
@@ -232,28 +228,6 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
     // No more use of this file. Delete it.
     remove(capture->configuration.temp_path().c_str());
   }
-}
-
-grpc::Status CpuServiceImpl::CheckAppProfilingState(
-    ServerContext* context, const ProfilingStateRequest* request,
-    ProfilingStateResponse* response) {
-  string app_name = ProcessManager::GetCmdlineForPid(request->session().pid());
-  ProfilingApp* app = trace_manager_->GetOngoingCapture(app_name);
-
-  // Whether the app is being profiled (there is a stored start profiling
-  // request corresponding to the app)
-  response->set_check_timestamp(clock_->GetCurrentTime());
-  bool is_being_profiled = app != nullptr;
-  response->set_being_profiled(is_being_profiled);
-
-  if (is_being_profiled) {
-    // App is being profiled. Include the start profiling request and its
-    // timestamp in the response.
-    response->set_start_timestamp(app->start_timestamp);
-    *(response->mutable_configuration()) = app->configuration;
-  }
-
-  return Status::OK;
 }
 
 grpc::Status CpuServiceImpl::StartStartupProfiling(

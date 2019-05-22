@@ -81,11 +81,6 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::CpuProfilingAppStopRequest* request,
       profiler::proto::CpuProfilingAppStopResponse* response) override;
 
-  grpc::Status CheckAppProfilingState(
-      grpc::ServerContext* context,
-      const profiler::proto::ProfilingStateRequest* request,
-      profiler::proto::ProfilingStateResponse* response) override;
-
   grpc::Status StartStartupProfiling(
       grpc::ServerContext* context,
       const profiler::proto::StartupProfilingRequest* request,

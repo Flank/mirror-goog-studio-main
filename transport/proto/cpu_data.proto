@@ -114,11 +114,9 @@ enum TraceInitiationType {
 // and should be returned if its time overlaps with the request time range.
 message CpuTraceInfo {
   int64 trace_id = 1;
-  CpuTraceType trace_type = 2;
-  CpuTraceMode trace_mode = 3;
-  TraceInitiationType initiation_type = 4;
-  int64 from_timestamp = 5;  // inclusive
-  int64 to_timestamp = 6;    // inclusive
+  int64 from_timestamp = 2;  // inclusive
+  int64 to_timestamp = 3;    // inclusive
+  CpuTraceConfiguration configuration = 4;
 }
 
 message StartCpuTrace {
