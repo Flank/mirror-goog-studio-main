@@ -1865,6 +1865,9 @@ public class ResourceUsageAnalyzer {
             if (cst instanceof Integer) {
                 Integer value = (Integer) cst;
                 referencedInt(context, value, mJarFile, mCurrentClass);
+            } else if (cst instanceof Long) {
+                Long value = (Long) cst;
+                referencedInt(context, value.intValue(), mJarFile, mCurrentClass);
             } else if (cst instanceof int[]) {
                 int[] values = (int[]) cst;
                 for (int value : values) {
