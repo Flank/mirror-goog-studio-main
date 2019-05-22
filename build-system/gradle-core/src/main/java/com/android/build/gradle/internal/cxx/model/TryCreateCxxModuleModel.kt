@@ -117,7 +117,10 @@ fun tryCreateCxxModuleModel(
                                 "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'.")
                     }
                     if (!ndkHandler.ndkPlatform.isConfigured) {
-                        throw InvalidUserDataException("NDK not configured. Download it with SDK manager. Log: $locatorRecord")
+                        throw InvalidUserDataException("NDK not configured. Download " +
+                                "it with SDK manager. Preferred NDK version is " +
+                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'. " +
+                                "Log: $locatorRecord")
                     }
                 }
             } finally {
