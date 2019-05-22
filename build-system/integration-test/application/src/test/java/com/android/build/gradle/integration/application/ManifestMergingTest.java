@@ -20,9 +20,7 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.FileSubject.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
@@ -234,12 +232,11 @@ public class ManifestMergingTest {
     }
 
     /**
-     * It does not make nay sense to include navigation graphs toa library manifest, because users
-     * of the library can include proper navigation graph into their application manifest themselves
-     * or can override library navigation graphs
+     * User may include navigation graphs in the library manifests but we do not resolve them into
+     * intent filters until application manifest
      */
     @Test
-    public void checkManifestMergingFails_ifLibraryIncludesNavigarionGraphs() throws Exception {
+    public void checkManifestMergingKeepsNavGraphs_ifLibraryIncludesNavGraphs() throws Exception {
         TestFileUtils.searchAndReplace(
                 new File(
                         navigation.getSubproject("library").getMainSrcDir().getParent(),
@@ -247,10 +244,68 @@ public class ManifestMergingTest {
                 "</activity>",
                 "        <nav-graph android:value=\"@navigation/nav1\"/>\n    </activity>");
 
-        GradleBuildResult result =
-                navigation.executor().expectFailure().run("clean", ":library:processDebugManifest");
-        ScannerSubject.assertThat(result.getStderr())
-                .contains("<nav-graph> element can only be included in application manifest.");
+        navigation.executor().run("clean", ":library:processDebugManifest");
+
+        File manifestFile =
+                navigation.file(
+                        "library/build/intermediates/library_manifest/debug/AndroidManifest.xml");
+        // Deep links from nav graph are NOT resolved into intent filters at the lib level
+        assertThat(manifestFile).contains("nav-graph android:value=\"@navigation/nav1\"");
+    }
+
+    /**
+     * Deep links from nav xml included in the library manifest are resolved into intent filters at
+     * the application level
+     */
+    @Test
+    public void checkManifestMergingAddsDeepLinks_ifLibraryIncludesNavGraphs() throws Exception {
+        File libManifest =
+                new File(
+                        navigation.getSubproject("library").getMainSrcDir().getParent(),
+                        "AndroidManifest.xml");
+        TestFileUtils.searchAndReplace(
+                libManifest,
+                "</activity>",
+                "        <nav-graph android:value=\"@navigation/nav1\"/>\n    </activity>");
+        File appManifest =
+                new File(
+                        navigation.getSubproject("app").getMainSrcDir().getParent(),
+                        "AndroidManifest.xml");
+        TestFileUtils.searchAndReplace(
+                appManifest, "<nav-graph android:value=\"@navigation/nav1\" />", "");
+        TestFileUtils.searchAndReplace(
+                appManifest, "<nav-graph android:value=\"@navigation/nav3\" />", "");
+        TestFileUtils.searchAndReplace(
+                appManifest, "<nav-graph android:value=\"@navigation/nav4\" />", "");
+        TestFileUtils.searchAndReplace(
+                appManifest, "<nav-graph android:value=\"@navigation/nav5\" />", "");
+        File navFolder =
+                FileUtils.join(
+                        navigation.getSubproject("app").getMainSrcDir().getParentFile(),
+                        "res",
+                        "navigation");
+        FileUtils.delete(FileUtils.join(navFolder, "nav1.xml"));
+        FileUtils.delete(FileUtils.join(navFolder, "nav3.xml"));
+        FileUtils.delete(FileUtils.join(navFolder, "nav4.xml"));
+        // Remove flavors
+        String srcFolder =
+                navigation.getSubproject("app").getMainSrcDir().getParentFile().getParent();
+        FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "debug"));
+        FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "f1"));
+        FileUtils.deleteRecursivelyIfExists(new File(srcFolder, "f1Debug"));
+        for (int i = 30; i <= 36; ++i) {
+            TestFileUtils.replaceLine(navigation.getSubproject("app").getBuildFile(), i, "");
+        }
+
+        navigation.executor().run("clean", ":app:processDebugManifest");
+
+        File manifestFile =
+                navigation.file(
+                        "app/build/intermediates/merged_manifests/debug/AndroidManifest.xml");
+
+        // Deep links from nav graph ARE resolved into intent filters at the app level
+        assertThat(manifestFile).contains("library/nav1");
+        assertThat(manifestFile).contains("main/nav2");
     }
 
     @Test
