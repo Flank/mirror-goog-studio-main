@@ -164,7 +164,7 @@ class R8Transform(
 
     override fun transform(transformInvocation: TransformInvocation) {
         LoggerWrapper.getLogger(R8Transform::class.java)
-            .lifecycle(
+            .info(
                 """
                 |R8 is a new Android code shrinker. If you experience any issues, please file a bug at
                 |https://issuetracker.google.com, using 'Shrinker (R8)' as component name. You can
