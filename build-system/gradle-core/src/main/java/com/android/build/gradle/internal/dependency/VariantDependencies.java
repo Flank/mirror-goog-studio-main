@@ -281,7 +281,8 @@ public class VariantDependencies {
                         .beforeResolve(
                                 new ConstraintHandler(
                                         runtimeClasspath,
-                                        project.getDependencies().getConstraints()));
+                                        project.getDependencies().getConstraints(),
+                                        false));
 
                 // if this is a test App, then also synchronize the 2 runtime classpaths
                 if (variantType.isApk() && testedVariantScope != null) {
@@ -292,7 +293,8 @@ public class VariantDependencies {
                             .beforeResolve(
                                     new ConstraintHandler(
                                             testedRuntimeClasspath,
-                                            project.getDependencies().getConstraints()));
+                                            project.getDependencies().getConstraints(),
+                                            true));
                 }
             }
 

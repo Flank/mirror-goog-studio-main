@@ -30,7 +30,8 @@ import org.gradle.api.artifacts.result.ResolvedComponentResult
  */
 class ConstraintHandler(
     private val srcConfiguration: Configuration,
-    private val constraints: DependencyConstraintHandler
+    private val constraints: DependencyConstraintHandler,
+    private val isTest: Boolean
 ) : Action<ResolvableDependencies> {
     override fun execute(resolvableDependencies: ResolvableDependencies) {
         val srcConfigName = srcConfiguration.name
@@ -46,17 +47,20 @@ class ConstraintHandler(
                 // using a repository with a flatDir to stock local AARs will result in an
                 // external module dependency with no version.
                 if (!id.version.isNullOrEmpty()) {
-                    constraints.add(
-                        configName,
-                        "${id.group}:${id.module}:${id.version}"
-                    ) { constraint ->
-                        constraint.because("$srcConfigName uses version ${id.version}")
-                        constraint.version { versionConstraint ->
-                            versionConstraint.strictly(id.version)
+                    if (!isTest || id.module != "listenablefuture" || id.group != "com.google.guava" || id.version != "1.0") {
+                        constraints.add(
+                            configName,
+                            "${id.group}:${id.module}:${id.version}"
+                        ) { constraint ->
+                            constraint.because("$srcConfigName uses version ${id.version}")
+                            constraint.version { versionConstraint ->
+                                versionConstraint.strictly(id.version)
+                            }
                         }
                     }
                 }
             }
         }
     }
+
 }
