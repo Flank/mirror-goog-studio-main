@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.internal.dsl.ViewBindingOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -151,6 +152,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final List<Transform> transforms = Lists.newArrayList();
 
+    private final ViewBindingOptions viewBinding;
+
     private final DataBindingOptions dataBinding;
 
     private final SourceSetManager sourceSetManager;
@@ -236,6 +239,7 @@ public abstract class BaseExtension implements AndroidConfig {
         adbOptions = objectFactory.newInstance(AdbOptions.class);
         splits = objectFactory.newInstance(Splits.class, objectFactory);
         dataBinding = objectFactory.newInstance(DataBindingOptions.class);
+        viewBinding = objectFactory.newInstance(ViewBindingOptions.class);
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.
@@ -684,6 +688,23 @@ public abstract class BaseExtension implements AndroidConfig {
     @Override
     public DataBindingOptions getDataBinding() {
         return dataBinding;
+    }
+
+    /**
+     * Specifies options for the View Binding lLibrary.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * ViewBindingOptions}.
+     */
+    public void viewBinding(Action<ViewBindingOptions> action) {
+        checkWritability();
+        action.execute(viewBinding);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ViewBindingOptions getViewBinding() {
+        return viewBinding;
     }
 
     public void deviceProvider(DeviceProvider deviceProvider) {

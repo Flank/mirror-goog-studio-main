@@ -689,8 +689,7 @@ public abstract class MergeResources extends ResourceAwareTask {
             }
 
             boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
-            boolean isViewBindingEnabled =
-                    globalScope.getProjectOptions().get(BooleanOption.ENABLE_VIEW_BINDING);
+            boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
             if (isDataBindingEnabled || isViewBindingEnabled) {
                 // Keep as an output.
                 task.dataBindingLayoutProcessor =

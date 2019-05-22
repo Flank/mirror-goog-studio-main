@@ -751,7 +751,9 @@ public abstract class BasePlugin<E extends BaseExtension2>
         // must run this after scopes are created so that we can configure kotlin
         // kapt tasks
         taskManager.addBindingDependenciesIfNecessary(
-                extension.getDataBinding(), variantManager.getVariantScopes());
+                extension.getViewBinding(),
+                extension.getDataBinding(),
+                variantManager.getVariantScopes());
 
 
         // create the global lint task that depends on all the variants

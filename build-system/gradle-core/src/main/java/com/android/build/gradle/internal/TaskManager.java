@@ -82,6 +82,7 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
+import com.android.build.gradle.internal.dsl.ViewBindingOptions;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -3586,11 +3587,13 @@ public abstract class TaskManager {
     }
 
     public void addBindingDependenciesIfNecessary(
-            DataBindingOptions options, List<VariantScope> variantScopes) {
+            ViewBindingOptions viewBindingOptions,
+            DataBindingOptions dataBindingOptions,
+            List<VariantScope> variantScopes) {
         ProjectOptions projectOptions = globalScope.getProjectOptions();
         boolean useAndroidX = projectOptions.get(BooleanOption.USE_ANDROID_X);
-        boolean viewBindingEnabled = projectOptions.get(BooleanOption.ENABLE_VIEW_BINDING);
-        boolean dataBindingEnabled = options.isEnabled();
+        boolean viewBindingEnabled = viewBindingOptions.isEnabled();
+        boolean dataBindingEnabled = dataBindingOptions.isEnabled();
 
         if (viewBindingEnabled) {
             String version =
@@ -3605,7 +3608,8 @@ public abstract class TaskManager {
         if (dataBindingEnabled) {
             String version =
                     MoreObjects.firstNonNull(
-                            options.getVersion(), dataBindingBuilder.getCompilerVersion());
+                            dataBindingOptions.getVersion(),
+                            dataBindingBuilder.getCompilerVersion());
             String baseLibArtifact =
                     useAndroidX
                             ? SdkConstants.ANDROIDX_DATA_BINDING_BASELIB_ARTIFACT
@@ -3623,7 +3627,7 @@ public abstract class TaskManager {
                                     + ":"
                                     + version);
             // TODO load config name from source sets
-            if (options.isEnabledForTests()
+            if (dataBindingOptions.isEnabledForTests()
                     || this instanceof LibraryTaskManager
                     || this instanceof MultiTypeTaskManager) {
                 project.getDependencies()
@@ -3633,7 +3637,7 @@ public abstract class TaskManager {
                                         + ":"
                                         + version);
             }
-            if (options.getAddDefaultAdapters()) {
+            if (dataBindingOptions.getAddDefaultAdapters()) {
                 String libArtifact =
                         useAndroidX
                                 ? SdkConstants.ANDROIDX_DATA_BINDING_LIB_ARTIFACT
