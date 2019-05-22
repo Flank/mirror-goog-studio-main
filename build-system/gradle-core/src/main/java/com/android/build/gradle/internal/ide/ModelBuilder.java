@@ -309,7 +309,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     }
 
     private Object buildProjectSyncIssuesModel() {
-        // TODO: Lock the issue handler object so any attempt to register new issues should throw.
+        extraModelInfo.getSyncIssueHandler().lockHandler();
         return new DefaultProjectSyncIssues(
                 ImmutableSet.<SyncIssue>builder()
                         .addAll(syncIssues)

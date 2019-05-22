@@ -96,9 +96,15 @@ public class TaskTestUtils {
             return syncIssue;
         }
 
+        @Override
+        public synchronized void lockHandler() {
+            throw new UnsupportedOperationException(
+                    "lockHandler() shouldn't be called from inside tasks.");
+        }
+
         @NonNull
         @Override
-        public SyncIssue reportIssue(
+        public synchronized SyncIssue reportIssue(
                 @NonNull Type type,
                 @NonNull Severity severity,
                 @NonNull EvalIssueException exception) {
@@ -110,13 +116,13 @@ public class TaskTestUtils {
         }
 
         @Override
-        public boolean hasSyncIssue(@NonNull Type type) {
+        public synchronized boolean hasSyncIssue(@NonNull Type type) {
             return syncIssue != null && syncIssue.getType() == type.getType();
         }
 
         @NonNull
         @Override
-        public ImmutableList<SyncIssue> getSyncIssues() {
+        public synchronized ImmutableList<SyncIssue> getSyncIssues() {
             if (syncIssue != null) {
                 return ImmutableList.of(syncIssue);
             }

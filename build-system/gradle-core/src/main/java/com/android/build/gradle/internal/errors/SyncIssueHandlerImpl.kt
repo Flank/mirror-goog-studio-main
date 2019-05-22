@@ -27,21 +27,29 @@ import com.google.common.collect.ImmutableList
 import com.google.common.collect.Maps
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logger
+import javax.annotation.concurrent.GuardedBy
 
 class SyncIssueHandlerImpl(
         private val mode: EvaluationMode,
         private val logger: Logger)
     : SyncIssueHandler {
 
+    @GuardedBy("this")
     private val _syncIssues = Maps.newHashMap<SyncIssueKey, SyncIssue>()
 
+    @GuardedBy("this")
+    private var handlerLocked = false
+
+    @get:Synchronized
     override val syncIssues: ImmutableList<SyncIssue>
         get() = ImmutableList.copyOf(_syncIssues.values)
 
+    @Synchronized
     override fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean {
         return _syncIssues.values.any { issue -> issue.type == type.type }
     }
 
+    @Synchronized
     override fun reportIssue(
             type: EvalIssueReporter.Type,
             severity: EvalIssueReporter.Severity,
@@ -56,12 +64,20 @@ class SyncIssueHandlerImpl(
             }
 
             EvaluationMode.IDE -> {
+                if (handlerLocked) {
+                    throw IllegalStateException("Issue registered after handler locked.", exception)
+                }
                 _syncIssues.put(syncIssueKeyFrom(issue), issue)
             }
             else -> throw RuntimeException("Unknown SyncIssue type")
         }
 
         return issue
+    }
+
+    @Synchronized
+    override fun lockHandler() {
+        handlerLocked = true
     }
 }
 

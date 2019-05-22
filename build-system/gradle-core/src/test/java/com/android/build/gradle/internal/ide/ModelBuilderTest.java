@@ -28,7 +28,10 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
+import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
+import com.android.build.gradle.internal.fixtures.FakeLogger;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -40,8 +43,10 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
@@ -87,6 +92,7 @@ public class ModelBuilderTest {
 
     ModelBuilder modelBuilder;
     File apkLocation;
+    SyncIssueHandler syncIssueHandler;
 
     @Before
     public void setUp() throws IOException {
@@ -101,6 +107,10 @@ public class ModelBuilderTest {
         when(gradle.getRootProject()).thenReturn(project);
         when(gradle.getParent()).thenReturn(null);
         when(gradle.getIncludedBuilds()).thenReturn(ImmutableList.of());
+
+        syncIssueHandler =
+                new SyncIssueHandlerImpl(SyncOptions.EvaluationMode.IDE, new FakeLogger());
+        when(extraModelInfo.getSyncIssueHandler()).thenReturn(syncIssueHandler);
 
         apkLocation = temporaryFolder.newFolder("apk");
 
@@ -409,6 +419,14 @@ public class ModelBuilderTest {
         assertThat(testVariant.getName()).isEqualTo("testVariant");
         assertThat(testVariant.getTestedVariantName()).isEqualTo("variantName");
         assertThat(testVariant.getOutputs()).hasSize(1);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void syncIssueModelLockdown() {
+        // This should lock down the issue handler.
+        modelBuilder.buildAll("com.android.builder.model.ProjectSyncIssues", project);
+        // And then trying to report anything after fetching the sync issues model should throw.
+        syncIssueHandler.reportWarning(EvalIssueReporter.Type.GENERIC, "Should Fail");
     }
 
     private static BaseVariantData createVariantData(
