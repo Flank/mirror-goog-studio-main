@@ -53,7 +53,6 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.sdklib.SdkVersionInfo;
@@ -61,13 +60,11 @@ import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -83,7 +80,6 @@ public class InstantAppModelBuilder
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     private boolean modelWithFullDependency = false;
-    private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
     public InstantAppModelBuilder(
             @NonNull VariantManager variantManager,
@@ -169,8 +165,6 @@ public class InstantAppModelBuilder
                         extraModelInfo.getExtraFlavorSourceProviders(
                                 variantManager.getDefaultConfig().getProductFlavor().getName()));
 
-        syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
-
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
                         ? extension.getFlavorDimensionList()
@@ -196,7 +190,8 @@ public class InstantAppModelBuilder
                                     pfData.getProductFlavor().getName())));
         }
 
-        String defaultVariant = variantManager.getDefaultVariant(syncIssues::add);
+        String defaultVariant =
+                variantManager.getDefaultVariant(extraModelInfo.getSyncIssueHandler());
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
@@ -222,7 +217,7 @@ public class InstantAppModelBuilder
                 Collections.emptyList(),
                 AaptOptionsImpl.createDummy(),
                 Collections.emptyList(),
-                syncIssues,
+                extraModelInfo.getSyncIssueHandler().getSyncIssues(),
                 new CompileOptions(),
                 new LintOptions(),
                 project.getBuildDir(),
@@ -301,7 +296,6 @@ public class InstantAppModelBuilder
                         variantScope,
                         buildMapping,
                         extraModelInfo,
-                        syncIssues,
                         modelLevel,
                         modelWithFullDependency);
 

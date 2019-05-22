@@ -20,10 +20,10 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.DependenciesImpl;
 import com.android.build.gradle.internal.ide.DependencyFailureHandler;
 import com.android.build.gradle.internal.ide.DependencyFailureHandlerKt;
-import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.ide.dependencies.ResolvedArtifact.DependencyType;
 import com.android.build.gradle.internal.ide.level2.FullDependencyGraphsImpl;
 import com.android.build.gradle.internal.ide.level2.GraphItemImpl;
@@ -35,19 +35,19 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.utils.ImmutableCollectors;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -77,7 +77,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             boolean withFullDependency,
             boolean downloadSources,
             @NonNull ImmutableMap<String, String> buildMapping,
-            @NonNull Consumer<SyncIssue> failureConsumer) {
+            @NonNull SyncIssueHandler syncIssueHandler) {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
@@ -98,7 +98,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     ids.add(artifact.getComponentIdentifier());
                 }
 
-                handleSources(variantScope.getGlobalScope().getProject(), ids, failureConsumer);
+                handleSources(variantScope.getGlobalScope().getProject(), ids, syncIssueHandler);
             }
 
             // In this simpler model, faster computation of the runtime dependencies to get the
@@ -184,7 +184,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     providedAddresses,
                     ImmutableList.of()); // FIXME: actually get skip list
         } finally {
-            dependencyFailureHandler.collectIssues().forEach(failureConsumer);
+            dependencyFailureHandler.registerIssues(syncIssueHandler);
         }
     }
 
@@ -195,7 +195,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             @NonNull VariantScope variantScope,
             boolean downloadSources,
             @NonNull ImmutableMap<String, String> buildMapping,
-            @NonNull Consumer<SyncIssue> failureConsumer) {
+            @NonNull SyncIssueHandler syncIssueHandler) {
         // FIXME change the way we compare dependencies b/64387392
 
         try {
@@ -298,7 +298,7 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     ids.add(artifact.getComponentIdentifier());
                 }
 
-                handleSources(variantScope.getGlobalScope().getProject(), ids, failureConsumer);
+                handleSources(variantScope.getGlobalScope().getProject(), ids, syncIssueHandler);
             }
 
             // get runtime-only jars by filtering out compile dependencies from runtime artifacts.
@@ -324,14 +324,14 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
                     projects.build(),
                     runtimeOnlyClasspath);
         } finally {
-            dependencyFailureHandler.collectIssues().forEach(failureConsumer);
+            dependencyFailureHandler.registerIssues(syncIssueHandler);
         }
     }
 
     private static void handleSources(
             @NonNull Project project,
             @NonNull Set<ComponentIdentifier> artifacts,
-            @NonNull Consumer<SyncIssue> failureConsumer) {
+            @NonNull SyncIssueHandler syncIssueHandler) {
         final DependencyHandler dependencies = project.getDependencies();
 
         try {
@@ -348,16 +348,19 @@ class ArtifactDependencyGraph implements DependencyGraphBuilder {
             DependencyFailureHandlerKt.processDependencyThrowable(
                     t,
                     s -> null,
-                    (data, messages) ->
-                            failureConsumer.accept(
-                                    new SyncIssueImpl(
-                                            EvalIssueReporter.Type.GENERIC,
-                                            EvalIssueReporter.Severity.WARNING,
-                                            null,
-                                            String.format(
-                                                    "Unable to download sources/javadoc: %s",
-                                                    messages.get(0)),
-                                            messages)));
+                    (data, messages) -> {
+                        List<String> multilineMsg = new ArrayList<>(messages.size() + 1);
+                        multilineMsg.add(
+                                String.format(
+                                        "Unable to download sources/javadoc: %s", messages.get(0)));
+                        multilineMsg.addAll(messages);
+
+                        syncIssueHandler.reportIssue(
+                                EvalIssueReporter.Type.GENERIC,
+                                EvalIssueReporter.Severity.WARNING,
+                                Joiner.on("\n").join(multilineMsg));
+                    });
+
         }
     }
 

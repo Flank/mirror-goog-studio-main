@@ -39,6 +39,6 @@ class FakeEvalIssueReporter(
         if (severity == EvalIssueReporter.Severity.ERROR && throwOnError) {
             throw exception
         }
-        return SyncIssueImpl(type, severity, exception.data, exception.message, listOf())
+        return SyncIssueImpl(type, severity, exception.data, exception.message)
     }
 }

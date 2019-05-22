@@ -696,11 +696,19 @@ public class PluginDslTest {
                                 + ToolsRevisionUtils.MIN_BUILD_TOOLS_REV
                                 + ") for Android Gradle Plugin "
                                 + Version.ANDROID_GRADLE_PLUGIN_VERSION
-                                + ".\n"
-                                + "Android SDK Build Tools "
+                                + ".");
+        assertThat(issue.getMultiLineMessage())
+                .containsExactly(
+                        "The specified Android SDK Build Tools version (19.0.0) is "
+                                + "ignored, as it is below the minimum supported version ("
+                                + ToolsRevisionUtils.MIN_BUILD_TOOLS_REV
+                                + ") for Android Gradle Plugin "
+                                + Version.ANDROID_GRADLE_PLUGIN_VERSION
+                                + ".",
+                        "Android SDK Build Tools "
                                 + ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION
-                                + " will be used.\n"
-                                + "To suppress this warning, remove \"buildToolsVersion '19.0.0'\" from your build.gradle file, "
+                                + " will be used.",
+                        "To suppress this warning, remove \"buildToolsVersion '19.0.0'\" from your build.gradle file, "
                                 + "as each version of the Android Gradle Plugin now has a default version of the build tools.");
     }
 

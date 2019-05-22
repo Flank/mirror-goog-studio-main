@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide.dependencies
 
+import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.build.gradle.internal.ide.DependenciesImpl
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.builder.model.AndroidProject
@@ -31,7 +32,7 @@ interface DependencyGraphBuilder {
         variantScope: VariantScope,
         downloadSources: Boolean,
         buildMapping: ImmutableMap<String, String>,
-        failureConsumer: Consumer<SyncIssue>
+        syncIssueHandler: SyncIssueHandler
     ): DependenciesImpl
 
     /**
@@ -44,7 +45,7 @@ interface DependencyGraphBuilder {
         withFullDependency: Boolean,
         downloadSources: Boolean,
         buildMapping: ImmutableMap<String, String>,
-        failureConsumer: Consumer<SyncIssue>
+        syncIssueHandler: SyncIssueHandler
     ): DependencyGraphs
 }
 

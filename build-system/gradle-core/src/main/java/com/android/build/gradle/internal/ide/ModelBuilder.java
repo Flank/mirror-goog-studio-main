@@ -86,7 +86,6 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.ProjectSyncIssues;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
@@ -153,10 +152,6 @@ public class ModelBuilder<Extension extends BaseExtension>
      * build.
      */
     private ImmutableMap<String, String> buildMapping = null;
-
-    // TODO: Stop buildAndroidProject from manually populating
-    //       this field and use the syncIssueHandler instead.
-    private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
 
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
@@ -311,10 +306,7 @@ public class ModelBuilder<Extension extends BaseExtension>
     private Object buildProjectSyncIssuesModel() {
         extraModelInfo.getSyncIssueHandler().lockHandler();
         return new DefaultProjectSyncIssues(
-                ImmutableSet.<SyncIssue>builder()
-                        .addAll(syncIssues)
-                        .addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues())
-                        .build());
+                ImmutableSet.copyOf(extraModelInfo.getSyncIssueHandler().getSyncIssues()));
     }
 
     private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
@@ -372,8 +364,6 @@ public class ModelBuilder<Extension extends BaseExtension>
         ViewBindingOptions viewBindingOptions =
                 ViewBindingOptionsImpl.create(extension.getViewBinding());
 
-        syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
-
         List<String> flavorDimensionList =
                 extension.getFlavorDimensionList() != null
                         ? extension.getFlavorDimensionList()
@@ -401,7 +391,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                     extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
         }
 
-        String defaultVariant = variantManager.getDefaultVariant(syncIssues::add);
+        String defaultVariant =
+                variantManager.getDefaultVariant(extraModelInfo.getSyncIssueHandler());
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isTestComponent()) {
                 variantNames.add(variantScope.getFullVariantName());
@@ -430,7 +421,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 cloneSigningConfigs(extension.getSigningConfigs()),
                 aaptOptions,
                 artifactMetaDataList,
-                syncIssues,
+                extraModelInfo.getSyncIssueHandler().getSyncIssues(),
                 extension.getCompileOptions(),
                 lintOptions,
                 project.getBuildDir(),
@@ -495,15 +486,16 @@ public class ModelBuilder<Extension extends BaseExtension>
                 }
                 eventReader.close();
             } catch (XMLStreamException | IOException e) {
-                syncIssues.add(
-                        new SyncIssueImpl(
+                extraModelInfo
+                        .getSyncIssueHandler()
+                        .reportIssue(
                                 Type.GENERIC,
                                 EvalIssueReporter.Severity.ERROR,
-                                null,
                                 "Failed to parse XML in "
                                         + manifest.getPath()
                                         + "\n"
-                                        + e.getMessage()));
+                                        + e.getMessage(),
+                                null);
             }
         }
         return false;
@@ -582,15 +574,16 @@ public class ModelBuilder<Extension extends BaseExtension>
                 validateMinSdkVersion(attributeSupplier);
                 validateTargetSdkVersion(attributeSupplier);
             } catch (Throwable e) {
-                syncIssues.add(
-                        new SyncIssueImpl(
+                extraModelInfo
+                        .getSyncIssueHandler()
+                        .reportIssue(
                                 Type.GENERIC,
                                 EvalIssueReporter.Severity.ERROR,
-                                null,
                                 "Failed to parse XML in "
                                         + manifest.getPath()
                                         + "\n"
-                                        + e.getMessage()));
+                                        + e.getMessage(),
+                                null);
             }
         }
 
@@ -668,12 +661,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                     hasFeaturePlugin,
                     consumerProguardFiles,
                     exception ->
-                            syncIssues.add(
-                                    new SyncIssueImpl(
+                            extraModelInfo
+                                    .getSyncIssueHandler()
+                                    .reportIssue(
                                             Type.GENERIC,
                                             EvalIssueReporter.Severity.ERROR,
-                                            exception.getData(),
-                                            exception.getMessage())));
+                                            exception.getMessage(),
+                                            exception.getData()));
         }
     }
 
@@ -704,15 +698,14 @@ public class ModelBuilder<Extension extends BaseExtension>
                 VariantScope variantScope = variantData.getScope();
 
                 // probably there was an error...
-                syncIssues.addAll(
-                        new DependencyFailureHandler()
-                                .addErrors(
-                                        variantScope.getGlobalScope().getProject().getPath()
-                                                + "@"
-                                                + variantScope.getFullVariantName()
-                                                + "/testTarget",
-                                        apkArtifacts.getFailures())
-                                .collectIssues());
+                new DependencyFailureHandler()
+                        .addErrors(
+                                variantScope.getGlobalScope().getProject().getPath()
+                                        + "@"
+                                        + variantScope.getFullVariantName()
+                                        + "/testTarget",
+                                apkArtifacts.getFailures())
+                        .registerIssues(extraModelInfo.getSyncIssueHandler());
             }
         }
 
@@ -729,7 +722,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                         scope,
                         buildMapping,
                         extraModelInfo,
-                        syncIssues,
                         modelLevel,
                         modelWithFullDependency);
 
@@ -790,7 +782,6 @@ public class ModelBuilder<Extension extends BaseExtension>
             @NonNull VariantScope variantScope,
             @NonNull ImmutableMap<String, String> buildMapping,
             @NonNull ExtraModelInfo extraModelInfo,
-            @NonNull Set<SyncIssue> syncIssues,
             int modelLevel,
             boolean modelWithFullDependency) {
         Pair<Dependencies, DependencyGraphs> result;
@@ -822,7 +813,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         modelWithFullDependency,
                                         downloadSources,
                                         buildMapping,
-                                        syncIssues::add));
+                                        extraModelInfo.getSyncIssueHandler()));
             } else {
                 result =
                         Pair.of(
@@ -830,7 +821,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                         variantScope,
                                         downloadSources,
                                         buildMapping,
-                                        syncIssues::add),
+                                        extraModelInfo.getSyncIssueHandler()),
                                 EmptyDependencyGraphs.EMPTY);
             }
         }
@@ -848,12 +839,12 @@ public class ModelBuilder<Extension extends BaseExtension>
                         "Signing configuration should not be declared in the "
                                 + "dynamic-feature. Dynamic-features use the signing configuration "
                                 + "declared in the application module.";
-                syncIssues.add(
-                        new SyncIssueImpl(
+                extraModelInfo
+                        .getSyncIssueHandler()
+                        .reportIssue(
                                 Type.SIGNING_CONFIG_DECLARED_IN_DYNAMIC_FEATURE,
                                 EvalIssueReporter.Severity.WARNING,
-                                null,
-                                message));
+                                message);
             }
         }
     }
@@ -889,7 +880,6 @@ public class ModelBuilder<Extension extends BaseExtension>
                         scope,
                         buildMapping,
                         extraModelInfo,
-                        syncIssues,
                         modelLevel,
                         modelWithFullDependency);
 
@@ -915,12 +905,13 @@ public class ModelBuilder<Extension extends BaseExtension>
             DeviceProviderInstrumentTestTask.checkForNonApks(
                     additionalRuntimeApks,
                     message ->
-                            syncIssues.add(
-                                    new SyncIssueImpl(
+                            extraModelInfo
+                                    .getSyncIssueHandler()
+                                    .reportIssue(
                                             Type.GENERIC,
                                             EvalIssueReporter.Severity.ERROR,
-                                            null,
-                                            message)));
+                                            message,
+                                            null));
 
             TestOptions testOptionsDsl = scope.getGlobalScope().getExtension().getTestOptions();
             testOptions =
@@ -938,9 +929,9 @@ public class ModelBuilder<Extension extends BaseExtension>
         } catch (RuntimeException e) {
             // don't crash. just throw a sync error.
             applicationId = "";
-            syncIssues.add(
-                    new SyncIssueImpl(
-                            Type.GENERIC, EvalIssueReporter.Severity.ERROR, null, e.getMessage()));
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportIssue(Type.GENERIC, EvalIssueReporter.Severity.ERROR, e.getMessage());
         }
         final MutableTaskContainer taskContainer = scope.getTaskContainer();
         return new AndroidArtifactImpl(
@@ -983,28 +974,28 @@ public class ModelBuilder<Extension extends BaseExtension>
     private void validateMinSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
         if (supplier.getMinSdkVersion() != null) {
             // report an error since min sdk version should not be in the manifest.
-            syncIssues.add(
-                    new SyncIssueImpl(
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportIssue(
                             EvalIssueReporter.Type.MIN_SDK_VERSION_IN_MANIFEST,
                             EvalIssueReporter.Severity.ERROR,
-                            null,
                             "The minSdk version should not be declared in the android"
                                     + " manifest file. You can move the version from the manifest"
-                                    + " to the defaultConfig in the build.gradle file."));
+                                    + " to the defaultConfig in the build.gradle file.");
         }
     }
 
     private void validateTargetSdkVersion(@NonNull ManifestAttributeSupplier supplier) {
         if (supplier.getTargetSdkVersion() != null) {
             // report a warning since target sdk version should not be in the manifest.
-            syncIssues.add(
-                    new SyncIssueImpl(
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportIssue(
                             EvalIssueReporter.Type.TARGET_SDK_VERSION_IN_MANIFEST,
                             EvalIssueReporter.Severity.WARNING,
-                            null,
                             "The targetSdk version should not be declared in the android"
                                     + " manifest file. You can move the version from the manifest"
-                                    + " to the defaultConfig in the build.gradle file."));
+                                    + " to the defaultConfig in the build.gradle file.");
         }
     }
 

@@ -22,6 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.List;
@@ -46,21 +47,13 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
             @NonNull EvalIssueReporter.Severity severity,
             @Nullable String data,
             @NonNull String message) {
-        this(type, severity, data, message, null);
-    }
-
-    public SyncIssueImpl(
-            @NonNull EvalIssueReporter.Type type,
-            @NonNull EvalIssueReporter.Severity severity,
-            @Nullable String data,
-            @NonNull String message,
-            @Nullable List<String> multiLineMessage) {
         this.type = type.getType();
         this.severity = severity.getSeverity();
         this.data = data;
-        this.message = message;
-        this.multiLineMessage =
-                multiLineMessage == null ? null : ImmutableList.copyOf(multiLineMessage);
+
+        ImmutableList<String> messages = ImmutableList.copyOf(Splitter.on("\n").split(message));
+        this.message = messages.get(0);
+        this.multiLineMessage = messages;
     }
 
     @Override

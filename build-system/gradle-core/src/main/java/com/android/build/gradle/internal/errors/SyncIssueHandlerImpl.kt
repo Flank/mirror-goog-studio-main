@@ -85,13 +85,15 @@ class SyncIssueHandlerImpl(
  * Creates a key from a SyncIssue to use in a map.
  */
 private fun syncIssueKeyFrom(syncIssue: SyncIssue): SyncIssueKey {
-    return SyncIssueKey(syncIssue.type, syncIssue.data)
+    // If data is not available we use the message part to disambiguate between issues with the
+    // same type.
+    return SyncIssueKey(syncIssue.type, syncIssue.data ?: syncIssue.message)
 }
 
 @Immutable
 internal data class SyncIssueKey constructor(
         private val type: Int,
-        private val data: String?) {
+        private val data: String) {
 
     override fun toString(): String {
         return MoreObjects.toStringHelper(this)

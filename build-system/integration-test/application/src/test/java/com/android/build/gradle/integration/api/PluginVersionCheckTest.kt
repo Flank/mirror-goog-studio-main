@@ -61,16 +61,17 @@ class PluginVersionCheckTest {
 
         assertThat(syncIssue.type).isEqualTo(TYPE_THIRD_PARTY_GRADLE_PLUGIN_TOO_OLD)
         assertThat(syncIssue.severity).isEqualTo(SEVERITY_ERROR)
-        val expected = "The Android Gradle plugin supports only Butterknife Gradle " +
+        val expected = ("The Android Gradle plugin supports only Butterknife Gradle " +
                 "plugin version 9.0.0-rc2 and higher.\n" +
                 "The following dependencies do not satisfy the required version:\n" +
                 "root project 'project' -> " +
-                "com.jakewharton:butterknife-gradle-plugin:9.0.0-rc1"
-        assertThat(syncIssue.message).isEqualTo(expected)
+                "com.jakewharton:butterknife-gradle-plugin:9.0.0-rc1").split("\n")
+        assertThat(syncIssue.message).isEqualTo(expected.first())
+        assertThat(syncIssue.multiLineMessage).containsExactlyElementsIn(expected).inOrder()
 
         val failure = project.executor().expectFailure().run("generateDebugR2")
         failure.stderr.use {
-            ScannerSubject.assertThat(it).contains(expected)
+            ScannerSubject.assertThat(it).contains(expected.joinToString("\n"))
         }
     }
 

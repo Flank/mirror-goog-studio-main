@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.build.gradle.internal.errors.SyncIssueHandler
 import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.builder.model.SyncIssue
@@ -41,40 +42,31 @@ class DependencyFailureHandler {
         return this
     }
 
-    fun collectIssues(): Collection<SyncIssue> {
-        if (failures.isEmpty) {
-            return ImmutableList.of()
-        }
-
-        val issues: MutableList<SyncIssue> = mutableListOf()
-
+    fun registerIssues(syncIssueHandler: SyncIssueHandler) {
         for ((key, value) in failures.entries()) {
             processDependencyThrowable(
-                    value,
-                    { message -> checkForData(message) },
-                    { data, messages ->
-                        val issue = if (data != null) {
-                            SyncIssueImpl(
-                                    Type.UNRESOLVED_DEPENDENCY,
-                                    Severity.ERROR,
-                                    data,
-                                    "Unable to resolve dependency $data",
-                                    null)
-                        } else {
-                            SyncIssueImpl(
-                                    Type.UNRESOLVED_DEPENDENCY,
-                                    Severity.ERROR,
-                                    null,
-                                    "Unable to resolve dependency for '$key': ${messages[0]}",
-                                    messages)
-                        }
+                value,
+                { message -> checkForData(message) },
+                { data, messages ->
+                    if (data != null) {
+                        syncIssueHandler.reportIssue(
+                            Type.UNRESOLVED_DEPENDENCY,
+                            Severity.ERROR,
+                            "Unable to resolve dependency $data",
+                            data)
+                    } else {
+                        val messageList = mutableListOf<String>()
+                        messageList += "Unable to resolve dependency for '$key': ${messages[0]}"
+                        messageList += messages
 
-                        issues.add(issue)
+                        syncIssueHandler.reportIssue(
+                            Type.UNRESOLVED_DEPENDENCY,
+                            Severity.ERROR,
+                            messageList.joinToString("\n"))
                     }
+                }
             )
         }
-
-        return issues
     }
 }
 
