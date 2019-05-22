@@ -19,6 +19,8 @@ package com.android.tools.lint.gradle;
 import static com.android.SdkConstants.ANDROIDX_APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_LEANBACK_ARTIFACT;
 import static com.android.SdkConstants.ANDROIDX_SUPPORT_LIB_ARTIFACT;
+import static com.android.SdkConstants.FN_R_CLASS_JAR;
+import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -443,7 +445,7 @@ public class LintGradleProject extends Project {
         @Override
         public List<File> getJavaClassFolders() {
             if (javaClassFolders == null) {
-                javaClassFolders = new ArrayList<>(1);
+                javaClassFolders = new ArrayList<>(3); // common: javac, kotlinc, rjar
                 AndroidArtifact mainArtifact = mVariant.getMainArtifact();
                 File outputClassFolder = mainArtifact.getClassesFolder();
                 if (outputClassFolder.exists()) {
@@ -452,6 +454,12 @@ public class LintGradleProject extends Project {
                         if (file.isDirectory()) {
                             javaClassFolders.add(file);
                         }
+                    }
+
+                    // R.jar file? Sadly not part of the builder-model.
+                    File rJar = findRjar(outputClassFolder);
+                    if (rJar != null) {
+                        javaClassFolders.add(rJar);
                     }
                 } else if (isLibrary()) {
                     // For libraries we build the release variant instead
@@ -466,6 +474,13 @@ public class LintGradleProject extends Project {
                                         javaClassFolders.add(file);
                                     }
                                 }
+
+                                // R.jar file? Sadly not part of the builder-model.
+                                File rJar = findRjar(outputClassFolder);
+                                if (rJar != null) {
+                                    javaClassFolders.add(rJar);
+                                }
+
                                 break;
                             }
                         }
@@ -474,6 +489,37 @@ public class LintGradleProject extends Project {
             }
 
             return javaClassFolders;
+        }
+
+        /**
+         * Locates the R.jar file relative to a given javac class folder. Temporary until this is
+         * added to the builder-model (or the upcoming lint-model). Tracked in b/133326990.
+         */
+        @Nullable
+        private static File findRjar(@NonNull File f) {
+            // from classes/debug/ go to
+            // ../../../compile_and_runtime_not_namespaced_r_class_jar/debug/R.jar
+            File p1 = f.getParentFile();
+            if (p1 == null) {
+                return null;
+            }
+            String variant = p1.getName();
+            File p2 = p1.getParentFile(); // classes
+            if (p2 == null) {
+                return null;
+            }
+            File p3 = p2.getParentFile();
+            if (p3 == null) {
+                return null;
+            }
+            // From gradle-core
+            // String root =InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR;
+            String root = "compile_and_runtime_not_namespaced_r_class_jar";
+            File rJar = new File(p3, root + separator + variant + separator + FN_R_CLASS_JAR);
+            if (rJar.isFile()) {
+                return rJar;
+            }
+            return null;
         }
 
         @NonNull

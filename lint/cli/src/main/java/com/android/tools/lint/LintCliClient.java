@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_KTS;
 import static com.android.SdkConstants.DOT_SRCJAR;
 import static com.android.SdkConstants.FD_TOOLS;
+import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.SdkConstants.FN_SOURCE_PROP;
 import static com.android.SdkConstants.VALUE_NONE;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
@@ -1309,6 +1310,12 @@ public class LintCliClient extends LintClient {
             // https://issuetracker.google.com/72032121
             if (project.isLibrary()) {
                 files.addAll(project.getJavaClassFolders());
+            } else if (project.isGradleProject()) { // As of 3.4, R.java is in a special jar file
+                for (File f : project.getJavaClassFolders()) {
+                    if (f.getName().equals(FN_R_CLASS_JAR)) {
+                        files.add(f);
+                    }
+                }
             }
         }
 

@@ -127,6 +127,7 @@ public class CheckAll {
                     "externalBuildPlugin", // Not an Android Project.
                     "lintKotlin", // deliberately contains lint errors (missing baseline file)
                     "lintBaseline", // deliberately contains lint errors
+                    "lintResourceResolve/", // deliberately contains lint errors
                     "lintStandalone", // Not an Android project
                     "lintStandaloneVital", // Not an Android project
                     "lintStandaloneCustomRules", // Not an Android project
