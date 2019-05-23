@@ -169,37 +169,6 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         }
     }
 
-    private static void assertHistory(FakeDevice device, String... expectedHistory)
-            throws IOException {
-        List<String> actualHistory = device.getShell().getHistory();
-        String actual = String.join("\n", actualHistory);
-        String expected = String.join("\n", expectedHistory);
-
-        // Apply the right version
-        expected = expected.replaceAll("\\$VERSION", Version.hash());
-
-        // Find the right sizes:
-        Pattern pattern = Pattern.compile("\\$\\{size:([^:}]*)(:([^:}]*))?}");
-        Matcher matcher = pattern.matcher(expected);
-        StringBuffer buffer = new StringBuffer();
-        while (matcher.find()) {
-            String pkg = matcher.group(1);
-            String file = matcher.group(3);
-            List<String> paths = device.getAppPaths(pkg);
-            int size = 0;
-            for (String path : paths) {
-                if (file == null || path.endsWith("/" + file)) {
-                    size += device.readFile(path).length;
-                }
-            }
-            matcher.appendReplacement(buffer, Integer.toString(size));
-        }
-        matcher.appendTail(buffer);
-        expected = buffer.toString();
-
-        assertEquals(expected, actual);
-    }
-
     @Test
     public void testSkipInstall() throws Exception {
         AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
@@ -900,6 +869,208 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
                         "DDMLIB_INSTALL");
             }
         }
+    }
+
+    @Test
+    public void testAddAsset() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install", "com.example.simpleapp", file.getAbsolutePath(), "--force-full-install"
+        };
+
+        assertEquals(0, runner.run(args, logger));
+        assertInstalled("com.example.simpleapp", file);
+        assertMetrics(
+                runner.getMetrics(),
+                "DELTAINSTALL:DISABLED",
+                "INSTALL:OK",
+                "DDMLIB_UPLOAD",
+                "DDMLIB_INSTALL");
+        device.getShell().clearHistory();
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+new_asset.apk");
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+
+        assertInstalled("com.example.simpleapp", file);
+
+        if (device.getApi() < 24) {
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
+        } else {
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "mkdir -p /data/local/tmp/.studio/bin",
+                    "chmod +x /data/local/tmp/.studio/bin/installer",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                    "/system/bin/cmd package install-create -t -r",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk",
+                    "/system/bin/cmd package install-commit 2");
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL_UPLOAD",
+                    "DELTAINSTALL_INSTALL",
+                    "DELTAINSTALL:SUCCESS");
+        }
+    }
+
+    @Test
+    public void testAddAssetWithSplits() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File base = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        File split = TestUtils.getWorkspaceFile(BASE + "apks/split.apk");
+        File installersPath = prepareInstaller();
+
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            base.getAbsolutePath(),
+            split.getAbsolutePath(),
+            "--force-full-install"
+        };
+
+        int code = runner.run(args, logger);
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertInstalled("com.example.simpleapp", base, split);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DISABLED",
+                    "INSTALL:OK",
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
+        }
+
+        device.getShell().clearHistory();
+
+        File newBase = TestUtils.getWorkspaceFile(BASE + "apks/simple+new_asset.apk");
+        args =
+                new String[] {
+                    "install",
+                    "com.example.simpleapp",
+                    newBase.getAbsolutePath(),
+                    split.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        code = runner.run(args, logger);
+
+        if (device.getApi() < 21) {
+            assertEquals(DeployerException.Error.INSTALL_FAILED.ordinal(), code);
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:MULTI_APKS_NO_SUPPORTED_BELOW21");
+        } else {
+            assertEquals(0, code);
+            assertEquals(1, device.getApps().size());
+
+            // Check new app installed
+            assertInstalled("com.example.simpleapp", newBase, split);
+
+            if (device.getApi() < 24) {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "pm install-create -r -t -S ${size:com.example.simpleapp}",
+                        "pm install-write -S ${size:com.example.simpleapp:base.apk} 2 0_simple_new_asset -",
+                        "pm install-write -S ${size:com.example.simpleapp:split_split_01.apk} 2 1_split -",
+                        "pm install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL:API_NOT_SUPPORTED",
+                        "INSTALL:OK",
+                        "DDMLIB_UPLOAD",
+                        "DDMLIB_INSTALL");
+            } else {
+                assertHistory(
+                        device,
+                        "getprop",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "mkdir -p /data/local/tmp/.studio/bin",
+                        "chmod +x /data/local/tmp/.studio/bin/installer",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                        "/system/bin/run-as com.example.simpleapp id -u",
+                        "id -u",
+                        "/system/bin/cmd package path com.example.simpleapp",
+                        "/data/local/tmp/.studio/bin/installer -version=$VERSION deltainstall",
+                        "/system/bin/cmd package install-create -t -r -p com.example.simpleapp",
+                        "cmd package install-write -S ${size:com.example.simpleapp:base.apk} 2 base.apk",
+                        "/system/bin/cmd package install-commit 2");
+                assertMetrics(
+                        runner.getMetrics(),
+                        "DELTAINSTALL_UPLOAD",
+                        "DELTAINSTALL_INSTALL",
+                        "DELTAINSTALL:SUCCESS");
+            }
+        }
+    }
+
+    private static void assertHistory(FakeDevice device, String... expectedHistory)
+            throws IOException {
+        List<String> actualHistory = device.getShell().getHistory();
+        String actual = String.join("\n", actualHistory);
+        String expected = String.join("\n", expectedHistory);
+
+        // Apply the right version
+        expected = expected.replaceAll("\\$VERSION", Version.hash());
+
+        // Find the right sizes:
+        Pattern pattern = Pattern.compile("\\$\\{size:([^:}]*)(:([^:}]*))?}");
+        Matcher matcher = pattern.matcher(expected);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String pkg = matcher.group(1);
+            String file = matcher.group(3);
+            List<String> paths = device.getAppPaths(pkg);
+            int size = 0;
+            for (String path : paths) {
+                if (file == null || path.endsWith("/" + file)) {
+                    size += device.readFile(path).length;
+                }
+            }
+            matcher.appendReplacement(buffer, Integer.toString(size));
+        }
+        matcher.appendTail(buffer);
+        expected = buffer.toString();
+
+        assertEquals(expected, actual);
     }
 
     public File prepareInstaller() throws IOException {

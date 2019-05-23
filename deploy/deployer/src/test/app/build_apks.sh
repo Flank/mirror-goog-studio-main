@@ -27,6 +27,7 @@ function build_apk() {
   SOURCE_FILE=$6
   HAS_RESOURCES=$7
   SPLIT=$8
+  ADD_FILE=$9
   PACKAGE=com.example.simpleapp
 
   echo "AAPT2 compile..."
@@ -65,6 +66,10 @@ function build_apk() {
   echo "Adding dexs to APK..."
   (cd $BIN; zip -r base.apk classes.dex )
 
+  if [ "$ADD_FILE" != "" ]; then
+    (cd $BIN; mkdir -p "${ADD_FILE%/*}"; touch $ADD_FILE; zip base.apk $ADD_FILE)
+  fi
+
   echo "Aligning and signing APK..."
   # Create keytore via command:
   # keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000
@@ -80,6 +85,7 @@ function build_apk() {
 }
 
 build_apk ../resource/apks/simple.apk "HelloWorld" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true base
+build_apk ../resource/apks/simple+new_asset.apk "HelloWorld" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true base assets/new.txt
 build_apk ../resource/apks/simple+code.apk "HelloWorld2" "1" "Hello Android!" AndroidManifest.xml MainActivity.java true base
 build_apk ../resource/apks/simple+ver.apk "HelloWorld" "2" "Hello Android!" AndroidManifest.xml MainActivity.java true base
 build_apk ../resource/apks/simple+res.apk "HelloWorld" "1" "Hello Android2!" AndroidManifest.xml MainActivity.java true base

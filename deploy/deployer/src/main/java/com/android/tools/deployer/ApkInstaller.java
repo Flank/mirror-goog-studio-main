@@ -289,7 +289,8 @@ public class ApkInstaller {
         boolean inherit = apkCount > 1;
         if (inherit) {
             for (FileDiff fileDiff : diff) {
-                if (fileDiff.oldFile.name.equals("AndroidManifest.xml")) {
+                if (fileDiff.oldFile != null
+                        && fileDiff.oldFile.name.equals("AndroidManifest.xml")) {
                     inherit = false;
                 }
             }
