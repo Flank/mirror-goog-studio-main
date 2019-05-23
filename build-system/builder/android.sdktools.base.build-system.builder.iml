@@ -47,5 +47,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="kotlin-stdlib-jdk8" level="project" />
+    <orderEntry type="module" module-name="android.sdktools.zipflinger" />
   </component>
 </module>

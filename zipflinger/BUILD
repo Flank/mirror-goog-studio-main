@@ -1,27 +1,27 @@
-java_library(
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+
+maven_java_library(
     name = "zipflinger",
     srcs = glob([
         "src/zipflinger/**/*.java",
     ]),
-    visibility = ["//visibility:public"],
+    pom = ":pom",
+    visibility = [
+        "//tools/base/build-system:__subpackages__",
+        "//tools/base/lint:__subpackages__",
+    ],
     deps = [
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
     ],
 )
 
-java_library(
-    name = "jarflinger",
-    srcs = glob([
-        "test/src/java/zipflinger/JarFlinger.java",
-    ]),
-    deps = [
-        ":zipflinger",
-        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
-        "//tools/base/annotations",
-        "//tools/base/build-system/builder",
-        "//tools/base/common:tools.common",
-        "//tools/base/third_party:junit_junit",
-    ],
+maven_pom(
+    name = "pom",
+    artifact = "zipflinger",
+    group = "zipflinger",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_binary(
@@ -35,7 +35,6 @@ java_binary(
     ],
     main_class = "zipflinger.Benchmark",
     deps = [
-        ":jarflinger",
         ":test_utils",
         ":zipflinger",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
@@ -168,7 +167,6 @@ java_test(
     jvm_flags = ["-Dtest.suite.jar=testsJarFlinger.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
-        ":jarflinger",
         ":test_utils",
         ":zipflinger",
         "//tools/base/testutils:tools.testutils",

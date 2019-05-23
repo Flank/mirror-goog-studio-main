@@ -83,6 +83,7 @@ enum class BooleanOption(
     PRECOMPILE_REMOTE_RESOURCES("android.precompileRemoteResources", true),
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
+    USE_ZIPFLINGER_FOR_JAR_MERGING("android.useZipflingerForJarMerging", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

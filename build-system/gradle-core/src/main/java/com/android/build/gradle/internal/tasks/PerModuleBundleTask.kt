@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
@@ -32,7 +31,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
-import com.android.builder.packaging.JarCreator
+import zipflinger.JarCreator
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty

@@ -42,6 +42,7 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import zipflinger.JarCreator;
 
 /** Jar Merger class. */
 public class JarMerger implements JarCreator {

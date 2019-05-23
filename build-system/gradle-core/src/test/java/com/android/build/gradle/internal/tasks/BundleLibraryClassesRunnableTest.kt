@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.truth.MoreTruth.assertThatZip
@@ -62,7 +63,8 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = input,
-                packageBuildConfig = false
+                packageBuildConfig = false,
+                jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
         assertThatZip(output).contains("A.class")
@@ -92,7 +94,8 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = input,
-                packageBuildConfig = false
+                packageBuildConfig = false,
+                jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
         assertThatZip(output).contains("A.class")
@@ -127,7 +130,8 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(),
                 output = output,
                 input = setOf(inputJar),
-                packageBuildConfig = false
+                packageBuildConfig = false,
+                jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
         assertThatZip(output).contains("A.class")
@@ -157,7 +161,8 @@ class BundleLibraryClassesRunnableTest {
                 toIgnore = listOf(".*A\\.class$"),
                 output = output,
                 input = setOf(inputJar),
-                packageBuildConfig = false
+                packageBuildConfig = false,
+                jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
         assertThatZip(output).doesNotContain("A.class")

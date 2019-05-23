@@ -85,6 +85,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-util",
+        "//tools/base/zipflinger",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )
@@ -170,6 +171,7 @@ kotlin_test(
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.ow2.asm_asm-util",
+        "//tools/base/zipflinger",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )

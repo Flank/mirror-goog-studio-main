@@ -19,13 +19,15 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_CLASSES_JAR
 import com.android.build.api.transform.QualifiedContent
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.packaging.JarMerger
+import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -74,6 +76,10 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
     @Input
     fun getToIgnore() = toIgnoreRegExps.get()
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
+
     override fun doTaskAction() {
         workers.use {
             it.submit(
@@ -83,7 +89,8 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
                     toIgnoreRegExps.get(),
                     output!!.get().asFile,
                     classes.files,
-                    packageBuildConfig
+                    packageBuildConfig,
+                    jarCreatorType
                 )
             )
         }
@@ -147,6 +154,12 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps = TaskInputHelper.memoize(toIgnoreRegExps)
             task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
+            task.jarCreatorType =
+                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
+                    JarCreatorType.JAR_FLINGER
+                } else {
+                    JarCreatorType.JAR_MERGER
+                }
         }
     }
 }
@@ -158,7 +171,8 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         val toIgnore: List<String>,
         val output: File,
         val input: Set<File>,
-        val packageBuildConfig: Boolean
+        val packageBuildConfig: Boolean,
+        val jarCreatorType: JarCreatorType
     ) :
         Serializable
 
@@ -178,7 +192,11 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
                     && !ignorePatterns.any { it.matcher(entry).matches() }
         }
 
-        JarMerger(params.output.toPath(), predicate).use { out ->
+        JarCreatorFactory.make(
+            params.output.toPath(),
+            predicate,
+            params.jarCreatorType
+        ).use { out ->
             params.input.forEach { base ->
                 if (base.isDirectory) {
                     out.addDirectory(base.toPath())

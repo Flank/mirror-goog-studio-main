@@ -211,6 +211,7 @@ kotlin_library(
         "//tools/base/third_party:org.jetbrains_annotations",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/zipflinger",
     ],
 )
 

@@ -63,6 +63,7 @@ kotlin_library(
         "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
         "//tools/base/third_party:org.ow2.asm_asm-util",
+        "//tools/base/zipflinger",
     ],
 )
 
@@ -112,5 +113,6 @@ kotlin_test(
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/zipflinger",
     ],
 )

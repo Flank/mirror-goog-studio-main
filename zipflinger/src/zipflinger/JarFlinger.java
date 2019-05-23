@@ -17,7 +17,6 @@ package zipflinger;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.packaging.JarCreator;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.BufferedInputStream;
