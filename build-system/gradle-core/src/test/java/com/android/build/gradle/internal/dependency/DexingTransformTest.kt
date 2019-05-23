@@ -30,6 +30,7 @@ import com.google.common.truth.Truth.assertThat
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
+import org.gradle.api.provider.Property
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -108,8 +109,7 @@ class DexingTransformTest {
         val dexingTransform = TestDexingTransform(
             input,
             classpath = listOf(),
-            parameters = TestDexingTransform.TestParameters(12, true, listOf()),
-            desugaring = true
+            parameters = TestDexingTransform.TestParameters(12, true, listOf(), true)
         )
         val outputs = FakeTransformOutputs(tmp)
         dexingTransform.transform(outputs)
@@ -135,8 +135,7 @@ class DexingTransformTest {
         val dexingTransform = TestDexingTransform(
             input,
             classpath = listOf(),
-            parameters = TestDexingTransform.TestParameters(12, true, listOf(bootclasspath)),
-            desugaring = true
+            parameters = TestDexingTransform.TestParameters(12, true, listOf(bootclasspath), true)
         )
         val outputs = FakeTransformOutputs(tmp)
         dexingTransform.transform(outputs)
@@ -154,18 +153,16 @@ class DexingTransformTest {
     private class TestDexingTransform(
         override val primaryInput: File,
         private val parameters: TestParameters,
-        private val desugaring: Boolean = false,
         private val classpath: List<File> = listOf()
     ) : BaseDexingTransform() {
 
         override fun computeClasspathFiles() = classpath.map(File::toPath)
 
-        override fun enableDesugaring() = desugaring
-
         class TestParameters(
             minSdkVersion: Int,
             debuggable: Boolean,
             bootClasspath: List<File> = listOf(),
+            desugaring: Boolean = false,
             errorFormat: SyncOptions.ErrorFormatMode = SyncOptions.ErrorFormatMode.MACHINE_PARSABLE
         ) : BaseDexingTransform.Parameters {
             override var projectName = FakeGradleProperty(":test")
@@ -173,6 +170,7 @@ class DexingTransformTest {
             override val minSdkVersion = FakeGradleProperty(minSdkVersion)
             override val bootClasspath = FakeConfigurableFileCollection(bootClasspath)
             override val errorFormat = FakeGradleProperty(errorFormat)
+            override val enableDesugaring = FakeGradleProperty(desugaring)
         }
 
         override fun getParameters(): Parameters {

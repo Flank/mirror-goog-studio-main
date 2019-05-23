@@ -19,7 +19,10 @@ package com.android.build.gradle.integration.dexing
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
+import com.android.build.gradle.internal.dependency.DexingNoClasspathTransform
+import com.android.build.gradle.internal.dependency.DexingWithClasspathTransform
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.TestInputsGenerator
@@ -191,6 +194,24 @@ class DexingArtifactTransformTest {
         val result =
             project.executor().run("assembleDebug")
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG)).containsClass("Ltest/A;")
+    }
+
+    @Test
+    fun testDesugaringWithMinSdk24() {
+        project.buildFile.appendText("""
+            android.defaultConfig.minSdkVersion 24
+            android.compileOptions.targetCompatibility 1.8
+            dependencies {
+                implementation 'com.android.support:support-core-utils:$SUPPORT_LIB_VERSION'
+            }
+        """.trimIndent())
+        executor().run("assembleDebug")
+        project.buildResult.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).doesNotContain(DexingWithClasspathTransform::class.java.simpleName)
+        }
+        project.buildResult.stdout.use { scanner ->
+            ScannerSubject.assertThat(scanner).contains(DexingNoClasspathTransform::class.java.simpleName)
+        }
     }
 
     private fun executor() =

@@ -24,6 +24,7 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
+import com.android.sdklib.AndroidVersion
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
 import com.google.common.io.Closer
 import com.google.common.io.Files
@@ -51,6 +52,8 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
         val minSdkVersion: Property<Int>
         @get:Input
         val debuggable: Property<Boolean>
+        @get:Input
+        val enableDesugaring: Property<Boolean>
         @get:Classpath
         val bootClasspath: ConfigurableFileCollection
         @get:Internal
@@ -62,8 +65,6 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
     abstract val primaryInput: File
 
     protected abstract fun computeClasspathFiles(): List<Path>
-
-    protected abstract fun enableDesugaring(): Boolean
 
     override fun transform(outputs: TransformOutputs) {
         recordArtifactTransformSpan(
@@ -80,10 +81,10 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     ClassFileProviderFactory(parameters.bootClasspath.files.map(File::toPath))
                         .also { closer.register(it) },
                     ClassFileProviderFactory(computeClasspathFiles()).also { closer.register(it) },
-                    enableDesugaring(),
+                    parameters.enableDesugaring.get(),
                     MessageReceiverImpl(
                         parameters.errorFormat.get(),
-                        LoggerFactory.getLogger(DexingNoDesugarTransform::class.java)
+                        LoggerFactory.getLogger(DexingNoClasspathTransform::class.java)
                     )
                 )
 
@@ -101,12 +102,11 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
     }
 }
 
-abstract class DexingNoDesugarTransform : BaseDexingTransform() {
+abstract class DexingNoClasspathTransform : BaseDexingTransform() {
     override fun computeClasspathFiles() = listOf<Path>()
-    override fun enableDesugaring() = false
 }
 
-abstract class DexingWithDesugarTransform : BaseDexingTransform() {
+abstract class DexingWithClasspathTransform : BaseDexingTransform() {
     /**
      * Using compile classpath normalization is safe here due to the design of desugar:
      * Method bodies are only moved to the companion class within the same artifact,
@@ -117,8 +117,6 @@ abstract class DexingWithDesugarTransform : BaseDexingTransform() {
     abstract val classpath: FileCollection
 
     override fun computeClasspathFiles() = classpath.files.map(File::toPath)
-
-    override fun enableDesugaring() = true
 }
 
 fun getDexingArtifactConfigurations(scopes: Collection<VariantScope>): Set<DexingArtifactConfiguration> {
@@ -139,6 +137,8 @@ data class DexingArtifactConfiguration(
     private val enableDesugaring: Boolean
 ) {
 
+    private val needsClasspath = enableDesugaring && minSdk < AndroidVersion.VersionCodes.N
+
     fun registerTransform(
         projectName: String,
         dependencyHandler: DependencyHandler,
@@ -150,7 +150,8 @@ data class DexingArtifactConfiguration(
                 parameters.projectName.set(projectName)
                 parameters.minSdkVersion.set(minSdk)
                 parameters.debuggable.set(isDebuggable)
-                if (enableDesugaring) {
+                parameters.enableDesugaring.set(enableDesugaring)
+                if (needsClasspath) {
                     parameters.bootClasspath.from(bootClasspath)
                 }
                 parameters.errorFormat.set(errorFormat)
@@ -166,10 +167,10 @@ data class DexingArtifactConfiguration(
     }
 
     private fun getTransformClass(): Class<out BaseDexingTransform> {
-        return if (enableDesugaring) {
-            DexingWithDesugarTransform::class.java
+        return if (needsClasspath) {
+            DexingWithClasspathTransform::class.java
         } else {
-            DexingNoDesugarTransform::class.java
+            DexingNoClasspathTransform::class.java
         }
     }
 
