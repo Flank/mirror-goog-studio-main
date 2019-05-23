@@ -9,8 +9,8 @@ apply plugin: 'com.android.library'
 dependencies {
     <@kt.addKotlinDependencies />
 <#if useAndroidX>
-    ${getConfigurationName("compile")} 'androidx.media:media:+'
+    ${getConfigurationName("compile")} '${resolveDependency("androidx.media:media:+")}'
 <#else>
-    ${getConfigurationName("compile")} 'com.android.support:support-media-compat:+'
+    ${getConfigurationName("compile")} '${resolveDependency("com.android.support:support-media-compat:+")}'
 </#if>
 }
