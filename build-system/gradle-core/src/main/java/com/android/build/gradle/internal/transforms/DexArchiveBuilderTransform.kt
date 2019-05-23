@@ -60,6 +60,7 @@ import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.internal.WaitableExecutor
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutput
+import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.base.Throwables
@@ -117,6 +118,9 @@ class DexArchiveBuilderTransform internal constructor(
     private val inBufferSize: Int = (inBufferSize ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
     private val outBufferSize: Int = (outBufferSize ?: DEFAULT_BUFFER_SIZE_IN_KB) * 1024
     private val numberOfBuckets: Int = numberOfBuckets ?: DEFAULT_NUM_BUCKETS
+    private val needsClasspath =
+        java8LangSupportType == VariantScope.Java8LangSupport.D8
+                && minSdkVersion < AndroidVersion.VersionCodes.N
 
     /**
      * Classpath resources provider is shared between invocations, and this key uniquely identifies
@@ -158,6 +162,10 @@ class DexArchiveBuilderTransform internal constructor(
     }
 
     override fun getReferencedScopes(): ImmutableSet<in Scope> {
+        if (!needsClasspath) {
+            return ImmutableSet.of()
+        }
+
         return ImmutableSet.Builder<QualifiedContent.ScopeType>().also {
             it.add(Scope.TESTED_CODE, Scope.PROVIDED_ONLY)
             if (enableDexingArtifactTransform) {
@@ -209,10 +217,8 @@ class DexArchiveBuilderTransform internal constructor(
 
         val cacheableItems = mutableListOf<DexArchiveBuilderCacheHandler.CacheableItem>()
 
-        val classpath =
-            getClasspath(transformInvocation, java8LangSupportType).map { Paths.get(it) }
-        val bootclasspath =
-            getBootClasspath(androidJarClasspath, java8LangSupportType).map { Paths.get(it) }
+        val classpath = getClasspath(transformInvocation).map { Paths.get(it) }
+        val bootclasspath = getBootClasspath(androidJarClasspath).map { Paths.get(it) }
 
         var bootclasspathServiceKey: ClasspathServiceKey? = null
         var classpathServiceKey: ClasspathServiceKey? = null
@@ -622,11 +628,8 @@ class DexArchiveBuilderTransform internal constructor(
         )
     }
 
-    private fun getClasspath(
-        transformInvocation: TransformInvocation,
-        java8LangSupportType: VariantScope.Java8LangSupport
-    ): List<String> {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+    private fun getClasspath(transformInvocation: TransformInvocation): List<String> {
+        if (!needsClasspath) {
             return emptyList()
         }
         val classpathEntries = mutableListOf<String>()
@@ -647,14 +650,12 @@ class DexArchiveBuilderTransform internal constructor(
         return classpathEntries
     }
 
-    private fun getBootClasspath(
-        androidJarClasspath: FileCollection,
-        java8LangSupportType: VariantScope.Java8LangSupport
-    ): List<String> {
-        if (java8LangSupportType != VariantScope.Java8LangSupport.D8) {
-            return emptyList()
+    private fun getBootClasspath(androidJarClasspath: FileCollection): List<String> {
+        return if (needsClasspath) {
+            androidJarClasspath.files.map { it.path }
+        } else {
+            emptyList()
         }
-        return androidJarClasspath.files.map { it.path }
     }
 
     private fun getOutputForJar(
