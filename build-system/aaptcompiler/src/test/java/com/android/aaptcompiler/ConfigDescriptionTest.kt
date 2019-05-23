@@ -75,6 +75,13 @@ class ConfigDescriptionTest {
   }
 
   @Test
+  fun testParseVersionOnly() {
+    val config = testParse("v26")
+    Truth.assertThat(config).isNotNull()
+    Truth.assertThat(config!!.sdkVersion).isEqualTo(26)
+  }
+
+  @Test
   fun testParsingRoundQualifier() {
     val roundConfig = testParse("round")
     Truth.assertThat(roundConfig).isNotNull()

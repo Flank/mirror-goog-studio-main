@@ -82,7 +82,7 @@ class LocaleValue {
         }
     }
 
-    private fun isAlpha(word: String): Boolean = !word.any { !it.isLetterOrDigit() }
+    private fun isAlpha(word: String): Boolean = word.all { it.isLetter() }
 
     private fun initFromBcp47TagImpl(word: String, separator: Char): Boolean {
         val subTags = word.split(separator).map { it.toLowerCase() }
