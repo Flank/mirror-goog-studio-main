@@ -102,4 +102,13 @@ public class DeploymentApiOverrideTest {
             assertThat(apk).containsClass(userClass);
         }
     }
+
+    @Test
+    public void testDexingUsesDeviceApi() throws Exception {
+        project.executor().run("assembleIcsDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics")).hasDexVersion(35);
+
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 24).run("assembleIcsDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "ics")).hasDexVersion(37);
+    }
 }

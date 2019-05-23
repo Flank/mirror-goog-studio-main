@@ -2220,7 +2220,11 @@ public abstract class TaskManager {
                                 SyncOptions.getErrorFormatMode(
                                         variantScope.getGlobalScope().getProjectOptions()))
                         .setUserLevelCache(userLevelCache)
-                        .setMinSdkVersion(variantScope.getMinSdkVersion().getFeatureLevel())
+                        .setMinSdkVersion(
+                                variantScope
+                                        .getVariantConfiguration()
+                                        .getMinSdkVersionWithTargetDeviceApi()
+                                        .getFeatureLevel())
                         .setDexer(variantScope.getDexer())
                         .setUseGradleWorkers(
                                 projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))

@@ -156,7 +156,7 @@ open class DexFileDependenciesTask
         override fun configure(task: DexFileDependenciesTask) {
             super.configure(task)
             task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
-            task.minSdkVersion.set(variantScope.minSdkVersion.featureLevel)
+            task.minSdkVersion.set(variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel)
             task.classes.from(
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

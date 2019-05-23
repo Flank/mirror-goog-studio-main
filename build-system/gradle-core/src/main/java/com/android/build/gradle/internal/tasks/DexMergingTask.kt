@@ -216,7 +216,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
             task.errorFormatMode =
                 SyncOptions.getErrorFormatMode(variantScope.globalScope.projectOptions)
             task.dexMerger = variantScope.dexMerger
-            task.minSdkVersion = variantScope.minSdkVersion.featureLevel
+            task.minSdkVersion = variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
             task.isDebuggable = variantScope.variantConfiguration.buildType.isDebuggable
             if (variantScope.globalScope.projectOptions[BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK]) {
                 task.duplicateClassesCheck = variantScope.artifacts.getFinalArtifactFiles(
@@ -347,7 +347,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
             return when (action) {
                 DexMergingAction.MERGE_LIBRARY_PROJECTS ->
                     when {
-                        variantScope.minSdkVersion.featureLevel < 23 -> {
+                        variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel < 23 -> {
                             task.outputs.cacheIf { getAllRegularFiles(task.dexFiles.files).size < LIBRARIES_MERGING_THRESHOLD }
                             LIBRARIES_MERGING_THRESHOLD
                         }
