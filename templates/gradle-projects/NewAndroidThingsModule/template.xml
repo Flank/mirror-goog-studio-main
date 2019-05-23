@@ -8,6 +8,12 @@
     <category value="Application" />
     <formfactor value="Things" />
 
+    <parameter
+        id="makeIgnore"
+        name="Create .gitignore file"
+        type="boolean"
+        default="true" />
+
     <thumbs>
         <thumb>things-module.png</thumb>
     </thumbs>

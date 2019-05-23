@@ -7,6 +7,12 @@
 
     <category value="Application" />
 
+    <parameter
+        id="makeIgnore"
+        name="Create .gitignore file"
+        type="boolean"
+        default="true" />
+
     <thumbs>
         <thumb>instant-app-module.png</thumb>
     </thumbs>

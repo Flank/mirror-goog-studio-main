@@ -17,5 +17,9 @@
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
+<#if makeIgnore>
+    <copy from="root://gradle-projects/common/gitignore"
+            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
+</#if>
 
 </recipe>

@@ -7,6 +7,12 @@
 
     <category value="Application" />
 
+    <parameter
+        id="makeIgnore"
+        name="Create .gitignore file"
+        type="boolean"
+        default="true" />
+
     <thumbs>
         <thumb>dynamic-feature-module.png</thumb>
     </thumbs>

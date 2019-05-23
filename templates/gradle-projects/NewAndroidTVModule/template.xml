@@ -10,6 +10,12 @@
     <category value="Application" />
     <formfactor value="TV" />
 
+    <parameter
+        id="makeIgnore"
+        name="Create .gitignore file"
+        type="boolean"
+        default="true" />
+
     <thumbs>
         <thumb>tv-module.png</thumb>
     </thumbs>

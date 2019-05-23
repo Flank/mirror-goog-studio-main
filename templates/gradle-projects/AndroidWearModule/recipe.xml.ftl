@@ -20,6 +20,10 @@
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
+<#if makeIgnore>
+    <copy from="root://gradle-projects/common/gitignore"
+            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
+</#if>
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
     <mkdir  at="${escapeXmlAttribute(resOut)}/drawable" />
     <copy from="root/res/mipmap-hdpi"

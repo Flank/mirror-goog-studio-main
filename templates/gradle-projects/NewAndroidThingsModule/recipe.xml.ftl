@@ -31,6 +31,11 @@
 
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 
+<#if makeIgnore>
+    <copy from="root://gradle-projects/common/gitignore"
+            to="${escapeXmlAttribute(projectOut)}/.gitignore" />
+</#if>
+
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#if !isLibraryProject && generateLayout!false>

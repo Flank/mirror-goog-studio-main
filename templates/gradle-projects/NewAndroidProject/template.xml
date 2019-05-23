@@ -7,15 +7,15 @@
 
     <category value="Application" />
 
+    <thumbs>
+        <thumb>android-project.png</thumb>
+    </thumbs>
+
     <parameter
         id="makeIgnore"
         name="Create .gitignore file"
         type="boolean"
         default="true" />
-
-    <thumbs>
-        <thumb>android-project.png</thumb>
-    </thumbs>
 
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />

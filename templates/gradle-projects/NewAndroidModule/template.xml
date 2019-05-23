@@ -9,6 +9,12 @@
     <formfactor value="Mobile" />
 
     <parameter
+        id="makeIgnore"
+        name="Create .gitignore file"
+        type="boolean"
+        default="true" />
+
+    <parameter
         id="includeCppSupport"
         name="Enable C++ Support"
         type="boolean"
