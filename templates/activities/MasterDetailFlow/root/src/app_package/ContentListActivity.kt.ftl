@@ -9,6 +9,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+<#if parentActivityClass?has_content>
+import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)}
+import ${actionBarClassFqcn}
+import android.view.MenuItem
+</#if>
 <#if applicationPackage??>
 import ${applicationPackage}.R
 </#if>
@@ -45,6 +50,10 @@ class ${CollectionName}Activity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
+<#if parentActivityClass != "">
+        // Show the Up button in the action bar.
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+</#if>
 
         if (${detail_name}_container != null) {
             // The detail container view will be present only in the
@@ -56,6 +65,23 @@ class ${CollectionName}Activity : AppCompatActivity() {
 
         setupRecyclerView(${collection_name})
     }
+<#if parentActivityClass != "">
+
+    override fun onOptionsItemSelected(item: MenuItem) =
+            when (item.itemId) {
+                android.R.id.home -> {
+                    // This ID represents the Home or Up button. In the case of this
+                    // activity, the Up button is shown. Use NavUtils to allow users
+                    // to navigate up one level in the application structure. For
+                    // more details, see the Navigation pattern on Android Design:
+                    //
+                    // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+                    NavUtils.navigateUpFromSameTask(this)
+                    true
+                }
+                else -> super.onOptionsItemSelected(item)
+            }
+</#if>
 
     private fun setupRecyclerView(recyclerView: RecyclerView) {
         recyclerView.adapter = SimpleItemRecyclerViewAdapter(this, DummyContent.ITEMS, twoPane)

@@ -9,7 +9,12 @@
             android:label="@string/title_${simpleName}"
             </#if>
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:theme="@style/FullscreenTheme">
+            android:theme="@style/FullscreenTheme"
+            <#if buildApi gte 16 && parentActivityClass != "">android:parentActivityName="${parentActivityClass}"</#if>>
+            <#if parentActivityClass != "">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="${parentActivityClass}" />
+            </#if>
             <@manifestMacros.commonActivityBody />
         </activity>
     </application>

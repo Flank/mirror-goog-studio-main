@@ -25,6 +25,9 @@ class ${activityClass} : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
+<#if parentActivityClass?has_content>
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+</#if>
     }
 <#if isNewProject>
 

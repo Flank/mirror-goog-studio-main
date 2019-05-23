@@ -13,6 +13,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+<#if parentActivityClass != "">
+import ${getMaterialComponentName('android.support.v4.app.NavUtils', useAndroidX)};
+import ${actionBarClassFqcn};
+import android.view.MenuItem;
+</#if>
 <#if applicationPackage??>
 import ${applicationPackage}.R;
 </#if>
@@ -54,6 +59,13 @@ public class ${CollectionName}Activity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+<#if parentActivityClass != "">
+        // Show the Up button in the action bar.
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+</#if>
 
         if (findViewById(R.id.${detail_name}_container) != null) {
             // The detail container view will be present only in the
@@ -67,6 +79,25 @@ public class ${CollectionName}Activity extends AppCompatActivity {
         assert recyclerView != null;
         setupRecyclerView((RecyclerView) recyclerView);
     }
+<#if parentActivityClass != "">
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            // This ID represents the Home or Up button. In the case of this
+            // activity, the Up button is shown. Use NavUtils to allow users
+            // to navigate up one level in the application structure. For
+            // more details, see the Navigation pattern on Android Design:
+            //
+            // http://developer.android.com/design/patterns/navigation.html#up-vs-back
+            //
+            NavUtils.navigateUpFromSameTask(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+</#if>
 
     private void setupRecyclerView(@NonNull RecyclerView recyclerView) {
         recyclerView.setAdapter(new SimpleItemRecyclerViewAdapter(this, DummyContent.ITEMS, mTwoPane));

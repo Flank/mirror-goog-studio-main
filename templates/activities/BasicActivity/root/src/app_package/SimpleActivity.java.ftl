@@ -31,6 +31,9 @@ public class ${activityClass} extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+<#if parentActivityClass != "">
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+</#if>
     }
 
 <#if isNewProject>

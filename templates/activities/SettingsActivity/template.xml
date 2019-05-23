@@ -38,6 +38,14 @@
             help="If true, this activity will have a main settings screen that links to separate settings screens." />
 
     <parameter
+        id="parentActivityClass"
+        name="Parent Activity"
+        type="string"
+        constraints="activity|exists|empty"
+        default=""
+        help="The hierarchical parent activity, used to provide a default implementation for the 'Up' button"/>
+
+    <parameter
             id="packageName"
             name="Package Name"
             type="string"

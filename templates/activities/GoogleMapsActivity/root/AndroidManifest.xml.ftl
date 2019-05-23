@@ -21,6 +21,10 @@
 
         <activity android:name="${packageName}.${activityClass}"
             android:label="@string/title_${simpleName}">
+            <#if parentActivityClass != "">
+            <meta-data android:name="android.support.PARENT_ACTIVITY"
+                android:value="${parentActivityClass}" />
+            </#if>
             <@manifestMacros.commonActivityBody />
         </activity>
     </application>
