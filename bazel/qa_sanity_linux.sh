@@ -60,8 +60,8 @@ if [[ -d "${dist_dir}" ]]; then
   echo "<meta http-equiv=\"refresh\" content=\"0; URL='https://source.cloud.google.com/results/invocations/${upsalite_id_emu}'\" />" > "${dist_dir}"/upsalite_emu_test_results.html
 
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
-  mkdir "${dist_dir}"/bazel-testlogs
-  (cd "${testlogs_dir}" && zip -R "${dist_dir}"/bazel-testlogs/xml_files.zip "*.xml")
+  mkdir "${dist_dir}"/testlogs
+  (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
 
 fi
 
