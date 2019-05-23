@@ -32,10 +32,9 @@ import java.util.Map;
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class FusedLocationProviderClientWrapper {
     private static final String LOCATION_PROVIDER_NAME = "fused";
-    private static final Map<LocationCallback, Integer> callbackIdMap =
-            new HashMap<LocationCallback, Integer>();
-    private static final Map<PendingIntent, Integer> intentIdMap =
-            new HashMap<PendingIntent, Integer>();
+    private static final Map<LocationCallback, Long> callbackIdMap =
+            new HashMap<LocationCallback, Long>();
+    private static final Map<PendingIntent, Long> intentIdMap = new HashMap<PendingIntent, Long>();
 
     /**
      * Entry hook on {@code FusedLocationProviderClient.requestLocationUpdate} (callback version).

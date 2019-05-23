@@ -16,15 +16,15 @@
 
 package com.android.tools.profiler.support.energy;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /** Utility class for energy events. */
 public final class EnergyUtils {
-    private static final AtomicInteger atomicInteger = new AtomicInteger();
+    private static final AtomicLong atomicLong = new AtomicLong();
 
     /** Generates a unique energy event ID. */
-    public static int nextId() {
-        return atomicInteger.incrementAndGet();
+    public static long nextId() {
+        return atomicLong.incrementAndGet();
     }
 
     /** JNI method to return the current time in nanoseconds. */

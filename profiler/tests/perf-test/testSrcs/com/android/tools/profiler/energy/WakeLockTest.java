@@ -22,12 +22,12 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
-import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
+import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
+import com.android.tools.profiler.proto.Energy.WakeLockAcquired.Level;
+import com.android.tools.profiler.proto.Energy.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
-import com.android.tools.profiler.proto.EnergyProfiler.WakeLockAcquired.Level;
-import com.android.tools.profiler.proto.EnergyProfiler.WakeLockReleased.ReleaseFlag;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
@@ -76,28 +76,32 @@ public class WakeLockTest {
                         resp -> resp.getEventsCount() == 2);
         assertThat(response.getEventsCount()).isEqualTo(2);
 
-        EnergyEvent acquiredEvent = response.getEvents(0);
+        Common.Event acquiredEvent = response.getEvents(0);
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
-        assertThat(acquiredEvent.getIsTerminal()).isFalse();
-        assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+        assertThat(acquiredEvent.getGroupId()).isGreaterThan(0L);
+        assertThat(acquiredEvent.getIsEnded()).isFalse();
+        assertThat(acquiredEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getLevel())
                 .isEqualTo(Level.PARTIAL_WAKE_LOCK);
-        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
-        assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Bar");
-        assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(1000);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getFlagsCount())
+                .isEqualTo(0);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTag()).isEqualTo("Bar");
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTimeout())
+                .isEqualTo(1000);
 
-        EnergyEvent releasedEvent = response.getEvents(1);
+        Common.Event releasedEvent = response.getEvents(1);
         assertThat(releasedEvent.getTimestamp()).isAtLeast(acquiredEvent.getTimestamp());
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(releasedEvent.getEventId()).isEqualTo(acquiredEvent.getEventId());
-        assertThat(releasedEvent.getIsTerminal()).isTrue();
-        assertThat(releasedEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
-        assertThat(releasedEvent.getWakeLockReleased().getFlagsList())
+        assertThat(releasedEvent.getGroupId()).isEqualTo(acquiredEvent.getGroupId());
+        assertThat(releasedEvent.getIsEnded()).isTrue();
+        assertThat(releasedEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
+        assertThat(releasedEvent.getEnergyEvent().getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
 
-        String stack = TestUtils.getBytes(myGrpc, releasedEvent.getTraceId());
+        String stack = TestUtils.getBytes(myGrpc, releasedEvent.getEnergyEvent().getTraceId());
         assertThat(stack).contains(ACTIVITY_CLASS);
     }
 
@@ -116,16 +120,18 @@ public class WakeLockTest {
                         resp -> resp.getEventsCount() == 1);
         assertThat(response.getEventsCount()).isEqualTo(1);
 
-        EnergyEvent acquiredEvent = response.getEvents(0);
+        Common.Event acquiredEvent = response.getEvents(0);
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(acquiredEvent.getEventId()).isGreaterThan(0);
-        assertThat(acquiredEvent.getIsTerminal()).isFalse();
-        assertThat(acquiredEvent.getMetadataCase()).isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
-        assertThat(acquiredEvent.getWakeLockAcquired().getLevel())
+        assertThat(acquiredEvent.getGroupId()).isGreaterThan(0L);
+        assertThat(acquiredEvent.getIsEnded()).isFalse();
+        assertThat(acquiredEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.WAKE_LOCK_ACQUIRED);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getLevel())
                 .isEqualTo(Level.PARTIAL_WAKE_LOCK);
-        assertThat(acquiredEvent.getWakeLockAcquired().getFlagsCount()).isEqualTo(0);
-        assertThat(acquiredEvent.getWakeLockAcquired().getTag()).isEqualTo("Foo");
-        assertThat(acquiredEvent.getWakeLockAcquired().getTimeout()).isEqualTo(0);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getFlagsCount())
+                .isEqualTo(0);
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTag()).isEqualTo("Foo");
+        assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTimeout()).isEqualTo(0);
     }
 }

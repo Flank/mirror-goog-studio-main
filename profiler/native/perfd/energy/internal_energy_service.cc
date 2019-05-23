@@ -21,7 +21,6 @@ using grpc::ServerContext;
 using grpc::Status;
 using profiler::proto::AddEnergyEventRequest;
 using profiler::proto::EmptyEnergyReply;
-using profiler::proto::EnergyEvent;
 
 InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache,
                                                      FileCache *file_cache)
@@ -35,7 +34,7 @@ Status InternalEnergyServiceImpl::AddEnergyEvent(
     trace_id = file_cache_.AddString(request->callstack());
   }
   auto event = energy_cache_.AddEnergyEvent(request->energy_event());
-  event->set_trace_id(trace_id);
+  event->mutable_energy_event()->set_trace_id(trace_id);
   return Status::OK;
 }
 

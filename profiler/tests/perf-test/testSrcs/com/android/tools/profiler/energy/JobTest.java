@@ -23,19 +23,14 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent;
-import com.android.tools.profiler.proto.EnergyProfiler.EnergyEvent.MetadataCase;
+import com.android.tools.profiler.proto.Energy.*;
+import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
+import com.android.tools.profiler.proto.Energy.JobInfo.BackoffPolicy;
+import com.android.tools.profiler.proto.Energy.JobInfo.NetworkType;
+import com.android.tools.profiler.proto.Energy.JobScheduled.Result;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
-import com.android.tools.profiler.proto.EnergyProfiler.JobFinished;
-import com.android.tools.profiler.proto.EnergyProfiler.JobInfo;
-import com.android.tools.profiler.proto.EnergyProfiler.JobInfo.BackoffPolicy;
-import com.android.tools.profiler.proto.EnergyProfiler.JobInfo.NetworkType;
-import com.android.tools.profiler.proto.EnergyProfiler.JobParameters;
-import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled;
-import com.android.tools.profiler.proto.EnergyProfiler.JobScheduled.Result;
-import com.android.tools.profiler.proto.EnergyProfiler.JobStarted;
-import com.android.tools.profiler.proto.EnergyProfiler.JobStopped;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -48,22 +43,19 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class JobTest {
-    @Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(26, 28);
-    }
-
     private static final String ACTIVITY_CLASS = "com.activity.energy.JobActivity";
-
     @Rule public final PerfDriver myPerfDriver;
-
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
     private EnergyStubWrapper myStubWrapper;
     private Session mySession;
-
     public JobTest(int sdkLevel) {
         myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+    }
+
+    @Parameters
+    public static Collection<Integer> data() {
+        return Arrays.asList(26, 28);
     }
 
     @Before
@@ -87,18 +79,22 @@ public class JobTest {
                         "Actual events: (%s)",
                         response.getEventsList()
                                 .stream()
-                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .map(
+                                        event ->
+                                                String.valueOf(
+                                                        event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
                 .that(response.getEventsCount())
                 .isEqualTo(3);
 
-        final EnergyEvent scheduleEvent = response.getEvents(0);
+        final Common.Event scheduleEvent = response.getEvents(0);
         assertThat(scheduleEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(scheduleEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(scheduleEvent.getEventId()).isGreaterThan(0);
-        assertThat(scheduleEvent.getIsTerminal()).isFalse();
-        assertThat(scheduleEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_SCHEDULED);
-        JobScheduled jobScheduled = scheduleEvent.getJobScheduled();
+        assertThat(scheduleEvent.getGroupId()).isGreaterThan(0L);
+        assertThat(scheduleEvent.getIsEnded()).isFalse();
+        assertThat(scheduleEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_SCHEDULED);
+        JobScheduled jobScheduled = scheduleEvent.getEnergyEvent().getJobScheduled();
         assertThat(jobScheduled.getResult()).isEqualTo(Result.RESULT_SUCCESS);
         JobInfo jobInfo = jobScheduled.getJob();
         assertThat(jobInfo.getJobId()).isEqualTo(1);
@@ -122,13 +118,14 @@ public class JobTest {
         assertThat(jobInfo.getExtras()).isEqualTo("extras");
         assertThat(jobInfo.getTransientExtras()).isEqualTo("transient extras");
 
-        final EnergyEvent startEvent = response.getEvents(1);
+        final Common.Event startEvent = response.getEvents(1);
         assertThat(startEvent.getTimestamp()).isAtLeast(scheduleEvent.getTimestamp());
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(startEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
-        assertThat(startEvent.getIsTerminal()).isFalse();
-        assertThat(startEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STARTED);
-        JobStarted jobStarted = startEvent.getJobStarted();
+        assertThat(startEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
+        assertThat(startEvent.getIsEnded()).isFalse();
+        assertThat(startEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_STARTED);
+        JobStarted jobStarted = startEvent.getEnergyEvent().getJobStarted();
         assertThat(jobStarted.getWorkOngoing()).isTrue();
         JobParameters params = jobStarted.getParams();
         assertThat(params.getJobId()).isEqualTo(1);
@@ -138,13 +135,14 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        final EnergyEvent finishEvent = response.getEvents(2);
+        final Common.Event finishEvent = response.getEvents(2);
         assertThat(finishEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(finishEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
-        assertThat(finishEvent.getIsTerminal()).isTrue();
-        assertThat(finishEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_FINISHED);
-        JobFinished jobFinished = finishEvent.getJobFinished();
+        assertThat(finishEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
+        assertThat(finishEvent.getIsEnded()).isTrue();
+        assertThat(finishEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_FINISHED);
+        JobFinished jobFinished = finishEvent.getEnergyEvent().getJobFinished();
         assertThat(jobFinished.getNeedsReschedule()).isFalse();
         params = jobFinished.getParams();
         assertThat(params.getJobId()).isEqualTo(1);
@@ -154,9 +152,10 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        String scheduleStack = TestUtils.getBytes(myGrpc, scheduleEvent.getTraceId());
+        String scheduleStack =
+                TestUtils.getBytes(myGrpc, scheduleEvent.getEnergyEvent().getTraceId());
         assertThat(scheduleStack).contains("schedule");
-        String finishStack = TestUtils.getBytes(myGrpc, finishEvent.getTraceId());
+        String finishStack = TestUtils.getBytes(myGrpc, finishEvent.getEnergyEvent().getTraceId());
         assertThat(finishStack).contains("Finish");
     }
 
@@ -173,19 +172,23 @@ public class JobTest {
                         "Actual events: (%s).",
                         response.getEventsList()
                                 .stream()
-                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .map(
+                                        event ->
+                                                String.valueOf(
+                                                        event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
                 .that(response.getEventsCount())
                 .isEqualTo(3);
 
-        final EnergyEvent scheduleEvent = response.getEvents(0);
-        final EnergyEvent startEvent = response.getEvents(1);
+        final Common.Event scheduleEvent = response.getEvents(0);
+        final Common.Event startEvent = response.getEvents(1);
         assertThat(startEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(startEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
-        assertThat(startEvent.getIsTerminal()).isFalse();
-        assertThat(startEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STARTED);
-        JobStarted jobStarted = startEvent.getJobStarted();
+        assertThat(startEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
+        assertThat(startEvent.getIsEnded()).isFalse();
+        assertThat(startEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_STARTED);
+        JobStarted jobStarted = startEvent.getEnergyEvent().getJobStarted();
         assertThat(jobStarted.getWorkOngoing()).isTrue();
         JobParameters params = jobStarted.getParams();
         assertThat(params.getJobId()).isEqualTo(2);
@@ -195,13 +198,14 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        final EnergyEvent stopEvent = response.getEvents(2);
+        final Common.Event stopEvent = response.getEvents(2);
         assertThat(stopEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
-        assertThat(stopEvent.getEventId()).isEqualTo(scheduleEvent.getEventId());
-        assertThat(stopEvent.getIsTerminal()).isTrue();
-        assertThat(stopEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STOPPED);
-        JobStopped jobStopped = stopEvent.getJobStopped();
+        assertThat(stopEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
+        assertThat(stopEvent.getIsEnded()).isTrue();
+        assertThat(stopEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_STOPPED);
+        JobStopped jobStopped = stopEvent.getEnergyEvent().getJobStopped();
         assertThat(jobStopped.getReschedule()).isFalse();
         params = jobStopped.getParams();
         assertThat(params.getJobId()).isEqualTo(2);
@@ -225,13 +229,17 @@ public class JobTest {
                         "Actual events: (%s).",
                         response.getEventsList()
                                 .stream()
-                                .map(event -> String.valueOf(event.getMetadataCase()))
+                                .map(
+                                        event ->
+                                                String.valueOf(
+                                                        event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
                 .that(response.getEventsCount())
                 .isEqualTo(1);
 
-        final EnergyEvent startEvent = response.getEvents(0);
-        assertThat(startEvent.getEventId()).isGreaterThan(0);
-        assertThat(startEvent.getMetadataCase()).isEqualTo(MetadataCase.JOB_STARTED);
+        final Common.Event startEvent = response.getEvents(0);
+        assertThat(startEvent.getGroupId()).isGreaterThan(0L);
+        assertThat(startEvent.getEnergyEvent().getMetadataCase())
+                .isEqualTo(MetadataCase.JOB_STARTED);
     }
 }

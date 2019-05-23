@@ -77,7 +77,7 @@ public final class WakeLockWrapper {
     private static final ThreadLocal<Long> releaseTimestamp = new ThreadLocal<Long>();
 
     /** Used by acquire and release hooks to look up the generated ID by wake lock instance. */
-    private static final Map<WakeLock, Integer> eventIdMap = new HashMap<WakeLock, Integer>();
+    private static final Map<WakeLock, Long> eventIdMap = new HashMap<WakeLock, Long>();
 
     /** Used by acquire hooks to retrieve wake lock creation parameters. */
     private static final Map<WakeLock, CreationParams> wakeLockCreationParamsMap =
@@ -193,8 +193,8 @@ public final class WakeLockWrapper {
 
     // Native functions to send wake lock events to perfd.
     private static native void sendWakeLockAcquired(
-            long timestamp, int eventId, int flags, String tag, long timeout, String stack);
+            long timestamp, long eventId, int flags, String tag, long timeout, String stack);
 
     private static native void sendWakeLockReleased(
-            long timestamp, int eventId, int releaseFlags, boolean isHeld, String stack);
+            long timestamp, long eventId, int releaseFlags, boolean isHeld, String stack);
 }

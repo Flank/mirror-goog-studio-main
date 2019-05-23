@@ -17,20 +17,20 @@
 
 namespace profiler {
 
-using profiler::proto::EnergyEvent;
+using profiler::proto::Event;
 using std::vector;
 
-EnergyEvent* EnergyCache::AddEnergyEvent(const EnergyEvent& data) {
+Event* EnergyCache::AddEnergyEvent(const Event& data) {
   std::lock_guard<std::mutex> lock(energy_events_mutex_);
-  return energy_events_.emplace(data.pid(), CircularBuffer<EnergyEvent>(500))
+  return energy_events_.emplace(data.pid(), CircularBuffer<Event>(500))
       .first->second.Add(data);
 }
 
-const vector<EnergyEvent> EnergyCache::GetEnergyEvents(int32_t app_id,
-                                                       int64_t start_time_excl,
-                                                       int64_t end_time_incl) {
+const vector<Event> EnergyCache::GetEnergyEvents(int32_t app_id,
+                                                 int64_t start_time_excl,
+                                                 int64_t end_time_incl) {
   std::lock_guard<std::mutex> lock(energy_events_mutex_);
-  vector<EnergyEvent> result;
+  vector<Event> result;
   auto search = energy_events_.find(app_id);
   if (search != energy_events_.end()) {
     for (size_t i = 0; i < search->second.size(); ++i) {

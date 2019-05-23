@@ -29,10 +29,9 @@ import java.util.Map;
 @SuppressWarnings("unused") // Used by native instrumentation code.
 public final class LocationManagerWrapper {
 
-    private static final Map<LocationListener, Integer> listenerIdMap =
-            new HashMap<LocationListener, Integer>();
-    private static final Map<PendingIntent, Integer> intentIdMap =
-            new HashMap<PendingIntent, Integer>();
+    private static final Map<LocationListener, Long> listenerIdMap =
+            new HashMap<LocationListener, Long>();
+    private static final Map<PendingIntent, Long> intentIdMap = new HashMap<PendingIntent, Long>();
 
     /**
      * Wraps {@link LocationManager#requestLocationUpdates(String, long, float, LocationListener)}.
@@ -262,7 +261,7 @@ public final class LocationManagerWrapper {
     // Native functions to send location events to perfd.
     public static native void sendListenerLocationUpdateRequested(
             long timestamp,
-            int eventId,
+            long eventId,
             String provider,
             long interval,
             long minInterval,
@@ -274,7 +273,7 @@ public final class LocationManagerWrapper {
 
     public static native void sendIntentLocationUpdateRequested(
             long timestamp,
-            int eventId,
+            long eventId,
             String provider,
             long interval,
             long minInterval,
@@ -287,14 +286,14 @@ public final class LocationManagerWrapper {
             String stack);
 
     public static native void sendListenerLocationUpdateRemoved(
-            long timestamp, int eventId, String stack);
+            long timestamp, long eventId, String stack);
 
     public static native void sendIntentLocationUpdateRemoved(
-            long timestamp, int eventId, String creatorPackage, int creatorUid, String stack);
+            long timestamp, long eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerLocationChanged(
             long timestamp,
-            int eventId,
+            long eventId,
             String provider,
             float accuracy,
             double latitude,
@@ -302,7 +301,7 @@ public final class LocationManagerWrapper {
 
     public static native void sendIntentLocationChanged(
             long timestamp,
-            int eventId,
+            long eventId,
             String provider,
             float accuracy,
             double latitude,

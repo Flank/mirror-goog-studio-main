@@ -38,10 +38,10 @@ public final class AlarmManagerWrapper {
 
     /** Data structure for {@link OnAlarmListener} parameters. */
     private static final class ListenerParams {
-        final int id;
+        final long id;
         final String tag;
 
-        ListenerParams(int id, String tag) {
+        ListenerParams(long id, String tag) {
             this.id = id;
             this.tag = tag;
         }
@@ -49,10 +49,10 @@ public final class AlarmManagerWrapper {
 
     /** Data structure for PendingIntent Alarm parameters. */
     private static final class PendingIntentParams {
-        final int id;
+        final long id;
         final boolean isRepeating;
 
-        PendingIntentParams(int id, boolean isRepeating) {
+        PendingIntentParams(long id, boolean isRepeating) {
             this.id = id;
             this.isRepeating = isRepeating;
         }
@@ -205,7 +205,7 @@ public final class AlarmManagerWrapper {
     // Native functions to send alarm events to perfd.
     private static native void sendIntentAlarmScheduled(
             long timestamp,
-            int eventId,
+            long eventId,
             int type,
             long triggerMs,
             long windowMs,
@@ -216,7 +216,7 @@ public final class AlarmManagerWrapper {
 
     private static native void sendListenerAlarmScheduled(
             long timestamp,
-            int eventId,
+            long eventId,
             int type,
             long triggerMs,
             long windowMs,
@@ -225,17 +225,17 @@ public final class AlarmManagerWrapper {
             String stack);
 
     private static native void sendIntentAlarmCancelled(
-            long timestamp, int eventId, String creatorPackage, int creatorUid, String stack);
+            long timestamp, long eventId, String creatorPackage, int creatorUid, String stack);
 
     private static native void sendListenerAlarmCancelled(
-            long timestamp, int eventId, String listenerTag, String stack);
+            long timestamp, long eventId, String listenerTag, String stack);
 
     private static native void sendListenerAlarmFired(
-            long timestamp, int eventId, String listenerTag);
+            long timestamp, long eventId, String listenerTag);
 
     private static native void sendIntentAlarmFired(
             long timestamp,
-            int eventId,
+            long eventId,
             String creatorPackage,
             int creatorUid,
             boolean isRepeating);

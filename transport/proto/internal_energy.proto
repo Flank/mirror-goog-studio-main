@@ -17,6 +17,7 @@ syntax = "proto3";
 
 package profiler.proto;
 
+import "common.proto";
 import "energy.proto";
 
 // RPC services to send data to perfd.
@@ -26,7 +27,7 @@ service InternalEnergyService {
 
 message AddEnergyEventRequest {
   // Energy event includes information like id and event metadata.
-  EnergyEvent energy_event = 1;
+  Event energy_event = 1;
   // Optional callstack for the event.
   string callstack = 2;
 }

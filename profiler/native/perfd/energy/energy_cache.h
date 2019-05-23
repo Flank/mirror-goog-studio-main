@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "proto/common.pb.h"
 #include "proto/energy.grpc.pb.h"
 #include "utils/circular_buffer.h"
 
@@ -31,20 +32,19 @@ class EnergyCache {
 
   // Add a copy of the passed-in energy event to the internal cache, returning a
   // pointer to the copy (so the caller can optionally edit it further).
-  proto::EnergyEvent* AddEnergyEvent(const proto::EnergyEvent& data);
+  proto::Event* AddEnergyEvent(const proto::Event& data);
 
   // Query for all the energy events for a given app within the time range
   // (start_time_excl, end_time_incl].
-  const std::vector<proto::EnergyEvent> GetEnergyEvents(int32_t app_id,
-                                                        int64_t start_time_excl,
-                                                        int64_t end_time_incl);
+  const std::vector<proto::Event> GetEnergyEvents(int32_t app_id,
+                                                  int64_t start_time_excl,
+                                                  int64_t end_time_incl);
 
  private:
   // Mutex that guards the cache.
   std::mutex energy_events_mutex_;
   // Map of app_id to buffer of energy events
-  std::unordered_map<int32_t, CircularBuffer<proto::EnergyEvent>>
-      energy_events_;
+  std::unordered_map<int32_t, CircularBuffer<proto::Event>> energy_events_;
 };
 
 }  // end of namespace profiler

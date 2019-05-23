@@ -52,7 +52,7 @@ public final class JobWrapper {
      * Job ID is user-defined so we still need to send event ID to guarantee uniqueness across
      * energy events.
      */
-    private static final Map<Integer, Integer> jobIdToEventId = new HashMap<Integer, Integer>();
+    private static final Map<Integer, Long> jobIdToEventId = new HashMap<Integer, Long>();
 
     /**
      * Entry hook for {@link JobScheduler#schedule(JobInfo)}.
@@ -208,7 +208,7 @@ public final class JobWrapper {
     // Native functions to send job events to perfd.
     private static native void sendJobScheduled(
             long timestamp,
-            int eventId,
+            long eventId,
             int jobId,
             String serviceName,
             int backoffPolicy,
@@ -234,7 +234,7 @@ public final class JobWrapper {
 
     private static native void sendJobStarted(
             long timestamp,
-            int eventId,
+            long eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,
@@ -245,7 +245,7 @@ public final class JobWrapper {
 
     private static native void sendJobStopped(
             long timestamp,
-            int eventId,
+            long eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,
@@ -256,7 +256,7 @@ public final class JobWrapper {
 
     private static native void sendJobFinished(
             long timestamp,
-            int eventId,
+            long eventId,
             int jobId,
             String[] triggerContentAuthorities,
             String[] triggerContentUris,

@@ -19,8 +19,9 @@
 #include "energy_cache.h"
 
 using profiler::EnergyCache;
-using profiler::proto::EnergyEvent;
+using profiler::proto::EnergyEventData;
 using profiler::proto::EnergyEventsResponse;
+using profiler::proto::Event;
 
 TEST(EnergyCache, IsEmptyInitially) {
   EnergyCache energy_cache;
@@ -29,9 +30,9 @@ TEST(EnergyCache, IsEmptyInitially) {
 }
 
 TEST(EnergyCache, AddEnergyEvent) {
-  EnergyEvent energy_event;
+  Event energy_event;
   energy_event.set_timestamp(1000);
-  energy_event.mutable_wake_lock_acquired();
+  energy_event.mutable_energy_event()->mutable_wake_lock_acquired();
   energy_event.set_pid(1);
   EnergyCache energy_cache;
   energy_cache.AddEnergyEvent(energy_event);
@@ -39,16 +40,17 @@ TEST(EnergyCache, AddEnergyEvent) {
   auto result = energy_cache.GetEnergyEvents(1, LLONG_MIN, LLONG_MAX);
   EXPECT_EQ(1, result.size());
   EXPECT_EQ(1000, result.at(0).timestamp());
-  EXPECT_EQ(EnergyEvent::kWakeLockAcquired, result.at(0).metadata_case());
+  EXPECT_EQ(EnergyEventData::kWakeLockAcquired,
+            result.at(0).energy_event().metadata_case());
   EXPECT_EQ(1, result.at(0).pid());
 }
 
 TEST(EnergyCache, GetEnergyEventsOfAppId) {
-  EnergyEvent energy_event_app1, energy_event_app2;
+  Event energy_event_app1, energy_event_app2;
   energy_event_app1.set_pid(1);
-  energy_event_app1.set_event_id(1);
+  energy_event_app1.set_group_id(1);
   energy_event_app2.set_pid(2);
-  energy_event_app2.set_event_id(1);
+  energy_event_app2.set_group_id(1);
   EnergyCache energy_cache;
   energy_cache.AddEnergyEvent(energy_event_app1);
   energy_cache.AddEnergyEvent(energy_event_app2);
@@ -59,7 +61,7 @@ TEST(EnergyCache, GetEnergyEventsOfAppId) {
 }
 
 TEST(EnergyCache, GetEnergyEventsWithinTimeRange) {
-  EnergyEvent energy_event_time1, energy_event_time2;
+  Event energy_event_time1, energy_event_time2;
   energy_event_time1.set_pid(1);
   energy_event_time1.set_timestamp(1000);
   energy_event_time2.set_pid(1);

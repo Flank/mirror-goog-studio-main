@@ -70,6 +70,8 @@ message Event {
     // Energy Profiler Prefix = 500
     // no specified group id.
     ENERGY_USAGE = 501;
+    // group_id: event_id
+    ENERGY_EVENT = 502;
 
     // Event Profiler Prefix = 600
     INTERACTION = 601;
@@ -159,7 +161,12 @@ message Event {
     MemoryUsageData memory_usage = 401;
 
     // Energy Profiler Prefix = 500
+    // Energy consumption calculated from CPU, network and location activities.
+    // Populated when |kind| is |ENERGY_USAGE|.
     EnergyUsageData energy_usage = 501;
+    // Energy-impacting system event, e.g. wake locks.
+    // Populated when |kind| is |ENERGY_EVENT|.
+    EnergyEventData energy_event = 502;
 
     // Event Profiler Prefix = 600
     InteractionData interaction = 601;
