@@ -821,6 +821,67 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                 + "2 errors, 0 warnings");
     }
 
+    public void testUnknownTypes() {
+        // Regression test for
+        // 133280834: False positive with support annotations and kotlin when operator
+        // Can happen in editor before all when clauses are entered.
+        lint().files(
+                        kotlin(
+                                ""
+                                        + "package test.pkg\n"
+                                        + "\n"
+                                        + "import android.support.annotation.DrawableRes\n"
+                                        + "import test.pkg.R // unresolved for now\n"
+                                        + "\n"
+                                        + "enum class Foo {\n"
+                                        + "    NOT_STARTED, IN_PROGRESS, PENDING, IN_ERROR, ACCEPTED, REJECTED\n"
+                                        + "}\n"
+                                        + "\n"
+                                        + "fun test2(state: Foo) {\n"
+                                        + "    @DrawableRes val imageId: Int = when (state) {\n"
+                                        + "        Foo.NOT_STARTED -> R.drawable.ic_launcher_foreground\n"
+                                        + "        Foo.IN_PROGRESS -> R.drawable.ic_launcher_foreground\n"
+                                        + "        Foo.PENDING -> R.drawable.ic_launcher_foreground\n"
+                                        + "        Foo.IN_ERROR -> R.drawable.ic_launcher_foreground\n"
+                                        + "        Foo.ACCEPTED -> R.drawable.ic_launcher_foreground\n"
+                                        + "        Foo.REJECTED -> R.drawable.ic_launcher_foreground\n"
+                                        + "    }\n"
+                                        + "}"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
+    public void testPxOnFloats() {
+        // Regression test for
+        //  133205958: @Px annotation should support float
+        lint().files(
+                        java(
+                                ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "import android.support.annotation.Px;\n"
+                                        + "\n"
+                                        + "public class PxTest {\n"
+                                        + "    public boolean fakeDragBy(@Px float offsetPxFloat) { // OK\n"
+                                        + "    }\n"
+                                        + "    public boolean fakeDragBy2(@Dimension(unit = Dimension.PX) float offset) { // OK\n"
+                                        + "    }\n"
+                                        + "    public boolean wrongPx(@Px char c) { // ERROR\n"
+                                        + "    }\n"
+                                        + "}\n"),
+                        SUPPORT_ANNOTATIONS_CLASS_PATH,
+                        SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect(
+                        ""
+                                + "src/test/pkg/PxTest.java:10: Error: This annotation does not apply for type char; expected int, long, float, or double [SupportAnnotationUsage]\n"
+                                + "    public boolean wrongPx(@Px char c) { // ERROR\n"
+                                + "                           ~~~\n"
+                                + "1 errors, 0 warnings");
+    }
+
     @Override
     protected Detector getDetector() {
         return new AnnotationDetector();

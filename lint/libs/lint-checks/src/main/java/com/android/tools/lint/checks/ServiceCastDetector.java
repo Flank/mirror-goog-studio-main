@@ -249,6 +249,9 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
             } else if (resolved instanceof PsiLocalVariable) {
                 PsiLocalVariable variable = (PsiLocalVariable) resolved;
                 PsiType type = variable.getType();
+                if (!type.isValid()) {
+                    return false;
+                }
                 if (checkWifiContextType(context, call, type, false)) {
                     return true;
                 }
