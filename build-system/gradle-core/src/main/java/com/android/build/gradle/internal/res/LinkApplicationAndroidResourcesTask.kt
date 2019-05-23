@@ -115,12 +115,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
     @Internal
     private var sourceOutputDir= objects.directoryProperty()
 
-    private var textSymbolOutputDir: Supplier<File?> = Supplier { null }
+    @get:OutputFile
+    @get:Optional
+    abstract val textSymbolOutputFileProperty: RegularFileProperty
 
     @get:org.gradle.api.tasks.OutputFile
     @get:Optional
-    var symbolsWithPackageNameOutputFile: File? = null
-        private set
+    abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
 
     @get:OutputFile
     @get:Optional
@@ -556,8 +557,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
 
     class CreationAction(
         scope: VariantScope,
-        private val symbolLocation: Supplier<File>,
-        private val symbolsWithPackageNameOutputFile: File,
         generateLegacyMultidexMainDexProguardRules: Boolean,
         private val sourceArtifactType: TaskManager.MergeType,
         baseName: String,
@@ -596,6 +595,24 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     LinkApplicationAndroidResourcesTask::sourceOutputDir,
                     fileName = SdkConstants.FD_RES_CLASS
                 )}
+
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.SYMBOL_LIST,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                LinkApplicationAndroidResourcesTask::textSymbolOutputFileProperty,
+                SdkConstants.FN_RESOURCE_TEXT
+            )
+
+            // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
+            // process resources for local subprojects.
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                LinkApplicationAndroidResourcesTask::symbolsWithPackageNameOutputFile,
+                "package-aware-r.txt"
+            )
         }
 
         override fun configure(task: LinkApplicationAndroidResourcesTask) {
@@ -611,10 +628,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                 sourceArtifactType.outputType,
                 task.inputResourcesDir
             )
-
-            @Suppress("UNCHECKED_CAST")
-            task.textSymbolOutputDir = symbolLocation as Supplier<File?>
-            task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
             if (variantScope.globalScope.projectOptions.get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
                 task.compiledRemoteResources =
@@ -759,7 +772,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     FileUtils.cleanOutputDir(srcOut)
                 }
 
-                symbolOutputDir = params.textSymbolOutputDir
+                symbolOutputDir = params.textSymbolOutputFile?.parentFile
                 proguardOutputFile = params.proguardOutputFile
                 mainDexListProguardOutputFile = params.mainDexListProguardOutputFile
             }
@@ -851,11 +864,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     && params.symbolsWithPackageNameOutputFile != null
                 ) {
                     SymbolIo.writeSymbolListWithPackageName(
-                        File(
-                            params.textSymbolOutputDir!!,
-                            SdkConstants.R_CLASS + SdkConstants.DOT_TXT
-                        )
-                            .toPath(),
+                        params.textSymbolOutputFile!!.toPath(),
                         manifestFile.toPath(),
                         params.symbolsWithPackageNameOutputFile.toPath()
                     )
@@ -898,7 +907,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val variantDataType: VariantType = task.variantScope.variantData.type
         val originalApplicationId: String? = task.originalApplicationId.get()
         val sourceOutputDir: File? = task.getSourceOutputDir()
-        val textSymbolOutputDir: File? = task.textSymbolOutputDir.get()
+        val textSymbolOutputFile: File? = task.textSymbolOutputFileProperty.orNull?.asFile
         val proguardOutputFile: File? = task.proguardOutputFile.orNull?.asFile
         val mainDexListProguardOutputFile: File? = task.mainDexListProguardOutputFile.orNull?.asFile
         val buildTargetDensity: String? = task.buildTargetDensity
@@ -913,7 +922,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         val inputResourcesDir: File? = task.inputResourcesDir.orNull?.asFile
         val mergeBlameFolder: File = task.mergeBlameLogFolder
         val isLibrary: Boolean = task.isLibrary
-        val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile
+        val symbolsWithPackageNameOutputFile: File? = task.symbolsWithPackageNameOutputFile.orNull?.asFile
         val useConditionalKeepRules: Boolean = task.useConditionalKeepRules
         val useFinalIds: Boolean = task.useFinalIds
         val errorFormatMode: SyncOptions.ErrorFormatMode = task.errorFormatMode
@@ -946,15 +955,9 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         return sourceOutputDir.orNull?.asFile
     }
 
-    @org.gradle.api.tasks.OutputFile
-    @Optional
-    fun getTextSymbolOutputFile(): File? {
-        val outputDir = textSymbolOutputDir.get()
-        return if (outputDir != null)
-            File(outputDir, SdkConstants.R_CLASS + SdkConstants.DOT_TXT)
-        else
-            null
-    }
+    @Suppress("unused") // Used by butterknife
+    @Internal
+    fun getTextSymbolOutputFile(): File? = textSymbolOutputFileProperty.orNull?.asFile
 
     @Input
     fun getTypeAsString(): String {

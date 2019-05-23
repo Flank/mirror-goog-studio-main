@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.dsl.SigningConfig
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -31,6 +32,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
 
 /**
  * Task that writes the SigningConfig information and publish it for dynamic-feature modules.
@@ -39,8 +41,7 @@ import org.gradle.api.tasks.PathSensitivity
 abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:OutputDirectory
-    var outputDirectory: Provider<Directory>? = null
-        internal set
+    abstract val outputDirectory: DirectoryProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -53,9 +54,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
 
     public override fun doTaskAction() {
-        val out = outputDirectory
-            ?: throw RuntimeException("OutputDirectory not set.")
-        SigningConfigMetadata.save(out.get().asFile, signingConfig)
+        SigningConfigMetadata.save(outputDirectory.get().asFile, signingConfig)
     }
 
     class CreationAction(variantScope: VariantScope) :
@@ -65,20 +64,20 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             get() = variantScope.getTaskName("signingConfigWriter")
         override val type: Class<SigningConfigWriterTask>
             get() = SigningConfigWriterTask::class.java
-        private var outputDirectory: Provider<Directory>? = null
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
-            outputDirectory = variantScope.artifacts.createDirectory(
+        override fun handleProvider(taskProvider: TaskProvider<out SigningConfigWriterTask>) {
+            super.handleProvider(taskProvider)
+            variantScope.artifacts.producesDir(
                 InternalArtifactType.SIGNING_CONFIG,
-                taskName
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                SigningConfigWriterTask::outputDirectory
             )
         }
 
         override fun configure(task: SigningConfigWriterTask) {
             super.configure(task)
 
-            task.outputDirectory = outputDirectory
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.VALIDATE_SIGNING_CONFIG,
                 task.validatedSigningOutput

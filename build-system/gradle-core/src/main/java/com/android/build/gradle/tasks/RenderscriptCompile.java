@@ -50,7 +50,6 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
-import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Provider;
@@ -72,9 +71,6 @@ public abstract class RenderscriptCompile extends NdkTask {
     private File resOutputDir;
 
     private File objOutputDir;
-
-    private Provider<Directory> libOutputDir;
-
 
     // ----- PRIVATE TASK API -----
 
@@ -123,9 +119,7 @@ public abstract class RenderscriptCompile extends NdkTask {
     }
 
     @OutputDirectory
-    public Provider<Directory> getLibOutputDir() {
-        return libOutputDir;
-    }
+    public abstract DirectoryProperty getLibOutputDir();
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -202,7 +196,7 @@ public abstract class RenderscriptCompile extends NdkTask {
         File objDestDir = getObjOutputDir();
         FileUtils.cleanOutputDir(objDestDir);
 
-        File libDestDir = libOutputDir.get().getAsFile();
+        File libDestDir = getLibOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(libDestDir);
 
         Set<File> sourceDirectories = sourceDirs.getFiles();
@@ -322,8 +316,6 @@ public abstract class RenderscriptCompile extends NdkTask {
 
     public static class CreationAction extends VariantTaskCreationAction<RenderscriptCompile> {
 
-        private Provider<Directory> libOutputDir;
-
         public CreationAction(@NonNull VariantScope scope) {
             super(scope);
         }
@@ -341,16 +333,6 @@ public abstract class RenderscriptCompile extends NdkTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
-            libOutputDir =
-                    getVariantScope()
-                            .getArtifacts()
-                            .createDirectory(RENDERSCRIPT_LIB, taskName, "lib");
-        }
-
-        @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
             super.handleProvider(taskProvider);
@@ -363,6 +345,15 @@ public abstract class RenderscriptCompile extends NdkTask {
                             taskProvider,
                             RenderscriptCompile::getSourceOutputDir,
                             "out");
+
+            getVariantScope()
+                    .getArtifacts()
+                    .producesDir(
+                            RENDERSCRIPT_LIB,
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            RenderscriptCompile::getLibOutputDir,
+                            "lib");
         }
 
         @Override
@@ -393,7 +384,6 @@ public abstract class RenderscriptCompile extends NdkTask {
 
             renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
             renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
-            renderscriptTask.libOutputDir = libOutputDir;
 
             renderscriptTask.setNdkConfig(config.getNdkConfig());
 

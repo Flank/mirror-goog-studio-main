@@ -20,7 +20,6 @@ import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostProcessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
@@ -40,7 +39,6 @@ import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
@@ -1393,15 +1391,18 @@ public class VariantScopeImpl implements VariantScope {
                         AndroidArtifacts.ArtifactScope.PROJECT,
                         AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
             } else {
-                return getArtifacts()
-                        .getFinalArtifactFiles(InternalArtifactType.SIGNING_CONFIG)
-                        .get();
+                return getProject()
+                        .files(
+                                getArtifacts()
+                                        .getFinalArtifactFiles(
+                                                InternalArtifactType.SIGNING_CONFIG));
             }
         } else {
             return variantType.isBaseModule()
-                    ? getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.SIGNING_CONFIG)
-                            .get()
+                    ? getProject()
+                            .files(
+                                    getArtifacts()
+                                            .getFinalProduct(InternalArtifactType.SIGNING_CONFIG))
                     : getArtifactFileCollection(
                             ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,

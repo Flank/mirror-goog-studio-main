@@ -228,7 +228,7 @@ fun getProjectNativeLibs(scope: VariantScope): FileCollection {
     // add renderscript compilation output if support mode is enabled.
     if (scope.variantConfiguration.renderscriptSupportModeEnabled) {
         val rsFileCollection: ConfigurableFileCollection =
-                project.files(scope.artifacts.getFinalArtifactFiles(RENDERSCRIPT_LIB).get())
+                project.files(scope.artifacts.getFinalProduct<Directory>(RENDERSCRIPT_LIB))
         val rsLibs = scope.globalScope.sdkComponents.supportNativeLibFolderProvider.orNull
         if (rsLibs?.isDirectory != null) {
             rsFileCollection.from(rsLibs)

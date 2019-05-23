@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_ZIP;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
@@ -35,7 +36,6 @@ import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.tools.build.apkzlib.zip.ZFileOptions;
 import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -46,14 +46,16 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.Deflater;
 import javax.inject.Inject;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.WorkerExecutor;
 
 /** Task to bundle a bundle of feature APKs. */
-public class BundleInstantApp extends NonIncrementalTask {
+public abstract class BundleInstantApp extends NonIncrementalTask {
     private final WorkerExecutorFacade workers;
 
     @Inject
@@ -71,7 +73,7 @@ public class BundleInstantApp extends NonIncrementalTask {
                     new BundleInstantAppParams(
                             getProject().getName(),
                             getPath(),
-                            bundleDirectory,
+                            getBundleDirectory().get().getAsFile(),
                             bundleName,
                             ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
                             new TreeSet<>(apkDirectories.getFiles())));
@@ -80,9 +82,7 @@ public class BundleInstantApp extends NonIncrementalTask {
 
     @OutputDirectory
     @NonNull
-    public File getBundleDirectory() {
-        return bundleDirectory;
-    }
+    public abstract DirectoryProperty getBundleDirectory();
 
     @Input
     @NonNull
@@ -102,7 +102,6 @@ public class BundleInstantApp extends NonIncrementalTask {
         return apkDirectories;
     }
 
-    private File bundleDirectory;
     private String bundleName;
     private FileCollection applicationId;
     private FileCollection apkDirectories;
@@ -127,20 +126,25 @@ public class BundleInstantApp extends NonIncrementalTask {
         }
 
         @Override
-        public void preConfigure(@NonNull String taskName) {
-            super.preConfigure(taskName);
-
+        public void handleProvider(@NonNull TaskProvider<? extends BundleInstantApp> taskProvider) {
+            super.handleProvider(taskProvider);
             scope.getArtifacts()
-                    .appendArtifact(
+                    .producesDir(
                             InternalArtifactType.INSTANTAPP_BUNDLE,
-                            ImmutableList.of(scope.getApkLocation()),
-                            taskName);
+                            BuildArtifactsHolder.OperationType.INITIAL,
+                            taskProvider,
+                            BundleInstantApp::getBundleDirectory,
+                            scope.getGlobalScope()
+                                    .getProject()
+                                    .getLayout()
+                                    .getBuildDirectory()
+                                    .dir(bundleDirectory.getAbsolutePath()),
+                            "");
         }
 
         @Override
         public void configure(@NonNull BundleInstantApp bundleInstantApp) {
             bundleInstantApp.setVariantName(scope.getFullVariantName());
-            bundleInstantApp.bundleDirectory = bundleDirectory;
             bundleInstantApp.bundleName =
                     scope.getGlobalScope().getProjectBaseName()
                             + "-"

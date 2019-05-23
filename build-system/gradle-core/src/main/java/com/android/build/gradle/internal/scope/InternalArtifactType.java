@@ -97,9 +97,9 @@ public enum InternalArtifactType implements ArtifactType {
     // package resources for aar publishing.
     PACKAGED_RES,
     // R.txt output
-    SYMBOL_LIST,
+    SYMBOL_LIST(Kind.FILE),
     // Synthetic artifacts
-    SYMBOL_LIST_WITH_PACKAGE_NAME,
+    SYMBOL_LIST_WITH_PACKAGE_NAME(Kind.FILE),
     // Resources defined within the AAR.
     DEFINED_ONLY_SYMBOL_LIST,
     //Resources defined within the current module.

@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactUtil;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
@@ -44,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -54,11 +53,9 @@ import org.gradle.api.tasks.PathSensitivity;
  * Task side loading an instant app variant. It looks at connected device, checks if preO or postO
  * and either multi-install the feature APKs or upload the bundle.
  */
-public class InstantAppSideLoadTask extends NonIncrementalTask {
+public abstract class InstantAppSideLoadTask extends NonIncrementalTask {
 
     private Provider<File> adbExecutableProvider;
-
-    private BuildableArtifact bundleDir;
 
     public InstantAppSideLoadTask() {
         this.getOutputs()
@@ -75,13 +72,13 @@ public class InstantAppSideLoadTask extends NonIncrementalTask {
             throw new GradleException("No adb file found.");
         }
 
-        InstantAppOutputScope outputScope =
-                InstantAppOutputScope.load(BuildableArtifactUtil.singleFile(bundleDir));
+        File inputBundleDirectory = getBundleDir().get().getAsFile();
+        InstantAppOutputScope outputScope = InstantAppOutputScope.load(inputBundleDirectory);
 
         if (outputScope == null) {
             throw new GradleException(
                     "Instant app outputs not found in "
-                            + BuildableArtifactUtil.singleFile(bundleDir).getAbsolutePath()
+                            + inputBundleDirectory.getAbsolutePath()
                             + ".");
         }
 
@@ -159,9 +156,7 @@ public class InstantAppSideLoadTask extends NonIncrementalTask {
     @InputFiles
     @NonNull
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getBundleDir() {
-        return bundleDir;
-    }
+    public abstract DirectoryProperty getBundleDir();
 
     public static class CreationAction extends TaskCreationAction<InstantAppSideLoadTask> {
 
@@ -192,9 +187,9 @@ public class InstantAppSideLoadTask extends NonIncrementalTask {
 
             task.adbExecutableProvider =
                     scope.getGlobalScope().getSdkComponents().getAdbExecutableProvider();
-            task.bundleDir =
-                    scope.getArtifacts()
-                            .getFinalArtifactFiles(InternalArtifactType.INSTANTAPP_BUNDLE);
+            scope.getArtifacts()
+                    .setTaskInputToFinalProduct(
+                            InternalArtifactType.INSTANTAPP_BUNDLE, task.getBundleDir());
         }
     }
 }

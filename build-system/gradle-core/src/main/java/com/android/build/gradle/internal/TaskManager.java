@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.cxx.model.TryCreateCxxModuleModelKt.tryCreateCxxModuleModel;
@@ -199,7 +198,6 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
@@ -1029,14 +1027,6 @@ public abstract class TaskManager {
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
-        File symbolTableWithPackageName =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        FD_RES,
-                        "symbol-table-with-package",
-                        scope.getVariantConfiguration().getDirName(),
-                        "package-aware-r.txt");
-        final TaskProvider<? extends ProcessAndroidResources> task;
 
         File symbolFile = new File(symbolDirectory, FN_RESOURCE_TEXT);
         BuildArtifactsHolder artifacts = scope.getArtifacts();
@@ -1057,21 +1047,15 @@ public abstract class TaskManager {
 
             // Generate the R class for a library using both local symbols and symbols
             // from dependencies.
-            task =
-                    taskFactory.register(
-                            new GenerateLibraryRFileTask.CreationAction(
-                                    scope, symbolFile, symbolTableWithPackageName));
+            taskFactory.register(new GenerateLibraryRFileTask.CreationAction(scope));
         } else {
             // MergeType.MERGE means we merged the whole universe.
-            task =
-                    taskFactory.register(
-                            createProcessAndroidResourcesConfigAction(
-                                    scope,
-                                    () -> symbolDirectory,
-                                    symbolTableWithPackageName,
-                                    useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                                    mergeType,
-                                    baseName));
+            taskFactory.register(
+                    createProcessAndroidResourcesConfigAction(
+                            scope,
+                            useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                            mergeType,
+                            baseName));
 
             if (packageOutputType != null) {
                 artifacts.republish(PROCESSED_RES, packageOutputType);
@@ -1087,15 +1071,6 @@ public abstract class TaskManager {
                                     artifacts.getFinalProduct(
                                             COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
         }
-        artifacts.appendArtifact(
-                InternalArtifactType.SYMBOL_LIST, ImmutableList.of(symbolFile), task.getName());
-
-        // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
-        // process resources for local subprojects.
-        artifacts.appendArtifact(
-                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
-                ImmutableList.of(symbolTableWithPackageName),
-                task.getName());
     }
 
     private static boolean generatesProguardOutputFile(VariantScope variantScope) {
@@ -1105,16 +1080,12 @@ public abstract class TaskManager {
     protected VariantTaskCreationAction<LinkApplicationAndroidResourcesTask>
             createProcessAndroidResourcesConfigAction(
                     @NonNull VariantScope scope,
-                    @NonNull Supplier<File> symbolLocation,
-                    @NonNull File symbolWithPackageName,
                     boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
                     @NonNull MergeType sourceArtifactType,
                     @NonNull String baseName) {
 
         return new LinkApplicationAndroidResourcesTask.CreationAction(
                 scope,
-                symbolLocation,
-                symbolWithPackageName,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceArtifactType,
                 baseName,

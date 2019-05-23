@@ -41,23 +41,17 @@ class SigningConfigWriterTaskTest {
 
     internal lateinit var project: Project
     internal lateinit var task: SigningConfigWriterTask
-    @Mock
-    lateinit var outputDirectoryProvider : Provider<Directory>
-    @Mock lateinit var outputDirectoryMock : Directory
     lateinit var outputDirectory : File
 
     @Before
     @Throws(IOException::class)
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
         val testDir = temporaryFolder.newFolder()
         outputDirectory = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
-        Mockito.`when`(outputDirectoryProvider.get()).thenReturn(outputDirectoryMock)
-        Mockito.`when`(outputDirectoryMock.asFile).thenReturn(outputDirectory)
         task = project.tasks.create("test", SigningConfigWriterTask::class.java)
-        task.outputDirectory = outputDirectoryProvider
+        task.outputDirectory.set(outputDirectory)
     }
 
     @Test

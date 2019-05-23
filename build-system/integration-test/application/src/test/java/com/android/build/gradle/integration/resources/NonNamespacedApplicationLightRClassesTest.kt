@@ -158,15 +158,13 @@ class NonNamespacedApplicationLightRClassesTest {
 
         assertThat(
             libFiles.getIntermediateFile(
-                    "res",
-                    "symbol-table-with-package",
+                    "symbol_list_with_package_name",
                     "debug",
                     "package-aware-r.txt")).exists()
 
         assertThat(
             libFiles.getIntermediateFile(
-                    "res",
-                    "symbol-table-with-package",
+                    "symbol_list_with_package_name",
                     "debug",
                     "package-aware-r.txt")).contains("lib_string")
 
@@ -175,15 +173,13 @@ class NonNamespacedApplicationLightRClassesTest {
 
         assertThat(
             appFiles.getIntermediateFile(
-                    "res",
-                    "symbol-table-with-package",
-                    "debug",
-                    "package-aware-r.txt")).exists()
+                "symbol_list_with_package_name",
+                "debug",
+                "package-aware-r.txt")).exists()
 
         assertThat(
             appFiles.getIntermediateFile(
-                    "res",
-                    "symbol-table-with-package",
+                    "symbol_list_with_package_name",
                     "debug",
                     "package-aware-r.txt")).containsAllOf("lib_string", "app_string")
 

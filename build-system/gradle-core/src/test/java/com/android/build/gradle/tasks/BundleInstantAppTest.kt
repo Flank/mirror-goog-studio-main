@@ -151,7 +151,7 @@ class BundleInstantAppTest {
         val project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
 
         val task = project.tasks.create("bundleInstantApp", BundleInstantApp::class.java)
-
+        task.bundleDirectory.set(bundleDirectory)
         creationAction.configure(task)
 
         task.taskAction()

@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle.internal.res
 
+import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -41,6 +42,7 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -66,11 +68,16 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
 
     override fun getSourceOutputDir() = rClassOutputJar.get().asFile
 
-    @get:OutputFile lateinit var textSymbolOutputFile: File
-        private set
+    // used by Butterknife
+    @Suppress("unused")
+    @Internal
+    fun getTextSymbolOutputFile(): File {
+        return textSymbolOutputFileProperty.get().asFile
+    }
 
-    @get:OutputFile lateinit var symbolsWithPackageNameOutputFile: File
-        private set
+    @get:OutputFile abstract val textSymbolOutputFileProperty: RegularFileProperty
+
+    @get:OutputFile abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection
@@ -109,9 +116,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                     packageForR.get(),
                     null,
                     rClassOutputJar.get().asFile,
-                    textSymbolOutputFile,
+                    textSymbolOutputFileProperty.get().asFile,
                     namespacedRClass,
-                    symbolsWithPackageNameOutputFile
+                    symbolsWithPackageNameOutputFile.get().asFile
                 )
             )
         }
@@ -161,11 +168,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
     }
 
 
-    class CreationAction(
-            variantScope: VariantScope,
-            private val symbolFile: File,
-            private val symbolsWithPackageNameOutputFile: File
-    ) : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantScope) {
+    class CreationAction(variantScope: VariantScope)
+        : VariantTaskCreationAction<GenerateLibraryRFileTask>(variantScope) {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "RFile")
@@ -183,7 +187,26 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                 GenerateLibraryRFileTask::rClassOutputJar,
                 fileName = "R.jar"
             )
+
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.SYMBOL_LIST,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                GenerateLibraryRFileTask::textSymbolOutputFileProperty,
+                SdkConstants.FN_RESOURCE_TEXT
+            )
+
+            // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
+            // process resources for local subprojects.
+            variantScope.artifacts.producesFile(
+                InternalArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider,
+                GenerateLibraryRFileTask::symbolsWithPackageNameOutputFile,
+                "package-aware-r.txt"
+            )
         }
+
 
         override fun configure(task: GenerateLibraryRFileTask) {
             super.configure(task)
@@ -198,9 +221,6 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
-
-            task.textSymbolOutputFile = symbolFile
-            task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 
             task.packageForR = TaskInputHelper.memoizeToProvider(task.project) {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
