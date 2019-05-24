@@ -544,9 +544,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgUnsupportedElement() throws Exception {
         String errors = checkSvgConversion("test_unsupported_element");
-        assertEquals(
-                "In test_unsupported_element.svg:\n" + "ERROR @ line 4: <text> is not supported",
-                errors);
+        assertEquals("ERROR @ line 4: <text> is not supported", errors);
     }
 
     public void testSvgImageOnly() throws Exception {

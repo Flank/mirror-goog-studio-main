@@ -44,9 +44,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXException;
 
 /**
  * Represents the SVG file in an internal data structure as a tree.
@@ -185,9 +187,13 @@ class SvgTree {
         }
     }
 
-    public Document parse(@NonNull File f) throws Exception {
+    public Document parse(@NonNull File f) throws IOException, SAXException {
         mFileName = f.getName();
-        return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
+        try {
+            return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
+        } catch (ParserConfigurationException e) {
+            throw new Error("Internal error", e); // Should not happen unless there is a bug.
+        }
     }
 
     public void normalize() {
@@ -241,9 +247,10 @@ class SvgTree {
         }
         Collections.sort(mLogMessages); // Sort by severity and line number.
         StringBuilder result = new StringBuilder();
-        result.append("In ").append(mFileName).append(':');
         for (LogMessage message : mLogMessages) {
-            result.append('\n');
+            if (result.length() != 0) {
+                result.append('\n');
+            }
             result.append(message.getFormattedMessage());
         }
         return result.toString();

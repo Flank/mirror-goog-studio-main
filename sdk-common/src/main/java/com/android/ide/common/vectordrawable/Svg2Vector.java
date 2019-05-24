@@ -39,6 +39,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  * Converts SVG to VectorDrawable's XML.
@@ -198,7 +199,7 @@ public class Svg2Vector {
     private static final Pattern SPACE_OR_COMMA = Pattern.compile("[\\s,]+");
 
     @NonNull
-    private static SvgTree parse(File f) throws Exception {
+    private static SvgTree parse(File f) throws IOException, SAXException {
         SvgTree svgTree = new SvgTree();
         Document doc = svgTree.parse(f);
 
@@ -1220,23 +1221,12 @@ public class Svg2Vector {
      */
     @Slow
     @NonNull
-    public static String parseSvgToXml(@NonNull File inputSvg, @NonNull OutputStream outStream) {
-        // Write all the error message during parsing into SvgTree and return here as getErrorLog().
-        // We will also log the exceptions here.
-        String errorMessage;
-        try {
-            SvgTree svgTree = parse(inputSvg);
-            if (svgTree.getHasLeafNode()) {
-                writeFile(outStream, svgTree);
-            }
-            errorMessage = svgTree.getErrorMessage();
-        } catch (Exception e) {
-            errorMessage = "Error while parsing " + inputSvg.getName();
-            String errorDetail = e.getLocalizedMessage();
-            if (errorDetail != null) {
-                errorMessage += ":\n" + errorDetail;
-            }
+    public static String parseSvgToXml(@NonNull File inputSvg, @NonNull OutputStream outStream)
+            throws IOException, SAXException {
+        SvgTree svgTree = parse(inputSvg);
+        if (svgTree.getHasLeafNode()) {
+            writeFile(outStream, svgTree);
         }
-        return errorMessage;
+        return svgTree.getErrorMessage();
     }
 }
