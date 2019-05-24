@@ -193,6 +193,7 @@ def kotlin_test(name, srcs, deps = [], runtime_deps = [], friends = [], coverage
             ":" + name + ".testlib",
         ] + runtime_deps,
         coverage = coverage,
+        visibility = visibility,
         **kwargs
     )
 

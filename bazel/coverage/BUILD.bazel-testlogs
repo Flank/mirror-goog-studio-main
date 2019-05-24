@@ -1,8 +1,0 @@
-load("@cov//:results.bzl", "name_results")
-
-# name the undeclared test output zipfiles
-name_results(
-    name = "UDOZ",  # UnDeclared Output Zipfile
-    path_suffix = "test.outputs/outputs.zip",
-    visibility = ["@cov//:__subpackages__"],
-)
