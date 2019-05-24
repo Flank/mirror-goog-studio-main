@@ -91,7 +91,8 @@ Java_com_android_tools_agent_layoutinspector_ComponentTree_addView(
  */
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_ComponentTree_addIdResource(
-    JNIEnv *env, jclass clazz, jlong jview, jint namespace_, jint type, jint name) {
+    JNIEnv *env, jclass clazz, jlong jview, jint namespace_, jint type,
+    jint name) {
   View *view = (View *)jview;
   saveResource(view->mutable_view_id(), namespace_, type, name);
 }
@@ -101,7 +102,8 @@ Java_com_android_tools_agent_layoutinspector_ComponentTree_addIdResource(
  */
 JNIEXPORT void JNICALL
 Java_com_android_tools_agent_layoutinspector_ComponentTree_addLayoutResource(
-    JNIEnv *env, jclass clazz, jlong jview, jint namespace_, jint type, jint name) {
+    JNIEnv *env, jclass clazz, jlong jview, jint namespace_, jint type,
+    jint name) {
   View *view = (View *)jview;
   saveResource(view->mutable_layout(), namespace_, type, name);
 }

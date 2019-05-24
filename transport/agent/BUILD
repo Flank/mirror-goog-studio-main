@@ -66,7 +66,7 @@ cc_binary(
         "-Itools/base/profiler/native/agent",
         "-Itools/base/transport",
         "-Itools/base/echo-sample",
-        "-Itools/base/dynamic-layout-inspector/src/main/native",
+        "-Itools/base/dynamic-layout-inspector/src/main/native/agent",
         "-I$(GENDIR)/tools/base/transport",
     ],
     linkopts = ANDROID_LINKOPTS,

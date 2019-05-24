@@ -179,25 +179,27 @@ def android_java_proto_library(
 
 def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility = None, grpc_support = False, tags = None):
     outs = []
+    hdrs = []
     for src in srcs:
         # .proto suffix should not be present in the output files
         p_name = src[:-len(".proto")]
-        outs += [p_name + ".pb.h", p_name + ".pb.cc"]
+        outs += [p_name + ".pb.cc"]
+        hdrs += [p_name + ".pb.h"]
         if grpc_support:
-            outs += [p_name + ".grpc.pb.h", p_name + ".grpc.pb.cc"]
+            outs += [p_name + ".grpc.pb.cc"]
+            hdrs += [p_name + ".grpc.pb.h"]
 
     _gen_proto_rule(
         name = name + "_srcs",
         srcs = srcs,
         deps = deps,
-        outs = outs,
+        outs = outs + hdrs,
         proto_include_version = "3.0.0",
         protoc = "//external:protoc",
         grpc_plugin = "//external:grpc_cpp_plugin" if grpc_support else None,
         target_language = proto_languages.CPP,
         tags = tags,
     )
-
     native.cc_library(
         name = name,
         srcs = outs,
@@ -205,4 +207,5 @@ def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility 
         includes = includes,
         visibility = visibility,
         tags = tags,
+        hdrs = hdrs,
     )
