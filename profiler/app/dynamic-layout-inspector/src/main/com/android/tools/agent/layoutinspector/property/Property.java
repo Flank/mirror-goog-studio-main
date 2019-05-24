@@ -17,6 +17,8 @@
 package com.android.tools.agent.layoutinspector.property;
 
 import com.android.tools.agent.layoutinspector.common.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Representation of a Property including name, type, and value. */
 public class Property {
@@ -24,10 +26,12 @@ public class Property {
     private Object mValue;
     private ValueType mValueType;
     private Resource mSource;
+    private final List<Resource> mResolutionStack;
 
     public Property(PropertyType type) {
         mType = type;
         mValueType = type.getType();
+        mResolutionStack = new ArrayList<>();
     }
 
     public PropertyType getPropertyType() {
@@ -68,5 +72,10 @@ public class Property {
 
     public void setSource(Resource source) {
         mSource = source;
+    }
+
+    /** Get the resolution stack for this property. */
+    public List<Resource> getResolutionStack() {
+        return mResolutionStack;
     }
 }

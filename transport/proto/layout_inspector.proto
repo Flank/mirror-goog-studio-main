@@ -78,14 +78,15 @@ message Property {
   int32 name = 2;
   Type type = 3;
   Resource source = 4;
+  repeated Resource resolution_stack = 5;
 
   oneof union {
-    int32 int32_value = 5;
-    int64 int64_value = 6;
-    double double_value = 7;
-    float float_value = 8;
-    Resource resource_value = 9;
-    FlagValue flag_value = 10;
+    int32 int32_value = 6;
+    int64 int64_value = 7;
+    double double_value = 8;
+    float float_value = 9;
+    Resource resource_value = 10;
+    FlagValue flag_value = 11;
   }
 }
 

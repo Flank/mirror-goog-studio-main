@@ -85,6 +85,18 @@ public class ViewNode<V extends View> {
         }
     }
 
+    private int[] getAttributeResolutionStack(V view, int attributeId) {
+        try {
+            // TODO: Call this method directly when we compile against android-Q
+            Method method =
+                    View.class.getDeclaredMethod("getAttributeResolutionStack", Integer.TYPE);
+            //noinspection unchecked
+            return (int[]) method.invoke(view, attributeId);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ex) {
+            return new int[0];
+        }
+    }
+
     private class SimplePropertyReader implements PropertyReader {
         private final V mView;
         private final Map<Integer, Integer> mResourceMap;
@@ -192,11 +204,19 @@ public class ViewNode<V extends View> {
             PropertyType type = property.getPropertyType();
             property.setValue(value);
             property.setSource(getResourceValueOfAttribute(type.getAttributeId()));
+            addResolutionStack(property.getResolutionStack(), type.getAttributeId());
         }
 
         private Resource getResourceValueOfAttribute(int attributeId) {
             Integer resourceId = mResourceMap.get(attributeId);
             return resourceId != null ? Resource.fromResourceId(mView, resourceId) : null;
+        }
+
+        private void addResolutionStack(List<Resource> stack, int attributeId) {
+            int[] ids = getAttributeResolutionStack(mView, attributeId);
+            for (int id : ids) {
+                stack.add(Resource.fromResourceId(mView, id));
+            }
         }
     }
 }

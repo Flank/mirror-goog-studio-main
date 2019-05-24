@@ -55,6 +55,14 @@ Java_com_android_tools_agent_layoutinspector_Properties_addPropertySource(
   saveResource(property->mutable_source(), namespace_, type, name);
 }
 
+JNIEXPORT void JNICALL
+Java_com_android_tools_agent_layoutinspector_Properties_addResolution(
+    JNIEnv *env, jclass clazz, jlong jproperty, jint namespace_, jint type,
+    jint name) {
+  Property *property = (Property *)jproperty;
+  saveResource(property->add_resolution_stack(), namespace_, type, name);
+}
+
 JNIEXPORT jlong JNICALL
 Java_com_android_tools_agent_layoutinspector_Properties_addIntProperty(
     JNIEnv *env, jclass clazz, jlong jevent, jint name, jint type, jint value) {

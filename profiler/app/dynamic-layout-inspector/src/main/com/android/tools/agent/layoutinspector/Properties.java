@@ -54,12 +54,21 @@ class Properties {
         for (Property property : node.getProperties()) {
             long propertyId = addProperty(event, property);
             Resource source = property.getSource();
-            if (propertyId != 0 && source != null) {
-                addPropertySource(
-                        propertyId,
-                        toInt(source.getNamespace()),
-                        toInt(source.getType()),
-                        toInt(source.getName()));
+            if (propertyId != 0) {
+                if (source != null) {
+                    addPropertySource(
+                            propertyId,
+                            toInt(source.getNamespace()),
+                            toInt(source.getType()),
+                            toInt(source.getName()));
+                }
+                for (Resource resolution : property.getResolutionStack()) {
+                    addResolution(
+                            propertyId,
+                            toInt(resolution.getNamespace()),
+                            toInt(resolution.getType()),
+                            toInt(resolution.getName()));
+                }
             }
         }
 
@@ -150,8 +159,11 @@ class Properties {
     /** Adds a flag property value into the flag property protobuf. */
     private native void addFlagPropertyValue(long property, int flag);
 
-    /** Adds a resource property value into the event protobuf. */
+    /** Adds a resource property value into the property protobuf. */
     private native void addPropertySource(long propertyId, int namespace, int type, int name);
+
+    /** Adds a resolution property value into the property protobuf. */
+    private native void addResolution(long propertyId, int namespace, int type, int name);
 
     /** Adds the layout of the view as a resource. */
     private native void addLayoutResource(long event, int namespace, int type, int name);
