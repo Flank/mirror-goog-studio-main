@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
-import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.VariantAwareTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -26,9 +25,7 @@ import org.gradle.api.tasks.CacheableTask
 import com.android.build.gradle.options.BooleanOption
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
@@ -52,10 +49,6 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
 
     @get:Internal
     override lateinit var variantName: String
-
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val processorListFile: RegularFileProperty
 
     @get:Internal
     lateinit var sourceFileTrees: () -> List<FileTree>
@@ -91,18 +84,6 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
             this.source(source)
         }
 
-        // If no annotation processors are present, the Java compiler will proceed to compile the
-        // source files even when the -proc:only option is specified (see
-        // https://bugs.openjdk.java.net/browse/JDK-6378728). That would mess up the setup of this
-        // task which is meant to do annotation processing only. Therefore, we need to return here
-        // in that case. (This decision can't be made at the task's configuration as we don't want
-        // to resolve annotation processors at configuration time.)
-        val annotationProcessors =
-            readAnnotationProcessorsFromJsonFile(processorListFile.get().asFile)
-        if (annotationProcessors.isEmpty()) {
-            return
-        }
-
         super.compile(inputs)
     }
 
@@ -132,12 +113,6 @@ abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory
             // Configure properties that are shared between AndroidJavaCompile and
             // ProcessAnnotationTask
             task.configureProperties(variantScope)
-
-            // Configure properties that are specific to ProcessAnnotationTask
-            variantScope.artifacts.setTaskInputToFinalProduct(
-                ANNOTATION_PROCESSOR_LIST,
-                task.processorListFile
-            )
 
             // Configure properties for annotation processing
             task.configurePropertiesForAnnotationProcessing(
