@@ -64,10 +64,14 @@ public class MergingException extends Exception {
      */
     public static void findAndReportMergingException(
             @NonNull Exception exception, @NonNull MessageReceiver messageReceiver) {
+        MergingException rootMergingExceptionCause = null;
         for (Throwable it = exception; it != null; it = it.getCause()) {
             if (it instanceof MergingException) {
-                ((MergingException) it).getMessages().forEach(messageReceiver::receiveMessage);
+                rootMergingExceptionCause = (MergingException) it;
             }
+        }
+        if (rootMergingExceptionCause != null) {
+            rootMergingExceptionCause.getMessages().forEach(messageReceiver::receiveMessage);
         }
     }
 
