@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -48,12 +49,14 @@ import com.google.common.collect.ImmutableMap
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -86,7 +89,6 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
     private lateinit var publicFiles: ArtifactCollection
     private lateinit var externalNotNamespacedResources: ArtifactCollection
     private lateinit var externalResStaticLibraries: ArtifactCollection
-
     // Don't need to mark this as input as it's already covered by the other inputs
     private lateinit var dependencies: ResolvableDependencies
 
@@ -121,10 +123,11 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
     fun getStaticLibraryDependenciesFiles(): FileCollection =
         externalResStaticLibraries.artifactFiles
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var aapt2FromMaven: FileCollection
+    @get:Input
+    lateinit var aapt2Version: String
         private set
+    @get:Internal
+    abstract val aapt2FromMaven: ConfigurableFileCollection
 
     @get:Internal
     @VisibleForTesting internal var log: Logger? = null
@@ -494,7 +497,9 @@ abstract class AutoNamespaceDependenciesTask : NonIncrementalTask() {
 
             task.intermediateDirectory = variantScope.getIncrementalDir(name)
 
-            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            task.aapt2FromMaven.from(aapt2FromMaven)
+            task. aapt2Version = aapt2Version
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(

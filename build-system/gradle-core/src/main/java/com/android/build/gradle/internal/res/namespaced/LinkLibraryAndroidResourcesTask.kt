@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -31,6 +32,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.utils.FileUtils
 import com.google.common.base.Suppliers
 import com.google.common.collect.ImmutableList
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -75,9 +77,11 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
     @Input fun getPackageForR() = packageForRSupplier.get()
 
-    @get:InputFiles
-    @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var aapt2FromMaven: FileCollection private set
+    @get:Input
+    lateinit var aapt2Version: String
+        private set
+    @get:Internal
+    abstract val aapt2FromMaven: ConfigurableFileCollection
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputFile abstract val staticLibApk: RegularFileProperty
@@ -185,7 +189,9 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
                     FileUtils.join(
                             variantScope.globalScope.intermediatesDir, "res-link-intermediate", variantScope.variantConfiguration.dirName)
             task.packageForRSupplier = Suppliers.memoize(variantScope.variantConfiguration::getOriginalApplicationId)
-            task.aapt2FromMaven = getAapt2FromMaven(variantScope.globalScope)
+            val (aapt2FromMaven, aapt2Version) = getAapt2FromMavenAndVersion(variantScope.globalScope)
+            task.aapt2FromMaven.from(aapt2FromMaven)
+            task.aapt2Version = aapt2Version
 
             task.androidJar = variantScope.globalScope.sdkComponents.androidJarProvider
 

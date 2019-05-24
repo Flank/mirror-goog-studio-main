@@ -75,7 +75,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
+import kotlin.Pair;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
@@ -83,6 +85,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
@@ -126,7 +129,10 @@ public abstract class MergeResources extends ResourceAwareTask {
 
     private Supplier<Integer> minSdk;
 
-    private FileCollection aapt2FromMaven;
+    private String aapt2Version;
+
+    @Internal
+    public abstract ConfigurableFileCollection getAapt2FromMaven();
 
     @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
 
@@ -211,7 +217,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
         try (ResourceCompilationService resourceCompiler =
                 getResourceProcessor(
-                        aapt2FromMaven,
+                        getAapt2FromMaven(),
                         workerExecutorFacade,
                         errorFormatMode,
                         flags,
@@ -342,7 +348,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             try (ResourceCompilationService resourceCompiler =
                     getResourceProcessor(
-                            aapt2FromMaven,
+                            getAapt2FromMaven(),
                             workerExecutorFacade,
                             errorFormatMode,
                             flags,
@@ -548,10 +554,9 @@ public abstract class MergeResources extends ResourceAwareTask {
         return vectorSupportLibraryIsUsed;
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getAapt2FromMaven() {
-        return aapt2FromMaven;
+    @Input
+    public String getAapt2Version() {
+        return aapt2Version;
     }
 
     @Nullable
@@ -649,7 +654,10 @@ public abstract class MergeResources extends ResourceAwareTask {
                                             .getMinSdkVersion()
                                             .getApiLevel());
 
-            task.aapt2FromMaven = Aapt2MavenUtils.getAapt2FromMaven(globalScope);
+            Pair<FileCollection, String> aapt2AndVersion =
+                    Aapt2MavenUtils.getAapt2FromMavenAndVersion(globalScope);
+            task.getAapt2FromMaven().from(aapt2AndVersion.getFirst());
+            task.aapt2Version = aapt2AndVersion.getSecond();
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
             // Libraries use this task twice, once for compilation (with dependencies),
             // where blame is useful, and once for packaging where it is not.

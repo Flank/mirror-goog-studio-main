@@ -46,18 +46,19 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import kotlin.Pair;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Task to generate micro app data res file. */
-public class GenerateApkDataTask extends NonIncrementalTask {
+public abstract class GenerateApkDataTask extends NonIncrementalTask {
 
     @Nullable private FileCollection apkDirectoryFileCollection;
 
@@ -71,7 +72,10 @@ public class GenerateApkDataTask extends NonIncrementalTask {
 
     private int targetSdkVersion;
 
-    private FileCollection aapt2Executable;
+    private String aapt2Version;
+
+    @Internal
+    public abstract ConfigurableFileCollection getAapt2Executable();
 
     @Override
     protected void doTaskAction() throws IOException, ProcessException {
@@ -124,7 +128,7 @@ public class GenerateApkDataTask extends NonIncrementalTask {
             File to = new File(rawDir, ANDROID_WEAR_MICRO_APK + DOT_ANDROID_PACKAGE);
             Files.copy(apk, to);
 
-            generateApkData(apk, outDir, getMainPkgName(), aapt2Executable.getSingleFile());
+            generateApkData(apk, outDir, getMainPkgName(), getAapt2Executable().getSingleFile());
         } else {
             generateUnbundledWearApkData(outDir, getMainPkgName());
         }
@@ -248,10 +252,9 @@ public class GenerateApkDataTask extends NonIncrementalTask {
         return targetSdkVersion;
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getAapt2Executable() {
-        return aapt2Executable;
+    @Input
+    public String getAapt2Version() {
+        return aapt2Version;
     }
 
     public void setTargetSdkVersion(int targetSdkVersion) {
@@ -312,7 +315,10 @@ public class GenerateApkDataTask extends NonIncrementalTask {
             task.minSdkVersion = variantConfiguration.getMinSdkVersion().getApiLevel();
             task.targetSdkVersion = variantConfiguration.getTargetSdkVersion().getApiLevel();
 
-            task.aapt2Executable = Aapt2MavenUtils.getAapt2FromMaven(scope.getGlobalScope());
+            Pair<FileCollection, String> aapt2AndVersion =
+                    Aapt2MavenUtils.getAapt2FromMavenAndVersion(scope.getGlobalScope());
+            task.getAapt2Executable().from(aapt2AndVersion.getFirst());
+            task.aapt2Version = aapt2AndVersion.getSecond();
         }
     }
 }

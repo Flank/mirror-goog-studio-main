@@ -18,12 +18,13 @@ package com.android.build.gradle.integration.resources
 
 import com.android.SdkConstants
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.internal.res.getAapt2FromMaven
+import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.res.namespaced.registerAaptService
 import com.android.build.gradle.internal.res.namespaced.useAaptDaemon
 import com.android.build.gradle.internal.workeractions.WorkerActionServiceRegistry
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
+import com.google.common.truth.Truth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.utils.StdLogger
 import org.gradle.api.Project
@@ -71,9 +72,7 @@ class Aapt2FromMavenTest {
 
     private fun getAapt2FromMavenForTest(project: Project): FileCollection {
 
-        val artifact = getAapt2FromMaven(
-            project = project
-        )
+        val (artifact,_) = getAapt2FromMavenAndVersion(project)
 
         assertNotNull(artifact, "Artifact view should be created here.")
 
