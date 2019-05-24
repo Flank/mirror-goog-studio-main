@@ -2479,7 +2479,9 @@ public abstract class TaskManager {
     }
 
     private void createDataBindingMergeArtifactsTask(@NonNull VariantScope variantScope) {
-        if (!extension.getDataBinding().isEnabled()) {
+        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
+        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
+        if (!dataBindingEnabled && !viewBindingEnabled) {
             return;
         }
         final BaseVariantData variantData = variantScope.getVariantData();
@@ -2509,7 +2511,9 @@ public abstract class TaskManager {
 
     protected void createDataBindingTasksIfNecessary(
             @NonNull VariantScope scope, @NonNull MergeType mergeType) {
-        if (!extension.getDataBinding().isEnabled()) {
+        boolean dataBindingEnabled = extension.getDataBinding().isEnabled();
+        boolean viewBindingEnabled = extension.getViewBinding().isEnabled();
+        if (!dataBindingEnabled && !viewBindingEnabled) {
             return;
         }
         createDataBindingMergeBaseClassesTask(scope);
@@ -2526,10 +2530,12 @@ public abstract class TaskManager {
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
-        taskFactory.register(new DataBindingExportBuildInfoTask.CreationAction(scope));
         taskFactory.register(new DataBindingGenBaseClassesTask.CreationAction(scope));
 
-        setDataBindingAnnotationProcessorParams(scope, mergeType);
+        if (dataBindingEnabled) {
+            taskFactory.register(new DataBindingExportBuildInfoTask.CreationAction(scope));
+            setDataBindingAnnotationProcessorParams(scope, mergeType);
+        }
     }
 
     private void setDataBindingAnnotationProcessorParams(
