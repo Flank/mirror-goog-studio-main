@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import java.io.File

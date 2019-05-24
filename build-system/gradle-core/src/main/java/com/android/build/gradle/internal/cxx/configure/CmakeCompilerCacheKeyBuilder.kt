@@ -17,6 +17,10 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.BinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.GeneratorName
 import com.android.build.gradle.internal.cxx.logging.warnln
 import java.io.File
 

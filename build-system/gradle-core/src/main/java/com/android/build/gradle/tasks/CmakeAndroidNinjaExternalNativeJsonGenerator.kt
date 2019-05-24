@@ -32,15 +32,6 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator
     stats: GradleBuildVariant.Builder
 ) : CmakeExternalNativeJsonGenerator(variant, abis, stats) {
 
-    internal override fun getCacheArguments(abi: CxxAbiModel): List<String> {
-        val cacheArguments = getCommonCacheArguments(abi)
-        cacheArguments.add("-DCMAKE_TOOLCHAIN_FILE=${abi.variant.module.cmakeToolchainFile.absolutePath}")
-        cacheArguments.add("-DCMAKE_MAKE_PROGRAM=${cmake.ninjaExe.absolutePath}")
-
-        cacheArguments.add("-GAndroid Gradle - Ninja")
-        return cacheArguments
-    }
-
     override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         val logPrefix = "${variant.variantName}|${abi.abi.tag} :"
         return abi.variant.module.createProcessOutputJunction(

@@ -17,6 +17,11 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.BinaryOutputPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.GeneratorName
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.UnknownArgument
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
@@ -119,5 +124,13 @@ class CmakeCommandLineKtTest {
         val buildType = DefineProperty.from(CMAKE_BUILD_TYPE, "type")
         val got = listOf(toolchain, buildType).removeProperty(CMAKE_BUILD_TYPE)
         assertThat(got).isEqualTo(listOf(toolchain))
+    }
+
+    @Test
+    fun convertCmakeCommandLineArgumentsToStringList() {
+        val arguments = listOf(
+            DefineProperty.from(CMAKE_ANDROID_NDK, "ndk"))
+        assertThat(arguments.convertCmakeCommandLineArgumentsToStringList())
+            .isEqualTo(listOf("-D$CMAKE_ANDROID_NDK=ndk"))
     }
 }

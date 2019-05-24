@@ -17,20 +17,19 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.cmake.MakeCmakeMessagePathsAbsoluteKt.makeCmakeMessagePathsAbsolute;
-import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.wrapCmakeListsForCompilerSettingsCaching;
-import static com.android.build.gradle.internal.cxx.configure.CmakeAndroidGradleBuildExtensionsKt.writeCompilerSettingsToCache;
+import static com.android.build.gradle.internal.cxx.configure.CmakeCommandLineBuilderKt.getCmakeCommandLineVariables;
+import static com.android.build.gradle.internal.cxx.configure.CmakeCommandLineKt.convertCmakeCommandLineArgumentsToStringList;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.configure.CommandLineArgument;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.ndk.Stl;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
@@ -77,14 +76,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     }
 
     /**
-     * Returns the cache arguments for implemented strategy.
-     *
-     * @return Returns the cache arguments
-     */
-    @NonNull
-    abstract List<String> getCacheArguments(@NonNull CxxAbiModel abi);
-
-    /**
      * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
      * the process.
      *
@@ -103,9 +94,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
 
     @Override
     void processBuildOutput(@NonNull String buildOutput, @NonNull CxxAbiModel abi) {
-        if (variant.getModule().getProject().isNativeCompilerSettingsCacheEnabled()) {
-            writeCompilerSettingsToCache(abi);
-        }
     }
 
     @NonNull
@@ -114,58 +102,16 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         builder.setExecutable(cmake.getCmakeExe());
-        builder.addArgs(getProcessBuilderArgs(abi));
+        List<CommandLineArgument> arguments = Lists.newArrayList();
+        arguments.add(
+                CommandLineArgument.CmakeListsPath.from(
+                        variant.getModule().getMakeFile().getParentFile().getPath()));
+        arguments.add(CommandLineArgument.BinaryOutputPath.from(abi.getCxxBuildFolder().getPath()));
+
+        arguments.addAll(getCmakeCommandLineVariables(abi));
+        builder.addArgs(convertCmakeCommandLineArgumentsToStringList(arguments));
 
         return builder;
-    }
-
-    /** Returns the list of arguments to be passed to process builder. */
-    @VisibleForTesting
-    @NonNull
-    List<String> getProcessBuilderArgs(@NonNull CxxAbiModel abi) {
-        List<String> processBuilderArgs = Lists.newArrayList();
-        // CMake requires a folder. Trim the filename off.
-        File cmakeListsFolder = getMakefile().getParentFile();
-        processBuilderArgs.add(String.format("-H%s", cmakeListsFolder));
-        processBuilderArgs.add(String.format("-B%s", abi.getCxxBuildFolder()));
-        processBuilderArgs.addAll(getCacheArguments(abi));
-
-        // Add user provided build arguments
-        processBuilderArgs.addAll(getBuildArguments());
-        if (variant.getModule().getProject().isNativeCompilerSettingsCacheEnabled()) {
-            return wrapCmakeListsForCompilerSettingsCaching(abi, processBuilderArgs).getArgs();
-        }
-        return processBuilderArgs;
-    }
-
-    /**
-     * Returns a list of default cache arguments that the implementations may use.
-     *
-     * @return list of default cache arguments
-     */
-    protected List<String> getCommonCacheArguments(@NonNull CxxAbiModel abi) {
-        List<String> cacheArguments = Lists.newArrayList();
-        cacheArguments.add(String.format("-DANDROID_ABI=%s", abi.getAbi().getTag()));
-        cacheArguments.add(
-                String.format("-DANDROID_PLATFORM=android-%s", abi.getAbiPlatformVersion()));
-        cacheArguments.add(
-                String.format(
-                        "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s",
-                        new File(getObjFolder(), abi.getAbi().getTag())));
-        cacheArguments.add(
-                String.format("-DCMAKE_BUILD_TYPE=%s", isDebuggable() ? "Debug" : "Release"));
-        cacheArguments.add(String.format("-DANDROID_NDK=%s", getNdkFolder()));
-        if (!getcFlags().isEmpty()) {
-            cacheArguments.add(
-                    String.format("-DCMAKE_C_FLAGS=%s", Joiner.on(" ").join(getcFlags())));
-        }
-
-        if (!getCppFlags().isEmpty()) {
-            cacheArguments.add(
-                    String.format("-DCMAKE_CXX_FLAGS=%s", Joiner.on(" ").join(getCppFlags())));
-        }
-
-        return cacheArguments;
     }
 
     @NonNull

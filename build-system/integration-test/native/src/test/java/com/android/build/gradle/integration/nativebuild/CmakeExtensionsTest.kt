@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
 import com.android.build.gradle.options.BooleanOption.*
 import com.android.utils.FileUtils.join
+import org.junit.Ignore
 
 /**
  * Parameterized JUnit test for CMake compiler settings cache.
@@ -54,6 +55,7 @@ import com.android.utils.FileUtils.join
  *   compiler settings may not be reliable and shouldn't be cached.
  */
 @RunWith(Parameterized::class)
+@Ignore("Re-enable at the end of CMake cohabitation")
 class CmakeExtensionsTest(
     private val cmakeVersion : String,
     private val enableCaching : Boolean?,
