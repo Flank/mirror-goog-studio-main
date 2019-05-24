@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,7 +92,10 @@ public final class IdeNativeAndroidProjectImpl extends IdeModel implements IdeNa
                     variantInfo ->
                             new IdeNativeVariantInfo(
                                     variantInfo.getAbiNames(),
-                                    variantInfo.getBuildRootFolderMap()));
+                                    Objects.requireNonNull(
+                                            IdeModel.copyNewProperty(
+                                                    () -> variantInfo.getBuildRootFolderMap(),
+                                                    Collections.emptyMap()))));
         } catch (UnsupportedOperationException e) {
             return Maps.newHashMap();
         }
