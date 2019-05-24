@@ -16,19 +16,36 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.api.AndroidSourceSet
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.model.SourceProvider
+import com.google.common.collect.ImmutableList
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.internal.file.copy.DestinationRootCopySpec
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
 import java.io.File
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 
-open class ProcessJavaResTask : Sync(), VariantAwareTask {
+abstract class ProcessJavaResTask : Sync(), VariantAwareTask {
+
+    @get:OutputDirectory
+    abstract val outDirectory: DirectoryProperty
+
+    // override to remove the @OutputDirectory annotation
+    @Internal
+    override fun getDestinationDir(): File {
+        return outDirectory.get().asFile
+    }
 
     override lateinit var variantName: String
 
     /** Configuration Action for a process*JavaRes tasks.  */
-    class CreationAction(scope: VariantScope, private val destinationDir: File) :
+    class CreationAction(scope: VariantScope) :
         VariantTaskCreationAction<ProcessJavaResTask>(scope) {
 
         override val name: String
@@ -42,6 +59,14 @@ open class ProcessJavaResTask : Sync(), VariantAwareTask {
         ) {
             super.handleProvider(taskProvider)
             variantScope.taskContainer.processJavaResourcesTask = taskProvider
+            variantScope
+                .artifacts
+                .producesDir(
+                    InternalArtifactType.JAVA_RES,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    ProcessJavaResTask::outDirectory
+                )
         }
 
         override fun configure(task: ProcessJavaResTask) {
@@ -50,8 +75,6 @@ open class ProcessJavaResTask : Sync(), VariantAwareTask {
             for (sourceProvider in variantScope.variantConfiguration.sortedSourceProviders) {
                 task.from((sourceProvider as AndroidSourceSet).resources.sourceFiles)
             }
-
-            task.destinationDir = destinationDir
         }
     }
 }

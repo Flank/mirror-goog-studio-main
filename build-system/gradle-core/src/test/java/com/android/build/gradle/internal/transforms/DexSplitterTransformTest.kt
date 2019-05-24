@@ -38,6 +38,8 @@ import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -189,12 +191,17 @@ class DexSplitterTransformTest {
 
         val dexSplitterTransform =
                 DexSplitterTransform(
-                        dexSplitterOutputDir,
                         FakeFileCollection(featureJars),
                         baseJars,
                         mappingFileSrc = mappingFileSrc,
                         mainDexList = mainDexList)
 
+        val directoryMock = Mockito.mock(Directory::class.java)
+        `when`(directoryMock.asFile).thenReturn(dexSplitterOutputDir)
+        val directoryPropertyMock = Mockito.mock(DirectoryProperty::class.java)
+        `when`(directoryPropertyMock.get()).thenReturn(directoryMock)
+
+        dexSplitterTransform.setOutputDirectory(directoryPropertyMock)
         dexSplitterTransform.transform(dexSplitterInvocation)
     }
 

@@ -214,9 +214,6 @@ public interface VariantScope extends TransformVariantScope {
     @NonNull
     File getRenderscriptObjOutputDir();
 
-    @NonNull
-    File getSourceFoldersJavaResDestinationDir();
-
     /**
      * Returns a place to store incremental build data. The {@code name} argument has to be unique
      * per task, ideally generated with {@link

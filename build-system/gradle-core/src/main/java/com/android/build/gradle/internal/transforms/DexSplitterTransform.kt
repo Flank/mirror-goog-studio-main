@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX
 import com.android.builder.dexing.DexSplitterTool
 import com.android.utils.FileUtils
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
@@ -38,13 +39,14 @@ import java.nio.file.Files
  * Transform that splits dex files depending on their feature sources
  */
 class DexSplitterTransform(
-        private val outputDir: File,
         private val featureJars: FileCollection,
         private val baseJars: BuildableArtifact,
         private val mappingFileSrc: BuildableArtifact?,
         private val mainDexList: Provider<RegularFile>?
 ) :
         Transform() {
+
+    private lateinit var outputDirectoryProperty: DirectoryProperty
 
     override fun getName(): String = "dexSplitter"
 
@@ -67,7 +69,7 @@ class DexSplitterTransform(
     }
 
     override fun getSecondaryDirectoryOutputs(): MutableCollection<File> {
-        return mutableListOf(outputDir)
+        return mutableListOf(outputDirectoryProperty.get().asFile)
     }
 
     override fun transform(transformInvocation: TransformInvocation) {
@@ -86,6 +88,7 @@ class DexSplitterTransform(
                 { "No output provider set" }
             )
             outputProvider.deleteAll()
+            val outputDir = outputDirectoryProperty.get().asFile
             FileUtils.deleteRecursivelyIfExists(outputDir)
 
             val builder = DexSplitterTool.Builder(
@@ -118,5 +121,9 @@ class DexSplitterTransform(
         } catch (e: Exception) {
             throw TransformException(e)
         }
+    }
+
+    override fun setOutputDirectory(directory: DirectoryProperty) {
+        outputDirectoryProperty= directory
     }
 }

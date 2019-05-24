@@ -183,7 +183,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             // 2. the test component classes and java_res
             collection.from(artifacts.getFinalArtifactFiles(ALL_CLASSES).get());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
-            collection.from(artifacts.getFinalArtifactFiles(InternalArtifactType.JAVA_RES));
+            collection.from(artifacts.getFinalProduct(InternalArtifactType.JAVA_RES));
 
             // 3. the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, CLASSES));

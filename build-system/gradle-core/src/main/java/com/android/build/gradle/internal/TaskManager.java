@@ -220,7 +220,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
-import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -230,7 +229,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -1158,10 +1156,9 @@ public abstract class TaskManager {
      * <ul>
      *   <li>{@link Sync} task configured with {@link ProcessJavaResTask.CreationAction} will sync
      *       all source folders into a single folder identified by {@link
-     *       VariantScope#getSourceFoldersJavaResDestinationDir()}
-     *   <li>{@link MergeJavaResourceTask} will take the output of this merge plus the
-     *       dependencies and will create a single merge with the {@link PackagingOptions} settings
-     *       applied.
+     *       InternalArtifactType#JAVA_RES}
+     *   <li>{@link MergeJavaResourceTask} will take the output of this merge plus the dependencies
+     *       and will create a single merge with the {@link PackagingOptions} settings applied.
      * </ul>
      *
      * This sets up only the Sync part. The java res merging is setup via {@link
@@ -1172,21 +1169,7 @@ public abstract class TaskManager {
     public void createProcessJavaResTask(@NonNull VariantScope variantScope) {
         // Copy the source folders java resources into the temporary location, mainly to
         // maintain the PluginDsl COPY semantics.
-
-        // TODO: move this file computation completely out of VariantScope.
-        File destinationDir = variantScope.getSourceFoldersJavaResDestinationDir();
-
-        TaskProvider<ProcessJavaResTask> processJavaResourcesTask =
-                taskFactory.register(
-                        new ProcessJavaResTask.CreationAction(variantScope, destinationDir));
-
-        // create the task outputs for others to consume
-        variantScope
-                .getArtifacts()
-                .appendArtifact(
-                        InternalArtifactType.JAVA_RES,
-                        ImmutableList.of(destinationDir),
-                        processJavaResourcesTask.getName());
+        taskFactory.register(new ProcessJavaResTask.CreationAction(variantScope));
 
         // create the stream generated from this task, but only if a library with custom transforms,
         // in which case the custom transforms must be applied before java res merging.
@@ -3241,11 +3224,6 @@ public abstract class TaskManager {
             return;
         }
 
-        File dexSplitterOutput =
-                FileUtils.join(
-                        globalScope.getIntermediatesDir(),
-                        "dex-splitter",
-                        variantScope.getVariantConfiguration().getDirName());
         FileCollection featureJars =
                 variantScope.getArtifactFileCollection(METADATA_VALUES, PROJECT, METADATA_CLASSES);
         BuildableArtifact baseJars =
@@ -3269,8 +3247,7 @@ public abstract class TaskManager {
                         : null;
 
         DexSplitterTransform transform =
-                new DexSplitterTransform(
-                        dexSplitterOutput, featureJars, baseJars, mappingFileSrc, mainDexList);
+                new DexSplitterTransform(featureJars, baseJars, mappingFileSrc, mainDexList);
 
         Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
@@ -3279,21 +3256,25 @@ public abstract class TaskManager {
                                 taskFactory,
                                 variantScope,
                                 transform,
-                                taskName ->
+                                null,
+                                null,
+                                taskProvider ->
                                         variantScope
                                                 .getArtifacts()
-                                                .appendArtifact(
+                                                .producesDir(
                                                         InternalArtifactType.FEATURE_DEX,
-                                                        ImmutableList.of(dexSplitterOutput),
-                                                        taskName),
-                                null,
-                                null);
+                                                        BuildArtifactsHolder.OperationType.INITIAL,
+                                                        taskProvider,
+                                                        TransformTask::getOutputDirectory,
+                                                        ""));
+
 
         if (transformTask.isPresent()) {
             publishFeatureDex(variantScope);
             if (mainDexList != null) {
                 transformTask.get().configure(it -> it.dependsOn(mainDexList));
             }
+
         } else {
             globalScope
                     .getErrorHandler()
@@ -3332,15 +3313,11 @@ public abstract class TaskManager {
                 "Publishing to Runtime Element with no Runtime Elements configuration object. "
                         + "VariantType: "
                         + variantScope.getType());
-        BuildableArtifact artifact =
-                variantScope.getArtifacts().getFinalArtifactFiles(InternalArtifactType.FEATURE_DEX);
+        Provider<Directory> artifact =
+                variantScope.getArtifacts().getFinalProduct(InternalArtifactType.FEATURE_DEX);
         for (String modulePath : modulePaths) {
-            Provider<File> file =
-                    project.provider(
-                            () ->
-                                    new File(
-                                            Iterables.getOnlyElement(artifact.getFiles()),
-                                            getFeatureFileName(modulePath, null)));
+            Provider<RegularFile> file =
+                    artifact.map(directory -> directory.file(getFeatureFileName(modulePath, null)));
             Map<Attribute<String>, String> attributeMap =
                     ImmutableMap.of(MODULE_PATH, project.absoluteProjectPath(modulePath));
             publishArtifactToConfiguration(

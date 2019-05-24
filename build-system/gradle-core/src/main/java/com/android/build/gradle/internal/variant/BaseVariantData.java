@@ -674,7 +674,10 @@ public abstract class BaseVariantData {
         if (processJavaResourcesTask != null) {
             return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
         } else {
-            return scope.getSourceFoldersJavaResDestinationDir();
+            return scope.getArtifacts()
+                    .getFinalProduct(InternalArtifactType.JAVA_RES)
+                    .get()
+                    .getAsFile();
         }
     }
 }

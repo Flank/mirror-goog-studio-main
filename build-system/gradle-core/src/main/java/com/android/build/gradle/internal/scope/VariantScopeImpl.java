@@ -1105,13 +1105,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @Override
     @NonNull
-    public File getSourceFoldersJavaResDestinationDir() {
-        return new File(
-                globalScope.getIntermediatesDir(), "sourceFolderJavaResources/" + getDirName());
-    }
-
-    @Override
-    @NonNull
     public File getIncrementalDir(String name) {
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
@@ -1392,10 +1385,7 @@ public class VariantScopeImpl implements VariantScope {
                         AndroidArtifacts.ArtifactType.FEATURE_SIGNING_CONFIG);
             } else {
                 return getProject()
-                        .files(
-                                getArtifacts()
-                                        .getFinalArtifactFiles(
-                                                InternalArtifactType.SIGNING_CONFIG));
+                        .files(getArtifacts().getFinalProduct(InternalArtifactType.SIGNING_CONFIG));
             }
         } else {
             return variantType.isBaseModule()
