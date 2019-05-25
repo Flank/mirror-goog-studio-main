@@ -1,4 +1,4 @@
-load("//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "java_proto_library")
+load("//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "android_java_proto_library")
 load("//tools/base/bazel:bazel.bzl", "java_jarjar")
 
 package(default_visibility = ["//tools/base/deploy:__subpackages__"])
@@ -9,18 +9,8 @@ cc_grpc_proto_library(
     tags = ["no_windows"],
 )
 
-java_jarjar(
+android_java_proto_library(
     name = "deploy_java_proto",
-    srcs = [
-        ":java_proto",
-        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
-    ],
-    rules = "jarjar_rules.txt",
-    visibility = ["//visibility:public"],
-)
-
-java_proto_library(
-    name = "java_proto",
     srcs = glob(["*.proto"]),
     visibility = ["//visibility:public"],
 )

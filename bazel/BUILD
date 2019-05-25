@@ -1,5 +1,9 @@
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:bazel.bzl", "java_jarjar")
+load("//tools/base/bazel:proto.bzl", "PROTOC_VERSION")
+
+exports_files(["jarjar_rules.txt"])
 
 java_library(
     name = "utils",
@@ -327,6 +331,43 @@ java_binary(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.antlr_antlr",
     ],
+)
+
+java_jarjar(
+    name = "studio-proto",
+    srcs = [
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/" + PROTOC_VERSION + ":jar",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/" + PROTOC_VERSION + ":jar",
+    ],
+    rules = "jarjar_rules.txt",
+    visibility = ["//visibility:public"],
+)
+
+java_jarjar(
+    name = "studio-grpc",
+    srcs = [
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-auth/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-context/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-core/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-netty/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-okhttp/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-lite/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-socks/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler-proxy/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
+    ],
+    rules = "jarjar_rules.txt",
+    visibility = ["//visibility:public"],
 )
 
 config_setting(

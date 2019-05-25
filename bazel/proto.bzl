@@ -1,5 +1,6 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_java_library")
+load(":bazel.bzl", "java_jarjar")
 
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
@@ -7,6 +8,8 @@ proto_languages = struct(
     CPP = 0,
     JAVA = 1,
 )
+
+PROTOC_VERSION = "3.4.0"
 
 def _gen_proto_impl(ctx):
     gen_dir = label_workspace_path(ctx.label)
@@ -118,7 +121,7 @@ def java_proto_library(
         pom = None,
         visibility = None,
         grpc_support = False,
-        protoc_version = "3.4.0",
+        protoc_version = PROTOC_VERSION,
         proto_java_runtime_library = ["@//tools/base/third_party:com.google.protobuf_protobuf-java"],
         **kwargs):
     srcs_name = name + "_srcs"
@@ -159,6 +162,20 @@ def java_proto_library(
             visibility = visibility,
             **kwargs
         )
+
+def android_java_proto_library(
+        name,
+        srcs = None,
+        grpc_support = False,
+        visibility = None):
+    internal_name = "_" + name + "_internal"
+    java_proto_library(name = internal_name, srcs = srcs, grpc_support = grpc_support)
+    java_jarjar(
+        name = name,
+        srcs = [":" + internal_name],
+        rules = "//tools/base/bazel:jarjar_rules.txt",
+        visibility = visibility,
+    )
 
 def cc_grpc_proto_library(name, srcs = [], deps = [], includes = [], visibility = None, grpc_support = False, tags = None):
     outs = []

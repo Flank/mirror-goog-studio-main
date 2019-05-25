@@ -45,13 +45,14 @@ iml_module(
         "//tools/base/ddmlib:studio.android.sdktools.ddmlib[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/idea/.idea/libraries:equalsverifier[test]",
-        "//tools/idea/.idea/libraries:aia-manifest-proto-1.0-jarjar",
         "//tools/idea/.idea/libraries:javax-inject",
         "//tools/idea/.idea/libraries:Trove4j",
         "//tools/idea/.idea/libraries:aapt-proto",
         "//tools/idea/.idea/libraries:protobuf",
         "//tools/idea/.idea/libraries:jetbrains-annotations",
         "//tools/idea/.idea/libraries:studio-analytics-proto",
+        "//tools/idea/.idea/libraries:aia-proto",
+        "//tools/idea/.idea/libraries:studio-proto",
     ],
 )
 
@@ -67,7 +68,7 @@ kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
     bundled_deps = [
-        "//tools/base/sdk-common/aia-manifest-jar-generator:proto",
+        "//tools/base/sdk-common/aia-manifest-jar-generator:tools.proto",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/sdk-common",

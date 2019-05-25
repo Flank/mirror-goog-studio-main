@@ -16,10 +16,10 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deploy.protobuf.CodedInputStream;
-import com.android.tools.deploy.protobuf.CodedOutputStream;
-import com.android.tools.deploy.protobuf.MessageLite;
-import com.android.tools.deploy.protobuf.Parser;
+import com.android.tools.idea.protobuf.CodedInputStream;
+import com.android.tools.idea.protobuf.CodedOutputStream;
+import com.android.tools.idea.protobuf.MessageLite;
+import com.android.tools.idea.protobuf.Parser;
 import com.android.tools.tracer.Trace;
 import com.android.utils.ILogger;
 import com.google.common.collect.ObjectArrays;

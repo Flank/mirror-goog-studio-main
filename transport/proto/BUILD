@@ -1,9 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 
-load("//tools/base/bazel:proto.bzl", "java_proto_library", "cc_grpc_proto_library")
+load("//tools/base/bazel:proto.bzl", "android_java_proto_library", "cc_grpc_proto_library")
 
-java_proto_library(
-    name = "java_proto",
+android_java_proto_library(
+    name = "transport_java_proto",
     srcs = glob(["**/*.proto"]),
     grpc_support = 1,
 )

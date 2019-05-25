@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.testutils.TestUtils;
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deploy.protobuf.ByteString;
 import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
+import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Files;

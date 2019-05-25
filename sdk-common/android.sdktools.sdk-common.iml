@@ -43,12 +43,13 @@
     <orderEntry type="module" module-name="android.sdktools.ddmlib" />
     <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
-    <orderEntry type="library" name="aia-manifest-proto-1.0-jarjar" level="project" />
     <orderEntry type="library" name="javax-inject" level="project" />
     <orderEntry type="library" name="Trove4j" level="project" />
     <orderEntry type="library" name="aapt-proto" level="project" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="jetbrains-annotations" level="project" />
     <orderEntry type="library" name="studio-analytics-proto" level="project" />
+    <orderEntry type="library" name="aia-proto" level="project" />
+    <orderEntry type="library" name="studio-proto" level="project" />
   </component>
 </module>

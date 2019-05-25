@@ -32,7 +32,9 @@ def perf_test(name, srcs, test_app, deps = [], tags = [], size = "small"):
         srcs = srcs,
         deps = deps + [
             "//tools/base/profiler/tests/perf-test:profiler-service",
-            "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
+            "//tools/base/transport/proto:transport_java_proto",
+            "//tools/base/bazel:studio-grpc",
+            "//tools/base/bazel:studio-proto",
             "//tools/base/profiler/app:perfa",
             "//tools/base/transport/agent:libjvmtiagent.so",
             "//tools/base/transport:transport_main",

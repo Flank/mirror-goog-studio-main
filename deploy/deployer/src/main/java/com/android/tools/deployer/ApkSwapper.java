@@ -16,8 +16,8 @@
 package com.android.tools.deployer;
 
 import com.android.tools.deploy.proto.Deploy;
-import com.android.tools.deploy.protobuf.ByteString;
 import com.android.tools.deployer.model.DexClass;
+import com.android.tools.idea.protobuf.ByteString;
 import com.google.common.base.Enums;
 import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
