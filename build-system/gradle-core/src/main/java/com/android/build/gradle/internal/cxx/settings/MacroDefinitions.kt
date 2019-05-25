@@ -158,6 +158,16 @@ enum class Macro(
         environment = GRADLE,
         tag = "buildRoot",
         example = "${GRADLE_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64"),
+    GRADLE_C_FLAGS(
+        description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
+        environment = GRADLE,
+        tag = "cFlags",
+        example = "-DC_FLAG_DEFINED"),
+    GRADLE_CPP_FLAGS(
+        description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
+        environment = GRADLE,
+        tag = "cppFlags",
+        example = "-DCPP_FLAG_DEFINED"),
     GRADLE_LIBRARY_OUTPUT_DIRECTORY(
         description = "The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.",
         environment = GRADLE,

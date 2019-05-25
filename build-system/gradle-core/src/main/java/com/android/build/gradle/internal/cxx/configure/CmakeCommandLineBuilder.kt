@@ -17,63 +17,68 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_ABI
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_PLATFORM
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_PLATFORM
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_ARCH_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_BUILD_TYPE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_FLAGS
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_FLAGS
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_MAKE_PROGRAM
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_NAME
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_ARCH_ABI
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SYSTEM_VERSION
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_ANDROID_NDK
-import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty.Companion.from
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.settings.Macro.ABI
+import com.android.build.gradle.internal.cxx.settings.Macro.GRADLE_C_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.GRADLE_CMAKE_BUILD_TYPE
+import com.android.build.gradle.internal.cxx.settings.Macro.GRADLE_CPP_FLAGS
+import com.android.build.gradle.internal.cxx.settings.Macro.GRADLE_LIBRARY_OUTPUT_DIRECTORY
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_CMAKE_TOOLCHAIN
+import com.android.build.gradle.internal.cxx.settings.Macro.NDK_DIR
+import com.android.build.gradle.internal.cxx.settings.Macro.NINJA_EXE
+import com.android.build.gradle.internal.cxx.settings.Macro.PLATFORM
+import com.android.build.gradle.internal.cxx.settings.Macro.PLATFORM_SYSTEM_VERSION
+import com.android.build.gradle.internal.cxx.settings.resolveMacroValue
 import com.android.utils.FileUtils.join
-import com.google.common.base.Joiner
-import org.apache.commons.io.FileUtils
 import java.io.File
+import org.apache.commons.io.FileUtils
 
 /**
  * Build the CMake command used to variables for [CxxAbiModel].
  */
 fun CxxAbiModel.getCmakeCommandLineVariables() : List<CommandLineArgument> {
-    val result = mutableListOf<CommandLineArgument>()
+
     val cmake = variant.module.cmake!!
-    result += if (cmake.minimumCmakeVersion.isCmakeForkVersion()) {
-            "-GAndroid Gradle - Ninja"
-        } else {
-            "-GNinja"
-        }.toCmakeArgument()
-    result += from(ANDROID_ABI, abi.tag)
-    result += from(ANDROID_PLATFORM,"android-$abiPlatformVersion")
-    result += from(CMAKE_LIBRARY_OUTPUT_DIRECTORY, join(variant.objFolder, abi.tag).absolutePath)
-    result += from(CMAKE_BUILD_TYPE, if (variant.isDebuggableEnabled) "Debug" else "Release")
-    result += from(ANDROID_NDK, variant.module.ndkFolder.absolutePath)
-    if (variant.cFlagsList.isNotEmpty()) {
-        result += from(CMAKE_C_FLAGS, Joiner.on(" ").join(variant.cFlagsList))
-    }
-
-    if (variant.cppFlagsList.isNotEmpty()) {
-        result += from(CMAKE_CXX_FLAGS, Joiner.on(" ").join(variant.cppFlagsList))
-    }
-
+    val variables = sortedMapOf<CmakeProperty, String>()
+    variables[ANDROID_ABI] = resolveMacroValue(ABI)
+    variables[ANDROID_PLATFORM] = resolveMacroValue(PLATFORM)
+    variables[CMAKE_LIBRARY_OUTPUT_DIRECTORY] = resolveMacroValue(GRADLE_LIBRARY_OUTPUT_DIRECTORY)
+    variables[CMAKE_BUILD_TYPE] = resolveMacroValue(GRADLE_CMAKE_BUILD_TYPE)
+    variables[ANDROID_NDK] = resolveMacroValue(NDK_DIR)
+    variables[CMAKE_C_FLAGS] = resolveMacroValue(GRADLE_C_FLAGS)
+    variables[CMAKE_CXX_FLAGS] = resolveMacroValue(GRADLE_CPP_FLAGS)
     if (cmake.minimumCmakeVersion.isCmakeForkVersion()) {
-        result += from(CMAKE_TOOLCHAIN_FILE, variant.module.cmakeToolchainFile.absolutePath)
-        result += from(CMAKE_MAKE_PROGRAM, cmake.ninjaExe.absolutePath)
+        variables[CMAKE_TOOLCHAIN_FILE] = resolveMacroValue(NDK_CMAKE_TOOLCHAIN)
+        variables[CMAKE_MAKE_PROGRAM] = resolveMacroValue(NINJA_EXE)
     } else {
-        result += from(CMAKE_SYSTEM_NAME, "Android")
-        result += from(CMAKE_ANDROID_ARCH_ABI, abi.tag)
-        result += from(CMAKE_SYSTEM_VERSION, "$abiPlatformVersion")
-        result += from(CMAKE_EXPORT_COMPILE_COMMANDS, "ON")
-        result += from(CMAKE_ANDROID_NDK, variant.module.ndkFolder.absolutePath)
-        result += from(CMAKE_TOOLCHAIN_FILE, getToolchainFile().absolutePath)
-        if (variant.module.cmake!!.ninjaExe.isFile) {
-            result += from(CMAKE_MAKE_PROGRAM, variant.module.cmake!!.ninjaExe.absolutePath)
-        }
+        variables[CMAKE_SYSTEM_NAME] = "Android"
+        variables[CMAKE_ANDROID_ARCH_ABI] = resolveMacroValue(ABI)
+        variables[CMAKE_SYSTEM_VERSION] = resolveMacroValue(PLATFORM_SYSTEM_VERSION)
+        variables[CMAKE_EXPORT_COMPILE_COMMANDS] = "ON"
+        variables[CMAKE_ANDROID_NDK] = resolveMacroValue(NDK_DIR)
+        variables[CMAKE_TOOLCHAIN_FILE] = getToolchainFile().absolutePath
+        variables[CMAKE_MAKE_PROGRAM] = resolveMacroValue(NINJA_EXE)
+    }
+
+    // TODO Inject settings from CMakeSettings.json here
+
+    val result = mutableListOf<CommandLineArgument>()
+    result += "-G${this.cmake!!.generator}".toCmakeArgument()
+    for((name,value) in variables) {
+        result += "-D$name=$value".toCmakeArgument()
     }
     result += parseCmakeArguments(variant.buildSystemArgumentList)
     return result
@@ -89,7 +94,7 @@ private fun CxxAbiModel.getToolchainFile(): File {
         // Note: When setting this flag, Cmake's android toolchain would end up calling our
         // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only
         // once.
-        variant.module.cmakeToolchainFile
+        File(resolveMacroValue(NDK_CMAKE_TOOLCHAIN))
     } else {
         /**
          * Returns a pre-ndk-r15-wrapper android toolchain cmake file for NDK r14 and below that has a
@@ -99,8 +104,8 @@ private fun CxxAbiModel.getToolchainFile(): File {
         val toolchainFile = join(cxxBuildFolder, "pre-ndk-r15-wrapper-android.toolchain.cmake")
         FileUtils.writeStringToFile(toolchainFile,
             """
-            # This toolchain file was generated by Android Gradle Plugin to support NDK versions r14 and below.
-            include("${variant.module.cmakeToolchainFile.path.replace('\\', '/')}")
+            # This toolchain file was generated by Gradle to support NDK versions r14 and below.
+            include("${resolveMacroValue(NDK_CMAKE_TOOLCHAIN).replace("\\", "/")}")
             set($CMAKE_SYSTEM_VERSION 1)
             """.trimIndent())
         toolchainFile

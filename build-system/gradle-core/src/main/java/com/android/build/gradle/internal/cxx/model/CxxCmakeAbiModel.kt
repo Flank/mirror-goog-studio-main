@@ -98,4 +98,9 @@ interface CxxCmakeAbiModel {
      */
     val toolchainSettingsFromCacheFile: File
         get() = join(cmakeWrappingBaseFolder, "compiler_settings_cache.cmake")
+
+    /**
+     * The backend generator to use.
+     */
+    val generator: String
 }

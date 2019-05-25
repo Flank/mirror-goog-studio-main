@@ -256,6 +256,7 @@ internal data class CxxCmakeAbiModelData(
     override val compileCommandsJsonFile: File,
     override val compilerCacheUseFile: File,
     override val compilerCacheWriteFile: File,
+    override val generator: String,
     override val toolchainSettingsFromCacheFile: File,
     override val toolchainWrapperFile: File
 ) : CxxCmakeAbiModel
@@ -269,6 +270,7 @@ private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
     compileCommandsJsonFile = compileCommandsJsonFile,
     compilerCacheUseFile = compilerCacheUseFile,
     compilerCacheWriteFile = compilerCacheWriteFile,
+    generator = generator,
     toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile,
     toolchainWrapperFile = toolchainWrapperFile
 )

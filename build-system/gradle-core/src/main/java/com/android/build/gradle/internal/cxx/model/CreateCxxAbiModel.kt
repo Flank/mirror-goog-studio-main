@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.isCmakeForkVersion
 import com.android.build.gradle.internal.cxx.services.createDefaultAbiServiceRegistry
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -59,6 +60,12 @@ fun createCxxAbiModel(
         override val cmake by lazy {
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 object : CxxCmakeAbiModel {
+                    override val generator: String
+                        get() = if (variant.module.cmake!!.minimumCmakeVersion.isCmakeForkVersion()) {
+                            "Android Gradle - Ninja"
+                        } else {
+                            "Ninja"
+                        }
                     override val cmakeWrappingBaseFolder: File
                         get() = join(variant.gradleBuildOutputFolder, abi.tag)
                     override val cmakeArtifactsBaseFolder: File
