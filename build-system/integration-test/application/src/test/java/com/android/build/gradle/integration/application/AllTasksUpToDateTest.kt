@@ -14,48 +14,49 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.google.common.truth.Truth;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.google.common.truth.Truth
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 
-public class AllTasksUpToDateTest {
+class AllTasksUpToDateTest {
 
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .create();
+    @JvmField
+    val project = GradleTestProject.builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
     @Before
-    public void setUp() throws Exception {
+    fun setUp() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.buildTypes {\n"
-                        + "  release { minifyEnabled true }\n"
-                        + "  r8 { minifyEnabled true; useProguard false }\n"
-                        + "}");
+            project.buildFile, """
+                 android.buildTypes {
+                       release { minifyEnabled true }
+                       r8 { minifyEnabled true; useProguard false }
+                 }""".trimIndent()
+        )
     }
 
     @Test
-    public void allTasksUpToDate() throws Exception {
-        String[] tasksToRun = new String[] {"build", "assembleAndroidTest"};
+    fun allTasksUpToDate() {
+        val tasksToRun = arrayOf("build", "assembleAndroidTest")
 
-        project.execute(tasksToRun);
-        GradleBuildResult result = project.executor().run(tasksToRun);
+        project.execute(*tasksToRun)
+        val result = project.executor().run(*tasksToRun)
 
-        Truth.assertThat(result.getDidWorkTasks())
-                // Known exceptions:
-                .containsExactly(
-                        // Lint declares no outputs, so it's never up-to-date. It's probably for the
-                        // better, because it's hard to declare all inputs (they include the SDK
-                        // and contents of the Google maven repo).
-                        ":lint");
+        Truth.assertThat(result.didWorkTasks)
+            // Known exceptions:
+            .containsExactly(
+                // Lint declares no outputs, so it's never up-to-date. It's probably for the
+                // better, because it's hard to declare all inputs (they include the SDK
+                // and contents of the Google maven repo).
+                ":lint"
+            )
     }
 }
