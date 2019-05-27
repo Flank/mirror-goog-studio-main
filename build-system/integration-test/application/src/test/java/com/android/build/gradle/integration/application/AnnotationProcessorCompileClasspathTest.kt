@@ -14,101 +14,114 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static com.google.common.truth.Truth.assertThat;
+import com.google.common.truth.Truth.assertThat
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.ScannerSubject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import java.io.IOException;
-import java.util.Scanner;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ScannerSubject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
 
-/** Test various scenarios with AnnotationProcessorOptions.includeCompileClasspath */
-public class AnnotationProcessorCompileClasspathTest {
+/** Test various scenarios with AnnotationProcessorOptions.includeCompileClasspath  */
+class AnnotationProcessorCompileClasspathTest {
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("butterknife").create();
+    @JvmField
+    var project = GradleTestProject.builder().fromTestProject("butterknife").create()
 
     @Before
-    public void setUp() throws IOException {
+    fun setUp() {
         // Remove dependencies block from build file.
         TestFileUtils.searchRegexAndReplace(
-                project.getBuildFile(), "(?s)dependencies \\{.*\\}", "");
+            project.buildFile, "(?s)dependencies \\{.*\\}", ""
+        )
     }
 
     @Test
-    public void failWhenClasspathHasProcessor() throws IOException, InterruptedException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "dependencies {\n"
-                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "}\n"
-                        + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null");
+    fun failWhenClasspathHasProcessor() {
 
-        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
-        assertThat(result.getFailureMessage())
-                .contains("Annotation processors must be explicitly declared now");
-        assertThat(result.getFailureMessage())
-                .contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
+        TestFileUtils.appendToFile(
+            project.buildFile,
+            """
+            dependencies {
+                compile 'com.jakewharton:butterknife:7.0.1'
+            }
+            android.defaultConfig.javaCompileOptions
+                .annotationProcessorOptions.includeCompileClasspath null""".trimIndent())
+
+        val result = project.executor().expectFailure().run("assembleDebug")
+        assertThat(result.failureMessage)
+            .contains("Annotation processors must be explicitly declared now")
+        assertThat(result.failureMessage)
+            .contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)")
     }
 
     @Test
-    public void failForAndroidTest() throws IOException, InterruptedException {
+    fun failForAndroidTest() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "dependencies {\n"
-                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "    annotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "}\n"
-                        + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null");
+            project.buildFile,
+            """
+            dependencies {
+                compile 'com.jakewharton:butterknife:7.0.1'
+                annotationProcessor 'com.jakewharton:butterknife:7.0.1'
+            }
+            android.defaultConfig.javaCompileOptions
+                .annotationProcessorOptions.includeCompileClasspath null""".trimIndent()
+        )
 
-        GradleBuildResult result = project.executor().run("assembleDebugAndroidTest");
-        try (Scanner stdout = result.getStdout()) {
+        var result = project.executor().run("assembleDebugAndroidTest")
+        result.stdout.use { stdout ->
             ScannerSubject.assertThat(stdout)
-                    .contains(
-                            "Annotation processors must be explicitly declared now\n"
-                                    + "androidTestAnnotationProcessor\n"
-                                    + "- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)\n");
+                .contains("""
+                          Annotation processors must be explicitly declared now
+                          androidTestAnnotationProcessor
+                          butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)
+                          """.trimIndent())
         }
-        result = project.executor().run("assembleDebugUnitTest");
-        try (Scanner stdout = result.getStdout()) {
+        result = project.executor().run("assembleDebugUnitTest")
+        result.stdout.use { stdout ->
             ScannerSubject.assertThat(stdout)
-                    .contains(
-                            "Annotation processors must be explicitly declared\n"
-                                    + "testAnnotationProcessor\n"
-                                    + "- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
+                .contains("""
+                          Annotation processors must be explicitly declared
+                          testAnnotationProcessor
+                          - butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)
+                          """.trimIndent()
+                )
         }
 
     }
 
     @Test
-    public void checkSuccessWithIncludeCompileClasspath() throws IOException, InterruptedException {
+    fun checkSuccessWithIncludeCompileClasspath() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true\n"
-                        + "dependencies {\n"
-                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "}\n");
+            project.buildFile,
+            """
+            android.defaultConfig.javaCompileOptions
+                .annotationProcessorOptions.includeCompileClasspath = true
+            dependencies {
+                compile 'com.jakewharton:butterknife:7.0.1'
+            }
+            """.trimIndent())
         project.executor()
-                .run("assembleDebug", "assembleDebugAndroidTest", "assembleDebugUnitTest");
+            .run("assembleDebug", "assembleDebugAndroidTest", "assembleDebugUnitTest")
     }
 
     @Test
-    public void checkSuccessWhenProcessorIsSpecified() throws IOException, InterruptedException {
+    fun checkSuccessWhenProcessorIsSpecified() {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null\n"
-                        + "dependencies {\n"
-                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "    annotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "    testAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "    androidTestAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
-                        + "}\n");
-        project.executor().run("assembleDebug", "assembleDebugAndroidTest", "testDebug");
+            project.buildFile,
+            """
+            android.defaultConfig.javaCompileOptions
+                .annotationProcessorOptions.includeCompileClasspath null
+            dependencies {
+                compile 'com.jakewharton:butterknife:7.0.1'
+                annotationProcessor 'com.jakewharton:butterknife:7.0.1'
+                testAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'
+                androidTestAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'
+            }
+            """.trimIndent())
+        project.executor().run("assembleDebug", "assembleDebugAndroidTest", "testDebug")
     }
 }
