@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent.ContentType
@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
@@ -317,8 +316,12 @@ class ShrinkResourcesTransform(
                     val before = params.uncompressedResourceFile.length()
                     val after = params.output.length()
                     val percent = ((before - after) * 100 / before).toInt().toLong()
-                    sb.append(": Binary resource data reduced from ${toKbString(before)}")
-                        .append("KB to ${toKbString(after)}")
+                    sb.append(": Binary resource data reduced from ${toKbString(
+                        before
+                    )}")
+                        .append("KB to ${toKbString(
+                            after
+                        )}")
                         .append("KB: Removed ${percent}%")
                     if (!ourWarned) {
                         ourWarned = true
