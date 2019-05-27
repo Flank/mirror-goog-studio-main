@@ -14,52 +14,50 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static org.junit.Assert.fail;
+import org.junit.Assert.fail
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.testutils.apk.Apk;
-import java.util.List;
-import org.junit.Rule;
-import org.junit.Test;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.truth.ApkSubject
+import org.junit.Rule
+import org.junit.Test
 
-/** Assemble tests for androidManifestInTest. */
-public class AndroidManifestInTestTest {
+/** Assemble tests for androidManifestInTest.  */
+class AndroidManifestInTestTest {
     @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("androidManifestInTest").create();
+    @JvmField
+    var project = GradleTestProject.builder().fromTestProject("androidManifestInTest").create()
 
     @Test
-    public void testUserProvidedTestAndroidManifest() throws Exception {
-        project.execute("assembleDebugAndroidTest");
-        Apk testApk = project.getTestApk();
+    fun testUserProvidedTestAndroidManifest() {
+        project.execute("assembleDebugAndroidTest")
+        val testApk = project.testApk
 
-        List<String> output = ApkSubject.getManifestContent(testApk.getFile());
+        val output = ApkSubject.getManifestContent(testApk.file)
 
-        boolean foundPermission = false;
-        boolean foundMetadata = false;
-        boolean isDebuggable = false;
-        for (String line : output) {
+        var foundPermission = false
+        var foundMetadata = false
+        var isDebuggable = false
+        for (line in output) {
             if (line.contains("foo.permission-group.COST_MONEY")) {
-                foundPermission = true;
+                foundPermission = true
             }
             if (line.contains("meta-data")) {
-                foundMetadata = true;
+                foundMetadata = true
             }
             if (line.contains("android:debuggable")) {
-                isDebuggable = true;
+                isDebuggable = true
             }
         }
         if (!foundPermission) {
-            fail("Could not find user-specified permission group.");
+            fail("Could not find user-specified permission group.")
         }
         if (!foundMetadata) {
-            fail("Could not find meta-data under instrumentation ");
+            fail("Could not find meta-data under instrumentation ")
         }
         if (!isDebuggable) {
-            fail("Generated apk is not debuggable ");
+            fail("Generated apk is not debuggable ")
         }
     }
 }
