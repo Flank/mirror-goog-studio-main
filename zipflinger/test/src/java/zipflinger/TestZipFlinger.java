@@ -356,11 +356,11 @@ public class TestZipFlinger extends TestBase {
         ZipArchive zipArchive = new ZipArchive(new File("nonexistant.bla"));
         File file = getFile("1-2-3files.zip");
         FileSource fileSource = new FileSource(file, "name", false);
-        zipArchive.add(fileSource);
-        zipArchive.add(fileSource);
 
         boolean exceptionCaught = false;
         try {
+            zipArchive.add(fileSource);
+            zipArchive.add(fileSource);
             zipArchive.close();
         } catch (IllegalStateException e) {
             exceptionCaught = true;

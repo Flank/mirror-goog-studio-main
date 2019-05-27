@@ -48,6 +48,9 @@ class CentralDirectory {
             entries.remove(name);
             return entry;
         }
+        if (addedEntries.containsKey(name)) {
+            addedEntries.remove(name);
+        }
         return null;
     }
 
@@ -118,5 +121,9 @@ class CentralDirectory {
 
     public boolean contains(@NonNull String name) {
         return entries.containsKey(name) || addedEntries.containsKey(name);
+    }
+
+    public boolean containsNewEntries() {
+        return !addedEntries.isEmpty();
     }
 }

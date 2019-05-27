@@ -29,6 +29,14 @@ The library is made of four components named ZipArchive, Freestore, Mapper (Inpu
 +------------------------------------+
 ```
 
+Design choice discussion:
+
+In order to avoid creating holes when editing an archive, zipflinger mandates to submit all delete
+operations first and then submit add operations. A "deferred add" mechanism was initially used where
+delete operations were carried immediately but additions were deferred until the archive was closed.
+This approach was ultimately abandoned since it increased the memory footprint significantly when 
+BytesSource were involved.
+
 ## ZipArchive
 ZipArchive is the interface to the users of the library. This is where an archive is created and/or
 modified. Typically an user will provide the path to an archive and request operations such as
@@ -44,20 +52,21 @@ existed, the archive would have been create. Two operations are requested:
 ```
  ZipArchive archive = new ZipArchive("app.ap_");
 
- // Delete (nothing is written to disk at this point).
+ // Delete (to reduce holes to a minimum, it is mandatory to do all delete
+ // operation first).
  archive.delete("classes18.dex");
 
- // Add (nothing is written to disk at this point).
+ // Add sources
  FileSource source = new FileSource("/path/to/file", "entryName");
  archive.addFile(source);
 
- // Zip archive is actually modified.
+ // Don't forget to close in order to release the archive fd/handle.
  archive.close();
 ```
 
 Such an operation can be performed by Zipflinger in under 100 ms with a mid-range 2019 SSD laptop.
 
-Writing to the archive only happens upon closing it via close() method. If an entry has been deleted
+If an entry has been deleted
 in the middle of the archive, Zipflinger will not leaves a "hole" there. This is done in order to be
 compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect, 
 Zipflinger fills empty space with virtual entries (a.k.a a Local File Header with no name, up to 

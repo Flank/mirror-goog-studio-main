@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +33,7 @@ public class ZipArchive implements Closeable {
     private boolean closed;
     private final File file;
     private final CentralDirectory cd;
-
-    private final List<Source> sources = new ArrayList<>();
-    private final List<ZipSource> zipSources = new ArrayList<>();
-
+    private final ZipWriter writer;
     /**
      * The object used to manipulate a zip archive.
      *
@@ -55,6 +51,7 @@ public class ZipArchive implements Closeable {
             cd = new CentralDirectory(ByteBuffer.allocate(0), entries);
             freestore = new FreeStore(entries);
         }
+        writer = new ZipWriter(file);
         closed = false;
     }
 
@@ -73,44 +70,59 @@ public class ZipArchive implements Closeable {
     }
 
     /**
-     * Add a source to the archive. The file on the storage system is not modified until this
-     * ZipArchive is closed.
+     * Add a source to the archive.
      *
      * @param source The source to add to this zip archive.
+     * @throws IllegalStateException if the entry name already exists in the archive.
+     * @throws IOException if writing to the zip archive fails.
      */
-    public void add(@NonNull Source source) {
+    public void add(@NonNull Source source) throws IOException {
         if (closed) {
             throw new IllegalStateException(
                     String.format("Cannot add source to closed archive %s", file));
         }
-        sources.add(source);
+        writeSource(source);
     }
 
     /**
-     * Add a set of selected entries from an other zip archive. The file on the storage system is
-     * not modified until this ZipArchive is closed.
+     * Add a set of selected entries from an other zip archive.
      *
-     * @param source A zip archive with selected entries to add to this zip archive.
+     * @param sources A zip archive with selected entries to add to this zip archive.
+     * @throws IllegalStateException if the entry name already exists in the archive.
+     * @throws IOException if writing to the zip archive fails.
      */
-    public void add(@NonNull ZipSource source) {
+    public void add(@NonNull ZipSource sources) throws IOException {
         if (closed) {
             throw new IllegalStateException(
                     String.format("Cannot add zip source to closed archive %s", file));
         }
-        zipSources.add(source);
+
+        try {
+            sources.open();
+            for (Source source : sources.getSelectedEntries()) {
+                writeSource(source);
+            }
+        } catch (Exception e) {
+            sources.close();
+        }
     }
 
     /**
-     * Delete an entry from this archive. If the entry did not exist, this method does nothing.
+     * Delete an entry from this archive. If the entry did not exist, this method does nothing. To
+     * avoid creating "holes" in the archive, it is mendatory to delete all entries first and add
+     * sources second.
      *
      * @param name The name of the entry to delete.
+     * @throws IllegalStateException if entries have been added.
      */
     public void delete(@NonNull String name) {
         if (closed) {
             throw new IllegalStateException(
                     String.format("Cannot delete '%s' from closed archive %s", name, file));
         }
-
+        if (cd.containsNewEntries()) {
+            throw new IllegalStateException("Delete entries after adding is illegal.");
+        }
         Entry entry = cd.delete(name);
         if (entry != null) {
             freestore.free(entry.getLocation());
@@ -131,25 +143,15 @@ public class ZipArchive implements Closeable {
                     String.format("Attempt to close closed archive '%s'", file));
         }
         closed = true;
-
-        try (ZipWriter writer = new ZipWriter(file)) {
-            writeArchive(writer);
-        }
+        finishArchive();
+        writer.close();
     }
 
-    private void writeArchive(@NonNull ZipWriter writer) throws IOException {
+    // 1. Fill empty space with virtual entries to be nice to top-down parsers.
+    // 2. Write the CD.
+    // 3. Write the EOCD.
+    private void finishArchive() throws IOException {
         checkNumEntries();
-
-        writeSources(sources, writer);
-
-        for (ZipSource zipSource : zipSources) {
-            try {
-                zipSource.open();
-                writeSources(zipSource.getSelectedEntries(), writer);
-            } catch (Exception e) {
-                zipSource.close();
-            }
-        }
 
         // Fill all empty space with virtual entry (not the last one since it represent all of
         // the unused file space.
@@ -174,10 +176,7 @@ public class ZipArchive implements Closeable {
     // TODO: Zip64 -> Remove this check
     private void checkNumEntries() {
         // Check that num entries can be represented on an uint16_t.
-        long numEntries = cd.getNumEntries() + sources.size();
-        for (ZipSource source : zipSources) {
-            numEntries += source.entries().size();
-        }
+        long numEntries = cd.getNumEntries();
         if (numEntries > Ints.USHRT_MAX) {
             throw new IllegalStateException("Too many entries (" + numEntries + ")");
         }
@@ -205,14 +204,7 @@ public class ZipArchive implements Closeable {
         }
     }
 
-    private void writeSources(@NonNull List<? extends Source> sources, @NonNull ZipWriter writer)
-            throws IOException {
-        for (Source source : sources) {
-            writeSource(source, writer);
-        }
-    }
-
-    private void writeSource(@NonNull Source source, @NonNull ZipWriter writer) throws IOException {
+    private void writeSource(@NonNull Source source) throws IOException {
         source.prepare();
         validateName(source);
 

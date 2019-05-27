@@ -23,7 +23,7 @@ for(Entry entry : map.getEntries().values()) {
 ## How to replace an entry in an archive
 ```
  ZipArchive zip = new ZipArchive("app.apk");
- zip.delete("classes18.dex");
+ zip.delete("classes18.dex"); // All deletes must be submitted first.
  zip.add(new FileSource("/path/to/classes18.dex", "classes18.dex", true)); // Compressed
  zip.add(new FileSource("/path/to/stuff.png", "image.png", false)); // Uncompressed
  zip.close();
