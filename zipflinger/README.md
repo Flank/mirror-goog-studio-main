@@ -61,8 +61,7 @@ Writing to the archive only happens upon closing it via close() method. If an en
 in the middle of the archive, Zipflinger will not leaves a "hole" there. This is done in order to be
 compatible with top-down parsers such as jarsigner or the JDK zip classes. To this effect, 
 Zipflinger fills empty space with virtual entries (a.k.a a Local File Header with no name, up to 
-2GiB payload and no Central Directory entry). Padding is done via zip entries "extra field". For
-alignment as well, padding fields are used.
+64KiB extra and no Central Directory entry). Alignment is also done via "extra field".
 
 Entry name heuristic:
 - Deleting a non-existing entry will fail silently.
