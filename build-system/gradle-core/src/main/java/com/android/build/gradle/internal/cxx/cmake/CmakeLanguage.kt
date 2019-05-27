@@ -34,8 +34,7 @@ import java.util.Locale
  *
  */
 fun isCmakeConstantTruthy(value : String) : Boolean {
-    val upper = value.toUpperCase(Locale.US)
-    return when(upper) {
+    return when(val upper = value.toUpperCase(Locale.US)) {
         "1", "ON", "YES", "TRUE", "Y" -> true
         "0", "OFF", "NO", "FALSE", "N", "IGNORE", "NOTFOUND", "" -> false
         else ->
@@ -54,3 +53,9 @@ fun isCmakeConstantTruthy(value : String) : Boolean {
             }
     }
 }
+
+
+/**
+ * Convert boolean to "1" or "0" for CMake.
+ */
+fun cmakeBoolean(bool : Boolean) = if (bool) "1" else "0"

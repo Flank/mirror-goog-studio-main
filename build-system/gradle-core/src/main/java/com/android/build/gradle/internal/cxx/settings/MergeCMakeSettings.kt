@@ -20,12 +20,14 @@ package com.android.build.gradle.internal.cxx.settings
  * Merge a list of [CMakeSettings].
  */
 fun mergeCMakeSettings(vararg settings: CMakeSettings) : CMakeSettings {
-    var result = CMakeSettings()
+    val environments = mutableListOf<CMakeSettingsEnvironment>()
+    val configurations = mutableListOf<CMakeSettingsConfiguration>()
     for (setting in settings) {
-        result = result.copy(
-            environments = result.environments + setting.environments,
-            configurations = result.configurations + setting.configurations
-        )
+        environments += setting.environments
+        configurations += setting.configurations
     }
-    return result
+    return CMakeSettings(
+        environments = environments,
+        configurations = configurations
+    )
 }

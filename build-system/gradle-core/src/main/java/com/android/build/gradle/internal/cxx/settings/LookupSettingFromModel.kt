@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.cmake.cmakeBoolean
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
@@ -45,11 +46,6 @@ fun CxxAbiModel.resolveMacroValue(macro : Macro) : String {
         else -> variant.resolveMacroValue(macro)
     }
 }
-
-/**
- * Convert boolean to "1" or "0" for CMake.
- */
-private fun cmakeBoolean(bool : Boolean) = if (bool) "1" else "0"
 
 /**
  * Get the platform codename (like 'Q')

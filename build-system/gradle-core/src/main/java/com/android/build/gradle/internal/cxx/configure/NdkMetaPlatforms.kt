@@ -16,17 +16,33 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.Reader
 
 data class NdkMetaPlatforms(
-    val min : Int = 0,
-    val max : Int = 0,
+    val min : Int = potentialPlatforms.start,
+    val max : Int = potentialPlatforms.endInclusive,
     val aliases : Map<String, Int> = mapOf()) {
 
+    init {
+        if (!potentialPlatforms.contains(min)) {
+            errorln("potentialPlatforms range needs to include $min")
+        }
+        if (!potentialPlatforms.contains(max)) {
+            errorln("potentialPlatforms range needs to include $max")
+        }
+    }
+
     companion object {
+
+        /**
+         * Theoretical range of platforms across all NDKs. Used to place limits on possible
+         * platforms when the meta/platforms.json hasn't yet been read.
+         */
+        val potentialPlatforms : IntRange = (0 until 64)
 
         /**
          * Given an NDK root file path, return the name of the platforms metadata JSON file.
