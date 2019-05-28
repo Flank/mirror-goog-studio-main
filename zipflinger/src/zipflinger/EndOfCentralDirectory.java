@@ -34,7 +34,7 @@ class EndOfCentralDirectory {
         return new Location(cdOffset, cdSize);
     }
 
-    public static void write(
+    public static Location write(
             @NonNull ZipWriter writer, @NonNull Location cdLocation, long numEntries)
             throws IOException {
         ByteBuffer eocd = ByteBuffer.allocate(SIZE).order(ByteOrder.LITTLE_ENDIAN);
@@ -49,5 +49,7 @@ class EndOfCentralDirectory {
 
         eocd.rewind();
         writer.write(eocd);
+
+        return new Location(cdLocation.last + 1, eocd.capacity());
     }
 }

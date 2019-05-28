@@ -28,7 +28,7 @@ public class Entry {
     private Location cdLocation = Location.INVALID;
 
     // The location (in file space) of the zip entry payload (the actual file data).
-    private Location payloadLocation;
+    private Location payloadLocation = Location.INVALID;
 
     private String name = "";
     private int crc;

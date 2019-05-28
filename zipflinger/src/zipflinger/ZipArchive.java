@@ -17,7 +17,6 @@
 package zipflinger;
 
 import com.android.annotations.NonNull;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -27,13 +26,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ZipArchive implements Closeable {
+public class ZipArchive implements Archive {
 
     private final FreeStore freestore;
     private boolean closed;
     private final File file;
     private final CentralDirectory cd;
     private final ZipWriter writer;
+
     /**
      * The object used to manipulate a zip archive.
      *
@@ -69,13 +69,8 @@ public class ZipArchive implements Closeable {
         return ZipMap.from(file, false).getEntries();
     }
 
-    /**
-     * Add a source to the archive.
-     *
-     * @param source The source to add to this zip archive.
-     * @throws IllegalStateException if the entry name already exists in the archive.
-     * @throws IOException if writing to the zip archive fails.
-     */
+    /** See Archive.add documentation */
+    @Override
     public void add(@NonNull Source source) throws IOException {
         if (closed) {
             throw new IllegalStateException(
@@ -84,13 +79,8 @@ public class ZipArchive implements Closeable {
         writeSource(source);
     }
 
-    /**
-     * Add a set of selected entries from an other zip archive.
-     *
-     * @param sources A zip archive with selected entries to add to this zip archive.
-     * @throws IllegalStateException if the entry name already exists in the archive.
-     * @throws IOException if writing to the zip archive fails.
-     */
+    /** See Archive.add documentation */
+    @Override
     public void add(@NonNull ZipSource sources) throws IOException {
         if (closed) {
             throw new IllegalStateException(
@@ -107,21 +97,12 @@ public class ZipArchive implements Closeable {
         }
     }
 
-    /**
-     * Delete an entry from this archive. If the entry did not exist, this method does nothing. To
-     * avoid creating "holes" in the archive, it is mendatory to delete all entries first and add
-     * sources second.
-     *
-     * @param name The name of the entry to delete.
-     * @throws IllegalStateException if entries have been added.
-     */
+    /** See Archive.delete documentation */
+    @Override
     public void delete(@NonNull String name) {
         if (closed) {
             throw new IllegalStateException(
                     String.format("Cannot delete '%s' from closed archive %s", name, file));
-        }
-        if (cd.containsNewEntries()) {
-            throw new IllegalStateException("Delete entries after adding is illegal.");
         }
         Entry entry = cd.delete(name);
         if (entry != null) {
@@ -138,22 +119,29 @@ public class ZipArchive implements Closeable {
     // TODO: Zip64 -> Add boolean allowZip64
     @Override
     public void close() throws IOException {
+        closeWithInfo();
+    }
+
+    @NonNull
+    public ZipInfo closeWithInfo() throws IOException {
+        if (closed) {
+            throw new IllegalStateException("Attempt to close a closed archive");
+        }
+        closed = true;
         try {
-            if (closed) {
-                throw new IllegalStateException(
-                        String.format("Attempt to close closed archive '%s'", file));
-            }
-            closed = true;
-            finishArchive();
+            return writeArchive(writer);
         } finally {
             writer.close();
         }
     }
 
-    // 1. Fill empty space with virtual entries to be nice to top-down parsers.
-    // 2. Write the CD.
-    // 3. Write the EOCD.
-    private void finishArchive() throws IOException {
+    @NonNull
+    public File getFile() {
+        return file;
+    }
+
+    @NonNull
+    private ZipInfo writeArchive(@NonNull ZipWriter writer) throws IOException {
         checkNumEntries();
 
         // Fill all empty space with virtual entry (not the last one since it represent all of
@@ -172,8 +160,12 @@ public class ZipArchive implements Closeable {
 
         // Write EOCD
         long numEntries = cd.getNumEntries();
-        EndOfCentralDirectory.write(writer, cdLocation, numEntries);
+        Location eocdLocation = EndOfCentralDirectory.write(writer, cdLocation, numEntries);
         writer.truncate(writer.position());
+
+        // Build and return location map
+        Location payLoadLocation = new Location(0, cdStart);
+        return new ZipInfo(payLoadLocation, cdLocation, eocdLocation);
     }
 
     // TODO: Zip64 -> Remove this check

@@ -18,12 +18,12 @@ package zipflinger;
 import com.android.annotations.NonNull;
 import java.text.NumberFormat;
 
-class Location implements Comparable<Location> {
+public class Location implements Comparable<Location> {
 
     public static final Location INVALID = new Location(0, 0);
 
-    final long first;
-    final long last;
+    public final long first;
+    public final long last;
 
     public Location(long first, long size) {
         this.first = first;

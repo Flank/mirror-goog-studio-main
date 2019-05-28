@@ -9,6 +9,7 @@ maven_java_library(
     visibility = [
         "//tools/base/build-system:__subpackages__",
         "//tools/base/lint:__subpackages__",
+        "//tools/base/signflinger:__subpackages__",
     ],
     deps = [
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/27.0.1-jre:jar",
