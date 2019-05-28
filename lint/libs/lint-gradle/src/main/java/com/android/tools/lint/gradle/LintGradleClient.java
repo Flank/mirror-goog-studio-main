@@ -162,10 +162,7 @@ public class LintGradleClient extends LintCliClient {
     @NonNull
     @Override
     public Iterable<File> findRuleJars(@NonNull Project project) {
-        return variantInputs.getRuleJars()
-                .getAsFileTree()
-                .filter(File::isFile)
-                .getFiles();
+        return variantInputs.getRuleJars().getAsFileTree().filter(File::isFile).getFiles();
     }
 
     @NonNull

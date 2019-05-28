@@ -100,7 +100,6 @@ class ThreadDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         if (method == null) return
         val usagePsi = usage.sourcePsi ?: return
 
-
         if (usagePsi.getUserData(CHECKED) == true) return
         usagePsi.putUserData(CHECKED, true)
 
