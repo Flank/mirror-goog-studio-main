@@ -14,310 +14,326 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.testutils.truth.PathSubject.assertThat
 
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
-
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule;
-import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.AndroidProjectUtils;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.VariantUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.JavaArtifact;
-import com.android.builder.model.Variant;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
-import java.io.File;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
+import com.android.build.gradle.integration.common.category.DeviceTests
+import com.android.build.gradle.integration.common.fixture.Adb
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestModule
+import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.utils.*
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.google.common.base.Charsets
+import com.google.common.io.Files
+import java.io.File
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.experimental.categories.Category
 
 /**
  * Tests for annotation processor.
  */
-public class AnnotationProcessorTest {
-
-    private static final String ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER =
-            "build/generated/ap_generated_sources/";
+class AnnotationProcessorTest {
 
     @Rule
-    public GradleTestProject project;
+    @JvmField
+    val project: GradleTestProject = GradleTestProject.builder()
+        .fromTestApp(
+            MultiModuleTestProject(
+                mapOf<String, AndroidTestModule>(
+                    ":app" to app,
+                    ":lib" to AnnotationProcessorLib.createLibrary(),
+                    ":lib-compiler" to AnnotationProcessorLib.createCompiler()
+                )
+            )
+        ).create()
 
     @Rule
-    public Adb adb = new Adb();
-
-    public AnnotationProcessorTest() {
-
-        project =
-                GradleTestProject.builder()
-                        .fromTestApp(
-                                new MultiModuleTestProject(
-                                        ImmutableMap.of(
-                                                ":app", sApp,
-                                                ":lib",
-                                                        AnnotationProcessorLib.Companion
-                                                                .createLibrary(),
-                                                ":lib-compiler",
-                                                        AnnotationProcessorLib.Companion
-                                                                .createCompiler())))
-                        .create();
-    }
-    private static AndroidTestModule sApp = HelloWorldApp.noBuildFile();
-    static {
-        sApp.replaceFile(
-                new TestSourceFile(
-                        "src/main/java/com/example/helloworld/HelloWorld.java",
-                        "package com.example.helloworld;\n"
-                                + "\n"
-                                + "import android.app.Activity;\n"
-                                + "import android.widget.TextView;\n"
-                                + "import android.os.Bundle;\n"
-                                + "import com.example.annotation.ProvideString;\n"
-                                + "\n"
-                                + "@ProvideString\n"
-                                + "public class HelloWorld extends Activity {\n"
-                                + "    /** Called when the activity is first created. */\n"
-                                + "    @Override\n"
-                                + "    public void onCreate(Bundle savedInstanceState) {\n"
-                                + "        super.onCreate(savedInstanceState);\n"
-                                + "        TextView tv = new TextView(this);\n"
-                                + "        tv.setText(getString());\n"
-                                + "        setContentView(tv);\n"
-                                + "    }\n"
-                                + "\n"
-                                + "    public static String getString() {\n"
-                                + "        return new com.example.helloworld.HelloWorldStringValue().value;\n"
-                                + "    }\n"
-                                + "\n"
-                                + "    public static String getProcessor() {\n"
-                                + "        return new com.example.helloworld.HelloWorldStringValue().processor;\n"
-                                + "    }\n"
-                                + "}\n"));
-
-        sApp.removeFileByName("HelloWorldTest.java");
-
-        sApp.addFile(
-                new TestSourceFile(
-                        "src/test/java/com/example/helloworld/HelloWorldTest.java",
-                        "package com.example.helloworld;\n"
-                                + "import com.example.annotation.ProvideString;\n"
-                                + "\n"
-                                + "@ProvideString\n"
-                                + "public class HelloWorldTest {\n"
-                                + "}\n"));
-
-        sApp.addFile(
-                new TestSourceFile(
-                        "src/androidTest/java/com/example/hellojni/HelloWorldAndroidTest.java",
-                        "package com.example.helloworld;\n"
-                                + "\n"
-                                + "import android.support.test.runner.AndroidJUnit4;\n"
-                                + "import org.junit.Assert;\n"
-                                + "import org.junit.Test;\n"
-                                + "import org.junit.runner.RunWith;\n"
-                                + "import com.example.annotation.ProvideString;\n"
-                                + "\n"
-                                + "@ProvideString\n"
-                                + "@RunWith(AndroidJUnit4.class)\n"
-                                + "public class HelloWorldAndroidTest {\n"
-                                + "\n"
-                                + "    @Test\n"
-                                + "    public void testStringValue() {\n"
-                                + "        Assert.assertTrue(\"Hello\".equals(HelloWorld.getString()));\n"
-                                + "    }\n"
-                                + "    @Test\n"
-                                + "    public void testProcessor() {\n"
-                                + "        Assert.assertTrue(\"Processor\".equals(HelloWorld.getProcessor()));\n"
-                                + "    }\n"
-                                + "}\n"));
-    }
+    @JvmField
+    var adb = Adb()
 
     @Before
-    public void setUp() throws Exception {
-        String buildScript =
-                "\n"
-                        + "apply from: \"../../commonHeader.gradle\"\n"
-                        + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
-                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
-                        + "\n"
-                        + "apply plugin: 'com.android.application'\n"
-                        + "\n"
-                        + "android {\n"
-                        + "    compileSdkVersion "
-                        + DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "    buildToolsVersion '"
-                        + DEFAULT_BUILD_TOOL_VERSION
-                        + "'\n"
-                        + "    defaultConfig {\n"
-                        + "        javaCompileOptions {\n"
-                        + "            annotationProcessorOptions {\n"
-                        + "                argument \"value\", \"Hello\"\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "        minSdkVersion rootProject.supportLibMinSdk\n"
-                        + "        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "dependencies {\n"
-                        + "    androidTestImplementation \"com.android.support.test:runner:${project.testSupportLibVersion}\"\n"
-                        + "    androidTestImplementation \"com.android.support.test:rules:${project.testSupportLibVersion}\"\n"
-                        + "}\n";
-        Files.asCharSink(project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8)
-                .write(buildScript);
+    fun setUp() {
+        val testSupportLibVersion = "\${project.testSupportLibVersion}"
+        val buildScript = ("""
+                apply from: "../../commonHeader.gradle"
+                buildscript { apply from: "../../commonBuildScript.gradle" }
+                apply from: "../../commonLocalRepo.gradle"
+
+                apply plugin: 'com.android.application'
+
+                android {
+                    compileSdkVersion $DEFAULT_COMPILE_SDK_VERSION
+
+                    buildToolsVersion '$DEFAULT_BUILD_TOOL_VERSION'
+                    defaultConfig {
+                        javaCompileOptions {
+                            annotationProcessorOptions {
+                                argument "value", "Hello"
+                            }
+                        }
+                        minSdkVersion rootProject.supportLibMinSdk
+                        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+                    }
+                }
+                dependencies {
+                    androidTestImplementation (
+                        "com.android.support.test:runner:$testSupportLibVersion"
+                    )
+                    androidTestImplementation (
+                        "com.android.support.test:rules:$testSupportLibVersion"
+                    )
+                }
+                """).trimIndent()
+        Files.asCharSink(project.getSubproject(":app")
+            .file("build.gradle"), Charsets.UTF_8)
+            .write(buildScript)
     }
 
     @Test
-    public void normalBuild() throws Exception {
+    fun normalBuild() {
         TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "dependencies {\n"
-                        + "    api project(':lib')\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "}\n");
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                api project(':lib')
+                annotationProcessor project(':lib-compiler')
+            }
+            """.trimIndent()
+        )
 
-        project.executor().run("assembleDebug");
-        File aptOutputFolder =
-                project.getSubproject(":app")
-                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debug/out");
-        assertThat(new File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
-                .exists();
+        project.executor().run("assembleDebug")
+        val aptOutputFolder = project.getSubproject(":app")
+            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debug/out")
+        assertThat(File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
+            .exists()
 
-        AndroidProject model = project.model().fetchAndroidProjects().getOnlyModelMap().get(":app");
-        Variant debugVariant = AndroidProjectUtils.getDebugVariant(model);
+        val model = project.model().fetchAndroidProjects().onlyModelMap[":app"]
+        val debugVariant = (model)!!.getDebugVariant()
 
-        assertThat(debugVariant.getMainArtifact().getGeneratedSourceFolders())
-                .contains(aptOutputFolder);
+        assertThat(debugVariant.mainArtifact.generatedSourceFolders)
+            .contains(aptOutputFolder)
 
         // Ensure that test sources also have their generated sources files sent to the IDE. This
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
-        File testAptOutputFolder =
-                project.getSubproject(":app")
-                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugUnitTest/out");
-        JavaArtifact testArtifact = VariantUtils.getUnitTestArtifact(debugVariant);
-        assertThat(testArtifact.getGeneratedSourceFolders()).contains(testAptOutputFolder);
+        val testAptOutputFolder = project.getSubproject(":app")
+            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugUnitTest/out")
+        val testArtifact = debugVariant.getUnitTestArtifact()
+        assertThat(testArtifact.generatedSourceFolders).contains(testAptOutputFolder)
 
         // Ensure that test projects also have their generated sources files sent to the IDE. This
         // specifically tests for the issue described in
         // https://issuetracker.google.com/37121918.
-        File androidTestAptOutputFolder =
-                project.getSubproject(":app")
-                        .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugAndroidTest/out");
-        AndroidArtifact androidTest = VariantUtils.getAndroidTestArtifact(debugVariant);
-        assertThat(androidTest.getGeneratedSourceFolders()).contains(androidTestAptOutputFolder);
+        val androidTestAptOutputFolder = project.getSubproject(":app")
+            .file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER + "debugAndroidTest/out")
+        val androidTest = debugVariant.getAndroidTestArtifact()
+        assertThat(androidTest.generatedSourceFolders).contains(androidTestAptOutputFolder)
 
         // check incrementality.
-        GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getUpToDateTasks()).contains(":app:javaPreCompileDebug");
+        val result = project.executor().run("assembleDebug")
+        assertThat(result.upToDateTasks).contains(":app:javaPreCompileDebug")
     }
 
     @Test
-    public void testBuild() throws Exception {
-        Files.append(
-                "\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "    testAnnotationProcessor project(':lib-compiler')\n"
-                        + "    androidTestAnnotationProcessor project(':lib-compiler')\n"
-                        + "    api project(':lib')\n"
-                        + "}\n",
-                project.getSubproject(":app").getBuildFile(),
-                Charsets.UTF_8);
+    fun testBuild() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                annotationProcessor project(':lib-compiler')
+                testAnnotationProcessor project(':lib-compiler')
+                androidTestAnnotationProcessor project(':lib-compiler')
+                api project(':lib')
+            }
+            """.trimIndent()
+        )
 
-        project.executor().run("assembleDebugAndroidTest", "testDebug");
-        File aptOutputFolder =
-                project.getSubproject(":app").file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER);
+        project.executor().run("assembleDebugAndroidTest", "testDebug")
+        val aptOutputFolder =
+            project.getSubproject(":app").file(ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER)
         assertThat(
-                        new File(
-                                aptOutputFolder,
-                                "debugAndroidTest/out/com/example/helloworld/HelloWorldAndroidTestStringValue.java"))
-                .exists();
+            File(
+                aptOutputFolder,
+                "debugAndroidTest/out/com/example/helloworld/HelloWorldAndroidTestStringValue.java"
+            )
+        )
+            .exists()
         assertThat(
-                        new File(
-                                aptOutputFolder,
-                                "debugUnitTest/out/com/example/helloworld/HelloWorldTestStringValue.java"))
-                .exists();
+            File(
+                aptOutputFolder,
+                "debugUnitTest/out/com/example/helloworld/HelloWorldTestStringValue.java"
+            )
+        )
+            .exists()
     }
 
     @Test
-    public void precompileCheck() throws Exception {
-        Files.append(
-                "\n"
-                        + "dependencies {\n"
-                        + "    api project(':lib-compiler')\n"
-                        + "    api project(':lib')\n"
-                        + "}\n",
-                project.getSubproject(":app").getBuildFile(),
-                Charsets.UTF_8);
+    fun precompileCheck() {
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+            api project(':lib-compiler')
+                api project(':lib')
+            }
+            """.trimIndent()
+        )
 
-        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
-        String message = result.getFailureMessage();
-        assertThat(message).contains("Annotation processors must be explicitly declared now");
-        assertThat(message).contains("- lib-compiler.jar (project :lib-compiler)");
+        val result = project.executor().expectFailure().run("assembleDebug")
+        val message = result.failureMessage
+        assertThat(message).contains("Annotation processors must be explicitly declared now")
+        assertThat(message).contains("- lib-compiler.jar (project :lib-compiler)")
     }
-
 
     /**
      * Test compile classpath is being added to processor path.
      */
     @Test
-    public void compileClasspathIncludedInProcessor() throws Exception {
-        File emptyJar = project.getSubproject("app").file("empty.jar");
-        assertThat(emptyJar.createNewFile()).isTrue();
+    fun compileClasspathIncludedInProcessor() {
+        val emptyJar = project.getSubproject("app").file("empty.jar")
+        assertThat(emptyJar.createNewFile()).isTrue()
 
         TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "    android {\n"
-                        + "        defaultConfig {\n"
-                        + "            javaCompileOptions {\n"
-                        + "                annotationProcessorOptions {\n"
-                        + "                    includeCompileClasspath = true\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "dependencies {\n"
-                        + "    api project(':lib-compiler')\n"
-                        + "    annotationProcessor files('empty.jar')\n"
-                        + "}\n");
+            project.getSubproject(":app").buildFile,
+            """
+            android {
+                defaultConfig {
+                    javaCompileOptions {
+                        annotationProcessorOptions {
+                            includeCompileClasspath = true
+                        }
+                    }
+                }
+            }
+            dependencies {
+                api project(':lib-compiler')
+                annotationProcessor files('empty.jar')
+            }
+            """.trimIndent()
+        )
 
-        project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug")
     }
 
     @Test
-    public void androidAptPluginFail() throws Exception {
+    fun androidAptPluginFail() {
         TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "apply plugin: 'com.neenbedankt.android-apt'\n");
+            project.getSubproject(":app").buildFile,
+            "apply plugin: 'com.neenbedankt.android-apt'\n")
 
-        project.executor().expectFailure().run("assembleDebug");
+        project.executor().expectFailure().run("assembleDebug")
     }
 
     @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
+    @Category(DeviceTests::class)
+    fun connectedCheck() {
         TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "dependencies {\n"
-                        + "    api project(':lib')\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "}\n");
-        project.executeConnectedCheck();
+            project.getSubproject(":app").buildFile,
+            """
+            dependencies {
+                api project(':lib')
+                annotationProcessor project(':lib-compiler')
+            }
+            """.trimIndent()
+        )
+        project.executeConnectedCheck()
+    }
+
+    companion object {
+
+        private val ANNOTATION_PROCESSOR_SOURCES_OUT_FOLDER =
+            "build/generated/ap_generated_sources/"
+        private val app = HelloWorldApp.noBuildFile()
+
+        init {
+            app.replaceFile(
+                TestSourceFile(
+                    "src/main/java/com/example/helloworld/HelloWorld.java",
+                    """
+                    package com.example.helloworld;
+
+                    import android.app.Activity;
+                    import android.widget.TextView;
+                    import android.os.Bundle;
+                    import com.example.annotation.ProvideString;
+
+                    @ProvideString
+                    public class HelloWorld extends Activity {
+                        /** Called when the activity is first created. */
+                        @Override
+                        public void onCreate(Bundle savedInstanceState) {
+                            super.onCreate(savedInstanceState);
+                            TextView tv = new TextView(this);
+                            tv.setText(getString());
+                            setContentView(tv);
+                        }
+
+                            public static String getString() {
+                                return new com.example.helloworld.HelloWorldStringValue().value;
+                            }
+
+                            public static String getProcessor() {
+                                return new com.example.helloworld.HelloWorldStringValue().processor;
+                            }
+                        }
+                        """.trimIndent()
+                )
+            )
+
+            app.removeFileByName("HelloWorldTest.java")
+
+            app.addFile(
+                TestSourceFile(
+                    "src/test/java/com/example/helloworld/HelloWorldTest.java",
+                    """
+                    package com.example.helloworld;
+                    import com.example.annotation.ProvideString;
+
+                    @ProvideString
+                    public class HelloWorldTest {
+                    }
+                    """.trimIndent()
+                )
+            )
+
+            app.addFile(
+                TestSourceFile(
+                    "src/androidTest/java/com/example/hellojni/HelloWorldAndroidTest.java",
+                    """
+                    package com.example.helloworld;
+
+                    import android.support.test.runner.AndroidJUnit4;
+                    import org.junit.Assert;
+                    import org.junit.Test;
+                    import org.junit.runner.RunWith;
+                    import com.example.annotation.ProvideString;
+
+                    @ProvideString
+                    @RunWith(AndroidJUnit4.class)
+                    public class HelloWorldAndroidTest {
+
+                        @Test
+                        public void testStringValue() {
+                            Assert.assertTrue("Hello".equals(HelloWorld.getString()));
+                        }
+                        @Test
+                        public void testProcessor() {
+                            Assert.assertTrue("Processor".equals(HelloWorld.getProcessor()));
+                        }
+                    }
+                    """.trimIndent()
+                )
+            )
+        }
     }
 }
