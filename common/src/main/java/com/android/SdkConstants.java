@@ -1429,6 +1429,7 @@ public final class SdkConstants {
     public static final String ATTR_WIDTH = "width"; //$NON-NLS-1$
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
     public static final String ATTR_NAV_GRAPH = "navGraph";
+    public static final String ATTR_USE_TAG = "useTag";
 
     // Attributes: Drawable
     public static final String ATTR_VIEWPORT_HEIGHT = "viewportHeight";
