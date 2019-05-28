@@ -17,32 +17,27 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.api.transform.QualifiedContent.ContentType
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
-import com.android.build.api.transform.QualifiedContent.Scope
-import com.android.build.api.transform.SecondaryFile
-import com.android.build.api.transform.Transform
-import com.android.build.api.transform.TransformInvocation
-import com.android.build.gradle.internal.api.artifact.*
+import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.ApkData
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.BuildElements
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable
 import com.android.build.gradle.internal.scope.BuildOutput
 import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.variant.MultiOutputPolicy
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
-import com.google.common.collect.ImmutableList
-import com.google.common.collect.ImmutableSet
-import com.google.common.collect.Maps
+import org.gradle.api.file.ConfigurableFileCollection
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
@@ -50,199 +45,187 @@ import javax.xml.parsers.ParserConfigurationException
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.workers.WorkerExecutor
 import org.xml.sax.SAXException
 
 /**
- * Implementation of Resource Shrinking as a transform.
- *
- * Since this transform only reads the data from the stream but does not output anything
- * back into the stream, it is a no-op transform, asking only for referenced scopes, and not
- * "consumed" scopes.
+ * Implementation of Resource Shrinking as a task.
  */
-class ShrinkResourcesTransform(
-    /**
-     * Associated variant data that the strip task will be run against. Used to locate not only
-     * locations the task needs (e.g. for resources and generated R classes) but also to obtain the
-     * resource merging task, since we will run it a second time here to generate a new .ap_ file
-     * with fewer resources
-     */
-    private val variantData: BaseVariantData,
-    private val uncompressedResources: Provider<Directory>,
-    private val logger: Logger
-) : Transform() {
+@CacheableTask
+abstract class ShrinkResourcesTask
+@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
-    private val lightRClasses: Provider<RegularFile>
-    private val resourceDir: Provider<Directory>
-    private val mappingFileSrc: BuildableArtifact?
-    private val mergedManifests: Provider<Directory>
+    private lateinit var buildTypeName: String
 
-    private val aaptOptions: AaptOptions
-    private val variantType: VariantType
-    private val isDebuggableBuildType: Boolean
-    private val multiOutputPolicy: MultiOutputPolicy
+    private lateinit var aaptOptions: AaptOptions
 
-    private var compressedResources: DirectoryProperty? = null
+    private lateinit var variantType: VariantType
 
-    init {
-        val variantScope = variantData.scope
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val uncompressedResources: DirectoryProperty
 
-        val artifacts = variantScope.artifacts
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val lightRClasses: RegularFileProperty
 
-        this.lightRClasses = artifacts.getFinalProduct(
-            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
-        )
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val resourceDir: DirectoryProperty
 
-        this.resourceDir = variantScope
-            .artifacts
-            .getFinalProduct(InternalArtifactType.MERGED_NOT_COMPILED_RES)
-        this.mappingFileSrc =
-            if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
-                variantScope
-                    .artifacts
-                    .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
-            else
-                null
-        this.mergedManifests = artifacts.getFinalProduct(InternalArtifactType.MERGED_MANIFESTS)
+    @get:Optional
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    var mappingFileSrc: BuildableArtifact? = null
+        private set
 
-        this.aaptOptions = variantScope.globalScope.extension.aaptOptions
-        this.variantType = variantData.type
-        this.isDebuggableBuildType = variantData.variantConfiguration.buildType.isDebuggable
-        this.multiOutputPolicy = variantData.multiOutputPolicy
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val mergedManifests: DirectoryProperty
+
+    @get:Input
+    var isDebuggableBuildType: Boolean = false
+        private set
+
+    @get:Input
+    lateinit var multiOutputPolicy: MultiOutputPolicy
+        private set
+
+    @Input
+    fun getVariantTypeAsString(): String {
+        return variantType.name
     }
 
-    override fun getName(): String {
-        return "shrinkRes"
-    }
-
-    override fun getInputTypes(): Set<ContentType> {
-        // When R8 produces dex files, this transform analyzes them. If R8 or Proguard produce
-        // class files, this transform will analyze those. That is why both types are specified.
-        return ImmutableSet.of(ExtendedContentType.DEX, DefaultContentType.CLASSES)
-    }
-
-    override fun getOutputTypes(): Set<ContentType> = setOf()
-
-    override fun getScopes(): MutableSet<in Scope> {
-        return TransformManager.EMPTY_SCOPES
-    }
-
-    override fun getReferencedScopes(): MutableSet<in Scope> {
-        return TransformManager.SCOPE_FULL_PROJECT
-    }
-
-    /**
-     * Sets the directory where we should output compressed resources
-     *
-     * @param directory the output directory
-     */
-    override fun setOutputDirectory(directory: DirectoryProperty) {
-        compressedResources = directory
-    }
-
-    override fun getSecondaryFiles(): Collection<SecondaryFile> {
-        val secondaryFiles = mutableListOf<SecondaryFile>()
-
-        // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-        secondaryFiles.add(SecondaryFile.nonIncremental(lightRClasses.get().asFile))
-        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir.get().asFile))
-
-        if (mappingFileSrc != null) {
-            secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc))
-        }
-
-        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests.get().asFile))
-        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources.get().asFile))
-
-        return secondaryFiles
-    }
-
-    override fun getParameterInputs(): Map<String, Any> {
-        val params = Maps.newHashMapWithExpectedSize<String, Any>(7)
-        params["aaptOptions"] = Joiner.on(";")
+    @Input
+    fun getAaptOptionsAsString(): String {
+        return Joiner.on(";")
             .join(
-                if (aaptOptions.ignoreAssetsPattern != null) {
-                    aaptOptions.ignoreAssetsPattern
-                } else {
-                    ""
-                },
-                if (aaptOptions.noCompress != null) {
-                    Joiner.on(":").join(aaptOptions.noCompress)
-                } else {
-                    ""
-                },
+                aaptOptions.ignoreAssetsPattern ?: "",
+                Joiner.on(":")
+                    .join(aaptOptions.noCompress ?: listOf<String>()),
                 aaptOptions.failOnMissingConfigEntry,
-                if (aaptOptions.additionalParameters != null) {
-                    Joiner.on(":").join(aaptOptions.additionalParameters!!)
-                } else {
-                    ""
-                },
+                Joiner.on(":")
+                    .join(aaptOptions.additionalParameters ?:listOf<String>()),
                 aaptOptions.cruncherProcesses
             )
-        params["variantType"] = variantType.name
-        params["isDebuggableBuildType"] = isDebuggableBuildType
-        params["splitHandlingPolicy"] = multiOutputPolicy
-
-        return params
     }
 
-    override fun getSecondaryDirectoryOutputs(): Collection<File> {
-        return ImmutableList.of(compressedResources!!.get().asFile)
-    }
+    @get:Classpath
+    abstract val classes: ConfigurableFileCollection
 
-    override fun isIncremental(): Boolean {
-        return false
-    }
+    @get:OutputDirectory
+    abstract val compressedResources: DirectoryProperty
 
-    override fun isCacheable(): Boolean {
-        return true
-    }
-
-    override fun transform(invocation: TransformInvocation) {
-
-        val referencedInputs = invocation.referencedInputs
-        val classes = mutableListOf<File>()
-        for (transformInput in referencedInputs) {
-            for (directoryInput in transformInput.directoryInputs) {
-                classes.add(directoryInput.file)
-            }
-            for (jarInput in transformInput.jarInputs) {
-                classes.add(jarInput.file)
-            }
-        }
+    override fun doTaskAction() {
 
         val mergedManifestsOutputs =
             ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, mergedManifests)
 
-        Workers.preferWorkers(
-            invocation.context.projectName,
-            invocation.context.path,
-            invocation.context.workerExecutor
-        ).use { workers ->
-            ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
-                .transform(
-                    workers,
-                    SplitterRunnable::class.java
-                ) { apkInfo: ApkData, buildInput: File ->
-                    SplitterParams(
-                        apkInfo,
-                        buildInput,
-                        mergedManifestsOutputs,
-                        classes,
-                        this
-                    )
-                }
-                .into(
-                    InternalArtifactType.SHRUNK_PROCESSED_RES,
-                    compressedResources!!.get().asFile
+        ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
+            .transform(
+                workers,
+                SplitterRunnable::class.java
+            ) { apkInfo: ApkData, buildInput: File ->
+                SplitterParams(
+                    apkInfo,
+                    buildInput,
+                    mergedManifestsOutputs,
+                    classes.toList(),
+                    this
                 )
+            }.into(
+                InternalArtifactType.SHRUNK_PROCESSED_RES,
+                compressedResources.get().asFile
+            )
+    }
+
+    class CreationAction(
+        variantScope: VariantScope
+    ) : VariantTaskCreationAction<ShrinkResourcesTask>(variantScope) {
+        override val type = ShrinkResourcesTask::class.java
+        override val name = variantScope.getTaskName("shrink", "Res")
+
+        private val classes = variantScope.transformManager
+            .getPipelineOutputAsFileCollection { contentTypes, scopes ->
+                scopes.intersect(TransformManager.SCOPE_FULL_PROJECT).isNotEmpty()
+                        && (contentTypes.contains(DefaultContentType.CLASSES)
+                        || contentTypes.contains(ExtendedContentType.DEX))
+            }
+
+        override fun handleProvider(taskProvider: TaskProvider<out ShrinkResourcesTask>) {
+            super.handleProvider(taskProvider)
+
+            variantScope.artifacts.producesDir(
+                artifactType = InternalArtifactType.SHRUNK_PROCESSED_RES,
+                operationType = BuildArtifactsHolder.OperationType.INITIAL,
+                taskProvider = taskProvider,
+                productProvider = ShrinkResourcesTask::compressedResources,
+                fileName = "out"
+            )
+        }
+
+        override fun configure(task: ShrinkResourcesTask) {
+
+            super.configure(task)
+
+            val variantData = variantScope.variantData
+
+            val artifacts = variantScope.artifacts
+
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.PROCESSED_RES,
+                task.uncompressedResources
+            )
+
+            artifacts.setTaskInputToFinalProduct<RegularFile>(
+                InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                task.lightRClasses
+            )
+
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.MERGED_NOT_COMPILED_RES,
+                task.resourceDir
+            )
+
+            if (artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
+                task.mappingFileSrc = artifacts
+                    .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+            }
+
+            artifacts.setTaskInputToFinalProduct<Directory>(
+                InternalArtifactType.MERGED_MANIFESTS,
+                task.mergedManifests
+            )
+
+            task.aaptOptions = variantScope.globalScope.extension.aaptOptions
+
+            task.buildTypeName = variantData.variantConfiguration.buildType.name
+            task.variantType = variantData.type
+            task.isDebuggableBuildType = variantData.variantConfiguration.buildType.isDebuggable
+            task.multiOutputPolicy = variantData.multiOutputPolicy
+
+            // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
+            // class files, this task will analyze those. That is why both types are specified.
+            task.classes.from(classes)
         }
     }
 
-    private inner class SplitterRunnable @Inject
+    private class SplitterRunnable @Inject
     constructor(params: SplitterParams) : BuildElementsTransformRunnable(params) {
 
         override fun run() {
@@ -263,7 +246,7 @@ class ShrinkResourcesTransform(
                         params.uncompressedResourceFile, params.output
                     )
                 } catch (e: IOException) {
-                    Logging.getLogger(ShrinkResourcesTransform::class.java)
+                    Logging.getLogger(ShrinkResourcesTask::class.java)
                         .error("Failed to copy uncompressed resource file :", e)
                     throw RuntimeException("Failed to copy uncompressed resource file", e)
                 }
@@ -316,16 +299,15 @@ class ShrinkResourcesTransform(
                     val before = params.uncompressedResourceFile.length()
                     val after = params.output.length()
                     val percent = ((before - after) * 100 / before).toInt().toLong()
-                    sb.append(": Binary resource data reduced from ${toKbString(
-                        before
-                    )}")
-                        .append("KB to ${toKbString(
-                            after
-                        )}")
+
+                    sb.append(": Binary resource data reduced from ${toKbString(before)}")
+                        .append("KB to ${toKbString(after)}")
                         .append("KB: Removed ${percent}%")
+
                     if (!ourWarned) {
                         ourWarned = true
-                        sb.append("""
+                        sb.append(
+                            """
                             Note: If necessary, you can disable resource shrinking by adding
                             android {
                                 buildTypes {
@@ -333,10 +315,12 @@ class ShrinkResourcesTransform(
                                         shrinkResources false
                                     }
                                 }
-                            }""".trimIndent())
+                            }""".trimIndent()
+                        )
                     }
 
-                    logger.log(LogLevel.INFO, sb.toString())
+                    Logging.getLogger(SplitterRunnable::class.java)
+                        .log(LogLevel.INFO, sb.toString())
                 }
             } finally {
                 analyzer.dispose()
@@ -344,24 +328,25 @@ class ShrinkResourcesTransform(
         }
     }
 
-    private inner class SplitterParams internal constructor(
+    private class SplitterParams internal constructor(
         apkInfo: ApkData,
         val uncompressedResourceFile: File,
         mergedManifests: BuildElements,
         val classes: List<File>,
-        transform: ShrinkResourcesTransform
+        task: ShrinkResourcesTask
     ) : BuildElementsTransformParams() {
+
         override val output: File = File(
-            transform.compressedResources!!.get().asFile,
+            task.compressedResources.get().asFile,
             "resources-${apkInfo.baseName}-stripped.ap_"
         )
         val mergedManifest: BuildOutput? = mergedManifests.element(apkInfo)
-        val mappingFile: File? = transform.mappingFileSrc?.singleFile()
-        val buildTypeName: String = transform.variantData.variantConfiguration.buildType.name
-        val lightRClasses: File = transform.lightRClasses.get().asFile
-        val resourceDir: File = transform.resourceDir.get().asFile
-        val isInfoLoggingEnabled: Boolean = transform.logger.isEnabled(LogLevel.INFO)
-        val isDebugLoggingEnabled: Boolean = transform.logger.isEnabled(LogLevel.DEBUG)
+        val mappingFile: File? = task.mappingFileSrc?.singleFile()
+        val buildTypeName: String = task.buildTypeName
+        val lightRClasses: File = task.lightRClasses.get().asFile
+        val resourceDir: File = task.resourceDir.get().asFile
+        val isInfoLoggingEnabled: Boolean = task.logger.isEnabled(LogLevel.INFO)
+        val isDebugLoggingEnabled: Boolean = task.logger.isEnabled(LogLevel.DEBUG)
 
     }
 

@@ -279,7 +279,7 @@ public class LibraryTaskManager extends TaskManager {
 
         // ----- Minify next -----
         maybeCreateJavaCodeShrinkerTransform(variantScope);
-        maybeCreateResourcesShrinkerTransform(variantScope);
+        maybeCreateResourcesShrinkerTasks(variantScope);
 
         // now add a task that will take all the classes and java resources and package them
         // into the main and secondary jar files that goes in the AAR.

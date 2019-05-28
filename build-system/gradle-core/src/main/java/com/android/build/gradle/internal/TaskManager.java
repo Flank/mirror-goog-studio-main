@@ -161,7 +161,7 @@ import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
-import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
+import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -213,7 +213,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
@@ -2016,7 +2015,7 @@ public abstract class TaskManager {
         // ----- Minify next -----
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
-            maybeCreateResourcesShrinkerTransform(variantScope);
+            maybeCreateResourcesShrinkerTasks(variantScope);
             maybeCreateDexSplitterTransform(variantScope);
             // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
@@ -2047,7 +2046,7 @@ public abstract class TaskManager {
 
         createDexTasks(variantScope, dexingType);
 
-        maybeCreateResourcesShrinkerTransform(variantScope);
+        maybeCreateResourcesShrinkerTasks(variantScope);
 
         // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
         maybeCreateDexSplitterTransform(variantScope);
@@ -2602,11 +2601,6 @@ public abstract class TaskManager {
                             if (taskContainer.getPackageSplitAbiTask() != null) {
                                 task.dependsOn(taskContainer.getPackageSplitAbiTask());
                             }
-
-                            // FIX ME : Reinstate once ShrinkResourcesTransform is converted.
-                            //if ( variantOutputScope.getShrinkResourcesTask() != null) {
-                            //    packageApp.dependsOn( variantOutputScope.getShrinkResourcesTask());
-                            //}
 
                             configureResourcesAndAssetsDependencies.execute(task);
                         },
@@ -3349,42 +3343,18 @@ public abstract class TaskManager {
     }
 
     /**
-     * Checks if {@link ShrinkResourcesTransform} should be added to the build pipeline and either
-     * adds it or registers a {@link SyncIssue} with the reason why it was skipped.
+     * Checks if {@link ShrinkResourcesTask} and {@link ShrinkBundleResourcesTask} should be added
+     * to the build pipeline and creates the tasks
      */
-    protected void maybeCreateResourcesShrinkerTransform(@NonNull VariantScope scope) {
+    protected void maybeCreateResourcesShrinkerTasks(@NonNull VariantScope scope) {
         if (!scope.useResourceShrinker()) {
             return;
         }
 
-        // if resources are shrink, insert a no-op transform per variant output
+        // if resources are shrink, create task per variant output
         // to transform the res package into a stripped res package
-        ShrinkResourcesTransform shrinkResTransform =
-                new ShrinkResourcesTransform(
-                        scope.getVariantData(),
-                        scope.getArtifacts().getFinalProduct(InternalArtifactType.PROCESSED_RES),
-                        logger);
 
-        Optional<TaskProvider<TransformTask>> shrinkTask =
-                scope.getTransformManager()
-                        .addTransform(taskFactory, scope, shrinkResTransform, null, null, null);
-
-        if (!shrinkTask.isPresent()) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(
-                            Type.GENERIC,
-                            new EvalIssueException(
-                                    "Internal error, could not add the ShrinkResourcesTransform"));
-        } else {
-            scope.getArtifacts()
-                    .producesDir(
-                            InternalArtifactType.SHRUNK_PROCESSED_RES,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            shrinkTask.get(),
-                            TransformTask::getOutputDirectory,
-                            "out");
-        }
+        taskFactory.register(new ShrinkResourcesTask.CreationAction(scope));
 
         // And for the bundle
         taskFactory.register(new ShrinkBundleResourcesTask.CreationAction(scope));
