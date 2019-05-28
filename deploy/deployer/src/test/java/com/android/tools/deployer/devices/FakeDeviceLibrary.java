@@ -15,6 +15,7 @@
  */
 package com.android.tools.deployer.devices;
 
+import com.android.tools.deployer.devices.shell.Am;
 import com.android.tools.deployer.devices.shell.BasicPm;
 import com.android.tools.deployer.devices.shell.Chmod;
 import com.android.tools.deployer.devices.shell.Cmd;
@@ -98,6 +99,7 @@ public class FakeDeviceLibrary {
                 }
         }
         if (device != null) {
+            device.getShell().addCommand(new Am());
             device.getShell().addCommand(new GetProp());
             device.getShell().addCommand(new Mkdir());
             device.getShell().addCommand(new Chmod());

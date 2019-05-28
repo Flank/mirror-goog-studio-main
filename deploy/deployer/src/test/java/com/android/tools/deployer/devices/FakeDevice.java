@@ -22,6 +22,9 @@ import com.android.fakeadbserver.FakeAdbServer;
 import com.android.tools.deployer.ApkParser;
 import com.android.tools.deployer.devices.shell.Shell;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,12 +51,15 @@ public class FakeDevice {
     private final Map<String, String> props;
     private final Map<String, String> env;
     private final Map<String, Application> apps;
+    private final List<Application> processes;
     private final User shellUser;
     private List<User> users;
 
     private final Map<Integer, Session> sessions;
+
     private File storage;
     private File bridge;
+    @Nullable private DeviceState deviceState;
 
     public FakeDevice(String version, int api) {
         this.version = version;
@@ -68,13 +74,14 @@ public class FakeDevice {
         this.env = new HashMap<>();
         this.sessions = new HashMap<>();
         this.apps = new HashMap<>();
+        this.processes = new ArrayList<>();
         this.users = new ArrayList<>();
         this.storage = null;
         this.shellUser = addUser(2000, "shell");
     }
 
     public void connectTo(FakeAdbServer server) throws ExecutionException, InterruptedException {
-        DeviceState device =
+        deviceState =
                 server.connectDevice(
                                 UUID.randomUUID().toString(),
                                 MANUFACTURER,
@@ -83,7 +90,14 @@ public class FakeDevice {
                                 String.valueOf(api),
                                 DeviceState.HostConnectionType.USB)
                         .get();
-        device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
+        deviceState.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
+
+        // Connect running apps to FakeADB.
+        for (int i = 0; i < processes.size(); i++) {
+            Application app = processes.get(i);
+            // TODO: handle renamed processes
+            deviceState.startClient(i, app.user.uid, app.packageName, app.packageName, false);
+        }
     }
 
     public Map<String, String> getProps() {
@@ -160,6 +174,24 @@ public class FakeDevice {
             paths.add(app.path + "/" + apk.details.fileName);
         }
         return paths;
+    }
+
+    public boolean runApp(String pkgName) {
+        Application app = apps.get(pkgName);
+        if (app != null && !processes.contains(app)) {
+            int index = processes.size();
+            processes.add(index, app);
+            // TODO: get proper user, and pass proper boolean for isWaiting (support wait-for-debugger)
+            if (deviceState != null) {
+                deviceState.startClient(index, app.user.uid, pkgName, pkgName, false);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public ImmutableList<Application> getProcesses() {
+        return ImmutableList.copyOf(processes);
     }
 
     public int createSession(String inherit) {
@@ -308,6 +340,15 @@ public class FakeDevice {
         return shellUser;
     }
 
+    public RunResult executeScript(String cmd, byte[] input) throws IOException {
+        try (ByteArrayInputStream in = new ByteArrayInputStream(input);
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            return new RunResult(
+                    getShell().execute(cmd, getShellUser(), out, in, this),
+                    out.toByteArray());
+        }
+    }
+
     public Application getApplication(String pkg) {
         return apps.get(pkg);
     }
@@ -374,6 +415,16 @@ public class FakeDevice {
             SUCCESS,
             INSTALL_FAILED_VERSION_DOWNGRADE,
             INSTALL_FAILED_INVALID_APK,
+        }
+    }
+
+    public static class RunResult {
+        public final int value;
+        public final byte[] output;
+
+        public RunResult(int value, byte[] output) {
+            this.value = value;
+            this.output = output;
         }
     }
 }
