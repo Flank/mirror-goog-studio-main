@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.desugar.resources.InterfaceWithDefau
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.testutils.TestInputsGenerator
+import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -84,6 +85,19 @@ class DesugarFileDependencyTest(var tool: Tool) {
                 .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
                 .that()
                 .hasMethod("myDefaultMethod")
+        }
+    }
+
+    @Test
+    fun checkMinApi24WithArtifactTransformsDoesNotDesugar() {
+        Assume.assumeTrue(tool == Tool.D8_WITH_ARTIFACT_TRANSFORMS)
+        project.buildFile.appendText("\nandroid.defaultConfig.minSdkVersion 24")
+        executor().run("assembleDebug")
+        project.getApk(GradleTestProject.ApkType.DEBUG).use { apk ->
+            assertThat(apk)
+                .hasClass("Lcom/android/build/gradle/integration/desugar/resources/ImplOfInterfaceWithDefaultMethod;")
+                .that()
+                .doesNotHaveMethod("myDefaultMethod")
         }
     }
 

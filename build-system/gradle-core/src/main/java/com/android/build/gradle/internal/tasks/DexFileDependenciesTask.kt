@@ -157,17 +157,17 @@ open class DexFileDependenciesTask
         override fun configure(task: DexFileDependenciesTask) {
             super.configure(task)
             task.debuggable.set(variantScope.variantConfiguration.buildType.isDebuggable)
+            task.classes.from(
+                variantScope.getArtifactFileCollection(
+                    AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
+                    AndroidArtifacts.ArtifactScope.FILE,
+                    AndroidArtifacts.ArtifactType.PROCESSED_JAR
+                )
+            )
             val minSdkVersion =
                 variantScope.variantConfiguration.minSdkVersionWithTargetDeviceApi.featureLevel
             task.minSdkVersion.set(minSdkVersion)
             if (minSdkVersion < AndroidVersion.VersionCodes.N) {
-                task.classes.from(
-                    variantScope.getArtifactFileCollection(
-                        AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.FILE,
-                        AndroidArtifacts.ArtifactType.PROCESSED_JAR
-                    )
-                )
                 task.classpath.from(
                     variantScope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
