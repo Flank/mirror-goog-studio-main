@@ -87,10 +87,9 @@ def _package_component_impl(ctx):
         runtime_jar_names[name] = jar
         args.append("tools/lib/%s=%s" % (name, jar.path))
         inputs += [jar]
-    args.append("tools/source.properties=" + ctx.file.sourceprops.path)
-    inputs += [ctx.file.sourceprops]
-    args.append("tools/NOTICE.txt=" + ctx.file.notice.path)
-    inputs += [ctx.file.notice]
+    for other_file, other_location in ctx.attr.others.items():
+        args.append(other_location + "=" + other_file.files.to_list()[0].path)
+        inputs += other_file.files.to_list()
     ctx.action(
         inputs = inputs,
         outputs = [ctx.outputs.out],
@@ -105,8 +104,7 @@ package_component = rule(
     attrs = {
         "bins": attr.label_list(),
         "java_libs": attr.label_list(),
-        "sourceprops": attr.label(allow_single_file = True),
-        "notice": attr.label(allow_single_file = True),
+        "others": attr.label_keyed_string_dict(allow_files = True),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
             cfg = "host",
@@ -133,8 +131,11 @@ def sdk_package(name, binaries, sourceprops, visibility):
             name = "%s_%s" % (name, platform),
             bins = [bin + "_wrapper_" + platform for bin in binaries],
             java_libs = binaries,
-            sourceprops = "source.properties",
-            notice = name + "_combined_licenses",
+            others = {
+                "source.properties": "tools/source.properties",
+                name + "_combined_licenses": "tools/NOTICE.txt",
+                "README.libs": "tools/lib/README",
+            },
             visibility = visibility,
         )
     native.filegroup(

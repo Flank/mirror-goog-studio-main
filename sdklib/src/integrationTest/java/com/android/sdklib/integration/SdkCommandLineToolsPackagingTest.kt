@@ -43,10 +43,11 @@ class SdkCommandLineToolsPackagingTest(private val platform: AndroidSdkCommandLi
             "tools/bin/screenshot2$suffix",
             "tools/bin/sdkmanager$suffix",
             "tools/NOTICE.txt",
-            "tools/source.properties"
+            "tools/source.properties",
+            "tools/lib/README"
         )
 
-        assertThat(entries.filter { !it.startsWith("tools/lib/") })
+        assertThat(entries.filter { !(it.startsWith("tools/lib/") && it.endsWith(".jar")) })
             .containsExactlyElementsIn(expectedNonLibEntries)
     }
 
