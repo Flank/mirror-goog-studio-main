@@ -117,10 +117,10 @@ Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'al
 Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'buildToolsRevision' is private and annotated with @Internal.
 Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.LintGlobalTask': property 'lintOptions' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'allInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'buildToolsRevision' is private and annotated with @Internal.
 Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintClassPath' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'lintOptions' is not annotated with an input or output annotation.
-Warning: Task type 'com.android.build.gradle.tasks.LintPerVariantTask': property 'variantInputs' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.MergeResources': property 'resourcesComputer' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

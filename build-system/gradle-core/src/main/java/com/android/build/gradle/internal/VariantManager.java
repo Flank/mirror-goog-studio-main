@@ -494,13 +494,23 @@ public class VariantManager implements VariantModel {
                                     multiDexInstrumentationDep);
                 }
 
-                taskManager.createAndroidTestVariantTasks((TestVariantData) variantData);
+                taskManager.createAndroidTestVariantTasks(
+                        (TestVariantData) variantData,
+                        variantScopes
+                                .stream()
+                                .filter(TaskManager::isLintVariant)
+                                .collect(Collectors.toList()));
             } else { // UNIT_TEST
                 taskManager.createUnitTestVariantTasks((TestVariantData) variantData);
             }
 
         } else {
-            taskManager.createTasksForVariantScope(variantScope);
+            taskManager.createTasksForVariantScope(
+                    variantScope,
+                    variantScopes
+                            .stream()
+                            .filter(TaskManager::isLintVariant)
+                            .collect(Collectors.toList()));
         }
     }
 

@@ -46,6 +46,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -83,9 +84,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(@NonNull VariantScope variantScope) {
+    public void createTasksForVariantScope(
+            @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint) {
 
-        super.createTasksForVariantScope(variantScope);
+        super.createTasksForVariantScope(variantScope, variantScopesForLint);
 
         Configuration testedApksConfig =
                 project.getConfigurations()
@@ -159,12 +161,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void createLintTasks(VariantScope scope) {
+    public void createLintTasks(VariantScope scope, @NonNull List<VariantScope> variantScopes) {
         // do nothing
     }
 
     @Override
-    public void maybeCreateLintVitalTask(@NonNull ApkVariantData variantData) {
+    public void maybeCreateLintVitalTask(
+            @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         // do nothing
     }
 

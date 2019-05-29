@@ -155,6 +155,42 @@ public abstract class LintBaseTask extends DefaultTask {
         }
     }
 
+    /**
+     * The jar artifacts are used in ModelBuilder eventually, we add them to inputs here so Gradle
+     * would make sure they are resolved before starting the task.
+     */
+    protected static void addJarArtifactsToInputs(
+            @NonNull ConfigurableFileCollection inputs, @NonNull VariantScope variantScope) {
+        inputs.from(ArtifactUtils.computeArtifactList(variantScope, COMPILE_CLASSPATH, ALL, JAR));
+        inputs.from(ArtifactUtils.computeArtifactList(variantScope, RUNTIME_CLASSPATH, ALL, JAR));
+
+        if (variantScope.getVariantData() instanceof TestedVariantData) {
+            for (VariantType variantType : VariantType.Companion.getTestComponents()) {
+                TestVariantData testVariantData =
+                        ((TestedVariantData) variantScope.getVariantData())
+                                .getTestVariantData(variantType);
+                if (testVariantData != null) {
+                    inputs.from(
+                            (Callable<ArtifactCollection>)
+                                    (() ->
+                                            ArtifactUtils.computeArtifactList(
+                                                    testVariantData.getScope(),
+                                                    COMPILE_CLASSPATH,
+                                                    ALL,
+                                                    JAR)));
+                    inputs.from(
+                            (Callable<ArtifactCollection>)
+                                    (() ->
+                                            ArtifactUtils.computeArtifactList(
+                                                    testVariantData.getScope(),
+                                                    RUNTIME_CLASSPATH,
+                                                    ALL,
+                                                    JAR)));
+                }
+            }
+        }
+    }
+
     public static class VariantInputs implements com.android.tools.lint.gradle.api.VariantInputs {
         @NonNull private final String name;
         @NonNull private final Provider<? extends FileSystemLocation> mergedManifest;
@@ -210,39 +246,7 @@ public abstract class LintBaseTask extends DefaultTask {
             // intermediates are built.
             allInputs.from(artifacts.getFinalArtifactFiles(ALL_CLASSES));
 
-            // The jar artifacts are used in ModelBuilder eventually, we declare them as inputs here
-            // so Gradle would make sure they are resolved before starting the task.
-            allInputs.from(
-                    ArtifactUtils.computeArtifactList(variantScope, COMPILE_CLASSPATH, ALL, JAR));
-            allInputs.from(
-                    ArtifactUtils.computeArtifactList(variantScope, RUNTIME_CLASSPATH, ALL, JAR));
-
-            if (variantScope.getVariantData() instanceof TestedVariantData) {
-                for (VariantType variantType : VariantType.Companion.getTestComponents()) {
-                    TestVariantData testVariantData =
-                            ((TestedVariantData) variantScope.getVariantData())
-                                    .getTestVariantData(variantType);
-                    if (testVariantData != null) {
-                        allInputs.from(
-                                (Callable<ArtifactCollection>)
-                                        (() ->
-                                                ArtifactUtils.computeArtifactList(
-                                                        testVariantData.getScope(),
-                                                        COMPILE_CLASSPATH,
-                                                        ALL,
-                                                        JAR)));
-                        allInputs.from(
-                                (Callable<ArtifactCollection>)
-                                        (() ->
-                                                ArtifactUtils.computeArtifactList(
-                                                        testVariantData.getScope(),
-                                                        RUNTIME_CLASSPATH,
-                                                        ALL,
-                                                        JAR)));
-                    }
-                }
-            }
-
+            addJarArtifactsToInputs(allInputs, variantScope);
         }
 
         @NonNull

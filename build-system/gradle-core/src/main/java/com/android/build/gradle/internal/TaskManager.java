@@ -351,7 +351,8 @@ public abstract class TaskManager {
     }
 
     /** Creates the tasks for a given BaseVariantData. */
-    public abstract void createTasksForVariantScope(@NonNull VariantScope variantScope);
+    public abstract void createTasksForVariantScope(
+            @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint);
 
     /**
      * Override to configure NDK data in the scope.
@@ -1627,7 +1628,9 @@ public abstract class TaskManager {
     }
 
     /** Creates the tasks to build android tests. */
-    public void createAndroidTestVariantTasks(@NonNull TestVariantData variantData) {
+    public void createAndroidTestVariantTasks(
+            @NonNull TestVariantData variantData,
+            @NonNull List<VariantScope> variantScopesForLint) {
         VariantScope variantScope = variantData.getScope();
 
         createAnchorTasks(variantScope);
@@ -1688,6 +1691,9 @@ public abstract class TaskManager {
 
         createPackagingTask(variantScope);
 
+        maybeCreateLintVitalTask(
+                (ApkVariantData) variantScope.getVariantData(), variantScopesForLint);
+
         taskFactory.configure(
                 ASSEMBLE_ANDROID_TEST,
                 assembleTest ->
@@ -1698,7 +1704,7 @@ public abstract class TaskManager {
     }
 
     /** Is the given variant relevant for lint? */
-    private static boolean isLintVariant(@NonNull VariantScope variantScope) {
+    static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
         final VariantType variantType = variantScope.getVariantConfiguration().getType();
         return !variantType.isForTesting() && !variantType.isHybrid();
@@ -1708,12 +1714,12 @@ public abstract class TaskManager {
      * Add tasks for running lint on individual variants. We've already added a lint task earlier
      * which runs on all variants.
      */
-    public void createLintTasks(final VariantScope scope) {
+    public void createLintTasks(
+            final VariantScope scope, @NonNull List<VariantScope> variantScopes) {
         if (!isLintVariant(scope)) {
             return;
         }
-
-        taskFactory.register(new LintPerVariantTask.CreationAction(scope));
+        taskFactory.register(new LintPerVariantTask.CreationAction(scope, variantScopes));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1723,7 +1729,8 @@ public abstract class TaskManager {
                 : project.getPath() + ':' + taskName;
     }
 
-    public void maybeCreateLintVitalTask(@NonNull ApkVariantData variantData) {
+    public void maybeCreateLintVitalTask(
+            @NonNull ApkVariantData variantData, @NonNull List<VariantScope> variantScopes) {
         VariantScope variantScope = variantData.getScope();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
@@ -1735,7 +1742,7 @@ public abstract class TaskManager {
 
         TaskProvider<LintPerVariantTask> lintReleaseCheck =
                 taskFactory.register(
-                        new LintPerVariantTask.VitalCreationAction(variantScope),
+                        new LintPerVariantTask.VitalCreationAction(variantScope, variantScopes),
                         null,
                         task -> task.dependsOn(variantScope.getTaskContainer().getJavacTask()),
                         null);
@@ -2674,8 +2681,6 @@ public abstract class TaskManager {
         if (signedApk) {
             createInstallTask(variantScope);
         }
-
-        maybeCreateLintVitalTask(variantData);
 
         // add an uninstall task
         final TaskProvider<UninstallTask> uninstallTask =

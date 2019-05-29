@@ -32,6 +32,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.core.VariantTypeImpl;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -88,8 +89,11 @@ public class MultiTypeTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(@NonNull VariantScope variantScope) {
-        delegates.get(variantScope.getType()).createTasksForVariantScope(variantScope);
+    public void createTasksForVariantScope(
+            @NonNull VariantScope variantScope, @NonNull List<VariantScope> variantScopesForLint) {
+        delegates
+                .get(variantScope.getType())
+                .createTasksForVariantScope(variantScope, variantScopesForLint);
     }
 
     @NonNull

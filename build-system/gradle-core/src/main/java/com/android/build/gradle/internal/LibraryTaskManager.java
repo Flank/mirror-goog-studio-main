@@ -102,7 +102,9 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
+    public void createTasksForVariantScope(
+            @NonNull final VariantScope variantScope,
+            @NonNull List<VariantScope> variantScopesForLint) {
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
 
         GlobalScope globalScope = variantScope.getGlobalScope();
@@ -297,7 +299,7 @@ public class LibraryTaskManager extends TaskManager {
                 new LibraryJniLibsTask.ProjectAndLocalJarsCreationAction(
                         variantScope, InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI));
 
-        createLintTasks(variantScope);
+        createLintTasks(variantScope, variantScopesForLint);
         createBundleTask(variantScope);
     }
 

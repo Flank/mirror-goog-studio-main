@@ -34,6 +34,7 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
@@ -63,7 +64,9 @@ public class InstantAppTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
+    public void createTasksForVariantScope(
+            @NonNull final VariantScope variantScope,
+            @NonNull List<VariantScope> variantScopesForLint) {
         // add a warning that the instantapp module is deprecated and will be removed in the future.
         globalScope
                 .getErrorHandler()
