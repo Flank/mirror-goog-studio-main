@@ -14,24 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.api
 
-import javax.inject.Inject;
+interface ViewBindingOptions {
 
-/** DSL object for configuring view binding options. */
-public class ViewBindingOptions implements com.android.builder.model.ViewBindingOptions {
-    private boolean enabled = false;
+    /** Whether to enable view binding.  */
+    var isEnabled: Boolean
 
-    @Inject
-    public ViewBindingOptions() {}
-
-    /** Whether to enable data binding. */
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
 }

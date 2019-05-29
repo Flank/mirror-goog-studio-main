@@ -23,6 +23,7 @@ import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.ViewBindingOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
@@ -41,7 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
-import com.android.build.gradle.internal.dsl.ViewBindingOptions;
+import com.android.build.gradle.internal.dsl.ViewBindingOptionsImpl;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -239,7 +240,7 @@ public abstract class BaseExtension implements AndroidConfig {
         adbOptions = objectFactory.newInstance(AdbOptions.class);
         splits = objectFactory.newInstance(Splits.class, objectFactory);
         dataBinding = objectFactory.newInstance(DataBindingOptions.class);
-        viewBinding = objectFactory.newInstance(ViewBindingOptions.class);
+        viewBinding = objectFactory.newInstance(ViewBindingOptionsImpl.class);
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.

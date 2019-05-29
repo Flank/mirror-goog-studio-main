@@ -30,7 +30,7 @@ data class ViewBindingOptionsImpl(private val enabled: Boolean) : ViewBindingOpt
 
         @JvmStatic
         fun create(
-            viewBindingOptions: ViewBindingOptions
+            viewBindingOptions: com.android.build.gradle.api.ViewBindingOptions
         ): ViewBindingOptions {
             return ViewBindingOptionsImpl(
                 viewBindingOptions.isEnabled
