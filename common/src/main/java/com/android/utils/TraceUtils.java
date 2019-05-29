@@ -16,6 +16,7 @@
 package com.android.utils;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -81,6 +82,18 @@ public class TraceUtils {
             t.printStackTrace(writer);
             return stringWriter.toString();
         }
+    }
+
+    /**
+     * Returns a string consisting of the object's class name without the package part, '@'
+     * separator, and the hexadecimal identity hash code, e.g. AndroidResGroupNode@5A1D1719.
+     */
+    @NonNull
+    public static String getSimpleId(@Nullable Object obj) {
+        return obj == null
+                ? "null"
+                : String.format(
+                        "%s@%08X", obj.getClass().getSimpleName(), System.identityHashCode(obj));
     }
 
     private TraceUtils() {}
