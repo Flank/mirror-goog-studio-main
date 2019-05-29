@@ -31,8 +31,8 @@ import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
-import com.google.common.collect.ImmutableList;
 import com.android.utils.ILogger;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -72,10 +72,11 @@ public class DeployerRunnerTest {
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
         builder.setHostCommandHandler(
                 TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
-        builder.addDeviceHandler(new FakeDeviceHandler(device));
+        FakeDeviceHandler handler = new FakeDeviceHandler();
+        builder.addDeviceHandler(handler);
 
         myAdbServer = builder.build();
-        device.connectTo(myAdbServer);
+        handler.connect(device, myAdbServer);
         myAdbServer.start();
         this.service = Mockito.mock(UIService.class);
         logger = new TestLogger();

@@ -30,38 +30,57 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 public class FakeDeviceHandler extends DeviceCommandHandler {
-    private final FakeDevice device;
+    //@GuardedBy("devices")
+    private final Set<FakeDevice> devices = new HashSet<>();
 
-    public FakeDeviceHandler(FakeDevice device) {
+    public FakeDeviceHandler() {
         super("");
-        this.device = device;
+    }
+
+    public void connect(@NonNull FakeDevice device, @NonNull FakeAdbServer server)
+            throws ExecutionException, InterruptedException {
+        device.connectTo(server);
+        synchronized (devices) {
+            devices.add(device);
+        }
     }
 
     @Override
     public boolean accept(
             @NonNull FakeAdbServer server,
             @NonNull Socket socket,
-            @NonNull DeviceState device,
+            @NonNull DeviceState deviceState,
             @NonNull String command,
             @NonNull String args) {
         try {
-            switch (command) {
-                case "shell":
-                case "exec": // exec is different to shell, but we can interpret the same
-                    return shell(args, socket);
-                case "sync":
-                    return sync(args, socket);
+            synchronized (devices) {
+                for (FakeDevice device : devices) {
+                    if (!device.isDevice(deviceState)) {
+                        continue;
+                    }
+
+                    switch (command) {
+                        case "shell":
+                        case "exec": // exec is different to shell, but we can interpret the same
+                            return shell(device, args, socket);
+                        case "sync":
+                            return sync(device, args, socket);
+                    }
+                    return false;
+                }
             }
-            return false;
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
         return false;
     }
 
-    private boolean sync(String args, Socket socket) throws IOException {
+    private boolean sync(FakeDevice device, String args, Socket socket) throws IOException {
         OutputStream output = socket.getOutputStream();
         CommandHandler.writeOkay(output);
         InputStream input = socket.getInputStream();
@@ -104,7 +123,7 @@ public class FakeDeviceHandler extends DeviceCommandHandler {
         return new String(commandb, Charsets.UTF_8);
     }
 
-    private boolean shell(String args, Socket socket) throws IOException {
+    private boolean shell(FakeDevice device, String args, Socket socket) throws IOException {
         OutputStream output = socket.getOutputStream();
         InputStream input = socket.getInputStream();
         CommandHandler.writeOkay(output);

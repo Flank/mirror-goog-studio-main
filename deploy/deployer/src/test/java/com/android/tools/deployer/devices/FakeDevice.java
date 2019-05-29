@@ -100,6 +100,10 @@ public class FakeDevice {
         }
     }
 
+    public boolean isDevice(DeviceState state) {
+        return deviceState == state;
+    }
+
     public Map<String, String> getProps() {
         return props;
     }
