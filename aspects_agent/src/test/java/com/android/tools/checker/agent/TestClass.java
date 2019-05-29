@@ -1,7 +1,9 @@
 package com.android.tools.checker.agent;
 
+import com.android.tools.checker.AnotherTestAnnotation;
 import com.android.tools.checker.BlockingTest;
 
+@AnotherTestAnnotation
 public class TestClass {
     public static void staticMethodThrows() {
         // This will throw after instrumentation
@@ -21,6 +23,7 @@ public class TestClass {
         // This should not throw
     }
 
+    @AnotherTestAnnotation
     public void methodNop() {}
 
     @BlockingTest

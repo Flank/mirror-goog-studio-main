@@ -36,6 +36,11 @@ public class TransformTest {
                                         .getResourceAsStream(binaryTestClassName + ".class")));
         String[] annotations =
                 Transform.annotationFromByteBuffer(classInput).toArray(new String[1]);
-        assertArrayEquals(new String[] {"com.android.tools.checker.BlockingTest"}, annotations);
+        String[] expectedAnnotations =
+                new String[] {
+                    "com.android.tools.checker.AnotherTestAnnotation",
+                    "com.android.tools.checker.BlockingTest"
+                };
+        assertArrayEquals(expectedAnnotations, annotations);
     }
 }

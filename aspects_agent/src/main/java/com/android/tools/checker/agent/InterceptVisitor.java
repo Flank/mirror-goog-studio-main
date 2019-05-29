@@ -2,6 +2,7 @@ package com.android.tools.checker.agent;
 
 import com.android.annotations.NonNull;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -29,6 +30,7 @@ public class InterceptVisitor extends AdviceAdapter {
      * @param access The method access flags.
      * @param name The method name.
      * @param desc The method type descriptor.
+     * @param classAnnotations The annotations of the class containing the method.
      * @param className The class name of the method container.
      * @param aspects {@link Function} to locate aspects.
      * @param notFoundCallback {@link Consumer} to report aspects that this class can not find.
@@ -38,6 +40,7 @@ public class InterceptVisitor extends AdviceAdapter {
             int access,
             @NonNull String name,
             @NonNull String desc,
+            @NonNull Set<Type> classAnnotations,
             @NonNull String className,
             @NonNull Function<String, String> aspects,
             @NonNull Consumer<String> notFoundCallback) {
@@ -48,6 +51,7 @@ public class InterceptVisitor extends AdviceAdapter {
         this.className = className;
         this.aspects = aspects;
         this.notFoundCallback = notFoundCallback;
+        this.visitedAnnotations.addAll(classAnnotations);
     }
 
     @Override
@@ -93,7 +97,7 @@ public class InterceptVisitor extends AdviceAdapter {
             LOGGER.fine("Method Aspect found " + key);
         }
 
-        // If the method has any annotations, check if there are any aspects defined.
+        // If either the method or class has any annotations, check if there are any aspects defined
         if (!visitedAnnotations.isEmpty()) {
             visitedAnnotations
                     .stream()

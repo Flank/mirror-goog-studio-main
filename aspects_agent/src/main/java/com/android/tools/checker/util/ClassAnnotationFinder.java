@@ -39,6 +39,12 @@ public class ClassAnnotationFinder extends ClassVisitor {
         }
     }
 
+    @Override
+    public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+        annotationFound.accept(Type.getType(desc));
+        return super.visitAnnotation(desc, visible);
+    }
+
     /**
      * @param delegate the delegate {@link ClassVisitor} or null if none.
      * @param annotationFound {@link Consumer} that will received the annotations.

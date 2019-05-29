@@ -73,7 +73,7 @@ public class InstrumentTest {
     }
 
     @Test
-    public void testAnnotations()
+    public void testMethodAnnotations()
             throws IOException, IllegalAccessException, InstantiationException,
                     NoSuchMethodException {
         Set<String> notFound = new HashSet<>();
@@ -86,6 +86,34 @@ public class InstrumentTest {
         assertEquals(0, TestAssertions.count);
         callMethod(instance, "blockingMethod");
         assertEquals(1, TestAssertions.count);
+    }
+
+    @Test
+    public void testClassAnnotations()
+            throws IOException, IllegalAccessException, InstantiationException,
+                    NoSuchMethodException {
+        Set<String> notFound = new HashSet<>();
+        ImmutableMap<String, String> matcher =
+                ImmutableMap.of(
+                        "@com.android.tools.checker.AnotherTestAnnotation",
+                        "com.android.tools.checker.TestAssertions#count",
+                        "@com.android.tools.checker.BlockingTest",
+                        "com.android.tools.checker.TestAssertions#count");
+        Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
+        TestAssertions.count = 0;
+        assertEquals(0, TestAssertions.count);
+        callMethod(instance, "methodNop");
+        // methodNop is also annotated with @AnotherTestAnnotation but we only intercept it once
+        assertEquals(1, TestAssertions.count);
+        callMethod(instance, "publicMethodThrows");
+        // publicMethodThrows calls privateMethodThrows, which is also annotated.
+        assertEquals(3, TestAssertions.count);
+        callMethod(instance, "staticMethodNop");
+        assertEquals(4, TestAssertions.count);
+        // Blocking method is annotated with both @AnotherTestAnnotation (from the class) and
+        // @BlockingTest (from the method itself), so we intercept it twice.
+        callMethod(instance, "blockingMethod");
+        assertEquals(6, TestAssertions.count);
     }
 
     @Test

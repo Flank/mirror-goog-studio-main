@@ -72,11 +72,7 @@ class Transform implements ClassFileTransformer {
         // This is a new class, look if it has any annotations
         ClassReader classReader = new ClassReader(classFileBuffer);
         ClassAnnotationFinder annotationFinder =
-                new ClassAnnotationFinder(
-                        null,
-                        (type) -> {
-                            classAnnotation.add(type.getClassName());
-                        });
+                new ClassAnnotationFinder(null, (type) -> classAnnotation.add(type.getClassName()));
         classReader.accept(
                 annotationFinder,
                 ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
@@ -98,9 +94,9 @@ class Transform implements ClassFileTransformer {
         if (!aspects.hasClass(className)) {
             boolean hasAnnotations;
             if (classBeingRedefined != null) {
-                // The class has no method aspects defined in the configuration, however, we can still
-                // define aspects via annotations. Check if the class has any annotations and if the
-                // annotations has an aspect defined in the configuration file.
+                // The class has no method aspects defined in the configuration, however, we can
+                // still define aspects via annotations. Check if the class has any annotations and
+                // if the annotations has an aspect defined in the configuration file.
                 hasAnnotations =
                         Arrays.stream(classBeingRedefined.getDeclaredMethods())
                                 .flatMap(method -> Arrays.stream(method.getDeclaredAnnotations()))
