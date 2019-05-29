@@ -581,12 +581,12 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      *
      * <p>By default, when you enable code shrinking by setting <a
      * href="com.android.build.gradle.internal.dsl.BuildType.html#com.android.build.gradle.internal.dsl.BuildType:minifyEnabled">
-     * <code>minifyEnabled</code></a> to <code>true</code>, the Android plugin uses ProGuard. If you
-     * set this property to <code>false</code>, the Android plugin will use R8.
+     * <code>minifyEnabled</code></a> to <code>true</code>, the Android plugin uses R8. If you set
+     * this property to <code>true</code>, the Android plugin uses ProGuard.
      *
      * <p>To learn more, read <a
-     * href="https://developer.android.com/studio/build/shrink-code.html">Shrink Your Code and
-     * Resources</a>.
+     * href="https://developer.android.com/studio/build/shrink-code.html">Shrink, obfuscate, and
+     * optimize your app</a>.
      */
     @Override
     public Boolean isUseProguard() {
