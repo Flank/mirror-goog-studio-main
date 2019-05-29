@@ -92,6 +92,7 @@ import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.Version;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.utils.Pair;
@@ -368,6 +369,9 @@ public class ModelBuilder<Extension extends AndroidConfig>
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(extension.getAaptOptions());
 
+        ViewBindingOptions viewBindingOptions =
+                ViewBindingOptionsImpl.create(extension.getViewBinding());
+
         // For modules that have C/C++, construct the JSON generators to get sync errors.
         // This doesn't do the slow work of actually generating the JSON.
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
@@ -450,7 +454,8 @@ public class ModelBuilder<Extension extends AndroidConfig>
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 isBaseSplit(),
-                getDynamicFeatures());
+                getDynamicFeatures(),
+                viewBindingOptions);
     }
 
     protected boolean isBaseSplit() {

@@ -47,6 +47,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final JavaCompileOptions myJavaCompileOptions;
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
+    @NonNull private final ViewBindingOptions myViewBindingOptions;
     @Nullable private final String myResourcePrefix;
     private final int myApiVersion;
     private final boolean myLibrary;
@@ -74,6 +75,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 Sets.newHashSet("unresolvedDependency"),
                 new JavaCompileOptionsStub(),
                 new AaptOptionsStub(),
+                new ViewBindingOptionsStub(),
                 new File("buildFolder"),
                 "resourcePrefix",
                 1,
@@ -102,6 +104,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             @NonNull Collection<String> unresolvedDependencies,
             @NonNull JavaCompileOptions javaCompileOptions,
             @NonNull AaptOptions aaptOptions,
+            @NonNull ViewBindingOptions viewBindingOptions,
             @NonNull File buildFolder,
             @Nullable String resourcePrefix,
             int apiVersion,
@@ -127,6 +130,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         myUnresolvedDependencies = unresolvedDependencies;
         myJavaCompileOptions = javaCompileOptions;
         myAaptOptions = aaptOptions;
+        myViewBindingOptions = viewBindingOptions;
         myBuildFolder = buildFolder;
         myResourcePrefix = resourcePrefix;
         myApiVersion = apiVersion;
@@ -305,6 +309,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return ImmutableList.of();
     }
 
+    @NonNull
+    @Override
+    public ViewBindingOptions getViewBindingOptions() {
+        return myViewBindingOptions;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -336,7 +346,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && Objects.equals(getUnresolvedDependencies(), stub.getUnresolvedDependencies())
                 && Objects.equals(getJavaCompileOptions(), stub.getJavaCompileOptions())
                 && Objects.equals(getBuildFolder(), stub.getBuildFolder())
-                && Objects.equals(getResourcePrefix(), stub.getResourcePrefix());
+                && Objects.equals(getResourcePrefix(), stub.getResourcePrefix())
+                && Objects.equals(getViewBindingOptions(), stub.getViewBindingOptions());
     }
 
     @Override
@@ -364,7 +375,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 getApiVersion(),
                 isLibrary(),
                 getProjectType(),
-                isBaseSplit());
+                isBaseSplit(),
+                getViewBindingOptions());
     }
 
     @Override
@@ -423,6 +435,8 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + myProjectType
                 + ", myBaseSplit="
                 + myBaseSplit
+                + ", myViewBindingOptions="
+                + myViewBindingOptions
                 + "}";
     }
 }

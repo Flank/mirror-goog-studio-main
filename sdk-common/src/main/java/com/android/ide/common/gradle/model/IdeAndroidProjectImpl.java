@@ -27,6 +27,7 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import com.google.common.annotations.VisibleForTesting;
@@ -68,6 +69,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull private final AaptOptions myAaptOptions;
     @NonNull private final File myBuildFolder;
     @NonNull private final Collection<String> myDynamicFeatures;
+    @Nullable private final ViewBindingOptions myViewBindingOptions;
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
     @Nullable private final String myResourcePrefix;
@@ -179,6 +181,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myDynamicFeatures =
                 ImmutableList.copyOf(
                         copyNewProperty(project::getDynamicFeatures, ImmutableList.of()));
+        myViewBindingOptions =
+                copyNewProperty(
+                        () ->
+                                new IdeViewBindingOptions(
+                                        project.getViewBindingOptions(), modelCache),
+                        null);
 
         myHashCode = calculateHashCode();
     }
@@ -372,6 +380,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myDynamicFeatures;
     }
 
+    @Nullable
+    @Override
+    public ViewBindingOptions getViewBindingOptions() {
+        return myViewBindingOptions;
+    }
+
     @Override
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
         for (Variant variant : myVariants) {
@@ -436,7 +450,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && Objects.equals(myAaptOptions, project.myAaptOptions)
                 && Objects.equals(myBuildFolder, project.myBuildFolder)
                 && Objects.equals(myResourcePrefix, project.myResourcePrefix)
-                && Objects.equals(myDynamicFeatures, project.myDynamicFeatures);
+                && Objects.equals(myDynamicFeatures, project.myDynamicFeatures)
+                && Objects.equals(myViewBindingOptions, project.myViewBindingOptions);
     }
 
     @Override
@@ -472,7 +487,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 mySupportsPluginGeneration,
                 myAaptOptions,
                 myBaseSplit,
-                myDynamicFeatures);
+                myDynamicFeatures,
+                myViewBindingOptions);
     }
 
     @Override
@@ -535,6 +551,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + myBaseSplit
                 + ", myDynamicFeatures="
                 + myDynamicFeatures
+                + ", myViewBindingOptions="
+                + myViewBindingOptions
                 + "}";
     }
 }

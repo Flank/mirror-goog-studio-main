@@ -404,4 +404,8 @@ public interface AndroidProject {
      */
     @NonNull
     Collection<String> getDynamicFeatures();
+
+    /** Returns the options for view binding. */
+    @NonNull
+    ViewBindingOptions getViewBindingOptions();
 }

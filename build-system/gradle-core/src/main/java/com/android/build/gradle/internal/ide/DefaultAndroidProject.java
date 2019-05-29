@@ -31,6 +31,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.Version;
+import com.android.builder.model.ViewBindingOptions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
@@ -90,6 +91,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     private final Collection<String> flavorDimensions;
 
+    @NonNull private final ViewBindingOptions viewBindingOptions;
+
     DefaultAndroidProject(
             @NonNull String name,
             @NonNull ProductFlavorContainer defaultConfig,
@@ -115,7 +118,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             int projectType,
             int apiVersion,
             boolean baseSplit,
-            @NonNull Collection<String> dynamicFeatures) {
+            @NonNull Collection<String> dynamicFeatures,
+            @NonNull ViewBindingOptions viewBindingOptions) {
         this.name = name;
         this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
@@ -141,6 +145,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.buildToolsVersion = buildToolsVersion;
         this.baseSplit = baseSplit;
         this.dynamicFeatures = ImmutableList.copyOf(dynamicFeatures);
+        this.viewBindingOptions = viewBindingOptions;
     }
 
     @Override
@@ -312,6 +317,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return dynamicFeatures;
     }
 
+    @NonNull
+    @Override
+    public ViewBindingOptions getViewBindingOptions() {
+        return viewBindingOptions;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -345,7 +356,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(defaultConfig, that.defaultConfig)
                 && Objects.equals(flavorDimensions, that.flavorDimensions)
                 && Objects.equals(baseSplit, that.baseSplit)
-                && Objects.equals(dynamicFeatures, that.dynamicFeatures);
+                && Objects.equals(dynamicFeatures, that.dynamicFeatures)
+                && Objects.equals(viewBindingOptions, that.viewBindingOptions);
     }
 
     @Override
@@ -375,6 +387,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 defaultConfig,
                 flavorDimensions,
                 baseSplit,
-                dynamicFeatures);
+                dynamicFeatures,
+                viewBindingOptions);
     }
 }

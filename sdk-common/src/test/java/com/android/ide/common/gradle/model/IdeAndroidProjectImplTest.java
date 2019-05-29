@@ -108,7 +108,8 @@ public class IdeAndroidProjectImplTest {
                                 getApiVersion(),
                                 isLibrary(),
                                 getProjectType(),
-                                isBaseSplit());
+                                isBaseSplit(),
+                                getViewBindingOptions());
                     }
                 };
         IdeAndroidProject androidProject =
@@ -231,7 +232,8 @@ public class IdeAndroidProjectImplTest {
                                 getApiVersion(),
                                 isLibrary(),
                                 getProjectType(),
-                                isBaseSplit());
+                                isBaseSplit(),
+                                getViewBindingOptions());
                     }
                 };
         IdeAndroidProject androidProject =

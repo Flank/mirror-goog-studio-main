@@ -26,6 +26,7 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.builder.model.ViewBindingOptions;
 import com.android.ide.common.gradle.model.level2.IdeDependenciesFactory;
 import com.android.ide.common.repository.GradleVersion;
 import java.io.File;
@@ -247,6 +248,9 @@ public interface IdeAndroidProject extends Serializable {
      */
     @NonNull
     Collection<String> getDynamicFeatures();
+
+    @Nullable
+    ViewBindingOptions getViewBindingOptions();
 
     @Nullable
     GradleVersion getParsedModelVersion();

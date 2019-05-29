@@ -231,7 +231,8 @@ public class InstantAppModelBuilder
                 PROJECT_TYPE_INSTANTAPP,
                 Version.BUILDER_MODEL_API_VERSION,
                 false,
-                ImmutableList.of());
+                ImmutableList.of(),
+                ViewBindingOptionsImpl.createDummy());
     }
 
     private Object buildMinimalisticModel() {
