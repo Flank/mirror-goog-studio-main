@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.utils;
 
 import static com.android.SdkConstants.DOT_9PNG;
@@ -54,8 +53,7 @@ public class SdkUtils {
     }
 
     /**
-     * Returns true if the given sequence ends with the given suffix (case
-     * sensitive).
+     * Returns true if the given sequence ends with the given suffix (case sensitive).
      *
      * @param sequence the character sequence to be checked
      * @param suffix the suffix to look for
@@ -176,7 +174,7 @@ public class SdkUtils {
                 lineWidth = nextLineWidth - hangingIndent.length();
             }
 
-            sb.append(text.substring(index, lineEnd));
+            sb.append(text, index, lineEnd);
             sb.append('\n');
             index = next;
         }
