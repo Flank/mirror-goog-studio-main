@@ -26,7 +26,7 @@ import com.android.builder.dexing.DexingType
 import com.android.dx.command.dexer.DxContext
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.MoreTruth.assertThatDex
-import com.android.testutils.truth.PathSubject
+import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.collect.ImmutableSet
 import org.junit.Rule
 import org.junit.Test
@@ -145,7 +145,7 @@ class DexMergingTaskTest {
         ).run()
 
         (0 until numInputs).forEach {
-            PathSubject.assertThat(output.resolve("classes_$it.dex")).exists()
+            assertThat(output.resolve("classes_$it.dex")).exists()
         }
     }
 
@@ -174,6 +174,39 @@ class DexMergingTaskTest {
 
         assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
             (0 until numInputs).map { "Ltest/A$it;" })
+    }
+
+    /**
+     * Regression test for b/132840182. When number of top-level inputs is below threshold, but
+     * number of dex files that we would produce is higher than threshold, we should merge all.
+     */
+    @Test
+    fun testNativeMultiDexThresholdMustNotCopy() {
+        val numInputs = 5
+        val inputFiles = (0 until numInputs).map {
+            generateArchive("test/A$it", "test/B$it")
+        }
+
+        val output = tmp.newFolder()
+        DexMergingTaskRunnable(
+            DexMergingParams(
+                DexingType.NATIVE_MULTIDEX,
+                SyncOptions.ErrorFormatMode.HUMAN_READABLE,
+                DexMergerTool.D8,
+                21,
+                true,
+                numInputs + 1,
+                null,
+                inputFiles.toSet(),
+                null,
+                output
+            )
+        ).run()
+
+        assertThatDex(output.resolve("classes.dex")).containsExactlyClassesIn(
+            (0 until numInputs).flatMap { listOf("Ltest/A$it;", "Ltest/B$it;") }
+        )
+        assertThat(output.resolve("classes2.dex")).doesNotExist()
     }
 
     @Test

@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.TransformException
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.crash.PluginCrashReporter
 import com.android.build.gradle.internal.dependency.getDexingArtifactConfiguration
 import com.android.build.gradle.internal.errors.MessageReceiverImpl
@@ -53,7 +51,6 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -62,7 +59,6 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
@@ -351,7 +347,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
                             task.outputs.cacheIf { getAllRegularFiles(task.dexFiles.files).size < LIBRARIES_MERGING_THRESHOLD }
                             LIBRARIES_MERGING_THRESHOLD
                         }
-                        else -> Integer.MAX_VALUE
+                        else -> LIBRARIES_M_PLUS_MAX_THRESHOLD
                     }
                 else -> 0
             }
@@ -398,6 +394,11 @@ private fun getAllRegularFiles(files: Iterable<File>): List<File> {
  * is 21 or 22.
  */
 internal const val LIBRARIES_MERGING_THRESHOLD = 51
+/**
+ * Max number of DEX files to generate on 23+, above that dex2out might have issues. See
+ * http://b/110374966 for more info.
+ */
+internal const val LIBRARIES_M_PLUS_MAX_THRESHOLD = 500
 
 enum class DexMergingAction {
     /** Merge only external libraries' dex files. */
@@ -440,7 +441,9 @@ class DexMergingTaskRunnable @Inject constructor(
                 return
             }
 
-            if (dexFiles.size >= params.mergingThreshold) {
+            val allDexFiles = lazy { getAllRegularFiles(dexFiles) }
+            if (dexFiles.size >= params.mergingThreshold
+                || allDexFiles.value.size >= params.mergingThreshold) {
                 DexMergerTransformCallable(
                     messageReceiver,
                     params.dexingType,
@@ -457,7 +460,7 @@ class DexMergingTaskRunnable @Inject constructor(
                 val outputPath =
                     { id: Int -> params.outputDir.resolve("classes_$id.${SdkConstants.EXT_DEX}") }
                 var index = 0
-                for (file in getAllRegularFiles(dexFiles)) {
+                for (file in allDexFiles.value) {
                     if (file.extension == SdkConstants.EXT_JAR) {
                         // Dex files can also come from jars when dexing is not done in artifact
                         // transforms. See b/130965921 for details.
