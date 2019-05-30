@@ -194,14 +194,16 @@ public interface SyncIssue {
     /** Indicates that the compileSdkVersion is missing */
     int TYPE_COMPILE_SDK_VERSION_NOT_SET = 39;
 
-    // ATTENTION: When adding new values here, update EvalIssueReporter.Type and TYPE_MAX below.
+    // ATTENTION: When adding a new type here, increment the index by 1 and also increment TYPE_MAX
+    // below.
 
     /**
-     * Highest number assigned to types of {@link SyncIssue}s.
+     * Number of {@link SyncIssue} types, counting the generic type with index 0. (This value should
+     * equal the highest type index plus 1.)
      *
-     * <p>TODO: Why is it needed even when there are no usages in the code?
+     * <p>This variable is not used in tools/base but is currently used in tools/adt/idea.
      */
-    int TYPE_MAX = 40; // increment when adding new types.
+    int TYPE_MAX = 40; // increment by 1 when adding a new type
 
     /** Returns the severity of the issue. */
     int getSeverity();
