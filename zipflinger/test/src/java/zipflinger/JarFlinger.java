@@ -125,7 +125,7 @@ public class JarFlinger implements JarCreator {
         ZipSource source = new ZipSource(file);
         Map<String, Entry> entries = source.entries();
         for (Entry entry : entries.values()) {
-            if (entry.getUncompressedSize() == 0) {
+            if (entry.isDirectory()) {
                 continue;
             }
             String name = entry.getName();

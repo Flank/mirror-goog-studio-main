@@ -428,4 +428,15 @@ public class TestZipFlinger extends TestBase {
 
         verifyArchive(file);
     }
+
+    @Test
+    public void TestDirectories() throws IOException {
+        File file = getFile("zip_with_directories.zip");
+        Map<String, Entry> entries = ZipArchive.listEntries(file);
+
+        Assert.assertTrue("Folder found", entries.get("contents/").isDirectory());
+        Assert.assertTrue("Sub-folder found", entries.get("contents/folder/").isDirectory());
+        Assert.assertFalse("File1 found", entries.get("contents/folder/b.txt").isDirectory());
+        Assert.assertFalse("File2 found", entries.get("contents/a.txt").isDirectory());
+    }
 }

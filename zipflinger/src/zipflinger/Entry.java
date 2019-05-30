@@ -58,6 +58,10 @@ public class Entry {
         return crc;
     }
 
+    public boolean isDirectory() {
+        return name.charAt(name.length() - 1) == '/';
+    }
+
     @NonNull
     Location getCdLocation() {
         return cdLocation;
