@@ -22,17 +22,17 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty
  * Builder class for [CMakeSettingsConfiguration].
  */
 class CMakeSettingsConfigurationBuilder {
-    var name : String = ""
-    var description : String = ""
-    var buildRoot : String = ""
-    var generator : String = ""
-    var configurationType : String = ""
-    var installRoot : String = ""
-    var cmakeExecutable : String = ""
-    var cmakeToolchain : String = ""
-    var cmakeCommandArgs : String = ""
-    var buildCommandArgs : String = ""
-    var ctestCommandArgs : String = ""
+    var name : String? = null
+    var description : String? = null
+    var buildRoot : String? = null
+    var generator : String? = null
+    var configurationType : String? = null
+    var installRoot : String? = null
+    var cmakeExecutable : String? = null
+    var cmakeToolchain : String? = null
+    var cmakeCommandArgs : String? = null
+    var buildCommandArgs : String? = null
+    var ctestCommandArgs : String? = null
     var inheritedEnvironments = listOf<String>()
     val variables = mutableListOf<CMakeSettingsVariable>()
 

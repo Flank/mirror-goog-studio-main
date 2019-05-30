@@ -23,20 +23,20 @@ data class CMakeSettingsConfiguration(
     /**
      * The configuration name.
      */
-    val name: String = "",
+    val name: String? = null,
     /**
      * Description of this configuration
      */
-    val description: String = "",
+    val description: String? = null,
     /**
      * The CMake generator name. Example: Ninja
      */
-    val generator: String = "",
+    val generator: String? = null,
     /**
      * Specifies build type configuration for the selected generator.
      * Example, MinSizeRel
      */
-    val configurationType: String = "",
+    val configurationType: String? = null,
     /**
      * The environments this configuration depends on.
      * Any custom environment can be used.
@@ -48,36 +48,36 @@ data class CMakeSettingsConfiguration(
      * ${workspaceHash}, ${projectFile}, ${projectDir}, ${thisFile},
      * ${thisFileDir}, ${name}, ${generator}, ${env.VARIABLE}.
      */
-    val buildRoot: String = "",
+    val buildRoot: String? = null,
     /**
      * The directory in which CMake generates install targets for the chosen
      * generator. Supported macros include ${workspaceRoot}, ${workspaceHash},
      * ${projectFile}, ${projectDir}, ${thisFile}, ${thisFileDir}, ${name},
      * ${generator}, ${env.VARIABLE}.
      */
-    val installRoot: String = "",
+    val installRoot: String? = null,
     /**
      * Additional command line options passed to CMake when invoked to generate
      * the cache.
      */
-    val cmakeCommandArgs: String = "",
+    val cmakeCommandArgs: String? = null,
     /**
      * specifies the toolchain file. This is passed to CMake using -DCMAKE_TOOLCHAIN_FILE.
      */
-    val cmakeToolchain: String = "",
+    val cmakeToolchain: String? = null,
     /**
      * specifies the full path to the CMake program executable, including the file name
      * and extension.
      */
-    val cmakeExecutable: String = "",
+    val cmakeExecutable: String? = null,
     /**
      * Native build switches passed to CMake after --build --.
      */
-    val buildCommandArgs: String = "",
+    val buildCommandArgs: String? = null,
     /**
      * Additional command line options passed to CTest when running the tests.
      */
-    val ctestCommandArgs: String = "",
+    val ctestCommandArgs: String? = null,
     /**
      * A list of CMake variables. The name value pairs are passed to CMake
      * as -Dname1=value1 -Dname2=value2, etc.
