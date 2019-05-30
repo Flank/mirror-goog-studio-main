@@ -25,7 +25,7 @@
 #include <condition_variable>
 #include <queue>
 
-using profiler::proto::CpuProfilingAppStopResponse;
+using profiler::proto::TraceStopStatus;
 using std::string;
 using testing::EndsWith;
 using testing::Eq;
@@ -80,7 +80,7 @@ TEST(AtraceManagerTest, ProfilingStartStop) {
   EXPECT_TRUE(manager.IsProfiling());
   test_data.atrace->WaitUntilParamsSize(1);
   EXPECT_EQ(manager.GetDumpCount(), dump_count);
-  EXPECT_EQ(CpuProfilingAppStopResponse::SUCCESS,
+  EXPECT_EQ(TraceStopStatus::SUCCESS,
             manager.StopProfiling(test_data.app_name, false, &test_data.error));
   EXPECT_FALSE(manager.IsProfiling());
 }
@@ -108,7 +108,7 @@ TEST(AtraceManagerTest, ProfilerReentrant) {
     test_data.atrace->WaitUntilParamsSize(1);
     EXPECT_EQ(manager.GetDumpCount(), dump_count);
     EXPECT_EQ(
-        CpuProfilingAppStopResponse::SUCCESS,
+        TraceStopStatus::SUCCESS,
         manager.StopProfiling(test_data.app_name, false, &test_data.error));
     EXPECT_FALSE(manager.IsProfiling());
   }
@@ -135,7 +135,7 @@ TEST(AtraceManagerTest, ProfilingStartTwice) {
                                       &allocated_buffer_size_kb,
                                       test_data.trace_path, &test_data.error));
   EXPECT_EQ(manager.GetDumpCount(), 1);
-  EXPECT_EQ(CpuProfilingAppStopResponse::SUCCESS,
+  EXPECT_EQ(TraceStopStatus::SUCCESS,
             manager.StopProfiling(test_data.app_name, false, &test_data.error));
 }
 
@@ -167,7 +167,7 @@ TEST(AtraceManagerTest, StartStopFailsAndReturnsError) {
   EXPECT_TRUE(manager.StartProfiling(test_data.app_name, 8,
                                      &allocated_buffer_size_kb,
                                      test_data.trace_path, &test_data.error));
-  EXPECT_EQ(CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP,
+  EXPECT_EQ(TraceStopStatus::STILL_PROFILING_AFTER_STOP,
             manager.StopProfiling(test_data.app_name, false, &test_data.error));
   EXPECT_THAT(test_data.error, Eq("Failed to stop atrace."));
 }
@@ -200,7 +200,7 @@ TEST(AtraceManagerTest, BufferAutoDownSamples) {
   EXPECT_EQ(manager.GetDumpCount(), 0);
   test_data.atrace->WaitUntilParamsSize(1);
   EXPECT_EQ(manager.GetDumpCount(), 1);
-  EXPECT_EQ(CpuProfilingAppStopResponse::SUCCESS,
+  EXPECT_EQ(TraceStopStatus::SUCCESS,
             manager.StopProfiling(test_data.app_name, false, &test_data.error));
 }
 
@@ -239,7 +239,7 @@ TEST(AtraceManagerTest, StopProfilingCombinesFiles) {
   EXPECT_EQ(allocated_buffer_size_kb, 8192);
   EXPECT_TRUE(manager.IsProfiling());
   test_data.atrace->WaitUntilParamsSize(1);
-  EXPECT_EQ(CpuProfilingAppStopResponse::SUCCESS,
+  EXPECT_EQ(TraceStopStatus::SUCCESS,
             manager.StopProfiling(test_data.app_name, true, &test_data.error));
 
   // On stop profiling get the dump count (this is incremented by stop

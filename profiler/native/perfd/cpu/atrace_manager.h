@@ -72,7 +72,7 @@ class AtraceManager {
   bool StartProfiling(const std::string &app_name, int buffer_size_in_mb,
                       int *acquired_buffer_size_kb,
                       const std::string &trace_path, std::string *error);
-  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+  profiler::proto::TraceStopStatus::Status StopProfiling(
       const std::string &app_name, bool need_result, std::string *error);
   void Shutdown();
   bool IsProfiling() { return is_profiling_; }

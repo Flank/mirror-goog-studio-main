@@ -20,8 +20,8 @@
 #include "proto/profiler.grpc.pb.h"
 #include "utils/trace.h"
 
-using profiler::proto::CpuProfilingAppStopResponse;
 using profiler::proto::Device;
+using profiler::proto::TraceStopStatus;
 using std::string;
 
 namespace profiler {
@@ -59,8 +59,7 @@ bool PerfettoManager::StartProfiling(
   return status == Perfetto::LAUNCH_STATUS_SUCCESS;
 }
 
-CpuProfilingAppStopResponse::Status PerfettoManager::StopProfiling(
-    std::string* error) {
+TraceStopStatus::Status PerfettoManager::StopProfiling(std::string* error) {
   Trace trace("CPU:StopProfiling perfetto");
   perfetto_->Stop();
   bool stop_succeeded = true;
@@ -72,9 +71,8 @@ CpuProfilingAppStopResponse::Status PerfettoManager::StopProfiling(
     error->append("Failed to stop perfetto.");
     stop_succeeded = false;
   }
-  return stop_succeeded
-             ? CpuProfilingAppStopResponse::SUCCESS
-             : CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP;
+  return stop_succeeded ? TraceStopStatus::SUCCESS
+                        : TraceStopStatus::STILL_PROFILING_AFTER_STOP;
 }
 
 void PerfettoManager::Shutdown() {

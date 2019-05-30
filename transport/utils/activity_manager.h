@@ -53,7 +53,7 @@ class ActivityManager {
   // no-op. If |need_result|, waits ART for |timeout_sec| Seconds for finishing
   // writing the trace file. Returns true is profiling stopped successfully.
   // Otherwise false and populate error_string.
-  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
+  profiler::proto::TraceStopStatus::Status StopProfiling(
       const std::string &app_package_name, bool need_result,
       std::string *error_string, int32_t timeout_sec,
       bool is_startup_profiling);

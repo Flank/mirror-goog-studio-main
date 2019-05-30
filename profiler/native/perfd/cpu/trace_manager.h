@@ -105,9 +105,9 @@ class TraceManager final {
   // trace (e.g. it stops any ongoing trace), the more correct logic would be
   // to pass in a |CpuTraceConfiguration| and validate we are stopping the
   // correct one.
-  ProfilingApp* StopProfiling(
-      const std::string& app_name, bool need_trace,
-      proto::CpuProfilingAppStopResponse::Status* status, std::string* error);
+  ProfilingApp* StopProfiling(const std::string& app_name, bool need_trace,
+                              proto::TraceStopStatus::Status* status,
+                              std::string* error);
 
   // Returns the |ProfilingApp| of an app if there is an ongoing tracing, null
   // otherwise.

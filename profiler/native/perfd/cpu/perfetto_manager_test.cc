@@ -114,17 +114,15 @@ TEST(PerfettoManagerTest, ValidateShutdownErrors) {
   perfetto->SetStopStateTo(false, true);
   EXPECT_TRUE(
       manager.StartProfiling("App Name", "armv8", config, trace_path, &error));
-  EXPECT_EQ(
-      manager.StopProfiling(&error),
-      profiler::proto::CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP);
+  EXPECT_EQ(manager.StopProfiling(&error),
+            profiler::proto::TraceStopStatus::STILL_PROFILING_AFTER_STOP);
   EXPECT_EQ(error, "Failed to stop tracer.");
 
   // Clear state and test failing to stop perfetto.
   error = "";
   perfetto->SetStopStateTo(true, false);
-  EXPECT_EQ(
-      manager.StopProfiling(&error),
-      profiler::proto::CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP);
+  EXPECT_EQ(manager.StopProfiling(&error),
+            profiler::proto::TraceStopStatus::STILL_PROFILING_AFTER_STOP);
   EXPECT_EQ(error, "Failed to stop perfetto.");
 }
 

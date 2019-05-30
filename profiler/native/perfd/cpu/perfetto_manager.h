@@ -55,8 +55,7 @@ class PerfettoManager {
                       const std::string &trace_path, std::string *error);
 
   // Stops profiling returns true if perfetto is no longer running.
-  profiler::proto::CpuProfilingAppStopResponse::Status StopProfiling(
-      std::string *error);
+  profiler::proto::TraceStopStatus::Status StopProfiling(std::string *error);
 
   bool IsProfiling() {
     return perfetto_->IsPerfettoRunning() || perfetto_->IsTracerRunning();

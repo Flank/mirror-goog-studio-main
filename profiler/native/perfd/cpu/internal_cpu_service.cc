@@ -24,13 +24,13 @@
 
 using grpc::ServerContext;
 using grpc::Status;
-using profiler::proto::CpuProfilingAppStopResponse;
 using profiler::proto::CpuTraceConfiguration;
 using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
 using profiler::proto::CpuTraceType;
 using profiler::proto::TraceInitiationType;
+using profiler::proto::TraceStopStatus;
 
 namespace profiler {
 Status InternalCpuServiceImpl::SendTraceEvent(
@@ -73,7 +73,7 @@ Status InternalCpuServiceImpl::SendTraceEvent(
           "Debug.stopMethodTracing() is called but the running trace is not "
           "initiated by startMetghodTracing* APIs");
     } else {
-      CpuProfilingAppStopResponse::Status status;
+      TraceStopStatus::Status status;
       std::string error_string;
       auto* capture = trace_manager_->StopProfiling(app_name, false, &status,
                                                     &error_string);

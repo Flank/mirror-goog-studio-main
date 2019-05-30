@@ -36,7 +36,7 @@
 #include "utils/tokenizer.h"
 #include "utils/trace.h"
 
-using profiler::proto::CpuProfilingAppStopResponse;
+using profiler::proto::TraceStopStatus;
 using std::string;
 
 namespace profiler {
@@ -159,7 +159,7 @@ string AtraceManager::GetNextDumpPath() {
   return path.str();
 }
 
-CpuProfilingAppStopResponse::Status AtraceManager::StopProfiling(
+TraceStopStatus::Status AtraceManager::StopProfiling(
     const std::string &app_pkg_name, bool need_result, std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling atrace");
@@ -189,15 +189,15 @@ CpuProfilingAppStopResponse::Status AtraceManager::StopProfiling(
   if (isRunning) {
     assert(error != nullptr);
     error->append("Failed to stop atrace.");
-    return CpuProfilingAppStopResponse::STILL_PROFILING_AFTER_STOP;
+    return TraceStopStatus::STILL_PROFILING_AFTER_STOP;
   }
   if (need_result) {
     if (!CombineFiles(profiled_app_.trace_path.c_str(), dumps_created_,
                       profiled_app_.trace_path.c_str())) {
-      return CpuProfilingAppStopResponse::CANNOT_FORM_FILE;
+      return TraceStopStatus::CANNOT_FORM_FILE;
     }
   }
-  return CpuProfilingAppStopResponse::SUCCESS;
+  return TraceStopStatus::SUCCESS;
 }
 
 void AtraceManager::Shutdown() {

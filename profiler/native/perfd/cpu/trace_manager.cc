@@ -99,17 +99,17 @@ ProfilingApp* TraceManager::StartProfiling(
 
 ProfilingApp* TraceManager::StopProfiling(
     const std::string& app_name, bool need_trace,
-    proto::CpuProfilingAppStopResponse::Status* status, std::string* error) {
+    proto::TraceStopStatus::Status* status, std::string* error) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
   auto* ongoing_capture = GetOngoingCapture(app_name);
   if (ongoing_capture == nullptr) {
     *error = "No ongoing capture exists";
-    *status = proto::CpuProfilingAppStopResponse::NO_ONGOING_PROFILING;
+    *status = proto::TraceStopStatus::NO_ONGOING_PROFILING;
     return nullptr;
   }
 
-  *status = proto::CpuProfilingAppStopResponse::SUCCESS;
+  *status = proto::TraceStopStatus::SUCCESS;
 
   if (ongoing_capture->configuration.initiation_type() ==
       proto::INITIATED_BY_API) {

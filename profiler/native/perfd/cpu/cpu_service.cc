@@ -51,6 +51,9 @@ using profiler::proto::GetThreadsRequest;
 using profiler::proto::GetThreadsResponse;
 using profiler::proto::GetTraceInfoRequest;
 using profiler::proto::GetTraceInfoResponse;
+using profiler::proto::TraceStartStatus;
+using profiler::proto::TraceStopStatus;
+
 using std::map;
 using std::string;
 using std::vector;
@@ -175,11 +178,12 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   string error;
   auto* capture = trace_manager_->StartProfiling(
       clock_->GetCurrentTime(), request->configuration(), &error);
+  auto* status = response->mutable_status();
   if (capture != nullptr) {
-    response->set_status(CpuProfilingAppStartResponse::SUCCESS);
+    status->set_status(TraceStartStatus::SUCCESS);
   } else {
-    response->set_status(CpuProfilingAppStartResponse::FAILURE);
-    response->set_error_message(error);
+    status->set_status(TraceStartStatus::FAILURE);
+    status->set_error_message(error);
   }
 
   return Status::OK;
@@ -194,14 +198,14 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
 void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
                                         CpuProfilingAppStopResponse* response) {
-  proto::CpuProfilingAppStopResponse::Status status;
+  proto::TraceStopStatus::Status status;
   string error;
   bool need_response = response != nullptr;
   ProfilingApp* capture =
       trace_manager_->StopProfiling(app_name, need_response, &status, &error);
 
   if (need_response) {
-    if (status == CpuProfilingAppStopResponse::SUCCESS) {
+    if (status == TraceStopStatus::SUCCESS) {
       assert(capture != nullptr);
       response->set_trace_id(capture->trace_id);
       // Move over the file to the shared cached to be access via |GetBytes|
@@ -215,13 +219,15 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
       bool move_failed =
           fs.MoveFile(capture->configuration.temp_path(), oss.str());
       if (move_failed) {
-        status = CpuProfilingAppStopResponse::CANNOT_READ_FILE;
+        status = TraceStopStatus::CANNOT_READ_FILE;
         error = "Failed to read trace from device";
       }
     }
-    response->set_status(status);
+
+    auto* stop_status = response->mutable_status();
+    stop_status->set_status(status);
     // Empty if success but simply set it for all cases.
-    response->set_error_message(error);
+    stop_status->set_error_message(error);
   }
 
   if (capture != nullptr) {

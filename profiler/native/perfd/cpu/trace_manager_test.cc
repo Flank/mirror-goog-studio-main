@@ -27,10 +27,10 @@
 #include "utils/termination_service.h"
 
 using google::protobuf::util::MessageDifferencer;
-using profiler::proto::CpuProfilingAppStopResponse;
 using profiler::proto::CpuTraceConfiguration;
 using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceType;
+using profiler::proto::TraceStopStatus;
 
 using std::string;
 using testing::HasSubstr;
@@ -124,7 +124,7 @@ struct TraceManagerTest : testing::Test {
     // Stop profiling.
     // Test does not validate trace output so we don't need to wait for trace
     // file.
-    CpuProfilingAppStopResponse::Status status;
+    TraceStopStatus::Status status;
     capture =
         trace_manager->StopProfiling("fake_app", false, &status, &error_string);
     EXPECT_NE(capture, nullptr);
@@ -288,11 +288,11 @@ TEST_F(TraceManagerTest, StopBeforeStartsDoesNothing) {
       ConfigureDefaultTraceManager(config);
 
   std::string error_string;
-  CpuProfilingAppStopResponse::Status status;
+  TraceStopStatus::Status status;
   auto* capture =
       trace_manager->StopProfiling("fake_app", false, &status, &error_string);
   EXPECT_EQ(capture, nullptr);
-  EXPECT_EQ(status, CpuProfilingAppStopResponse::NO_ONGOING_PROFILING);
+  EXPECT_EQ(status, TraceStopStatus::NO_ONGOING_PROFILING);
   EXPECT_NE(error_string, "");
 
   // Simulate that daemon is killed.
@@ -323,7 +323,7 @@ TEST_F(TraceManagerTest, StartStopSequence) {
 
   clock_.SetCurrentTime(20);
   std::string error_string2;
-  CpuProfilingAppStopResponse::Status status;
+  TraceStopStatus::Status status;
   capture =
       trace_manager->StopProfiling("fake_app", false, &status, &error_string2);
   EXPECT_NE(capture, nullptr);
@@ -366,7 +366,7 @@ TEST_F(TraceManagerTest, GetOngoingCapture) {
   // Stopping the capture should return no ongoing capture.
   clock_.SetCurrentTime(20);
   std::string error_string2;
-  CpuProfilingAppStopResponse::Status status;
+  TraceStopStatus::Status status;
   trace_manager->StopProfiling("fake_app", false, &status, &error_string2);
   capture = trace_manager->GetOngoingCapture("fake_app");
   EXPECT_EQ(capture, nullptr);
@@ -416,7 +416,7 @@ TEST_F(TraceManagerTest, GetCaptures) {
 
   clock_.SetCurrentTime(20);
   std::string error_string2;
-  CpuProfilingAppStopResponse::Status status;
+  TraceStopStatus::Status status;
   trace_manager->StopProfiling("fake_app1", false, &status, &error_string2);
 
   // In-range query 3 (finished capture)
