@@ -58,7 +58,6 @@ java_library(
 
 WINDOWS_FILES = [
     "//prebuilts/tools/common/aapt:windows/aapt2.exe",
-    "//prebuilts/tools/common/aapt:windows/libwinpthread-1.dll",
 ]
 
 java_library(

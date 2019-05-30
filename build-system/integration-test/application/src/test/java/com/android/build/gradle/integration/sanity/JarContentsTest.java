@@ -156,7 +156,6 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/tools/build/aapt2:windows",
                 "aapt2.exe",
-                "libwinpthread-1.dll",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
