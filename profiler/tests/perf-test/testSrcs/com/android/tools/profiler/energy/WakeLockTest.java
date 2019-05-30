@@ -22,14 +22,14 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.TransportStubWrapper;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.Energy.EnergyEventData.MetadataCase;
 import com.android.tools.profiler.proto.Energy.WakeLockAcquired.Level;
 import com.android.tools.profiler.proto.Energy.WakeLockReleased.ReleaseFlag;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,44 +39,62 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class WakeLockTest {
-    @Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(26, 28);
+    @Parameters(name = "{index}: SdkLevel={0}, UnifiedPipeline={1}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {{26, false}, {26, true}, {28, false}, {28, true}});
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.energy.WakeLockActivity";
 
     @Rule public final PerfDriver myPerfDriver;
 
+    private boolean myIsUnifiedPipeline;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
-    private EnergyStubWrapper myStubWrapper;
+    private EnergyStubWrapper myEnergyWrapper;
+    private TransportStubWrapper myTransportWrapper;
     private Session mySession;
 
-    public WakeLockTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+    public WakeLockTest(int sdkLevel, boolean isUnifiedPipeline) {
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel, isUnifiedPipeline);
+        myIsUnifiedPipeline = isUnifiedPipeline;
     }
 
     @Before
     public void setUp() throws Exception {
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
-        myStubWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
+        myEnergyWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
         mySession = myPerfDriver.getSession();
     }
 
     @Test
     public void testAcquireAndRelease() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquireAndRelease");
-        assertThat(myAndroidDriver.waitForInput("WAKE LOCK RELEASED")).isTrue();
+        final String methodName = "runAcquireAndRelease";
+        final String expectedResponse = "WAKE LOCK RELEASED";
 
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 2);
-        assertThat(response.getEventsCount()).isEqualTo(2);
+        List<Common.Event> energyEvents = new ArrayList<>();
+        if (myIsUnifiedPipeline) {
+            Map<Long, List<Common.Event>> eventGroups =
+                    myTransportWrapper.getEvents(
+                            2,
+                            event -> event.getKind() == Common.Event.Kind.ENERGY_EVENT,
+                            (unused) -> triggerMethod(methodName, expectedResponse));
+            for (List<Common.Event> eventList : eventGroups.values()) {
+                energyEvents.addAll(eventList);
+            }
+        } else {
+            triggerMethod(methodName, expectedResponse);
+            EnergyEventsResponse response =
+                    TestUtils.waitForAndReturn(
+                            () -> myEnergyWrapper.getAllEnergyEvents(mySession),
+                            resp -> resp.getEventsCount() == 2);
+            energyEvents.addAll(response.getEventsList());
+        }
+        assertThat(energyEvents).hasSize(2);
 
-        Common.Event acquiredEvent = response.getEvents(0);
+        Common.Event acquiredEvent = energyEvents.get(0);
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getGroupId()).isGreaterThan(0L);
@@ -91,7 +109,7 @@ public class WakeLockTest {
         assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTimeout())
                 .isEqualTo(1000);
 
-        Common.Event releasedEvent = response.getEvents(1);
+        Common.Event releasedEvent = energyEvents.get(1);
         assertThat(releasedEvent.getTimestamp()).isAtLeast(acquiredEvent.getTimestamp());
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getGroupId()).isEqualTo(acquiredEvent.getGroupId());
@@ -101,8 +119,12 @@ public class WakeLockTest {
         assertThat(releasedEvent.getEnergyEvent().getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
 
-        String stack = TestUtils.getBytes(myGrpc, releasedEvent.getEnergyEvent().getTraceId());
-        assertThat(stack).contains(ACTIVITY_CLASS);
+        if (myIsUnifiedPipeline) {
+            // TODO(b/129355112): call stack is not yet implemented.
+        } else {
+            String stack = TestUtils.getBytes(myGrpc, releasedEvent.getEnergyEvent().getTraceId());
+            assertThat(stack).contains(ACTIVITY_CLASS);
+        }
     }
 
     /**
@@ -111,16 +133,30 @@ public class WakeLockTest {
      */
     @Test
     public void testAcquireWithoutNewWakeLock() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runAcquireWithoutNewWakeLock");
-        assertThat(myAndroidDriver.waitForInput("WAKE LOCK ACQUIRED")).isTrue();
+        final String methodName = "runAcquireWithoutNewWakeLock";
+        final String expectedResponse = "WAKE LOCK ACQUIRED";
 
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
-        assertThat(response.getEventsCount()).isEqualTo(1);
+        List<Common.Event> energyEvents = new ArrayList<>();
+        if (myIsUnifiedPipeline) {
+            Map<Long, List<Common.Event>> eventGroups =
+                    myTransportWrapper.getEvents(
+                            1,
+                            event -> event.getKind() == Common.Event.Kind.ENERGY_EVENT,
+                            (unused) -> triggerMethod(methodName, expectedResponse));
+            for (List<Common.Event> eventList : eventGroups.values()) {
+                energyEvents.addAll(eventList);
+            }
+        } else {
+            triggerMethod(methodName, expectedResponse);
+            EnergyEventsResponse response =
+                    TestUtils.waitForAndReturn(
+                            () -> myEnergyWrapper.getAllEnergyEvents(mySession),
+                            resp -> resp.getEventsCount() == 1);
+            energyEvents.addAll(response.getEventsList());
+        }
+        assertThat(energyEvents).hasSize(1);
 
-        Common.Event acquiredEvent = response.getEvents(0);
+        Common.Event acquiredEvent = energyEvents.get(0);
         assertThat(acquiredEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(acquiredEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(acquiredEvent.getGroupId()).isGreaterThan(0L);
@@ -133,5 +169,10 @@ public class WakeLockTest {
                 .isEqualTo(0);
         assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTag()).isEqualTo("Foo");
         assertThat(acquiredEvent.getEnergyEvent().getWakeLockAcquired().getTimeout()).isEqualTo(0);
+    }
+
+    private void triggerMethod(String methodName, String expectedResponse) {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
+        assertThat(myAndroidDriver.waitForInput(expectedResponse)).isTrue();
     }
 }

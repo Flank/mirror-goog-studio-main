@@ -23,6 +23,7 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.TransportStubWrapper;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
 import com.android.tools.profiler.proto.Energy.*;
@@ -31,8 +32,7 @@ import com.android.tools.profiler.proto.Energy.JobInfo.BackoffPolicy;
 import com.android.tools.profiler.proto.Energy.JobInfo.NetworkType;
 import com.android.tools.profiler.proto.Energy.JobScheduled.Result;
 import com.android.tools.profiler.proto.EnergyProfiler.EnergyEventsResponse;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,49 +45,69 @@ import org.junit.runners.Parameterized.Parameters;
 public class JobTest {
     private static final String ACTIVITY_CLASS = "com.activity.energy.JobActivity";
     @Rule public final PerfDriver myPerfDriver;
+
+    private boolean myIsUnifiedPipeline;
     private GrpcUtils myGrpc;
     private FakeAndroidDriver myAndroidDriver;
-    private EnergyStubWrapper myStubWrapper;
+    private EnergyStubWrapper myEnergyWrapper;
+    private TransportStubWrapper myTransportWrapper;
     private Session mySession;
-    public JobTest(int sdkLevel) {
-        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel);
+
+    public JobTest(int sdkLevel, boolean isUnifiedPipeline) {
+        myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel, isUnifiedPipeline);
+        myIsUnifiedPipeline = isUnifiedPipeline;
     }
 
-    @Parameters
-    public static Collection<Integer> data() {
-        return Arrays.asList(26, 28);
+    @Parameters(name = "{index}: SdkLevel={0}, UnifiedPipeline={1}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {{26, false}, {26, true}, {28, false}, {28, true}});
     }
 
     @Before
     public void setUp() throws Exception {
         myAndroidDriver = myPerfDriver.getFakeAndroidDriver();
         myGrpc = myPerfDriver.getGrpc();
-        myStubWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
+        myEnergyWrapper = new EnergyStubWrapper(myGrpc.getEnergyStub());
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
         mySession = myPerfDriver.getSession();
     }
 
     @Test
     public void testScheduleStartAndFinishJob() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "scheduleStartAndFinishJob");
-        assertThat(myAndroidDriver.waitForInput("JOB FINISHED")).isTrue();
+        final String methodName = "scheduleStartAndFinishJob";
+        final String expectedResponse = "JOB FINISHED";
 
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 3);
+        List<Common.Event> energyEvents = new ArrayList<>();
+        if (myIsUnifiedPipeline) {
+            Map<Long, List<Common.Event>> eventGroups =
+                    myTransportWrapper.getEvents(
+                            3,
+                            event -> event.getKind() == Common.Event.Kind.ENERGY_EVENT,
+                            (unused) -> triggerMethod(methodName, expectedResponse));
+            for (List<Common.Event> eventList : eventGroups.values()) {
+                energyEvents.addAll(eventList);
+            }
+        } else {
+            triggerMethod(methodName, expectedResponse);
+            EnergyEventsResponse response =
+                    TestUtils.waitForAndReturn(
+                            () -> myEnergyWrapper.getAllEnergyEvents(mySession),
+                            resp -> resp.getEventsCount() == 3);
+            energyEvents.addAll(response.getEventsList());
+        }
         assertWithMessage(
                         "Actual events: (%s)",
-                        response.getEventsList()
+                        energyEvents
                                 .stream()
                                 .map(
                                         event ->
                                                 String.valueOf(
                                                         event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
-                .that(response.getEventsCount())
-                .isEqualTo(3);
+                .that(energyEvents)
+                .hasSize(3);
 
-        final Common.Event scheduleEvent = response.getEvents(0);
+        final Common.Event scheduleEvent = energyEvents.get(0);
         assertThat(scheduleEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(scheduleEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(scheduleEvent.getGroupId()).isGreaterThan(0L);
@@ -118,7 +138,7 @@ public class JobTest {
         assertThat(jobInfo.getExtras()).isEqualTo("extras");
         assertThat(jobInfo.getTransientExtras()).isEqualTo("transient extras");
 
-        final Common.Event startEvent = response.getEvents(1);
+        final Common.Event startEvent = energyEvents.get(1);
         assertThat(startEvent.getTimestamp()).isAtLeast(scheduleEvent.getTimestamp());
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(startEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
@@ -135,7 +155,7 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        final Common.Event finishEvent = response.getEvents(2);
+        final Common.Event finishEvent = energyEvents.get(2);
         assertThat(finishEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(finishEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
@@ -152,36 +172,55 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        String scheduleStack =
-                TestUtils.getBytes(myGrpc, scheduleEvent.getEnergyEvent().getTraceId());
-        assertThat(scheduleStack).contains("schedule");
-        String finishStack = TestUtils.getBytes(myGrpc, finishEvent.getEnergyEvent().getTraceId());
-        assertThat(finishStack).contains("Finish");
+        if (myIsUnifiedPipeline) {
+            // TODO(b/129355112): call stack is not yet implemented.
+        } else {
+            String scheduleStack =
+                    TestUtils.getBytes(myGrpc, scheduleEvent.getEnergyEvent().getTraceId());
+            assertThat(scheduleStack).contains("schedule");
+            String finishStack =
+                    TestUtils.getBytes(myGrpc, finishEvent.getEnergyEvent().getTraceId());
+            assertThat(finishStack).contains("Finish");
+        }
     }
 
     @Test
     public void testScheduleStartAndStopJob() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "scheduleStartAndStopJob");
-        assertThat(myAndroidDriver.waitForInput("JOB STOPPED")).isTrue();
+        final String methodName = "scheduleStartAndStopJob";
+        final String expectedResponse = "JOB STOPPED";
 
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 3);
+        List<Common.Event> energyEvents = new ArrayList<>();
+        if (myIsUnifiedPipeline) {
+            Map<Long, List<Common.Event>> eventGroups =
+                    myTransportWrapper.getEvents(
+                            3,
+                            event -> event.getKind() == Common.Event.Kind.ENERGY_EVENT,
+                            (unused) -> triggerMethod(methodName, expectedResponse));
+            for (List<Common.Event> eventList : eventGroups.values()) {
+                energyEvents.addAll(eventList);
+            }
+        } else {
+            triggerMethod(methodName, expectedResponse);
+            EnergyEventsResponse response =
+                    TestUtils.waitForAndReturn(
+                            () -> myEnergyWrapper.getAllEnergyEvents(mySession),
+                            resp -> resp.getEventsCount() == 3);
+            energyEvents.addAll(response.getEventsList());
+        }
         assertWithMessage(
                         "Actual events: (%s).",
-                        response.getEventsList()
+                        energyEvents
                                 .stream()
                                 .map(
                                         event ->
                                                 String.valueOf(
                                                         event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
-                .that(response.getEventsCount())
-                .isEqualTo(3);
+                .that(energyEvents)
+                .hasSize(3);
 
-        final Common.Event scheduleEvent = response.getEvents(0);
-        final Common.Event startEvent = response.getEvents(1);
+        final Common.Event scheduleEvent = energyEvents.get(0);
+        final Common.Event startEvent = energyEvents.get(1);
         assertThat(startEvent.getTimestamp()).isGreaterThan(0L);
         assertThat(startEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(startEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
@@ -198,7 +237,7 @@ public class JobTest {
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
 
-        final Common.Event stopEvent = response.getEvents(2);
+        final Common.Event stopEvent = energyEvents.get(2);
         assertThat(stopEvent.getTimestamp()).isAtLeast(startEvent.getTimestamp());
         assertThat(stopEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(stopEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
@@ -218,28 +257,47 @@ public class JobTest {
 
     @Test
     public void testMissingJobScheduled() throws Exception {
-        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "startWithoutScheduling");
-        assertThat(myAndroidDriver.waitForInput("JOB STARTED")).isTrue();
+        final String methodName = "startWithoutScheduling";
+        final String expectedResponse = "JOB STARTED";
 
-        EnergyEventsResponse response =
-                TestUtils.waitForAndReturn(
-                        () -> myStubWrapper.getAllEnergyEvents(mySession),
-                        resp -> resp.getEventsCount() == 1);
+        List<Common.Event> energyEvents = new ArrayList<>();
+        if (myIsUnifiedPipeline) {
+            Map<Long, List<Common.Event>> eventGroups =
+                    myTransportWrapper.getEvents(
+                            1,
+                            event -> event.getKind() == Common.Event.Kind.ENERGY_EVENT,
+                            (unused) -> triggerMethod(methodName, expectedResponse));
+            for (List<Common.Event> eventList : eventGroups.values()) {
+                energyEvents.addAll(eventList);
+            }
+        } else {
+            triggerMethod(methodName, expectedResponse);
+            EnergyEventsResponse response =
+                    TestUtils.waitForAndReturn(
+                            () -> myEnergyWrapper.getAllEnergyEvents(mySession),
+                            resp -> resp.getEventsCount() == 1);
+            energyEvents.addAll(response.getEventsList());
+        }
         assertWithMessage(
                         "Actual events: (%s).",
-                        response.getEventsList()
+                        energyEvents
                                 .stream()
                                 .map(
                                         event ->
                                                 String.valueOf(
                                                         event.getEnergyEvent().getMetadataCase()))
                                 .collect(Collectors.joining(", ")))
-                .that(response.getEventsCount())
-                .isEqualTo(1);
+                .that(energyEvents)
+                .hasSize(1);
 
-        final Common.Event startEvent = response.getEvents(0);
+        final Common.Event startEvent = energyEvents.get(0);
         assertThat(startEvent.getGroupId()).isGreaterThan(0L);
         assertThat(startEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.JOB_STARTED);
+    }
+
+    private void triggerMethod(String methodName, String expectedResponse) {
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, methodName);
+        assertThat(myAndroidDriver.waitForInput(expectedResponse)).isTrue();
     }
 }

@@ -26,14 +26,17 @@ using profiler::JStringWrapper;
 using profiler::Log;
 using profiler::SteadyClock;
 using profiler::proto::AddEnergyEventRequest;
+using profiler::proto::AgentService;
 using profiler::proto::AlarmSet;
 using profiler::proto::EmptyEnergyReply;
+using profiler::proto::EmptyResponse;
 using profiler::proto::Event;
 using profiler::proto::InternalEnergyService;
 using profiler::proto::JobInfo;
 using profiler::proto::JobParameters;
 using profiler::proto::JobScheduled;
 using profiler::proto::LocationRequest;
+using profiler::proto::SendEventRequest;
 using profiler::proto::WakeLockAcquired;
 using profiler::proto::WakeLockReleased;
 
@@ -113,19 +116,29 @@ const SteadyClock& GetClock() {
 void SubmitEnergyEvent(const Event& energy_event,
                        const std::string& stack = {}) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+    Agent::Instance().SubmitAgentTasks(
+        {[energy_event, stack](AgentService::Stub& stub, ClientContext& ctx) {
+          SendEventRequest request;
+          auto* event = request.mutable_event();
+          event->CopyFrom(energy_event);
+          event->set_kind(Event::ENERGY_EVENT);
+          // TODO(b/129355112): set call stack.
+
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
+  } else {
+    Agent::Instance().SubmitEnergyTasks(
+        {[energy_event, stack](InternalEnergyService::Stub& stub,
+                               ClientContext& ctx) {
+          AddEnergyEventRequest request;
+          request.mutable_energy_event()->CopyFrom(energy_event);
+          request.set_callstack(stack);
+
+          EmptyEnergyReply response;
+          return stub.AddEnergyEvent(&ctx, request, &response);
+        }});
   }
-
-  Agent::Instance().SubmitEnergyTasks(
-      {[energy_event, stack](InternalEnergyService::Stub& stub,
-                             ClientContext& ctx) {
-        AddEnergyEventRequest request;
-        request.mutable_energy_event()->CopyFrom(energy_event);
-        request.set_callstack(stack);
-
-        EmptyEnergyReply response;
-        return stub.AddEnergyEvent(&ctx, request, &response);
-      }});
 }
 
 AlarmSet::Type ParseAlarmType(jint type) {

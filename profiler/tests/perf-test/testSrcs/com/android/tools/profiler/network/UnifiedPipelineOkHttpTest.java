@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
+import com.android.tools.profiler.TransportStubWrapper;
 import com.android.tools.profiler.proto.Common.Event;
 import com.android.tools.profiler.proto.Network;
 import com.android.tools.profiler.proto.Transport.BytesRequest;
@@ -51,6 +52,7 @@ public class UnifiedPipelineOkHttpTest {
     @Rule public final PerfDriver myPerfDriver;
 
     private GrpcUtils myGrpc;
+    private TransportStubWrapper myTransportWrapper;
 
     public UnifiedPipelineOkHttpTest(int sdkLevel) {
         myPerfDriver = new PerfDriver(ACTIVITY_CLASS, sdkLevel, true);
@@ -59,20 +61,26 @@ public class UnifiedPipelineOkHttpTest {
     @Before
     public void setup() {
         myGrpc = myPerfDriver.getGrpc();
+        myTransportWrapper = new TransportStubWrapper(myGrpc.getTransportStub());
     }
 
     @Test
     public void testOkHttp3Get() throws Exception {
         final String okHttp3Get = "OKHTTP3GET";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp3Get",
-                        okHttp3Get,
-                        1);
-        assertThat(httpEventsMap.size()).isEqualTo(1);
+                myTransportWrapper.getEvents(
+                        5,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3Get");
+                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(okHttp3Get))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -112,14 +120,22 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp3Post() throws Exception {
         final String okHttp3Post = "OKHTTP3POST";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp3Post",
-                        okHttp3Post,
-                        1);
-        assertThat(httpEventsMap.size()).isEqualTo(1);
+                myTransportWrapper.getEvents(
+                        6,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3Post");
+                            assertThat(
+                                            myPerfDriver
+                                                    .getFakeAndroidDriver()
+                                                    .waitForInput(okHttp3Post))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -151,14 +167,19 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp2Get() throws Exception {
         final String okHttp2Get = "OKHTTP2GET";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp2Get",
-                        okHttp2Get,
-                        1);
-        assertThat(httpEventsMap.size()).isEqualTo(1);
+                myTransportWrapper.getEvents(
+                        5,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2Get");
+                            assertThat(myPerfDriver.getFakeAndroidDriver().waitForInput(okHttp2Get))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -198,14 +219,22 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp2Post() throws Exception {
         final String okHttp2Post = "OKHTTP2POST";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp2Post",
-                        okHttp2Post,
-                        1);
-        assertThat(httpEventsMap.size()).isEqualTo(1);
+                myTransportWrapper.getEvents(
+                        6,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2Post");
+                            assertThat(
+                                            myPerfDriver
+                                                    .getFakeAndroidDriver()
+                                                    .waitForInput(okHttp2Post))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(1);
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
                     .filter(e -> e.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION)
@@ -237,14 +266,22 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp2AndOkHttp3Get() throws Exception {
         String okhttp2AndOkHttp3Get = "OKHTTP2ANDOKHTTP3GET";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp2AndOkHttp3Get",
-                        okhttp2AndOkHttp3Get,
-                        2);
-        assertThat(httpEventsMap.size()).isEqualTo(2);
+                myTransportWrapper.getEvents(
+                        10,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2AndOkHttp3Get");
+                            assertThat(
+                                            myPerfDriver
+                                                    .getFakeAndroidDriver()
+                                                    .waitForInput(okhttp2AndOkHttp3Get))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(2);
         String urlQuery = "?method=" + okhttp2AndOkHttp3Get;
         for (List<Event> httpEvents : httpEventsMap.values()) {
             List<Event> httpConnectionEvents = httpEvents.stream()
@@ -263,14 +300,22 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp2GetAbortedByError() throws Exception {
         String okHttp2Error = "OKHTTP2ERROR";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp2GetAbortedByError",
-                        okHttp2Error,
-                        2);
-        assertThat(httpEventsMap.size()).isEqualTo(2);
+                myTransportWrapper.getEvents(
+                        8,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
+                            assertThat(
+                                            myPerfDriver
+                                                    .getFakeAndroidDriver()
+                                                    .waitForInput(okHttp2Error))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(2);
 
         Long[] connectionIds = new Long[2];
         httpEventsMap.keySet().toArray(connectionIds);
@@ -305,14 +350,22 @@ public class UnifiedPipelineOkHttpTest {
     public void testOkHttp3GetAbortedByError() throws Exception {
         String okHttp3Error = "OKHTTP3ERROR";
         Map<Long, List<Event>> httpEventsMap =
-                NetworkStubWrapper.getHttpEvents(
-                        myGrpc.getTransportStub(),
-                        myPerfDriver,
-                        ACTIVITY_CLASS,
-                        "runOkHttp3GetAbortedByError",
-                        okHttp3Error,
-                        2);
-        assertThat(httpEventsMap.size()).isEqualTo(2);
+                myTransportWrapper.getEvents(
+                        8,
+                        event ->
+                                event.getKind() == Event.Kind.NETWORK_HTTP_CONNECTION
+                                        || event.getKind() == Event.Kind.NETWORK_HTTP_THREAD,
+                        (unused) -> {
+                            myPerfDriver
+                                    .getFakeAndroidDriver()
+                                    .triggerMethod(ACTIVITY_CLASS, "runOkHttp3GetAbortedByError");
+                            assertThat(
+                                            myPerfDriver
+                                                    .getFakeAndroidDriver()
+                                                    .waitForInput(okHttp3Error))
+                                    .isTrue();
+                        });
+        assertThat(httpEventsMap).hasSize(2);
 
         Long[] connectionIds = new Long[2];
         httpEventsMap.keySet().toArray(connectionIds);
