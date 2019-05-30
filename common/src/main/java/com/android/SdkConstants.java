@@ -414,6 +414,8 @@ public final class SdkConstants {
     public static final String FD_PKG_SOURCES = "sources"; //$NON-NLS-1$
     /** Name of the SDK tools folder. */
     public static final String FD_TOOLS = "tools"; //$NON-NLS-1$
+    /** Name of the SDK command-line tools folder. */
+    public static final String FD_CMDLINE_TOOLS = "cmdline-tools";
     /** Name of the SDK emulator folder. */
     public static final String FD_EMULATOR = "emulator"; //$NON-NLS-1$
     /** Name of the SDK tools/support folder. */
