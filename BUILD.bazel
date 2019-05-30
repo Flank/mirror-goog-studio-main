@@ -362,9 +362,6 @@ coverage_report(
         "//tools/adt/idea/whats-new-assistant:whats-new-assistant-test",
         "//tools/adt/idea/wizard:intellij.android.wizard",
         "//tools/adt/idea/wizard-model:intellij.android.wizard.model",
-        # java_library
-        "//tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/ng/nosyncbuilder/proto:nosyncbuilder-jarjar-lib",
-        "//tools/adt/idea/android/src/com/android/tools/idea/gradle/project/sync/ng/nosyncbuilder/proto:nosyncbuilder_java_proto",
     ],
     tags = ["no_windows"],
 )
