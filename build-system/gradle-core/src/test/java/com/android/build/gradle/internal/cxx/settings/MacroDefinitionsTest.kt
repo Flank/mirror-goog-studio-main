@@ -16,6 +16,11 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
+import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
 import com.google.common.truth.Truth
 import org.junit.Test
 
@@ -40,6 +45,59 @@ class MacroDefinitionsTest {
         Macro.values().forEach { macro->
             Truth.assertThat(macro.description)
                 .doesNotContain("\\")
+        }
+    }
+
+    @Test
+    fun `ensure examples are accurate`() {
+        BasicCmakeMock().let {
+            // Walk all vals in the model and invoke them
+            val module = tryCreateCxxModuleModel(
+                it.global, it.cmakeFinder
+            )!!
+            val variant = createCxxVariantModel(
+                module,
+                it.baseVariantData
+            )
+            val abi = createCxxAbiModel(
+                variant,
+                Abi.X86_64,
+                it.global,
+                it.baseVariantData
+            )
+            Macro.values()
+                .toList()
+                .sortedBy { macro -> macro.qualifiedName }
+                .forEach { macro ->
+                    val resolved = abi.resolveMacroValue(macro)
+
+                    // Every macro must be resolvable
+                    Truth.assertThat(resolved).isNotEmpty()
+
+                    // Example string, when expanded, must equal the true value from the model
+                    val example = StringBuilder()
+                    tokenizeMacroString(macro.example) { token ->
+                        when (token) {
+                            is Token.LiteralToken -> {
+                                val expanded = token.literal
+                                    .replace("\$HOME", it.home.path)
+                                    .replace("\$PROJECTS", it.projects.path)
+                                example.append(expanded)
+                            }
+                            is Token.MacroToken -> {
+                                val tokenMacro = Macro.lookup(token.macro)
+                                Truth.assertThat(tokenMacro)
+                                    .named("${token.macro} in ${macro.example}")
+                                    .isNotNull()
+                                example.append(abi.resolveMacroValue(tokenMacro!!))
+                            }
+                        }
+                    }
+
+                    Truth.assertThat(resolved.replace('\\', '/').replace(".exe", ""))
+                        .named(macro.ref)
+                        .isEqualTo(example.toString().replace('\\', '/').replace(".exe", ""))
+                }
         }
     }
 }

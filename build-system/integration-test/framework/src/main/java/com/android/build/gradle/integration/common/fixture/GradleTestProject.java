@@ -910,6 +910,7 @@ public final class GradleTestProject implements TestRule {
         ApkType RELEASE = of("release", false);
         ApkType RELEASE_SIGNED = of("release", true);
         ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
+        ApkType MIN_SIZE_REL = of("minSizeRel", false);
 
         @NonNull
         String getBuildType();
