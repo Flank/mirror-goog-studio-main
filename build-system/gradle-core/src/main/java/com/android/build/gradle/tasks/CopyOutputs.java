@@ -148,12 +148,7 @@ public abstract class CopyOutputs extends NonIncrementalTask {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             CopyOutputs::getDestinationDir,
-                            getVariantScope()
-                                    .getGlobalScope()
-                                    .getProject()
-                                    .getLayout()
-                                    .getBuildDirectory()
-                                    .dir(destinationDir.getAbsolutePath()),
+                            destinationDir.getAbsolutePath(),
                             "");
         }
 

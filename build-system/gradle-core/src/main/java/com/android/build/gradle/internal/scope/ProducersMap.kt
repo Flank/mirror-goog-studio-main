@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Map of all the producers registered in this context.
  *
  * @param buildDirectory the project buildDirectory [DirectoryProperty]
- * @param identifier a function to uniquely indentify this context when creating files and folders.
+ * @param identifier a function to uniquely identify this context when creating files and folders.
  */
 class ProducersMap<T: FileSystemLocation>(
     val objectFactory: ObjectFactory,
@@ -55,22 +55,20 @@ class ProducersMap<T: FileSystemLocation>(
      * [ArtifactType]
      *
      * @param artifactType the artifact type for looked up producers.
-     * @param buildDirectory intended location for the artifact or not provided if using the default.
+     * @param buildLocation intended location for the artifact or not provided if using the default.
      * @return a [Producers] instance for that [ArtifactType]
      */
-    internal fun getProducers(artifactType: ArtifactType, buildDirectory: Provider<Directory> = this.buildDirectory): Producers<T> {
+    internal fun getProducers(artifactType: ArtifactType, buildLocation: String? = null): Producers<T> {
 
         val outputLocationResolver: (Producers<T>, Producer<T>) -> Provider<T> =
-            if (buildDirectory != this.buildDirectory) {
-                { _, producer -> producer.resolve(buildDirectory.get().asFile) }
+            if (buildLocation != null) {
+                { _, producer -> producer.resolve(buildDirectory.dir(buildLocation).get().asFile) }
             } else {
                 { producers, producer ->
-                    val outputLocation = FileUtils.join(
-                        artifactType.getOutputDir(buildDirectory.get().asFile),
+                    val outputLocation = artifactType.getOutputDirectory(
+                        buildDirectory,
                         identifier(),
-                        if (producers.hasMultipleProducers()) producer.taskName else ""
-                    )
-
+                        if (producers.hasMultipleProducers()) producer.taskName else "")
                     producer.resolve(outputLocation) }
             }
 
@@ -78,7 +76,6 @@ class ProducersMap<T: FileSystemLocation>(
             Producers(
                 artifactType,
                 identifier,
-                buildDirectory,
                 outputLocationResolver,
                 when (artifactType.kind()) {
                     ArtifactType.Kind.DIRECTORY -> this.buildDirectory.dir("__EMPTY_DIR__$artifactType")
@@ -104,7 +101,7 @@ class ProducersMap<T: FileSystemLocation>(
      * under.
      */
     fun republish(from: ArtifactType, to: ArtifactType) {
-        producersMap[to] = getProducers(from, buildDirectory)
+        producersMap[to] = getProducers(from)
     }
 
     /**
@@ -124,7 +121,6 @@ class ProducersMap<T: FileSystemLocation>(
     class Producers<T : FileSystemLocation>(
         val artifactType: ArtifactType,
         val identifier: () -> String,
-        val buildDirectory: Provider<Directory>,
         val resolver: (Producers<T>, Producer<T>) -> Provider<T>,
         private val emptyProvider: Provider<T>,
         private val listProperty: ListProperty<T>,

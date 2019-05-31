@@ -134,11 +134,7 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             BundleInstantApp::getBundleDirectory,
-                            scope.getGlobalScope()
-                                    .getProject()
-                                    .getLayout()
-                                    .getBuildDirectory()
-                                    .dir(bundleDirectory.getAbsolutePath()),
+                            bundleDirectory.getAbsolutePath(),
                             "");
         }
 

@@ -884,13 +884,9 @@ public abstract class TaskManager {
                         BuildArtifactsHolder.OperationType.INITIAL,
                         mergeResourcesTask,
                         MergeResources::getOutputDir,
-                        project.getLayout()
-                                .getBuildDirectory()
-                                .dir(
-                                        MoreObjects.firstNonNull(
-                                                        outputLocation,
-                                                        scope.getDefaultMergeResourcesOutputDir())
-                                                .getAbsolutePath()),
+                        MoreObjects.firstNonNull(
+                                        outputLocation, scope.getDefaultMergeResourcesOutputDir())
+                                .getAbsolutePath(),
                         "");
 
         if (alsoOutputNotCompiledResources) {
@@ -900,9 +896,7 @@ public abstract class TaskManager {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             mergeResourcesTask,
                             MergeResources::getMergedNotCompiledResourcesOutputDirectory,
-                            project.getLayout()
-                                    .getBuildDirectory()
-                                    .dir(mergedNotCompiledDir.getAbsolutePath()),
+                            mergedNotCompiledDir.getAbsolutePath(),
                             "");
         }
 

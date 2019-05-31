@@ -59,8 +59,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
                 BundleAar::getDestinationDirectory,
-                variantScope.globalScope.project.layout.buildDirectory.dir(
-                    variantScope.aarLocation.absolutePath),
+                variantScope.aarLocation.absolutePath,
                 "")
         }
 

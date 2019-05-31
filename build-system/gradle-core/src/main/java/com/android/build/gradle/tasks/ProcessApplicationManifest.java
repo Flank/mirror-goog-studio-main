@@ -631,18 +631,10 @@ public abstract class ProcessApplicationManifest extends ManifestProcessorTask {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             ProcessApplicationManifest::getReportFile,
-                            getVariantScope()
-                                    .getGlobalScope()
-                                    .getProject()
-                                    .getLayout()
-                                    .getBuildDirectory()
-                                    .dir(
-                                            FileUtils.join(
-                                                            getVariantScope()
-                                                                    .getGlobalScope()
-                                                                    .getOutputsDir(),
-                                                            "logs")
-                                                    .getAbsolutePath()),
+                            FileUtils.join(
+                                            getVariantScope().getGlobalScope().getOutputsDir(),
+                                            "logs")
+                                    .getAbsolutePath(),
                             "manifest-merger-"
                                     + getVariantScope().getVariantConfiguration().getBaseName()
                                     + "-report.txt");

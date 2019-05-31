@@ -145,11 +145,10 @@ abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExec
                     BuildArtifactsHolder.OperationType.INITIAL,
                     taskProvider,
                     FinalizeBundleTask::finalBundleFile,
-                    variantScope.globalScope.project.layout.buildDirectory.dir(
-                        FileUtils.join(
-                            variantScope.globalScope.project.file(apkLocationOverride),
-                            variantScope.variantConfiguration.dirName).absolutePath
-                    ),
+                    FileUtils.join(
+                        variantScope.globalScope.project.file(apkLocationOverride),
+                        variantScope.variantConfiguration.dirName).absolutePath
+                    ,
                     bundleName
                 )
             }

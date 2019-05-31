@@ -140,12 +140,7 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             PackageApplication::getOutputDirectory,
-                            getVariantScope()
-                                    .getGlobalScope()
-                                    .getProject()
-                                    .getLayout()
-                                    .getBuildDirectory()
-                                    .dir(outputDirectory.getAbsolutePath()),
+                            outputDirectory.getAbsolutePath(),
                             "");
         }
 

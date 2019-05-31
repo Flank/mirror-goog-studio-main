@@ -108,7 +108,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             BuildArtifactsHolder.OperationType.INITIAL,
             task1Provider,
             RegularFileProducerTask::output,
-            project.layout.buildDirectory.dir("set_location"),
+            "set_location",
             "initialFile"
         )
 
@@ -132,7 +132,7 @@ class NonParameterizedBuildArtifactsHolderTest {
             BuildArtifactsHolder.OperationType.INITIAL,
             task1Provider,
             DirectoryProducerTask::output,
-            buildDirectory= project.layout.buildDirectory.dir("set_location")
+            buildDirectory= "set_location"
         )
 
         val finalVersion = newHolder.getFinalProduct<FileSystemLocation>(InternalArtifactType.MERGED_MANIFESTS)
