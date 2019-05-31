@@ -368,8 +368,9 @@ public class LintGradleExecution {
                 AndroidProject project =
                         (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
 
+                // Sync issues are not used in lint.
                 return new IdeAndroidProjectImpl(
-                        project, new IdeDependenciesFactory(), project.getVariants());
+                        project, new IdeDependenciesFactory(), project.getVariants(), null);
             } finally {
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
                 ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);

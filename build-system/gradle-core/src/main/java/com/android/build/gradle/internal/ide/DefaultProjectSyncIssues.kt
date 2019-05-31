@@ -18,9 +18,10 @@ package com.android.build.gradle.internal.ide
 
 import com.android.builder.model.ProjectSyncIssues
 import com.android.builder.model.SyncIssue
+import java.io.Serializable
 
 data class DefaultProjectSyncIssues(
-    private val issues: Collection<SyncIssue>) : ProjectSyncIssues {
+    private val issues: Collection<SyncIssue>) : ProjectSyncIssues, Serializable {
 
     companion object {
         // Increase the value when adding/removing fields or when changing the

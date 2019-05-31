@@ -372,24 +372,6 @@ public class ModelBuilder<Extension extends AndroidConfig>
         ViewBindingOptions viewBindingOptions =
                 ViewBindingOptionsImpl.create(extension.getViewBinding());
 
-        // For modules that have C/C++, construct the JSON generators to get sync errors.
-        // This doesn't do the slow work of actually generating the JSON.
-        for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            if (!variantScope.getVariantData().getType().isTestComponent()) {
-                if (shouldBuildVariant) {
-                    Provider<ExternalNativeJsonGenerator> provider =
-                            variantScope.getTaskContainer().getExternalNativeJsonGenerator();
-                    if (provider != null) {
-                        // This path will only execute if the module has native code.
-                        // It will cause ExternalNativeJsonGenerator#create to be invoked.
-                        // This function does work, like trying to located the NDK, that
-                        // can trigger sync messages.
-                        provider.get().build(false);
-                    }
-                }
-            }
-        }
-
         syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
         List<String> flavorDimensionList =

@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.nativebuild
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.builder.model.NativeAndroidProject
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -64,6 +65,18 @@ class UnresolveableNdkVersionTest {
     }
 
     @Test
+    fun testAndroidProjectModelHasNoNativeSyncIssues() {
+        // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // The point of this test is to ensure that a sync error from C/C++ will get
+        // reported to Android Studio. Don't make any change that would trigger this in a
+        // way that's different from Android Studio just to get this test to pass.
+        project.model().fetchAndroidProjects() // This will fail if there are sync issues present.
+        // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
+
+    @Test
     fun testAndroidProjectModelHasNativeSyncIssues() {
         // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // Caution !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -71,7 +84,7 @@ class UnresolveableNdkVersionTest {
         // reported to Android Studio. Don't make any change that would trigger this in a
         // way that's different from Android Studio just to get this test to pass.
         try {
-            project.model().fetchAndroidProjectsAllowSyncIssues().onlyModel
+            project.model().fetchContainer(NativeAndroidProject::class.java).onlyModel
             throw RuntimeException("Expected BuildActionFailureException")
         } catch (e1: BuildActionFailureException) {
             val message = e1.cause!!.message
