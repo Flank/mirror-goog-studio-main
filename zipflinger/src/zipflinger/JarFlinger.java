@@ -92,19 +92,20 @@ public class JarFlinger implements JarCreator {
         ImmutableSortedMap<String, Path> sortedFiles = candidateFiles.build();
         for (Map.Entry<String, Path> entry : sortedFiles.entrySet()) {
             String entryPath = entry.getKey();
-            try (InputStream is = new BufferedInputStream(Files.newInputStream(entry.getValue()))) {
                 if (transformer != null) {
+                try (InputStream is =
+                        new BufferedInputStream(Files.newInputStream(entry.getValue()))) {
                     @Nullable InputStream is2 = transformer.filter(entryPath, is);
                     if (is2 != null) {
                         InputStreamSource source = new InputStreamSource(is2, entryPath, compress);
                         zipArchive.add(source);
                     }
+                }
                 } else {
                     FileSource source =
                             new FileSource(entry.getValue().toFile(), entryPath, compress);
                     zipArchive.add(source);
                 }
-            }
         }
     }
 

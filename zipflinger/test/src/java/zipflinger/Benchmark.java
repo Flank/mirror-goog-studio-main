@@ -23,5 +23,6 @@ public class Benchmark {
         BenchmarkAdd.run();
         BenchmarkList.run();
         BenchmarkJarMerge.run();
+        BenchmarkFolderMerge.run();
     }
 }
