@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.aapt
 
+import com.android.SdkConstants.DOT_9PNG
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.namespaced.Aapt2ServiceKey
 import com.android.build.gradle.options.SyncOptions
@@ -48,10 +49,23 @@ class WorkerExecutorResourceCompilationService(
                 Aapt2RenamingConventions.compilationRename(request.inputFile))
     }
 
+    private fun getExtension(file: File): String {
+        // kotlin File.extension returns png for 9.png files
+        if (file.name.endsWith(DOT_9PNG)) {
+            return DOT_9PNG
+        }
+        return file.extension
+    }
+
     override fun close() {
         if (requests.isEmpty()) {
             return
         }
+        // Sort the resource files by extension and directory name for a better distribution of
+        // files between workers, as files of the same type will be distributed equally between
+        // the workers and as the parent folder indicates how large the file is, large files
+        // of the same type will also be distributed equally between the workers.
+        requests.sortWith(compareBy({getExtension(it.inputFile)}, {it.inputDirectoryName}))
         val buckets = minOf(requests.size, 8) // Max 8 buckets
 
         for (bucket in 0 until buckets) {
