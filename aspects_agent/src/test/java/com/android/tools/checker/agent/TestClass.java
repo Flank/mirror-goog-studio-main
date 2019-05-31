@@ -2,6 +2,7 @@ package com.android.tools.checker.agent;
 
 import com.android.tools.checker.AnotherTestAnnotation;
 import com.android.tools.checker.BlockingTest;
+import com.android.tools.checker.ConflictingAnnotation;
 
 @AnotherTestAnnotation
 public class TestClass {
@@ -31,4 +32,7 @@ public class TestClass {
 
     @BlockingTest
     public void blockingMethod2() {}
+
+    @ConflictingAnnotation
+    public void conflictingMethod() {}
 }

@@ -1,0 +1,19 @@
+{
+  "annotations":[
+    {
+      "name":"@com.android.tools.checker.AnotherTestAnnotation",
+      "aspect":"#warn3",
+      "group":"threading"
+    },
+    {
+      "name":"@com.android.tools.checker.ConflictingAnnotation",
+      "aspect":"#warn4",
+      "group":"threading"
+    },
+    {
+      "name":"@annotations.wow.Wow",
+      "aspect":"something.else#fail",
+      "group":"random"
+    }
+  ]
+}

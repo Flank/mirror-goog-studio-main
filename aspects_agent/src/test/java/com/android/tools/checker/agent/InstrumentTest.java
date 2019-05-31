@@ -2,6 +2,7 @@ package com.android.tools.checker.agent;
 
 import static com.android.tools.checker.agent.AgentTestUtils.callMethod;
 import static com.android.tools.checker.agent.AgentTestUtils.loadAndTransform;
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.fail;
 
@@ -19,7 +20,7 @@ public class InstrumentTest {
     @Test
     public void testInstance()
             throws IOException, IllegalAccessException, InstantiationException,
-                    NoSuchMethodException {
+                    NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -59,7 +60,7 @@ public class InstrumentTest {
     @Test
     public void testSimplifiedName()
             throws IOException, IllegalAccessException, InstantiationException,
-                    NoSuchMethodException {
+                    NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -75,7 +76,7 @@ public class InstrumentTest {
     @Test
     public void testMethodAnnotations()
             throws IOException, IllegalAccessException, InstantiationException,
-                    NoSuchMethodException {
+                    NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -91,7 +92,7 @@ public class InstrumentTest {
     @Test
     public void testClassAnnotations()
             throws IOException, IllegalAccessException, InstantiationException,
-                    NoSuchMethodException {
+                    NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -110,15 +111,47 @@ public class InstrumentTest {
         assertEquals(3, TestAssertions.count);
         callMethod(instance, "staticMethodNop");
         assertEquals(4, TestAssertions.count);
-        // Blocking method is annotated with both @AnotherTestAnnotation (from the class) and
+        // blockingMethod is annotated with both @AnotherTestAnnotation (from the class) and
         // @BlockingTest (from the method itself), so we intercept it twice.
         callMethod(instance, "blockingMethod");
         assertEquals(6, TestAssertions.count);
     }
 
     @Test
+    public void testConflictingAnnotations()
+            throws NoSuchMethodException, IllegalAccessException, IOException,
+                    InstantiationException, RulesFileException {
+        Set<String> notFound = new HashSet<>();
+        ImmutableMap<String, String> matcher =
+                ImmutableMap.of(
+                        "@com.android.tools.checker.AnotherTestAnnotation",
+                        "com.android.tools.checker.TestAssertions#count",
+                        "@com.android.tools.checker.BlockingTest",
+                        "com.android.tools.checker.TestAssertions#count",
+                        "@com.android.tools.checker.ConflictingAnnotation",
+                        "com.android.tools.checker.TestAssertions#count");
+        Object instance =
+                loadAndTransform("Test2", matcher, notFound::add, "group_threading.json")
+                        .newInstance();
+        TestAssertions.count = 0;
+        assertEquals(0, TestAssertions.count);
+        callMethod(instance, "staticMethodNop");
+        // staticMethodNop is intercepted because of @AnotherTestAnnotation (class-level)
+        assertEquals(1, TestAssertions.count);
+        // blockingMethod is intercepted twice: @AnotherTestAnnotation (class-level) and
+        // @BlockingTest (method-level).
+        callMethod(instance, "blockingMethod");
+        assertEquals(3, TestAssertions.count);
+        callMethod(instance, "conflictingMethod");
+        // conflictingMethod is intercepted only once by @ConflictingAnnotation (method-level)
+        // because it conflicts with the class-level annotation @AnotherTestAnnotation, which does
+        // not get to intercept the method.
+        assertEquals(4, TestAssertions.count);
+    }
+
+    @Test
     public void testStaticMethod()
-            throws IOException, IllegalAccessException, NoSuchMethodException {
+            throws IOException, IllegalAccessException, NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(

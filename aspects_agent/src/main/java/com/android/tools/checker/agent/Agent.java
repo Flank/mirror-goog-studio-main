@@ -62,7 +62,10 @@ public class Agent {
         Aspects aspects = new Aspects(aspectsMap);
         aspectsMap.forEach(
                 (key, value) -> LOGGER.fine(String.format("Rule added %s=%s", key, value)));
-        inst.addTransformer(new Transform(aspects), inst.isRetransformClassesSupported());
+        Transform transform =
+                new Transform(
+                        aspects, new AnnotationConflictsManager(rulesFile.getAnnotationGroups()));
+        inst.addTransformer(transform, inst.isRetransformClassesSupported());
 
         if (!Baseline.getInstance().isGeneratingBaseline()) {
             Baseline.getInstance()

@@ -16,17 +16,20 @@ public class InstrumentClassVisitor extends ClassVisitor {
     private final Set<Type> classAnnotations = new HashSet<>();
     private final String className;
     private final Consumer<String> notFoundCallback;
+    private final AnnotationConflictsManager annotationConflictsManager;
 
     InstrumentClassVisitor(
             @NonNull ClassVisitor classVisitor,
             @NonNull String className,
             @NonNull Function<String, String> methodAspects,
-            @NonNull Consumer<String> notFoundCallback) {
+            @NonNull Consumer<String> notFoundCallback,
+            @NonNull AnnotationConflictsManager annotationConflictsManager) {
         super(Opcodes.ASM5, classVisitor);
 
         this.className = className;
         this.methodAspects = methodAspects;
         this.notFoundCallback = notFoundCallback;
+        this.annotationConflictsManager = annotationConflictsManager;
     }
 
     @Override
@@ -45,6 +48,7 @@ public class InstrumentClassVisitor extends ClassVisitor {
                 access,
                 name,
                 desc,
+                annotationConflictsManager,
                 classAnnotations,
                 className,
                 methodAspects,

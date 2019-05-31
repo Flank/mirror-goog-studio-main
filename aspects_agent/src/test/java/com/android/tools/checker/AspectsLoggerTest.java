@@ -18,6 +18,7 @@ package com.android.tools.checker;
 
 import static com.android.tools.checker.agent.AgentTestUtils.callMethod;
 import static com.android.tools.checker.agent.AgentTestUtils.loadAndTransform;
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +38,7 @@ public class AspectsLoggerTest {
     @Test
     public void exceptionThrownWhenMethodCalledFromWrongThread()
             throws IOException, IllegalAccessException, InstantiationException,
-                    NoSuchMethodException {
+                    NoSuchMethodException, RulesFileException {
         File log = File.createTempFile("log", ".txt");
 
         Set<String> notFound = new HashSet<>();

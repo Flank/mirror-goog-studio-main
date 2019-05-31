@@ -16,13 +16,19 @@
 
 package com.android.tools.checker.agent;
 
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
+
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -94,7 +100,16 @@ public class AgentTestUtils {
             String className,
             ImmutableMap<String, String> matcher,
             Consumer<String> notFoundCallback)
-            throws IOException {
+            throws IOException, RulesFileException {
+        return loadAndTransform(className, matcher, notFoundCallback, null);
+    }
+
+    public static Class<?> loadAndTransform(
+            String className,
+            ImmutableMap<String, String> matcher,
+            Consumer<String> notFoundCallback,
+            String rulesFile)
+            throws IOException, RulesFileException {
         String binaryTestClassName = TestClass.class.getCanonicalName().replace('.', '/');
         byte[] classInput =
                 ByteStreams.toByteArray(
@@ -102,8 +117,25 @@ public class AgentTestUtils {
                                 InstrumentTest.class
                                         .getClassLoader()
                                         .getResourceAsStream(binaryTestClassName + ".class")));
+
+        Map<String, String> aspects = Collections.emptyMap();
+        Map<String, String> annotationGroups = Collections.emptyMap();
+        if (rulesFile != null) {
+            String testData = "tools/base/aspects_agent/testData/conflicts/";
+            RulesFile rules =
+                    new RulesFile(
+                            TestUtils.getWorkspaceFile(testData + rulesFile).getAbsolutePath());
+            rules.parseRulesFile(Function.identity(), Function.identity());
+            aspects = rules.getAspects();
+            annotationGroups = rules.getAnnotationGroups();
+        }
+
+        Transform transform =
+                new Transform(
+                        new Aspects(aspects), new AnnotationConflictsManager(annotationGroups));
+
         byte[] newClass =
-                Transform.transformClass(
+                transform.transformClass(
                         classInput,
                         TestClass.class.getCanonicalName(),
                         matcher::get,

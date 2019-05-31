@@ -20,7 +20,9 @@ public class InterceptVisitor extends AdviceAdapter {
     private final String name;
     private final String desc;
     private final Consumer<String> notFoundCallback;
+    private final Set<Type> classAnnotations;
     private final HashSet<Type> visitedAnnotations = new HashSet<>();
+    private final AnnotationConflictsManager annotationConflictsManager;
 
     /**
      * Creates a new {@link InterceptVisitor}. The intercept visitor will analyze the method an
@@ -30,6 +32,7 @@ public class InterceptVisitor extends AdviceAdapter {
      * @param access The method access flags.
      * @param name The method name.
      * @param desc The method type descriptor.
+     * @param annotationConflictsManager Resolves conflicts between method and class annotations.
      * @param classAnnotations The annotations of the class containing the method.
      * @param className The class name of the method container.
      * @param aspects {@link Function} to locate aspects.
@@ -40,6 +43,7 @@ public class InterceptVisitor extends AdviceAdapter {
             int access,
             @NonNull String name,
             @NonNull String desc,
+            @NonNull AnnotationConflictsManager annotationConflictsManager,
             @NonNull Set<Type> classAnnotations,
             @NonNull String className,
             @NonNull Function<String, String> aspects,
@@ -48,10 +52,11 @@ public class InterceptVisitor extends AdviceAdapter {
 
         this.name = name;
         this.desc = desc;
+        this.annotationConflictsManager = annotationConflictsManager;
+        this.classAnnotations = classAnnotations;
         this.className = className;
         this.aspects = aspects;
         this.notFoundCallback = notFoundCallback;
-        this.visitedAnnotations.addAll(classAnnotations);
     }
 
     @Override
@@ -96,8 +101,20 @@ public class InterceptVisitor extends AdviceAdapter {
             generateStaticCall(methodAspect);
             LOGGER.fine("Method Aspect found " + key);
         }
+        handleMethodAnnotations();
+    }
 
-        // If either the method or class has any annotations, check if there are any aspects defined
+    /**
+     * If either the method or class has any annotations, check if there are any aspects defined. If
+     * any of the class annotations conflicts with a method annotation, the latter takes precedence.
+     */
+    private void handleMethodAnnotations() {
+        // Add the class annotations to the method as long as they don't conflict with any
+        // annotations of the method, which should take precedence.
+        visitedAnnotations.addAll(
+                annotationConflictsManager.getNonConflictingClassAnnotations(
+                        visitedAnnotations, classAnnotations));
+        // Check whether we have aspects defined for this method.
         if (!visitedAnnotations.isEmpty()) {
             visitedAnnotations
                     .stream()

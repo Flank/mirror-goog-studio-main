@@ -21,7 +21,7 @@ import java.util.function.Function;
  * <p>2) {@link #annotationGroups}: maps the annotations specified in the rules file to its group
  * name.
  */
-class RulesFile {
+public class RulesFile {
 
     @NonNull private final String filePath;
 
@@ -95,9 +95,9 @@ class RulesFile {
         return annotationGroups;
     }
 
-    static class RulesFileException extends Exception {
+    public static class RulesFileException extends Exception {
 
-        private static String BASE_MSG = "Error while reading the aspects agent rules file: ";
+        private static final String BASE_MSG = "Error while reading the aspects agent rules file: ";
 
         public RulesFileException(String msg) {
             super(BASE_MSG + msg);

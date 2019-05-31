@@ -39,6 +39,7 @@ public class TransformTest {
         String[] expectedAnnotations =
                 new String[] {
                     "com.android.tools.checker.AnotherTestAnnotation",
+                    "com.android.tools.checker.ConflictingAnnotation",
                     "com.android.tools.checker.BlockingTest"
                 };
         assertArrayEquals(expectedAnnotations, annotations);

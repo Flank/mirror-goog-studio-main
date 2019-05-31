@@ -19,6 +19,7 @@ package com.android.tools.checker;
 import static com.android.tools.checker.agent.AgentTestUtils.callMethod;
 import static com.android.tools.checker.agent.AgentTestUtils.loadAndTransform;
 import static com.android.tools.checker.agent.AgentTestUtils.stackTraceBuilder;
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 
@@ -34,7 +35,7 @@ public class AssertionsTest {
 
     @Test
     public void exceptionThrownWhenMethodCalledFromWrongThread()
-            throws IOException, IllegalAccessException, InstantiationException {
+            throws IOException, IllegalAccessException, InstantiationException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -53,7 +54,7 @@ public class AssertionsTest {
 
     @Test
     public void methodInBaselineSkipsExceptionThrow()
-            throws IOException, IllegalAccessException, InstantiationException {
+            throws IOException, IllegalAccessException, InstantiationException, RulesFileException {
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =
                 ImmutableMap.of(
@@ -72,7 +73,7 @@ public class AssertionsTest {
 
     @Test
     public void exceptionNotThrownWhenGeneratingBaseline()
-            throws IOException, IllegalAccessException, InstantiationException {
+            throws IOException, IllegalAccessException, InstantiationException, RulesFileException {
         System.setProperty("aspects.baseline.export.path", "/any/path");
         Set<String> notFound = new HashSet<>();
         ImmutableMap<String, String> matcher =

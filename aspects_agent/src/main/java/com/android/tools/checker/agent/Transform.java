@@ -43,12 +43,16 @@ class Transform implements ClassFileTransformer {
             key -> LOGGER.fine(key + " not found");
 
     private final Aspects aspects;
+    private final AnnotationConflictsManager annotationConflictsManager;
 
-    Transform(@NonNull Aspects aspects) {
+    Transform(
+            @NonNull Aspects aspects,
+            @NonNull AnnotationConflictsManager annotationConflictsManager) {
         this.aspects = aspects;
+        this.annotationConflictsManager = annotationConflictsManager;
     }
 
-    static byte[] transformClass(
+    byte[] transformClass(
             byte[] input,
             @NonNull String className,
             @NonNull Function<String, String> aspects,
@@ -56,7 +60,12 @@ class Transform implements ClassFileTransformer {
         try {
             ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             ClassVisitor visitor =
-                    new InstrumentClassVisitor(writer, className, aspects, notMatchedCallback);
+                    new InstrumentClassVisitor(
+                            writer,
+                            className,
+                            aspects,
+                            notMatchedCallback,
+                            annotationConflictsManager);
             ClassReader reader = new ClassReader(input);
             reader.accept(visitor, ClassReader.EXPAND_FRAMES);
             return writer.toByteArray();
