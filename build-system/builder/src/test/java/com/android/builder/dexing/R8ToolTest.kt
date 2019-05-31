@@ -18,6 +18,7 @@ package com.android.builder.dexing
 
 import com.android.builder.core.NoOpMessageReceiver
 import com.android.ide.common.blame.MessageReceiver
+import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.MoreTruth.assertThatDex
@@ -317,6 +318,34 @@ class R8ToolTest {
             assertThat(messages.single()).contains("wrongRuleExample")
             assertThat(toolNameTags).containsExactly("R8")
         }
+    }
+
+    @Test
+    fun testMultiReleaseFromDir() {
+        val proguardConfig = ProguardConfig(listOf(), null, null, listOf())
+        val mainDexConfig = MainDexListConfig(listOf(), listOf())
+        val toolConfig = ToolConfig(
+            minSdkVersion = 21,
+            isDebuggable = true,
+            disableTreeShaking = true,
+            disableDesugaring = true,
+            disableMinification = true,
+            r8OutputType = R8OutputType.DEX
+        )
+
+        val classes = tmp.newFolder().toPath()
+        TestInputsGenerator.dirWithEmptyClasses(classes, listOf("test/A", "test/B"))
+        classes.resolve("META-INF/versions/9/test/C.class").also {
+            it.parent.toFile().mkdirs()
+            it.toFile().writeText("malformed class file")
+        }
+
+        val output = tmp.newFolder().toPath()
+        val javaRes = tmp.root.resolve("res.jar").toPath()
+        runR8(listOf(classes), output, listOf(), javaRes, bootClasspath, toolConfig, proguardConfig, mainDexConfig, NoOpMessageReceiver())
+
+        assertThatDex(output.resolve("classes.dex").toFile())
+            .containsExactlyClassesIn(listOf("Ltest/A;", "Ltest/B;"))
     }
 
     private fun getDexFileCount(dir: Path): Long =
