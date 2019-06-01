@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_ASSETS
 import com.android.SdkConstants.FD_DEX
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
@@ -29,6 +31,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NAT
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
+import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import zipflinger.JarCreator
@@ -102,9 +105,14 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
     val fileName: String
         get() = fileNameSupplier.get()
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
+
     public override fun doTaskAction() {
         FileUtils.cleanOutputDir(outputDir.get().asFile)
-        val jarMerger = JarMerger(File(outputDir.get().asFile, fileName).toPath())
+        val jarMerger =
+            JarCreatorFactory.make(File(outputDir.get().asFile, fileName).toPath(), jarCreatorType)
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
@@ -143,7 +151,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
     }
 
     private fun addHybridFolder(
-        jarMerger: JarMerger,
+        jarCreator: JarCreator,
         files: Iterable<File>,
         relocator: JarCreator.Relocator? = null,
         fileFilter: Predicate<String>? = null ) {
@@ -153,16 +161,16 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
         for (file in files) {
             if (file.isFile) {
                 if (file.name.endsWith(SdkConstants.DOT_JAR)) {
-                    jarMerger.addJar(file.toPath(), fileFilter, relocator)
+                    jarCreator.addJar(file.toPath(), fileFilter, relocator)
                 } else if (fileFilter == null || fileFilter.test(file.name)) {
                     if (relocator != null) {
-                        jarMerger.addFile(relocator.relocate(file.name), file.toPath())
+                        jarCreator.addFile(relocator.relocate(file.name), file.toPath())
                     } else {
-                        jarMerger.addFile(file.name, file.toPath())
+                        jarCreator.addFile(file.name, file.toPath())
                     }
                 }
             } else {
-                jarMerger.addDirectory(
+                jarCreator.addDirectory(
                     file.toPath(),
                     fileFilter,
                     null,
@@ -231,6 +239,13 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
             task.nativeLibsFiles = getNativeLibsFiles(variantScope, packageCustomClassDependencies)
 
             task.abiFilters = variantScope.variantConfiguration.supportedAbis
+
+            task.jarCreatorType =
+                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
+                    JarCreatorType.JAR_FLINGER
+                } else {
+                    JarCreatorType.JAR_MERGER
+                }
         }
     }
 }

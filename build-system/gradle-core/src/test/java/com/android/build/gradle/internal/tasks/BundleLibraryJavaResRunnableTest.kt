@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.ide.common.workers.ExecutorServiceAdapter
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.truth.MoreTruth.assertThatZip
@@ -51,7 +52,9 @@ class BundleLibraryJavaResRunnableTest {
                 }
             }
         )
-        BundleLibraryJavaResRunnable(BundleLibraryJavaResRunnable.Params(output, input)).run()
+        BundleLibraryJavaResRunnable(
+            BundleLibraryJavaResRunnable.Params(output, input, JarCreatorType.JAR_FLINGER)
+        ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).contains("b.txt")
         assertThatZip(output).contains("sub/c.txt")
@@ -66,7 +69,9 @@ class BundleLibraryJavaResRunnableTest {
                 dir.resolve("A.class").createNewFile()
             }
         )
-        BundleLibraryJavaResRunnable(BundleLibraryJavaResRunnable.Params(output, input)).run()
+        BundleLibraryJavaResRunnable(
+            BundleLibraryJavaResRunnable.Params(output, input, JarCreatorType.JAR_FLINGER)
+        ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).doesNotContain("A.class")
     }
@@ -87,7 +92,9 @@ class BundleLibraryJavaResRunnableTest {
             it.closeEntry()
         }
 
-        BundleLibraryJavaResRunnable(BundleLibraryJavaResRunnable.Params(output, setOf(inputJar))).run()
+        BundleLibraryJavaResRunnable(
+            BundleLibraryJavaResRunnable.Params(output, setOf(inputJar), JarCreatorType.JAR_FLINGER)
+        ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).contains("sub/a.txt")
         assertThatZip(output).doesNotContain("A.class")
@@ -105,7 +112,11 @@ class BundleLibraryJavaResRunnableTest {
             }
         }
 
-        BundleLibraryJavaResRunnable(BundleLibraryJavaResRunnable.Params(output, setOf(inputDirWithJar))).run()
+        BundleLibraryJavaResRunnable(
+            BundleLibraryJavaResRunnable.Params(
+                output, setOf(inputDirWithJar), JarCreatorType.JAR_FLINGER
+            )
+        ).run()
         assertThatZip(output).contains("subJar.jar")
         assertThatZip(output).doesNotContain("A.class")
     }

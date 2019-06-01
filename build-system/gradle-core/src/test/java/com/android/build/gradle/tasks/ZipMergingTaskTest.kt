@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.testutils.truth.PathSubject.assertThat
 import com.android.testutils.truth.ZipFileSubject.assertThatZip
 import org.gradle.testfixtures.ProjectBuilder
@@ -52,6 +53,7 @@ class ZipMergingTaskTest {
         task.libraryInputFile.set(zip1)
         task.javaResInputFile.set(zip2)
         task.outputFile.set(output)
+        task.jarCreatorType = JarCreatorType.JAR_FLINGER
         task.doTaskAction()
 
         assertThat(output).exists()
@@ -77,6 +79,7 @@ class ZipMergingTaskTest {
         task.libraryInputFile.set(zip1)
         task.javaResInputFile.set(zip2)
         task.outputFile.set(output)
+        task.jarCreatorType = JarCreatorType.JAR_FLINGER
         task.doTaskAction()
 
         assertThat(output).exists()

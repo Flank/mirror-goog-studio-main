@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -28,6 +27,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
+import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
@@ -50,13 +51,16 @@ import org.junit.rules.TemporaryFolder
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.nio.charset.Charset
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
 import java.util.zip.ZipFile
 
 class PerModuleBundleTaskTest {
 
-    @Mock private lateinit var resFiles: BuildableArtifact
     @Mock private lateinit var dexFiles: FileCollection
     @Mock private lateinit var javaResProvider: Provider<RegularFile>
     @Mock private lateinit var javaResFiles: FileCollection
@@ -73,6 +77,7 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var preBuildTask: TaskProvider<out Task>
     @Mock private lateinit var projectLayout: ProjectLayout
     @Mock private lateinit var projectFiles: ConfigurableFileCollection
+    @Mock private lateinit var projectOptions: ProjectOptions
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -123,6 +128,9 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
+        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
+        Mockito.`when`(projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)).thenReturn(true)
+
         val testFiles = testFolder.newFolder("test_files")
         val featureMetadata = File(testFiles, "feature-metadata.json")
         FileUtils.writeToFile(
@@ -137,7 +145,9 @@ class PerModuleBundleTaskTest {
 
         Mockito.`when`(featureSetMetadata.singleFile).thenReturn(featureMetadata)
 
-        task.resFiles.set(testFolder.newFile("res"))
+        val resFile = testFolder.newFile("res")
+        createRes(resFile)
+        task.resFiles.set(resFile)
         task.outputDir.set(testFolder.newFolder("out"))
 
 
@@ -224,5 +234,13 @@ class PerModuleBundleTaskTest {
         val dexFile = File(folder, id)
         FileUtils.createFile(dexFile, "Dex $id")
         return dexFile
+    }
+
+    private fun createRes(resFile: File) {
+        JarOutputStream(BufferedOutputStream(FileOutputStream(resFile))).use {
+            it.putNextEntry(JarEntry("foo"))
+            it.writer(Charsets.UTF_8).append("foo")
+            it.closeEntry()
+        }
     }
 }

@@ -18,22 +18,22 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter.PROJECT_RESOURCES
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.builder.packaging.JarMerger
+import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -61,6 +61,10 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
     var resourcesAsJars: FileCollection? = null
         private set
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
+
     // The runnable implementing the processing is not able to deal with fine-grained file but
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
     // changes the FileCollection of directories into a FileTree of files) to process, but don't
@@ -73,7 +77,8 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
                 BundleLibraryJavaResRunnable::class.java,
                 BundleLibraryJavaResRunnable.Params(
                     output = output!!.get().asFile,
-                    inputs = unfilteredResources.files
+                    inputs = unfilteredResources.files,
+                    jarCreatorType = jarCreatorType
                 )
             )
         }
@@ -117,19 +122,34 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
                 task.unfilteredResources = projectJavaRes
                 task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
             }
+
+            task.jarCreatorType =
+                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
+                    JarCreatorType.JAR_FLINGER
+                } else {
+                    JarCreatorType.JAR_MERGER
+                }
         }
     }
 }
 
 class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Runnable {
-    data class Params(val output: File, val inputs: Set<File>) : Serializable
+    data class Params(
+        val output: File,
+        val inputs: Set<File>,
+        val jarCreatorType: JarCreatorType
+    ) : Serializable
 
     override fun run() {
         Files.deleteIfExists(params.output.toPath())
         params.output.parentFile.mkdirs()
 
         val predicate = Predicate<String> { entry -> !entry.endsWith(SdkConstants.DOT_CLASS) }
-        JarMerger(params.output.toPath(), predicate).use { out ->
+        JarCreatorFactory.make(
+            params.output.toPath(),
+            predicate,
+            params.jarCreatorType
+        ).use { out ->
             params.inputs.forEach { base ->
                 if (base.isDirectory) {
                     out.addDirectory(base.toPath())
