@@ -43,6 +43,12 @@ fun createCxxVariantModel(
         override val cFlagsList get() = buildSystem.cFlags
         override val cppFlagsList get() = buildSystem.cppFlags
         override val variantName get() = baseVariantData.name
+        override val cmakeSettingsConfiguration
+            // TODO remove this after configuration has been added to DSL
+            // If CMakeSettings.json has a configuration with this exact name then
+            // it will be used. The point is to delay adding 'configuration' to the
+            // DSL.
+            get() = "android-gradle-plugin-predetermined-name"
         override val objFolder get() =
             if (module.buildSystem == NativeBuildSystem.NDK_BUILD) {
                 // ndkPlatform-build create libraries in a "local" subfolder.

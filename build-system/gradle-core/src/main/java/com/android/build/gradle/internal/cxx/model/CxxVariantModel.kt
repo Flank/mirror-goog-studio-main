@@ -91,6 +91,14 @@ interface CxxVariantModel {
      */
     val buildTargetSet : Set<String>
 
+    /**  The CMakeSettings.json configuration
+     *      ex, android
+     *          .defaultConfig
+     *          .cmake
+     *          .externalNativeBuild
+     *          .configuration 'my-configuration' */
+    val cmakeSettingsConfiguration : String
+
     /**
      * The module that this variant is part of
      */

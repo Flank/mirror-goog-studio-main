@@ -176,6 +176,7 @@ internal data class CxxVariantModelData(
     override val buildSystemArgumentList: List<String> = listOf(),
     override val buildTargetSet: Set<String> = setOf(),
     override val cFlagsList: List<String> = listOf(),
+    override val cmakeSettingsConfiguration: String = "",
     override val cppFlagsList: List<String> = listOf(),
     override val gradleBuildOutputFolder: File = File("."),
     override val isDebuggableEnabled: Boolean = false,
