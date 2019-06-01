@@ -70,6 +70,20 @@ public class BashTokenizer {
     }
 
     @NonNull
+    public BashTokenizer extractToEndingBacktick() {
+        final Pattern endingBacktick = Pattern.compile("[^\\\\]`");
+        Matcher m = endingBacktick.matcher(residual);
+        StringBuilder prefix = new StringBuilder();
+        if (m.find()) {
+            prefix.append(residual, 0, m.end() - 1);
+            residual = residual.substring(m.end() - 1);
+        } else {
+            throw new RuntimeException("Could not split string to backtick: " + residual);
+        }
+        return new BashTokenizer(prefix.toString().trim());
+    }
+
+    @NonNull
     public String getCommand() {
         return command;
     }
@@ -100,9 +114,9 @@ public class BashTokenizer {
         NUMBER("\\d+"),
         PUNCTUATION("\\p{Punct}+"),
         OPERATOR("\\p{Punct}+", "\\s"),
-        FILE_PATH("[\\S&&[^=;]]+"),
+        FILE_PATH("[\\S&&[^=;`]]+"),
         QUOTED_STRING(Pattern.compile("^'((?:\\.|[^'])*)'|^\"((?:\\.|[^\"])*)\""), true),
-        WHITESPACE_SEMICOLON_DELIMITED("[\\S&&[^;]]+"),
+        WHITESPACE_SEMICOLON_BACKTICK_DELIMITED("[\\S&&[^;`]]+"),
         DOUBLE_CONDITIONAL_UNARY("-z|-n"),
         DOUBLE_CONDITIONAL_BINARY(
                 "<|>|==|!=|<=|>=|-eq|-ne|-gt|-ge|-lt|-le"), // this only works for [[ ]], and no "="

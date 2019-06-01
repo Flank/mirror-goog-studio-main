@@ -186,10 +186,16 @@ public interface Expression {
     class CommandExpression implements Expression {
         @NonNull private final Expression commandExpression;
         @NonNull private final List<Expression> params;
+        private final boolean subshell;
 
         public CommandExpression(@NonNull Expression commandExpression) {
+            this(commandExpression, false);
+        }
+
+        public CommandExpression(@NonNull Expression commandExpression, boolean subshell) {
             this.commandExpression = commandExpression;
             params = new ArrayList<>();
+            this.subshell = subshell;
         }
 
         public void addParam(@NonNull Expression expression) {
@@ -204,11 +210,21 @@ public interface Expression {
                 List<String> paramResults = new ArrayList<>();
                 for (Expression expression : params) {
                     result = expression.execute(env);
-                    paramResults.add(result.text);
+                    if (subshell && (commandName == null || commandName.isEmpty())) {
+                        // Backticks can eval to empty, then the next param becomes the command.
+                        commandName = result.text;
+                    }
+                    else if (!result.text.isEmpty()) {
+                        paramResults.add(result.text);
+                    }
                 }
                 String[] cmdArgs = paramResults.toArray(new String[] {});
                 InputStream stdin = env.takeStdin();
                 PrintStream stdout = env.getPrintStdout();
+
+                if (subshell && (commandName == null || commandName.isEmpty())) {
+                    return new ExecutionResult(0);
+                }
 
                 ShellCommand command = env.getDevice().getShell().getCommand(commandName);
                 int code = 0;

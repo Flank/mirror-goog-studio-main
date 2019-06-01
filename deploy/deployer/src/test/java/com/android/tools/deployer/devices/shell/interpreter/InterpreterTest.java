@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +44,8 @@ public class InterpreterTest {
         FakeDevice device = new FakeDeviceLibrary().build(FakeDeviceLibrary.DeviceId.API_28);
         device.getShell().addCommand(new EchoCommand());
         device.getShell().addCommand(new CatCommand());
+        device.getShell().addCommand(new TwoParamCommand());
+        device.getShell().addCommand(new OnlyBarParams());
         env = new ShellContext(device, device.getShellUser(), inputStream, outputStream);
     }
 
@@ -138,6 +141,21 @@ public class InterpreterTest {
         assertNotEquals(0, Parser.parse("aaaa foo").execute(env).code);
     }
 
+    @Test
+    public void consecutiveSingleQuotes() {
+        assertEquals(0, Parser.parse("two ' ' ' '").execute(env).code);
+    }
+
+    @Test
+    public void consecutiveDoubleQuotes() {
+        assertEquals(0, Parser.parse("two \" \" \" \" ").execute(env).code);
+    }
+
+    @Test
+    public void backtickParsing() {
+        assertEquals(0, Parser.parse("`baronly bar bar`").execute(env).code);
+    }
+
     @Test(expected = RuntimeException.class)
     public void noDanglingOperatorAnd() {
         Parser.parse("echo foo &&");
@@ -194,6 +212,32 @@ public class InterpreterTest {
         @Override
         public String getExecutable() {
             return "cat";
+        }
+    }
+
+    private static class TwoParamCommand extends ShellCommand {
+        @Override
+        public int execute(
+          ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
+            return args.length == 2 ? 0 : 1;
+        }
+
+        @Override
+        public String getExecutable() {
+            return "two";
+        }
+    }
+
+    private static class OnlyBarParams extends ShellCommand {
+        @Override
+        public int execute(
+          ShellContext context, String[] args, InputStream stdin, PrintStream stdout) {
+            return Arrays.stream(args).allMatch(arg -> "bar".equals(arg)) ? 0 : 1;
+        }
+
+        @Override
+        public String getExecutable() {
+            return "baronly";
         }
     }
 }

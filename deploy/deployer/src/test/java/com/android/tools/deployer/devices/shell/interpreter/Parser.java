@@ -34,7 +34,7 @@ import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer
 import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.SEMICOLON;
 import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.THEN;
 import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.VAR;
-import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.WHITESPACE_SEMICOLON_DELIMITED;
+import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.WHITESPACE_SEMICOLON_BACKTICK_DELIMITED;
 import static com.android.tools.deployer.devices.shell.interpreter.BashTokenizer.TokenType.WORD;
 
 import com.android.annotations.NonNull;
@@ -222,7 +222,8 @@ public class Parser {
         // Parse the command itself.
         CommandExpression commandExpression;
         if (command.getType() == BACKTICK) {
-            commandExpression = new CommandExpression(parseScript(tokenizer));
+            commandExpression =
+                    new CommandExpression(parseScript(tokenizer.extractToEndingBacktick()), true);
             tokenizer.parseToken(BACKTICK);
         } else {
             commandExpression = new CommandExpression(new VarSubExpression(command.getText()));
@@ -237,7 +238,7 @@ public class Parser {
                             SEMICOLON,
                             BACKTICK,
                             QUOTED_STRING,
-                            WHITESPACE_SEMICOLON_DELIMITED,
+                            WHITESPACE_SEMICOLON_BACKTICK_DELIMITED,
                             EOF);
             switch (param.getType()) {
                 case PIPE:
@@ -245,9 +246,9 @@ public class Parser {
                 case SEMICOLON:
                 case EOF:
                     return commandExpression;
-                case WHITESPACE_SEMICOLON_DELIMITED:
+                case WHITESPACE_SEMICOLON_BACKTICK_DELIMITED:
                 case QUOTED_STRING:
-                    tokenizer.parseToken(WHITESPACE_SEMICOLON_DELIMITED, QUOTED_STRING);
+                    tokenizer.parseToken(QUOTED_STRING, WHITESPACE_SEMICOLON_BACKTICK_DELIMITED);
                     commandExpression.addParam(new VarSubExpression(param.getText()));
                     break;
                 case BACKTICK:
