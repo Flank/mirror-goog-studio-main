@@ -67,6 +67,38 @@ class JsonUtilKtTest {
           ]
         }""".trimIndent()
 
+    fun CMakeSettings.nullCheck() {
+        check(environments != null)
+        check(configurations != null)
+        environments.forEach { it.nullCheck() }
+        configurations.forEach { it.nullCheck() }
+    }
+
+    fun CMakeSettingsEnvironment.nullCheck() {
+        check(namespace != null)
+        check(environment != null)
+        check(inheritEnvironments != null)
+        inheritEnvironments.forEach { check(it!=null) }
+        check(properties != null)
+        properties.forEach { (key, value) ->
+            check(key != null)
+            check(value != null)
+        }
+    }
+
+    fun CMakeSettingsConfiguration.nullCheck() {
+        check(inheritEnvironments != null)
+        inheritEnvironments.forEach { check(it!=null) }
+        check(variables != null)
+        variables.forEach { check(it!=null) }
+        variables.forEach { it.nullCheck() }
+    }
+
+    fun CMakeSettingsVariable.nullCheck() {
+        check(name != null)
+        check(value != null)
+    }
+
     @Test
     fun `real world test`() {
         val settings = createCmakeSettingsJsonFromString(realWorldTestExample)
@@ -113,5 +145,24 @@ class JsonUtilKtTest {
                 val roundTrip = createCmakeSettingsJsonFromString(returnToString)
                 assertThat(settings.toJsonString()).isEqualTo(roundTrip.toJsonString())
             }
+    }
+
+    @Test
+    fun `trailing comma in variables`() {
+        val json = """
+        {
+          "configurations": [
+            {
+              "variables": [
+                {
+                  "name": "CMAKE_C_COMPILER",
+                  "value": "${'$'}{env.BIN_ROOT}\\gcc.exe"
+                },
+              ]
+            }
+          ]
+        }""".trimIndent()
+        val value = createCmakeSettingsJsonFromString(json)
+        value.nullCheck()
     }
 }

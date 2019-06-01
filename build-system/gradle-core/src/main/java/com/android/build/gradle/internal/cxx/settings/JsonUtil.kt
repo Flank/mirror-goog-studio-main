@@ -39,7 +39,11 @@ fun createCmakeSettingsJsonFromString(
     return CMakeSettings(
         // [filterNotNull] needed to remove nulls introduced by Gson when there is a trailing comma
         environments = settings.environments.filterNotNull(),
-        configurations = settings.configurations.filterNotNull()
+        configurations = settings.configurations.filterNotNull().map { configuration ->
+            configuration.copy(
+                variables = configuration.variables.filterNotNull()
+            )
+        }
     )
 }
 
