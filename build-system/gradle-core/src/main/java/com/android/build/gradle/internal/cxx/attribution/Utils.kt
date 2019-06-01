@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.attribution
 
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
+import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.services.allAbis
 import java.io.File
 import java.io.FileOutputStream

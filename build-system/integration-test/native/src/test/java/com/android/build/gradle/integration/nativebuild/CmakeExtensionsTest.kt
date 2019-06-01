@@ -39,7 +39,14 @@ import com.android.build.gradle.internal.cxx.configure.CmakeCompilerSettingsCach
 import com.android.build.gradle.internal.cxx.configure.CmakePropertyValue
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
+import com.android.build.gradle.internal.cxx.model.cacheKeyFile
+import com.android.build.gradle.internal.cxx.model.cmakeListsWrapperFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheUseFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheWriteFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
+import com.android.build.gradle.internal.cxx.model.jsonFile
+import com.android.build.gradle.internal.cxx.model.toolchainWrapperFile
 import com.android.build.gradle.options.BooleanOption.*
 import com.android.utils.FileUtils.join
 import org.junit.Ignore

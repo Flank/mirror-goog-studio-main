@@ -24,7 +24,9 @@ import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
+import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.services.registerAbi
+import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth
 import org.gradle.api.invocation.Gradle
 import org.junit.Before
@@ -60,7 +62,6 @@ class UtilsKtTest {
         buildId = cxxBuildModel.buildId.toString()
         buildAttributionFolder = testDir.root.resolve(".cxx/attribution/")
         ninjaLogFile = testDir.root.resolve(".ninja_log")
-        `when`(mockAbiModel.ninjaLogFile).thenReturn(testDir.root.resolve(".ninja_log"))
         `when`(mockAbiModel.variant).thenReturn(mockVariantModel)
         val mockModuleModel = mock(CxxModuleModel::class.java)
         val mockProjectModel = mock(CxxProjectModel::class.java)
@@ -73,6 +74,9 @@ class UtilsKtTest {
 
     @Test
     fun `appendTimestampAndBuildIdToNinjaLog append time stamp and build ID`() {
+        `when`(mockAbiModel.cxxBuildFolder).thenReturn(join(testDir.root, ".cxx", "x86"))
+        val ninjaLogFile = mockAbiModel.ninjaLogFile
+        ninjaLogFile.parentFile.mkdirs()
         ninjaLogFile.writeText("# ninja log v5\n")
         appendTimestampAndBuildIdToNinjaLog(cxxBuildModel, mockAbiModel)
         val ninjaLogLines = ninjaLogFile.readLines()
@@ -83,7 +87,9 @@ class UtilsKtTest {
 
     @Test
     fun `appendTimestampAndBuildIdToNinjaLog appends magic word if file does not exist`() {
-        val ninjaLogFile = testDir.root.resolve(".ninja_log")
+        `when`(mockAbiModel.cxxBuildFolder).thenReturn(join(testDir.root, ".cxx", "x86"))
+        val ninjaLogFile = mockAbiModel.ninjaLogFile
+        ninjaLogFile.parentFile.mkdirs()
         appendTimestampAndBuildIdToNinjaLog(cxxBuildModel, mockAbiModel)
         val ninjaLogLines = ninjaLogFile.readLines()
         Truth.assertThat(ninjaLogLines).hasSize(2)
@@ -93,39 +99,44 @@ class UtilsKtTest {
 
     @Test
     fun `collectNinjaLogs works`() {
-        val appDebugX86 = testDir.root.resolve("app-debug-x86")
         cxxBuildModel.registerAbi(
             mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86)
-            `when`(ninjaLogFile).thenReturn(appDebugX86)
-            `when`(variant).thenReturn(mockVariantModel)})
-
-        appDebugX86.writeText(
-            """
+            `when`(variant).thenReturn(mockVariantModel)
+            `when`(cxxBuildFolder).thenReturn(join(testDir.root, ".cxx", "x86"))
+            val ninjaLogFile = this.ninjaLogFile
+            ninjaLogFile.parentFile.mkdirs()
+            ninjaLogFile.writeText(
+                """
                 # ninja log v5
                 # 1 prev-build-id
                 previous metric
                 # 2 $buildId
                 x86 metric 1
                 x86 metric 2
-            """.trimIndent()
+                """.trimIndent()
+                )
+            }
         )
-        val appDebugX8664 = testDir.root.resolve("app-debug-x86_64")
+
         cxxBuildModel.registerAbi(mock(CxxAbiModel::class.java).apply {
             `when`(abi).thenReturn(Abi.X86_64)
-            `when`(ninjaLogFile).thenReturn(appDebugX8664)
             `when`(variant).thenReturn(mockVariantModel)
-        })
-        appDebugX8664.writeText(
-            """
+            `when`(cxxBuildFolder).thenReturn(join(testDir.root, ".cxx", "x86_64"))
+            val ninjaLogFile = this.ninjaLogFile
+            ninjaLogFile.parentFile.mkdirs()
+            ninjaLogFile.writeText(
+                """
                 # ninja log v5
                 # 1 prev-build-id
                 previous metric
                 # 2 $buildId
                 x86_64 metric 1
                 x86_64 metric 2
-            """.trimIndent()
-        )
+                """.trimIndent()
+            )
+        })
+
         collectNinjaLogs(cxxBuildModel)
 
         val (zipFile) = buildAttributionFolder.listFiles()

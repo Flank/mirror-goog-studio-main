@@ -18,6 +18,13 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
+import com.android.build.gradle.internal.cxx.model.cacheKeyFile
+import com.android.build.gradle.internal.cxx.model.cmakeListsWrapperFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheUseFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheWriteFile
+import com.android.build.gradle.internal.cxx.model.toolchainSettingsFromCacheFile
+import com.android.build.gradle.internal.cxx.model.toolchainWrapperFile
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule

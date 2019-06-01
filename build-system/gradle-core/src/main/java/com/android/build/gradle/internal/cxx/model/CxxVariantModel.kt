@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.utils.FileUtils.join
+import com.android.utils.FileUtils
 import java.io.File
 
 /**
@@ -49,13 +49,6 @@ interface CxxVariantModel {
     val variantName: String
 
     /**
-     * Base folder for .so files
-     *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
-     */
-    val soFolder: File
-        get() = join(module.intermediatesFolder, module.buildSystem.tag, variantName, "lib")
-
-    /**
      * Base folder for .o files
      *   ex, $moduleRootFolder/build/intermediates/cmake/debug/obj
      */
@@ -66,14 +59,6 @@ interface CxxVariantModel {
      *   ex, $moduleRootFolder/.cxx/cmake/debug
      */
     val jsonFolder: File
-        get() = join(module.cxxFolder, module.buildSystem.tag, variantName)
-
-    /**
-     * The gradle build output folder
-     *   ex, '$moduleRootFolder/.cxx/cxx/debug'
-     */
-    val gradleBuildOutputFolder: File
-        get() = join(module.cxxFolder, "cxx", variantName)
 
     /**
      * Whether this variant build is debuggable
@@ -104,3 +89,13 @@ interface CxxVariantModel {
      */
     val module: CxxModuleModel
 }
+
+/**
+ * Base folder for .so files
+ *   ex, $moduleRootFolder/build/intermediates/cmake/debug/lib
+ */
+val CxxVariantModel.soFolder: File
+    get() = FileUtils.join(module.intermediatesFolder, module.buildSystem.tag, variantName, "lib")
+
+
+

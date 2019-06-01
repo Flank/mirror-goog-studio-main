@@ -30,15 +30,15 @@ import com.android.build.gradle.internal.cxx.configure.findCmakeVersion
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import com.android.build.gradle.internal.cxx.configure.ndkMetaAbisFile
 import com.android.build.gradle.internal.cxx.configure.trySymlinkNdk
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
-import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
-import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
+import com.android.build.gradle.internal.model.CoreExternalNativeBuild
 import com.android.build.gradle.internal.ndk.Stl
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.build.gradle.tasks.NativeBuildSystem.CMAKE
+import com.android.build.gradle.tasks.NativeBuildSystem.NDK_BUILD
 import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import org.gradle.api.InvalidUserDataException
@@ -100,7 +100,7 @@ fun tryCreateCxxModuleModel(
         override val services by lazy { createDefaultServiceRegistry(global) }
         private val ndkHandler by lazy {
             val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
-            val locatorRecord = join(cxxFolder, "ndk_locator_record.json")
+            val locatorRecord = join(cxxFolder(global), "ndk_locator_record.json")
             try {
                 if (!ndkHandler.ndkPlatform.isConfigured) {
                     if (ndkHandler.userExplicityRequestedNdkVersion) {
@@ -169,7 +169,7 @@ fun tryCreateCxxModuleModel(
         override val ndkFolder by lazy {
             trySymlinkNdk(
                 ndkHandler.ndkPlatform.getOrThrow().ndkDirectory,
-                cxxFolder,
+                cxxFolder(global),
                 localPropertyFile(NDK_SYMLINK_DIR))
         }
         override val ndkVersion by lazy {
@@ -195,12 +195,7 @@ fun tryCreateCxxModuleModel(
         override val moduleRootFolder by lazy {
             global.project.projectDir
         }
-        override val cxxFolder by lazy {
-            findCxxFolder(
-                moduleRootFolder,
-                buildStagingDirectory,
-                global.project.buildDir)
-        }
+        override val buildStagingFolder get() = buildStagingDirectory
         override val stlSharedObjectMap by lazy {
             val map: MutableMap<Stl, Map<Abi, File>> = mutableMapOf()
             val ndkInfo = ndkHandler.ndkPlatform.getOrThrow().ndkInfo
@@ -216,6 +211,15 @@ fun tryCreateCxxModuleModel(global : GlobalScope) = tryCreateCxxModuleModel(
     global,
     CmakeLocator()
 )
+
+/**
+ * Get the module-level cxxFolder.
+ */
+fun CxxModuleModel.cxxFolder(global : GlobalScope) =
+    findCxxFolder(
+        global.project.projectDir,
+        buildStagingFolder,
+        global.project.buildDir)
 
 /**
  * Resolve the CMake or ndk-build path and buildStagingDirectory of native build project.
@@ -252,7 +256,7 @@ private fun getProjectPath(config: CoreExternalNativeBuild)
  * because moduleRoot/build will be deleted when the user does clean and that will lead to
  * undefined behavior.
  */
-private fun findCxxFolder(
+internal fun findCxxFolder(
     moduleRootFolder : File,
     buildStagingDirectory: File?,
     buildFolder: File): File {

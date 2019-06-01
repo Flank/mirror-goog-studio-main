@@ -21,6 +21,7 @@ import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxModuleModel
 import com.android.build.gradle.internal.cxx.model.CxxProjectModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.utils.FileUtils.join
 import com.google.common.base.Joiner
 import java.lang.RuntimeException

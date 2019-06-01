@@ -42,6 +42,40 @@ fun CxxAbiModel.toJsonString(): String {
 }
 
 /**
+ * Write the [CxxCmakeAbiModel] to Json string.
+ */
+fun CxxCmakeAbiModel.toJsonString(): String {
+    return StringWriter()
+        .also { writer -> GSON.toJson(toData(), writer) }
+        .toString()
+}
+
+/**
+ * Write the [CxxVariantModel] to Json string.
+ */
+fun CxxVariantModel.toJsonString(): String {
+    return StringWriter()
+        .also { writer -> GSON.toJson(toData(), writer) }
+        .toString()
+}
+
+/**
+ * Write the [CxxModuleModel] to Json string.
+ */
+fun CxxModuleModel.toJsonString(): String {
+    return StringWriter()
+        .also { writer -> GSON.toJson(toData(), writer) }
+        .toString()
+}
+
+/**
+ * Create a [CxxModuleModel] from Json string.
+ */
+fun createCxxModuleModelFromJson(json: String): CxxModuleModel {
+    return GSON.fromJson(json, CxxModuleModelData::class.java)
+}
+
+/**
  * Create a [CxxAbiModel] from Json string.
  */
 fun createCxxAbiModelFromJson(json: String): CxxAbiModel {
@@ -111,10 +145,10 @@ private fun CxxProjectModel.toData() = CxxProjectModelData(
 // TODO retaining JSON read/write? They're a pain to maintain.
 @VisibleForTesting
 data class CxxModuleModelData(
+    override val buildStagingFolder: File? = null,
     override val buildSystem: NativeBuildSystem = NativeBuildSystem.CMAKE,
     override val cmake: CxxCmakeModuleModelData? = null,
     override val cmakeToolchainFile: File = File("."),
-    override val cxxFolder: File = File("."),
     override val gradleModulePathName: String = "",
     override val intermediatesFolder: File = File("."),
     override val makeFile: File = File("."),
@@ -134,10 +168,10 @@ data class CxxModuleModelData(
 }
 
 private fun CxxModuleModel.toData() = CxxModuleModelData(
+    buildStagingFolder = buildStagingFolder,
     buildSystem = buildSystem,
     cmake = cmake?.toData(),
     cmakeToolchainFile = cmakeToolchainFile,
-    cxxFolder = cxxFolder,
     gradleModulePathName = gradleModulePathName,
     intermediatesFolder = intermediatesFolder,
     makeFile = makeFile,
@@ -178,14 +212,12 @@ internal data class CxxVariantModelData(
     override val cFlagsList: List<String> = listOf(),
     override val cmakeSettingsConfiguration: String = "",
     override val cppFlagsList: List<String> = listOf(),
-    override val gradleBuildOutputFolder: File = File("."),
     override val isDebuggableEnabled: Boolean = false,
     override val jsonFolder: File = File("."),
     override val module: CxxModuleModelData = CxxModuleModelData(),
     override val objFolder: File = File("."),
-    override val soFolder: File = File("."),
-    override val validAbiList: List<Abi> = listOf(),
-    override val variantName: String = ""
+    override val variantName: String = "",
+    override val validAbiList: List<Abi> = listOf()
 ) : CxxVariantModel
 
 private fun CxxVariantModel.toData() =
@@ -193,13 +225,12 @@ private fun CxxVariantModel.toData() =
         buildSystemArgumentList = buildSystemArgumentList,
         buildTargetSet = buildTargetSet,
         cFlagsList = cFlagsList,
+        cmakeSettingsConfiguration = cmakeSettingsConfiguration,
         cppFlagsList = cppFlagsList,
-        gradleBuildOutputFolder = gradleBuildOutputFolder,
         isDebuggableEnabled = isDebuggableEnabled,
         jsonFolder = jsonFolder,
         module = module.toData(),
         objFolder = objFolder,
-        soFolder = soFolder,
         validAbiList = validAbiList,
         variantName = variantName
     )
@@ -212,16 +243,9 @@ private fun CxxVariantModel.toData() =
 internal data class CxxAbiModelData(
     override val abi: Abi = Abi.X86,
     override val abiPlatformVersion: Int = 0,
-    override val buildCommandFile: File = File("."),
-    override val buildOutputFile: File = File("."),
     override val cmake: CxxCmakeAbiModelData? = null,
     override val cxxBuildFolder: File = File("."),
     override val info: AbiInfo = AbiInfo(),
-    override val jsonFile: File = File("."),
-    override val jsonGenerationLoggingRecordFile: File = File("."),
-    override val modelOutputFile: File = File("."),
-    override val objFolder: File = File("."),
-    override val soFolder: File = File("."),
     override val variant: CxxVariantModelData = CxxVariantModelData()
 ) : CxxAbiModel {
     override val services: CxxServiceRegistry
@@ -231,15 +255,9 @@ internal data class CxxAbiModelData(
 private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     abi = abi,
     abiPlatformVersion = abiPlatformVersion,
-    buildCommandFile = buildCommandFile,
-    buildOutputFile = buildOutputFile,
     cmake = cmake?.toData(),
     cxxBuildFolder = cxxBuildFolder,
-    jsonFile = jsonFile,
-    jsonGenerationLoggingRecordFile = jsonGenerationLoggingRecordFile,
-    modelOutputFile = modelOutputFile,
-    objFolder = objFolder,
-    soFolder = soFolder,
+    info = info,
     variant = variant.toData()
 )
 
@@ -249,30 +267,14 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
  */
 @VisibleForTesting
 internal data class CxxCmakeAbiModelData(
-    override val buildGenerationStateFile: File,
-    override val cacheKeyFile: File,
     override val cmakeArtifactsBaseFolder: File,
-    override val cmakeListsWrapperFile: File,
     override val cmakeWrappingBaseFolder: File,
-    override val compileCommandsJsonFile: File,
-    override val compilerCacheUseFile: File,
-    override val compilerCacheWriteFile: File,
-    override val generator: String,
-    override val toolchainSettingsFromCacheFile: File,
-    override val toolchainWrapperFile: File
+    override val generator: String
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
-    buildGenerationStateFile = buildGenerationStateFile,
-    cacheKeyFile = cacheKeyFile,
     cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
-    cmakeListsWrapperFile = cmakeListsWrapperFile,
     cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
-    compileCommandsJsonFile = compileCommandsJsonFile,
-    compilerCacheUseFile = compilerCacheUseFile,
-    compilerCacheWriteFile = compilerCacheWriteFile,
-    generator = generator,
-    toolchainSettingsFromCacheFile = toolchainSettingsFromCacheFile,
-    toolchainWrapperFile = toolchainWrapperFile
+    generator = generator
 )
 

@@ -24,24 +24,12 @@ import org.junit.Test
 class JsonUtilTest {
     @Test
     fun `round trip`() {
-        BasicCmakeMock().let {
-            // Walk all vals in the model and invoke them
-            val module = tryCreateCxxModuleModel(it.global, it.cmakeFinder)!!
-            val variant = createCxxVariantModel(
-                module,
-                it.baseVariantData
-            )
-            val abi = createCxxAbiModel(
-                variant,
-                Abi.X86,
-                it.global,
-                it.baseVariantData
-            )
+        BasicCmakeMock().apply {
             val json = abi.toJsonString()
             val writtenBackAbi = createCxxAbiModelFromJson(json)
             val writtenBackJson = writtenBackAbi.toJsonString()
             assertThat(json).isEqualTo(writtenBackJson)
-            assertThat(writtenBackAbi.variant.module.cxxFolder.path).endsWith(".cxx")
+            assertThat(writtenBackAbi.cxxBuildFolder.parentFile.parentFile.parentFile.path).endsWith(".cxx")
             assertThat(writtenBackAbi.variant.module.ndkVersion.toString()).isEqualTo(
                 ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
             )

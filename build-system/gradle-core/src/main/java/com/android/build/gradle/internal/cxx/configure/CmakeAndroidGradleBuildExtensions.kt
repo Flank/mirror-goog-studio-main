@@ -22,6 +22,13 @@ import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.Cmake
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
+import com.android.build.gradle.internal.cxx.model.cacheKeyFile
+import com.android.build.gradle.internal.cxx.model.cmakeListsWrapperFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheUseFile
+import com.android.build.gradle.internal.cxx.model.compilerCacheWriteFile
+import com.android.build.gradle.internal.cxx.model.toolchainSettingsFromCacheFile
+import com.android.build.gradle.internal.cxx.model.toolchainWrapperFile
 import java.io.File
 
 /**

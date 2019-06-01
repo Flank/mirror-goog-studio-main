@@ -21,6 +21,7 @@ import static com.android.SdkConstants.PLATFORM_WINDOWS;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.services.CxxProcessServiceKt.createProcessOutputJunction;
 
 import com.android.annotations.NonNull;
@@ -29,6 +30,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModelKt;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -130,7 +132,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                 .toJson(buildConfig);
 
         // Write the captured ndk-build output to JSON file
-        Files.write(abi.getJsonFile().toPath(), actualResult.getBytes(Charsets.UTF_8));
+        Files.write(getJsonFile(abi).toPath(), actualResult.getBytes(Charsets.UTF_8));
     }
 
     /**
@@ -159,7 +161,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     String executeProcess(@NonNull CxxAbiModel abi) throws ProcessException, IOException {
         return createProcessOutputJunction(
                         abi.getVariant().getModule(),
-                        abi.getObjFolder(),
+                        CxxAbiModelKt.getSoFolder(abi),
                         "android_gradle_generate_ndk_build_json_" + abi.getAbi().getTag(),
                         getProcessBuilder(abi),
                         "")

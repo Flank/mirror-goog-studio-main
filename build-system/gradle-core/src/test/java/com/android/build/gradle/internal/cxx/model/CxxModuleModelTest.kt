@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.internal.cxx.configure.NdkAbiFile
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
 import com.android.build.gradle.internal.ndk.AbiInfo

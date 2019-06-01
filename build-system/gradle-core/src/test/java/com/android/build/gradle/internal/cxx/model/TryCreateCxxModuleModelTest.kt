@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
@@ -78,7 +79,7 @@ class TryCreateCxxModuleModelTest {
                 doReturn(File("my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
-                val finalStagingDir = module.cxxFolder
+                val finalStagingDir = module.cxxFolder(it.global)
                 assertThat(logEnvironment.errors).hasSize(0)
                 assertThat(finalStagingDir.path).contains("my-build-staging-directory")
             }
@@ -93,7 +94,7 @@ class TryCreateCxxModuleModelTest {
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
                 assertThat(logEnvironment.errors).hasSize(0)
-                val finalStagingDir = module.cxxFolder
+                val finalStagingDir = module.cxxFolder(it.global)
                 assertThat(logEnvironment.errors).hasSize(1)
                 assertThat(logEnvironment.errors[0])
                     .contains("The build staging directory you specified")
@@ -101,5 +102,17 @@ class TryCreateCxxModuleModelTest {
                 assertThat(finalStagingDir.path).contains(".cxx")
             }
         }
+    }
+
+    @Test
+    fun `round trip random instance`() {
+        RandomInstanceGenerator()
+            .synthetics(CxxModuleModelData::class.java)
+            .forEach { module ->
+                val abiString = module.toJsonString()
+                val recoveredAbi = createCxxModuleModelFromJson(abiString)
+                val recoveredAbiString = recoveredAbi.toJsonString()
+                assertThat(abiString).isEqualTo(recoveredAbiString)
+            }
     }
 }

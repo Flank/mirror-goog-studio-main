@@ -68,10 +68,11 @@ interface CxxModuleModel {
     val buildSystem: NativeBuildSystem
 
     /**
-     * The module level .cxx folder
-     *   ex, $moduleRootFolder/.cxx)
+     * The value of buildStagingingDirectory from build.gradle
+     *   ex, myBuildStagingDirectory
+     * Null means not specified.
      */
-    val cxxFolder: File
+    val buildStagingFolder: File?
 
     /**
      * Folder path to the NDK
@@ -101,12 +102,12 @@ interface CxxModuleModel {
      * Information about minimum and maximum platform along with mapping between platform
      * and platform code. Will be null if the NDK is so old it doesn't have meta/platforms.json.
      */
-    val ndkMetaPlatforms : NdkMetaPlatforms?
+    val ndkMetaPlatforms: NdkMetaPlatforms?
 
     /**
      * Information about all ABIs
      */
-    val ndkMetaAbiList : List<AbiInfo>
+    val ndkMetaAbiList: List<AbiInfo>
 
     /**
      * Path to the CMake toolchain in NDK
@@ -116,7 +117,7 @@ interface CxxModuleModel {
         get() = join(ndkFolder, "build", "cmake", "android.toolchain.cmake")
 
     /**
-     * Information relevant only to CMake. Null if not CMake build.
+     * CMake-specific settings for this Module.
      */
     val cmake: CxxCmakeModuleModel?
 
@@ -131,9 +132,7 @@ interface CxxModuleModel {
 
     /**
      * Service provider entry for module-level services. These are services naturally
-     * scoped at the module level. If there are services that are more naturally
-     * applicable to variant or ABI levels then a service provider should be added
-     * there.
+     * scoped at the module level.
      */
     val services: CxxServiceRegistry
 
@@ -142,4 +141,11 @@ interface CxxModuleModel {
      */
     val project: CxxProjectModel
 }
+
+
+/**  Get the NDK level CMakeSettings.json file */
+val CxxModuleModel.ndkCmakeSettingsJsonFile: File
+    get() = join(ndkFolder, "meta", "CMakeSettings.json")
+
+
 

@@ -26,6 +26,9 @@ import static com.android.build.gradle.internal.cxx.json.CompilationDatabaseTool
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
+import static com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModelKt.getCmakeServerLogFile;
+import static com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModelKt.getCompileCommandsJsonFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -139,7 +142,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         try (ThreadLoggingEnvironment ignore =
                 new PassThroughPrintWriterLoggingEnvironment(
                         new PrintWriter(
-                                abi.getCmake().getCmakeServerLogFile().getAbsoluteFile(), "UTF-8"),
+                                getCmakeServerLogFile(abi.getCmake()).getAbsoluteFile(), "UTF-8"),
                         CMAKE_SERVER_LOG_PREFIX)) {
             // Create a new cmake server for the given Cmake and configure the given project.
             ServerReceiver serverReceiver =
@@ -342,7 +345,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         NativeBuildConfigValue nativeBuildConfigValue =
                 getNativeBuildConfigValue(config, cmakeServer);
         AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile(
-                config.getJsonFile(), nativeBuildConfigValue);
+                getJsonFile(config), nativeBuildConfigValue);
     }
 
     /**
@@ -431,7 +434,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cmake.getCmakeExe(),
                 abi.getCxxBuildFolder(),
                 isDebuggable(),
-                new JsonReader(new FileReader(abi.getCmake().getCompileCommandsJsonFile())),
+                new JsonReader(new FileReader(getCompileCommandsJsonFile(abi.getCmake()))),
                 abi.getAbi().getTag(),
                 workingDirectory,
                 target,
@@ -687,7 +690,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         File cCompilerExecutable = null;
         File cppCompilerExecutable = null;
 
-        File compilationDatabase = abi.getCmake().getCompileCommandsJsonFile();
+        File compilationDatabase = getCompileCommandsJsonFile(abi.getCmake());
         if (compilationDatabase.exists()) {
             CompilationDatabaseToolchain toolchain =
                     populateCompilationDatabaseToolchains(

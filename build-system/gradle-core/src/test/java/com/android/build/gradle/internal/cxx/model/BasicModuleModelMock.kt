@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -141,6 +142,10 @@ open class BasicModuleModelMock {
         BaseVariantData::class.java,
         throwUnmocked
     )
+    val variantScope = mock(
+        VariantScope::class.java,
+        throwUnmocked
+    )
     val gradleVariantConfiguration = mock(
         GradleVariantConfiguration::class.java,
         throwUnmocked
@@ -237,6 +242,7 @@ open class BasicModuleModelMock {
         doReturn(null).`when`(cmake).buildStagingDirectory
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
         doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
+        doReturn(variantScope).`when`(baseVariantData).scope
         doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
             .externalNativeBuildOptions
         doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
@@ -281,6 +287,7 @@ open class BasicModuleModelMock {
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
         doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
         doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
+        doReturn(global).`when`(variantScope).globalScope
 
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
