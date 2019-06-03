@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
@@ -113,12 +112,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
                 InternalArtifactType.LIBRARY_JAVA_RES,
                 task.javaResInputFile
             )
-            task.jarCreatorType =
-                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
-                    JarCreatorType.JAR_FLINGER
-                } else {
-                    JarCreatorType.JAR_MERGER
-                }
+            task.jarCreatorType = variantScope.jarCreatorType
         }
     }
 }

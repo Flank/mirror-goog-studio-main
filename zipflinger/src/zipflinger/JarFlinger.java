@@ -51,6 +51,7 @@ public class JarFlinger implements JarCreator {
 
     public JarFlinger(@NonNull Path jarFile, @Nullable Predicate<String> filter)
             throws IOException {
+        Files.deleteIfExists(jarFile);
         zipArchive = new ZipArchive(jarFile.toFile());
         this.filter = filter;
     }

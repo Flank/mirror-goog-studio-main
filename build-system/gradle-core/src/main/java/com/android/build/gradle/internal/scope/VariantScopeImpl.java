@@ -35,6 +35,7 @@ import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
+import static com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -61,6 +62,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.packaging.JarCreatorType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope;
@@ -1400,5 +1402,15 @@ public class VariantScopeImpl implements VariantScope {
         return new File(
                 globalScope.getIntermediatesDir(),
                 "symbols/" + variantData.getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
+    public JarCreatorType getJarCreatorType() {
+        if (globalScope.getProjectOptions().get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
+            return JarCreatorType.JAR_FLINGER;
+        } else {
+            return JarCreatorType.JAR_MERGER;
+        }
     }
 }

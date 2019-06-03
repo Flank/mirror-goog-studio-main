@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
@@ -27,8 +28,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
-import com.android.build.gradle.options.ProjectOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.testutils.truth.ZipFileSubject
 import com.android.utils.FileUtils
@@ -77,7 +76,6 @@ class PerModuleBundleTaskTest {
     @Mock private lateinit var preBuildTask: TaskProvider<out Task>
     @Mock private lateinit var projectLayout: ProjectLayout
     @Mock private lateinit var projectFiles: ConfigurableFileCollection
-    @Mock private lateinit var projectOptions: ProjectOptions
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -128,8 +126,7 @@ class PerModuleBundleTaskTest {
         Mockito.`when`(variantScope.taskContainer).thenReturn(taskContainer)
         Mockito.`when`(taskContainer.preBuildTask).thenReturn(preBuildTask)
 
-        Mockito.`when`(globalScope.projectOptions).thenReturn(projectOptions)
-        Mockito.`when`(projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)).thenReturn(true)
+        Mockito.`when`(variantScope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)
 
         val testFiles = testFolder.newFolder("test_files")
         val featureMetadata = File(testFiles, "feature-metadata.json")

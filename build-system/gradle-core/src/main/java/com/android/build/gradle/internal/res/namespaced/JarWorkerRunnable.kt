@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.builder.packaging.JarMerger
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.packaging.JarCreatorType
+import com.android.utils.FileUtils
 import java.io.File
 import java.io.Serializable
 import java.util.function.Predicate
@@ -24,7 +26,11 @@ import javax.inject.Inject
 
 class JarWorkerRunnable @Inject constructor(val params: JarRequest) : Runnable {
     override fun run() {
-        JarMerger(params.toFile.toPath(), params.filter).use { out ->
+        JarCreatorFactory.make(
+            params.toFile.toPath(),
+            if (params.filter == null) null else Predicate { params.filter.invoke(it) },
+            params.jarCreatorType
+        ).use { out ->
             if (params.manifestProperties.isNotEmpty()) {
                 out.setManifestProperties(params.manifestProperties)
             }
@@ -37,6 +43,7 @@ class JarWorkerRunnable @Inject constructor(val params: JarRequest) : Runnable {
 
 data class JarRequest(
     val toFile: File,
+    val jarCreatorType: JarCreatorType,
     val fromDirectories: List<File> = listOf(),
     val fromJars: List<File> = listOf(),
     val fromFiles: Map<String, File> = mapOf(),

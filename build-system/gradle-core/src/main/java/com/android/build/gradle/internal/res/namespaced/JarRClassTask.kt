@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.DefaultTask
@@ -44,6 +45,7 @@ open class JarRClassTask @Inject constructor(workerExecutor: WorkerExecutor) : D
             it.submit(JarWorkerRunnable::class.java,
                 JarRequest(
                     toFile = rClassJar,
+                    jarCreatorType = JarCreatorType.JAR_MERGER,
                     fromDirectories = listOf(rClassClasses.singleFile)
                 )
             )

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -28,11 +29,9 @@ import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
 import com.google.common.collect.ImmutableMap
-import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFile
-import org.gradle.api.internal.provider.Providers
 import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.After
@@ -94,6 +93,8 @@ class BundleAllClassesTest {
         Mockito.`when`(globalScope.project).thenReturn(project)
         Mockito.`when`(artifacts.getFinalProduct<RegularFile>(InternalArtifactType
             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(rClasses)
+
+        Mockito.`when`(scope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)
 
         val configAction = BundleAllClasses.CreationAction(scope)
         configAction.preConfigure(task.name)

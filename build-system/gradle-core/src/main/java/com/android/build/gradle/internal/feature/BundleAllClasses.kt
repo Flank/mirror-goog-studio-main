@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.feature
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
@@ -84,6 +85,10 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
     lateinit var modulePath: String
         private set
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
+
     public override fun doTaskAction() {
         val files = HashMap<String, File>()
         val collector = object: ReproducibleFileVisitor {
@@ -104,9 +109,12 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
 
         workers.use {
             it.submit(
-                JarWorkerRunnable::class.java, JarRequest(toFile = outputJar.get().asFile,
+                JarWorkerRunnable::class.java, JarRequest(
+                    toFile = outputJar.get().asFile,
+                    jarCreatorType = jarCreatorType,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                    fromFiles = files)
+                    fromFiles = files
+                )
             )
         }
     }
@@ -137,6 +145,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
             task.postJavacClasses = variantScope.variantData.allPostJavacGeneratedBytecode
             val globalScope = variantScope.globalScope
             task.modulePath = globalScope.project.path
+            task.jarCreatorType = variantScope.jarCreatorType
             if (globalScope.extension.aaptOptions.namespaced) {
                 variantScope.artifacts.setTaskInputToFinalProduct(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,

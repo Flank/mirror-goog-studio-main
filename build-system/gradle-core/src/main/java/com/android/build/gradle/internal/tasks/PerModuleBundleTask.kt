@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NAT
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
-import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.builder.files.NativeLibraryAbiPredicate
 import com.android.builder.packaging.JarMerger
 import zipflinger.JarCreator
@@ -111,17 +110,17 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
     public override fun doTaskAction() {
         FileUtils.cleanOutputDir(outputDir.get().asFile)
-        val jarMerger =
+        val jarCreator =
             JarCreatorFactory.make(File(outputDir.get().asFile, fileName).toPath(), jarCreatorType)
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
-        jarMerger.setCompressionLevel(0)
+        jarCreator.setCompressionLevel(0)
 
         val filters = abiFilters
         val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
 
-        jarMerger.use {
+        jarCreator.use {
             it.addDirectory(
                 assetsFiles.get().asFile.toPath(),
                 null,
@@ -240,12 +239,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
             task.abiFilters = variantScope.variantConfiguration.supportedAbis
 
-            task.jarCreatorType =
-                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
-                    JarCreatorType.JAR_FLINGER
-                } else {
-                    JarCreatorType.JAR_MERGER
-                }
+            task.jarCreatorType = variantScope.jarCreatorType
         }
     }
 }

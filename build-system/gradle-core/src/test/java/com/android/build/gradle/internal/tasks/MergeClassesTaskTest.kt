@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Zip
@@ -85,7 +86,12 @@ class MergeClassesTaskTest {
         val inputFiles = listOf(jarFile1, jarFile2, inputDir)
         val outputFile = File(temporaryFolder.newFolder("outputDir"), "out.jar")
 
-        MergeClassesTask.MergeClassesDelegate(inputFiles, outputFile, workers).mergeClasses()
+        MergeClassesTask.MergeClassesDelegate(
+            inputFiles,
+            outputFile,
+            workers,
+            JarCreatorType.JAR_FLINGER
+        ).mergeClasses()
 
         // outputFile should only contain classes, not java resources or .kotlin_module files
         Zip(outputFile).use {

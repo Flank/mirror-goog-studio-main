@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -123,12 +122,7 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
                 task.resources = projectJavaRes.asFileTree.filter(MergeJavaResourceTask.spec)
             }
 
-            task.jarCreatorType =
-                if (variantScope.globalScope.projectOptions.get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
-                    JarCreatorType.JAR_FLINGER
-                } else {
-                    JarCreatorType.JAR_MERGER
-                }
+            task.jarCreatorType = variantScope.jarCreatorType
         }
     }
 }

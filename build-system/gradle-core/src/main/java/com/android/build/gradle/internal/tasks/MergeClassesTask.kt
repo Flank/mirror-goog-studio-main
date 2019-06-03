@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants.DOT_JAR
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
@@ -32,6 +33,7 @@ import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
@@ -56,17 +58,27 @@ abstract class MergeClassesTask
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
+
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     override fun doTaskAction() {
         // We use a delegate here to simplify testing
-        MergeClassesDelegate(inputFiles.files, outputFile.get().asFile, workers).mergeClasses()
+        MergeClassesDelegate(
+            inputFiles.files,
+            outputFile.get().asFile,
+            workers,
+            jarCreatorType
+        ).mergeClasses()
     }
 
     class MergeClassesDelegate(
         val inputFiles: Collection<File>,
         val outputFile: File,
-        val workers: WorkerExecutorFacade
+        val workers: WorkerExecutorFacade,
+        val jarCreatorType: JarCreatorType
     ) {
         fun mergeClasses() {
             val fromJars = inputFiles.filter { it.isFile && it.name.endsWith(DOT_JAR) }
@@ -76,8 +88,9 @@ abstract class MergeClassesTask
                     JarWorkerRunnable::class.java,
                     JarRequest(
                         toFile = outputFile,
-                        fromJars = fromJars,
+                        jarCreatorType = jarCreatorType,
                         fromDirectories = fromDirectories,
+                        fromJars = fromJars,
                         filter = { CLASS_MATCHER.test(it) }
                     )
                 )
@@ -119,6 +132,7 @@ abstract class MergeClassesTask
         override fun configure(task: MergeClassesTask) {
             super.configure(task)
             task.inputFiles = inputFiles
+            task.jarCreatorType = variantScope.jarCreatorType
         }
     }
 }
