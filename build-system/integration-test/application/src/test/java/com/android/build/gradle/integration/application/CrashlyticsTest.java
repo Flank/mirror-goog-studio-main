@@ -45,7 +45,7 @@ public class CrashlyticsTest {
                 "android {\n",
                 "buildscript {\n"
                         + "    dependencies {\n"
-                        + "        classpath 'io.fabric.tools:gradle:1.25.4'\n"
+                        + "        classpath 'io.fabric.tools:gradle:1.28.0'\n"
                         + "    }\n"
                         + "}\n"
                         + "\n"

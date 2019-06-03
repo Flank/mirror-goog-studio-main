@@ -47,7 +47,7 @@ private val pluginList = listOf(
         "Crashlytics",
         "io.fabric.tools",
         "gradle",
-        GradleVersion.parse("1.25.4")
+        GradleVersion.parse("1.28.0")
     ),
 
     // https://issuetracker.google.com/110564407
