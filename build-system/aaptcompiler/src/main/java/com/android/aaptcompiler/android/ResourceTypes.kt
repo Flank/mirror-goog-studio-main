@@ -74,6 +74,66 @@ enum class ChunkType(val id: Short) {
 }
 
 /**
+ * Representation of a value in a resource, supplying type information.
+ */
+data class ResValue(val dataType: DataType, val data: Int, val size: Short = 0) {
+
+  constructor() : this(DataType.NULL, 0)
+
+  // type of the data value.
+  enum class DataType(val byteValue: Byte) {
+    // The 'data' is either 0 or 1, specifying this resource is undefined or empty, respectively.
+    NULL(0X00),
+    // The 'data' holds a ResTable reference, i.e. a reference to another resource.
+    REFERENCE(0x01),
+    // The 'data' holds an attribute resource identifier.
+    ATTRIBUTE(0x02),
+    // The 'data' holds an index into the containing resource table's string pool.
+    STRING(0x03),
+    // The 'data' holds a single-precision floating point number.
+    FLOAT(0x04),
+    // The 'data' holds a fixed point number encoding a dimension value, e.g. 100in.
+    DIMENSION(0x05),
+    // The 'data' holds a fixed point number encoding a fraction of a container.
+    FRACTION(0x06),
+    // The 'data' holds a dynamic ResTable reference, which needs to be resolved before it can be
+    // used as a REFERENCE.
+    DYNAMIC_REFERENCE(0x07),
+    // The 'data' holds an attribute resource identifier, which needs to be resolved before it can
+    // be used like a ATTRIBUTE.
+    DYNAMIC_ATTRIBUTE(0x08),
+    // The 'data' is a raw integer of the form n..n.
+    INT_DEC(0x10),
+    // The 'data' is a raw integer value of the form 0xn..n.
+    INT_HEX(0x11),
+    // The 'data' is either 0 or 1, for input 'false' or 'true' respectively.
+    INT_BOOLEAN(0x12),
+    // The 'data' is a raw integer value of the form #aarrggbb.
+    INT_COLOR_ARGB8(0x1c),
+    // The 'data' is a raw integer value of the form #rrggbb.
+    INT_COLOR_RGB8(0x1d),
+    // The 'data' is a raw integer value of the form #argb
+    INT_COLOR_ARGB4(0x1e),
+    // The 'data is a raw integer value of the form #rgb
+    INT_COLOR_RGB4(0x1f);
+
+    companion object {
+      val FIRST_INT = DataType.INT_DEC
+      val FIRST_COLOR_INT = DataType.INT_COLOR_ARGB8
+      val LAST_COLOR_INT = DataType.INT_COLOR_RGB4
+      val LAST_INT = LAST_COLOR_INT
+    }
+  }
+
+  // Possible Data values for DataType NULL.
+  object NullFormat {
+    const val UNDEFINED = 0
+    const val EMPTY = 1
+  }
+}
+
+
+/**
  * Reference to a string in a string pool
  */
 data class ResStringPoolRef(
@@ -343,5 +403,96 @@ class ResStringPool private constructor(
       return result
     }
   }
+}
+
+fun parseHex(codePoint: Int) =
+  when(codePoint) {
+    in '0'.toInt()..'9'.toInt() -> codePoint - '0'.toInt()
+    in 'A'.toInt()..'F'.toInt() -> codePoint - 'A'.toInt() + 10
+    in 'a'.toInt()..'f'.toInt() -> codePoint - 'a'.toInt() + 10
+    else -> -1
+  }
+
+fun stringToInt(string: String): ResValue? {
+  val trimmedString = string.trimStart()
+  if (trimmedString.isEmpty()) {
+    return null
+  }
+
+  val codePointCount = trimmedString.codePointCount(0, trimmedString.length)
+
+  var index = 0
+  var value = 0L
+  var isNegative = false
+
+  if (trimmedString.codePointAt(0) == '-'.toInt()) {
+    ++index
+    isNegative = true
+  }
+
+  if (codePointCount == index
+    || trimmedString.codePointAt(index) !in '0'.toInt()..'9'.toInt()) {
+
+    return null
+  }
+
+  val isHex: Boolean
+  if (codePointCount >= index + 2
+    && trimmedString.codePointAt(index) == '0'.toInt()
+    && trimmedString.codePointAt(index+1) == 'x'.toInt()) {
+    isHex = true
+    index += 2
+
+    if (isNegative) {
+      // Hex values are not allowed to be negative.
+      return null
+    }
+
+    if (index == codePointCount) {
+      // Just "0x", not a valid format.
+      return null
+    }
+
+    while (index < codePointCount) {
+      val hexValue = parseHex(trimmedString.codePointAt(index))
+      if (hexValue == -1) {
+        return null
+      }
+      ++index
+
+      value = (value shl 4) + hexValue
+
+      if (value > 0xffffffffL) {
+        return null
+      }
+    }
+  } else {
+    isHex = false
+
+    while (index < codePointCount) {
+      val codePoint = trimmedString.codePointAt(index)
+      if (codePoint !in '0'.toInt()..'9'.toInt()) {
+        return null
+      }
+      ++index
+
+      val decValue = codePoint - '0'.toInt()
+      value = (value*10) + decValue
+
+      val outOfBounds =
+        if (isNegative) -value < Int.MIN_VALUE.toLong() else value > Int.MAX_VALUE.toLong()
+      if (outOfBounds) {
+        return null
+      }
+    }
+  }
+
+  if (isNegative) {
+    value = -value
+  }
+
+  return ResValue(
+    if(isHex) ResValue.DataType.INT_HEX else ResValue.DataType.INT_DEC,
+    value.toInt())
 }
 

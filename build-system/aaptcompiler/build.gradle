@@ -2,6 +2,8 @@ apply plugin: 'kotlin'
 apply plugin: 'clone-artifacts'
 
 dependencies {
+    compile project(':base:sdklib')
+    
     compile project(':base:common')
     compile project(':base:build-system:aapt2-proto')
 
