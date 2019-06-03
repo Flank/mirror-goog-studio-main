@@ -69,7 +69,6 @@ public class ExternalCommand extends ShellCommand {
                                 }
                             })
                     .start();
-
             Process process = new ProcessBuilder(command).start();
             PipeConnector inToProcess = new PipeConnector(stdin, process.getOutputStream());
             inToProcess.start();
@@ -148,8 +147,10 @@ public class ExternalCommand extends ShellCommand {
 
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
-            data.writeInt(len);
-            data.write(b, off, len);
+            if (len > 0) {
+                data.writeInt(len);
+                data.write(b, off, len);
+            }
         }
     }
 
