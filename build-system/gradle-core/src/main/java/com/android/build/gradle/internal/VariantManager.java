@@ -545,11 +545,11 @@ public class VariantManager implements VariantModel {
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
                 Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
                         buildArtifactsHolder.getFinalProductWithTaskName(buildArtifactType);
-                    variantScope.publishIntermediateArtifact(
-                            finalProduct.getSecond(),
-                            finalProduct.getFirst(),
-                            outputSpec.getArtifactType(),
-                            outputSpec.getPublishedConfigTypes());
+                variantScope.publishIntermediateArtifact(
+                        finalProduct.getSecond(),
+                        finalProduct.getFirst(),
+                        outputSpec.getArtifactType(),
+                        outputSpec.getPublishedConfigTypes());
             }
         }
     }
@@ -993,8 +993,8 @@ public class VariantManager implements VariantModel {
                         .reportError(
                                 EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
                                 new EvalIssueException(
-                                        "All flavors must now belong to a named flavor dimension. "
-                                                + "Learn more at "
+                                        "All flavors must now belong to a named flavor dimension."
+                                                + " Learn more at "
                                                 + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html"));
             } else if (flavorDimensionList.size() == 1) {
                 // if there's only one dimension, auto-assign the dimension to all the flavors.
@@ -1292,8 +1292,10 @@ public class VariantManager implements VariantModel {
 
             testBuildTypeData = buildTypes.get(testedExtension.getTestBuildType());
             if (testBuildTypeData == null) {
-                throw new RuntimeException(String.format(
-                        "Test Build Type '%1$s' does not exist.", testedExtension.getTestBuildType()));
+                throw new RuntimeException(
+                        String.format(
+                                "Test Build Type '%1$s' does not" + " exist.",
+                                testedExtension.getTestBuildType()));
             }
         }
 
@@ -1365,7 +1367,10 @@ public class VariantManager implements VariantModel {
                                     EvalIssueReporter.Type.GENERIC,
                                     String.format(
                                             Locale.US,
-                                            "minSdkVersion (%d) is greater than targetSdkVersion (%d) for variant \"%s\". Please change the values such that minSdkVersion is less than or equal to targetSdkVersion.",
+                                            "minSdkVersion (%d) is greater than targetSdkVersion"
+                                                    + " (%d) for variant \"%s\". Please change the"
+                                                    + " values such that minSdkVersion is less than or"
+                                                    + " equal to targetSdkVersion.",
                                             minSdkVersion,
                                             targetSdkVersion,
                                             variantData.getName()));
