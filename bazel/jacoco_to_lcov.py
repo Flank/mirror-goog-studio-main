@@ -134,6 +134,7 @@ def main():
       './tools/adt/idea/smali/gen',
       # external
       './tools/base/jobb',
+      './tools/base/zipflinger',
       './tools/dx',
       './tools/external',
       './tools/idea',
