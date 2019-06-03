@@ -30,7 +30,6 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
@@ -139,12 +138,17 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
                 referencedClasses.from(
                     variantScope.artifacts.getFinalArtifactFiles(
-                        InternalArtifactType.TESTED_CODE_CLASSES))
+                        InternalArtifactType.TESTED_CODE_CLASSES
+                    )
+                )
 
-                referencedClasses.from(testedVariantScope.getArtifactCollection(
+                referencedClasses.from(
+                    testedVariantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.CLASSES))
+                        AndroidArtifacts.ArtifactType.CLASSES
+                    ).artifactFiles
+                )
             }
 
             task.classesToFix = classesToFix

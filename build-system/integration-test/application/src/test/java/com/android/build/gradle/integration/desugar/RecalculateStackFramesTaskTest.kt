@@ -45,11 +45,8 @@ class RecalculateStackFramesTaskTest {
     @Test
     fun testNonEmptyFileCache() {
         enableJava8()
-
         createLibrary()
-
         addLibraryAsDependency()
-
         project
             .executor()
             .with(BooleanOption.ENABLE_BUILD_CACHE, true)
@@ -62,6 +59,24 @@ class RecalculateStackFramesTaskTest {
             .run("fixStackFramesDebug")
 
         assertThat(getCacheDir().listFiles().asList().filter { it.isDirectory }).isNotEmpty()
+    }
+
+    /** Regression test for b/133299018. */
+    @Test
+    fun testAndroidTest() {
+        enableJava8()
+        createLibrary()
+        addLibraryAsDependency()
+        project
+            .executor()
+            .with(BooleanOption.ENABLE_BUILD_CACHE, true)
+            .with(BooleanOption.ENABLE_GRADLE_WORKERS, true)
+            .with(BooleanOption.ENABLE_D8_DESUGARING, false)
+            .with(BooleanOption.ENABLE_R8_DESUGARING, false)
+            .with(OptionalBooleanOption.ENABLE_R8, false)
+            .with(BooleanOption.ENABLE_DESUGAR, true)
+            .with(StringOption.BUILD_CACHE_DIR, CACHE_DIR)
+            .run("fixStackFramesDebugAndroidTest")
     }
 
     private fun enableJava8() {
