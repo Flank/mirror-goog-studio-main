@@ -18,6 +18,7 @@ dependencies {
     testCompile project(':base:testing-infrastructure:device-pool:device-provider')
     testCompile project(':base:testutils')
     testCompile project(':base:java-lib-model')
+    testCompile project(':base:zipflinger')
 
     testCompile libs.kotlin_stdlib
     testCompile libs.kotlin_test
