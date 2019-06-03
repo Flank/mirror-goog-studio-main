@@ -821,12 +821,13 @@ public class ModelBuilder<Extension extends AndroidConfig>
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
             boolean downloadSources =
-                    !Boolean.valueOf(
+                    !Boolean.parseBoolean(
                             String.valueOf(
-                                    project.getProperties()
-                                            .get(
-                                                    AndroidProject
-                                                            .PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD)));
+                                            project.getProperties()
+                                                    .get(
+                                                            AndroidProject
+                                                                    .PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD))
+                                    .trim());
 
             if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
                 result =
