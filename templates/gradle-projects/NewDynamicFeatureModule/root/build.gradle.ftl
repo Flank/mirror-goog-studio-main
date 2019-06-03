@@ -1,7 +1,8 @@
 <#import "root://gradle-projects/NewAndroidModule/root/shared_macros.ftl" as shared>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 apply plugin: 'com.android.dynamic-feature'
-
-<@shared.androidConfig/>
+<@shared.androidConfig hasTests=true/>
+<@kt.addKotlinPlugins />
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
