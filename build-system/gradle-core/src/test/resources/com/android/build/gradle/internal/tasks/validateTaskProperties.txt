@@ -20,7 +20,6 @@ Warning: Task type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTa
 Warning: Task type 'com.android.build.gradle.internal.res.GenerateLibraryRFileTask': property 'sourceOutputDir' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask': property 'manifestFile' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.res.namespaced.CompileSourceSetResources': property 'inputDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.res.namespaced.JarRClassTask': property 'RClassClasses' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'reportType' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'resultsDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'testFailed' is not annotated with an input or output annotation.
