@@ -122,6 +122,7 @@ coverage_java_test(
     deps = [
         ":java_version",
         ":tools.deployer",
+        "//prebuilts/r8:r8-master",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/23.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
         "//tools/base/annotations",

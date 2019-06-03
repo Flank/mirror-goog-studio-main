@@ -19,7 +19,7 @@ import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Predicate;
 
 public class CachedDexSplitter implements DexSplitter {
@@ -33,10 +33,10 @@ public class CachedDexSplitter implements DexSplitter {
     }
 
     @Override
-    public List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode)
+    public Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode)
             throws DeployerException {
         // Try a cached version
-        List<DexClass> classes = db.getClasses(dex);
+        Collection<DexClass> classes = db.getClasses(dex);
         if (classes.isEmpty() || keepCode != null) {
             // TODO: Calling CacheDexSplitter.split() on a remote APK is fine but actually calling the real splitter on an remote
             // APK is going to crash. Checking path == null isn't going to work as that gives the remote path of the APK.

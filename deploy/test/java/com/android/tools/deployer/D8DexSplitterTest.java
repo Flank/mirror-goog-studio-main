@@ -19,7 +19,7 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -34,8 +34,8 @@ public class D8DexSplitterTest {
         ApkEntry dex1 = new ApkEntry("classes.dex", 1, Apk.builder().setPath(apk1Location).build());
         ApkEntry dex2 = new ApkEntry("classes.dex", 2, Apk.builder().setPath(apk2Location).build());
         D8DexSplitter splitter = new D8DexSplitter();
-        List<DexClass> before = splitter.split(dex1, c -> false);
-        List<DexClass> after =
+        Collection<DexClass> before = splitter.split(dex1, c -> false);
+        Collection<DexClass> after =
                 splitter.split(dex2, c -> searchByName(before, c.name).checksum != c.checksum);
 
         // Unchanged classes -> No code.
@@ -45,7 +45,7 @@ public class D8DexSplitterTest {
         Assert.assertNotNull(searchByName(after, "testapk.Changed").code);
     }
 
-    public static DexClass searchByName(List<DexClass> classes, String name) {
+    public static DexClass searchByName(Collection<DexClass> classes, String name) {
         for (DexClass c : classes) {
             if (name.equals(c.name)) {
                 System.out.println(c.name);

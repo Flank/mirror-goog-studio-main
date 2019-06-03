@@ -19,6 +19,7 @@ import com.android.annotations.Trace;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.deployer.model.FileDiff;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class DexComparator {
             if (diff.status == FileDiff.Status.CREATED) {
                 continue;
             }
-            List<DexClass> klasses = splitter.split(diff.oldFile, null);
+            Collection<DexClass> klasses = splitter.split(diff.oldFile, null);
             for (DexClass clz : klasses) {
                 // split() can return multiple entries but with the most recent ones first. Duplicated entries with
                 // We are going to assume the classes are actually the most recent one.
@@ -89,7 +90,7 @@ public class DexComparator {
                         return oldChecksum == null || clz.checksum != oldChecksum;
                     };
 
-            List<DexClass> klasses = splitter.split(diff.newFile, keepCode);
+            Collection<DexClass> klasses = splitter.split(diff.newFile, keepCode);
             for (DexClass klass : klasses) {
                 if (klass.code == null) {
                     // If we already decided this is unchanged, make it in the oldChecksums map as null. From now on we are going to

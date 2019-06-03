@@ -19,6 +19,7 @@ import com.android.tools.deployer.model.Apk;
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
 import com.android.tools.r8.Version;
+import com.android.tools.tracer.Trace;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -45,7 +46,13 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
     // Purely a value-based check. No plans to make the cache database forward / backward compatible.
     //  IE: All tables will be dropped if version number on the file does not match this number.
-    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "0.3";
+
+    // History:
+    //  0.1 - Initial Check-in
+    //  0.2 - First Release (AS 3.5)
+    //  0.3 - Take into account of dex splitter version.
+    //  1.0 - D8 Checksum support (Note: No database table scheme was changed, just changing checksum computation)
+    private static final String CURRENT_SCHEMA_VERSION_NUMBER = "1.0";
     private static final String CURRENT_CHECKSUM_TOOL_VERSION = Version.getVersionString();
     private static final String CURRENT_DATABASE_VERSION_STRING =
             CURRENT_SCHEMA_VERSION_NUMBER + "|" + CURRENT_CHECKSUM_TOOL_VERSION;
@@ -187,7 +194,8 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
 
     @Override
     public List<DexClass> getClasses(ApkEntry dex) {
-        try (Statement s = connection.createStatement();
+        try (Trace ignored = Trace.begin("SqlApkFileDatabase.getClasses");
+                Statement s = connection.createStatement();
                 ResultSet result =
                         s.executeQuery(
                                 "SELECT classes.name as name, classes.checksum as checksum"
@@ -212,7 +220,7 @@ public class SqlApkFileDatabase implements ApkFileDatabase {
     }
 
     @Override
-    public void addClasses(List<DexClass> allClasses) {
+    public void addClasses(Collection<DexClass> allClasses) {
         try {
             Map<Apk, Multimap<ApkEntry, DexClass>> map = new HashMap<>();
             for (DexClass clazz : allClasses) {

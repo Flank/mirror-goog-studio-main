@@ -17,11 +17,12 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
 public interface DexSplitter {
-    List<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) throws DeployerException;
+    Collection<DexClass> split(ApkEntry dex, Predicate<DexClass> keepCode) throws DeployerException;
 
     default boolean cache(List<ApkEntry> dexes) throws DeployerException {
         for (ApkEntry file : dexes) {

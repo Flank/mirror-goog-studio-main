@@ -34,6 +34,11 @@ Trace: org.gradle.api.tasks.compile.JavaCompile::compile
 Trace: org.jetbrains.kotlin.gradle.plugin.AbstractKotlinCompile::execute
 # Kotlin Daemon (Unless you modify how Kotlin daemon is started, you need to see _JAVA_OPTIONS for this)
 Trace: org.jetbrains.kotlin.daemon.CompileServiceImpl::execIncrementalCompiler
+Trace: com.android.tools.r8.dex.ApplicationReader::*
+Trace: com.android.tools.r8.dex.ApplicationWriter::*
+Trace: com.android.tools.r8.graph.DexItemFactory::sort
+
+
 
 # Apk step
 Trace: com.android.build.gradle.tasks.PackageAndroidArtifact::doIncrementalTaskAction

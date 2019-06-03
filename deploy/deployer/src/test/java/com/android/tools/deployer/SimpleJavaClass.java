@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,4 @@
  */
 package com.android.tools.deployer;
 
-import com.android.tools.deployer.model.ApkEntry;
-import com.android.tools.deployer.model.DexClass;
-import com.google.common.annotations.VisibleForTesting;
-import java.util.Collection;
-import java.util.List;
-
-public interface ApkFileDatabase {
-    void addClasses(Collection<DexClass> allClasses);
-
-    List<DexClass> getClasses(ApkEntry dex);
-
-    void close();
-
-    @VisibleForTesting
-    List<DexClass> dump();
-}
+public class SimpleJavaClass {}
