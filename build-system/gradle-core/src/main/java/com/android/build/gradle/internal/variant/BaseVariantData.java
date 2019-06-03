@@ -580,6 +580,15 @@ public abstract class BaseVariantData {
                         ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
             }
 
+            // then all the generated src folders.
+            if (scope.getGlobalScope().getProjectOptions().get(BooleanOption.GENERATE_R_JAVA)) {
+                Provider<Directory> rClassSource =
+                        scope.getArtifacts()
+                                .getFinalProduct(
+                                        InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
+                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
+            }
+
             // for the other, there's no duplicate so no issue.
             if (taskContainer.getGenerateBuildConfigTask() != null) {
                 sourceSets.add(

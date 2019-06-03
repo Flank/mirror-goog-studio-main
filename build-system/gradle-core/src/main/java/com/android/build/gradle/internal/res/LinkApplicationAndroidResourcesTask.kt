@@ -578,15 +578,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
         override fun handleProvider(taskProvider: TaskProvider<out LinkApplicationAndroidResourcesTask>) {
             super.handleProvider(taskProvider)
 
-            variantScope
-                .artifacts
-                .producesFile(
-                    InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    taskProvider,
-                    LinkApplicationAndroidResourcesTask::rClassOutputJar,
-                    FN_R_CLASS_JAR)
-
             if (variantScope.globalScope.projectOptions[BooleanOption.GENERATE_R_JAVA]) {
                 variantScope.artifacts.producesDir(
                     InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES,
@@ -594,7 +585,17 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     taskProvider,
                     LinkApplicationAndroidResourcesTask::sourceOutputDir,
                     fileName = SdkConstants.FD_RES_CLASS
-                )}
+                )
+            } else {
+                variantScope
+                    .artifacts
+                    .producesFile(
+                        InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR,
+                        BuildArtifactsHolder.OperationType.INITIAL,
+                        taskProvider,
+                        LinkApplicationAndroidResourcesTask::rClassOutputJar,
+                        FN_R_CLASS_JAR)
+            }
 
             variantScope.artifacts.producesFile(
                 InternalArtifactType.SYMBOL_LIST,

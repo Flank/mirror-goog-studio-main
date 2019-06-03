@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -144,7 +145,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
                         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
-            } else {
+            } else if (!globalScope.projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
                 // This is actually thisRClassClasses and dependencyRClassClasses altogether. But
                 // thisRClassClasses expects *.class files as an input while this is *.jar. Thus,
                 // put it to dependencyRClassClasses and it will be processed properly.
@@ -154,7 +155,9 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
                             .artifacts
                             .getFinalProduct<RegularFile>(
                                 InternalArtifactType
-                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR))
+                                    .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR
+                            )
+                    )
 
             }
         }

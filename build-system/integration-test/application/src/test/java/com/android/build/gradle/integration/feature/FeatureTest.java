@@ -130,11 +130,13 @@ public class FeatureTest {
                             "main",
                             SdkConstants.ANDROID_MANIFEST_XML),
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "<manifest"
+                            + " xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                             + "      package=\"com.example.android.multiproject.base\"\n"
                             + "      xmlns:tools=\"http://schemas.android.com/tools\">\n"
                             + "\n"
-                            + "      <uses-sdk tools:overrideLibrary=\"com.example.android.multiproject\"/>\n"
+                            + "      <uses-sdk"
+                            + " tools:overrideLibrary=\"com.example.android.multiproject\"/>\n"
                             + "\n"
                             + "</manifest>");
 
@@ -145,13 +147,15 @@ public class FeatureTest {
                             "main",
                             SdkConstants.ANDROID_MANIFEST_XML),
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "<manifest"
+                            + " xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                             + "      package=\"com.example.android.multiproject.app\"\n"
                             + "      android:versionCode=\"1\"\n"
                             + "      android:versionName=\"1.0\"\n"
                             + "      xmlns:tools=\"http://schemas.android.com/tools\">\n"
                             + "\n"
-                            + "      <uses-sdk tools:overrideLibrary=\"com.example.android.multiproject.feature\"/>\n"
+                            + "      <uses-sdk"
+                            + " tools:overrideLibrary=\"com.example.android.multiproject.feature\"/>\n"
                             + "\n"
                             + "</manifest>");
         }
@@ -191,40 +195,41 @@ public class FeatureTest {
             assertThat(featureResFile).exists();
         } else {
             assertThat(featureResFile).doesNotExist();
-        }
+            File rJar =
+                    featureProject.getIntermediateFile(
+                            "compile_and_runtime_not_namespaced_r_class_jar",
+                            "debugFeature",
+                            "R.jar");
+            assertThat(rJar).exists();
 
-        File rJar =
-                featureProject.getIntermediateFile(
-                        "compile_and_runtime_not_namespaced_r_class_jar", "debugFeature", "R.jar");
-        assertThat(rJar).exists();
-
-        try (ZipFileSubject zipFile = assertThatZip(rJar)) {
-            zipFile.contains("com/example/android/multiproject/feature/R$string.class");
-        }
-        try (Zip zip = new Zip(rJar)) {
-            byte[] classBytes =
-                    readAllBytes(
-                            zip.getEntry(
-                                    "com/example/android/multiproject/feature/R$string.class"));
-            ClassReader classReader = new ClassReader(classBytes);
-            Map<String, Object> fieldsMap = Maps.newHashMap();
-            ClassVisitor fieldVisitor =
-                    new ClassVisitor(Opcodes.ASM5) {
-                        @Override
-                        public FieldVisitor visitField(
-                                int access,
-                                String name,
-                                String desc,
-                                String signature,
-                                Object value) {
-                            fieldsMap.put(name, value);
-                            return null;
-                        }
-                    };
-            classReader.accept(fieldVisitor, SKIP_DEBUG | SKIP_FRAMES);
-            assertThat(fieldsMap).containsKey("feature_value");
-            int actualId = (Integer) fieldsMap.get("feature_value");
-            assertThat(actualId & 0xFF000000).isEqualTo(expectedFeatureId << 24);
+            try (ZipFileSubject zipFile = assertThatZip(rJar)) {
+                zipFile.contains("com/example/android/multiproject/feature/R$string.class");
+            }
+            try (Zip zip = new Zip(rJar)) {
+                byte[] classBytes =
+                        readAllBytes(
+                                zip.getEntry(
+                                        "com/example/android/multiproject/feature/R$string.class"));
+                ClassReader classReader = new ClassReader(classBytes);
+                Map<String, Object> fieldsMap = Maps.newHashMap();
+                ClassVisitor fieldVisitor =
+                        new ClassVisitor(Opcodes.ASM5) {
+                            @Override
+                            public FieldVisitor visitField(
+                                    int access,
+                                    String name,
+                                    String desc,
+                                    String signature,
+                                    Object value) {
+                                fieldsMap.put(name, value);
+                                return null;
+                            }
+                        };
+                classReader.accept(fieldVisitor, SKIP_DEBUG | SKIP_FRAMES);
+                assertThat(fieldsMap).containsKey("feature_value");
+                int actualId = (Integer) fieldsMap.get("feature_value");
+                assertThat(actualId & 0xFF000000).isEqualTo(expectedFeatureId << 24);
+            }
         }
     }
 

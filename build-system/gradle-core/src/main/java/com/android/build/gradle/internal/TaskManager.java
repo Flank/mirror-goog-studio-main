@@ -1057,12 +1057,14 @@ public abstract class TaskManager {
             // create the task that creates the aapt output for the bundle.
             taskFactory.register(new LinkAndroidResForBundleTask.CreationAction(scope));
 
-            scope.getArtifacts()
-                    .appendArtifact(
-                            AnchorOutputType.ALL_CLASSES,
-                            project.files(
-                                    artifacts.getFinalProduct(
-                                            COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
+            if (!projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
+                scope.getArtifacts()
+                        .appendArtifact(
+                                AnchorOutputType.ALL_CLASSES,
+                                project.files(
+                                        artifacts.getFinalProduct(
+                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
+            }
         }
     }
 
@@ -1554,7 +1556,8 @@ public abstract class TaskManager {
     }
 
     protected void registerRClassTransformStream(@NonNull VariantScope variantScope) {
-        if (globalScope.getExtension().getAaptOptions().getNamespaced()) {
+        if (globalScope.getExtension().getAaptOptions().getNamespaced()
+                || projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
             return;
         }
 

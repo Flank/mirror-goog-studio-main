@@ -25,7 +25,9 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
+import com.android.build.gradle.options.ProjectOptions
 import com.android.testutils.truth.FileSubject
+import com.google.common.collect.ImmutableMap
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
@@ -73,6 +75,7 @@ class BundleAllClassesTest {
         Mockito.`when`(variantData.allPostJavacGeneratedBytecode).thenReturn(postJavacClasses)
         Mockito.`when`(variantData.allPreJavacGeneratedBytecode).thenReturn(preJavacClasses)
         Mockito.`when`(globalScope.extension).thenReturn(extension)
+        Mockito.`when`(globalScope.projectOptions).thenReturn(ProjectOptions(ImmutableMap.of()))
         Mockito.`when`(extension.aaptOptions).thenReturn(aaptOptions)
         Mockito.`when`(aaptOptions.namespaced).thenReturn(false)
         Mockito.`when`(preJavacClasses.asFileTree).thenReturn(fileTree)
