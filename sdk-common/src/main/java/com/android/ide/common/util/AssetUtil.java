@@ -89,14 +89,14 @@ public class AssetUtil {
             return source;
         }
 
-        final int r = (int) Math.ceil(radius);
-        final int rows = r * 2 + 1;
-        final float[] kernelData = new float[rows * rows];
+        int r = (int) Math.ceil(radius);
+        int rows = r * 2 + 1;
+        float[] kernelData = new float[rows * rows];
 
-        final double sigma = radius / 3;
-        final double sigma22 = 2 * sigma * sigma;
-        final double sqrtPiSigma22 = Math.sqrt(Math.PI * sigma22);
-        final double radius2 = radius * radius;
+        double sigma = radius / 3;
+        double sigma22 = 2 * sigma * sigma;
+        double sqrtPiSigma22 = Math.sqrt(Math.PI * sigma22);
+        double radius2 = radius * radius;
 
         double total = 0;
         int index = 0;
@@ -135,8 +135,8 @@ public class AssetUtil {
      * @return A new image with an alpha channel inverted from the original.
      */
     public static BufferedImage invertedAlphaImage(BufferedImage source) {
-        final float[] scaleFactors = new float[]{1, 1, 1, -1};
-        final float[] offsets = new float[]{0, 0, 0, 255};
+        float[] scaleFactors = new float[] {1, 1, 1, -1};
+        float[] offsets = new float[] {0, 0, 0, 255};
 
         return operatedImage(source, new RescaleOp(scaleFactors, offsets, null));
     }
@@ -199,9 +199,9 @@ public class AssetUtil {
      */
     @SuppressWarnings("unused")
     public static BufferedImage trimmedImage(BufferedImage source) {
-        final int minAlpha = 1;
-        final int srcWidth = source.getWidth();
-        final int srcHeight = source.getHeight();
+        int minAlpha = 1;
+        int srcWidth = source.getWidth();
+        int srcHeight = source.getHeight();
         Raster raster = source.getRaster();
         int l = srcWidth, t = srcHeight, r = 0, b = 0;
 
@@ -270,7 +270,7 @@ public class AssetUtil {
         g.setComposite(oldComposite);
 
         // Inner shadow & fill effects.
-        final Rectangle imageRect = new Rectangle(0, 0, source.getWidth(), source.getHeight());
+        Rectangle imageRect = new Rectangle(0, 0, source.getWidth(), source.getHeight());
         BufferedImage out = newArgbBufferedImage(imageRect.width, imageRect.height);
         Graphics2D g2 = (Graphics2D) out.getGraphics();
         double fillOpacity = 1.0;
@@ -320,68 +320,71 @@ public class AssetUtil {
      *                image.
      */
     public static void drawCenterInside(Graphics2D g, BufferedImage source, Rectangle dstRect) {
-        final int srcWidth = source.getWidth();
-        final int srcHeight = source.getHeight();
+        int srcWidth = source.getWidth();
+        int srcHeight = source.getHeight();
         if (srcWidth * 1.0 / srcHeight > dstRect.width * 1.0 / dstRect.height) {
-            final int scaledWidth = Math.max(1, dstRect.width);
-            final int scaledHeight = Math.max(1, dstRect.width * srcHeight / srcWidth);
+            int scaledWidth = Math.max(1, dstRect.width);
+            int scaledHeight = Math.max(1, dstRect.width * srcHeight / srcWidth);
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
-            g.drawImage(scaledImage,
+            g.drawImage(
+                    scaledImage,
                     dstRect.x,
                     dstRect.y + (dstRect.height - scaledHeight) / 2,
                     dstRect.x + dstRect.width,
                     dstRect.y + (dstRect.height - scaledHeight) / 2 + scaledHeight,
                     0,
                     0,
-                    0 + scaledWidth,
-                    0 + scaledHeight,
+                    scaledWidth,
+                    scaledHeight,
                     null);
         } else {
-            final int scaledWidth = Math.max(1, dstRect.height * srcWidth / srcHeight);
-            final int scaledHeight = Math.max(1, dstRect.height);
+            int scaledWidth = Math.max(1, dstRect.height * srcWidth / srcHeight);
+            int scaledHeight = Math.max(1, dstRect.height);
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
-            g.drawImage(scaledImage,
+            g.drawImage(
+                    scaledImage,
                     dstRect.x + (dstRect.width - scaledWidth) / 2,
                     dstRect.y,
                     dstRect.x + (dstRect.width - scaledWidth) / 2 + scaledWidth,
                     dstRect.y + dstRect.height,
                     0,
                     0,
-                    0 + scaledWidth,
-                    0 + scaledHeight,
+                    scaledWidth,
+                    scaledHeight,
                     null);
         }
     }
 
     /**
-     * Draws the given {@link BufferedImage} to the canvas, centered and cropped to fill the
-     * bounds defined by the destination rectangle, and with preserved aspect ratio.
+     * Draws the given {@link BufferedImage} to the canvas, centered and cropped to fill the bounds
+     * defined by the destination rectangle, and with preserved aspect ratio.
      *
-     * @param g       The destination canvas.
-     * @param source  The source image.
+     * @param g The destination canvas.
+     * @param source The source image.
      * @param dstRect The destination rectangle in the destination canvas into which to draw the
-     *                image.
+     *     image.
      */
     public static void drawCenterCrop(Graphics2D g, BufferedImage source, Rectangle dstRect) {
-        final int srcWidth = source.getWidth();
-        final int srcHeight = source.getHeight();
+        int srcWidth = source.getWidth();
+        int srcHeight = source.getHeight();
         if (srcWidth * 1.0 / srcHeight > dstRect.width * 1.0 / dstRect.height) {
-            final int scaledWidth = dstRect.height * srcWidth / srcHeight;
-            final int scaledHeight = dstRect.height;
+            int scaledWidth = dstRect.height * srcWidth / srcHeight;
+            int scaledHeight = dstRect.height;
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
-            g.drawImage(scaledImage,
+            g.drawImage(
+                    scaledImage,
                     dstRect.x,
                     dstRect.y,
                     dstRect.x + dstRect.width,
                     dstRect.y + dstRect.height,
-                    0 + (scaledWidth - dstRect.width) / 2,
+                    (scaledWidth - dstRect.width) / 2,
                     0,
-                    0 + (scaledWidth - dstRect.width) / 2 + dstRect.width,
-                    0 + dstRect.height,
+                    (scaledWidth - dstRect.width) / 2 + dstRect.width,
+                    dstRect.height,
                     null);
         } else {
-            final int scaledWidth = dstRect.width;
-            final int scaledHeight = dstRect.width * srcHeight / srcWidth;
+            int scaledWidth = dstRect.width;
+            int scaledHeight = dstRect.width * srcHeight / srcWidth;
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
             g.drawImage(
                     scaledImage,
@@ -390,9 +393,9 @@ public class AssetUtil {
                     dstRect.x + dstRect.width,
                     dstRect.y + dstRect.height,
                     0,
-                    0 + (scaledHeight - dstRect.height) / 2,
-                    0 + dstRect.width,
-                    0 + (scaledHeight - dstRect.height) / 2 + dstRect.height,
+                    (scaledHeight - dstRect.height) / 2,
+                    dstRect.width,
+                    (scaledHeight - dstRect.height) / 2 + dstRect.height,
                     null);
         }
     }
@@ -421,12 +424,12 @@ public class AssetUtil {
             @NonNull Rectangle dstRect,
             int scaleRectWidth,
             int scaleRectHeight) {
-        final int srcWidth = source.getWidth();
-        final int srcHeight = source.getHeight();
+        int srcWidth = source.getWidth();
+        int srcHeight = source.getHeight();
         if (srcWidth * 1.0 / srcHeight > scaleRectWidth * 1.0 / scaleRectHeight) {
-            // Scale vertically
-            final int scaledWidth = srcWidth * scaleRectHeight / srcHeight;
-            final int scaledHeight = srcHeight * scaleRectHeight / srcHeight;
+            // Scale vertically.
+            int scaledWidth = srcWidth * scaleRectHeight / srcHeight;
+            int scaledHeight = srcHeight * scaleRectHeight / srcHeight;
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
             g.drawImage(
                     scaledImage,
@@ -436,9 +439,9 @@ public class AssetUtil {
                     scaledHeight,
                     null);
         } else {
-            // Scale horizontally
-            final int scaledWidth = srcWidth * scaleRectWidth / srcWidth;
-            final int scaledHeight = srcHeight * scaleRectWidth / srcWidth;
+            // Scale horizontally.
+            int scaledWidth = srcWidth * scaleRectWidth / srcWidth;
+            int scaledHeight = srcHeight * scaleRectWidth / srcWidth;
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
             g.drawImage(
                     scaledImage,
@@ -465,10 +468,7 @@ public class AssetUtil {
         g.drawImage(source, (imageRect.width - w) / 2, (imageRect.height - h) / 2, w, h, null);
     }
 
-    /**
-     * An effect to apply in {@link AssetUtil#drawEffects(java.awt.Graphics2D,
-     * java.awt.image.BufferedImage, int, int, AssetUtil.Effect[])}
-     */
+    /** An effect to apply in {@link #drawEffects}. */
     public abstract static class Effect {}
 
     /** An inner or outer shadow. */
