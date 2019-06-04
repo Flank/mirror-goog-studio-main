@@ -32,6 +32,7 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonG
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
+import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
 
 import com.android.annotations.NonNull;
@@ -79,10 +80,14 @@ import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /**
  * Base class for generation of native JSON.
@@ -540,6 +545,13 @@ public abstract class ExternalNativeJsonGenerator {
     @Input
     public boolean isDebuggable() {
         return variant.isDebuggableEnabled();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @NonNull
+    public FileCollection getJsonGenerationDependencyFiles() {
+        return jsonGenerationInputDependencyFileCollection(variant.getModule(), abis);
     }
 
     @NonNull
