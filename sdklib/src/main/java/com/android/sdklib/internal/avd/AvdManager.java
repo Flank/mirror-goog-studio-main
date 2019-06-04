@@ -1827,14 +1827,6 @@ public class AvdManager {
     }
 
     /**
-     * @deprecated This should only be used by swt code, and should be removed once swt is removed.
-     */
-    @Deprecated
-    public AndroidSdkHandler getSdkHandler() {
-        return mSdkHandler;
-    }
-
-    /**
      * Create the user data file for an AVD
      * @param systemImage the system image of the AVD
      * @param avdFolder where the AVDs live

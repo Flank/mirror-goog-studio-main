@@ -74,7 +74,7 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
     if (vm->AttachCurrentThread(&jni, nullptr) != 0) {
 #else
     // TODO get rid of this. Currently bazel built with the jdk's jni headers
-    // which has a slightly different signature. Once bazel has swtiched to
+    // which has a slightly different signature. Once bazel has switched to
     // platform-dependent headers we will remove this.
     if (vm->AttachCurrentThread((void**)&jni, nullptr) != 0) {
 #endif

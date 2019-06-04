@@ -553,9 +553,6 @@ class AvdManagerCli extends CommandLineParser {
                 mSdkLog.info("     Type: Add-On\n");
                 mSdkLog.info("     Vendor: %s\n", target.getVendor());
                 mSdkLog.info("     Revision: %d\n", target.getRevision());
-                if (target.getDescription() != null) {
-                    mSdkLog.info("     Description: %s\n", target.getDescription());
-                }
                 mSdkLog.info("     Based on Android %s (API level %s)\n",
                         target.getVersionName(), target.getVersion().getApiString());
                 // display the optional libraries.

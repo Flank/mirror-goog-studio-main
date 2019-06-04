@@ -173,11 +173,6 @@ public class AddonTarget implements IAndroidTarget {
         return String.format("%1$s [%2$s]", getName(), mBasePlatform.getVersionName());
     }
 
-    @Override
-    public String getDescription() {
-        return mPackage.getDisplayName();
-    }
-
     @NonNull
     @Override
     public AndroidVersion getVersion() {

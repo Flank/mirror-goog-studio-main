@@ -101,11 +101,6 @@ public interface IAndroidTarget extends Comparable<IAndroidTarget> {
     String getShortClasspathName();
 
     /**
-     * Returns the description of the target.
-     */
-    String getDescription();
-
-    /**
      * Returns the version of the target. This is guaranteed to be non-null.
      */
     @NonNull

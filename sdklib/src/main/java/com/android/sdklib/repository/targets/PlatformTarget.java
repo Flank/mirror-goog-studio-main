@@ -228,12 +228,6 @@ public class PlatformTarget implements IAndroidTarget {
     }
 
     @Override
-    public String getDescription() {
-        // Unused outside swt
-        return getName();
-    }
-
-    @Override
     @NonNull
     public AndroidVersion getVersion() {
         return mDetails.getAndroidVersion();

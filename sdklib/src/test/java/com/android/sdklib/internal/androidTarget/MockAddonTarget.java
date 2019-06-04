@@ -58,11 +58,6 @@ public class MockAddonTarget implements IAndroidTarget {
     }
 
     @Override
-    public String getDescription() {
-        return getName();
-    }
-
-    @Override
     public String getFullName() {
         return getName();
     }

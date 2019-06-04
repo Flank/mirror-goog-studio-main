@@ -133,11 +133,6 @@ public class FakeAndroidTarget implements IAndroidTarget {
         return "android";
     }
 
-    @Override
-    public String getDescription() {
-        return "android";
-    }
-
     @NonNull
     @Override
     public AndroidVersion getVersion() {

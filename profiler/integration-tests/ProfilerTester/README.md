@@ -24,7 +24,7 @@ https://service.gradle.org/distributions.
 3.  Use the secondary dropdown to select the task to run
 4.  Click the "play" button to run the task. Observe the profilers in Android
     Studio
-5.  Click the "forward" or "rewind" buttons to swtich to another tasker or
+5.  Click the "forward" or "rewind" buttons to switch to another tasker or
     profiler
 
 ## Exporting zip for the QA team
