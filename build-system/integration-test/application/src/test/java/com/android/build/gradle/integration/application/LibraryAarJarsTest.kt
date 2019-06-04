@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Zip
@@ -147,8 +148,9 @@ class LibraryAarJarsTest {
             mainResources,
             jars["classes.jar"]!!,
             excludes,
-            null
-            )
+            null,
+            JarCreatorType.JAR_FLINGER
+        )
 
         assertThat(Zip(jars["classes.jar"]!!).entries.map(Path::toString)).containsExactly(
             // main classes

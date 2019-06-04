@@ -19,6 +19,8 @@ package com.android.build.gradle.internal.tasks
 import com.android.SdkConstants
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
+import com.android.build.gradle.internal.packaging.JarCreatorFactory
+import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -27,9 +29,7 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import zipflinger.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
-import com.android.builder.utils.isValidZipEntryName
 import com.android.utils.FileUtils
-import com.google.common.io.Closer
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
@@ -45,19 +45,10 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.nio.file.InvalidPathException
 import java.util.function.Predicate
 import java.util.function.Supplier
-import java.util.jar.JarEntry
 import java.util.regex.Pattern
-import java.util.zip.ZipEntry
-import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 
 /**
@@ -117,6 +108,9 @@ abstract class LibraryAarJarsTask
     @get:OutputDirectory
     abstract val localJarsLocation: DirectoryProperty
 
+    @get:Input
+    lateinit var jarCreatorType: JarCreatorType
+        private set
 
     override fun doTaskAction() {
         // non incremental task, need to clear out outputs.
@@ -146,7 +140,8 @@ abstract class LibraryAarJarsTask
                     .setTypedefFile(typedefRecipe.get().asFile)
             } else {
                 null
-            }
+            },
+            jarCreatorType
         )
     }
 
@@ -169,7 +164,8 @@ abstract class LibraryAarJarsTask
             resourceFiles: MutableSet<File>,
             toFile: File,
             filter: Predicate<String>,
-            typedefRemover: JarCreator.Transformer?) {
+            typedefRemover: JarCreator.Transformer?,
+            jarCreatorType: JarCreatorType) {
 
             // process main scope.
             mergeInputsToLocation(
@@ -177,15 +173,20 @@ abstract class LibraryAarJarsTask
                 resourceFiles,
                 toFile,
                 filter,
-                typedefRemover
+                typedefRemover,
+                jarCreatorType
             )
 
             // process local scope
-            processLocalJars(localJars, localJarsLocation)
+            processLocalJars(localJars, localJarsLocation, jarCreatorType)
         }
 
 
-        private fun processLocalJars(inputs: MutableSet<File>, localJarsLocation: File) {
+        private fun processLocalJars(
+            inputs: MutableSet<File>,
+            localJarsLocation: File,
+            jarCreatorType: JarCreatorType
+        ) {
 
             /*
              * Separate jar and dir inputs, then copy the jars (almost) as is
@@ -201,21 +202,22 @@ abstract class LibraryAarJarsTask
             for (jar in jarInputs) {
                 // we need to copy the jars but only take the class files as the resources have
                 // been merged into the main jar.
-                copyJarWithContentFilter(
-                    jar,
-                    File(localJarsLocation, jar.name),
-                    JarMerger.CLASSES_ONLY
-                )
+                JarCreatorFactory.make(
+                    File(localJarsLocation, jar.name).toPath(),
+                    JarMerger.CLASSES_ONLY,
+                    jarCreatorType
+                ).use { it.addJar(jar.toPath()) }
             }
 
             // now handle the folders.
-            if (!dirInputs.isEmpty()) {
-                JarMerger(
+            if (dirInputs.isNotEmpty()) {
+                JarCreatorFactory.make(
                     File(localJarsLocation, "otherclasses.jar").toPath(),
-                    JarMerger.CLASSES_ONLY
-                ).use { jarMerger ->
+                    JarMerger.CLASSES_ONLY,
+                    jarCreatorType
+                ).use {jarCreator ->
                     for (dir in dirInputs) {
-                        jarMerger.addDirectory(dir.toPath())
+                        jarCreator.addDirectory(dir.toPath())
                     }
                 }
             }
@@ -226,11 +228,12 @@ abstract class LibraryAarJarsTask
             resourceFiles: MutableSet<File>,
             toFile: File,
             filter: Predicate<String>,
-            typedefRemover: JarCreator.Transformer?
+            typedefRemover: JarCreator.Transformer?,
+            jarCreatorType: JarCreatorType
         ) {
             val filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter)
 
-            JarMerger(toFile.toPath()).use { jarMerger ->
+            JarCreatorFactory.make(toFile.toPath(), jarCreatorType).use { jarCreator ->
                 // Merge only class files on CLASS type inputs
                 for (input in classFiles) {
                     // Skip if file doesn't exist
@@ -239,9 +242,9 @@ abstract class LibraryAarJarsTask
                     }
 
                     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
-                        jarMerger.addJar(input.toPath(), filterAndOnlyClasses, null)
+                        jarCreator.addJar(input.toPath(), filterAndOnlyClasses, null)
                     } else {
-                        jarMerger.addDirectory(
+                        jarCreator.addDirectory(
                             input.toPath(), filterAndOnlyClasses, typedefRemover, null)
                     }
                 }
@@ -253,9 +256,9 @@ abstract class LibraryAarJarsTask
                     }
 
                     if (input.name.endsWith(SdkConstants.DOT_JAR)) {
-                        jarMerger.addJar(input.toPath(), filter, null)
+                        jarCreator.addJar(input.toPath(), filter, null)
                     } else {
-                        jarMerger.addDirectory(
+                        jarCreator.addDirectory(
                             input.toPath(), filter, typedefRemover, null)
                     }
                 }
@@ -278,70 +281,6 @@ abstract class LibraryAarJarsTask
                 excludes.add("$packagePath/BuildConfig.class$")
             }
             return excludes
-        }
-
-        // TODO(b/133510425): replace zip with zipflinger
-        fun copyJarWithContentFilter(
-            from: File, to: File, filter: Predicate<String>?
-        ) {
-            val buffer = ByteArray(4096)
-
-            Closer.create().use { closer ->
-                val fos = FileOutputStream(to)
-                val bos = BufferedOutputStream(fos)
-                val zos = closer.register(ZipOutputStream(bos))
-
-                val fis = FileInputStream(from)
-                val bis = BufferedInputStream(fis)
-                val zis = closer.register(ZipInputStream(bis))
-
-                // loop on the entries of the intermediary package
-                // and put them in the final package.
-                var entry: ZipEntry? = zis.nextEntry
-                while (entry != null) {
-                    val name = entry.name
-
-                    if (entry.isDirectory || filter != null && !filter.test(name)) {
-                        entry = zis.nextEntry
-                        continue
-                    }
-
-                    // Preserve the STORED method of the input entry.
-                    val newEntry: JarEntry =
-                        if (entry.method == JarEntry.STORED) {
-                            JarEntry(entry)
-                        } else {
-                            // Create a new entry so that the compressed len is recomputed.
-                            JarEntry(name)
-                        }
-
-                    if (!isValidZipEntryName(newEntry)) {
-                        throw InvalidPathException(
-                            newEntry.name, "Entry name contains invalid characters"
-                        )
-                    }
-
-                    newEntry.lastModifiedTime = JarMerger.ZERO_TIME
-                    newEntry.lastAccessTime = JarMerger.ZERO_TIME
-                    newEntry.creationTime = JarMerger.ZERO_TIME
-
-                    // add the entry to the jar archive
-                    zos.putNextEntry(newEntry)
-
-                    // read the content of the entry from the input stream, and write it into the
-                    // archive.
-                    var count: Int = zis.read(buffer)
-                    while (count != -1) {
-                        zos.write(buffer, 0, count)
-                        count = zis.read(buffer)
-                    }
-
-                    zos.closeEntry()
-                    zis.closeEntry()
-
-                    entry = zis.nextEntry
-                }
-            }
         }
     }
 
@@ -391,6 +330,8 @@ abstract class LibraryAarJarsTask
                 variantScope.variantConfiguration.packageFromManifest }
 
             task.packageBuildConfig = packageBuildConfig
+
+            task.jarCreatorType = variantScope.jarCreatorType
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES
