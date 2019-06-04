@@ -28,7 +28,7 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":transport_main",
+    binary = ":transport_main.stripped",
     filename = "transport",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
