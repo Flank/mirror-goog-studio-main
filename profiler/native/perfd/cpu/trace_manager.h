@@ -91,7 +91,8 @@ class TraceManager final {
   // the |ProfilingApp| record without calling any trace commands.
   ProfilingApp* StartProfiling(
       int64_t request_timestamp_ns,
-      const proto::CpuTraceConfiguration& configuration, std::string* error);
+      const proto::CpuTraceConfiguration& configuration,
+      proto::TraceStartStatus* status);
 
   // Request to stop an ongoing trace. Returns the cached ProfilingApp with
   // the end timestamp marked if there is an existing trace, nullptr otherwise.
@@ -108,8 +109,7 @@ class TraceManager final {
   // correct one.
   ProfilingApp* StopProfiling(int64_t request_timestamp_ns,
                               const std::string& app_name, bool need_trace,
-                              proto::TraceStopStatus::Status* status,
-                              std::string* error);
+                              proto::TraceStopStatus* status);
 
   // Returns the |ProfilingApp| of an app if there is an ongoing tracing, null
   // otherwise.

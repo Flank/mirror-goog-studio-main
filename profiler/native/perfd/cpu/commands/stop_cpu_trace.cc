@@ -40,11 +40,9 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
     stop_timestamp = daemon->clock()->GetCurrentTime();
   }
 
-  proto::TraceStopStatus::Status status;
-  std::string error;
+  TraceStopStatus status;
   auto* capture = trace_manager_->StopProfiling(
-      stop_timestamp, stop_command.configuration().app_name(), true, &status,
-      &error);
+      stop_timestamp, stop_command.configuration().app_name(), true, &status);
 
   Event status_event;
   status_event.set_pid(command().pid());
@@ -52,9 +50,10 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
   status_event.set_command_id(command().command_id());
   auto* stop_status =
       status_event.mutable_cpu_trace_status()->mutable_trace_stop_status();
+  stop_status->CopyFrom(status);
 
   if (capture != nullptr) {
-    if (status == TraceStopStatus::SUCCESS) {
+    if (status.status() == TraceStopStatus::SUCCESS) {
       if (stopped_from_api) {
         std::ostringstream oss;
         oss << capture->trace_id;
@@ -72,8 +71,8 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
         bool move_failed =
             fs.MoveFile(capture->configuration.temp_path(), oss.str());
         if (move_failed) {
-          status = TraceStopStatus::CANNOT_READ_FILE;
-          error = "Failed to read trace from device";
+          stop_status->set_status(TraceStopStatus::CANNOT_READ_FILE);
+          stop_status->set_error_message("Failed to read trace from device");
         }
       }
     }
@@ -91,18 +90,14 @@ Status StopCpuTrace::ExecuteOn(Daemon* daemon) {
     trace_info->set_trace_id(capture->trace_id);
     trace_info->set_from_timestamp(capture->start_timestamp);
     trace_info->set_to_timestamp(capture->end_timestamp);
-    auto* config = trace_info->mutable_configuration();
-    config->CopyFrom(capture->configuration);
-
-    stop_status->set_status(status);
-    stop_status->set_error_message(error);
+    trace_info->mutable_configuration()->CopyFrom(capture->configuration);
+    trace_info->mutable_start_status()->CopyFrom(capture->start_status);
+    trace_info->mutable_stop_status()->CopyFrom(capture->stop_status);
     status_event.set_group_id(capture->trace_id);
-    daemon->buffer()->Add(status_event);
 
+    daemon->buffer()->Add(status_event);
     daemon->buffer()->Add(event);
   } else {
-    stop_status->set_status(status);
-    stop_status->set_error_message(error);
     daemon->buffer()->Add(status_event);
   }
 

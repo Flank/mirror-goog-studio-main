@@ -37,6 +37,10 @@ struct ProfilingApp {
   int64_t end_timestamp;
   // The last start profiling requests processed successfully.
   profiler::proto::CpuTraceConfiguration configuration;
+  // The status associated with starting the trace.
+  profiler::proto::TraceStartStatus start_status;
+  // The status associated with stopping the trace.
+  profiler::proto::TraceStopStatus stop_status;
 };
 
 }  // namespace profiler

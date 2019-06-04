@@ -151,6 +151,8 @@ message CpuTraceInfo {
   int64 from_timestamp = 2;  // inclusive
   int64 to_timestamp = 3;    // inclusive
   CpuTraceConfiguration configuration = 4;
+  TraceStartStatus start_status = 5;
+  TraceStopStatus stop_status = 6;
 }
 
 message CpuTraceData {

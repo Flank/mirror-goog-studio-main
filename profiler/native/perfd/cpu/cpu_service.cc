@@ -134,6 +134,8 @@ grpc::Status CpuServiceImpl::GetTraceInfo(ServerContext* context,
     info->set_from_timestamp(datum.start_timestamp);
     info->set_to_timestamp(datum.end_timestamp);
     info->set_trace_id(datum.trace_id);
+    info->mutable_start_status()->CopyFrom(datum.start_status);
+    info->mutable_stop_status()->CopyFrom(datum.stop_status);
   }
   return Status::OK;
 }
@@ -174,17 +176,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
   Trace trace("CPU:StartProfilingApp");
-  string error;
-  auto* capture = trace_manager_->StartProfiling(
-      clock_->GetCurrentTime(), request->configuration(), &error);
   auto* status = response->mutable_status();
-  if (capture != nullptr) {
-    status->set_status(TraceStartStatus::SUCCESS);
-  } else {
-    status->set_status(TraceStartStatus::FAILURE);
-    status->set_error_message(error);
-  }
-
+  trace_manager_->StartProfiling(clock_->GetCurrentTime(),
+                                 request->configuration(), status);
   return Status::OK;
 }
 
@@ -197,14 +191,13 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 
 void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
                                         CpuProfilingAppStopResponse* response) {
-  proto::TraceStopStatus::Status status;
-  string error;
+  proto::TraceStopStatus status;
   bool need_response = response != nullptr;
   ProfilingApp* capture = trace_manager_->StopProfiling(
-      clock_->GetCurrentTime(), app_name, need_response, &status, &error);
+      clock_->GetCurrentTime(), app_name, need_response, &status);
 
   if (need_response) {
-    if (status == TraceStopStatus::SUCCESS) {
+    if (status.status() == TraceStopStatus::SUCCESS) {
       assert(capture != nullptr);
       response->set_trace_id(capture->trace_id);
       // Move over the file to the shared cached to be access via |GetBytes|
@@ -218,15 +211,13 @@ void CpuServiceImpl::DoStopProfilingApp(const string& app_name,
       bool move_failed =
           fs.MoveFile(capture->configuration.temp_path(), oss.str());
       if (move_failed) {
-        status = TraceStopStatus::CANNOT_READ_FILE;
-        error = "Failed to read trace from device";
+        capture->stop_status.set_status(TraceStopStatus::CANNOT_READ_FILE);
+        capture->stop_status.set_error_message(
+            "Failed to read trace from device");
       }
     }
 
-    auto* stop_status = response->mutable_status();
-    stop_status->set_status(status);
-    // Empty if success but simply set it for all cases.
-    stop_status->set_error_message(error);
+    response->mutable_status()->CopyFrom(capture->stop_status);
   }
 
   if (capture != nullptr) {
@@ -239,15 +230,15 @@ grpc::Status CpuServiceImpl::StartStartupProfiling(
     grpc::ServerContext* context,
     const profiler::proto::StartupProfilingRequest* request,
     profiler::proto::StartupProfilingResponse* response) {
-  string error;
+  TraceStartStatus start_status;
   ProfilingApp* capture = trace_manager_->StartProfiling(
-      clock_->GetCurrentTime(), request->configuration(), &error);
+      clock_->GetCurrentTime(), request->configuration(), &start_status);
 
   if (capture != nullptr) {
     response->set_status(proto::StartupProfilingResponse::SUCCESS);
   } else {
     response->set_status(proto::StartupProfilingResponse::FAILURE);
-    response->set_error_message(error);
+    response->set_error_message(start_status.error_message());
   }
 
   return Status::OK;

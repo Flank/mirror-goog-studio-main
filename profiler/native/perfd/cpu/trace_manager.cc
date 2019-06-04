@@ -15,6 +15,9 @@
  */
 #include "perfd/cpu/trace_manager.h"
 
+using profiler::proto::TraceStartStatus;
+using profiler::proto::TraceStopStatus;
+
 namespace profiler {
 
 static const int64_t kTraceRecordBufferSize = 10;
@@ -26,7 +29,8 @@ bool TraceManager::UsePerfetto() {
 
 ProfilingApp* TraceManager::StartProfiling(
     int64_t request_timestamp_ns,
-    const proto::CpuTraceConfiguration& configuration, std::string* error) {
+    const proto::CpuTraceConfiguration& configuration,
+    TraceStartStatus* status) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
   const auto& app_name = configuration.app_name();
@@ -38,10 +42,13 @@ ProfilingApp* TraceManager::StartProfiling(
           .first->second;
   // Early-out if there is an ongoing previous capture.
   if (!cache.empty() && cache.back().end_timestamp == -1) {
-    *error = "ongoing capture already exists";
+    status->set_status(TraceStartStatus::FAILURE);
+    status->set_error_message("ongoing capture already exists");
     return nullptr;
   }
 
+  status->set_status(TraceStartStatus::SUCCESS);
+  std::string error_message;
   bool success = false;
   if (configuration.initiation_type() == proto::INITIATED_BY_API) {
     // Special case for API-initiated tracing: Only cache the ProfilingApp
@@ -54,8 +61,8 @@ ProfilingApp* TraceManager::StartProfiling(
     if (user_options.trace_type() == proto::CpuTraceType::SIMPLEPERF) {
       success = simpleperf_manager_->StartProfiling(
           app_name, configuration.abi_cpu_arch(),
-          user_options.sampling_interval_us(), configuration.temp_path(), error,
-          startup_profiling);
+          user_options.sampling_interval_us(), configuration.temp_path(),
+          &error_message, startup_profiling);
     } else if (user_options.trace_type() == proto::CpuTraceType::ATRACE) {
       // TODO report back the acquired buffer size. Currently it is not used.
       int acquired_buffer_size_kb = 0;
@@ -68,11 +75,12 @@ ProfilingApp* TraceManager::StartProfiling(
             PerfettoManager::BuildConfig(app_name, acquired_buffer_size_kb);
         success = perfetto_manager_->StartProfiling(
             app_name, configuration.abi_cpu_arch(), config,
-            configuration.temp_path(), error);
+            configuration.temp_path(), &error_message);
       } else {
         success = atrace_manager_->StartProfiling(
             app_name, user_options.buffer_size_in_mb(),
-            &acquired_buffer_size_kb, configuration.temp_path(), error);
+            &acquired_buffer_size_kb, configuration.temp_path(),
+            &error_message);
       }
     } else {
       auto mode = user_options.trace_mode() == proto::CpuTraceMode::INSTRUMENTED
@@ -80,7 +88,7 @@ ProfilingApp* TraceManager::StartProfiling(
                       : ActivityManager::SAMPLING;
       success = activity_manager_->StartProfiling(
           mode, app_name, user_options.sampling_interval_us(),
-          configuration.temp_path(), error, startup_profiling);
+          configuration.temp_path(), &error_message, startup_profiling);
     }
   }
 
@@ -90,27 +98,31 @@ ProfilingApp* TraceManager::StartProfiling(
     profiling_app.start_timestamp = request_timestamp_ns;
     profiling_app.end_timestamp = -1;  // -1 means trace is ongoing
     profiling_app.configuration = configuration;
+    profiling_app.start_status.CopyFrom(*status);
 
     return cache.Add(profiling_app);
   } else {
+    status->set_status(TraceStartStatus::FAILURE);
+    status->set_error_message(error_message);
     return nullptr;
   }
 }
 
-ProfilingApp* TraceManager::StopProfiling(
-    int64_t request_timestamp_ns, const std::string& app_name, bool need_trace,
-    proto::TraceStopStatus::Status* status, std::string* error) {
+ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
+                                          const std::string& app_name,
+                                          bool need_trace,
+                                          TraceStopStatus* status) {
   std::lock_guard<std::recursive_mutex> lock(capture_mutex_);
 
   auto* ongoing_capture = GetOngoingCapture(app_name);
   if (ongoing_capture == nullptr) {
-    *error = "No ongoing capture exists";
-    *status = proto::TraceStopStatus::NO_ONGOING_PROFILING;
+    status->set_error_message("No ongoing capture exists");
+    status->set_status(TraceStopStatus::NO_ONGOING_PROFILING);
     return nullptr;
   }
 
-  *status = proto::TraceStopStatus::SUCCESS;
-
+  std::string error_message;
+  TraceStopStatus::Status stop_status = TraceStopStatus::SUCCESS;
   if (ongoing_capture->configuration.initiation_type() ==
       proto::INITIATED_BY_API) {
     // Special for API-initiated tracing: only update the
@@ -122,22 +134,28 @@ ProfilingApp* TraceManager::StopProfiling(
     auto trace_type =
         ongoing_capture->configuration.user_options().trace_type();
     if (trace_type == proto::CpuTraceType::SIMPLEPERF) {
-      *status = simpleperf_manager_->StopProfiling(
-          app_name, need_trace, cpu_config_.simpleperf_host(), error);
+      stop_status = simpleperf_manager_->StopProfiling(
+          app_name, need_trace, cpu_config_.simpleperf_host(), &error_message);
     } else if (trace_type == proto::CpuTraceType::ATRACE) {
       if (UsePerfetto()) {
-        *status = perfetto_manager_->StopProfiling(error);
+        stop_status = perfetto_manager_->StopProfiling(&error_message);
       } else {
-        *status = atrace_manager_->StopProfiling(app_name, need_trace, error);
+        stop_status = atrace_manager_->StopProfiling(app_name, need_trace,
+                                                     &error_message);
       }
     } else {  // Profiler is ART
-      *status = activity_manager_->StopProfiling(
-          app_name, need_trace, error, cpu_config_.art_stop_timeout_sec(),
+      stop_status = activity_manager_->StopProfiling(
+          app_name, need_trace, &error_message,
+          cpu_config_.art_stop_timeout_sec(),
           ongoing_capture->configuration.initiation_type() ==
               proto::INITIATED_BY_STARTUP);
     }
     ongoing_capture->end_timestamp = clock_->GetCurrentTime();
   }
+
+  status->set_status(stop_status);
+  status->set_error_message(error_message);
+  ongoing_capture->stop_status.CopyFrom(*status);
 
   return ongoing_capture;
 }

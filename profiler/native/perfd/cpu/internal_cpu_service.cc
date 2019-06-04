@@ -30,6 +30,7 @@ using profiler::proto::CpuTraceOperationRequest;
 using profiler::proto::CpuTraceOperationResponse;
 using profiler::proto::CpuTraceType;
 using profiler::proto::TraceInitiationType;
+using profiler::proto::TraceStartStatus;
 using profiler::proto::TraceStopStatus;
 
 namespace profiler {
@@ -50,11 +51,12 @@ Status InternalCpuServiceImpl::SendTraceEvent(
     user_options->set_trace_type(CpuTraceType::ART);
     user_options->set_trace_mode(CpuTraceMode::INSTRUMENTED);
 
-    std::string error_string;
+    TraceStartStatus start_status;
     auto* capture = trace_manager_->StartProfiling(
-        request->timestamp(), configuration, &error_string);
+        request->timestamp(), configuration, &start_status);
     if (capture == nullptr) {
-      std::cout << " START request ignored. " << error_string << std::endl;
+      std::cout << " START request ignored. " << start_status.error_message()
+                << std::endl;
       return Status::OK;
     }
 
@@ -73,10 +75,9 @@ Status InternalCpuServiceImpl::SendTraceEvent(
           "Debug.stopMethodTracing() is called but the running trace is not "
           "initiated by startMetghodTracing* APIs");
     } else {
-      TraceStopStatus::Status status;
-      std::string error_string;
+      TraceStopStatus stop_status;
       auto* capture = trace_manager_->StopProfiling(
-          request->timestamp(), app_name, false, &status, &error_string);
+          request->timestamp(), app_name, false, &stop_status);
       assert(capture != nullptr);
       std::ostringstream oss;
       oss << capture->trace_id;

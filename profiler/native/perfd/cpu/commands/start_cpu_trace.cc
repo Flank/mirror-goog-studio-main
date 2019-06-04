@@ -37,16 +37,17 @@ Status StartCpuTrace::ExecuteOn(Daemon* daemon) {
     start_timestamp = daemon->clock()->GetCurrentTime();
   }
 
-  std::string error;
+  TraceStartStatus start_status;
   auto* capture = trace_manager_->StartProfiling(
-      start_timestamp, start_command.configuration(), &error);
+      start_timestamp, start_command.configuration(), &start_status);
 
   Event status_event;
   status_event.set_pid(command().pid());
   status_event.set_kind(Event::CPU_TRACE_STATUS);
   status_event.set_command_id(command().command_id());
-  auto* status =
-      status_event.mutable_cpu_trace_status()->mutable_trace_start_status();
+  status_event.mutable_cpu_trace_status()
+      ->mutable_trace_start_status()
+      ->CopyFrom(start_status);
 
   vector<Event> events_to_send;
   if (capture != nullptr) {
@@ -62,17 +63,13 @@ Status StartCpuTrace::ExecuteOn(Daemon* daemon) {
     trace_info->set_trace_id(capture->trace_id);
     trace_info->set_from_timestamp(capture->start_timestamp);
     trace_info->set_to_timestamp(capture->end_timestamp);
-    auto* config = trace_info->mutable_configuration();
-    config->CopyFrom(capture->configuration);
-
-    status->set_status(TraceStartStatus::SUCCESS);
+    trace_info->mutable_configuration()->CopyFrom(capture->configuration);
+    trace_info->mutable_start_status()->CopyFrom(capture->start_status);
     status_event.set_group_id(capture->trace_id);
 
     events_to_send.push_back(status_event);
     events_to_send.push_back(event);
   } else {
-    status->set_status(TraceStartStatus::FAILURE);
-    status->set_error_message(error);
     events_to_send.push_back(status_event);
   }
   // For the case of startup or API-initiated tracing, the command could be

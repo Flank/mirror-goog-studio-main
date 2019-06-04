@@ -30,6 +30,7 @@ using google::protobuf::util::MessageDifferencer;
 using profiler::proto::CpuTraceConfiguration;
 using profiler::proto::CpuTraceMode;
 using profiler::proto::CpuTraceType;
+using profiler::proto::TraceStartStatus;
 using profiler::proto::TraceStopStatus;
 
 using std::string;
@@ -108,13 +109,14 @@ struct TraceManagerTest : testing::Test {
     user_options->set_trace_type(CpuTraceType::ATRACE);
     user_options->set_buffer_size_in_mb(8);
 
-    std::string error_string;
+    TraceStartStatus start_status;
     auto* capture =
-        trace_manager->StartProfiling(0, configuration, &error_string);
+        trace_manager->StartProfiling(0, configuration, &start_status);
 
     // Expect a success result.
     EXPECT_NE(capture, nullptr);
-    EXPECT_EQ(error_string, "");
+    EXPECT_EQ(start_status.status(), TraceStartStatus::SUCCESS);
+    EXPECT_EQ(start_status.error_message(), "");
 
     // Validate state.
     EXPECT_EQ(trace_manager->atrace_manager()->IsProfiling(), !expect_perfetto);
@@ -124,10 +126,11 @@ struct TraceManagerTest : testing::Test {
     // Stop profiling.
     // Test does not validate trace output so we don't need to wait for trace
     // file.
-    TraceStopStatus::Status status;
-    capture = trace_manager->StopProfiling(1, "fake_app", false, &status,
-                                           &error_string);
+    TraceStopStatus stop_status;
+    capture = trace_manager->StopProfiling(1, "fake_app", false, &stop_status);
     EXPECT_NE(capture, nullptr);
+    EXPECT_EQ(stop_status.status(), TraceStopStatus::SUCCESS);
+    EXPECT_EQ(stop_status.error_message(), "");
 
     // Validate state.
     EXPECT_FALSE(trace_manager->atrace_manager()->IsProfiling());
@@ -154,10 +157,11 @@ TEST_F(TraceManagerTest, StopSimpleperfTraceWhenDaemonTerminated) {
   auto user_options = configuration.mutable_user_options();
   user_options->set_trace_type(CpuTraceType::SIMPLEPERF);
 
-  std::string error_string;
+  TraceStartStatus start_status;
   auto* capture =
-      trace_manager->StartProfiling(0, configuration, &error_string);
+      trace_manager->StartProfiling(0, configuration, &start_status);
   EXPECT_NE(capture, nullptr);
+  EXPECT_EQ(start_status.status(), TraceStartStatus::SUCCESS);
 
   // Now, verify that no command has been issued to kill simpleperf.
   auto* fake_simpleperf = dynamic_cast<FakeSimpleperf*>(
@@ -207,9 +211,11 @@ TEST_F(TraceManagerTest, StopArtTraceWhenDaemonTerminated) {
   user_options->set_trace_mode(CpuTraceMode::SAMPLED);
   user_options->set_trace_type(CpuTraceType::ART);
 
-  std::string error_string;
-  auto* capture = trace_manager.StartProfiling(0, configuration, &error_string);
+  TraceStartStatus start_status;
+  auto* capture = trace_manager.StartProfiling(0, configuration, &start_status);
   EXPECT_NE(capture, nullptr);
+  EXPECT_EQ(start_status.status(), TraceStartStatus::SUCCESS);
+  EXPECT_TRUE(MessageDifferencer::Equals(start_status, capture->start_status));
   EXPECT_THAT(cmd_1, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd_1, HasSubstr(kProfileStart));
 
@@ -251,32 +257,37 @@ TEST_F(TraceManagerTest, CannotStartMultipleTracesOnSameApp) {
   auto user_options = configuration.mutable_user_options();
   user_options->set_trace_type(CpuTraceType::SIMPLEPERF);
 
-  std::string error_string1;
+  TraceStartStatus start_status1;
   auto* capture =
-      trace_manager->StartProfiling(10, configuration, &error_string1);
+      trace_manager->StartProfiling(10, configuration, &start_status1);
   EXPECT_NE(capture, nullptr);
-  EXPECT_EQ(error_string1, "");
+  EXPECT_EQ(start_status1.status(), TraceStartStatus::SUCCESS);
+  EXPECT_EQ(start_status1.error_message(), "");
   EXPECT_EQ(capture->start_timestamp, 10);
   EXPECT_EQ(capture->end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, capture->configuration));
+  EXPECT_TRUE(MessageDifferencer::Equals(start_status1, capture->start_status));
 
   // Starting again should fail.
-  std::string error_string2;
-  capture = trace_manager->StartProfiling(10, configuration, &error_string2);
+  TraceStartStatus start_status2;
+  capture = trace_manager->StartProfiling(10, configuration, &start_status2);
   EXPECT_EQ(capture, nullptr);
-  EXPECT_NE(error_string2, "");
+  EXPECT_EQ(start_status2.status(), TraceStartStatus::FAILURE);
+  EXPECT_NE(start_status2.error_message(), "");
 
   // Starting on different app is okay.
-  std::string error_string3;
   configuration.set_app_name("fake_app2");
-  capture = trace_manager->StartProfiling(20, configuration, &error_string3);
+  TraceStartStatus start_status3;
+  capture = trace_manager->StartProfiling(20, configuration, &start_status3);
   EXPECT_NE(capture, nullptr);
-  EXPECT_EQ(error_string3, "");
+  EXPECT_EQ(start_status3.status(), TraceStartStatus::SUCCESS);
+  EXPECT_EQ(start_status3.error_message(), "");
   EXPECT_EQ(capture->start_timestamp, 20);
   EXPECT_EQ(capture->end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, capture->configuration));
+  EXPECT_TRUE(MessageDifferencer::Equals(start_status3, capture->start_status));
 
   // Simulate that daemon is killed.
   termination_service_.reset(nullptr);
@@ -287,13 +298,12 @@ TEST_F(TraceManagerTest, StopBeforeStartsDoesNothing) {
   std::unique_ptr<TraceManager> trace_manager =
       ConfigureDefaultTraceManager(config);
 
-  std::string error_string;
-  TraceStopStatus::Status status;
-  auto* capture = trace_manager->StopProfiling(1, "fake_app", false, &status,
-                                               &error_string);
+  TraceStopStatus stop_status;
+  auto* capture =
+      trace_manager->StopProfiling(1, "fake_app", false, &stop_status);
   EXPECT_EQ(capture, nullptr);
-  EXPECT_EQ(status, TraceStopStatus::NO_ONGOING_PROFILING);
-  EXPECT_NE(error_string, "");
+  EXPECT_EQ(stop_status.status(), TraceStopStatus::NO_ONGOING_PROFILING);
+  EXPECT_NE(stop_status.error_message(), "");
 
   // Simulate that daemon is killed.
   termination_service_.reset(nullptr);
@@ -311,27 +321,29 @@ TEST_F(TraceManagerTest, StartStopSequence) {
   user_options->set_trace_type(CpuTraceType::ATRACE);
   user_options->set_buffer_size_in_mb(8);
 
-  std::string error_string1;
+  TraceStartStatus start_status;
   auto* capture =
-      trace_manager->StartProfiling(10, configuration, &error_string1);
+      trace_manager->StartProfiling(10, configuration, &start_status);
   EXPECT_NE(capture, nullptr);
-  EXPECT_EQ(error_string1, "");
+  EXPECT_EQ(start_status.status(), TraceStartStatus::SUCCESS);
+  EXPECT_EQ(start_status.error_message(), "");
   EXPECT_EQ(capture->start_timestamp, 10);
   EXPECT_EQ(capture->end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, capture->configuration));
+  EXPECT_TRUE(MessageDifferencer::Equals(start_status, capture->start_status));
 
   clock_.SetCurrentTime(20);
-  std::string error_string2;
-  TraceStopStatus::Status status;
-  capture = trace_manager->StopProfiling(15, "fake_app", false, &status,
-                                         &error_string2);
+  TraceStopStatus stop_status;
+  capture = trace_manager->StopProfiling(15, "fake_app", false, &stop_status);
   EXPECT_NE(capture, nullptr);
-  EXPECT_EQ(error_string2, "");
+  EXPECT_EQ(stop_status.status(), TraceStopStatus::SUCCESS);
+  EXPECT_EQ(stop_status.error_message(), "");
   EXPECT_EQ(capture->start_timestamp, 10);
   EXPECT_EQ(capture->end_timestamp, 20);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, capture->configuration));
+  EXPECT_TRUE(MessageDifferencer::Equals(stop_status, capture->stop_status));
 
   // Simulate that daemon is killed.
   termination_service_.reset(nullptr);
@@ -349,8 +361,8 @@ TEST_F(TraceManagerTest, GetOngoingCapture) {
   user_options->set_trace_type(CpuTraceType::ATRACE);
   user_options->set_buffer_size_in_mb(8);
 
-  std::string error_string1;
-  trace_manager->StartProfiling(10, configuration, &error_string1);
+  TraceStartStatus start_status;
+  trace_manager->StartProfiling(10, configuration, &start_status);
 
   // Query for a different app should return null.
   auto* capture = trace_manager->GetOngoingCapture("fake_app2");
@@ -362,12 +374,12 @@ TEST_F(TraceManagerTest, GetOngoingCapture) {
   EXPECT_EQ(capture->end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, capture->configuration));
+  EXPECT_TRUE(MessageDifferencer::Equals(start_status, capture->start_status));
 
   // Stopping the capture should return no ongoing capture.
   clock_.SetCurrentTime(20);
-  std::string error_string2;
-  TraceStopStatus::Status status;
-  trace_manager->StopProfiling(15, "fake_app", false, &status, &error_string2);
+  TraceStopStatus stop_status;
+  trace_manager->StopProfiling(15, "fake_app", false, &stop_status);
   capture = trace_manager->GetOngoingCapture("fake_app");
   EXPECT_EQ(capture, nullptr);
 
@@ -387,8 +399,8 @@ TEST_F(TraceManagerTest, GetCaptures) {
   user_options->set_trace_type(CpuTraceType::ATRACE);
   user_options->set_buffer_size_in_mb(8);
 
-  std::string error_string1;
-  trace_manager->StartProfiling(10, configuration, &error_string1);
+  TraceStartStatus start_status;
+  trace_manager->StartProfiling(10, configuration, &start_status);
 
   // Query for a different app should return null.
   auto captures = trace_manager->GetCaptures("fake_app2", 0, 10);
@@ -405,6 +417,8 @@ TEST_F(TraceManagerTest, GetCaptures) {
   EXPECT_EQ(captures[0].end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, captures[0].configuration));
+  EXPECT_TRUE(
+      MessageDifferencer::Equals(start_status, captures[0].start_status));
 
   // In-range query 2 (ongoing capture)
   captures = trace_manager->GetCaptures("fake_app1", 11, 20);
@@ -413,11 +427,12 @@ TEST_F(TraceManagerTest, GetCaptures) {
   EXPECT_EQ(captures[0].end_timestamp, -1);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, captures[0].configuration));
+  EXPECT_TRUE(
+      MessageDifferencer::Equals(start_status, captures[0].start_status));
 
   clock_.SetCurrentTime(20);
-  std::string error_string2;
-  TraceStopStatus::Status status;
-  trace_manager->StopProfiling(15, "fake_app1", false, &status, &error_string2);
+  TraceStopStatus stop_status;
+  trace_manager->StopProfiling(15, "fake_app1", false, &stop_status);
 
   // In-range query 3 (finished capture)
   captures = trace_manager->GetCaptures("fake_app1", 11, 20);
@@ -426,6 +441,9 @@ TEST_F(TraceManagerTest, GetCaptures) {
   EXPECT_EQ(captures[0].end_timestamp, 20);
   EXPECT_TRUE(
       MessageDifferencer::Equals(configuration, captures[0].configuration));
+  EXPECT_TRUE(
+      MessageDifferencer::Equals(start_status, captures[0].start_status));
+  EXPECT_TRUE(MessageDifferencer::Equals(stop_status, captures[0].stop_status));
 
   // out-of-range query
   captures = trace_manager->GetCaptures("fake_app1", 21, 30);
