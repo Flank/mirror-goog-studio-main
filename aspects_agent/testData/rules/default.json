@@ -1,0 +1,29 @@
+{
+  "methods":[
+    {
+      "name":"java.test.Test.method",
+      "aspect":"#warn1"
+    },
+    {
+      "name":"java.test.Test.method2",
+      "aspect":"#warn2"
+    }
+  ],
+  "annotations":[
+    {
+      "name":"@annotations.threading.Slow",
+      "aspect":"#warn3",
+      "group":"threading"
+    },
+    {
+      "name":"@annotations.threading.Fast",
+      "aspect":"#warn4",
+      "group":"threading"
+    },
+    {
+      "name":"@annotations.wow.Wow",
+      "aspect":"something.else#fail",
+      "group":"random"
+    }
+  ]
+}

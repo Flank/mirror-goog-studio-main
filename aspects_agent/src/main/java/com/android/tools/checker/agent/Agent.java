@@ -1,5 +1,7 @@
 package com.android.tools.checker.agent;
 
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
+
 import com.android.annotations.NonNull;
 import com.android.tools.checker.Assertions;
 import java.io.IOException;
@@ -12,11 +14,14 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.logging.Logger;
 
+
+
 @SuppressWarnings("unused") // Used via -javaagent path
 public class Agent {
     private static final Logger LOGGER = Logger.getLogger(Agent.class.getName());
 
-    public static void premain(String agentArgs, Instrumentation inst) throws IOException {
+    public static void premain(String agentArgs, Instrumentation inst)
+            throws IOException, RulesFileException {
         agentmain(agentArgs, inst);
     }
 
@@ -30,7 +35,8 @@ public class Agent {
         return value;
     }
 
-    public static void agentmain(String agentArgs, Instrumentation inst) throws IOException {
+    public static void agentmain(String agentArgs, Instrumentation inst)
+            throws IOException, RulesFileException {
         /*
          * agentArgs should be in one of the formats below:
          *
@@ -46,11 +52,11 @@ public class Agent {
          * pipe (|) character. For instance "com.pkg.MyClass.method1|com.pkg.OtherClass.method2".
          */
         String[] splitArgs = agentArgs.split(";");
-        String rulesFile = splitArgs[0];
         String baselineFile = splitArgs.length == 2 ? splitArgs[1] : null;
 
-        Map<String, String> aspectsMap =
-                RulesFile.parserRulesFile(rulesFile, Function.identity(), Agent::shortcutProcessor);
+        RulesFile rulesFile = new RulesFile(splitArgs[0]);
+        rulesFile.parseRulesFile(Function.identity(), Agent::shortcutProcessor);
+        Map<String, String> aspectsMap = rulesFile.getAspects();
         LOGGER.info(String.format("Starting Aspect agent (%d rules)", aspectsMap.size()));
 
         Aspects aspects = new Aspects(aspectsMap);

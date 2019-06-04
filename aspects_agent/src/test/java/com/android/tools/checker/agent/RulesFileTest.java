@@ -1,35 +1,133 @@
 package com.android.tools.checker.agent;
 
+import static com.android.tools.checker.agent.RulesFile.RulesFileException;
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import com.android.testutils.TestUtils;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.function.Function;
 import org.junit.Test;
 
 public class RulesFileTest {
+
     @Test
-    public void testBasic() throws IOException {
-        final String content =
-                " # Test comment\n"
-                        + "# invalid()V=#test\n"
-                        + "java.test.Test.method()V=#warn1\n"
-                        + "\n"
-                        + "# Another comment\n"
-                        + "java.test.Test.method2()V=#warn2\n"
-                        + "# Annotation\n"
-                        + "@com.google.test.Blocking=#warn3\n";
+    public void rulesWithMethodsAndAnnotations() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("default.json");
 
-        File outputTest = File.createTempFile("test", ".txt");
-        outputTest.deleteOnExit();
-        Files.write(outputTest.toPath(), content.getBytes(), StandardOpenOption.CREATE);
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertEquals("#warn1", aspects.get("java.test.Test.method"));
+        assertEquals("#warn2", aspects.get("java.test.Test.method2"));
+        assertEquals("#warn3", aspects.get("@annotations.threading.Slow"));
+        assertEquals("#warn4", aspects.get("@annotations.threading.Fast"));
+        assertEquals("something.else#fail", aspects.get("@annotations.wow.Wow"));
+        assertEquals(5, aspects.size());
 
-        Map<String, String> result = RulesFile.parserRulesFile(outputTest.getAbsolutePath());
-        assertEquals("#warn1", result.get("java.test.Test.method()V"));
-        assertEquals("#warn2", result.get("java.test.Test.method2()V"));
-        assertEquals("#warn3", result.get("@com.google.test.Blocking"));
-        assertEquals(3, result.size());
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertEquals("threading", annotationGroups.get("annotations.threading.Slow"));
+        assertEquals("threading", annotationGroups.get("annotations.threading.Fast"));
+        assertEquals("random", annotationGroups.get("annotations.wow.Wow"));
+        assertEquals(3, annotationGroups.size());
+    }
+
+    @Test
+    public void rulesOnlyWithAnnotations() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("only_annotations.json");
+
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertEquals("#warn3", aspects.get("@annotations.threading.Slow"));
+        assertEquals("#warn4", aspects.get("@annotations.threading.Fast"));
+        assertEquals("something.else#fail", aspects.get("@annotations.wow.Wow"));
+        assertEquals(3, aspects.size());
+
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertEquals("threading", annotationGroups.get("annotations.threading.Slow"));
+        assertEquals("threading", annotationGroups.get("annotations.threading.Fast"));
+        assertEquals("random", annotationGroups.get("annotations.wow.Wow"));
+        assertEquals(3, annotationGroups.size());
+    }
+
+    @Test
+    public void annotationsWithoutGroup() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("annotations_no_group.json");
+
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertEquals("#warn3", aspects.get("@annotations.threading.Slow"));
+        assertEquals("#warn4", aspects.get("@annotations.threading.Fast"));
+        assertEquals("something.else#fail", aspects.get("@annotations.wow.Wow"));
+        assertEquals(3, aspects.size());
+
+        // Although we process 3 annotations, only 2 of them have a group specified.
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertEquals("threading", annotationGroups.get("annotations.threading.Slow"));
+        assertEquals("random", annotationGroups.get("annotations.wow.Wow"));
+        assertEquals(2, annotationGroups.size());
+    }
+
+    @Test
+    public void rulesOnlyWithMethods() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("only_methods.json");
+
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertEquals("#warn1", aspects.get("java.test.Test.method"));
+        assertEquals("#warn2", aspects.get("java.test.Test.method2"));
+        assertEquals(2, aspects.size());
+
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertTrue(annotationGroups.isEmpty());
+    }
+
+    @Test
+    public void emptyRules() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("empty.json");
+
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertTrue(aspects.isEmpty());
+
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertTrue(annotationGroups.isEmpty());
+    }
+
+    @Test
+    public void malformedRulesFile() throws IOException {
+        try {
+            parserRulesFile("malformed_file.json");
+            fail(); // RulesFileException is expected to be thrown.
+        } catch (RulesFileException ignore) {
+            // expected
+        }
+    }
+
+    @Test
+    public void noNameField() throws IOException {
+        try {
+            parserRulesFile("no_name_field.json");
+            fail(); // RulesFileException is expected to be thrown.
+        } catch (RulesFileException ignore) {
+            // expected
+        }
+    }
+
+    @Test
+    public void noAspectField() throws IOException {
+        try {
+            parserRulesFile("no_aspect_field.json");
+            fail(); // RulesFileException is expected to be thrown.
+        } catch (RulesFileException ignore) {
+            // expected
+        }
+    }
+
+    private static RulesFile parserRulesFile(String rulesFileName)
+            throws FileNotFoundException, RulesFileException {
+        String testDataPath = "tools/base/aspects_agent/testData/rules/";
+        File rules = TestUtils.getWorkspaceFile(String.format("%s%s", testDataPath, rulesFileName));
+        RulesFile rulesFile = new RulesFile(rules.getAbsolutePath());
+        rulesFile.parseRulesFile(Function.identity(), Function.identity());
+        return rulesFile;
     }
 }

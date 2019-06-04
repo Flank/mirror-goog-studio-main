@@ -1,0 +1,12 @@
+{
+  "methods":[
+    {
+      "name":"java.test.Test.method",
+      "aspect":"#warn1"
+    },
+    {
+      "name":"java.test.Test.method2",
+      "aspect":"#warn2"
+    }
+  ]
+}

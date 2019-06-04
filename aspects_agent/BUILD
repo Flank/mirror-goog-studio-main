@@ -16,6 +16,7 @@ java_binary(
         "//tools/base/annotations",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/idea/.idea/libraries:gson",
     ],
 )
 
@@ -52,6 +53,7 @@ iml_module(
     srcs = ["src/main"],
     iml_files = ["android.sdktools.aspects_agent.iml"],
     test_coverage = True,
+    test_data = glob(["testData/**"]),
     test_srcs = ["src/test"],
     visibility = ["//visibility:public"],
     deps = [
@@ -61,5 +63,6 @@ iml_module(
         "//tools/base/third_party:junit_junit[test]",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
+        "//tools/idea/.idea/libraries:gson",
     ],
 )

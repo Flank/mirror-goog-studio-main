@@ -1,0 +1,19 @@
+{
+  "annotations":[
+    {
+      "name":"@annotations.threading.Slow",
+      "aspect":"#warn3",
+      "group":"threading"
+    },
+    {
+      "name":"@annotations.threading.Fast",
+      "aspect":"#warn4",
+      "group":"threading"
+    },
+    {
+      "name":"@annotations.wow.Wow",
+      "aspect":"something.else#fail",
+      "group":"random"
+    }
+  ]
+}
