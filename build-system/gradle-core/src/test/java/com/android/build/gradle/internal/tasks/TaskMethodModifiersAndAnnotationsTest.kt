@@ -172,7 +172,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setJniDebugBuild",
                 "com.android.build.gradle.tasks.PackageAndroidArtifact::setSigningConfig",
-                "com.android.build.gradle.tasks.ProcessAnnotationsTask::setVariantName",
                 "com.android.build.gradle.tasks.ProcessApplicationManifest::setVariantConfiguration",
                 "com.android.build.gradle.tasks.ProcessLibraryManifest::setVariantConfiguration",
                 "com.android.build.gradle.tasks.ProcessTestManifest::setTestManifestFile",

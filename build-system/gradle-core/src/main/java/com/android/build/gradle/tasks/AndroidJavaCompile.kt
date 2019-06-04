@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.APPEND
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder.OperationType.INITIAL
-import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.ANNOTATION_PROCESSOR_LIST
+import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC
 import com.android.build.gradle.internal.scope.VariantScope
@@ -30,7 +30,6 @@ import com.android.sdklib.AndroidTargetHash
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.base.Joiner
 import org.gradle.api.JavaVersion
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RegularFileProperty
@@ -53,24 +52,25 @@ import java.io.File
  * Task to perform compilation for Java source code, without or with annotation processing depending
  * on whether annotation processing is done by a separate task or not.
  *
- * The separate annotation processing task can be either KaptTask or [ProcessAnnotationsTask].
+ * The separate annotation processing task can be either KaptTask or the process-annotations task
+ * (task created in [ProcessAnnotationsTaskCreationAction]).
  *
- * [ProcessAnnotationsTask] is needed if all of the following conditions are met:
+ * Process-annotations task is needed if all of the following conditions are met:
  *   1. Incremental compilation is requested (either by the user through the DSL or by default)
  *   2. Kapt is not used
  *   3. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
  *
  * When Kapt is used (e.g., in most Kotlin-only or hybrid Kotlin-Java projects):
- *   + [ProcessAnnotationsTask] is not created.
+ *   + Process-annotations task is not created.
  *   + KaptTask performs annotation processing only, without compiling.
  *   + [AndroidJavaCompile] and KotlinCompile perform compilation only, without annotation
  *     processing.
 
  * When Kapt is not used, (e.g., in Java-only projects):
- *   + If [ProcessAnnotationsTask] is needed (see above), [ProcessAnnotationsTask] first performs
+ *   + If process-annotations task is needed (see above), process-annotations task first performs
  *     annotation processing only, without compiling, and [AndroidJavaCompile] then performs
  *     compilation only, without annotation processing.
- *   + Otherwise, [ProcessAnnotationsTask] is not created, and [AndroidJavaCompile] performs both
+ *   + Otherwise, process-annotations task is not created, and [AndroidJavaCompile] performs both
  *     annotation processing and compilation.
  */
 @CacheableTask
@@ -324,14 +324,13 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             super.configure(task)
 
             val globalScope = variantScope.globalScope
-            val project = globalScope.project
             val compileOptions = globalScope.extension.compileOptions
             val separateAnnotationProcessingFlag = globalScope
                 .projectOptions
                 .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
 
             // Configure properties that are shared between AndroidJavaCompile and
-            // ProcessAnnotationTask.
+            // process-annotations task.
             task.configureProperties(variantScope)
 
             // Configure properties that are specific to AndroidJavaCompile
@@ -345,16 +344,8 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
             )
             task.compileSdkVersion = globalScope.extension.compileSdkVersion
 
-            // Configure properties for annotation processing, but only if this task is actually
-            // going to perform annotation processing (i.e., annotation processing is not done by
-            // ProcessAnnotationsTask).
-            if (!processAnnotationsTaskCreated) {
-                task.configurePropertiesForAnnotationProcessing(
-                    variantScope,
-                    task.annotationProcessorOutputDirectory
-                )
-            } else {
-                // Otherwise, we will disable annotation processing (see the task action).
+            if (processAnnotationsTaskCreated) {
+                // We will disable annotation processing (see the task action).
                 //
                 // We still need to set the annotation processor path because:
                 //   1. Java compiler plugins like Error Prone share their classpath with annotation
@@ -363,16 +354,14 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                 //      annotation processor.
                 // See https://issuetracker.google.com/130531986.
                 task.configureAnnotationProcessorPath(variantScope)
-            }
 
-            // Collect the list of source files to process/compile, which includes the annotation
-            // processing output if annotation processing is done by ProcessAnnotationsTask
-            if (processAnnotationsTaskCreated) {
                 task.separateTaskAnnotationProcessorOutputDirectory.set(
                     variantScope.artifacts.getFinalProduct(AP_GENERATED_SOURCES)
                 )
                 val generatedSources =
-                    project.fileTree(task.separateTaskAnnotationProcessorOutputDirectory)
+                    globalScope.project.fileTree(
+                        task.separateTaskAnnotationProcessorOutputDirectory
+                    )
                         .builtBy(task.separateTaskAnnotationProcessorOutputDirectory)
                 task.sourceFileTrees = {
                     val sources = mutableListOf<FileTree>()
@@ -381,15 +370,14 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     sources.toList()
                 }
             } else {
+                // Configure properties for annotation processing, because this task is actually
+                // going to perform annotation processing (i.e., annotation processing is not done
+                // by process-annotations task).
+                task.configurePropertiesForAnnotationProcessing(
+                    variantScope,
+                    task.annotationProcessorOutputDirectory
+                )
                 task.sourceFileTrees = { variantScope.variantData.javaSources }
-            }
-
-            // The annotation processor output is either an input or an output of this task, so one
-            // of the following fields will not be used.
-            if (processAnnotationsTaskCreated) {
-                task.annotationProcessorOutputDirectory.set(null as Directory?)
-            } else {
-                task.separateTaskAnnotationProcessorOutputDirectory.set(null as Directory?)
             }
         }
     }

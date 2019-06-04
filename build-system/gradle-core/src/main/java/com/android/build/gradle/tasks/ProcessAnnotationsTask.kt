@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
+@file:JvmName("ProcessAnnotationsTask")
+
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType.AP_GENERATED_SOURCES
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.VariantAwareTask
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import org.gradle.api.tasks.CacheableTask
+import com.android.build.gradle.internal.scope.getOutputDirectory
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.FileTree
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs
-import javax.inject.Inject
 
 /**
  * Task to perform annotation processing only, without compiling.
@@ -43,117 +35,88 @@ import javax.inject.Inject
  * This task may or may not be created depending on whether it is needed. See the documentation of
  * [AndroidJavaCompile] for more details.
  */
-@CacheableTask
-abstract class ProcessAnnotationsTask @Inject constructor(objects: ObjectFactory) : JavaCompile(),
-    VariantAwareTask {
+class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScope) :
+    TaskCreationAction<JavaCompile>() {
 
-    @get:Internal
-    override lateinit var variantName: String
+    override val name: String
+        get() = variantScope.getTaskName("process", "AnnotationsWithJavac")
 
-    @get:Internal
-    lateinit var sourceFileTrees: () -> List<FileTree>
-        private set
+    override val type: Class<JavaCompile>
+        get() = JavaCompile::class.java
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    @SkipWhenEmpty
-    fun getSources(): FileTree {
-        return this.project.files(this.sourceFileTrees()).asFileTree
+    private val output = variantScope.globalScope.project.objects.directoryProperty()
+
+    override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
+        super.handleProvider(taskProvider)
+
+        output.set(AP_GENERATED_SOURCES.getOutputDirectory(
+            variantScope.globalScope.project.layout.buildDirectory,
+            variantScope.artifacts.getIdentifier(),
+            name
+        ))
+
+        variantScope.artifacts.producesDir(
+            AP_GENERATED_SOURCES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            { output }
+        )
     }
 
-    @get:OutputDirectory
-    val annotationProcessorOutputDirectory: DirectoryProperty = objects.directoryProperty()
+    override fun configure(task: JavaCompile) {
+        val taskContainer: MutableTaskContainer = variantScope.taskContainer
+        task.dependsOn(taskContainer.preBuildTask)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.fullVariantName)
 
-    override fun compile(inputs: IncrementalTaskInputs) {
-        // Perform annotation processing only (but only if the user did not request -proc:none)
-        if (options.compilerArgs.contains(PROC_NONE)) {
-            return
-        } else {
-            options.compilerArgs.add(PROC_ONLY)
-        }
+        // Configure properties that are shared between AndroidJavaCompile and
+        // ProcessAnnotationTask
+        task.configureProperties(variantScope)
 
+        // Configure properties for annotation processing
+        task.configurePropertiesForAnnotationProcessing(variantScope, output)
+
+        // Collect the list of source files to process
+        task.source = task.project.files({ variantScope.variantData.javaSources }).asFileTree
+
+        // Since this task does not output compiled classes, destinationDir will not be used.
+        // However, Gradle requires this property to be set, so let's just set it to the
+        // annotation processor output directory for convenience.
+        task.destinationDir = output.get().asFile
+
+        // manually declare our output directory as a Task output since it's not annotated as
+        // an OutputDirectoy on the task implementation.
+        task.outputs.dir(output)
+
+        task.options.compilerArgs.add(PROC_ONLY)
         // Disable incremental mode as Gradle's JavaCompile currently does not work correctly in
         // incremental mode when -proc:only is used. We will revisit this issue later and
         // investigate what it means for an annotation-processing-only task to be incremental.
-        options.isIncremental = false
+        task.options.isIncremental = false
 
-        // For incremental compile to work, Gradle requires individual sources to be added one by
-        // one, rather than adding one single composite FileTree aggregated from the individual
-        // sources (method getSources() above).
-        for (source in sourceFileTrees()) {
-            this.source(source)
-        }
-
-        super.compile(inputs)
+        // Perform annotation processing only (but only if the user did not request -proc:none)
+        task.onlyIf { PROC_NONE !in task.options.compilerArgs }
     }
+}
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<ProcessAnnotationsTask>(variantScope) {
+/**
+ * Determine whether task for separate annotation processing should be created.
+ *
+ * As documented at [AndroidJavaCompile], separate annotation processing is needed if all of the
+ * following conditions are met:
+ *   1. Incremental compilation is requested (either by the user through the DSL or by
+ *      default)
+ *   2. Kapt is not used
+ *   3. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
+ */
+fun taskShouldBeCreated(variantScope: VariantScope): Boolean {
+    val globalScope = variantScope.globalScope
+    val project = globalScope.project
+    val compileOptions = globalScope.extension.compileOptions
+    val separateAnnotationProcessingFlag = globalScope
+        .projectOptions
+        .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
 
-        override val name: String
-            get() = variantScope.getTaskName("process", "AnnotationsWithJavac")
-
-        override val type: Class<ProcessAnnotationsTask>
-            get() = ProcessAnnotationsTask::class.java
-
-        override fun handleProvider(taskProvider: TaskProvider<out ProcessAnnotationsTask>) {
-            super.handleProvider(taskProvider)
-
-            variantScope.artifacts.producesDir(
-                AP_GENERATED_SOURCES,
-                BuildArtifactsHolder.OperationType.APPEND,
-                taskProvider,
-                ProcessAnnotationsTask::annotationProcessorOutputDirectory
-            )
-        }
-
-        override fun configure(task: ProcessAnnotationsTask) {
-            super.configure(task)
-
-            // Configure properties that are shared between AndroidJavaCompile and
-            // ProcessAnnotationTask
-            task.configureProperties(variantScope)
-
-            // Configure properties for annotation processing
-            task.configurePropertiesForAnnotationProcessing(
-                variantScope,
-                task.annotationProcessorOutputDirectory
-            )
-
-            // Collect the list of source files to process
-            task.sourceFileTrees = { variantScope.variantData.javaSources }
-
-            // Since this task does not output compiled classes, destinationDir will not be used.
-            // However, Gradle requires this property to be set, so let's just set it to the
-            // annotation processor output directory for convenience.
-            task.setDestinationDir(task.annotationProcessorOutputDirectory.asFile)
-        }
-    }
-
-    companion object {
-
-        /**
-         * Determine whether [ProcessAnnotationsTask] should be created.
-         *
-         * As documented at [AndroidJavaCompile], [ProcessAnnotationsTask] is needed if all of the
-         * following conditions are met:
-         *   1. Incremental compilation is requested (either by the user through the DSL or by
-         *      default)
-         *   2. Kapt is not used
-         *   3. The [BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING] flag is enabled
-         */
-        @JvmStatic
-        fun taskShouldBeCreated(variantScope: VariantScope): Boolean {
-            val globalScope = variantScope.globalScope
-            val project = globalScope.project
-            val compileOptions = globalScope.extension.compileOptions
-            val separateAnnotationProcessingFlag = globalScope
-                .projectOptions
-                .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
-
-            return compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
-                    && !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
-                    && separateAnnotationProcessingFlag
-        }
-    }
+    return compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
+            && !project.pluginManager.hasPlugin(KOTLIN_KAPT_PLUGIN_ID)
+            && separateAnnotationProcessingFlag
 }

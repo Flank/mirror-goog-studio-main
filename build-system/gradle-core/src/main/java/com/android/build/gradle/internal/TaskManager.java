@@ -199,6 +199,7 @@ import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.ProcessAnnotationsTask;
+import com.android.build.gradle.tasks.ProcessAnnotationsTaskCreationAction;
 import com.android.build.gradle.tasks.ProcessApplicationManifest;
 import com.android.build.gradle.tasks.ProcessLibraryManifest;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -1255,7 +1256,7 @@ public abstract class TaskManager {
 
         boolean processAnnotationsTaskCreated = ProcessAnnotationsTask.taskShouldBeCreated(scope);
         if (processAnnotationsTaskCreated) {
-            taskFactory.register(new ProcessAnnotationsTask.CreationAction(scope));
+            taskFactory.register(new ProcessAnnotationsTaskCreationAction(scope));
         }
 
         final TaskProvider<? extends JavaCompile> javacTask =

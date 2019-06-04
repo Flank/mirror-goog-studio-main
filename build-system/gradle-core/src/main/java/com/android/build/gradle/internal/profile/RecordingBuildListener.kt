@@ -23,13 +23,10 @@ import com.android.builder.profile.ProfileRecordWriter
 import com.android.builder.profile.Recorder
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType
-import com.google.wireless.android.sdk.stats.GradleTaskExecution
-import java.util.concurrent.ConcurrentHashMap
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.tasks.TaskState
-import java.time.Duration
-import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Implementation of the [TaskExecutionListener] that records the execution span of
@@ -106,13 +103,13 @@ class RecordingBuildListener internal constructor(
         private val logger = LoggerWrapper.getLogger(RecordingBuildListener::class.java)
 
         private fun getVariantName(task: Task): String? {
-            if (task !is VariantAwareTask) {
-                return null
+            return if (task is VariantAwareTask) {
+                task.variantName.takeIf { it.isNotEmpty() }
+            } else {
+                task.extensions.findByName(PROPERTY_VARIANT_NAME_KEY) as String?
             }
-            val variantName = (task as VariantAwareTask).variantName
-            return if (variantName.isEmpty()) {
-                null
-            } else variantName
         }
     }
 }
+
+const val PROPERTY_VARIANT_NAME_KEY = "AGP_VARIANT_NAME"

@@ -37,6 +37,7 @@ import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
 import org.junit.Assume.assumeTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -58,7 +59,7 @@ class IncrementalJavaCompileWithAPsTest(
         @Parameterized.Parameters(name = "kapt_{0}_separateAP_{1}_incrementalAPs_{2}")
         @JvmStatic
         fun parameters() = listOf(
-            // When Kapt is used, ProcessAnnotationsTask is not created and AndroidJavaCompile
+            // When Kapt is used, process-annotations task is not created and AndroidJavaCompile
             // performs incremental compilation regardless of the values of the other two
             // parameters. Therefore, testing one scenario is good enough (as we want to save test
             // execution time).
@@ -797,9 +798,9 @@ class IncrementalJavaCompileWithAPsTest(
 
     @Test
     fun `ensure correct build when no annotation processors are present`() {
-        // This test is needed only when annotation processing is done by ProcessAnnotationsTask.
+        // This test is needed only when annotation processing is done by process-annotations task.
         // It checks the Java compiler's behavior when the -proc:only option is specified but no
-        // annotation processors are present. See ProcessAnnotationsTask.compile().
+        // annotation processors are present. See ProcessAnnotationsTaskCreationAction.
         assumeTrue(!withKapt && withSeparateAP && !withIncrementalAPs)
 
         val appDir = project.getSubproject(APP_MODULE).testDir

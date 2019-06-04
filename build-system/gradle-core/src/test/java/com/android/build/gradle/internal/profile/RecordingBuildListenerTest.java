@@ -47,12 +47,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.tasks.TaskState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -62,6 +64,8 @@ public class RecordingBuildListenerTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
 
     @Mock Task task;
+
+    @Mock ExtensionContainer extensionContainer;
 
     @Mock Task secondTask;
 
@@ -96,13 +100,16 @@ public class RecordingBuildListenerTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         when(project.getPath()).thenReturn(":projectName");
+        when(extensionContainer.findByName(Mockito.any())).thenReturn(null);
         when(task.getName()).thenThrow(new AssertionError("Nothing should be using task name"));
         when(task.getPath()).thenReturn(":projectName:taskName");
         when(task.getProject()).thenReturn(project);
+        when(task.getExtensions()).thenReturn(extensionContainer);
         when(secondTask.getPath()).thenReturn(":projectName:task2Name");
         when(secondTask.getName())
                 .thenThrow(new AssertionError("Nothing should be using task name"));
         when(secondTask.getProject()).thenReturn(project);
+        when(secondTask.getExtensions()).thenReturn(extensionContainer);
         mProfileProtoFile = Jimfs.newFileSystem().getPath(
                 tmpFolder.newFile("profile_proto.rawproto").getAbsolutePath());
         ProcessProfileWriterFactory.initializeForTests();
@@ -199,6 +206,7 @@ public class RecordingBuildListenerTest {
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(project);
+        when(secondTask.getExtensions()).thenReturn(extensionContainer);
 
         // first thread start
         listener.beforeExecute(task);
@@ -232,6 +240,7 @@ public class RecordingBuildListenerTest {
         Task secondTask = mock(Task.class);
         when(secondTask.getPath()).thenReturn(":projectName:secondTaskName");
         when(secondTask.getProject()).thenReturn(project);
+        when(secondTask.getExtensions()).thenReturn(extensionContainer);
 
         // first thread start
         listener.beforeExecute(task);
