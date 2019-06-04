@@ -17,6 +17,8 @@
 package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResValue
+import com.android.aaptcompiler.android.parseHex
+import com.android.aaptcompiler.android.stringToFloat
 import com.android.aaptcompiler.android.stringToInt
 
 fun tryParseBool(string: String) : BinaryPrimitive? {
@@ -66,3 +68,73 @@ fun parseResourceId(value: String): Int? {
   }
   return null
 }
+
+fun tryParseFloat(value: String) : BinaryPrimitive? {
+  val floatResource = stringToFloat(value)
+  floatResource ?: return null
+
+  return BinaryPrimitive(floatResource)
+}
+
+fun tryParseColor(value: String): BinaryPrimitive? {
+  val colorStr = value.trim()
+  if (colorStr.isEmpty() || colorStr[0] != '#') {
+    return null
+  }
+
+  val dataType: ResValue.DataType
+  var data = 0
+  var error = false
+
+  when (colorStr.length) {
+    4 -> {
+      dataType = ResValue.DataType.INT_COLOR_RGB4
+      for (i in 1..3) {
+        val hexValue = parseHex(colorStr.codePointAt(i))
+        if (hexValue == -1) {
+          error = true
+          break
+        }
+        data = (data shl 8) or (hexValue + (hexValue shl 4))
+      }
+      data = data or 0xff000000.toInt()
+    }
+    5 -> {
+      dataType = ResValue.DataType.INT_COLOR_ARGB4
+      for (i in 1..4) {
+        val hexValue = parseHex(colorStr.codePointAt(i))
+        if (hexValue == -1) {
+          error = true
+          break
+        }
+        data = (data shl 8) or (hexValue + (hexValue shl 4))
+      }
+    }
+    7 -> {
+      dataType = ResValue.DataType.INT_COLOR_RGB8
+      for (i in 1..6) {
+        val hexValue = parseHex(colorStr.codePointAt(i))
+        if (hexValue == -1) {
+          error = true
+          break
+        }
+        data = (data shl 4) or hexValue
+      }
+      data = data or 0xff000000.toInt()
+    }
+    9 -> {
+      dataType = ResValue.DataType.INT_COLOR_ARGB8
+      for (i in 1..8) {
+        val hexValue = parseHex(colorStr.codePointAt(i))
+        if (hexValue == -1) {
+          error = true
+          break
+        }
+        data = (data shl 4) or hexValue
+      }
+    }
+    else -> return null
+  }
+  return if (error) BinaryPrimitive(ResValue()) else BinaryPrimitive(ResValue(dataType, data))
+}
+

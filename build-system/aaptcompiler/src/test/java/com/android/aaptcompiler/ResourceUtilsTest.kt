@@ -32,4 +32,23 @@ class ResourceUtilsTest {
     Truth.assertThat(tryParseNullOrEmpty("@empty"))
       .isEqualTo(BinaryPrimitive(ResValue(ResValue.DataType.NULL, ResValue.NullFormat.EMPTY)))
   }
+
+  @Test
+  fun testParseColorTypes() {
+    // needs leading '#' character
+    Truth.assertThat(tryParseColor("ff80a12b")).isNull()
+
+    Truth.assertThat(tryParseColor("#e12"))
+      .isEqualTo(BinaryPrimitive(ResValue(ResValue.DataType.INT_COLOR_RGB4, 0xffee1122.toInt())))
+    Truth.assertThat(tryParseColor("#8e12"))
+      .isEqualTo(BinaryPrimitive(ResValue(ResValue.DataType.INT_COLOR_ARGB4, 0x88ee1122.toInt())))
+    Truth.assertThat(tryParseColor("#00ffff"))
+      .isEqualTo(BinaryPrimitive(ResValue(ResValue.DataType.INT_COLOR_RGB8, 0xff00ffff.toInt())))
+    Truth.assertThat(tryParseColor("#ff80a12b"))
+      .isEqualTo(BinaryPrimitive(ResValue(ResValue.DataType.INT_COLOR_ARGB8, 0xff80a12b.toInt())))
+
+    // Ensure that invalid lengths fail to parse
+    Truth.assertThat(tryParseColor("#884a2")).isNull()
+    Truth.assertThat(tryParseColor("#123456789")).isNull()
+  }
 }

@@ -171,6 +171,7 @@ class StringPoolTest {
     Truth.assertThat(buffer.size).isEqualTo(28)
 
     val test = ResStringPool.get(ByteBuffer.wrap(buffer.toBytes()), buffer.size)
+    Truth.assertThat(test.stringPoolSize).isEqualTo(0)
   }
 
   @Test

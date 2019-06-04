@@ -125,6 +125,52 @@ data class ResValue(val dataType: DataType, val data: Int, val size: Short = 0) 
     }
   }
 
+  // Structure of complex data values (TYPE_DIMENSION and TYPE_FRACTION)
+  object ComplexFormat {
+    // Where the unit type information is.  This gives us 16 possible
+    // types, as defined below.
+    const val UNIT_SHIFT = 0
+    const val UNIT_MASK = 0xf
+
+    // TYPE_DIMENSION: Value is raw pixels.
+    const val UNIT_PX = 0
+    // TYPE_DIMENSION: Value is Device Independent Pixels.
+    const val UNIT_DIP = 1
+    // TYPE_DIMENSION: Value is a Scaled device independent Pixels.
+    const val UNIT_SP = 2
+    // TYPE_DIMENSION: Value is in points.
+    const val UNIT_PT = 3
+    // TYPE_DIMENSION: Value is in inches.
+    const val UNIT_IN = 4
+    // TYPE_DIMENSION: Value is in millimeters.
+    const val UNIT_MM = 5
+
+    // TYPE_FRACTION: A basic fraction of the overall size.
+    const val UNIT_FRACTION = 0
+    // TYPE_FRACTION: A fraction of the parent size.
+    const val UNIT_FRACTION_PARENT = 1
+
+    // Where the radix information is, telling where the decimal place
+    // appears in the mantissa.  This give us 4 possible fixed point
+    // representations as defined below.
+    const val RADIX_SHIFT = 4
+    const val RADIX_MASK = 0x3
+
+    // The mantissa is an integral number -- i.e., 0xnnnnnn.0
+    const val RADIX_23p0 = 0
+    // The mantissa magnitude is 16 bits -- i.e, 0xnnnn.nn
+    const val RADIX_16p7 = 1
+    // The mantissa magnitude is 8 bits -- i.e, 0xnn.nnnn
+    const val RADIX_8p15 = 2
+    // The mantissa magnitude is 0 bits -- i.e, 0x0.nnnnnn
+    const val RADIX_0p23 = 3
+
+    // Where the actual value is.  This gives us 23 bits of
+    // precision.  The top bit is the sign.
+    const val MANTISSA_SHIFT = 8
+    const val MANTISSA_MASK = 0xffffff
+  }
+
   // Possible Data values for DataType NULL.
   object NullFormat {
     const val UNDEFINED = 0
@@ -496,3 +542,111 @@ fun stringToInt(string: String): ResValue? {
     value.toInt())
 }
 
+private data class UnitEntry(
+  val name: String, val dataType: ResValue.DataType, val unitValue: Int, val scale: Float = 1.0f)
+
+private val unitSuffixes = listOf(
+  UnitEntry("px", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_PX),
+  UnitEntry("dip", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_DIP),
+  UnitEntry("dp", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_DIP),
+  UnitEntry("sp", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_SP),
+  UnitEntry("pt", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_PT),
+  UnitEntry("in", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_IN),
+  UnitEntry("mm", ResValue.DataType.DIMENSION, ResValue.ComplexFormat.UNIT_MM),
+  UnitEntry("%", ResValue.DataType.FRACTION, ResValue.ComplexFormat.UNIT_FRACTION, 1.0f/100),
+  UnitEntry(
+    "%p", ResValue.DataType.FRACTION, ResValue.ComplexFormat.UNIT_FRACTION_PARENT, 1.0f/100))
+
+private fun parseUnitType(string: String) : UnitEntry? {
+  for (entry in unitSuffixes) {
+    if (string.endsWith(entry.name)) {
+      return entry
+    }
+  }
+  return null
+}
+
+fun stringToFloat(string: String): ResValue? {
+  val trimmedString = string.trim()
+
+  if (trimmedString.isEmpty() || trimmedString.length > 128) {
+    return null
+  }
+
+  // need to find the unit type suffix first, so we can trim it and interpret the rest as a float
+  val entry = parseUnitType(trimmedString)
+  val suffixIndex =
+    if (entry != null) trimmedString.lastIndexOf(entry.name) else trimmedString.length
+
+  // no spaces allowed between suffix and floating point value
+  if (suffixIndex == 0 || Character.isWhitespace(trimmedString.codePointAt(suffixIndex-1))) {
+    return null
+  }
+
+  var stringToParse = trimmedString.substring(0, suffixIndex)
+  // We have an issue where the suffix could be considered part of a hex floating point number
+  // and would result in a valid dimension value which is normally considered invalid.
+  // i.e "0x1d.dp" should be considered: "0x1d.d p" not "0x1d. dp"
+  if (parseHex(entry?.name?.codePointAt(0) ?: 0) != -1) {
+    // try to parse the float value with the beginning of the suffix considered.
+    if (trimmedString.contains("0x", true) &&
+      !stringToParse.contains('p')) {
+      // ambiguous value string, resulting in a parse failure.
+      return null
+    }
+  }
+
+  // Kotlin does not parse hex floating point numbers that do not have exponent identifier. I.e.
+  // "0x23.b" does not parse. "0x23.bp0" will. So we append "p0" where we need it, to enforce
+  // consistency with C++ floating point parsing.
+  if (stringToParse.contains("0x", true) && !stringToParse.contains('p', true)) {
+    stringToParse += "p0"
+  }
+
+  var parsedValue = stringToParse.toFloatOrNull()
+  parsedValue ?: return null
+
+  if (entry != null) {
+    // Treat as a Unit.
+    parsedValue *= entry.scale
+    val negative = parsedValue < 0
+    if (negative) {
+      parsedValue = -parsedValue
+    }
+
+    // Transform the float to (rounded) integer with the lower 23 bits representing the fraction
+    // and bits 45 to 23 representing the whole number part.
+    val bits = (parsedValue*(1 shl 23) + .5f).toLong()
+
+    val (radix, shift) = when {
+      bits and ((1L shl 23) - 1) == 0L ->
+        // Always use 23p0 if there is no fraction, as it is easier to read.
+        Pair(ResValue.ComplexFormat.RADIX_23p0, 23)
+      bits and ((1L shl 23) - 1).inv() == 0L ->
+        // Whole number part is zero -- can fit into 0 leading bits of precision.
+        Pair(ResValue.ComplexFormat.RADIX_0p23, 0)
+      bits and ((1L shl 31) -1).inv() == 0L ->
+        // Magnitude can fit in 8 leading bits of precision.
+        Pair(ResValue.ComplexFormat.RADIX_8p15, 8)
+      bits and ((1L shl 39) -1).inv() == 0L ->
+        // Magnitude can fit in 16 leading bits of precision.
+        Pair(ResValue.ComplexFormat.RADIX_16p7, 16)
+      else ->
+        // Need whole range, so no fractional part.
+        Pair(ResValue.ComplexFormat.RADIX_23p0, 23)
+    }
+
+    var mantissa = (bits ushr shift).toInt() and ResValue.ComplexFormat.MANTISSA_MASK
+    if (negative) {
+      mantissa = (-mantissa) and ResValue.ComplexFormat.MANTISSA_MASK
+    }
+
+    val dataValue = (entry.unitValue shl ResValue.ComplexFormat.UNIT_SHIFT) or
+      (radix shl ResValue.ComplexFormat.RADIX_SHIFT) or
+      (mantissa shl ResValue.ComplexFormat.MANTISSA_SHIFT)
+
+    return ResValue(entry.dataType, dataValue)
+  }
+
+  return ResValue(ResValue.DataType.FLOAT, parsedValue.toRawBits())
+}
