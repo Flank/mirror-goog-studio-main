@@ -112,6 +112,7 @@ public class JobTest {
         assertThat(scheduleEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(scheduleEvent.getGroupId()).isGreaterThan(0L);
         assertThat(scheduleEvent.getIsEnded()).isFalse();
+        assertThat(scheduleEvent.getEnergyEvent().getCallstack()).contains("schedule");
         assertThat(scheduleEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.JOB_SCHEDULED);
         JobScheduled jobScheduled = scheduleEvent.getEnergyEvent().getJobScheduled();
@@ -160,6 +161,7 @@ public class JobTest {
         assertThat(finishEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(finishEvent.getGroupId()).isEqualTo(scheduleEvent.getGroupId());
         assertThat(finishEvent.getIsEnded()).isTrue();
+        assertThat(finishEvent.getEnergyEvent().getCallstack()).contains("Finish");
         assertThat(finishEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.JOB_FINISHED);
         JobFinished jobFinished = finishEvent.getEnergyEvent().getJobFinished();
@@ -171,17 +173,6 @@ public class JobTest {
         assertThat(params.getIsOverrideDeadlineExpired()).isTrue();
         assertThat(params.getTriggeredContentAuthoritiesList()).containsExactly("foo@example.com");
         assertThat(params.getTriggeredContentUrisList()).containsExactly("com.example");
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String scheduleStack =
-                    TestUtils.getBytes(myGrpc, scheduleEvent.getEnergyEvent().getTraceId());
-            assertThat(scheduleStack).contains("schedule");
-            String finishStack =
-                    TestUtils.getBytes(myGrpc, finishEvent.getEnergyEvent().getTraceId());
-            assertThat(finishStack).contains("Finish");
-        }
     }
 
     @Test

@@ -100,6 +100,7 @@ public class LocationTest {
         assertThat(requestEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(requestEvent.getGroupId()).isGreaterThan(0L);
         assertThat(requestEvent.getIsEnded()).isFalse();
+        assertThat(requestEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(requestEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REQUESTED);
         assertThat(requestEvent.getEnergyEvent().getLocationUpdateRequested().getActionCase())
@@ -132,21 +133,11 @@ public class LocationTest {
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getGroupId()).isEqualTo(requestEvent.getGroupId());
         assertThat(removeEvent.getIsEnded()).isTrue();
+        assertThat(removeEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(removeEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
         assertThat(removeEvent.getEnergyEvent().getLocationUpdateRemoved().getActionCase())
                 .isEqualTo(LocationUpdateRemoved.ActionCase.LISTENER);
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String requestStack =
-                    TestUtils.getBytes(myGrpc, requestEvent.getEnergyEvent().getTraceId());
-            assertThat(requestStack).contains(methodName);
-            String removeStack =
-                    TestUtils.getBytes(myGrpc, removeEvent.getEnergyEvent().getTraceId());
-            assertThat(removeStack).contains(methodName);
-        }
     }
 
     @Test
@@ -179,6 +170,7 @@ public class LocationTest {
         assertThat(requestEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(requestEvent.getGroupId()).isGreaterThan(0L);
         assertThat(requestEvent.getIsEnded()).isFalse();
+        assertThat(requestEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(requestEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REQUESTED);
         assertThat(requestEvent.getEnergyEvent().getLocationUpdateRequested().getActionCase())
@@ -239,21 +231,11 @@ public class LocationTest {
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getGroupId()).isEqualTo(requestEvent.getGroupId());
         assertThat(removeEvent.getIsEnded()).isTrue();
+        assertThat(removeEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(removeEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
         assertThat(removeEvent.getEnergyEvent().getLocationUpdateRemoved().getActionCase())
                 .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String requestStack =
-                    TestUtils.getBytes(myGrpc, requestEvent.getEnergyEvent().getTraceId());
-            assertThat(requestStack).contains(methodName);
-            String removeStack =
-                    TestUtils.getBytes(myGrpc, removeEvent.getEnergyEvent().getTraceId());
-            assertThat(removeStack).contains(methodName);
-        }
     }
 
     @Test
@@ -286,6 +268,7 @@ public class LocationTest {
         assertThat(requestEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(requestEvent.getGroupId()).isGreaterThan(0L);
         assertThat(requestEvent.getIsEnded()).isFalse();
+        assertThat(requestEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(requestEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REQUESTED);
         assertThat(requestEvent.getEnergyEvent().getLocationUpdateRequested().getActionCase())
@@ -346,21 +329,11 @@ public class LocationTest {
         assertThat(removeEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(removeEvent.getGroupId()).isEqualTo(requestEvent.getGroupId());
         assertThat(removeEvent.getIsEnded()).isTrue();
+        assertThat(removeEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(removeEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.LOCATION_UPDATE_REMOVED);
         assertThat(removeEvent.getEnergyEvent().getLocationUpdateRemoved().getActionCase())
                 .isEqualTo(LocationUpdateRemoved.ActionCase.INTENT);
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String requestStack =
-                    TestUtils.getBytes(myGrpc, requestEvent.getEnergyEvent().getTraceId());
-            assertThat(requestStack).contains(methodName);
-            String removeStack =
-                    TestUtils.getBytes(myGrpc, removeEvent.getEnergyEvent().getTraceId());
-            assertThat(removeStack).contains(methodName);
-        }
     }
 
     @Test

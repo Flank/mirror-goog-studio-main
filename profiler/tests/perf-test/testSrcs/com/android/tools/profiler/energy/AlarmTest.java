@@ -103,6 +103,7 @@ public class AlarmTest {
         assertThat(setEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(setEvent.getGroupId()).isGreaterThan(0L);
         assertThat(setEvent.getIsEnded()).isFalse();
+        assertThat(setEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(setEvent.getEnergyEvent().getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(setEvent.getEnergyEvent().getAlarmSet().getType())
                 .isEqualTo(Type.ELAPSED_REALTIME_WAKEUP);
@@ -121,6 +122,7 @@ public class AlarmTest {
         assertThat(cancelEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(cancelEvent.getGroupId()).isEqualTo(setEvent.getGroupId());
         assertThat(cancelEvent.getIsEnded()).isTrue();
+        assertThat(cancelEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(cancelEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.ALARM_CANCELLED);
         assertThat(cancelEvent.getEnergyEvent().getAlarmCancelled().getCancelActionCase())
@@ -134,16 +136,6 @@ public class AlarmTest {
                 .isEqualTo("com.example");
         assertThat(cancelEvent.getEnergyEvent().getAlarmCancelled().getOperation().getCreatorUid())
                 .isEqualTo(1);
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String setStack = TestUtils.getBytes(myGrpc, setEvent.getEnergyEvent().getTraceId());
-            assertThat(setStack).contains(methodName);
-            String cancelStack =
-                    TestUtils.getBytes(myGrpc, cancelEvent.getEnergyEvent().getTraceId());
-            assertThat(cancelStack).contains(methodName);
-        }
     }
 
     @Test
@@ -176,6 +168,7 @@ public class AlarmTest {
         assertThat(setEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(setEvent.getGroupId()).isGreaterThan(0L);
         assertThat(setEvent.getIsEnded()).isFalse();
+        assertThat(setEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(setEvent.getEnergyEvent().getMetadataCase()).isEqualTo(MetadataCase.ALARM_SET);
         assertThat(setEvent.getEnergyEvent().getAlarmSet().getType()).isEqualTo(Type.RTC_WAKEUP);
         assertThat(setEvent.getEnergyEvent().getAlarmSet().getTriggerMs()).isEqualTo(2000);
@@ -189,22 +182,13 @@ public class AlarmTest {
         assertThat(cancelEvent.getTimestamp()).isAtLeast(setEvent.getTimestamp());
         assertThat(cancelEvent.getGroupId()).isEqualTo(setEvent.getGroupId());
         assertThat(cancelEvent.getIsEnded()).isTrue();
+        assertThat(cancelEvent.getEnergyEvent().getCallstack()).contains(methodName);
         assertThat(cancelEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.ALARM_CANCELLED);
         assertThat(cancelEvent.getEnergyEvent().getAlarmCancelled().getCancelActionCase())
                 .isEqualTo(CancelActionCase.LISTENER);
         assertThat(cancelEvent.getEnergyEvent().getAlarmCancelled().getListener().getTag())
                 .isEqualTo("foo");
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String setStack = TestUtils.getBytes(myGrpc, setEvent.getEnergyEvent().getTraceId());
-            assertThat(setStack).contains(methodName);
-            String cancelStack =
-                    TestUtils.getBytes(myGrpc, cancelEvent.getEnergyEvent().getTraceId());
-            assertThat(cancelStack).contains(methodName);
-        }
     }
 
     @Test

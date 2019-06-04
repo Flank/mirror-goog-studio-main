@@ -29,12 +29,7 @@ InternalEnergyServiceImpl::InternalEnergyServiceImpl(EnergyCache *energy_cache,
 Status InternalEnergyServiceImpl::AddEnergyEvent(
     ServerContext *context, const AddEnergyEventRequest *request,
     EmptyEnergyReply *reply) {
-  std::string trace_id;
-  if (!request->callstack().empty()) {
-    trace_id = file_cache_.AddString(request->callstack());
-  }
-  auto event = energy_cache_.AddEnergyEvent(request->energy_event());
-  event->mutable_energy_event()->set_trace_id(trace_id);
+  energy_cache_.AddEnergyEvent(request->energy_event());
   return Status::OK;
 }
 

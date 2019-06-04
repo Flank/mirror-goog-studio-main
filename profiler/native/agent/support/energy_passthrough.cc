@@ -110,30 +110,25 @@ const SteadyClock& GetClock() {
   return clock;
 }
 
-// Enqueue and submit the target |energy_event|. The event's timestamp will be
-// set as a side-effect of calling this method, but all other fields and
+// Enqueue and submit the target |energy_event|. All fields and
 // appropriate metadata must be set by the caller.
-void SubmitEnergyEvent(const Event& energy_event,
-                       const std::string& stack = {}) {
+void SubmitEnergyEvent(const Event& energy_event) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     Agent::Instance().SubmitAgentTasks(
-        {[energy_event, stack](AgentService::Stub& stub, ClientContext& ctx) {
+        {[energy_event](AgentService::Stub& stub, ClientContext& ctx) {
           SendEventRequest request;
           auto* event = request.mutable_event();
           event->CopyFrom(energy_event);
           event->set_kind(Event::ENERGY_EVENT);
-          // TODO(b/129355112): set call stack.
 
           EmptyResponse response;
           return stub.SendEvent(&ctx, request, &response);
         }});
   } else {
     Agent::Instance().SubmitEnergyTasks(
-        {[energy_event, stack](InternalEnergyService::Stub& stub,
-                               ClientContext& ctx) {
+        {[energy_event](InternalEnergyService::Stub& stub, ClientContext& ctx) {
           AddEnergyEventRequest request;
           request.mutable_energy_event()->CopyFrom(energy_event);
-          request.set_callstack(stack);
 
           EmptyEnergyReply response;
           return stub.AddEnergyEvent(&ctx, request, &response);
@@ -251,6 +246,8 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* wake_lock_acquired =
       energy_event.mutable_energy_event()->mutable_wake_lock_acquired();
   WakeLockAcquired::Level level;
@@ -286,8 +283,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockAcqui
   JStringWrapper tag_string(env, tag);
   wake_lock_acquired->set_tag(tag_string.get());
   wake_lock_acquired->set_timeout(timeout);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -299,6 +295,8 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
   energy_event.set_is_ended(!is_held);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* wake_lock_released =
       energy_event.mutable_energy_event()->mutable_wake_lock_released();
   if ((flags & RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY) != 0) {
@@ -306,8 +304,7 @@ Java_com_android_tools_profiler_support_energy_WakeLockWrapper_sendWakeLockRelea
         WakeLockReleased::RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
   }
   wake_lock_released->set_is_held(is_held);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -319,6 +316,8 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* alarm_set = energy_event.mutable_energy_event()->mutable_alarm_set();
   alarm_set->set_type(ParseAlarmType(type));
   alarm_set->set_trigger_ms(trigger_ms);
@@ -328,8 +327,7 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
   alarm_set->mutable_operation()->set_creator_package(
       creator_package_str.get());
   alarm_set->mutable_operation()->set_creator_uid(creator_uid);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -341,6 +339,8 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* alarm_set = energy_event.mutable_energy_event()->mutable_alarm_set();
   alarm_set->set_type(ParseAlarmType(type));
   alarm_set->set_trigger_ms(trigger_ms);
@@ -348,8 +348,7 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   alarm_set->set_interval_ms(interval_ms);
   JStringWrapper listener_tag_str(env, listener_tag);
   alarm_set->mutable_listener()->set_tag(listener_tag_str.get());
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -361,14 +360,15 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendIntentAla
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
   energy_event.set_is_ended(true);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* operation = energy_event.mutable_energy_event()
                         ->mutable_alarm_cancelled()
                         ->mutable_operation();
   JStringWrapper creator_package_str(env, creator_package);
   operation->set_creator_package(creator_package_str.get());
   operation->set_creator_uid(creator_uid);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -381,11 +381,12 @@ Java_com_android_tools_profiler_support_energy_AlarmManagerWrapper_sendListenerA
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
   energy_event.set_is_ended(true);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* alarm_cancelled =
       energy_event.mutable_energy_event()->mutable_alarm_cancelled();
   alarm_cancelled->mutable_listener()->set_tag(listener_tag_str.get());
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -443,6 +444,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
 
   auto* job_scheduled =
       energy_event.mutable_energy_event()->mutable_job_scheduled();
@@ -525,8 +528,7 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobScheduled(
   job_scheduled->set_result(result);
   // If result is failure, the job will never run and thus terminal.
   energy_event.set_is_ended(result == JobScheduled::RESULT_FAILURE);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -587,6 +589,8 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
   energy_event.set_timestamp(timestamp);
   // If rescheduling, this job is not yet terminal.
   energy_event.set_is_ended(!needs_reschedule);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* job_finished =
       energy_event.mutable_energy_event()->mutable_job_finished();
   auto params = job_finished->mutable_params();
@@ -594,8 +598,7 @@ Java_com_android_tools_profiler_support_energy_JobWrapper_sendJobFinished(
                     triggered_content_uris, is_override_deadline_expired,
                     extras, transient_extras);
   job_finished->set_needs_reschedule(needs_reschedule);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -607,6 +610,8 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* location_update_requested =
       energy_event.mutable_energy_event()->mutable_location_update_requested();
   location_update_requested->mutable_listener();
@@ -618,8 +623,7 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   request->set_smallest_displacement_meters(min_distance);
   request->set_priority(
       GetPriority(priority, accuracy, power_req, provider_str.get()));
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -632,6 +636,8 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   energy_event.set_pid(getpid());
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* location_update_requested =
       energy_event.mutable_energy_event()->mutable_location_update_requested();
   auto* intent = location_update_requested->mutable_intent();
@@ -646,8 +652,7 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   request->set_smallest_displacement_meters(min_distance);
   request->set_priority(
       GetPriority(priority, accuracy, power_req, provider_str.get()));
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -658,11 +663,12 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendListen
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
   energy_event.set_is_ended(true);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   energy_event.mutable_energy_event()
       ->mutable_location_update_removed()
       ->mutable_listener();
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL
@@ -674,14 +680,15 @@ Java_com_android_tools_profiler_support_energy_LocationManagerWrapper_sendIntent
   energy_event.set_group_id(event_id);
   energy_event.set_timestamp(timestamp);
   energy_event.set_is_ended(true);
+  JStringWrapper stack_string(env, stack);
+  energy_event.mutable_energy_event()->set_callstack(stack_string.get());
   auto* intent = energy_event.mutable_energy_event()
                      ->mutable_location_update_removed()
                      ->mutable_intent();
   JStringWrapper creator_package_str(env, creator_package);
   intent->set_creator_package(creator_package_str.get());
   intent->set_creator_uid(creator_uid);
-  JStringWrapper stack_string(env, stack);
-  SubmitEnergyEvent(energy_event, stack_string.get());
+  SubmitEnergyEvent(energy_event);
 }
 
 JNIEXPORT void JNICALL

@@ -29,9 +29,8 @@ message EnergyUsageData {
 }
 
 message EnergyEventData {
-  // ID to fetch a code stack trace for where this event was generated
-  // Use with |ProfilerService.GetBytes|
-  string trace_id = 1;
+  // Call stack for where this event was generated
+  string callstack = 1;
 
   // Metadata for this specific event. Additionally, use
   // |EnergyEvent.metadata_case()| as a way to see what this event's type is.

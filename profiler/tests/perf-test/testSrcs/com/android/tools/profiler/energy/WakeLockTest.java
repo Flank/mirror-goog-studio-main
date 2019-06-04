@@ -114,17 +114,11 @@ public class WakeLockTest {
         assertThat(releasedEvent.getPid()).isEqualTo(mySession.getPid());
         assertThat(releasedEvent.getGroupId()).isEqualTo(acquiredEvent.getGroupId());
         assertThat(releasedEvent.getIsEnded()).isTrue();
+        assertThat(releasedEvent.getEnergyEvent().getCallstack()).contains(ACTIVITY_CLASS);
         assertThat(releasedEvent.getEnergyEvent().getMetadataCase())
                 .isEqualTo(MetadataCase.WAKE_LOCK_RELEASED);
         assertThat(releasedEvent.getEnergyEvent().getWakeLockReleased().getFlagsList())
                 .containsExactly(ReleaseFlag.RELEASE_FLAG_WAIT_FOR_NO_PROXIMITY);
-
-        if (myIsUnifiedPipeline) {
-            // TODO(b/129355112): call stack is not yet implemented.
-        } else {
-            String stack = TestUtils.getBytes(myGrpc, releasedEvent.getEnergyEvent().getTraceId());
-            assertThat(stack).contains(ACTIVITY_CLASS);
-        }
     }
 
     /**
