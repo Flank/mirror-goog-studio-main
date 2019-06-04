@@ -25,10 +25,9 @@
 namespace debug {
 
 // A dex bytecode transformation targeting a specific class.
-struct ClassTransform {
-  const std::string kClassDesc;
-
-  ClassTransform(std::string class_desc) : kClassDesc(class_desc){};
+class ClassTransform {
+ public:
+  ClassTransform(std::string class_desc) : class_desc_(class_desc){};
 
   virtual ~ClassTransform() = default;
 
@@ -38,6 +37,11 @@ struct ClassTransform {
   // class. This is useful if the transformation failed and [dex_ir] might now
   // be in an invalid state.
   virtual bool Apply(std::shared_ptr<ir::DexFile> dex_ir) = 0;
+
+  const std::string& class_desc() const { return class_desc_; }
+
+ private:
+  const std::string class_desc_;
 };
 
 }  // namespace debug

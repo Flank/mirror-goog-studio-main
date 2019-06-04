@@ -44,7 +44,7 @@ class Log {
  private:
   static void Handle(const char level, const char* fmt, va_list args);
 
-  static constexpr const char* const kTag = "studio.debug";
+  static constexpr const char* const kTag = "StudioDebug";
 };
 
 }  // namespace debug

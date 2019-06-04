@@ -19,12 +19,14 @@
 #include <dlfcn.h>
 #include <cstddef>
 #include <map>
+#include <string>
 
 #include <jni.h>
 #include <jvmti.h>
 #include "slicer/instrumentation.h"
 #include "slicer/reader.h"
 #include "slicer/writer.h"
+#include "tools/base/debug/agent/native/async-stack/init.h"
 #include "tools/base/debug/agent/native/log.h"
 #include "tools/base/debug/agent/native/transform.h"
 #include "tools/base/debug/agent/native/util.h"
@@ -38,7 +40,7 @@ static std::multimap<std::string, std::unique_ptr<ClassTransform>>
     class_transforms;
 
 void RegisterClassTransform(std::unique_ptr<ClassTransform> transform) {
-  class_transforms.emplace(transform->kClassDesc, std::move(transform));
+  class_transforms.emplace(transform->class_desc(), std::move(transform));
 }
 
 static void JNICALL ClassFileLoadHook(
@@ -136,6 +138,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                                                  void* reserved) {
   // TODO: "Before P ClassFileLoadHook has significant performance overhead"
 
+  InitAsyncStackInstrumentation();
+
   jvmtiEnv* jvmti;
   if (vm->GetEnv((void**)&jvmti, JVMTI_VERSION_1_2) != JNI_OK) {
     Log::E("Error retrieving JVMTI function table.");
@@ -148,10 +152,24 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     return JNI_ERR;
   }
 
+  // Add debug agent dex code to class path.
+  Dl_info dl_info;
+  if (!dladdr((void*)Agent_OnAttach, &dl_info)) {
+    Log::E("Could not find address for symbol Agent_OnAttach");
+    return JNI_ERR;
+  }
+  std::string so_path(dl_info.dli_fname);
+  auto filename_start = so_path.find_last_of('/') + 1;
+  auto dex_path = so_path.substr(0, filename_start) + "debug.jar";
+  auto err = jvmti->AddToBootstrapClassLoaderSearch(dex_path.c_str());
+  if (CheckJvmtiError(jvmti, err, "Failed to inject agent dex code")) {
+    return JNI_ERR;
+  }
+
   // Set JVMTI capabilities.
   jvmtiCapabilities capabilities = {};
   capabilities.can_retransform_classes = 1;
-  auto err = jvmti->AddCapabilities(&capabilities);
+  err = jvmti->AddCapabilities(&capabilities);
   if (CheckJvmtiError(jvmti, err, "Failed to add capabilities")) {
     return JNI_ERR;
   }

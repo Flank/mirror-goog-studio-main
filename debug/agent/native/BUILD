@@ -4,6 +4,7 @@ load(
     "ANDROID_COPTS",
     "ANDROID_LINKOPTS",
     "android_cc_binary",
+    "dex_library",
 )
 
 cc_binary(
@@ -11,6 +12,10 @@ cc_binary(
     srcs = [
         "agent.cc",
         "agent.h",
+        "async-stack/init.cc",
+        "async-stack/init.h",
+        "async-stack/inject_hooks.cc",
+        "async-stack/inject_hooks.h",
         "log.h",
         "transform.h",
         "util.cc",
@@ -59,4 +64,18 @@ android_cc_binary(
     tags = [
         "no_windows",
     ],
+    visibility = ["//visibility:public"],
+)
+
+java_library(
+    name = "java",
+    resource_jars = [
+        "//tools/idea/java/debugger/debugger-agent-storage:intellij.java.debugger.agent.storage.jar",
+    ],
+)
+
+dex_library(
+    name = "debug",
+    jars = [":java"],
+    visibility = ["//visibility:public"],
 )
