@@ -19,6 +19,7 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.base.Verify.verifyNotNull;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.Version;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -26,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.model.Version;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Arrays;

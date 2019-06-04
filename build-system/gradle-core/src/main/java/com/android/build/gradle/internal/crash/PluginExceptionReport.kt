@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.crash
 
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.tools.analytics.crash.CrashReport
 import com.google.common.base.Throwables
 import org.apache.http.entity.mime.MultipartEntityBuilder

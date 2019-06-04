@@ -18,12 +18,12 @@ package com.android.build.gradle.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.SynchronizedFile;
 import com.android.ide.common.repository.GradleVersion;

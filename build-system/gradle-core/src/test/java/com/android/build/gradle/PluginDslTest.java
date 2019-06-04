@@ -19,6 +19,7 @@ package com.android.build.gradle;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -33,7 +34,6 @@ import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestOptions.Execution;
-import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

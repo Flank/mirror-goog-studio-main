@@ -20,6 +20,7 @@ import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.build.api.transform.QualifiedContent.Scope;
 
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
@@ -37,7 +38,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.DesugarProcessBuilder;
-import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.JavaProcessExecutor;

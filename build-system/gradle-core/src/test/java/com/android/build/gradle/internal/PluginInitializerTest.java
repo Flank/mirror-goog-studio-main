@@ -21,8 +21,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.builder.model.Version;
 import com.android.utils.JvmWideVariable;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;

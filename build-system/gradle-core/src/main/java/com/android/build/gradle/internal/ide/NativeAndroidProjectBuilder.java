@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsonCompositeVisitor;
@@ -31,7 +32,6 @@ import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.NativeVariantAbi;
 import com.android.builder.model.NativeVariantInfo;
-import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

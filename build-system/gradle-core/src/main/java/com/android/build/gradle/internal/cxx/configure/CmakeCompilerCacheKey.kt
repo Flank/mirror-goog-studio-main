@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.builder.model.Version
+import com.android.Version
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken

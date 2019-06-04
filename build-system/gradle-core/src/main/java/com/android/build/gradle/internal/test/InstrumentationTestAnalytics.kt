@@ -20,7 +20,7 @@ package com.android.build.gradle.internal.test
 
 import com.android.build.gradle.internal.profile.AnalyticsUtil
 import com.android.builder.model.TestOptions
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.builder.profile.ProcessProfileWriter
 import com.android.tools.analytics.CommonMetricsData
 import com.android.tools.analytics.recordTestLibrary

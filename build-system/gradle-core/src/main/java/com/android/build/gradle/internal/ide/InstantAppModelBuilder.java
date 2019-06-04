@@ -20,6 +20,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import static com.android.builder.model.AndroidProject.PROJECT_TYPE_INSTANTAPP;
 
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
@@ -54,7 +55,6 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.builder.model.Version;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.Pair;

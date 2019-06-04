@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
@@ -32,7 +33,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.Version;
 import com.android.io.StreamException;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;

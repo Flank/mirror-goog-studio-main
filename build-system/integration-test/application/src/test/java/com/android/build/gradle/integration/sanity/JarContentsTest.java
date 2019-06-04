@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.integration.sanity;
 
-import com.android.builder.model.Version;
+import com.android.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
@@ -132,7 +132,6 @@ public class JarContentsTest {
                 "com/android/builder/",
                 "com/android/builder/model/",
                 "com/android/builder/model/level2/",
-                "com/android/builder/model/version.properties",
                 "META-INF/",
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
@@ -955,6 +954,7 @@ public class JarContentsTest {
                 "com/android/utils/",
                 "com/android/utils/concurrency/",
                 "com/android/utils/reflection/",
+                "com/android/version.properties",
                 "com/android/xml/",
                 "migrateToAndroidx/",
                 "migrateToAndroidx/migration.xml",

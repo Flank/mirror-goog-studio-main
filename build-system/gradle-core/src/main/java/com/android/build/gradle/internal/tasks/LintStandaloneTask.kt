@@ -20,9 +20,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.tasks.LintBaseTask.LINT_CLASS_PATH
 import com.android.builder.model.LintOptions
-import com.android.builder.model.Version.ANDROID_GRADLE_PLUGIN_VERSION
+import com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
 import com.android.repository.Revision
-import com.android.sdklib.BuildToolInfo
 import com.android.tools.lint.gradle.api.LintExecutionRequest
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner
 import com.android.tools.lint.gradle.api.VariantInputs

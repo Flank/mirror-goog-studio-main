@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.crash
 
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.LoggerWrapper
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.tools.analytics.AnalyticsSettings
 import com.android.tools.analytics.crash.CrashReporter
 import com.android.tools.analytics.crash.GoogleCrashReporter

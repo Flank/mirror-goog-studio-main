@@ -29,6 +29,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIFESTS;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.LintOptions;
@@ -44,7 +45,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.Version;
 import com.android.repository.Revision;
 import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import java.io.File;

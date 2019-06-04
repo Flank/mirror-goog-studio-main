@@ -18,8 +18,8 @@ package com.android.build.gradle.internal;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.builder.model.Version;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;

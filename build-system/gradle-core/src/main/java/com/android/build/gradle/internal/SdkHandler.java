@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -24,7 +25,6 @@ import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.Version;
 import com.android.builder.sdk.DefaultSdkLoader;
 import com.android.builder.sdk.InstallFailedException;
 import com.android.builder.sdk.LicenceNotAcceptedException;

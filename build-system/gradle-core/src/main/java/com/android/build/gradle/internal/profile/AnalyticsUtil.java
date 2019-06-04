@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.profile;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.core.Abi;
@@ -30,7 +31,6 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.TestOptions;
-import com.android.builder.model.Version;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.analytics.CommonMetricsData;

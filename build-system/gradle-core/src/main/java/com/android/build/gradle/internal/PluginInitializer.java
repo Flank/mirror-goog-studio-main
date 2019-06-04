@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.builder.model.Version;
 import com.android.utils.JvmWideVariable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

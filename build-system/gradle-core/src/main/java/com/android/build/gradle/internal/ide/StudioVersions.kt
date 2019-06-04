@@ -22,7 +22,7 @@ import com.android.build.gradle.options.BooleanOption
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.options.ProjectOptions
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.Version
+import com.android.Version
 import com.google.common.base.Splitter
 import org.gradle.api.InvalidUserDataException
 

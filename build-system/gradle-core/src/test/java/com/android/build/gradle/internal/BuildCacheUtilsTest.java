@@ -21,8 +21,8 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
-import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;

@@ -33,6 +33,7 @@ import static com.android.tools.lint.client.api.LintBaseline.VARIANT_ALL;
 import static com.android.tools.lint.client.api.LintBaseline.VARIANT_FATAL;
 import static com.android.utils.CharSequences.indexOf;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.ApiVersion;
@@ -40,7 +41,6 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
-import com.android.builder.model.Version;
 import com.android.ide.common.gradle.model.IdeAndroidProject;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.manifmerger.ManifestMerger2;

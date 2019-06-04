@@ -6,17 +6,6 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
     </content>
-    <content url="file://$MODULE_DIR$/../../../buildSrc/base">
-      <sourceFolder url="file://$MODULE_DIR$/../../../buildSrc/base" type="java-resource" relativeOutputPath="com/android/builder/model" />
-      <excludePattern pattern="*.gradle" />
-      <excludePattern pattern="BUILD*" />
-      <excludePattern pattern="*.sh" />
-      <excludePattern pattern="*.xml" />
-      <excludePattern pattern="gradle.properties" />
-      <excludePattern pattern="gradlew*" />
-      <excludePattern pattern="dependencies.properties" />
-      <excludePattern pattern="gradle.properties" />
-    </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android.sdktools.android-annotations" />

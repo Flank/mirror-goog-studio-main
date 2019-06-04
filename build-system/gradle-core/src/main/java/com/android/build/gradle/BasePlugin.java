@@ -21,6 +21,7 @@ import static java.io.File.separator;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AndroidBasePlugin;
@@ -80,7 +81,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
-import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;

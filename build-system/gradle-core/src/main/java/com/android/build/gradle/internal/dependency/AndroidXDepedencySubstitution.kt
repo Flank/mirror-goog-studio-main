@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.options.BooleanOption
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.Processor
 import org.gradle.api.Project

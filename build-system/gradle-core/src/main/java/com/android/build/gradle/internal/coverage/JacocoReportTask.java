@@ -17,6 +17,7 @@ package com.android.build.gradle.internal.coverage;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
@@ -24,7 +25,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.builder.model.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closeables;

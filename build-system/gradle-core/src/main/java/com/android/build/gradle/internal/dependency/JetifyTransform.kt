@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.tools.build.jetifier.core.config.ConfigParser
 import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor

@@ -25,7 +25,7 @@ import com.android.SdkConstants
 import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.StringOption
-import com.android.builder.model.Version
+import com.android.Version
 import com.google.common.base.Strings
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.Sets

@@ -20,7 +20,7 @@ import com.android.SdkConstants
 import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.internal.compiler.RenderScriptProcessor
-import com.android.builder.model.Version
+import com.android.Version
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.AndroidVersion

@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide;
 
+import com.android.Version;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.CompileOptions;
@@ -30,7 +31,6 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
-import com.android.builder.model.Version;
 import com.android.builder.model.ViewBindingOptions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;

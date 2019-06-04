@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
+import com.android.Version;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
@@ -29,7 +30,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Version;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.Sets;
