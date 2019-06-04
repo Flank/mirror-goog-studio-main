@@ -1198,14 +1198,16 @@ public class ModelBuilder<Extension extends AndroidConfig>
         BuildArtifactsHolder artifacts = scope.getArtifacts();
         GlobalScope globalScope = variantData.getScope().getGlobalScope();
 
-        boolean addDataBindingSources =
-                globalScope.getExtension().getDataBinding().isEnabled()
+        boolean isDataBindingEnabled = globalScope.getExtension().getDataBinding().isEnabled();
+        boolean isViewBindingEnabled = globalScope.getExtension().getViewBinding().isEnabled();
+        boolean addBindingSources =
+                (isDataBindingEnabled || isViewBindingEnabled)
                         && artifacts.hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
         List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
         // Set this to the number of folders you expect to add explicitly in the code below.
         int additionalFolders = 4;
-        if (addDataBindingSources) {
+        if (addBindingSources) {
             additionalFolders += 1;
         }
         List<File> folders =
@@ -1226,7 +1228,7 @@ public class ModelBuilder<Extension extends AndroidConfig>
                             .get()
                             .getAsFile());
         }
-        if (addDataBindingSources) {
+        if (addBindingSources) {
             folders.add(
                     scope.getArtifacts()
                             .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)

@@ -603,13 +603,17 @@ public abstract class BaseVariantData {
                 sourceSets.add(project.fileTree(aidlFC).builtBy(aidlFC));
             }
 
-            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                    && scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
-                sourceSets.add(
-                        project.fileTree(scope.getClassOutputForDataBinding())
-                                .builtBy(
-                                        scope.getTaskContainer()
-                                                .getDataBindingExportBuildInfoTask()));
+            AndroidConfig extension = scope.getGlobalScope().getExtension();
+            boolean isDataBindingEnabled = extension.getDataBinding().isEnabled();
+            boolean isViewBindingEnabled = extension.getViewBinding().isEnabled();
+            if (isDataBindingEnabled || isViewBindingEnabled) {
+                if (scope.getTaskContainer().getDataBindingExportBuildInfoTask() != null) {
+                    sourceSets.add(
+                            project.fileTree(scope.getClassOutputForDataBinding())
+                                    .builtBy(
+                                            scope.getTaskContainer()
+                                                    .getDataBindingExportBuildInfoTask()));
+                }
                 Provider<FileSystemLocation> baseClassSource =
                         scope.getArtifacts()
                                 .getFinalProduct(

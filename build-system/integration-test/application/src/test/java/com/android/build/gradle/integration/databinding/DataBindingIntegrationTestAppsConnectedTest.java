@@ -57,6 +57,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
         for (boolean useAndroidX : new boolean[] {true, false}) {
             params.add(new Object[] {"IndependentLibrary", useAndroidX});
             params.add(new Object[] {"TestApp", useAndroidX});
+            params.add(new Object[] {"ViewBindingTestApp", useAndroidX});
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
             params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
         }

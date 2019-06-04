@@ -53,6 +53,7 @@ public class DataBindingIntegrationTestAppsTest {
         for (boolean useAndroidX : new boolean[] {true, false}) {
             params.add(new Object[] {"IndependentLibrary", useAndroidX});
             params.add(new Object[] {"TestApp", useAndroidX});
+            params.add(new Object[] {"ViewBindingTestApp", useAndroidX});
             params.add(new Object[] {"ProguardedAppWithTest", useAndroidX});
             params.add(new Object[] {"AppWithDataBindingInTests", useAndroidX});
         }
@@ -67,7 +68,6 @@ public class DataBindingIntegrationTestAppsTest {
 
     @Test
     public void compile() throws Exception {
-        project.execute("assembleDebug");
-        project.execute("assembleDebugAndroidTest");
+        project.execute("assembleDebug", "assembleDebugAndroidTest");
     }
 }
