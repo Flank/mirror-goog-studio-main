@@ -37,14 +37,14 @@ class MappingFileAccessTest {
             class MappingFileUserTask extends DefaultTask {
 
                 @org.gradle.api.tasks.InputFiles
-                com.android.build.api.artifact.BuildableArtifact mappingFile;
+                FileCollection mappingFile;
 
                 @javax.inject.Inject
-                MappingFileUserTask(com.android.build.api.artifact.BuildableArtifact mappingFile) {
+                MappingFileUserTask(FileCollection mappingFile) {
                   this.mappingFile = mappingFile
 
                   doLast {
-                      def file = mappingFile.get().getSingleFile()
+                      def file = mappingFile.getSingleFile()
                       println "MappingFileTask " + file
                       println getName() + " task mapping file exists is " + file.exists()
                    }
