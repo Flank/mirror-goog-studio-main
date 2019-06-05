@@ -258,4 +258,10 @@ public abstract class LayoutlibCallback implements XmlParserFactory {
 
     /** Logs an error message to the Studio error log. */
     public void error(@NonNull Throwable t) {}
+
+    /** Logs a warning message to the Studio log. */
+    public void warn(@NonNull String message, @Nullable Throwable t) {}
+
+    /** Logs a warning message to the Studio log. */
+    public void warn(@NonNull Throwable t) {}
 }
