@@ -72,12 +72,12 @@ open class GenerateResValues : NonIncrementalTask() {
         val folder = resOutputDir
         val resolvedItems = items
 
-        if (resolvedItems.isEmpty()) {
-            FileUtils.cleanOutputDir(folder)
-        } else {
+        // Always clean up the directory before use.
+        FileUtils.cleanOutputDir(folder)
+
+        if (resolvedItems.isNotEmpty()) {
             val generator = ResValueGenerator(folder)
             generator.addItems(resolvedItems)
-
             generator.generate()
         }
     }

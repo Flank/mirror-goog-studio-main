@@ -39,6 +39,9 @@ class GenerateResValuesTest {
     @Test
     fun test() {
         val testDir = temporaryFolder.newFolder()
+        // To make sure we clean the output directory.
+        val trashFile = File(testDir, "dummy.txt").also { it.createNewFile()}
+
         val project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         val task = project.tasks.create("test", GenerateResValues::class.java)
@@ -59,5 +62,6 @@ class GenerateResValuesTest {
 
                 </resources>""".trimIndent()
         )
+        assertThat(trashFile).doesNotExist()
     }
 }
