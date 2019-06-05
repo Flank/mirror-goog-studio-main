@@ -1131,12 +1131,6 @@ public class VariantScopeImpl implements VariantScope {
         return new File(dataBindingIntermediate("class-list"), "_generated.txt");
     }
 
-    @NonNull
-    @Override
-    public File getBundleArtifactFolderForDataBinding() {
-        return dataBindingIntermediate("bundle-bin");
-    }
-
     private File dataBindingIntermediate(String name) {
         return intermediate("data-binding", name);
     }

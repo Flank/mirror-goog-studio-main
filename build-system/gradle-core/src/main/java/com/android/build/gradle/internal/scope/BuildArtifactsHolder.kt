@@ -435,7 +435,7 @@ abstract class BuildArtifactsHolder(
      */
     fun <T: FileSystemLocation> getFinalProduct(artifactType: ArtifactType): Provider<T> {
         val producers = getProducerMap(artifactType).getProducers(artifactType)
-        if (producers.hasMultipleProducers()) {
+        if (producers.size > 1) {
             throw java.lang.RuntimeException(
                 """A single producer of $artifactType was requested, but the following tasks
                     |produce it: ${Joiner.on(',').join(

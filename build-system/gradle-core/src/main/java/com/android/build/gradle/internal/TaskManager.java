@@ -256,6 +256,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
@@ -3704,12 +3705,22 @@ public abstract class TaskManager {
         // by the Kapt task (when the Kapt plugin is used). Therefore, we register Kapt as the
         // generating task. (This will overwrite the registration of JavaCompile as the generating
         // task that took place earlier before this method is called).
+        DirectoryProperty databindingArtifact =
+                scope.getGlobalScope().getProject().getObjects().directoryProperty();
+
+        TaskProvider<Task> kaptTaskProvider =
+                scope.getGlobalScope().getProject().getTasks().named(kaptTask.getName());
+
         scope.getArtifacts()
-                .createBuildableArtifact(
+                .producesDir(
                         InternalArtifactType.DATA_BINDING_ARTIFACT,
-                        BuildArtifactsHolder.OperationType.APPEND,
-                        ImmutableList.of(scope.getBundleArtifactFolderForDataBinding()),
-                        kaptTask.getName());
+                        BuildArtifactsHolder.OperationType.TRANSFORM,
+                        kaptTaskProvider,
+                        (Task task) -> databindingArtifact,
+                        "out");
+
+        // manually add the output property as a task output so Gradle can wire providers correctly
+        kaptTask.getOutputs().dir(databindingArtifact);
     }
 
     protected void configureTestData(AbstractTestDataImpl testData) {

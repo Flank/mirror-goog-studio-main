@@ -125,6 +125,11 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
     @get:Optional
     abstract val annotationProcessorOutputDirectory: DirectoryProperty
 
+    @get:OutputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    @get:Optional
+    abstract val bundleArtifactFolderForDataBinding: DirectoryProperty
+
     /**
      * Overrides the stock Gradle JavaCompile task output directory as we use instead the
      * above classesOutputDirectory. The [JavaCompile.destinationDir] is not declared as a Task
@@ -282,19 +287,9 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         override val type: Class<AndroidJavaCompile>
             get() = AndroidJavaCompile::class.java
 
-        override fun preConfigure(taskName: String) {
-            super.preConfigure(taskName)
+        private val bundleArtifactFolderForDataBinding: DirectoryProperty =
+            variantScope.globalScope.project.objects.directoryProperty();
 
-            // Data binding artifact is one of the annotation processing outputs
-            if (variantScope.globalScope.extension.dataBinding.isEnabled) {
-                variantScope.artifacts.createBuildableArtifact(
-                    DATA_BINDING_ARTIFACT,
-                    APPEND,
-                    listOf(variantScope.bundleArtifactFolderForDataBinding),
-                    taskName
-                )
-            }
-        }
 
         override fun handleProvider(taskProvider: TaskProvider<out AndroidJavaCompile>) {
             super.handleProvider(taskProvider)
@@ -316,6 +311,17 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
                     INITIAL,
                     taskProvider,
                     AndroidJavaCompile::annotationProcessorOutputDirectory
+                )
+            }
+
+            // Data binding artifact is one of the annotation processing outputs
+            if (variantScope.globalScope.extension.dataBinding.isEnabled) {
+                variantScope.artifacts.producesDir(
+                    DATA_BINDING_ARTIFACT,
+                    APPEND,
+                    taskProvider,
+                    AndroidJavaCompile::bundleArtifactFolderForDataBinding,
+                    "out"
                 )
             }
         }

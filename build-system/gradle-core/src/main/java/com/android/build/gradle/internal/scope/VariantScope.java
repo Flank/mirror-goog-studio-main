@@ -232,9 +232,6 @@ public interface VariantScope extends TransformVariantScope {
     File getGeneratedClassListOutputFileForDataBinding();
 
     @NonNull
-    File getBundleArtifactFolderForDataBinding();
-
-    @NonNull
     File getFullApkPackagesOutputDirectory();
 
     @NonNull

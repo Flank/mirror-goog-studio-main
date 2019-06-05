@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.databinding
 
 import android.databinding.tool.CompilerArguments
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_DEPENDENCY_ARTIFACTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
@@ -90,7 +91,7 @@ class DataBindingCompilerArguments constructor(
 
     @get:Optional
     @get:OutputDirectory
-    val aarOutDir: File?,
+    val aarOutDir: Provider<Directory>,
 
     @get:Optional
     @get:OutputFile
@@ -131,7 +132,7 @@ class DataBindingCompilerArguments constructor(
             classLogDir = classLogDir.get().asFile,
             baseFeatureInfoDir = baseFeatureInfoDir.orNull?.asFile,
             featureInfoDir = featureInfoDir.orNull?.asFile,
-            aarOutDir = aarOutDir,
+            aarOutDir = aarOutDir.orNull?.asFile,
             exportClassListOutFile = exportClassListOutFile,
             enableDebugLogs = enableDebugLogs,
             printEncodedErrorLogs = printEncodedErrorLogs,
@@ -198,7 +199,7 @@ class DataBindingCompilerArguments constructor(
                 classLogDir = artifacts.getFinalProduct(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
                 baseFeatureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_BASE_FEATURE_INFO),
                 featureInfoDir = artifacts.getFinalProduct(FEATURE_DATA_BINDING_FEATURE_INFO),
-                aarOutDir = variantScope.bundleArtifactFolderForDataBinding,
+                aarOutDir = artifacts.getFinalProduct(InternalArtifactType.DATA_BINDING_ARTIFACT),
                 exportClassListOutFile = exportClassListOutFile,
                 enableDebugLogs = enableDebugLogs,
                 printEncodedErrorLogs = printEncodedErrorLogs,

@@ -29,6 +29,7 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Map of all the producers registered in this context.
@@ -140,6 +141,12 @@ class ProducersMap<T: FileSystemLocation>(
         val lastProducerTaskName: Provider<String> =
             injectable.map { _ -> get(size - 1).taskName }
 
+        // keep count of all producers. Even if a producer is replaced, we still need to remember
+        // its existence so we do not have overlapping output with different task.
+        // For instance Task1 outputs in O1, and Task2 comes around and want to replace the artifact
+        // with output at O2, we must make sure that O1 and O2 do not overlap.
+        private val producerCount = AtomicInteger(0)
+
         private fun resolveAll(): List<Provider<T>> {
             return synchronized(this) {
                 map {
@@ -150,10 +157,13 @@ class ProducersMap<T: FileSystemLocation>(
 
         fun resolveAllAndReturnLast(): Provider<T>? = resolveAll().lastOrNull()
 
-        fun add(settableProperty: Property<T>,
+        fun add(
+            settableProperty: Property<T>,
             originalProperty: Provider<Property<T>>,
             taskName: String,
-            fileName: String) {
+            fileName: String
+        ) {
+            producerCount.incrementAndGet()
             listProperty.add(originalProperty.map { it.get() })
             dependencies.add(originalProperty)
             add(Producer(settableProperty, originalProperty, taskName, fileName))
@@ -173,10 +183,12 @@ class ProducersMap<T: FileSystemLocation>(
             return listProperty
         }
 
-        fun resolve(producer: Producer<T>)=
+        fun resolve(producer: Producer<T>) =
             resolver(this, producer)
 
-        fun hasMultipleProducers() = size > 1
+        // even if we currently have only one, but more than one was registered, return true so
+        // we do not have overlapping tasks output.
+        fun hasMultipleProducers() = producerCount.get() > 1
     }
 
     /**

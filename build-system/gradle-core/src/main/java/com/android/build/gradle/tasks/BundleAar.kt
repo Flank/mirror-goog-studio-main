@@ -93,7 +93,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             if (extension.dataBinding.isEnabled) {
                 task.from(
                     variantScope.globalScope.project.provider {
-                        variantScope.artifacts.getFinalArtifactFiles(
+                        variantScope.artifacts.getFinalProduct<Directory>(
                             InternalArtifactType.DATA_BINDING_ARTIFACT) },
                     prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR)
                 )
