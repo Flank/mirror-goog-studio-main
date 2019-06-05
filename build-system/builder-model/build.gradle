@@ -32,19 +32,3 @@ apply from: "$rootDir/buildSrc/base/javadoc.gradle"
     sdkJar.manifest.attributes((key): value)
 }
 
-def generated = project.layout.buildDirectory.dir("generated/resources")
-
-sourceSets {
-    main {
-        resources {
-            srcDir generated
-        }
-    }
-}
-
-task writeVersionProperties(type: com.android.tools.internal.VersionPropertiesWriter) {
-    outputFilePath = "com/android/builder/model/version.properties"
-    outputDirectory = generated
-}
-
-tasks.compileJava.dependsOn writeVersionProperties
