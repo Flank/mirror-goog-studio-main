@@ -36,6 +36,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 25: Android 7.1.1 (Nougat)", SdkVersionInfo.getAndroidName(25));
         assertEquals("API 27: Android 8.1 (Oreo)", SdkVersionInfo.getAndroidName(27));
         assertEquals("API 28: Android 9.0 (Pie)", SdkVersionInfo.getAndroidName(28));
+        assertEquals("API 29: Android 10.0 (Q)", SdkVersionInfo.getAndroidName(29));
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
     }

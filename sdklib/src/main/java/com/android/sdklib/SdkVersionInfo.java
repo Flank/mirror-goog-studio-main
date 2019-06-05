@@ -136,7 +136,7 @@ public class SdkVersionInfo {
             case 26: return "8.0";
             case 27: return "8.1";
             case 28: return "9.0";
-            case 29: return "9.+";
+            case 29: return "10.0";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 
