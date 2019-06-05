@@ -18,7 +18,7 @@ readonly command_log="$("${script_dir}"/bazel info command_log)"
   --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate_only \
   --define agent_coverage=true \
   -- \
-  //tools/...
+  @cov//:all.suite
 
 # We want to still attach the upsalite link if tests fail so we can't abort now
 readonly bazel_test_status=$?
@@ -36,51 +36,33 @@ if [[ ${bazel_test_status} -ne 0 ]]; then
   exit ${bazel_test_status}
 fi
 
-# Create a temp file to pass production targets to report generator
-readonly production_targets_file=$(mktemp)
-
-# Collect the production targets
-readonly universe="//tools/... - //tools/adt/idea/android-uitests/..."
-
+# Build the lcov file
 "${script_dir}/bazel" \
-  query \
-  "kind(test, rdeps(${universe}, deps(//tools/base:coverage_report)))" \
-  | tee $production_targets_file \
-  || exit $?
-
-# Generate the Jacoco report
-readonly testlogs_dir="$(${script_dir}/bazel info bazel-testlogs --config=remote ${auth_options})"
-
-"${script_dir}/bazel" \
-  run \
-  //tools/base:coverage_report \
+  build \
   --config=remote \
   ${auth_options} \
   -- \
-  tools/base/coverage_report \
-  $production_targets_file \
-  $testlogs_dir \
+  @cov//:all.lcov \
   || exit $?
 
-# Resolve to sourcefiles and convert to LCOV
-python "${script_dir}/jacoco_to_lcov.py" || exit $?
+readonly lcov_path="./bazel-genfiles/external/cov/all/lcov"
 
-# Generate LCOV style HTML report
-genhtml -o "./out/html" "./out/lcov" -p $(pwd) --no-function-coverage || exit $?
+# Generate the HTML report
+genhtml -o "./out/html" ${lcov_path} -p $(pwd) --no-function-coverage || exit $?
 
 if [[ -d "${dist_dir}" ]]; then
   # Copy the report to ab/ outputs
-  mkdir "${dist_dir}/coverage"
-  cp -pv "./out/lcov" "${dist_dir}/coverage"
+  mkdir "${dist_dir}/coverage" || exit $?
+  cp -pv ${lcov_path} "${dist_dir}/coverage" || exit $?
   # HTML report needs to be zipped for fast uploads
-  pushd "./out"
-  zip -r "html.zip" "./html"
-  popd
-  mv -v "./out/html.zip" "${dist_dir}/coverage"
+  pushd "./out" || exit $?
+  zip -r "html.zip" "./html" || exit $?
+  popd || exit $?
+  mv -v "./out/html.zip" "${dist_dir}/coverage" || exit $?
 
   # Upload the LCOV data to GCS if running on BYOB
   if [[ "$build_number" ]]; then
-    gsutil cp "./out/lcov" "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
+    gsutil cp ${lcov_path} "gs://android-devtools-archives/ab-studio-coverage/${build_number}/" || exit $?
   fi
 fi
 

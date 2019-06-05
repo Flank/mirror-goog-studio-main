@@ -86,20 +86,18 @@ bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --jav
 
 We currently do not use the in-built Bazel coverage support.
 
-To gather coverage from tests define `agent_coverage=true`, e.g.
+To enable a test in coverage runs do the following:
+1. Enable coverage for the test by:
+   |Bazel Rule    | Instruction |
+   |------------- | ----------- |
+   |`java_test`   | use `coverage_java_test` from //tools/base/bazel:coverage.bzl instead |
+   |`kotlin_test` | pass `coverage = true` to the rule |
+   |`iml_module`  | pass `test_coverage = true` to the rule |
+2. Add the test target to the "all" coverage_report in tools/base/bazel/coverage/BUILD for inclusion in overall coverage
+3. (Optional) Create your own coverage_report target in tools/base/bazel/coverage/BUILD for your team/feature
 
-```
-bazel test --define agent_coverage=true //tools/...
-```
-
-To create the coverage reports (xml and html) from those test logs run
-
-```
-tools/base/bazel/agent_coverage_reports.py
-```
-
-The reports will be output to `out/agent-coverage/`
-
+To build a coverage report do:
+./tools/base/bazel/coverage/report.sh <name of coverage_report target> <directory to output HTML report>
 
 ## BUILD files
 
