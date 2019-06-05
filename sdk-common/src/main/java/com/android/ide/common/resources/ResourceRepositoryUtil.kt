@@ -24,7 +24,10 @@ import com.android.ide.common.resources.configuration.LocaleQualifier
 import com.android.resources.ResourceType
 import com.google.common.collect.Table
 import com.google.common.collect.Tables
-import java.util.*
+import java.util.EnumMap
+import java.util.HashMap
+import java.util.SortedSet
+import java.util.TreeSet
 
 /**
  * Returns the resources values matching a given [FolderConfiguration].
@@ -102,7 +105,7 @@ fun ResourceRepository.getConfiguredValue(
     return match?.resourceValue
 }
 
-/** Returns the sorted list of languages used in the resources.  */
+/** Returns the sorted list of locales used in the resources. */
 fun ResourceRepository.getLocales(): SortedSet<LocaleQualifier> {
     // As an optimization we could just look for values since that's typically where
     // the languages are defined -- not on layouts, menus, etc -- especially if there
