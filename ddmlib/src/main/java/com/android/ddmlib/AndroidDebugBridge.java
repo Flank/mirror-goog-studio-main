@@ -16,6 +16,7 @@
 
 package com.android.ddmlib;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
@@ -68,6 +69,9 @@ public class AndroidDebugBridge {
 
     // Where to find the ADB bridge.
     static final int DEFAULT_ADB_PORT = 5037;
+
+    // ADB exit value when no Universal C Runtime on Windows
+    private static int STATUS_DLL_NOT_FOUND = (int) (long) 0xc0000135;
 
     // Only set when in unit testing mode. This is a hack until we move to devicelib.
     // http://b.android.com/221925
@@ -649,7 +653,7 @@ public class AndroidDebugBridge {
     }
 
     interface AdbOutputProcessor<T> {
-        T process(BufferedReader r) throws IOException;
+        T process(Process process, BufferedReader r) throws IOException;
     }
 
     private static <T> ListenableFuture<T> runAdb(
@@ -673,7 +677,7 @@ public class AndroidDebugBridge {
 
                             try (BufferedReader br =
                                     new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                                future.set(resultParser.process(br));
+                                future.set(resultParser.process(p, br));
                             } catch (IOException e) {
                                 future.setException(e);
                                 return;
@@ -689,7 +693,7 @@ public class AndroidDebugBridge {
     public static ListenableFuture<AdbVersion> getAdbVersion(@NonNull final File adb) {
         return runAdb(
                 adb,
-                (BufferedReader br) -> {
+                (Process process, BufferedReader br) -> {
                     StringBuilder sb = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
@@ -701,8 +705,28 @@ public class AndroidDebugBridge {
                         sb.append('\n');
                     }
 
-                    throw new RuntimeException(
-                            "Unable to detect adb version, adb output: " + sb.toString());
+                    String errorMessage = "Unable to detect adb version";
+
+                    int exitValue = process.exitValue();
+                    if (exitValue != 0) {
+                        errorMessage += ", exit value: 0x" + Integer.toHexString(exitValue);
+
+                        // Display special message if it is the STATUS_DLL_NOT_FOUND code, and ignore adb output since it's empty anyway
+                        if (exitValue == STATUS_DLL_NOT_FOUND
+                                && SdkConstants.currentPlatform()
+                                        == SdkConstants.PLATFORM_WINDOWS) {
+                            errorMessage +=
+                                    ". ADB depends on the Windows Universal C Runtime,"
+                                            + " which is usually installed by default via Windows Update."
+                                            + " You may need to manually fetch and install the runtime package here:"
+                                            + " https://support.microsoft.com/en-ca/help/2999226/update-for-universal-c-runtime-in-windows";
+                            throw new RuntimeException(errorMessage);
+                        }
+                    }
+                    if (sb.length() > 0) {
+                        errorMessage += ", adb output: " + sb.toString();
+                    }
+                    throw new RuntimeException(errorMessage);
                 },
                 "version");
     }
@@ -710,7 +734,7 @@ public class AndroidDebugBridge {
     private static ListenableFuture<List<AdbDevice>> getRawDeviceList(@NonNull final File adb) {
         return runAdb(
                 adb,
-                (BufferedReader br) -> {
+                (Process process, BufferedReader br) -> {
                     // The first line of output is a header, not part of the device list. Skip it.
                     br.readLine();
                     List<AdbDevice> result = new ArrayList<>();
