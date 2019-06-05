@@ -17,6 +17,7 @@ package com.android.ide.common.resources;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -28,17 +29,10 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 public class ResourceNameKeyedMapTest {
-    @Test
-    public void testFlattenResourceName() {
-        assertEquals("", ResourceNameKeyedMap.flattenResourceName(""));
-        assertEquals("my_key_test", ResourceNameKeyedMap.flattenResourceName("my.key:test"));
-        assertEquals("my_key_test", ResourceNameKeyedMap.flattenResourceName("my_key_test"));
-        assertEquals("_key_test", ResourceNameKeyedMap.flattenResourceName(".key_test"));
-        assertEquals("_key_test_", ResourceNameKeyedMap.flattenResourceName(".key_test:"));
-        assertEquals("_key test_", ResourceNameKeyedMap.flattenResourceName("-key test:"));
-    }
 
     @Test
+    @SuppressWarnings(
+            "RedundantCollectionOperation") // We're testing both keySet().contains() and containsKey() on purpose.
     public void testResourceMap() {
         ResourceNameKeyedMap<ResourceValue> resourceNameKeyedMap = new ResourceNameKeyedMap<>();
 
@@ -66,16 +60,21 @@ public class ResourceNameKeyedMapTest {
         assertEquals(value1, resourceNameKeyedMap.get("test:key"));
         assertEquals(
                 ImmutableSet.of("test_key", "key2", "key3", "key4"), resourceNameKeyedMap.keySet());
+        assertNotEquals(
+                ImmutableSet.of("test:key", "key2", "key3", "key4"), resourceNameKeyedMap.keySet());
         assertEquals(value1, resourceNameKeyedMap.remove("test_key"));
         assertFalse(resourceNameKeyedMap.keySet().contains("test_key"));
+        assertFalse(resourceNameKeyedMap.keySet().contains("test:key"));
 
         // Check key replace.
         assertEquals(value2, resourceNameKeyedMap.put("key2", value1));
         assertEquals(value1, resourceNameKeyedMap.put("key2", value2));
 
         // Check key flattening.
+        resourceNameKeyedMap.clear();
         resourceNameKeyedMap.put("test:key", value1);
-        assertFalse(resourceNameKeyedMap.keySet().contains("test_key"));
+        assertEquals("test:key", resourceNameKeyedMap.keySet().iterator().next());
+        assertTrue(resourceNameKeyedMap.keySet().contains("test_key"));
         assertTrue(resourceNameKeyedMap.keySet().contains("test:key"));
         assertTrue(resourceNameKeyedMap.containsKey("test_key"));
         assertTrue(resourceNameKeyedMap.containsKey("test:key"));

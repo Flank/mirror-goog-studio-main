@@ -15,13 +15,11 @@
  */
 package com.android.ide.common.resources;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.google.common.collect.ForwardingMap;
-import java.util.HashMap;
-import java.util.HashSet;
+import gnu.trove.THashMap;
+import gnu.trove.TObjectHashingStrategy;
 import java.util.Map;
-import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A {@link Map} that treats all the keys as resources names. This class takes care of the key
@@ -30,91 +28,57 @@ import java.util.Set;
  * ResourceNameKeyedMap} keys like 'my.key', 'my_key' and 'my-key' are exactly the same key.
  *
  * <p>{@link ResourceNameKeyedMap} will keep the original names given to the resources so calls to
- * {@link #keySet()} will return the names without modifications.
+ * {@link #keySet()} will return the names without modifications. Note that the set returned from
+ * {@link #keySet()} uses the same strategy for normalizing strings, so it will equate resource
+ * names that normalize to the same string in calls to {@link java.util.Set#contains(Object)} etc.
  */
 public class ResourceNameKeyedMap<T> extends ForwardingMap<String, T> {
-    private final Map<String, T> myDelegate;
-    private final Set<String> myKeys;
-
-    protected ResourceNameKeyedMap(@NonNull Map<String, T> delegate, @NonNull Set<String> keySet) {
-        myDelegate = delegate;
-        myKeys = keySet;
-    }
+    private final THashMap<String, T> myDelegate;
 
     public ResourceNameKeyedMap() {
-        this(new HashMap<>(), new HashSet<>());
+        myDelegate = new THashMap<>(NORMALIZED_RESOURCE_NAME_STRATEGY);
     }
 
-    private static boolean isInvalidResourceNameCharacter(char c) {
-        return c == ':' || c == '.' || c == '-';
-    }
-
-    @Nullable
-    private static String flattenKey(@Nullable String key) {
-        return key == null ? null : flattenResourceName(key);
-    }
-
-    /**
-     * Replicates the key flattening done by AAPT. If the passed key contains '.', '-' or ':', they
-     * will be replaced by '_' and a a new {@link String} returned. If none of those characters are
-     * contained, the same {@link String} passed as input will be returned.
-     */
-    @NonNull
-    public static String flattenResourceName(@NonNull String resourceName) {
-        for (int i = 0, n = resourceName.length(); i < n; i++) {
-            char c = resourceName.charAt(i);
-            if (isInvalidResourceNameCharacter(c)) {
-                // We found one instance that we need to replace. Allocate the buffer, copy everything up to this point and start replacing.
-                char[] buffer = new char[resourceName.length()];
-                resourceName.getChars(0, i, buffer, 0);
-                buffer[i] = '_';
-                for (int j = i + 1; j < n; j++) {
-                    c = resourceName.charAt(j);
-                    buffer[j] = (isInvalidResourceNameCharacter(c)) ? '_' : c;
-                }
-                return new String(buffer);
-            }
-        }
-
-        return resourceName;
+    public ResourceNameKeyedMap(int expectedSize) {
+        myDelegate = new THashMap<>(expectedSize, NORMALIZED_RESOURCE_NAME_STRATEGY);
     }
 
     @Override
-    @NonNull
     protected Map<String, T> delegate() {
         return myDelegate;
     }
 
-    @Override
-    public T put(@Nullable String key, @NonNull T value) {
-        assert key != null : "ResourceValueMap does not support null keys";
-        myKeys.add(key);
+    private static TObjectHashingStrategy<String> NORMALIZED_RESOURCE_NAME_STRATEGY =
+            new TObjectHashingStrategy<String>() {
+                @Override
+                public int computeHashCode(@NotNull String object) {
+                    int result = 0;
+                    for (int i = 0; i < object.length(); i++) {
+                        result = result * 31 + normalize(object.charAt(i));
+                    }
 
-        return super.put(flattenKey(key), value);
-    }
+                    return result;
+                }
 
-    @Override
-    public T get(@Nullable Object key) {
-        assert key != null : "ResourceValueMap does not support null keys";
-        return super.get(flattenKey((String) key));
-    }
+                @Override
+                public boolean equals(@NotNull String o1, @NotNull String o2) {
+                    if (o1.length() != o2.length()) return false;
 
-    @Override
-    public boolean containsKey(@Nullable Object key) {
-        assert key != null : "ResourceValueMap does not support null keys";
-        return super.containsKey(flattenKey((String) key));
-    }
+                    for (int i = o1.length() - 1; i >= 0; i--) {
+                        char c1 = normalize(o1.charAt(i));
+                        char c2 = normalize(o2.charAt(i));
+                        if (c1 != c2) return false;
+                    }
 
-    @Override
-    public T remove(@Nullable Object key) {
-        assert key != null : "ResourceValueMap does not support null keys";
-        myKeys.remove((String) key);
-        return super.remove(flattenKey((String) key));
-    }
+                    return true;
+                }
 
-    @NonNull
-    @Override
-    public Set<String> keySet() {
-        return myKeys;
-    }
+                private char normalize(char c) {
+                    if (ResourcesUtil.isInvalidResourceNameCharacter(c)) {
+                        return '_';
+                    } else {
+                        return c;
+                    }
+                }
+            };
 }

@@ -17,16 +17,11 @@ package com.android.ide.common.resources;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.util.Map;
-import java.util.Set;
 
 /** A {@link ResourceNameKeyedMap} that stores {@link ResourceValue}s as values. */
 public class ResourceValueMap extends ResourceNameKeyedMap<ResourceValue> {
-    private ResourceValueMap(
-            @NonNull Map<String, ResourceValue> delegate, @NonNull Set<String> keySet) {
-        super(delegate, keySet);
+    private ResourceValueMap(int expectedSize) {
+        super(expectedSize);
     }
 
     private ResourceValueMap() {
@@ -35,9 +30,7 @@ public class ResourceValueMap extends ResourceNameKeyedMap<ResourceValue> {
 
     @NonNull
     public static ResourceValueMap createWithExpectedSize(int expectedSize) {
-        return new ResourceValueMap(
-                Maps.newHashMapWithExpectedSize(expectedSize),
-                Sets.newHashSetWithExpectedSize(expectedSize));
+        return new ResourceValueMap(expectedSize);
     }
 
     @NonNull
