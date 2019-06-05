@@ -23,7 +23,6 @@ import android.databinding.tool.store.LayoutInfoInput
 import android.databinding.tool.util.L
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_LAYOUT_INFO_TYPE_MERGE
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -182,7 +181,8 @@ abstract class DataBindingGenBaseClassesTask : AndroidVariantTask() {
         override fun configure(task: DataBindingGenBaseClassesTask) {
             super.configure(task)
 
-            variantScope.artifacts.setTaskInputToFinalProduct(DATA_BINDING_LAYOUT_INFO_TYPE_MERGE,
+            variantScope.artifacts.setTaskInputToFinalProduct(
+                DataBindingCompilerArguments.getLayoutInfoArtifactType(variantScope),
                 task.layoutInfoDirectory)
             val variantData = variantScope.variantData
             val artifacts = variantScope.artifacts
