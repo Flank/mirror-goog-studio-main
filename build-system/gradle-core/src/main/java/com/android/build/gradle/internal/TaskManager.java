@@ -1186,10 +1186,14 @@ public abstract class TaskManager {
                                     .addScope(Scope.PROJECT)
                                     .setFileCollection(
                                             variantScope
-                                                    .getArtifacts()
-                                                    .getFinalArtifactFiles(
-                                                            InternalArtifactType.JAVA_RES)
-                                                    .get())
+                                                    .getGlobalScope()
+                                                    .getProject()
+                                                    .files(
+                                                            variantScope
+                                                                    .getArtifacts()
+                                                                    .getFinalProduct(
+                                                                            InternalArtifactType
+                                                                                    .JAVA_RES)))
                                     .build());
         }
     }
@@ -3231,11 +3235,10 @@ public abstract class TaskManager {
 
         FileCollection featureJars =
                 variantScope.getArtifactFileCollection(METADATA_VALUES, PROJECT, METADATA_CLASSES);
-        BuildableArtifact baseJars =
+        Provider<RegularFile> baseJars =
                 variantScope
                         .getArtifacts()
-                        .getFinalArtifactFiles(
-                                InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES);
+                        .getFinalProduct(InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES);
         BuildableArtifact mappingFileSrc =
                 variantScope.getArtifacts().hasArtifact(InternalArtifactType.APK_MAPPING)
                         ? variantScope
@@ -3276,10 +3279,15 @@ public abstract class TaskManager {
 
         if (transformTask.isPresent()) {
             publishFeatureDex(variantScope);
-            if (mainDexList != null) {
-                transformTask.get().configure(it -> it.dependsOn(mainDexList));
-            }
-
+            transformTask
+                    .get()
+                    .configure(
+                            it -> {
+                                if (mainDexList != null) {
+                                    it.dependsOn(mainDexList);
+                                }
+                                it.dependsOn(baseJars);
+                            });
         } else {
             globalScope
                     .getErrorHandler()

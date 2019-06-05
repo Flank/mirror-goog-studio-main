@@ -40,7 +40,7 @@ import java.nio.file.Files
  */
 class DexSplitterTransform(
         private val featureJars: FileCollection,
-        private val baseJars: BuildableArtifact,
+        private val baseJars: Provider<RegularFile>,
         private val mappingFileSrc: BuildableArtifact?,
         private val mainDexList: Provider<RegularFile>?
 ) :
@@ -62,7 +62,7 @@ class DexSplitterTransform(
     override fun getSecondaryFiles(): MutableCollection<SecondaryFile> {
         val secondaryFiles: MutableCollection<SecondaryFile> = mutableListOf()
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
-        secondaryFiles.add(SecondaryFile.nonIncremental(baseJars))
+        secondaryFiles.add(SecondaryFile.nonIncremental(baseJars.get().asFile))
         mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
         mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
         return secondaryFiles
@@ -104,7 +104,7 @@ class DexSplitterTransform(
                 Files.createDirectories(File(outputDir, file.nameWithoutExtension).toPath())
             }
 
-            baseJars.files.forEach { builder.addBaseJar(it.toPath()) }
+            builder.addBaseJar(baseJars.get().asFile.toPath())
 
             builder.build().run()
 

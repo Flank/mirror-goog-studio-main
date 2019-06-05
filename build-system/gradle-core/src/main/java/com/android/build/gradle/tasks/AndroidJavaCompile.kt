@@ -287,10 +287,6 @@ abstract class AndroidJavaCompile : JavaCompile(), VariantAwareTask {
         override val type: Class<AndroidJavaCompile>
             get() = AndroidJavaCompile::class.java
 
-        private val bundleArtifactFolderForDataBinding: DirectoryProperty =
-            variantScope.globalScope.project.objects.directoryProperty();
-
-
         override fun handleProvider(taskProvider: TaskProvider<out AndroidJavaCompile>) {
             super.handleProvider(taskProvider)
 
