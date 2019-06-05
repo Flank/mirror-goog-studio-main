@@ -224,7 +224,7 @@ public class DeployerException extends Exception {
     private DeployerException(Error error, Enum code, String[] messageArgs, String... detailArgs) {
         super(String.format(error.message, (Object[]) messageArgs));
         this.error = error;
-        this.code = error.name() + (code == null ? "" : ".") + code;
+        this.code = code == null ? error.name() : error.name() + "." + code.name();
         this.details = String.format(error.details, (Object[]) detailArgs);
     }
 
