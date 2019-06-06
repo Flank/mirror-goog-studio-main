@@ -17,6 +17,7 @@
 #include "bash_command.h"
 
 #include "sys/wait.h"
+#include "utils/device_info.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/trace.h"
@@ -28,13 +29,23 @@ namespace profiler {
 bool BashCommandRunner::RunAs(const string &parameters,
                               const string &package_name,
                               string *output) const {
-  string cmd;
-  cmd.append(kRunAsExecutable);
-  cmd.append(" ");
-  cmd.append(package_name);
   // TODO: The single quote can interfer with parameters. Disregarding
   // this potential issue for now.
-  cmd.append(" sh -c '");
+  string cmd;
+  if (DeviceInfo::is_user_build()) {
+    cmd.append(kRunAsExecutable);
+    cmd.append(" ");
+    cmd.append(package_name);
+    cmd.append(" sh -c '");
+  } else {
+    // "run-as" works only for debuggable apps, even on non-user-build devices
+    // (such as userdebug build). On those builds, we use "su root" to support
+    // non-debuggable apps.
+    cmd.append(kSuExecutable);
+    cmd.append(" root sh -c 'cd /data/data/");
+    cmd.append(package_name);
+    cmd.append(" && ");
+  }
   cmd.append(executable_path_);
   cmd.append(" ");
   cmd.append(parameters);

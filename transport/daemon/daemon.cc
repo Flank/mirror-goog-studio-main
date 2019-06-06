@@ -67,12 +67,11 @@ const char* const kAgentJarFileName = "perfa.jar";
 // Delete file executable from package's data folder.
 void DeleteFileFromPackageFolder(const string& package_name,
                                  const string& file_name) {
-  std::ostringstream os;
-  os << kRunAsExecutable << " " << package_name << " rm -f "
-     << kCodeCacheRelativeDir << file_name;
-  if (system(os.str().c_str()) == -1) {
-    perror("system");
-    exit(-1);
+  BashCommandRunner rm{"rm"};
+  std::ostringstream args;
+  args << "-f " << kCodeCacheRelativeDir << file_name;
+  if (!rm.RunAs(args.str(), package_name, nullptr)) {
+    perror("rm");
   }
 }
 
@@ -87,12 +86,11 @@ void CopyFileToPackageFolder(const string& package_name,
   // 'file not found' error.
   DeleteFileFromPackageFolder(package_name, file_name);
 
-  std::ostringstream os;
-  os << kRunAsExecutable << " " << package_name << " cp "
-     << CurrentProcess::dir() << file_name << " " << kCodeCacheRelativeDir;
-  if (system(os.str().c_str()) == -1) {
-    perror("system");
-    exit(-1);
+  BashCommandRunner cp{"cp"};
+  std::ostringstream args;
+  args << CurrentProcess::dir() << file_name << " " << kCodeCacheRelativeDir;
+  if (!cp.RunAs(args.str(), package_name, nullptr)) {
+    perror("cp");
   }
 }
 
@@ -126,9 +124,19 @@ void RunConnector(int app_pid, const string& package_name,
   // Pass the fd as command line argument to connector.
   connect_arg << ":" << kDaemonConnectRequest << ":" << fd;
 
-  int return_value =
-      execl(kRunAsExecutable, kRunAsExecutable, package_name.c_str(),
-            kConnectorRelativePath, connect_arg.str().c_str(), (char*)nullptr);
+  int return_value = -1;
+  if (DeviceInfo::is_user_build()) {
+    return_value = execl(kRunAsExecutable, kRunAsExecutable,
+                         package_name.c_str(), kConnectorRelativePath,
+                         connect_arg.str().c_str(), (char*)nullptr);
+  } else {
+    std::ostringstream connector_absolute_path;
+    connector_absolute_path << "/data/data/" << package_name << "/"
+                            << kConnectorRelativePath;
+    return_value = execl(kSuExecutable, kSuExecutable, "root",
+                         connector_absolute_path.str().c_str(),
+                         connect_arg.str().c_str(), (char*)nullptr);
+  }
   if (return_value == -1) {
     perror("execl");
     exit(-1);
