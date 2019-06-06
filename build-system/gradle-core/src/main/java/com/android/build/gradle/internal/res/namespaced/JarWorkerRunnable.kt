@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.packaging.JarCreatorFactory
 import com.android.build.gradle.internal.packaging.JarCreatorType
-import com.android.utils.FileUtils
 import java.io.File
 import java.io.Serializable
 import java.util.function.Predicate
@@ -31,6 +30,9 @@ class JarWorkerRunnable @Inject constructor(val params: JarRequest) : Runnable {
             if (params.filter == null) null else Predicate { params.filter.invoke(it) },
             params.jarCreatorType
         ).use { out ->
+            if (params.compressionLevel != null) {
+                out.setCompressionLevel(params.compressionLevel)
+            }
             if (params.manifestProperties.isNotEmpty()) {
                 out.setManifestProperties(params.manifestProperties)
             }
@@ -48,5 +50,6 @@ data class JarRequest(
     val fromJars: List<File> = listOf(),
     val fromFiles: Map<String, File> = mapOf(),
     val manifestProperties: Map<String, String> = mapOf(),
-    val filter: ((className: String) -> Boolean)? = null
+    val filter: ((className: String) -> Boolean)? = null,
+    val compressionLevel: Int? = null
 ): Serializable

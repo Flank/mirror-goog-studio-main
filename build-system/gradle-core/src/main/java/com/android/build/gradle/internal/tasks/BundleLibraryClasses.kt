@@ -191,6 +191,9 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
             predicate,
             params.jarCreatorType
         ).use { out ->
+            // Don't compress because compressing takes extra time, and this jar doesn't go into any
+            // APKs or AARs
+            out.setCompressionLevel(0)
             params.input.forEach { base ->
                 if (base.isDirectory) {
                     out.addDirectory(base.toPath())

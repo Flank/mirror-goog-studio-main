@@ -109,11 +109,14 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
 
         workers.use {
             it.submit(
+                // Don't compress because compressing takes extra time, and this jar doesn't go
+                // into any APKs or AARs.
                 JarWorkerRunnable::class.java, JarRequest(
                     toFile = outputJar.get().asFile,
                     jarCreatorType = jarCreatorType,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
-                    fromFiles = files
+                    fromFiles = files,
+                    compressionLevel = 0
                 )
             )
         }

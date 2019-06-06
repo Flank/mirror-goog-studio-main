@@ -74,6 +74,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             usedNamesPredicate,
             jarCreatorType
         ).use {
+            // Don't compress because compressing takes extra time, and this jar doesn't go into any
+            // APKs or AARs.
+            it.setCompressionLevel(0)
             val lib = libraryInputFile.get().asFile
             if (lib.exists()) {
                 it.addJar(lib.toPath())

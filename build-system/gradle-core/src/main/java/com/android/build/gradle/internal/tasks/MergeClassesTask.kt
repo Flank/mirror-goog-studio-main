@@ -86,12 +86,15 @@ abstract class MergeClassesTask
             workers.use { workers ->
                 workers.submit(
                     JarWorkerRunnable::class.java,
+                    // Don't compress because compressing takes extra time, and this jar doesn't go
+                    // into any APKs or AARs.
                     JarRequest(
                         toFile = outputFile,
                         jarCreatorType = jarCreatorType,
                         fromDirectories = fromDirectories,
                         fromJars = fromJars,
-                        filter = { CLASS_MATCHER.test(it) }
+                        filter = { CLASS_MATCHER.test(it) },
+                        compressionLevel = 0
                     )
                 )
             }
