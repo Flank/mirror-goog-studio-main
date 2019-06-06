@@ -1,6 +1,6 @@
 <recipe folder="root://activities/common">
 <#if !themeExists >
-    <#if isInstantApp || isDynamicFeature>
+    <#if isDynamicFeature>
     <merge from="root/res/values/theme_styles.xml.ftl"
              to="${escapeXmlAttribute(baseFeatureResOut)}/values/styles.xml" />
     <#else>

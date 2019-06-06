@@ -24,12 +24,6 @@
     <global id="hasNoActionBar" type="boolean" value="true" /> <#-- It's overridden in each template if necessary -->
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 
-    <global id="isInstantApp" type="boolean" value="false" />
-    <global id="instantAppActivityOrder" type="string" value="1" />
-    <global id="instantAppActivityHost" type="string" value="instantapp.example.com" />
-    <global id="instantAppActivityRoute" type="string" value="" />
-    <global id="instantAppActivityRouteType" type="string" value="path" />
-    <global id="includeInstantAppUrl" type="boolean" value="false" />
     <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'.')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
 

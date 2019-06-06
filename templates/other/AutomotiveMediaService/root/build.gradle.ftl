@@ -4,7 +4,7 @@
 apply plugin: 'com.android.library'
 <@kt.addKotlinPlugins />
 
-<@shared.androidConfig hasApplicationId=false applicationId='' isBaseFeature=false hasTests=true canHaveCpp=true canUseProguard=false />
+<@shared.androidConfig hasApplicationId=false applicationId='' hasTests=true canHaveCpp=true canUseProguard=false />
 
 dependencies {
     <@kt.addKotlinDependencies />

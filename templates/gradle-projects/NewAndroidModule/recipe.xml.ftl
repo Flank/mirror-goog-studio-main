@@ -14,13 +14,8 @@
 
     <instantiate from="root/AndroidManifest.xml.ftl"
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
-<#if hasInstantAppWrapper>
-    <instantiate from="root/res/values/strings.xml.ftl"
-                   to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
-<#else>
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-</#if>
 
     <instantiate from="root/test/app_package/ExampleInstrumentedTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.${ktOrJavaExt}" />
@@ -41,32 +36,6 @@
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
 
     <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
-
-<#if hasMonolithicAppWrapper>
-    <mkdir at="${monolithicAppOut}" />
-    <instantiate from="root/monolithic-AndroidManifest.xml.ftl"
-                   to="${monolithicAppOut}/src/main/AndroidManifest.xml" />
-    <instantiate from="root/monolithic-build.gradle.ftl"
-                   to="${monolithicAppOut}/build.gradle" />
-</#if>
-
-<#if hasInstantAppWrapper>
-    <mkdir at="${instantAppOut}" />
-    <instantiate from="root/instantApp-build.gradle.ftl"
-                   to="${instantAppOut}/build.gradle" />
-
-    <mkdir at="${baseFeatureOut}" />
-    <instantiate from="root/baseFeature-AndroidManifest.xml.ftl"
-                   to="${baseFeatureOut}/src/main/AndroidManifest.xml" />
-    <merge from="root/baseFeature-ApplicationManifest.xml.ftl"
-             to="${baseFeatureOut}/src/main/AndroidManifest.xml" />
-
-    <instantiate from="root/baseFeature-build.gradle.ftl"
-                   to="${baseFeatureOut}/build.gradle" />
-<#elseif isInstantApp && !isBaseFeature>
-    <merge from="root/baseFeatureDependency-build.gradle.ftl"
-             to="${baseFeatureOut}/build.gradle" />
-</#if>
 
 <#macro copyIconCommands destination>
     <#if buildApi gte 26 && targetApi gte 26>
@@ -103,8 +72,6 @@
 
 <#if !isLibraryProject>
   <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
-<#elseif hasInstantAppWrapper || isBaseFeature>
-  <@copyIconCommands destination=escapeXmlAttribute(baseFeatureResOut)/>
 </#if>
 
 <#if !isLibraryProject>
@@ -113,15 +80,6 @@
     <#if buildApi gte 22>
         <copy from="root/res/values/colors.xml"
                 to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
-    </#if>
-</#if>
-
-<#if hasInstantAppWrapper || isBaseFeature>
-    <instantiate from="root/res/values/styles.xml.ftl"
-                   to="${escapeXmlAttribute(baseFeatureResOut)}/values/styles.xml" />
-    <#if buildApi gte 22>
-        <copy from="root/res/values/colors.xml"
-                to="${escapeXmlAttribute(baseFeatureResOut)}/values/colors.xml" />
     </#if>
 </#if>
 

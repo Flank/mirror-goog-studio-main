@@ -28,14 +28,10 @@
 </manifest></#if>
 </#macro>
 
-<#macro androidConfig hasApplicationId=false applicationId='' hasTests=false canHaveCpp=false isBaseFeature=false canUseProguard=false>
+<#macro androidConfig hasApplicationId=false applicationId='' hasTests=false canHaveCpp=false canUseProguard=false>
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
     <#if explicitBuildToolsVersion!false>buildToolsVersion "${buildToolsVersion}"</#if>
-
-    <#if isBaseFeature>
-    baseFeature true
-    </#if>
 
     defaultConfig {
     <#if hasApplicationId>

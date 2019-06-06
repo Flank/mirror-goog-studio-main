@@ -1,19 +1,15 @@
 <#import "./shared_macros.ftl" as shared>
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
-<#if isInstantApp>
-apply plugin: 'com.android.feature'
-<#else>
-  <#if isLibraryProject>
+<#if isLibraryProject>
 apply plugin: 'com.android.library'
-  <#elseif isDynamicFeature>
+<#elseif isDynamicFeature>
 apply plugin: 'com.android.dynamic-feature'
-  <#else>
+<#else>
 apply plugin: 'com.android.application'
-  </#if>
 </#if>
 <@kt.addKotlinPlugins />
 
-<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseFeature=isBaseFeature hasTests=true canHaveCpp=true canUseProguard=isApplicationProject||isBaseFeature||(isLibraryProject&&!isInstantApp)/>
+<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName hasTests=true canHaveCpp=true canUseProguard=isApplicationProject||isLibraryProject />
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
@@ -23,17 +19,8 @@ dependencies {
     })
     </#if>
     <@kt.addKotlinDependencies />
-<#if isInstantApp||isDynamicFeature>
-  <#if isBaseFeature>
-    <#if monolithicModuleName?has_content>
-    application project(':${monolithicModuleName}')
-    <#else>
-    // TODO: Add dependency to the main application.
-    // application project(':app')
-    </#if>
-  <#else>
-    implementation project(':${baseFeatureName}')
-  </#if>
+<#if isDynamicFeature>
+  implementation project(':${baseFeatureName}')
 <#else>
   <@shared.watchProjectDependencies/>
 </#if>
