@@ -24,6 +24,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -70,9 +71,12 @@ public final class BuildOutput implements OutputFile, Serializable {
             @NonNull ApkData apkData,
             @NonNull Path outputPath,
             @NonNull Map<String, String> properties) {
+        String systemIndependentPath = FileUtils.toSystemIndependentPath(outputPath.toString());
         this.outputType = outputType;
-        this.apkData = apkData;
-        this.path = FileUtils.toSystemIndependentPath(outputPath.toString());
+        this.apkData =
+                Preconditions.checkNotNull(
+                        apkData, "apkData for %s [%s] is null.", outputType, systemIndependentPath);
+        this.path = systemIndependentPath;
         this.properties = properties;
     }
 

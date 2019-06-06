@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
@@ -25,20 +24,14 @@ import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.rules.ExpectedException;
 
 /** Tests for the {@link BuildOutput} class. */
 public class BuildOutputTest {
 
-    @Mock ApkData apkInfo;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
+    @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
     @Test
     public void testEquals() {
@@ -54,17 +47,27 @@ public class BuildOutputTest {
 
     @Test
     public void testGetFilterTypes() {
-        BuildOutput buildOutput =
-                new BuildOutput(InternalArtifactType.APK, apkInfo, new File("/tmp/bar/output"));
-        when(apkInfo.getFilters())
-                .thenReturn(
+        ApkData apkData =
+                ApkData.of(
+                        VariantOutput.OutputType.MAIN,
                         ImmutableList.of(
                                 new FilterDataImpl(VariantOutput.FilterType.LANGUAGE, "fr"),
                                 new FilterDataImpl(VariantOutput.FilterType.DENSITY, "xhdpi"),
-                                new FilterDataImpl(VariantOutput.FilterType.ABI, "arm")));
+                                new FilterDataImpl(VariantOutput.FilterType.ABI, "arm")),
+                        42);
+
+        BuildOutput buildOutput =
+                new BuildOutput(InternalArtifactType.APK, apkData, new File("/tmp/bar/output"));
 
         assertThat(buildOutput.getFilterTypes())
                 .containsExactlyElementsIn(
                         ImmutableList.of(OutputFile.DENSITY, OutputFile.ABI, OutputFile.LANGUAGE));
+    }
+
+    @Test
+    public void testNullApkData() {
+        exceptionRule.expect(NullPointerException.class);
+        exceptionRule.expectMessage("apkData for APK [/tmp/bar/output] is null.");
+        new BuildOutput(InternalArtifactType.APK, null, new File("/tmp/bar/output"));
     }
 }
