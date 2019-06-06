@@ -205,7 +205,7 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":installer",
+    binary = ":installer.stripped",
     filename = "installer",
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],

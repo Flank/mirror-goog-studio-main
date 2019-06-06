@@ -77,7 +77,7 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":libswap.so",
+    binary = ":libswap.so.stripped",
     filename = "libswap.so",
     tags = [
         "no_windows",
@@ -124,7 +124,7 @@ android_cc_binary(
         "armeabi-v7a",
         "arm64-v8a",
     ],
-    binary = ":agent_server",
+    binary = ":agent_server.stripped",
     filename = "agent_server",
     tags = ["no_windows"],
     visibility = ["//visibility:public"],
