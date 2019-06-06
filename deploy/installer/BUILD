@@ -8,9 +8,9 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 genrule(
     name = "version",
     srcs = [
-        "//tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server",
-        "//tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so",
-        "//tools/base/deploy/installer:raw-installer/arm64-v8a/installer",
+        "//tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server",
+        "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
+        "//tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw",
     ],
     outs = [
         "Version.java",
@@ -18,9 +18,9 @@ genrule(
     ],
     cmd = "DEP=\"" +
           # This should be a list of all binaries that determine our current version.
-          "$(location //tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server) " +
-          "$(location //tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so) " +
-          "$(location //tools/base/deploy/installer:raw-installer/arm64-v8a/installer) " +
+          "$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) " +
+          "$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) " +
+          "$(location //tools/base/deploy/installer:android-installer_raw/arm64-v8a/android-installer_raw) " +
           "\";" +
           # Java
           "$(location //tools/base/bazel:bin2c) -lang=java -embed=false -variable=com.android.tools.deployer.Version -output=$(location Version.java) $$DEP && " +
@@ -36,18 +36,18 @@ genrule(
 genrule(
     name = "android-installer",
     srcs = [
-        ":raw-installer/x86/installer",
-        ":raw-installer/x86_64/installer",
-        ":raw-installer/armeabi-v7a/installer",
-        ":raw-installer/arm64-v8a/installer",
-        "//tools/base/deploy/agent/native:raw-libswap/x86/libswap.so",
-        "//tools/base/deploy/agent/native:raw-libswap/x86_64/libswap.so",
-        "//tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so",
-        "//tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so",
-        "//tools/base/deploy/agent/native:raw-agent_server/x86/agent_server",
-        "//tools/base/deploy/agent/native:raw-agent_server/x86_64/agent_server",
-        "//tools/base/deploy/agent/native:raw-agent_server/armeabi-v7a/agent_server",
-        "//tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server",
+        ":android-installer_raw/x86/android-installer_raw",
+        ":android-installer_raw/x86_64/android-installer_raw",
+        ":android-installer_raw/armeabi-v7a/android-installer_raw",
+        ":android-installer_raw/arm64-v8a/android-installer_raw",
+        "//tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so",
+        "//tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so",
+        "//tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so",
+        "//tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so",
+        "//tools/base/deploy/agent/native:android-agent_server/x86/android-agent_server",
+        "//tools/base/deploy/agent/native:android-agent_server/x86_64/android-agent_server",
+        "//tools/base/deploy/agent/native:android-agent_server/armeabi-v7a/android-agent_server",
+        "//tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server",
         ":version.raw",
     ],
     outs = [
@@ -58,33 +58,33 @@ genrule(
     ],
     cmd = """
        $(location //tools/base/bazel:matryoshka) \
-           -i $(location :raw-installer/x86/installer) \
+           -i $(location :android-installer_raw/x86/android-installer_raw) \
            -o $(location android-installer/x86/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86/libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/x86/agent_server) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86/android-agent_server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
-           -i $(location :raw-installer/x86_64/installer) \
+           -i $(location :android-installer_raw/x86_64/android-installer_raw) \
            -o $(location android-installer/x86_64/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86_64/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:raw-libswap/x86/libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/x86_64/agent_server) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/x86_64/android-libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/x86/android-libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/x86_64/android-agent_server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
-           -i $(location :raw-installer/armeabi-v7a/installer) \
+           -i $(location :android-installer_raw/armeabi-v7a/android-installer_raw) \
            -o $(location android-installer/armeabi-v7a/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/armeabi-v7a/agent_server) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/armeabi-v7a/android-agent_server) \
            -p version=$(location :version.raw);
 
        $(location //tools/base/bazel:matryoshka) \
-           -i $(location :raw-installer/arm64-v8a/installer) \
+           -i $(location :android-installer_raw/arm64-v8a/android-installer_raw) \
            -o $(location android-installer/arm64-v8a/installer) \
-           -p agent.so=$(location //tools/base/deploy/agent/native:raw-libswap/arm64-v8a/libswap.so) \
-           -p agent-alt.so=$(location //tools/base/deploy/agent/native:raw-libswap/armeabi-v7a/libswap.so) \
-           -p agent_server=$(location //tools/base/deploy/agent/native:raw-agent_server/arm64-v8a/agent_server) \
+           -p agent.so=$(location //tools/base/deploy/agent/native:android-libswap/arm64-v8a/android-libswap.so) \
+           -p agent-alt.so=$(location //tools/base/deploy/agent/native:android-libswap/armeabi-v7a/android-libswap.so) \
+           -p agent_server=$(location //tools/base/deploy/agent/native:android-agent_server/arm64-v8a/android-agent_server) \
            -p version=$(location :version.raw);
     """,
     tags = ["no_rbe_windows"],
@@ -198,7 +198,7 @@ cc_binary(
 )
 
 android_cc_binary(
-    name = "raw-installer",
+    name = "android-installer_raw",
     abis = [
         "x86",
         "x86_64",
@@ -206,7 +206,7 @@ android_cc_binary(
         "arm64-v8a",
     ],
     binary = ":installer.stripped",
-    filename = "installer",
+    filename = "android-installer_raw",
     tags = ["no_windows"],
     visibility = ["//tools/base/deploy:__subpackages__"],
 )
