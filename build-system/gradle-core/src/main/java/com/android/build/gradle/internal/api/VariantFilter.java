@@ -29,7 +29,7 @@ import java.util.List;
  * Exposes a read-only view of a variant as well as a flag that can be used to signal that the
  * variant should be ignored.
  */
-public class VariantFilter implements com.android.build.gradle.api.VariantFilter {
+public class VariantFilter implements com.android.build.api.variant.VariantFilter {
 
     @NonNull
     private final ReadOnlyObjectProvider readOnlyObjectProvider;
