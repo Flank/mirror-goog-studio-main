@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APP_CLASSES
 import com.android.build.gradle.internal.scope.InternalArtifactType.AAPT_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.BUNDLE
 import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
+import com.android.build.gradle.internal.scope.InternalArtifactType.COMPILED_LOCAL_RESOURCES
 import com.android.build.gradle.internal.scope.InternalArtifactType.CONSUMER_PROGUARD_FILE
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_ARTIFACT
 import com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT
@@ -250,6 +251,7 @@ class PublishingSpecs {
                 runtime(LIBRARY_JNI, ArtifactType.JNI)
                 runtime(LINT_PUBLISH_JAR, ArtifactType.LINT)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
+                runtime(COMPILED_LOCAL_RESOURCES, ArtifactType.COMPILED_LOCAL_RESOURCES)
 
                 testSpec(VariantTypeImpl.UNIT_TEST) {
                     // unit test need ALL_CLASSES instead of RUNTIME_LIBRARY_CLASSES to get

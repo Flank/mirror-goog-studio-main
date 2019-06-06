@@ -53,6 +53,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.BundleAar;
+import com.android.build.gradle.tasks.CompileLibraryResourcesTask;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.ExtractDeepLinksTask;
 import com.android.build.gradle.tasks.MergeResources;
@@ -126,6 +127,8 @@ public class LibraryTaskManager extends TaskManager {
         createRenderscriptTask(variantScope);
 
         createMergeResourcesTasks(variantScope);
+
+        createCompileLibraryResourcesTask(variantScope);
 
         createShaderTask(variantScope);
 
@@ -420,6 +423,12 @@ public class LibraryTaskManager extends TaskManager {
         // This task merges all the resources, including the dependencies of this library.
         // This should be unused, except that external libraries might consume it.
         createMergeResourcesTask(variantScope, false /*processResources*/, ImmutableSet.of());
+    }
+
+    private void createCompileLibraryResourcesTask(@NonNull VariantScope variantScope) {
+        if (variantScope.isPrecompileLocalResourcesEnabled()) {
+            taskFactory.register(new CompileLibraryResourcesTask.CreationAction(variantScope));
+        }
     }
 
     @Override

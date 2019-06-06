@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.scope;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
-
 import java.io.File;
 import java.util.Locale;
 
@@ -138,6 +137,7 @@ public enum InternalArtifactType implements ArtifactType {
     // linked res for the unified bundle
     LINKED_RES_FOR_BUNDLE(Kind.FILE),
     SHRUNK_LINKED_RES_FOR_BUNDLE(Kind.FILE),
+    COMPILED_LOCAL_RESOURCES(Kind.DIRECTORY),
 
     // Artifacts for legacy multidex
     LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES(Kind.FILE),

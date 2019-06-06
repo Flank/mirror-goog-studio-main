@@ -85,6 +85,7 @@ enum class BooleanOption(
     USE_APK_FLINGER("android.useApkFlinger", false),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", false),
+    PRECOMPILE_LOCAL_RESOURCES("android.precompileLocalResources", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled
