@@ -31,7 +31,6 @@ import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
-import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
@@ -58,7 +57,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class GlobalScope implements TransformGlobalScope {
 
     @NonNull private final Project project;
-    @NonNull private final FilesProvider filesProvider;
     @NonNull private final GradleProcessExecutor processExecutor;
     @NonNull private final GradleJavaProcessExecutor javaProcessExecutor;
     @NonNull private AndroidConfig extension;
@@ -84,7 +82,6 @@ public class GlobalScope implements TransformGlobalScope {
     public GlobalScope(
             @NonNull Project project,
             @NonNull String createdBy,
-            @NonNull FilesProvider filesProvider,
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
             @NonNull SdkComponents sdkComponents,
@@ -96,7 +93,6 @@ public class GlobalScope implements TransformGlobalScope {
         this.project = checkNotNull(project);
         this.createdBy = createdBy;
         this.dslScope = checkNotNull(dslScope);
-        this.filesProvider = filesProvider;
         this.sdkComponents = checkNotNull(sdkComponents);
         this.toolingRegistry = checkNotNull(toolingRegistry);
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
@@ -126,11 +122,6 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull
     public String getCreatedBy() {
         return createdBy;
-    }
-
-    @NonNull
-    public FilesProvider getFilesProvider() {
-        return filesProvider;
     }
 
     @NonNull

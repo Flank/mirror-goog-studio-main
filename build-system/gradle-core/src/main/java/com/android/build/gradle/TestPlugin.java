@@ -22,13 +22,10 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.TestApplicationTaskManager;
-import com.android.build.gradle.internal.api.dsl.extensions.TestExtensionImpl;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.plugin.TestPluginDelegate;
-import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -42,7 +39,7 @@ import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'test' projects. */
-public class TestPlugin extends BasePlugin<TestExtensionImpl> {
+public class TestPlugin extends BasePlugin {
     @Inject
     public TestPlugin(ToolingModelBuilderRegistry registry) {
         super(registry);
@@ -119,10 +116,5 @@ public class TestPlugin extends BasePlugin<TestExtensionImpl> {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig) {
         return new TestVariantFactory(globalScope, androidConfig);
-    }
-
-    @Override
-    protected TypedPluginDelegate<TestExtensionImpl> getTypedDelegate() {
-        return new TestPluginDelegate();
     }
 }

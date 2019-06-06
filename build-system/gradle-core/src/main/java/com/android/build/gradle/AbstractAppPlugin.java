@@ -22,13 +22,10 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.plugin.AppPluginDelegate;
-import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -42,7 +39,7 @@ import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
-public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
+public abstract class AbstractAppPlugin extends BasePlugin {
     private final boolean isBaseApplication;
 
     @Inject
@@ -121,10 +118,5 @@ public abstract class AbstractAppPlugin extends BasePlugin<AppExtensionImpl> {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig) {
         return new ApplicationVariantFactory(globalScope, androidConfig);
-    }
-
-    @Override
-    protected TypedPluginDelegate<AppExtensionImpl> getTypedDelegate() {
-        return new AppPluginDelegate();
     }
 }

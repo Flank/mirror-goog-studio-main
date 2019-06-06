@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
-import com.android.build.gradle.internal.variant2.RenamedConfigurationAction
 import com.android.builder.errors.EvalIssueException
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
@@ -29,6 +28,7 @@ import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
+import org.gradle.api.artifacts.Dependency
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -210,5 +210,23 @@ class SourceSetManager(
 
     fun runBuildableArtifactsActions() {
         buildArtifactActions.runAll()
+    }
+}
+
+
+class RenamedConfigurationAction(
+    private val replacement: String,
+    private val oldName: String,
+    private val deprecationReporter: DeprecationReporter,
+    private val url: String? = null,
+    private val deprecationTarget: DeprecationReporter.DeprecationTarget = DeprecationReporter.DeprecationTarget.CONFIG_NAME) : Action<Dependency> {
+    private var warningPrintedAlready = false
+
+    override fun execute(dependency: Dependency) {
+        if (!warningPrintedAlready) {
+            warningPrintedAlready = true
+            deprecationReporter.reportRenamedConfiguration(
+                replacement, oldName, deprecationTarget, url)
+        }
     }
 }

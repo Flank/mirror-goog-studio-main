@@ -23,13 +23,11 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantAppTaskManager;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
-import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -43,7 +41,7 @@ import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'instantapp' projects. */
-public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
+public class InstantAppPlugin extends BasePlugin {
     @Inject
     public InstantAppPlugin(ToolingModelBuilderRegistry registry) {
         super(registry);
@@ -132,10 +130,5 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig) {
         return new InstantAppVariantFactory(globalScope, androidConfig);
-    }
-
-    @Override
-    protected TypedPluginDelegate<BaseExtension2> getTypedDelegate() {
-        return null;
     }
 }

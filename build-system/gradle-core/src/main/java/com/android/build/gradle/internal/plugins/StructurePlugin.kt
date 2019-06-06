@@ -70,7 +70,7 @@ class StructurePlugin: Plugin<Project> {
         // to do some conditional work depending on which plugins are applied, or not applied.
         project.afterEvaluate {
             if (it.plugins.count {
-                    it is BasePlugin<*> || it is JavaPlugin || it is JavaLibraryPlugin
+                    it is BasePlugin || it is JavaPlugin || it is JavaLibraryPlugin
                 } > 0) createTask(it)
 
             if (gatherModuleTask == null) {
