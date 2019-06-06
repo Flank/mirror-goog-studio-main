@@ -23,7 +23,6 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -443,8 +442,8 @@ public abstract class BaseVariantData {
                             .getArtifactFiles();
             allRes = allRes.plus(libraries);
 
-            Iterator<BuildableArtifact> sourceSets = getAndroidResources().values().iterator();
-            FileCollection mainSourceSet = sourceSets.next().get();
+            Iterator<FileCollection> sourceSets = getAndroidResources().values().iterator();
+            FileCollection mainSourceSet = sourceSets.next();
             FileCollection generated =
                     project.files(
                             scope.getRenderscriptResOutputDir(),
@@ -454,7 +453,7 @@ public abstract class BaseVariantData {
             allRes = allRes.plus(mainSourceSet.plus(generated));
 
             while (sourceSets.hasNext()) {
-                allRes = allRes.plus(sourceSets.next().get());
+                allRes = allRes.plus(sourceSets.next());
             }
 
             rawAndroidResources = allRes;
@@ -543,7 +542,7 @@ public abstract class BaseVariantData {
         return sourceSets.build();
     }
 
-    public LinkedHashMap<String, BuildableArtifact> getAndroidResources() {
+    public LinkedHashMap<String, FileCollection> getAndroidResources() {
         return getVariantConfiguration()
                 .getSortedSourceProviders()
                 .stream()

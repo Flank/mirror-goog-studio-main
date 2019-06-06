@@ -69,26 +69,6 @@ open class BuildArtifactReportTask : DefaultTask() {
         }
     }
 
-    class SourceSetReportCreationAction(
-        val globalScope: GlobalScope,
-        val sourceSet: DefaultAndroidSourceSet
-    ) :
-        TaskCreationAction<BuildArtifactReportTask>() {
-
-        override val name: String
-            get() = "reportSourceSetTransform".appendCapitalized(sourceSet.name)
-        override val type: Class<BuildArtifactReportTask>
-            get() = BuildArtifactReportTask::class.java
-
-        override fun configure(task: BuildArtifactReportTask) {
-            task.reportSupplier = sourceSet::buildArtifactsReport
-            val outputFile = globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
-            if (outputFile != null) {
-                task.outputFile = globalScope.project.file(outputFile)
-            }
-        }
-    }
-
     class BuildArtifactReportCreationAction(val scope: VariantScope) :
         TaskCreationAction<BuildArtifactReportTask>() {
 

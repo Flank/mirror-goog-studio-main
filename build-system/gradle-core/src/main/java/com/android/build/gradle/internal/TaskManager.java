@@ -699,16 +699,6 @@ public abstract class TaskManager {
         taskFactory.register(new BuildArtifactReportTask.BuildArtifactReportCreationAction(scope));
     }
 
-    public void createSourceSetArtifactReportTask(@NonNull GlobalScope scope) {
-        for (AndroidSourceSet sourceSet : scope.getExtension().getSourceSets()) {
-            if (sourceSet instanceof DefaultAndroidSourceSet) {
-                taskFactory.register(
-                        new BuildArtifactReportTask.SourceSetReportCreationAction(
-                                scope, (DefaultAndroidSourceSet) sourceSet));
-            }
-        }
-    }
-
     public void createMergeApkManifestsTask(@NonNull VariantScope variantScope) {
         AndroidArtifactVariantData androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();

@@ -80,54 +80,49 @@ open class DefaultAndroidSourceSet @Inject constructor(
 
     init {
         javaSource = DefaultAndroidSourceDirectorySet(
-            "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES, dslScope
+            "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES
         )
         javaSource.getFilter().include("**/*.java")
 
         javaResources = DefaultAndroidSourceDirectorySet(
             "$displayName Java resources",
-                project,
-                SourceArtifactType.JAVA_RESOURCES,
-                dslScope
+            project,
+            SourceArtifactType.JAVA_RESOURCES
         )
         javaResources.getFilter().exclude("**/*.java")
 
         manifest = DefaultAndroidSourceFile("$displayName manifest", project)
 
         assets = DefaultAndroidSourceDirectorySet(
-            "$displayName assets", project, SourceArtifactType.ASSETS, dslScope
+            "$displayName assets", project, SourceArtifactType.ASSETS
         )
 
         res = DefaultAndroidSourceDirectorySet(
             "$displayName resources",
-                project,
-                SourceArtifactType.ANDROID_RESOURCES,
-                dslScope,
-                buildArtifactsHolder,
-                delayedActionsExecutor
+            project,
+            SourceArtifactType.ANDROID_RESOURCES
         )
 
         aidl = DefaultAndroidSourceDirectorySet(
-            "$displayName aidl", project, SourceArtifactType.AIDL, dslScope
+            "$displayName aidl", project, SourceArtifactType.AIDL
         )
 
         renderscript = DefaultAndroidSourceDirectorySet(
             "$displayName renderscript",
-                project,
-                SourceArtifactType.RENDERSCRIPT,
-                dslScope
+            project,
+            SourceArtifactType.RENDERSCRIPT
         )
 
         jni = DefaultAndroidSourceDirectorySet(
-            "$displayName jni", project, SourceArtifactType.JNI, dslScope
+            "$displayName jni", project, SourceArtifactType.JNI
         )
 
         jniLibs = DefaultAndroidSourceDirectorySet(
-            "$displayName jniLibs", project, SourceArtifactType.JNI_LIBS, dslScope
+            "$displayName jniLibs", project, SourceArtifactType.JNI_LIBS
         )
 
         shaders = DefaultAndroidSourceDirectorySet(
-            "$displayName shaders", project, SourceArtifactType.SHADERS, dslScope
+            "$displayName shaders", project, SourceArtifactType.SHADERS
         )
 
         initRoot("src/$name")

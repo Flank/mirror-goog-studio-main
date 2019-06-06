@@ -19,8 +19,6 @@ package com.android.build.gradle.internal.scope
 import com.android.build.FilterData
 import com.android.build.VariantOutput
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.gradle.internal.api.artifact.forName
 import com.android.build.gradle.internal.ide.FilterDataImpl
 import com.google.common.collect.ImmutableList
 import com.google.gson.GsonBuilder
@@ -55,13 +53,6 @@ class ExistingBuildElements {
         @JvmStatic
         fun from(artifactType: ArtifactType, directoryProvider: Provider<Directory>): BuildElements {
             return from(artifactType, directoryProvider.get().asFile)
-        }
-
-
-        @JvmStatic
-        fun from(artifactType: ArtifactType, buildableArtifact : BuildableArtifact) : BuildElements {
-            val metadataFile = buildableArtifact.forName(METADATA_FILE_NAME)
-            return loadFrom(artifactType, metadataFile)
         }
 
         /**

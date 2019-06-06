@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.ExistingBuildElements;
@@ -116,7 +115,7 @@ public abstract class AbstractTestDataImpl implements TestData {
     }
 
     /**
-     * Returns the directory containing the test APK as a {@link BuildableArtifact}.
+     * Returns the directory containing the test APK as a {@link Directory}.
      *
      * @return the directory containing the test APK
      */

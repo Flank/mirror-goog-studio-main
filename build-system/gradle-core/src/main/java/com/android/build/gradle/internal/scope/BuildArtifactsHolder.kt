@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactTransformBuilder
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.artifact.toArtifactType
@@ -55,9 +54,6 @@ typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifact
  * Buildable artifact holder.
  *
  * This class manages buildable artifacts, allowing users to transform [ArtifactType].
- *
- * [BuildArtifactTransformBuilder] can then use these [BuildableArtifact] to
- * allow users to create transform task.
  *
  * @param project the Gradle [Project]
  * @param rootOutputDir a supplier for the intermediate directories to place output files.
@@ -960,12 +956,6 @@ abstract class BuildArtifactsHolder(
                 MULTI_TYPES,
                 task.name,
                 filename)
-
-    internal fun getArtifactFilename(artifactType: ArtifactType) : String {
-        val record = getArtifactRecord(artifactType)
-        return artifactType.name().toLowerCase(Locale.US) + record.size.toString()
-    }
-
     /**
      * Return history of all [BuildableArtifact] for an [ArtifactType].
      */

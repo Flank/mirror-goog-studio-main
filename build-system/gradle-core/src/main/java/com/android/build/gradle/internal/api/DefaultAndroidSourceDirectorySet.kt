@@ -16,25 +16,16 @@
 
 package com.android.build.gradle.internal.api
 
-import com.android.build.api.artifact.BuildArtifactTransformBuilder
-import com.android.build.api.artifact.BuildableArtifact
-import com.android.build.api.artifact.InputArtifactProvider
-import com.android.build.api.artifact.OutputFileProvider
 import com.android.build.gradle.api.AndroidSourceDirectorySet
-import com.android.build.gradle.internal.api.artifact.BuildArtifactTransformBuilderImpl
-import com.android.build.gradle.internal.api.artifact.OutputFileProviderImpl
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
-import com.android.build.gradle.internal.api.dsl.DslScope
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Lists
 import groovy.lang.Closure
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileTreeElement
 import org.gradle.api.specs.Spec
@@ -51,27 +42,11 @@ import java.util.concurrent.Callable
 class DefaultAndroidSourceDirectorySet(
     private val name: String,
     private val project: Project,
-    private val type: SourceArtifactType,
-    private val dslScope: DslScope,
-    private val artifactsHolder: BuildArtifactsHolder? = null,
-    private val delayedActionsExecutor: DelayedActionsExecutor? = null)
+    private val type: SourceArtifactType
+)
     : AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
     private val filter = PatternSet()
-
-    init {
-        artifactsHolder?.appendArtifact(
-                type,
-                project.files( Callable<Collection<File>> { srcDirs }))
-    }
-
-    constructor(name: String, project: Project, type: SourceArtifactType, dslScope : DslScope) : this(
-            name = name,
-            project = project,
-            type = type,
-            dslScope = dslScope,
-            artifactsHolder = null
-    )
 
     override fun getName(): String {
         return name
@@ -96,11 +71,6 @@ class DefaultAndroidSourceDirectorySet(
     }
 
     override fun getSourceFiles(): FileTree {
-        if (artifactsHolder != null) {
-            val files = artifactsHolder.getArtifactFiles(type)
-            return project.files(files).builtBy(files).asFileTree.matching(filter)
-        }
-
         var src: FileTree? = null
         val sources = srcDirs
         if (!sources.isEmpty()) {
@@ -129,9 +99,7 @@ class DefaultAndroidSourceDirectorySet(
         return filter
     }
 
-    override fun toString(): String {
-        return source.toString()
-    }
+    override fun toString()= "${super.toString()}, type=${type}, source=$source"
 
     override fun getIncludes(): Set<String> {
         return filter.includes
@@ -191,45 +159,8 @@ class DefaultAndroidSourceDirectorySet(
         return this
     }
 
-    override fun <T : Task> appendTo(
-            taskName: String,
-            taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
-        if (artifactsHolder == null || delayedActionsExecutor == null) {
-            throw UnsupportedOperationException("appendTo is not supported by source set '$name'")
-        }
-        BuildArtifactTransformBuilderImpl(
-                project,
-                artifactsHolder,
-                delayedActionsExecutor,
-                taskName,
-                taskType,
-                dslScope)
-                .append(type)
-                .create(configurationAction)
-    }
-
-    override fun <T : Task> replace(taskName: String,
-            taskType: Class<T>,
-            configurationAction: BuildArtifactTransformBuilder.ConfigurationAction<T>) {
-        if (artifactsHolder == null || delayedActionsExecutor == null) {
-            throw UnsupportedOperationException("replace is not supported by source set '$name'")
-        }
-        BuildArtifactTransformBuilderImpl(
-                project,
-                artifactsHolder,
-                delayedActionsExecutor,
-                taskName,
-                taskType,
-                dslScope)
-                .replace(type)
-                .create(configurationAction)
-    }
-
-    override fun getBuildableArtifact() : BuildableArtifact {
-        return artifactsHolder?.getArtifactFiles(type)
-                ?: throw UnsupportedOperationException(
-                    "getBuildableArtifact is not supported by source set '$name'")
+    override fun getBuildableArtifact() : FileCollection {
+        return project.files(Callable<Collection<File>> { srcDirs })
     }
 }
 

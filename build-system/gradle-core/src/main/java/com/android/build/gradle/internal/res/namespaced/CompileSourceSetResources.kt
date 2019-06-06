@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
 import com.android.build.gradle.internal.res.getAapt2FromMaven
@@ -32,7 +31,6 @@ import com.android.ide.common.resources.FileStatus
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -60,7 +58,7 @@ abstract class CompileSourceSetResources
 
     @get:InputFiles
     @get:SkipWhenEmpty
-    lateinit var inputDirectories: BuildableArtifact
+    lateinit var inputDirectories: FileCollection
         private set
     @get:Input
     var isPngCrunching: Boolean = false
@@ -189,7 +187,7 @@ abstract class CompileSourceSetResources
 
     class CreationAction(
         override val name: String,
-        private val inputDirectories: BuildableArtifact,
+        private val inputDirectories: FileCollection,
         variantScope: VariantScope
     ) : VariantTaskCreationAction<CompileSourceSetResources>(variantScope) {
 

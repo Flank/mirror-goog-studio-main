@@ -49,12 +49,3 @@ private fun forNameInFolder(files: Array<File>, name:String): File? {
 fun BuildableArtifact.singleFile() : File {
     return Iterators.getOnlyElement(iterator())
 }
-
-/**
- * Returns the single element of a [BuildableArtifact] as a [Path]
- *
- * @throws IllegalArgumentException if the BuildableArtifact contains zero or more than one element.
- */
-fun BuildableArtifact.singlePath() : Path {
-    return Iterators.getOnlyElement(iterator()).toPath()
-}

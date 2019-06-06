@@ -41,7 +41,7 @@ import java.io.File
 
 class DependencyResourcesComputer {
     @set:VisibleForTesting
-    lateinit var resources: Map<String, BuildableArtifact>
+    lateinit var resources: Map<String, FileCollection>
 
     @set:VisibleForTesting
     var localLibraries: ArtifactCollection? = null

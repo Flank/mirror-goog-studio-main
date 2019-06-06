@@ -21,8 +21,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl;
 import com.android.build.gradle.internal.fixtures.FakeFileCollection;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.rendering.api.ResourceNamespace;
@@ -56,7 +54,7 @@ public class DependencyResourcesComputerTest {
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private DependencyResourcesComputer computer;
     private List<ResourceSet> folderSets;
-    private Map<String, BuildableArtifact> artifactMap;
+    private Map<String, FileCollection> artifactMap;
 
     @Before
     public void setUp() throws IOException {
@@ -238,12 +236,11 @@ public class DependencyResourcesComputerTest {
     @NonNull
     private ResourceSet createResourceSet(
             List<ResourceSet> folderSets,
-            Map<String, BuildableArtifact> artifactMap,
+            Map<String, FileCollection> artifactMap,
             String name,
             File... files) {
         ResourceSet mainSet = new ResourceSet(name, ResourceNamespace.RES_AUTO, null, false);
-        BuildableArtifact artifact =
-                new BuildableArtifactImpl(new FakeFileCollection(Arrays.asList(files)));
+        FileCollection artifact = new FakeFileCollection(Arrays.asList(files));
         artifactMap.put(name, artifact);
         mainSet.addSources(artifact.getFiles());
         folderSets.add(mainSet);

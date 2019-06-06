@@ -382,8 +382,6 @@ public class VariantManager implements VariantModel {
             createTasksForVariantData(variantScope);
         }
 
-        taskManager.createSourceSetArtifactReportTask(globalScope);
-
         taskManager.createReportTasks(variantScopes);
 
         return variantScopes;
