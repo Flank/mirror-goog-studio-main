@@ -66,8 +66,9 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
 
         val resources = client.getResourceRepository(context.mainProject, true, false)
             ?: return
-        val items = resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT)
-        if (items.size() == 0 || items.size() > 25) {
+
+        val layouts = resources.getResources(ResourceNamespace.TODO(), ResourceType.LAYOUT)
+        if (layouts.size() == 0 || layouts.size() > 25) {
             // For large projects, don't bother; this could be done on the fly in the editor
             // so we don't want to (a) take too long and (b) for larger projects it's
             // not super likely that they're confused about NavHostFragments to begin with;
@@ -76,9 +77,11 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
             return
         }
 
+        val navGraphs = resources.getResources(ResourceNamespace.TODO(), ResourceType.NAVIGATION)
+        val items = layouts.values().plus(navGraphs.values())
         val target = NAVIGATION_PREFIX + getBaseName(context.file.name)
 
-        for (item in items.values()) {
+        for (item in items) {
             val file = item.source ?: continue
             try {
                 val parser = client.createXmlPullParser(file)
@@ -119,6 +122,16 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
                         if (navGraph == target) {
                             return true
                         }
+                    }
+                }
+                else if (tag == SdkConstants.TAG_INCLUDE) {
+                    val include: String? = parser.getAttributeValue(
+                      SdkConstants.AUTO_URI,
+                      SdkConstants.ATTR_GRAPH
+                    )
+
+                    if (include == target) {
+                        return true
                     }
                 }
             } else if (event == XmlPullParser.END_DOCUMENT) {

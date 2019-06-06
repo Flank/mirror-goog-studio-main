@@ -22,29 +22,29 @@ class UnusedNavigationDetectorTest : AbstractCheckTest() {
     fun testMissing() {
         lint().files(
             xml(
-                "res/navigation/used.xml", "" +
-                        "<navigation />"
+                "res/navigation/used.xml", """
+                        <navigation />
+                        """
+            ).indented(),
+            xml(
+                "res/layout/mylayout2.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+                        </LinearLayout>
+                        """
             ),
             xml(
-                "res/layout/mylayout2.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "</LinearLayout>"
-            ),
-            xml(
-                "res/layout/mylayout.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "\n" +
-                        "    <fragment\n" +
-                        "        android:id=\"@+id/fragment3\"\n" +
-                        "        android:name=\"androidx.navigation.fragment.NavHostFragment\"\n" +
-                        "        app:defaultNavHost=\"true\"\n" +
-                        "        app:navGraph=\"@navigation/other_name\" />\n" +
-                        "\n" +
-                        "</LinearLayout>"
+                "res/layout/mylayout.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                            <fragment
+                                android:id="@+id/fragment3"
+                                android:name="androidx.navigation.fragment.NavHostFragment"
+                                app:defaultNavHost="true\"
+                                app:navGraph="@navigation/other_name"/>
+                        </LinearLayout>
+                        """
             )
         ).incremental("res/navigation/used.xml").run().expect(
             "" +
@@ -55,32 +55,61 @@ class UnusedNavigationDetectorTest : AbstractCheckTest() {
         )
     }
 
-    fun testOk() {
+    fun testReferenced() {
         lint().files(
             xml(
                 "res/navigation/used.xml", "" +
                         "<navigation />"
             ),
             xml(
-                "res/layout/mylayout2.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "</LinearLayout>"
+                "res/layout/mylayout2.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+                        </LinearLayout>
+                        """
             ),
             xml(
-                "res/layout/mylayout.xml", "" +
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\">\n" +
-                        "\n" +
-                        "    <fragment\n" +
-                        "        android:id=\"@+id/fragment3\"\n" +
-                        "        android:name=\"androidx.navigation.fragment.NavHostFragment\"\n" +
-                        "        app:defaultNavHost=\"true\"\n" +
-                        "        app:navGraph=\"@navigation/used\" />\n" +
-                        "\n" +
-                        "</LinearLayout>"
+                "res/layout/mylayout.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                            <fragment
+                                android:id="@+id/fragment3"
+                                android:name="androidx.navigation.fragment.NavHostFragment"
+                                app:defaultNavHost="true\"
+                                app:navGraph="@navigation/used"/>
+                        </LinearLayout>
+                        """
+            )
+        ).incremental("res/navigation/used.xml").run().expectClean()
+    }
+
+    fun testIncluded() {
+        lint().files(
+            xml(
+            "res/navigation/used.xml", """
+                    <navigation xmlns:app="http://schemas.android.com/apk/res-auto">
+                        <app:include graph="@navigation/included"/>
+                    </navigation>
+                    """
+            ),
+            xml(
+                "res/navigation/included.xml", """
+                        <navigation />
+                        """
+            ),
+            xml(
+                "res/layout/mylayout.xml", """
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                            <fragment
+                                android:id="@+id/fragment3"
+                                android:name="androidx.navigation.fragment.NavHostFragment"
+                                app:defaultNavHost="true\"
+                                app:navGraph="@navigation/used"/>
+                        </LinearLayout>
+                        """
             )
         ).incremental("res/navigation/used.xml").run().expectClean()
     }
