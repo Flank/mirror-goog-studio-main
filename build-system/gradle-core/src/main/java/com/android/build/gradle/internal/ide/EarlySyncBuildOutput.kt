@@ -35,7 +35,6 @@ import java.io.File
 import java.io.FileReader
 import java.io.IOException
 import java.io.Reader
-import java.nio.file.Path
 
 /**
  * Temporary class to load enough metadata to populate early model. should be deleted once
@@ -74,7 +73,7 @@ data class EarlySyncBuildOutput(
 
             return try {
                 FileReader(metadataFile).use { reader: FileReader ->
-                    load(metadataFile.parentFile.toPath(), reader)
+                    load(metadataFile, reader)
                 }
             } catch (e: IOException) {
                 ImmutableList.of<EarlySyncBuildOutput>()
@@ -82,7 +81,7 @@ data class EarlySyncBuildOutput(
         }
 
         private fun load(
-                projectPath: Path,
+                metadataFile: File,
                 reader: Reader): Collection<EarlySyncBuildOutput> {
             val gsonBuilder = GsonBuilder()
 
@@ -94,7 +93,20 @@ data class EarlySyncBuildOutput(
             val gson = gsonBuilder.create()
             val recordType = object : TypeToken<List<BuildOutput>>() {}.type
             val buildOutputs = gson.fromJson<Collection<BuildOutput>>(reader, recordType)
+
+            // Some produced BuildOutput's might have null apkData, mostly because
+            // they're unused ones or not readable by the current adapter (b/129994596).
+            if (buildOutputs.any { it.apkData == null }) {
+                throw IllegalStateException(
+                    """
+                        Invalid file found (empty apk data).
+                        Try to remove ${metadataFile.absolutePath} or clean your build directory.
+                        If the error persists, report this issue via Help > Submit Feedback.
+                    """.trimIndent())
+            }
+
             // resolve the file path to the current project location.
+            val projectPath = metadataFile.parentFile.toPath()
             return buildOutputs
                     .asSequence()
                     .map { buildOutput ->
