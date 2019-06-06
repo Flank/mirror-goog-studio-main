@@ -429,8 +429,12 @@ public class ModelBuilder<Extension extends AndroidConfig>
             }
         }
 
+        // get groupId/artifactId for project
+        String groupId = project.getGroup().toString();
+
         return new DefaultAndroidProject(
                 project.getName(),
+                groupId,
                 defaultConfig,
                 flavorDimensionList,
                 buildTypes,

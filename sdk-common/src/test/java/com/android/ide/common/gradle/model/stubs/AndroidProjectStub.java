@@ -29,6 +29,7 @@ import java.util.Objects;
 public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull private final String myModelVersion;
     @NonNull private final String myName;
+    @Nullable private final String myGroupId;
     @NonNull private final ProductFlavorContainer myDefaultConfig;
     @NonNull private final Collection<BuildTypeContainer> myBuildTypes;
     @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
@@ -58,6 +59,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         this(
                 modelVersion,
                 "name",
+                null,
                 new ProductFlavorContainerStub(),
                 Lists.newArrayList(new BuildTypeContainerStub()),
                 Lists.newArrayList(new ProductFlavorContainerStub()),
@@ -87,6 +89,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     public AndroidProjectStub(
             @NonNull String modelVersion,
             @NonNull String name,
+            @Nullable String groupId,
             @NonNull ProductFlavorContainer defaultConfig,
             @NonNull Collection<BuildTypeContainer> buildTypes,
             @NonNull Collection<ProductFlavorContainer> productFlavors,
@@ -113,6 +116,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
             boolean baseSplit) {
         myModelVersion = modelVersion;
         myName = name;
+        myGroupId = groupId;
         myDefaultConfig = defaultConfig;
         myBuildTypes = buildTypes;
         myProductFlavors = productFlavors;
@@ -149,6 +153,12 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
     @NonNull
     public String getName() {
         return myName;
+    }
+
+    @Nullable
+    @Override
+    public String getGroupId() {
+        return myGroupId;
     }
 
     @Override
@@ -330,6 +340,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 && isBaseSplit() == stub.isBaseSplit()
                 && Objects.equals(getModelVersion(), stub.getModelVersion())
                 && Objects.equals(getName(), stub.getName())
+                && Objects.equals(getGroupId(), stub.getGroupId())
                 && Objects.equals(getDefaultConfig(), stub.getDefaultConfig())
                 && Objects.equals(getBuildTypes(), stub.getBuildTypes())
                 && Objects.equals(getProductFlavors(), stub.getProductFlavors())
@@ -355,6 +366,7 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
         return Objects.hash(
                 getModelVersion(),
                 getName(),
+                getGroupId(),
                 getDefaultConfig(),
                 getBuildTypes(),
                 getProductFlavors(),
@@ -387,6 +399,9 @@ public class AndroidProjectStub extends BaseStub implements AndroidProject {
                 + '\''
                 + ", myName='"
                 + myName
+                + '\''
+                + ", myGroupId='"
+                + myGroupId
                 + '\''
                 + ", myDefaultConfig="
                 + myDefaultConfig

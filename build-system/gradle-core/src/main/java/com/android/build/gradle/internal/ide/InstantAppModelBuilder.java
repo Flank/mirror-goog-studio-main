@@ -208,6 +208,7 @@ public class InstantAppModelBuilder
 
         return new DefaultAndroidProject(
                 project.getName(),
+                null,
                 defaultConfig,
                 flavorDimensionList,
                 buildTypes,

@@ -198,6 +198,14 @@ public interface AndroidProject {
     int getProjectType();
 
     /**
+     * Returns the optional group-id of the artifact represented by this project.
+     *
+     * @since 3.6
+     */
+    @Nullable
+    String getGroupId();
+
+    /**
      * Returns the {@link ProductFlavorContainer} for the 'main' default config.
      *
      * @return the product flavor.
