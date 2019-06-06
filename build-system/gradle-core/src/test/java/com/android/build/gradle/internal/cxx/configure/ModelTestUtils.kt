@@ -17,16 +17,16 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
-import com.android.build.gradle.internal.model.CoreCmakeOptions
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
-import com.android.build.gradle.internal.model.CoreNdkBuildOptions
+import com.android.build.gradle.internal.dsl.CmakeOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
@@ -41,10 +41,10 @@ import org.mockito.Mockito
 
 fun createCmakeProjectCxxAbiForTest(projectParentFolder: TemporaryFolder): CxxAbiModel {
     val global = Mockito.mock(GlobalScope::class.java)
-    val extension = Mockito.mock(AndroidConfig::class.java)
-    val externalNativeBuild = Mockito.mock(CoreExternalNativeBuild::class.java)
-    val cmake = Mockito.mock(CoreCmakeOptions::class.java)
-    val ndkBuild = Mockito.mock(CoreNdkBuildOptions::class.java)
+    val extension = Mockito.mock(BaseExtension::class.java)
+    val externalNativeBuild = Mockito.mock(ExternalNativeBuild::class.java)
+    val cmake = Mockito.mock(CmakeOptions::class.java)
+    val ndkBuild = Mockito.mock(NdkBuildOptions::class.java)
     val project = Mockito.mock(Project::class.java)
     val sdkComponents = Mockito.mock(SdkComponents::class.java)
     val ndkHandler = Mockito.mock(NdkHandler::class.java)

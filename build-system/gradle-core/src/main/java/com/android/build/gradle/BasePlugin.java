@@ -175,9 +175,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
     protected abstract GradleBuildProject.PluginType getAnalyticsPluginType();
 
     @NonNull
-    protected abstract VariantFactory createVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig);
+    protected abstract VariantFactory createVariantFactory(@NonNull GlobalScope globalScope);
 
     @NonNull
     protected abstract TaskManager createTaskManager(
@@ -185,7 +183,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
@@ -450,7 +448,7 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
         globalScope.setExtension(extension);
 
-        variantFactory = createVariantFactory(globalScope, extension);
+        variantFactory = createVariantFactory(globalScope);
 
         taskManager =
                 createTaskManager(
@@ -511,10 +509,10 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         // Register a builder for the custom tooling model
-        registerModelBuilder(registry, globalScope, variantManager, config, extraModelInfo);
+        registerModelBuilder(registry, globalScope, variantManager, extension, extraModelInfo);
 
         // Register a builder for the native tooling model
         NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(globalScope, variantManager);
@@ -526,14 +524,14 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new ModelBuilder<>(
                         globalScope,
                         variantManager,
                         taskManager,
-                        config,
+                        extension,
                         extraModelInfo,
                         getProjectType()));
     }

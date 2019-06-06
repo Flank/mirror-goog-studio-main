@@ -75,10 +75,8 @@ public class FeaturePlugin extends LibraryPlugin {
 
     @NonNull
     @Override
-    protected VariantFactory createVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig) {
-        return new MultiTypeVariantFactory(globalScope, androidConfig);
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new MultiTypeVariantFactory(globalScope);
     }
 
     @Override
@@ -93,7 +91,7 @@ public class FeaturePlugin extends LibraryPlugin {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -102,7 +100,7 @@ public class FeaturePlugin extends LibraryPlugin {
                 project,
                 projectOptions,
                 dataBindingBuilder,
-                androidConfig,
+                extension,
                 variantFactory,
                 toolingRegistry,
                 recorder);
@@ -113,14 +111,14 @@ public class FeaturePlugin extends LibraryPlugin {
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new FeatureModelBuilder(
                         globalScope,
                         variantManager,
                         taskManager,
-                        (FeatureExtension) config,
+                        (FeatureExtension) extension,
                         extraModelInfo,
                         getProjectType()));
     }

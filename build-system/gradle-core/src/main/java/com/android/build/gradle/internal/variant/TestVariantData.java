@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -34,12 +33,11 @@ public class TestVariantData extends ApkVariantData {
 
     public TestVariantData(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull TestedVariantData testedVariantData,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, recorder);
+        super(globalScope, taskManager, config, recorder);
         this.testedVariantData = testedVariantData;
 
         // create default output

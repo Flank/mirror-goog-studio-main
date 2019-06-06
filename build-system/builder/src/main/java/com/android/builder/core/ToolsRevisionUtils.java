@@ -34,7 +34,7 @@ public class ToolsRevisionUtils {
      * Default version of build tools that will be used if the user does not specify.
      *
      * <p>ATTENTION: This is usually the same as the minimum build tools version, as documented in
-     * {@code com.android.build.gradle.AndroidConfig#getBuildToolsVersion()} and {@code
+     * {@code com.android.build.gradle.BaseExtension#getBuildToolsVersion()} and {@code
      * com.android.build.api.dsl.extension.BuildProperties#getBuildToolsVersion()}, and in the
      * release notes (https://developer.android.com/studio/releases/gradle-plugin). If this version
      * is higher than the minimum version, make sure to update those places to document the new

@@ -16,7 +16,6 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -28,11 +27,10 @@ public abstract class ApkVariantData extends InstallableVariantData {
 
     protected ApkVariantData(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, recorder);
+        super(globalScope, taskManager, config, recorder);
     }
 
     @Override

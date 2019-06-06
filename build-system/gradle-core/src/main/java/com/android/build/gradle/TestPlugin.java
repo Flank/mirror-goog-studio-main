@@ -90,7 +90,7 @@ public class TestPlugin extends BasePlugin {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -99,7 +99,7 @@ public class TestPlugin extends BasePlugin {
                 project,
                 projectOptions,
                 dataBindingBuilder,
-                androidConfig,
+                extension,
                 variantFactory,
                 toolingRegistry,
                 recorder);
@@ -112,9 +112,7 @@ public class TestPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected VariantFactory createVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig) {
-        return new TestVariantFactory(globalScope, androidConfig);
+    protected VariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new TestVariantFactory(globalScope);
     }
 }

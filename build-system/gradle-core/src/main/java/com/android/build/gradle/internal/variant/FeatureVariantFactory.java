@@ -20,7 +20,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -42,9 +41,8 @@ public class FeatureVariantFactory extends ApplicationVariantFactory {
 
     public FeatureVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension,
             @NonNull VariantType variantType) {
-        super(globalScope, extension);
+        super(globalScope);
         this.variantType = variantType;
     }
 
@@ -55,8 +53,7 @@ public class FeatureVariantFactory extends ApplicationVariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
         FeatureVariantData variant =
-                new FeatureVariantData(
-                        globalScope, extension, taskManager, variantConfiguration, recorder);
+                new FeatureVariantData(globalScope, taskManager, variantConfiguration, recorder);
         computeOutputs(variantConfiguration, variant, false);
 
         return variant;

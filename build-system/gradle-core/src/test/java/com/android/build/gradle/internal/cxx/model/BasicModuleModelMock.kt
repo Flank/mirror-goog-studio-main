@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
@@ -24,13 +24,13 @@ import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIX
 import com.android.build.gradle.internal.cxx.configure.CmakeLocator
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.dsl.AbiSplitOptions
+import com.android.build.gradle.internal.dsl.CmakeOptions
 import com.android.build.gradle.internal.dsl.CoreBuildType
-import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions
 import com.android.build.gradle.internal.dsl.CoreNdkOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.ExternalNativeBuildOptions
+import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.dsl.Splits
-import com.android.build.gradle.internal.model.CoreCmakeOptions
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
-import com.android.build.gradle.internal.model.CoreNdkBuildOptions
 import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
@@ -117,20 +117,20 @@ open class BasicModuleModelMock {
         GlobalScope::class.java,
         throwUnmocked
     )
-    val extension = mock(
-        AndroidConfig::class.java,
+    val extension: BaseExtension = mock(
+        BaseExtension::class.java,
         throwUnmocked
     )
-    val externalNativeBuild = mock(
-        CoreExternalNativeBuild::class.java,
+    val externalNativeBuild: ExternalNativeBuild = mock(
+        ExternalNativeBuild::class.java,
         throwUnmocked
     )
-    val cmake = mock(
-        CoreCmakeOptions::class.java,
+    val cmake: CmakeOptions = mock(
+        CmakeOptions::class.java,
         throwUnmocked
     )
-    val ndkBuild = mock(
-        CoreNdkBuildOptions::class.java,
+    val ndkBuild: NdkBuildOptions = mock(
+        NdkBuildOptions::class.java,
         throwUnmocked
     )
     val ndkInstallStatus = NdkInstallStatus.Valid(
@@ -151,7 +151,7 @@ open class BasicModuleModelMock {
         throwUnmocked
     )
     val coreExternalNativeBuildOptions = mock(
-        CoreExternalNativeBuildOptions::class.java,
+        ExternalNativeBuildOptions::class.java,
         throwUnmocked
     )
     val coreNdkOptions = mock(

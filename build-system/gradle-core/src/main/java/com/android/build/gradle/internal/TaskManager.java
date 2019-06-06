@@ -64,7 +64,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -296,7 +296,7 @@ public abstract class TaskManager {
     @NonNull protected final Project project;
     @NonNull protected final ProjectOptions projectOptions;
     @NonNull protected final DataBindingBuilder dataBindingBuilder;
-    @NonNull protected final AndroidConfig extension;
+    @NonNull protected final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
@@ -313,7 +313,7 @@ public abstract class TaskManager {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig extension,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -1954,7 +1954,7 @@ public abstract class TaskManager {
         maybeCreateDesugarTask(
                 variantScope, config.getMinSdkVersion(), transformManager, isTestCoverageEnabled);
 
-        AndroidConfig extension = variantScope.getGlobalScope().getExtension();
+        BaseExtension extension = variantScope.getGlobalScope().getExtension();
 
         // Merge Java Resources.
         createMergeJavaResTask(variantScope);
@@ -3297,7 +3297,7 @@ public abstract class TaskManager {
     private void publishFeatureDex(@NonNull VariantScope variantScope) {
         // first calculate the list of module paths
         final Collection<String> modulePaths;
-        final AndroidConfig extension = globalScope.getExtension();
+        final BaseExtension extension = globalScope.getExtension();
         if (extension instanceof BaseAppModuleExtension) {
             modulePaths = ((BaseAppModuleExtension) extension).getDynamicFeatures();
         } else if (extension instanceof FeatureExtension) {

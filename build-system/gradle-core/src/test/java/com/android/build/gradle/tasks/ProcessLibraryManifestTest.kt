@@ -16,24 +16,19 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.SdkConstants
-import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.dsl.ProductFlavor
+import com.android.build.gradle.internal.scope.ApkData
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
-import com.android.build.gradle.internal.scope.ApkData
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
@@ -63,7 +58,7 @@ class ProcessLibraryManifestTest {
     @Mock lateinit var variantData : BaseVariantData
     @Mock lateinit var mainSplit: ApkData
     @Mock lateinit var mergedFlavor: ProductFlavor
-    @Mock lateinit var extension: AndroidConfig
+    @Mock lateinit var extension: BaseExtension
     @Mock lateinit var aaptOptions: AaptOptions
 
     @Before

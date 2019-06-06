@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.VariantOutput
-import com.android.build.gradle.AndroidConfig
+import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.SdkComponents
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.dsl.AaptOptions
@@ -61,7 +61,7 @@ class GenerateSplitAbiResTest {
     @Mock private lateinit var mockedArtifacts: BuildArtifactsHolder
     @Mock private lateinit var mockedOutputScope: OutputScope
     @Mock private lateinit var mockedVariantConfiguration: GradleVariantConfiguration
-    @Mock private lateinit var mockedAndroidConfig: AndroidConfig
+    @Mock private lateinit var mockedExtension: BaseExtension
     @Mock private lateinit var mockedSplits: Splits
     @Mock private lateinit var mockedBuildType: CoreBuildType
     @Mock private lateinit var mockedVariantData: FeatureVariantData
@@ -88,7 +88,7 @@ class GenerateSplitAbiResTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
 
         with(mockedGlobalScope) {
-            `when`(extension).thenReturn(mockedAndroidConfig)
+            `when`(extension).thenReturn(mockedExtension)
             `when`(project).thenReturn(this@GenerateSplitAbiResTest.project)
             `when`(projectOptions).thenReturn(projectOptionsMock)
             `when`(sdkComponents).thenReturn(mockedSdkComponents)
@@ -105,7 +105,7 @@ class GenerateSplitAbiResTest {
 
         mockedVariantScope.taskContainer.preBuildTask = project.tasks.register("preBuildTask")
 
-        with(mockedAndroidConfig) {
+        with(mockedExtension) {
             `when`(aaptOptions).thenReturn(mockedAaptOptions)
             `when`(splits).thenReturn(mockedSplits)
         }

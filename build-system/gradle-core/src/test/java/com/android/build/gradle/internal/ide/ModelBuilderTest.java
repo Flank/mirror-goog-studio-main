@@ -23,7 +23,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
@@ -79,7 +79,7 @@ public class ModelBuilderTest {
     @Mock Gradle gradle;
     @Mock VariantManager variantManager;
     @Mock TaskManager taskManager;
-    @Mock AndroidConfig androidConfig;
+    @Mock BaseExtension extension;
     @Mock ExtraModelInfo extraModelInfo;
     @Mock BuildArtifactsHolder artifacts;
 
@@ -109,7 +109,7 @@ public class ModelBuilderTest {
                         globalScope,
                         variantManager,
                         taskManager,
-                        androidConfig,
+                        extension,
                         extraModelInfo,
                         AndroidProject.PROJECT_TYPE_APP);
     }

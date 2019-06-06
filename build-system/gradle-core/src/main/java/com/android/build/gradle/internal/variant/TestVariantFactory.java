@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_TESTED_APKS;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -43,10 +42,8 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 /** Customization of {@link ApplicationVariantFactory} for test-only projects. */
 public class TestVariantFactory extends ApplicationVariantFactory {
 
-    public TestVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
-        super(globalScope, extension);
+    public TestVariantFactory(@NonNull GlobalScope globalScope) {
+        super(globalScope);
     }
 
     @Override
@@ -58,7 +55,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     public void preVariantWork(final Project project) {
         super.preVariantWork(project);
 
-        TestAndroidConfig testExtension = (TestAndroidConfig) extension;
+        TestAndroidConfig testExtension = (TestAndroidConfig) globalScope.getExtension();
 
         String path = testExtension.getTargetProjectPath();
         if (path == null) {

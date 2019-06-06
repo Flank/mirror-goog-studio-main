@@ -63,7 +63,7 @@ Warning: Task type 'com.android.build.gradle.internal.tasks.RecalculateStackFram
 Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.name' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.signingReady' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.storeFile' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.tasks.SourceSetsTask': property 'config' is not annotated with an input or output annotation.
+Warning: Task type 'com.android.build.gradle.internal.tasks.SourceSetsTask': property 'extension' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testedApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.UninstallTask': property 'adbExe' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.

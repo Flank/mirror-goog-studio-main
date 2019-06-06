@@ -97,7 +97,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -106,7 +106,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
                 project,
                 projectOptions,
                 dataBindingBuilder,
-                androidConfig,
+                extension,
                 variantFactory,
                 toolingRegistry,
                 recorder);
@@ -114,9 +114,7 @@ public abstract class AbstractAppPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected ApplicationVariantFactory createVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig) {
-        return new ApplicationVariantFactory(globalScope, androidConfig);
+    protected ApplicationVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new ApplicationVariantFactory(globalScope);
     }
 }

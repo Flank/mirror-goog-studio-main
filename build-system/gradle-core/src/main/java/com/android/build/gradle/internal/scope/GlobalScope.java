@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.FeatureExtension;
 import com.android.build.gradle.internal.FeatureModelBuilder;
 import com.android.build.gradle.internal.SdkComponents;
@@ -59,7 +59,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final Project project;
     @NonNull private final GradleProcessExecutor processExecutor;
     @NonNull private final GradleJavaProcessExecutor javaProcessExecutor;
-    @NonNull private AndroidConfig extension;
+    @NonNull private BaseExtension extension;
     @NonNull private final SdkComponents sdkComponents;
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
@@ -109,7 +109,7 @@ public class GlobalScope implements TransformGlobalScope {
 
     }
 
-    public void setExtension(@NonNull AndroidConfig extension) {
+    public void setExtension(@NonNull BaseExtension extension) {
         this.extension = checkNotNull(extension);
     }
 
@@ -125,7 +125,7 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     @NonNull
-    public AndroidConfig getExtension() {
+    public BaseExtension getExtension() {
         return extension;
     }
 
@@ -334,7 +334,7 @@ public class GlobalScope implements TransformGlobalScope {
     }
 
     public boolean hasDynamicFeatures() {
-        final AndroidConfig extension = getExtension();
+        final BaseExtension extension = getExtension();
         if (extension instanceof BaseAppModuleExtension) {
             return !((BaseAppModuleExtension) extension).getDynamicFeatures().isEmpty();
         }

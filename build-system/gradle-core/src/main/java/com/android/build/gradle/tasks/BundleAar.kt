@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks
 
 import android.databinding.tool.DataBindingBuilder
 import com.android.SdkConstants
-import com.android.build.gradle.AndroidConfig
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.LIBRARY_AND_LOCAL_JARS_JNI
@@ -43,7 +42,6 @@ abstract class BundleAar : Zip(), VariantAwareTask {
     override lateinit var variantName: String
 
     class CreationAction(
-        private val extension: AndroidConfig,
         variantScope: VariantScope
     ) : VariantTaskCreationAction<BundleAar>(variantScope) {
 
@@ -90,7 +88,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
             )
             task.from(artifacts.getFinalProduct<RegularFile>(
                 InternalArtifactType.CONSUMER_PROGUARD_FILE))
-            if (extension.dataBinding.isEnabled) {
+            if (variantScope.globalScope.extension.dataBinding.isEnabled) {
                 task.from(
                     variantScope.globalScope.project.provider {
                         variantScope.artifacts.getFinalProduct<Directory>(

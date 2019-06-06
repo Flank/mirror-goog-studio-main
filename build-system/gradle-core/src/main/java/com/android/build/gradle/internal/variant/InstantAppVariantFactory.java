@@ -21,7 +21,6 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
@@ -40,10 +39,8 @@ import org.gradle.api.NamedDomainObjectContainer;
 /** An implementation of VariantFactory for a project that generates AppBundles. */
 public class InstantAppVariantFactory extends BaseVariantFactory {
 
-    public InstantAppVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
-        super(globalScope, extension);
+    public InstantAppVariantFactory(@NonNull GlobalScope globalScope) {
+        super(globalScope);
     }
 
     @NonNull
@@ -55,7 +52,6 @@ public class InstantAppVariantFactory extends BaseVariantFactory {
         InstantAppVariantData variant =
                 new InstantAppVariantData(
                         globalScope,
-                        extension,
                         taskManager,
                         variantConfiguration,
                         recorder);

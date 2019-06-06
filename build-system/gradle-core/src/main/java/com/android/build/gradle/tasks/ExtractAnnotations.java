@@ -29,7 +29,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
@@ -300,12 +299,9 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
     public static class CreationAction extends VariantTaskCreationAction<ExtractAnnotations> {
 
-        @NonNull private final AndroidConfig extension;
 
-        public CreationAction(
-                @NonNull AndroidConfig extension, @NonNull VariantScope variantScope) {
+        public CreationAction(@NonNull VariantScope variantScope) {
             super(variantScope);
-            this.extension = extension;
         }
 
         @NonNull
@@ -360,7 +356,8 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES));
 
             task.source(variantScope.getVariantData().getJavaSources());
-            task.setEncoding(extension.getCompileOptions().getEncoding());
+            task.setEncoding(
+                    variantScope.getGlobalScope().getExtension().getCompileOptions().getEncoding());
             task.classpath = variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
 
             task.libraries = variantScope.getArtifactCollection(

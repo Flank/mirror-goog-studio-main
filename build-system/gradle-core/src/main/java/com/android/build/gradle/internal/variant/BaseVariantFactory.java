@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.variant;
 import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -29,13 +28,9 @@ import org.gradle.api.Project;
 public abstract class BaseVariantFactory implements VariantFactory {
 
     @NonNull protected final GlobalScope globalScope;
-    @NonNull protected final AndroidConfig extension;
 
-    public BaseVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
+    public BaseVariantFactory(@NonNull GlobalScope globalScope) {
         this.globalScope = globalScope;
-        this.extension = extension;
     }
 
     @Override

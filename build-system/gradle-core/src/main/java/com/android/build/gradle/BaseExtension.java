@@ -702,8 +702,6 @@ public abstract class BaseExtension implements AndroidConfig {
         action.execute(viewBinding);
     }
 
-    /** {@inheritDoc} */
-    @Override
     public ViewBindingOptions getViewBinding() {
         return viewBinding;
     }

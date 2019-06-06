@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -267,7 +267,7 @@ public class GradleVariantConfiguration
     }
 
     /** Depending on the extension, gets appropriate variant configuration builder */
-    public static Builder getBuilderForExtension(@NonNull AndroidConfig extension){
+    public static Builder getBuilderForExtension(@NonNull BaseExtension extension) {
         if (extension instanceof TestAndroidConfig) {
             // if this is the test module
             return new TestModuleConfigurationBuilder();

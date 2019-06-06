@@ -20,7 +20,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
@@ -45,19 +44,16 @@ import org.gradle.api.NamedDomainObjectContainer;
 public class MultiTypeVariantFactory extends BaseVariantFactory {
     @NonNull private final Map<VariantType, BaseVariantFactory> delegates;
 
-    public MultiTypeVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
-        super(globalScope, extension);
+    public MultiTypeVariantFactory(@NonNull GlobalScope globalScope) {
+        super(globalScope);
         delegates =
                 ImmutableMap.of(
                         VariantTypeImpl.BASE_FEATURE,
-                        new FeatureVariantFactory(
-                                globalScope, extension, VariantTypeImpl.BASE_FEATURE),
+                        new FeatureVariantFactory(globalScope, VariantTypeImpl.BASE_FEATURE),
                         VariantTypeImpl.FEATURE,
-                        new FeatureVariantFactory(globalScope, extension, VariantTypeImpl.FEATURE),
+                        new FeatureVariantFactory(globalScope, VariantTypeImpl.FEATURE),
                         VariantTypeImpl.LIBRARY,
-                        new LibraryVariantFactory(globalScope, extension));
+                        new LibraryVariantFactory(globalScope));
     }
 
     @NonNull
@@ -81,7 +77,7 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        if (extension.getBaseFeature()) {
+        if (globalScope.getExtension().getBaseFeature()) {
             return ImmutableList.of(VariantTypeImpl.BASE_FEATURE, VariantTypeImpl.LIBRARY);
         }
         return ImmutableList.of(VariantTypeImpl.FEATURE, VariantTypeImpl.LIBRARY);

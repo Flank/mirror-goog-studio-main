@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.build.gradle.AndroidConfig
-import com.android.build.gradle.internal.model.CoreCmakeOptions
-import com.android.build.gradle.internal.model.CoreExternalNativeBuild
-import com.android.build.gradle.internal.model.CoreNdkBuildOptions
+import com.android.build.gradle.BaseExtension
+import com.android.build.gradle.internal.dsl.CmakeOptions
+import com.android.build.gradle.internal.dsl.ExternalNativeBuild
+import com.android.build.gradle.internal.dsl.NdkBuildOptions
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.utils.FileUtils.join
@@ -35,29 +35,29 @@ import java.io.File
  * to determine whether this build.gradle contains a C/C++ build.
  */
 class EmptyGlobalMock {
-    val throwUnmocked = RuntimeExceptionAnswer()
-    val global = Mockito.mock(
+    private val throwUnmocked = RuntimeExceptionAnswer()
+    val global: GlobalScope = Mockito.mock(
         GlobalScope::class.java,
         throwUnmocked
     )
-    val baseVariantData = Mockito.mock(
+    val baseVariantData: BaseVariantData = Mockito.mock(
         BaseVariantData::class.java,
         throwUnmocked
     )
-    val extension = Mockito.mock(
-        AndroidConfig::class.java,
+    val extension: BaseExtension = Mockito.mock(
+        BaseExtension::class.java,
         throwUnmocked
     )
-    val externalNativeBuild = Mockito.mock(
-        CoreExternalNativeBuild::class.java,
+    val externalNativeBuild: ExternalNativeBuild = Mockito.mock(
+        ExternalNativeBuild::class.java,
         throwUnmocked
     )
-    val cmake = Mockito.mock(
-        CoreCmakeOptions::class.java,
+    val cmake: CmakeOptions = Mockito.mock(
+        CmakeOptions::class.java,
         throwUnmocked
     )
-    val ndkBuild = Mockito.mock(
-        CoreNdkBuildOptions::class.java,
+    val ndkBuild: NdkBuildOptions = Mockito.mock(
+        NdkBuildOptions::class.java,
         throwUnmocked
     )
     init {

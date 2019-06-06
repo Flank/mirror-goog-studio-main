@@ -22,7 +22,7 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput.FilterType;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
@@ -67,10 +67,8 @@ import org.gradle.api.NamedDomainObjectContainer;
  */
 public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
-    public ApplicationVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
-        super(globalScope, extension);
+    public ApplicationVariantFactory(@NonNull GlobalScope globalScope) {
+        super(globalScope);
     }
 
     @Override
@@ -81,7 +79,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
-                        globalScope, extension, taskManager, variantConfiguration, recorder);
+                        globalScope, taskManager, variantConfiguration, recorder);
         computeOutputs(variantConfiguration, variant, true);
 
         return variant;
@@ -91,6 +89,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull ApplicationVariantData variant,
             boolean includeMainApk) {
+        BaseExtension extension = globalScope.getExtension();
         variant.calculateFilters(extension.getSplits());
 
         Set<String> densities = variant.getFilters(OutputFile.FilterType.DENSITY);
@@ -138,8 +137,8 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         }
 
         boolean universalApkForAbi =
-                extension.getSplits().getAbi().isEnable()
-                        && extension.getSplits().getAbi().isUniversalApk();
+                globalScope.getExtension().getSplits().getAbi().isEnable()
+                        && globalScope.getExtension().getSplits().getAbi().isUniversalApk();
         if (universalApkForAbi) {
             outputFactory.addUniversalApk();
         } else {
@@ -214,7 +213,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         }
 
         // if universalAPK is requested, abiFilter will control what goes into the universal APK.
-        if (extension.getSplits().getAbi().isUniversalApk()) {
+        if (globalScope.getExtension().getSplits().getAbi().isUniversalApk()) {
             return;
         }
 
@@ -304,7 +303,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        if (extension.getBaseFeature()) {
+        if (globalScope.getExtension().getBaseFeature()) {
             return ImmutableList.of(VariantTypeImpl.BASE_APK);
         }
         return ImmutableList.of(VariantTypeImpl.OPTIONAL_APK);

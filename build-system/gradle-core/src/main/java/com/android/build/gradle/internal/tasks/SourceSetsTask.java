@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -38,25 +38,25 @@ public class SourceSetsTask extends AbstractReportTask {
 
     private final TextReportRenderer mRenderer = new TextReportRenderer();
 
-    private AndroidConfig config;
+    private BaseExtension extension;
 
     @Override
     protected ReportRenderer getRenderer() {
         return mRenderer;
     }
 
-    public AndroidConfig getConfig() {
-        return config;
+    public BaseExtension getExtension() {
+        return extension;
     }
 
-    public void setConfig(AndroidConfig config) {
-        this.config = config;
+    public void setExtension(BaseExtension extension) {
+        this.extension = extension;
     }
 
     @Override
     protected void generate(Project project) throws IOException {
-        if (config != null) {
-            for (AndroidSourceSet sourceSet : config.getSourceSets()) {
+        if (extension != null) {
+            for (AndroidSourceSet sourceSet : extension.getSourceSets()) {
                 mRenderer.getBuilder().subheading(sourceSet.getName());
 
 
@@ -110,9 +110,9 @@ public class SourceSetsTask extends AbstractReportTask {
 
     public static class CreationAction extends TaskCreationAction<SourceSetsTask> {
 
-        private final AndroidConfig extension;
+        private final BaseExtension extension;
 
-        public CreationAction(@NonNull AndroidConfig extension) {
+        public CreationAction(@NonNull BaseExtension extension) {
             this.extension = extension;
         }
 
@@ -130,7 +130,7 @@ public class SourceSetsTask extends AbstractReportTask {
 
         @Override
         public void configure(@NonNull SourceSetsTask sourceSetsTask) {
-            sourceSetsTask.setConfig(extension);
+            sourceSetsTask.setExtension(extension);
             sourceSetsTask.setDescription(
                     "Prints out all the source sets defined in this project.");
             sourceSetsTask.setGroup(TaskManager.ANDROID_GROUP);

@@ -22,7 +22,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.ViewBindingOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -51,7 +50,12 @@ import org.gradle.api.tasks.Internal;
 
 /**
  * User configuration settings for all android plugins.
+ *
+ * <p>DO NOT ADD ANYTHING THERE.
+ *
+ * @deprecated Use {@link BaseExtension} instead.
  */
+@Deprecated
 public interface AndroidConfig {
 
 
@@ -615,9 +619,6 @@ public interface AndroidConfig {
      * bind your application logic and layouts.
      */
     DataBindingOptions getDataBinding();
-
-    /** Specifies options for the View Binding library. */
-    ViewBindingOptions getViewBinding();
 
     /** Whether the feature module is the base feature. */
     Boolean getBaseFeature();

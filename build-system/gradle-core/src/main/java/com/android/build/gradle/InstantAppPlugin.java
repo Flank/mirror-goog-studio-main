@@ -92,7 +92,7 @@ public class InstantAppPlugin extends BasePlugin {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -101,7 +101,7 @@ public class InstantAppPlugin extends BasePlugin {
                 project,
                 projectOptions,
                 dataBindingBuilder,
-                androidConfig,
+                extension,
                 variantFactory,
                 toolingRegistry,
                 recorder);
@@ -112,10 +112,10 @@ public class InstantAppPlugin extends BasePlugin {
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         InstantAppModelBuilder instantAppModelBuilder =
-                new InstantAppModelBuilder(variantManager, config, extraModelInfo);
+                new InstantAppModelBuilder(variantManager, extension, extraModelInfo);
         registry.register(instantAppModelBuilder);
     }
 
@@ -126,9 +126,7 @@ public class InstantAppPlugin extends BasePlugin {
 
     @NonNull
     @Override
-    protected InstantAppVariantFactory createVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig) {
-        return new InstantAppVariantFactory(globalScope, androidConfig);
+    protected InstantAppVariantFactory createVariantFactory(@NonNull GlobalScope globalScope) {
+        return new InstantAppVariantFactory(globalScope);
     }
 }

@@ -33,7 +33,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
@@ -162,7 +162,7 @@ public class VariantManager implements VariantModel {
 
     @NonNull private final Project project;
     @NonNull private final ProjectOptions projectOptions;
-    @NonNull private final AndroidConfig extension;
+    @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
     @NonNull private final TaskManager taskManager;
     @NonNull private final SourceSetManager sourceSetManager;
@@ -184,7 +184,7 @@ public class VariantManager implements VariantModel {
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidConfig extension,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull TaskManager taskManager,
             @NonNull SourceSetManager sourceSetManager,
@@ -1256,7 +1256,6 @@ public class VariantManager implements VariantModel {
         TestVariantData testVariantData =
                 new TestVariantData(
                         globalScope,
-                        extension,
                         taskManager,
                         testVariantConfig,
                         (TestedVariantData) testedVariantData,

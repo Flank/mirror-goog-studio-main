@@ -25,7 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -79,7 +79,7 @@ public class InstantAppModelBuilder
         implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
 
-    @NonNull private final AndroidConfig config;
+    @NonNull private final BaseExtension extension;
     @NonNull private final ExtraModelInfo extraModelInfo;
     @NonNull private final VariantManager variantManager;
     private boolean modelWithFullDependency = false;
@@ -87,9 +87,9 @@ public class InstantAppModelBuilder
 
     public InstantAppModelBuilder(
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
-        this.config = config;
+        this.extension = extension;
         this.extraModelInfo = extraModelInfo;
         this.variantManager = variantManager;
     }
@@ -172,8 +172,8 @@ public class InstantAppModelBuilder
         syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
         List<String> flavorDimensionList =
-                config.getFlavorDimensionList() != null
-                        ? config.getFlavorDimensionList()
+                extension.getFlavorDimensionList() != null
+                        ? extension.getFlavorDimensionList()
                         : Lists.newArrayList();
 
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();

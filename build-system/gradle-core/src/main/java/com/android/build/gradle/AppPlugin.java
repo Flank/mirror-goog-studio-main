@@ -45,14 +45,14 @@ public class AppPlugin extends AbstractAppPlugin {
             @NonNull ToolingModelBuilderRegistry registry,
             @NonNull GlobalScope globalScope,
             @NonNull VariantManager variantManager,
-            @NonNull AndroidConfig config,
+            @NonNull BaseExtension extension,
             @NonNull ExtraModelInfo extraModelInfo) {
         registry.register(
                 new AppModelBuilder(
                         globalScope,
                         variantManager,
                         taskManager,
-                        (BaseAppModuleExtension) config,
+                        (BaseAppModuleExtension) extension,
                         extraModelInfo,
                         getProjectType()));
     }

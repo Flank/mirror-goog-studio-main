@@ -20,7 +20,6 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
@@ -44,10 +43,8 @@ import org.gradle.api.NamedDomainObjectContainer;
 
 public class LibraryVariantFactory extends BaseVariantFactory {
 
-    public LibraryVariantFactory(
-            @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig extension) {
-        super(globalScope, extension);
+    public LibraryVariantFactory(@NonNull GlobalScope globalScope) {
+        super(globalScope);
     }
 
     @Override
@@ -58,7 +55,6 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             @NonNull Recorder recorder) {
         return new LibraryVariantData(
                 globalScope,
-                extension,
                 taskManager,
                 variantConfiguration,
                 recorder);

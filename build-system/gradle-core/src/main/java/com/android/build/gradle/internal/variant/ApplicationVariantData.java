@@ -17,7 +17,6 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -25,7 +24,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * Data about a variant that produce an application APK
@@ -35,11 +33,10 @@ public class ApplicationVariantData extends ApkVariantData implements TestedVari
 
     public ApplicationVariantData(
             @NonNull GlobalScope globalScope,
-            @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, recorder);
+        super(globalScope, taskManager, config, recorder);
         testVariants = Maps.newHashMap();
     }
 

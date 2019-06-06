@@ -27,7 +27,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -86,7 +86,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig extension,
+            @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
@@ -189,7 +189,7 @@ public class LibraryTaskManager extends TaskManager {
         // TODO: remove this hack once tests are moved to a version that doesn't do this
         // b/37564303
         if (projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
-            taskFactory.register(new ExtractAnnotations.CreationAction(extension, variantScope));
+            taskFactory.register(new ExtractAnnotations.CreationAction(variantScope));
         }
 
         final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
@@ -335,7 +335,7 @@ public class LibraryTaskManager extends TaskManager {
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
         TaskProvider<BundleAar> bundle =
-                taskFactory.register(new BundleAar.CreationAction(extension, variantScope));
+                taskFactory.register(new BundleAar.CreationAction(variantScope));
 
         TaskFactoryUtils.dependsOn(variantScope.getTaskContainer().getAssembleTask(), bundle);
 
