@@ -16,12 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.SdkConstants
 import jdk.internal.org.objectweb.asm.Opcodes.ACC_PRIVATE
 import jdk.internal.org.objectweb.asm.Opcodes.ASM5
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.Type
-import java.io.File
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.AnnotationVisitor
@@ -29,7 +29,7 @@ import org.objectweb.asm.Label
 import org.objectweb.asm.TypePath
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
-import java.lang.IllegalArgumentException
+import java.io.InputStream
 import java.lang.reflect.Modifier.isPublic
 
 /***
@@ -55,22 +55,18 @@ class DependenciesAnalyzer {
         "double")
 
     /** Finds all the dependencies in a .class file */
-    @Throws(IllegalArgumentException::class)
-    fun findAllDependencies(compiledClass: File): List<String> {
-        val packages = mutableSetOf<String>()
-        findClassesInPublicAPI(compiledClass).forEach {
-            packages.add(it.key)
-        }
-        return packages.toList()
+    fun findAllDependencies(bytecode: InputStream): List<String> {
+        return visitClass(bytecode).keys.toList()
+
     }
 
     /** Finds only the dependencies that the .class file exposes in its public components */
-    fun findClassesInPublicAPI(compiledClass: File): Map<String, Boolean> {
-        if (!compiledClass.isFile) {
-            throw IllegalArgumentException()
-        }
+    fun findPublicDependencies(bytecode: InputStream): List<String> {
+        return visitClass(bytecode).filter { it.value }.keys.toList()
+    }
 
-        val classReader = ClassReader(compiledClass.inputStream())
+    private fun visitClass(bytecode: InputStream): Map<String,Boolean> {
+        val classReader = ClassReader(bytecode)
         val classVisitor = DependenciesClassVisitor(classReader)
         classReader.accept(classVisitor, ClassReader.SKIP_DEBUG or ClassReader.SKIP_FRAMES)
 
@@ -205,9 +201,9 @@ class DependenciesAnalyzer {
                 return
             }
 
-            val packageName = type.replace("/", ".")
+            val className = type.replace(".", "/").plus(SdkConstants.DOT_CLASS)
 
-            classes[packageName] = isPublic(access) || classes[packageName] ?: false
+            classes[className] = isPublic(access) || classes[className] ?: false
         }
 
         private fun addTypeName(type: Type, access: Int) {

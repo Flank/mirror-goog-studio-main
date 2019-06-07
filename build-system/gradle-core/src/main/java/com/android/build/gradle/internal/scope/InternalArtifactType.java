@@ -333,8 +333,9 @@ public enum InternalArtifactType implements ArtifactType {
     // File containing all generated proguard rules from Javac (by e.g. dagger) merged together
     GENERATED_PROGUARD_FILE(Kind.FILE),
 
-    // File containing all dependencies used in a build variant
-    USED_DEPENDENCIES(Kind.FILE);
+    // File containing unused dependencies and dependencies that can be configured as
+    // implementation in the current variant
+    ANALYZE_DEPENDENCIES_REPORT(Kind.DIRECTORY);
 
     /**
      * Defines the kind of artifact type. this will be used to determine the output file location

@@ -119,4 +119,10 @@ public class InstantAppTaskManager extends TaskManager {
     public void configureGlobalLintTask(@NonNull Collection<VariantScope> variants) {
         // do nothing.
     }
+
+    // The task is incompatible with the InstantApp plugin
+    @Override
+    protected void createDependencyAnalyzerTask(@NonNull Collection<VariantScope> variants) {
+        // do nothing
+    }
 }

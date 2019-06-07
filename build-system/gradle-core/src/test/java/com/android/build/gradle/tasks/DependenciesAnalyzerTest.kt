@@ -34,7 +34,7 @@ class DependenciesAnalyzerTest {
     @JvmField
     val tempDir = TemporaryFolder()
 
-    private val expectedOutput = mutableListOf("kotlin.Metadata", "java.lang.Object")
+    private val expectedOutput = mutableListOf("kotlin/Metadata.class", "java/lang/Object.class")
 
     /** Tests the analyzer finds the types from the class header (superclass, interfaces
      * and generics) */
@@ -47,14 +47,14 @@ class DependenciesAnalyzerTest {
 
         expectedOutput.addAll(
             Arrays.asList(
-                "com.android.build.gradle.internal.transforms.testdata.YetAnotherClass",
-                "com.android.build.gradle.internal.transforms.testdata.SomeInterface",
-                "com.android.build.gradle.internal.transforms.testdata.CarbonForm",
-                "com.android.build.gradle.internal.transforms.testdata.SomeClass",
-                "com.android.build.gradle.internal.transforms.testdata.Animal",
-                "com.android.build.gradle.internal.transforms.testdata.Dog",
-                "com.android.build.gradle.internal.transforms.testdata.Cat",
-                "java.util.List"
+                "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/SomeInterface.class",
+                "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
+                "com/android/build/gradle/internal/transforms/testdata/SomeClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/Animal.class",
+                "com/android/build/gradle/internal/transforms/testdata/Dog.class",
+                "com/android/build/gradle/internal/transforms/testdata/Cat.class",
+                "java/util/List.class"
             )
         )
 
@@ -62,7 +62,7 @@ class DependenciesAnalyzerTest {
         val output = mutableListOf<String>()
         input.walk().forEach {
             if (it.isFile && it.name.endsWith(SdkConstants.DOT_CLASS)) {
-                output.addAll(analyzer.findAllDependencies(it))
+                output.addAll(analyzer.findAllDependencies(it.inputStream()))
             }
         }
 
@@ -78,22 +78,22 @@ class DependenciesAnalyzerTest {
 
         expectedOutput.addAll(
             Arrays.asList(
-                "com.android.build.gradle.internal.transforms.testdata.YetAnotherClass",
-                "com.android.build.gradle.internal.transforms.testdata.SomeOtherClass",
-                "com.android.build.gradle.internal.transforms.testdata.CarbonForm",
-                "com.android.build.gradle.internal.transforms.testdata.SomeClass",
-                "com.android.build.gradle.internal.transforms.testdata.NewClass",
-                "com.android.build.gradle.internal.transforms.testdata.Animal",
-                "com.android.build.gradle.internal.transforms.testdata.Tiger",
-                "com.android.build.gradle.internal.transforms.testdata.Toy",
-                "com.android.build.gradle.internal.transforms.testdata.Cat",
-                "com.android.build.gradle.internal.transforms.testdata.Dog",
-                "org.jetbrains.annotations.Nullable",
-                "org.jetbrains.annotations.NotNull",
-                "kotlin.jvm.internal.Intrinsics",
-                "java.lang.Exception",
-                "java.io.IOException",
-                "java.util.Map"
+                "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/SomeOtherClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class",
+                "com/android/build/gradle/internal/transforms/testdata/SomeClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/NewClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/Animal.class",
+                "com/android/build/gradle/internal/transforms/testdata/Tiger.class",
+                "com/android/build/gradle/internal/transforms/testdata/Toy.class",
+                "com/android/build/gradle/internal/transforms/testdata/Cat.class",
+                "com/android/build/gradle/internal/transforms/testdata/Dog.class",
+                "org/jetbrains/annotations/Nullable.class",
+                "org/jetbrains/annotations/NotNull.class",
+                "kotlin/jvm/internal/Intrinsics.class",
+                "java/lang/Exception.class",
+                "java/io/IOException.class",
+                "java/util/Map.class"
             )
         )
 
@@ -101,7 +101,7 @@ class DependenciesAnalyzerTest {
         val output = mutableSetOf<String>()
         input.walk().forEach {
             if (it.isFile && it.name.endsWith(SdkConstants.DOT_CLASS)) {
-                output.addAll(analyzer.findAllDependencies(it))
+                output.addAll(analyzer.findAllDependencies(it.inputStream()))
             }
         }
 
@@ -117,15 +117,15 @@ class DependenciesAnalyzerTest {
 
         expectedOutput.addAll(
             Arrays.asList(
-                "com.android.build.gradle.internal.transforms.testdata.NewClass\$Companion",
-                "com.android.build.gradle.internal.transforms.testdata.YetAnotherClass",
-                "com.android.build.gradle.internal.transforms.testdata.SomeClassKt",
-                "com.android.build.gradle.internal.transforms.testdata.NewClass",
-                "com.android.build.gradle.internal.transforms.testdata.Animal",
-                "com.android.build.gradle.internal.transforms.testdata.Toy",
-                "org.jetbrains.annotations.NotNull",
-                "kotlin.jvm.internal.Intrinsics",
-                "java.lang.String"
+                "com/android/build/gradle/internal/transforms/testdata/NewClass\$Companion.class",
+                "com/android/build/gradle/internal/transforms/testdata/YetAnotherClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/SomeClassKt.class",
+                "com/android/build/gradle/internal/transforms/testdata/NewClass.class",
+                "com/android/build/gradle/internal/transforms/testdata/Animal.class",
+                "com/android/build/gradle/internal/transforms/testdata/Toy.class",
+                "org/jetbrains/annotations/NotNull.class",
+                "kotlin/jvm/internal/Intrinsics.class",
+                "java/lang/String.class"
             )
         )
 
@@ -133,7 +133,7 @@ class DependenciesAnalyzerTest {
         val output = mutableSetOf<String>()
         input.walk().forEach {
             if (it.isFile && it.name.endsWith(SdkConstants.DOT_CLASS)) {
-                output.addAll(analyzer.findAllDependencies(it))
+                output.addAll(analyzer.findAllDependencies(it.inputStream()))
             }
         }
 
