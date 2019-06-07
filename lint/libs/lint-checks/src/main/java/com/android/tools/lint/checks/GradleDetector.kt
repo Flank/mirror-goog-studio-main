@@ -60,7 +60,9 @@ import com.android.tools.lint.detector.api.guessGradleLocation
 import com.android.tools.lint.detector.api.isNumberString
 import com.android.tools.lint.detector.api.readUrlData
 import com.android.tools.lint.detector.api.readUrlDataAsString
+import com.android.utils.appendCapitalized
 import com.android.utils.capitalize
+import com.android.utils.usLocaleCapitalize
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Joiner
 import com.google.common.base.Splitter
@@ -460,6 +462,7 @@ open class GradleDetector : Detector(), GradleScanner {
                                     "for faster incremental build.", null
                         )
                     }
+                    checkAnnotationProcessorOnCompilePath(property, dependency, context, propertyCookie)
                 }
                 checkDeprecatedConfigurations(property, context, propertyCookie)
             }
@@ -604,6 +607,31 @@ open class GradleDetector : Detector(), GradleScanner {
                         .build()
                     report(context, propertyCookie, DEPRECATED_CONFIGURATION, message, fix)
                 }
+            }
+        }
+    }
+
+    private fun checkAnnotationProcessorOnCompilePath(
+        configuration: String,
+        dependency: String,
+        context: GradleContext,
+        propertyCookie: Any
+    ) {
+        for (compileConfiguration in CompileConfiguration.values()) {
+            if (compileConfiguration.matches(configuration)
+                && isCommonAnnotationProcessor(dependency)) {
+                val replacement: String = compileConfiguration.replacement(configuration)
+                val fix = fix()
+                    .name("Replace $configuration with $replacement")
+                    .family("Replace compile classpath with annotationProcessor")
+                    .replace()
+                    .text(configuration)
+                    .with(replacement)
+                    .independent(true)
+                    .build()
+                val message = "Add annotation processor to processor path using `$replacement`" +
+                        " instead of `$configuration`"
+                report(context, propertyCookie, ANNOTATION_PROCESSOR_ON_COMPILE_PATH, message, fix)
             }
         }
     }
@@ -2393,6 +2421,22 @@ open class GradleDetector : Detector(), GradleScanner {
             implementation = IMPLEMENTATION
         )
 
+        @JvmField
+        val ANNOTATION_PROCESSOR_ON_COMPILE_PATH = Issue.create(
+            id = "AnnotationProcessorOnCompilePath",
+            briefDescription = "Annotation Processor on Compile Classpath",
+            explanation = """
+               This dependency is identified as an annotation processor. Consider adding it to the \
+               processor path using `annotationProcessor` instead of including it to the
+               compile path.
+            """,
+            category = Category.PERFORMANCE,
+            priority = 8,
+            severity = Severity.WARNING,
+            androidSpecific = true,
+            implementation = IMPLEMENTATION
+        )
+
         /** The Gradle plugin ID for Android applications */
         const val APP_PLUGIN_ID = "com.android.application"
         /** The Gradle plugin ID for Android libraries */
@@ -2706,5 +2750,98 @@ open class GradleDetector : Detector(), GradleScanner {
         private fun hasLifecycleAnnotationProcessor(dependency: String) =
             dependency.contains("android.arch.lifecycle:compiler") ||
                     dependency.contains("androidx.lifecycle:lifecycle-compiler")
+
+        private fun isCommonAnnotationProcessor(dependency: String): Boolean =
+            dependency.substring(0, dependency.lastIndexOf(":")) in commonAnnotationProcessors
+
+        private enum class CompileConfiguration(
+            private val compileConfigName: String
+        ) {
+            API("api"),
+            COMPILE("compile"),
+            IMPLEMENTATION("implementation"),
+            COMPILE_ONLY("compileOnly")
+            ;
+
+            private val annotationProcessor = "annotationProcessor"
+            private val compileConfigSuffix = compileConfigName.usLocaleCapitalize()
+
+            fun matches(configurationName: String): Boolean {
+               return configurationName == compileConfigName
+                       || configurationName.endsWith(compileConfigSuffix)
+            }
+
+            fun replacement(configurationName: String): String {
+                return if (configurationName == compileConfigName) {
+                    annotationProcessor
+                } else {
+                    configurationName.removeSuffix(compileConfigSuffix)
+                        .appendCapitalized(annotationProcessor)
+                }
+            }
+        }
+
+        private val commonAnnotationProcessors: Set<String> = setOf(
+            "com.jakewharton:butterknife-compiler",
+            "com.github.bumptech.glide:compiler",
+            "androidx.databinding:databinding-compiler",
+            "com.google.dagger:dagger-compiler",
+            "com.google.auto.service:auto-service",
+            "android.arch.persistence.room:compiler",
+            "android.arch.lifecycle:compiler",
+            "io.realm:realm-annotations-processor",
+            "com.google.dagger:dagger-android-processor",
+            "androidx.room:room-compiler",
+            "com.android.databinding:compiler",
+            "androidx.lifecycle:lifecycle-compiler",
+            "org.projectlombok:lombok",
+            "com.google.auto.value:auto-value",
+            "org.parceler:parceler",
+            "com.jakewharton:butterknife",
+            "com.github.hotchemi:permissionsdispatcher-processor",
+            "com.alibaba:arouter-compiler",
+            "org.androidannotations:androidannotations",
+            "com.github.Raizlabs.DBFlow:dbflow-processor",
+            "frankiesardo:icepick-processor",
+            "org.greenrobot:eventbus-annotation-processor",
+            "com.ryanharter.auto.value:auto-value-gson",
+            "io.objectbox:objectbox-processor",
+            "com.arello-mobile:moxy-compiler",
+            "com.squareup.dagger:dagger-compiler",
+            "io.realm:realm-android",
+            "com.bluelinelabs:logansquare-compiler",
+            "com.tencent.tinker:tinker-android-anno",
+            "com.raizlabs.android:DBFlow-Compiler",
+            "com.google.auto.factory:auto-factory",
+            "com.airbnb:deeplinkdispatch-processor",
+            "com.alipay.android.tools:androidannotations",
+            "org.permissionsdispatcher:permissionsdispatcher-processor",
+            "com.airbnb.android:epoxy-processor",
+            "org.immutables:value",
+            "com.github.stephanenicolas.toothpick:toothpick-compiler",
+            "com.mindorks.android:placeholderview-compiler",
+            "com.github.frankiesardo:auto-parcel-processor",
+            "com.hannesdorfmann.fragmentargs:processor",
+            "com.evernote:android-state-processor",
+            "org.mapstruct:mapstruct-processor",
+            "com.iqiyi.component.router:qyrouter-compiler",
+            "com.iqiyi.component.mm:mm-compiler",
+            "dk.ilios:realmfieldnameshelper",
+            "com.lianjia.common.android.router2:compiler",
+            "com.smile.gifshow.annotation:invoker_processor",
+            "com.f2prateek.dart:dart-processor",
+            "com.sankuai.waimai.router:compiler",
+            "org.qiyi.card:card-action-compiler",
+            "com.iqiyi.video:eventbus-annotation-processor",
+            "ly.img.android.pesdk:build-processor",
+            "org.apache.logging.log4j:log4j-core",
+            "com.github.jokermonn:permissions4m",
+            "com.arialyy.aria:aria-compiler",
+            "com.smile.gifshow.annotation:provide_processor",
+            "com.smile.gifshow.annotation:preference_processor",
+            "com.smile.gifshow.annotation:plugin_processor",
+            "org.inferred:freebuilder",
+            "com.smile.gifshow.annotation:router_processor"
+        )
     }
 }

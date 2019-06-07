@@ -26,6 +26,7 @@ import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API
 import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.GradleDetector.Companion.ACCIDENTAL_OCTAL
+import com.android.tools.lint.checks.GradleDetector.Companion.ANNOTATION_PROCESSOR_ON_COMPILE_PATH
 import com.android.tools.lint.checks.GradleDetector.Companion.BUNDLED_GMS
 import com.android.tools.lint.checks.GradleDetector.Companion.COMPATIBILITY
 import com.android.tools.lint.checks.GradleDetector.Companion.DATA_BINDING_WITHOUT_KAPT
@@ -2986,6 +2987,75 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
         )
             .issues(DEPRECATED_CONFIGURATION)
+            .run()
+            .expect(expected)
+            .expectFixDiffs(fixDiff)
+    }
+
+    fun testAnnotationProcessorOnCompilePath() {
+        val expected = """
+            build.gradle:2: Warning: Add annotation processor to processor path using annotationProcessor instead of api [AnnotationProcessorOnCompilePath]
+                api 'com.jakewharton:butterknife-compiler:10.1.0'
+                ~~~
+            build.gradle:3: Warning: Add annotation processor to processor path using annotationProcessor instead of implementation [AnnotationProcessorOnCompilePath]
+                implementation 'com.github.bumptech.glide:compiler:4.9.0'
+                ~~~~~~~~~~~~~~
+            build.gradle:4: Warning: Add annotation processor to processor path using annotationProcessor instead of compile [AnnotationProcessorOnCompilePath]
+                compile "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
+                ~~~~~~~
+            build.gradle:5: Warning: Add annotation processor to processor path using testAnnotationProcessor instead of testImplementation [AnnotationProcessorOnCompilePath]
+                testImplementation "com.google.auto.value:auto-value:1.6.2"
+                ~~~~~~~~~~~~~~~~~~
+            build.gradle:6: Warning: Add annotation processor to processor path using androidTestAnnotationProcessor instead of androidTestCompile [AnnotationProcessorOnCompilePath]
+                androidTestCompile "org.projectlombok:lombok:1.18.8"
+                ~~~~~~~~~~~~~~~~~~
+            build.gradle:8: Warning: Add annotation processor to processor path using debugAnnotationProcessor instead of debugCompile [AnnotationProcessorOnCompilePath]
+                debugCompile "android.arch.persistence.room:compiler:1.1.1"
+                ~~~~~~~~~~~~
+            0 errors, 6 warnings
+        """
+        val fixDiff = """
+            Fix for build.gradle line 2: Replace api with annotationProcessor:
+            @@ -2 +2
+            -     api 'com.jakewharton:butterknife-compiler:10.1.0'
+            +     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
+            Fix for build.gradle line 3: Replace implementation with annotationProcessor:
+            @@ -3 +3
+            -     implementation 'com.github.bumptech.glide:compiler:4.9.0'
+            +     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
+            Fix for build.gradle line 4: Replace compile with annotationProcessor:
+            @@ -4 +4
+            -     compile "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
+            +     annotationProcessor "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
+            Fix for build.gradle line 5: Replace testImplementation with testAnnotationProcessor:
+            @@ -5 +5
+            -     testImplementation "com.google.auto.value:auto-value:1.6.2"
+            +     testAnnotationProcessor "com.google.auto.value:auto-value:1.6.2"
+            Fix for build.gradle line 6: Replace androidTestCompile with androidTestAnnotationProcessor:
+            @@ -6 +6
+            -     androidTestCompile "org.projectlombok:lombok:1.18.8"
+            +     androidTestAnnotationProcessor "org.projectlombok:lombok:1.18.8"
+            Fix for build.gradle line 8: Replace debugCompile with debugAnnotationProcessor:
+            @@ -8 +8
+            -     debugCompile "android.arch.persistence.room:compiler:1.1.1"
+            +     debugAnnotationProcessor "android.arch.persistence.room:compiler:1.1.1"
+        """
+        lint().files(
+            gradle(
+                """
+                    dependencies {
+                        api 'com.jakewharton:butterknife-compiler:10.1.0'
+                        implementation 'com.github.bumptech.glide:compiler:4.9.0'
+                        compile "androidx.lifecycle:lifecycle-compiler:2.2.0-alpha01"
+                        testImplementation "com.google.auto.value:auto-value:1.6.2"
+                        androidTestCompile "org.projectlombok:lombok:1.18.8"
+                        annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
+                        debugCompile "android.arch.persistence.room:compiler:1.1.1"
+                    }
+                """
+            ).indented()
+        )
+            .issues(ANNOTATION_PROCESSOR_ON_COMPILE_PATH)
             .run()
             .expect(expected)
             .expectFixDiffs(fixDiff)

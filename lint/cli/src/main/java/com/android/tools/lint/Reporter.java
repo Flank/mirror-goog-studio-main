@@ -376,6 +376,7 @@ public abstract class Reporter {
                             EllipsizeMaxLinesDetector.ISSUE,
                             FontDetector.FONT_VALIDATION_ERROR,
                             FontDetector.FONT_VALIDATION_WARNING,
+                            GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH,
                             GradleDetector.COMPATIBILITY,
                             GradleDetector.DEPENDENCY,
                             GradleDetector.DEPRECATED,

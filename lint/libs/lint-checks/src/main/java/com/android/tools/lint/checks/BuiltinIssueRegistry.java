@@ -130,6 +130,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(GetContentDescriptionOverrideDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);
         issues.add(GradleDetector.ACCIDENTAL_OCTAL);
+        issues.add(GradleDetector.ANNOTATION_PROCESSOR_ON_COMPILE_PATH);
         issues.add(GradleDetector.BUNDLED_GMS);
         issues.add(GradleDetector.COMPATIBILITY);
         issues.add(GradleDetector.DATA_BINDING_WITHOUT_KAPT);
