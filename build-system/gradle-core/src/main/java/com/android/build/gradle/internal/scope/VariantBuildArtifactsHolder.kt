@@ -25,7 +25,7 @@ class VariantBuildArtifactsHolder(
     private val variantName: String,
     rootOutputDir: File,
     dslScope: DslScope
-) : BuildArtifactsHolder(project, { rootOutputDir }, dslScope) {
+) : BuildArtifactsHolder(project, { rootOutputDir }) {
 
     override fun getIdentifier() : String = variantName
 

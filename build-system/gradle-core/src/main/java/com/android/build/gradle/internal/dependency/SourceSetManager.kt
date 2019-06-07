@@ -41,7 +41,7 @@ class SourceSetManager(
         private val buildArtifactActions: DelayedActionsExecutor) {
     val sourceSetsContainer: NamedDomainObjectContainer<AndroidSourceSet> = project.container(
             AndroidSourceSet::class.java,
-            AndroidSourceSetFactory(project, publishPackage, dslScope, buildArtifactActions))
+            AndroidSourceSetFactory(project, publishPackage, dslScope))
     private val configurations: ConfigurationContainer = project.configurations
     private val logger: Logger = Logging.getLogger(this.javaClass)
 

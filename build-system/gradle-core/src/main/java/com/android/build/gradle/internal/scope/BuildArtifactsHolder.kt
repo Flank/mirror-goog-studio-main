@@ -20,7 +20,6 @@ import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.api.artifact.toArtifactType
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Joiner
@@ -60,8 +59,8 @@ typealias Report = Map<ArtifactType, BuildArtifactsHolder.ProducersData>
  */
 abstract class BuildArtifactsHolder(
     private val project: Project,
-    private val rootOutputDir: () -> File,
-    private val dslScope: DslScope) {
+    private val rootOutputDir: () -> File
+) {
 
     // delete those 2 maps once use of BuildableArtifact has been eradicated.
     private val artifactRecordMap = ConcurrentHashMap<ArtifactType, ArtifactRecord>()
@@ -354,7 +353,7 @@ abstract class BuildArtifactsHolder(
                 if (!producers.isEmpty()) {
                     val plural = producers.hasMultipleProducers()
                     throw RuntimeException(
-                        """|Task ${taskProvider?.name} is expecting to be the initial producer of
+                        """|Task ${taskProvider.name} is expecting to be the initial producer of
                                 |$artifactType, but the following ${if (plural) "tasks" else "task"} : ${Joiner.on(',').join(producers.map { it.taskName})}
                                 |${if (plural) "are" else "is"} already registered as ${if (plural) "producers" else "producer"}"""
                             .trimMargin()
@@ -580,7 +579,7 @@ abstract class BuildArtifactsHolder(
      * @return the possibly empty final [BuildableArtifact] for this artifact type.
      */
     fun getFinalArtifactFiles(artifactType: ArtifactType) : BuildableArtifact {
-        val artifact = artifactRecordMap.get(artifactType)
+        val artifact = artifactRecordMap[artifactType]
         artifact?.lastProducer?.let {
             if (it.fileOrDirProperty == null) {
                 Logger.getLogger(javaClass.name).log(Level.WARNING,
@@ -702,7 +701,7 @@ abstract class BuildArtifactsHolder(
      * @param artifactType the intended artifact type stored in the directory.
      * @param operationType type of output (appending, replacing or initial version)
      * @param taskName name of the producer task.
-     * @param file file location to use, relative to the project build output.
+     * @param requestedFileLocation file location to use, relative to the project build output.
      */
     private fun createArtifactFile(
         artifactType: ArtifactType,
@@ -843,16 +842,16 @@ abstract class BuildArtifactsHolder(
             )
         }
 
-        when(T::class) {
+        return when(T::class) {
             RegularFileProperty::class -> {
-                var prop = project.objects.fileProperty()
+                val prop = project.objects.fileProperty()
                 prop.set(project.layout.buildDirectory.file(path))
-                return prop as T
+                prop as T
             }
             DirectoryProperty::class -> {
-                var prop = project.objects.directoryProperty()
+                val prop = project.objects.directoryProperty()
                 prop.set(project.layout.buildDirectory.dir(path))
-                return prop as T
+                prop as T
             }
             else -> throw RuntimeException("createFileOrDirectory called with unsupported type ${T::class}")
         }

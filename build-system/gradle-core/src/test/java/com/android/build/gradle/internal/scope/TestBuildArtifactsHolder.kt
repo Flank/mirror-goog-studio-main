@@ -26,7 +26,7 @@ internal class TestBuildArtifactsHolder(
     val variantName: String,
     val rootOutputDir: () -> File,
     dslScope: DslScope
-) : BuildArtifactsHolder(project, rootOutputDir, dslScope) {
+) : BuildArtifactsHolder(project, rootOutputDir) {
 
     override fun getIdentifier() = variantName
 

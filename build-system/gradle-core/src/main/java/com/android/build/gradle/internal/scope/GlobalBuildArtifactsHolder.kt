@@ -23,7 +23,7 @@ import java.io.File
 class GlobalBuildArtifactsHolder(
     project: Project,
     rootOutputDir: () -> File,
-    dslScope: DslScope) : BuildArtifactsHolder(project, rootOutputDir, dslScope) {
+    dslScope: DslScope) : BuildArtifactsHolder(project, rootOutputDir) {
 
     /**
      * Returns a identifier that will uniquely identify this artifacts holder against other holders.

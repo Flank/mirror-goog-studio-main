@@ -21,7 +21,6 @@ import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceFile
 import com.android.build.gradle.api.AndroidSourceSet
 import com.android.build.gradle.internal.api.artifact.SourceArtifactType
-import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_API
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_APK
@@ -32,7 +31,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
-import com.android.build.gradle.internal.scope.DelayedActionsExecutor
 import com.android.builder.model.SourceProvider
 import com.android.utils.appendCapitalized
 import groovy.lang.Closure
@@ -44,11 +42,10 @@ import java.io.File
 import javax.inject.Inject
 
 open class DefaultAndroidSourceSet @Inject constructor(
-        private val name: String,
-        project: Project,
-        private val publishPackage: Boolean,
-        dslScope: DslScope,
-        delayedActionsExecutor : DelayedActionsExecutor)
+    private val name: String,
+    project: Project,
+    private val publishPackage: Boolean
+)
         : AndroidSourceSet, SourceProvider {
 
     private val javaSource: AndroidSourceDirectorySet
