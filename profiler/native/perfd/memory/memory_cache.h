@@ -41,8 +41,8 @@ class MemoryCache {
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveAllocStatsSample(const proto::MemoryData::AllocStatsSample& sample);
   void SaveGcStatsSample(const proto::MemoryData::GcStatsSample& sample);
-  void SaveAllocationEvents(const proto::BatchAllocationSample* request);
-  void SaveJNIRefEvents(const proto::BatchJNIGlobalRefEvent* request);
+  void SaveAllocationEvents(const proto::BatchAllocationSample& sample);
+  void SaveJNIRefEvents(const proto::BatchJNIGlobalRefEvent& sample);
   void SaveAllocationSamplingRateEvent(
       const proto::AllocationSamplingRateEvent& event);
 

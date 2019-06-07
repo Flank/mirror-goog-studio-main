@@ -71,15 +71,15 @@ void MemoryCache::SaveGcStatsSample(const MemoryData::GcStatsSample& sample) {
   gc_stats_samples_.Add(sample);
 }
 
-void MemoryCache::SaveAllocationEvents(const BatchAllocationSample* request) {
+void MemoryCache::SaveAllocationEvents(const BatchAllocationSample& sample) {
   std::lock_guard<std::mutex> lock(allocations_samples_mutex_);
-  BatchAllocationSample* cache_sample = allocations_samples_.Add(*request);
+  BatchAllocationSample* cache_sample = allocations_samples_.Add(sample);
   cache_sample->set_timestamp(clock_->GetCurrentTime());
 }
 
-void MemoryCache::SaveJNIRefEvents(const BatchJNIGlobalRefEvent* request) {
+void MemoryCache::SaveJNIRefEvents(const BatchJNIGlobalRefEvent& sample) {
   std::lock_guard<std::mutex> lock(jni_ref_batches_mutex_);
-  BatchJNIGlobalRefEvent* cache_batch = jni_refs_event_batches_.Add(*request);
+  BatchJNIGlobalRefEvent* cache_batch = jni_refs_event_batches_.Add(sample);
   cache_batch->set_timestamp(clock_->GetCurrentTime());
 }
 

@@ -179,10 +179,10 @@ TEST(MemoryCache, GetMemoryJvmtiData) {
   fake_clock.Elapse(1);
 
   BatchAllocationSample alloc_sample;
-  cache.SaveAllocationEvents(&alloc_sample);
+  cache.SaveAllocationEvents(alloc_sample);
 
   BatchJNIGlobalRefEvent jni_ref_event;
-  cache.SaveJNIRefEvents(&jni_ref_event);
+  cache.SaveJNIRefEvents(jni_ref_event);
 
   AllocationSamplingRateEvent event;
   event.set_timestamp(1);

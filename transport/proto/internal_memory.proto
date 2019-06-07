@@ -18,6 +18,7 @@ syntax = "proto3";
 package profiler.proto;
 
 import "memory.proto";
+import "memory_data.proto";
 
 service InternalMemoryService {
   // Register a memory agent in perfd and open a stream where perfd can send
@@ -31,10 +32,10 @@ service InternalMemoryService {
   rpc RecordAllocStats(AllocStatsRequest)
     returns (EmptyMemoryReply) {}
 
-  rpc RecordAllocationEvents(BatchAllocationSample)
+  rpc RecordAllocationEvents(AllocationEventsRequest)
     returns (EmptyMemoryReply) {}
 
-  rpc RecordJNIRefEvents(BatchJNIGlobalRefEvent)
+  rpc RecordJNIRefEvents(JNIRefEventsRequest)
     returns (EmptyMemoryReply) {}
 
   rpc RecordAllocationSamplingRateEvent(AllocationSamplingRateEventRequest)
@@ -81,6 +82,16 @@ message GcStatsRequest {
 message AllocationSamplingRateEventRequest {
   int32 pid = 1;
   AllocationSamplingRateEvent event = 2;
+}
+
+message AllocationEventsRequest {
+  int32 pid = 1;
+  BatchAllocationSample sample = 2;
+}
+
+message JNIRefEventsRequest {
+  int32 pid = 1;
+  BatchJNIGlobalRefEvent sample = 2;
 }
 
 message EmptyMemoryReply {}

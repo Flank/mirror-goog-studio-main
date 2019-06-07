@@ -92,7 +92,7 @@ Status InternalMemoryServiceImpl::RecordGcStats(
 }
 
 grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
-    grpc::ServerContext *context, const proto::BatchAllocationSample *request,
+    grpc::ServerContext *context, const proto::AllocationEventsRequest *request,
     proto::EmptyMemoryReply *reply) {
   auto result = collectors_.find(request->pid());
   if (result == collectors_.end()) {
@@ -101,12 +101,12 @@ grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->SaveAllocationEvents(request);
+  result->second.memory_cache()->SaveAllocationEvents(request->sample());
   return Status::OK;
 }
 
 grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
-    grpc::ServerContext *context, const proto::BatchJNIGlobalRefEvent *request,
+    grpc::ServerContext *context, const proto::JNIRefEventsRequest *request,
     proto::EmptyMemoryReply *reply) {
   auto result = collectors_.find(request->pid());
   if (result == collectors_.end()) {
@@ -115,7 +115,7 @@ grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->SaveJNIRefEvents(request);
+  result->second.memory_cache()->SaveJNIRefEvents(request->sample());
   return Status::OK;
 }
 

@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <cstdint>
 
-#include "proto/internal_memory.grpc.pb.h"
+#include "proto/memory_data.grpc.pb.h"
 
 namespace profiler {
 
@@ -31,12 +31,10 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 void EnqueueGcStats(int64_t start_time, int64_t end_time);
 
 // Queues the BatchAlllocationSample to be sent to perfd.
-// Note the non-const request, as pid is set on the request before the queue.
-void EnqueueAllocationEvents(proto::BatchAllocationSample& request);
+void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample);
 
 // Queues the BatchJNIGlobalRefEvent to be sent to perfd.
-// Note the non-const request, as pid is set on the request before the queue.
-void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request);
+void EnqueueJNIGlobalRefEvents(const proto::BatchJNIGlobalRefEvent& sample);
 
 // Queues the AllocationSamplingRateEvent to be sent to perfd.
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,

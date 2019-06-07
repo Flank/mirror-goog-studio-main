@@ -390,58 +390,6 @@ message AllocationContextsResponse {
   repeated ThreadInfo allocation_threads = 4;
 }
 
-message AllocatedClass {
-  int32 class_id = 1;
-  string class_name = 2;
-  int32 class_loader_id = 3;
-}
-
-// Proto format for handling stack data for both pre-O and O+.
-message AllocationStack {
-  message StackFrame {
-    // O+ only for uniquely idenfitying a method.
-    int64 method_id = 1;
-    string class_name = 2;
-    string method_name = 3;
-
-    // Pre-O only. File name info is unavailable in JVMTI.
-    // TODO: investigate/feature request.
-    string file_name = 4;
-
-    int32 line_number = 5;
-  }
-
-  // studio-side only - a smaller proto format to store lazy-
-  // loaded stack frame objects. This is used specifically
-  // for showing live allocation tracking data (O+ JVMTI),
-  // where an app can run up to 2M+ unique frames. Given
-  // proto objects do not support null values, each string
-  // field in StackFrame holds default values that can add
-  // up to hundreds of MBs for these apps.
-  message SmallFrame {
-    int64 method_id = 1;
-    int32 line_number = 2;
-  }
-
-  // Wrapper proto for StackFrame since oneof does not
-  // support repeated fields.
-  message StackFrameWrapper {
-    repeated StackFrame frames = 1;
-  }
-
-  // Wrapper proto for SmallFrame since oneof does not
-  // support repeated fields.
-  message SmallFrameWrapper {
-    repeated SmallFrame frames = 1;
-  }
-
-  int32 stack_id = 1;
-  oneof frame {
-    StackFrameWrapper full_stack = 2;
-    SmallFrameWrapper small_stack = 3;
-  }
-}
-
 message StackFrameInfoRequest {
   Session session = 1;
   int64 method_id = 2;
@@ -450,31 +398,6 @@ message StackFrameInfoRequest {
 message StackFrameInfoResponse {
   string class_name = 1;
   string method_name = 2;
-}
-
-// Proto format for storing and transmitting O+ stack data efficiently.
-// The |stack_id| field uniquely identifies a stack within an app, each
-// |method_id| is referenced by AllocationStack.StackFrame which contains
-// detailed info about the method.
-message EncodedAllocationStack {
-  // The time when this stack was first seen. It should match the first
-  // AllocationEvent::Allocation that generated the stack.
-  int64 timestamp = 1;
-  int32 stack_id = 2;
-  repeated int64 method_ids = 3;
-  repeated int32 line_numbers = 4;
-}
-
-// Proto format for storing and transmitting O+ thread data.
-// JVMTI provides an API to get a thread's name but not id. To avoid
-// sending too much duplicated string datas, we encode thread names to
-// id manually and resolve them on Studio-side.
-message ThreadInfo {
-  // The time when this thread was first seen. It should match the first
-  // AllocationEvent::Allocation that generated the stack.
-  int64 timestamp = 1;
-  int32 thread_id = 2;
-  string thread_name = 3;
 }
 
 message AllocationSnapshotRequest {
@@ -493,32 +416,14 @@ message AllocationSnapshotRequest {
   bool live_objects_only = 4;
 }
 
-// Batched AllocationEvents to minimize number of grpc
-// calls compared to transferring them individually.
-message BatchAllocationSample {
-  int32 pid = 1;
-  // From Perfa->Perfd and Perfd->Studio, this marks the
-  // time(ns) when the sample was first created in the agent.
-  // Within Studio, this indicates the latest timestamp amongst
-  // the events list.
-  int64 timestamp = 2;
-  repeated AllocationEvent events = 3;
+message JNIGlobalRefsEventsRequest {
+  Session session = 1;
+  int64 start_time = 2;  // inclusive;
+  int64 end_time = 3; // exclusive;
 
-  // The following fields are used for transfering stack info
-  // from device to studio only. Within studio, stack info are
-  // retrieved via GetAllocationContexts.
-  repeated AllocationStack.StackFrame methods = 4;
-  repeated EncodedAllocationStack stacks = 5;
-  repeated ThreadInfo thread_infos = 6;
-}
-
-// Raw representation of the native callstack, it is symbolized
-// and interpreted by Android Studio.
-message NativeBacktrace {
-  // Sequence of program counter addresses obtained during a native
-  // stack walk. Addresses are ordered bottom-up e.g. the first one
-  // is the return address of the innermost function.
-  repeated uint64 addresses = 1;
+  // Ignore |start_time| - include only objects that are still
+  // alive at point in time specified by |end_time|
+  bool live_objects_only = 4;
 }
 
 message ResolveNativeBacktraceRequest {
@@ -537,131 +442,6 @@ message NativeCallStack {
   }
 
   repeated NativeFrame frames = 1;
-}
-
-message MemoryMap {
-  message MemoryRegion {
-    string name = 1;
-    uint64 start_address = 2;
-    uint64 end_address = 3;
-    uint64 file_offset = 4;
-  }
-
-  repeated MemoryRegion regions = 1;
-}
-
-// Proto format for handling O+ JNI global reference creation / deletion.
-message JNIGlobalReferenceEvent {
-  enum Type {
-    UNSPECIFIED = 0;
-    CREATE_GLOBAL_REF = 1;
-    DELETE_GLOBAL_REF = 2;
-    CREATE_WEAK_REF = 3;
-    DELETE_WEAK_REF = 4;
-  };
-
-  Type event_type = 1;
-  int64 timestamp = 2;
-  NativeBacktrace backtrace = 3;
-  int32 object_tag = 4;
-  int64 ref_value = 5;
-
-  // Same as in AllocationEvent.
-  int32 thread_id = 6;
-
-  // Same as in AllocationEvent.
-  string thread_name = 7;
-}
-
-message JNIGlobalRefsEventsRequest {
-  Session session = 1;
-  int64 start_time = 2;  // inclusive;
-  int64 end_time = 3; // exclusive;
-
-  // Ignore |start_time| - include only objects that are still
-  // alive at point in time specified by |end_time|
-  bool live_objects_only = 4;
-}
-
-message BatchJNIGlobalRefEvent {
-  int32 pid = 1;
-  int64 timestamp = 2;
-  repeated JNIGlobalReferenceEvent events = 3;
-  MemoryMap memory_map = 4;
-  repeated ThreadInfo thread_infos = 5;
-}
-
-// Proto format for handling O+ allocation data.
-message AllocationEvent {
-  message Allocation {
-    int32 tag = 1;
-    int32 class_tag = 2;
-    int64 size = 3;
-    // Length for array objects. For non-arrays, set to -1.
-    int32 length = 4;
-
-    // Profiler-generated Id representing a thread.
-    // Valid id starts at 1 as 0 is used as a default no-value.
-    int32 thread_id = 5;
-
-    // Profiler-Id representing the allocation stack.
-    // Valid id starts at 1 as 0 is used as a default no-value.
-    int32 stack_id = 6;
-
-    // Which heap an object was allocated from.
-    // The id's are manually mapped to their corresponding names
-    // in Studio (e.g. Zygote vs App).
-    int32 heap_id = 7;
-
-    // Entire list of methods corresponding to the allocation stack.
-    // Note that this is only used for temporary storage in perfa.
-    // When the data is sent from perfa->perfd, the list is encoded
-    // as |stack_id| above, and the encoded data is stored/sent
-    // separately using EncodedAllocationStack.
-    // First entry is top of stack.
-    repeated int64 method_ids = 8;
-    // Similar to |method_ids| above, this is only for temporary
-    // storage. The actual converted line numbers are stored/sent to
-    // studio via EncodedAllocationStack.
-    repeated int64 location_ids = 9;
-    // Temporary storage in perfa only. The thread info will be
-    // encoded into |thread_id| before transfer from perfa->perfd.
-    // The thread id -> name mapping is sent separately via ThreadInfo
-    // messages.
-    string thread_name = 10;
-  }
-
-  message Deallocation {
-    int32 tag = 1;
-
-    // The following are host/client-side only (e.g. Studio-only).
-    int32 class_tag = 2;
-    int64 alloc_time = 3;
-    int64 size = 4;
-    // Length for array objects. For non-arrays, set to -1.
-    int32 length = 5;
-
-    // Thread + Stack Id of the allocation of the same object.
-    int32 thread_id = 6;
-    int32 stack_id = 7;
-
-    int32 heap_id = 8;
-  }
-
-  // If it is an allocation event, this marks the exact time
-  // when the alloc happens. If it is a deallocation event, this
-  // should match the last gc end time.
-  int64 timestamp = 2;
-
-  oneof event {
-    // Special case for java/lang/Class object allocations.
-    // Note that a Klass event is expected to precede
-    // any Allocation which references its class via
-    // the class_tag field.
-    AllocatedClass class_data = 3;
-    Allocation alloc_data = 4;
-    Deallocation free_data = 5;
-  }
 }
 
 message ForceGarbageCollectionRequest {

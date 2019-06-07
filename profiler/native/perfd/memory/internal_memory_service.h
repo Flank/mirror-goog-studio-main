@@ -50,11 +50,12 @@ class InternalMemoryServiceImpl final
                              proto::EmptyMemoryReply *reply) override;
 
   grpc::Status RecordAllocationEvents(
-      grpc::ServerContext *context, const proto::BatchAllocationSample *request,
+      grpc::ServerContext *context,
+      const proto::AllocationEventsRequest *request,
       proto::EmptyMemoryReply *reply) override;
 
   grpc::Status RecordJNIRefEvents(grpc::ServerContext *context,
-                                  const proto::BatchJNIGlobalRefEvent *request,
+                                  const proto::JNIRefEventsRequest *request,
                                   proto::EmptyMemoryReply *reply) override;
 
   grpc::Status RecordAllocationSamplingRateEvent(

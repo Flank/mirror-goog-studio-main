@@ -26,11 +26,13 @@ using grpc::ClientContext;
 using grpc::Status;
 using profiler::Agent;
 using profiler::SteadyClock;
+using profiler::proto::AllocationEventsRequest;
 using profiler::proto::AllocationSamplingRateEventRequest;
 using profiler::proto::AllocStatsRequest;
 using profiler::proto::EmptyMemoryReply;
 using profiler::proto::GcStatsRequest;
 using profiler::proto::InternalMemoryService;
+using profiler::proto::JNIRefEventsRequest;
 using profiler::proto::MemoryData;
 
 namespace {
@@ -86,12 +88,14 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
       }});
 }
 
-void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
+void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 
+  AllocationEventsRequest request;
   request.set_pid(getpid());
+  request.mutable_sample()->CopyFrom(sample);
   Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
@@ -99,12 +103,14 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
       }});
 }
 
-void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
+void EnqueueJNIGlobalRefEvents(const proto::BatchJNIGlobalRefEvent& sample) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 
+  JNIRefEventsRequest request;
   request.set_pid(getpid());
+  request.mutable_sample()->CopyFrom(sample);
   Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
