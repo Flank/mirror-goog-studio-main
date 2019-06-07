@@ -1390,9 +1390,15 @@ public abstract class TaskManager {
 
         // Set up clean tasks
         TaskProvider<Task> cleanTask = taskFactory.named("clean");
+        CxxModuleModel module = tryCreateCxxModuleModel(scope.getGlobalScope());
+
+        if (module == null) {
+            return;
+        }
+
         TaskFactoryUtils.dependsOn(
                 cleanTask,
-                taskFactory.register(new ExternalNativeCleanTask.CreationAction(generator, scope)));
+                taskFactory.register(new ExternalNativeCleanTask.CreationAction(module, scope)));
     }
 
     /** Creates the tasks to build unit tests. */

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
-import com.google.common.truth.Truth.*
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class CMakeSettingsConfigurationBuilderTest {

@@ -25,7 +25,7 @@ import org.mockito.Mockito.mock
 /**
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
  */
-class BasicCmakeMock : BasicModuleModelMock() {
+open class BasicCmakeMock : BasicModuleModelMock() {
 
     // Walk all vals in the model and invoke them
     val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
@@ -49,4 +49,6 @@ class BasicCmakeMock : BasicModuleModelMock() {
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
     }
+
+
 }

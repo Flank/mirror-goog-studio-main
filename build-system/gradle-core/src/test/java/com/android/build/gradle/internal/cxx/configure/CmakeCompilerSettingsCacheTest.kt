@@ -21,8 +21,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.concurrent.thread
 
 class CmakeCompilerSettingsCacheTest {
 

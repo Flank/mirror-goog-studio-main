@@ -24,6 +24,8 @@ import com.android.utils.FileUtils.join
 import org.mockito.Mockito
 
 const val DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "different-mock-cmake-settings-configuration"
+const val NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-abi-in-build-root-mock-cmake-settings-configuration"
+const val NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION = "no-variant-in-build-root-mock-cmake-settings-configuration"
 
 /**
  * Set up a basic environment that will result in a CMake [CxxModuleModel]
@@ -32,8 +34,7 @@ class CmakeSettingsMock : BasicModuleModelMock() {
     val module by lazy { tryCreateCxxModuleModel(global, cmakeFinder)!! }
     val variant by lazy { createCxxVariantModel(module, baseVariantData) }
     val abi by lazy { createCxxAbiModel(variant, Abi.X86, global, baseVariantData) }
-
-    private val coreExternalNativeCmakeOptions = Mockito.mock(
+    val coreExternalNativeCmakeOptions = Mockito.mock(
         CoreExternalNativeCmakeOptions::class.java,
         throwUnmocked
     )!!
@@ -55,7 +56,6 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "name": "$DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                     "inheritEnvironments": ["ndk"],
                     "generator": "some other generator",
-                    "configurationType": "${Macro.GRADLE_CMAKE_BUILD_TYPE.ref}",
                     "buildRoot": "some other build root folder/${Macro.GRADLE_VARIANT_NAME.ref}/${Macro.ABI.ref}",
                     "cmakeExecutable": "my/path/to/cmake",
                     "cmakeToolchain": "my/path/to/toolchain",
@@ -71,17 +71,22 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                         {"name": "${CmakeProperty.CMAKE_SYSTEM_VERSION}", "value": "${Macro.PLATFORM_SYSTEM_VERSION.ref}"},
                         {"name": "${CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS}", "value": "ON"},
                         {"name": "${CmakeProperty.CMAKE_ANDROID_NDK}", "value": "${Macro.NDK_DIR.ref}"},
-                        {"name": "${CmakeProperty.CMAKE_TOOLCHAIN_FILE}", "value": "${Macro.NDK_CMAKE_TOOLCHAIN.ref}"},
                         {"name": "${CmakeProperty.CMAKE_MAKE_PROGRAM}", "value": "${Macro.NINJA_EXE.ref}"},
                         {"name": "${CmakeProperty.CMAKE_C_FLAGS}", "value": "-DTEST_C_FLAG -DTEST_C_FLAG_2"},
                         {"name": "${CmakeProperty.CMAKE_CXX_FLAGS}", "value": "-DTEST_CPP_FLAG"},
                     ]
-                }]
+                }, {
+                    "name": "$NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
+                    "inheritEnvironments": ["ndk"],
+                    "buildRoot": "project-build-root/${Macro.GRADLE_VARIANT_NAME.ref}"
+                }, {
+                    "name": "$NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
+                    "inheritEnvironments": ["ndk"],
+                    "buildRoot": "project-build-root/${Macro.ABI.ref}"
+                } ]
             }""".trimIndent())
         Mockito.doReturn(makefile).`when`(cmake).path
         projectRootDir.mkdirs()
         makefile.writeText("# written by ${BasicCmakeMock::class}")
     }
-
-
 }

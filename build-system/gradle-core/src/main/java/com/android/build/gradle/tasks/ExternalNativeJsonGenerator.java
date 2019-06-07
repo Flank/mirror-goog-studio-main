@@ -34,6 +34,7 @@ import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelSer
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
 import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
+import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -440,7 +441,9 @@ public abstract class ExternalNativeJsonGenerator {
                 getCxxBuildModel(scope.getGlobalScope().getProject().getGradle());
         for (Abi abi : variant.getValidAbiList()) {
             CxxAbiModel model =
-                    createCxxAbiModel(variant, abi, scope.getGlobalScope(), scope.getVariantData());
+                    rewriteCxxAbiModelWithCMakeSettings(
+                            createCxxAbiModel(
+                                    variant, abi, scope.getGlobalScope(), scope.getVariantData()));
             abis.add(model);
             registerAbi(cxxBuildModel, model);
 
@@ -530,13 +533,6 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    // This should not be annotated with @OutputDirectory because getNativeBuildConfigurationsJsons
-    // is already annotated with @OutputFiles
-    public File getJsonFolder() {
-        return variant.getJsonFolder();
-    }
-
-    @NonNull
     @Input // We don't need contents of the files in the generated JSON, just the path.
     public File getNdkFolder() {
         return variant.getModule().getNdkFolder();
@@ -606,5 +602,4 @@ public abstract class ExternalNativeJsonGenerator {
         }
         return result;
     }
-
 }

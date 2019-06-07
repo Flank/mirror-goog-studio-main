@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.google.common.truth.Truth.assertThat
 
 import org.junit.Test
@@ -37,7 +38,7 @@ class ModelRewriteUtilsKtTest {
             )
             val cmakeAbiPrime = abi.cmake!!.replaceWith(
                 cmakeArtifactsBaseFolder = { File("my/build-root") },
-                generator = { "my-generator" }
+                effectiveConfiguration = { CMakeSettingsConfiguration() }
             )
             val abiPrime = abi.replaceWith(
                 cmake = { cmakeAbiPrime },
@@ -48,7 +49,6 @@ class ModelRewriteUtilsKtTest {
             assertThat(modulePrime.cmakeToolchainFile.path.replace('\\', '/')).contains("my/toolchain")
             assertThat(cmakeAbiPrime.cmakeArtifactsBaseFolder.path.replace('\\', '/')).contains("my/build-root")
             assertThat(abiPrime.cxxBuildFolder.path.replace('\\', '/')).contains("my/build-root")
-            assertThat(abiPrime.cmake!!.generator.replace('\\', '/')).isEqualTo("my-generator")
         }
     }
 }

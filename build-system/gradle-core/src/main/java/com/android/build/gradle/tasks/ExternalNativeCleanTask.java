@@ -17,8 +17,11 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
+import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.createCxxAbiModel;
+import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
+import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.process.ProcessOutputJunctionKt.createProcessOutputJunction;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
@@ -27,6 +30,9 @@ import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxModuleModel;
+import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
@@ -34,7 +40,6 @@ import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
-import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -42,9 +47,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import org.gradle.api.provider.Provider;
 
 /**
  * Task that takes set of JSON files of type NativeBuildConfigValue and does clean steps with them.
@@ -53,9 +56,9 @@ import org.gradle.api.provider.Provider;
  * is left to the underlying build system.
  */
 public class ExternalNativeCleanTask extends NonIncrementalTask {
-
     private EvalIssueReporter evalIssueReporter;
-    @NonNull private Provider<ExternalNativeJsonGenerator> generator;
+    private CxxVariantModel variant;
+    private List<CxxAbiModel> abis;
 
     @Override
     protected void doTaskAction() throws ProcessException, IOException {
@@ -65,9 +68,15 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
             infoln("finding existing JSONs");
 
             List<File> existingJsons = Lists.newArrayList();
-            for (File json : getNativeBuildConfigurationsJsons()) {
-                if (json.isFile()) {
-                    existingJsons.add(json);
+            for (CxxAbiModel abi : abis) {
+                if (getJsonFile(abi).isFile()) {
+                    existingJsons.add(getJsonFile(abi));
+                } else {
+                    // This is infoln instead of warnln because clean considers all possible
+                    // ABIs while cleaning
+                    infoln(
+                            "Json file not found so contents couldn't be cleaned %s",
+                            getJsonFile(abi));
                 }
             }
 
@@ -85,22 +94,6 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
             }
             infoln("about to execute %s clean commands", cleanCommands.size());
             executeProcessBatch(cleanCommands, targetNames);
-
-            if (!getStlSharedObjectFiles().isEmpty()) {
-                infoln("remove STL shared object files");
-                for (Abi abi : getStlSharedObjectFiles().keySet()) {
-                    File stlSharedObjectFile = checkNotNull(getStlSharedObjectFiles().get(abi));
-                    File objAbi =
-                            FileUtils.join(
-                                    getObjFolder(), abi.getTag(), stlSharedObjectFile.getName());
-
-                    if (objAbi.delete()) {
-                        infoln("removed file %s", objAbi);
-                    } else {
-                        infoln("failed to remove file %s", objAbi);
-                    }
-                }
-            }
             infoln("clean complete");
         }
     }
@@ -124,7 +117,7 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
             }
             infoln("%s", processBuilder);
             createProcessOutputJunction(
-                            this.getObjFolder(),
+                            variant.getObjFolder(),
                             "android_gradle_clean_" + commandIndex,
                             processBuilder,
                             getLogger(),
@@ -137,14 +130,25 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
     }
 
     public static class CreationAction extends TaskCreationAction<ExternalNativeCleanTask> {
-        @NonNull private final Provider<ExternalNativeJsonGenerator> generator;
         @NonNull private final VariantScope variantScope;
+        @NonNull private final CxxVariantModel variant;
+        @NonNull private final List<CxxAbiModel> abis = Lists.newArrayList();
 
-        public CreationAction(
-                @NonNull Provider<ExternalNativeJsonGenerator> generator,
-                @NonNull VariantScope scope) {
-            this.generator = generator;
+        public CreationAction(@NonNull CxxModuleModel module, @NonNull VariantScope scope) {
             this.variantScope = scope;
+            this.variant = createCxxVariantModel(module, scope.getVariantData());
+            // Attempt to clean every possible ABI even those that aren't currently built.
+            // This covers cases where user has changed abiFilters or platform. We don't want
+            // to leave stale results hanging around.
+            for (Abi abi : Abi.values()) {
+                abis.add(
+                        rewriteCxxAbiModelWithCMakeSettings(
+                                createCxxAbiModel(
+                                        variant,
+                                        abi,
+                                        scope.getGlobalScope(),
+                                        scope.getVariantData())));
+            }
         }
 
         @NonNull
@@ -162,31 +166,9 @@ public class ExternalNativeCleanTask extends NonIncrementalTask {
         @Override
         public void configure(@NonNull ExternalNativeCleanTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.generator = generator;
+            task.variant = variant;
+            task.abis = abis;
             task.evalIssueReporter = variantScope.getGlobalScope().getErrorHandler();
         }
-    }
-
-    @NonNull
-    private List<File> getNativeBuildConfigurationsJsons() {
-        // Attempt to clean every possible ABI even those that aren't currently built.
-        // This covers cases where user has changed abiFilters or platform. We don't want
-        // to leave stale results hanging around.
-        List<String> abiNames = Lists.newArrayList();
-        for (Abi abi : Abi.values()) {
-            abiNames.add(abi.getTag());
-        }
-        ExternalNativeJsonGenerator jsonGenerator = generator.get();
-        return ExternalNativeBuildTaskUtils.getOutputJsons(jsonGenerator.getJsonFolder(), abiNames);
-    }
-
-    @NonNull
-    private Map<Abi, File> getStlSharedObjectFiles() {
-        return generator.get().getStlSharedObjectFiles();
-    }
-
-    @NonNull
-    private File getObjFolder() {
-        return generator.get().getObjFolder();
     }
 }

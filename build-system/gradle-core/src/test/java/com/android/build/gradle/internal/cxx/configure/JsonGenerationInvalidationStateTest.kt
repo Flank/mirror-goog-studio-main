@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.cxx.configure
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files

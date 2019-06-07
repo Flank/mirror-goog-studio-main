@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -37,9 +38,9 @@ interface CxxCmakeAbiModel {
     val cmakeArtifactsBaseFolder: File
 
     /**
-     * The backend generator to use.
+     * The effective CMakeSettings
      */
-    val generator: String
+    val effectiveConfiguration : CMakeSettingsConfiguration
 }
 
 /**

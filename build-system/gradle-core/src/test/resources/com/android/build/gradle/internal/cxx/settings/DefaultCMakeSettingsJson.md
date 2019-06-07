@@ -29,7 +29,7 @@ Any changes here will affect most C/C++ users.
         },
         {
           "name": "ANDROID_PLATFORM",
-          "value": "${ndk.systemVersion}"
+          "value": "${ndk.platform}"
         },
         {
           "name": "CMAKE_ANDROID_ARCH_ABI",
@@ -66,10 +66,6 @@ Any changes here will affect most C/C++ users.
         {
           "name": "CMAKE_SYSTEM_VERSION",
           "value": "${ndk.systemVersion}"
-        },
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "${ndk.toolchain}"
         }
       ]
     }

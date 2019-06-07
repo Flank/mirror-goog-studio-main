@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import java.io.File
 
 /**
@@ -43,12 +44,12 @@ fun CxxAbiModel.replaceWith(
  */
 fun CxxCmakeAbiModel.replaceWith(
     cmakeArtifactsBaseFolder : () -> File,
-    generator : () -> String
+    effectiveConfiguration : () -> CMakeSettingsConfiguration
 ) : CxxCmakeAbiModel {
     val original = this
     return object : CxxCmakeAbiModel by original {
         override val cmakeArtifactsBaseFolder get() = cmakeArtifactsBaseFolder()
-        override val generator get() = generator()
+        override val effectiveConfiguration get() = effectiveConfiguration()
     }
 }
 

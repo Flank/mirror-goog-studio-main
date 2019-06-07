@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.ndk.NdkInstallStatus
 import com.android.build.gradle.internal.ndk.NdkPlatform
 import com.android.build.gradle.internal.ndk.NdkR19Info
 import com.android.build.gradle.internal.scope.GlobalScope
-import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.ProjectOptions
@@ -117,10 +116,7 @@ open class BasicModuleModelMock {
         GlobalScope::class.java,
         throwUnmocked
     )
-    val extension: BaseExtension = mock(
-        BaseExtension::class.java,
-        throwUnmocked
-    )
+
     val externalNativeBuild: ExternalNativeBuild = mock(
         ExternalNativeBuild::class.java,
         throwUnmocked
@@ -142,14 +138,6 @@ open class BasicModuleModelMock {
         BaseVariantData::class.java,
         throwUnmocked
     )
-    val variantScope = mock(
-        VariantScope::class.java,
-        throwUnmocked
-    )
-    val gradleVariantConfiguration = mock(
-        GradleVariantConfiguration::class.java,
-        throwUnmocked
-    )
     val coreExternalNativeBuildOptions = mock(
         ExternalNativeBuildOptions::class.java,
         throwUnmocked
@@ -167,22 +155,11 @@ open class BasicModuleModelMock {
         ProjectOptions::class.java,
         throwUnmocked
     )
-    val splits = mock(
-        Splits::class.java,
-        throwUnmocked
-    )
-    val abiSplitOptions = mock(
-        AbiSplitOptions::class.java,
-        throwUnmocked
-    )
     val project = mock(
         Project::class.java,
         throwUnmocked
     )
-    val coreBuildType = mock(
-        CoreBuildType::class.java,
-        throwUnmocked
-    )
+
     val allPlatformsProjectRootDir = join(projects, "MyProject")
     val projectRootDir = join(allPlatformsProjectRootDir,  "Source", "Android")
     val sdkDir = join(home, "Library", "Android", "sdk")
@@ -190,21 +167,71 @@ open class BasicModuleModelMock {
         NdkHandler::class.java,
         throwUnmocked
     )
-    val productFlavor = mock(
-        ProductFlavor::class.java,
-        throwUnmocked
-    )
+
     val minSdkVersion = DefaultApiVersion(19)
     val cmakeFinder = mock(
         CmakeLocator::class.java,
         throwUnmocked
     )
-    val cmakeVersionProvider = { _ : File -> Revision.parseRevision(defaultCmakeVersion.toString())}
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()
     }
     private fun <T> uninitialized(): T = null as T
+
+    fun mockModule(appName : String) : File {
+        val appFolder = join(projectRootDir, appName)
+        val buildDir = File(appFolder, "build")
+        val intermediates = File(buildDir, "intermediates")
+        val extension: BaseExtension = mock(
+            BaseExtension::class.java,
+            throwUnmocked
+        )
+        val abiSplitOptions = mock(
+            AbiSplitOptions::class.java,
+            throwUnmocked
+        )
+        val gradleVariantConfiguration = mock(
+            GradleVariantConfiguration::class.java,
+            throwUnmocked
+        )
+        val splits = mock(
+            Splits::class.java,
+            throwUnmocked
+        )
+        val coreBuildType = mock(
+            CoreBuildType::class.java,
+            throwUnmocked
+        )
+        val productFlavor = mock(
+            ProductFlavor::class.java,
+            throwUnmocked
+        )
+        doReturn(intermediates).`when`(global).intermediatesDir
+        doReturn(appFolder).`when`(project).projectDir
+        doReturn(buildDir).`when`(project).buildDir
+        doReturn(extension).`when`(global).extension
+
+        doReturn(extension).`when`(global).extension
+        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
+        doReturn(false).`when`(extension).generatePureSplits
+
+        doReturn(splits).`when`(extension).splits
+
+        doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
+        doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
+            .externalNativeBuildOptions
+        doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
+        doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
+        doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
+        doReturn(abiSplitOptions).`when`(splits).abi
+        doReturn(setOf<String>()).`when`(splits).abiFilters
+        doReturn(false).`when`(abiSplitOptions).isUniversalApk
+        doReturn(true).`when`(coreBuildType).isDebuggable
+        doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
+        doReturn(":$appName").`when`(project).path
+        return appFolder
+    }
 
     init {
         val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
@@ -233,35 +260,26 @@ open class BasicModuleModelMock {
             .onEach { it.parentFile.mkdirs() }
             .onEach { it.writeText("fake STL generated by BasicModuleModelMock") }
 
-        doReturn(extension).`when`(global).extension
-        doReturn(externalNativeBuild).`when`(extension).externalNativeBuild
         doReturn(cmake).`when`(externalNativeBuild).cmake
         doReturn(ndkBuild).`when`(externalNativeBuild).ndkBuild
         doReturn(null).`when`(cmake).path
         doReturn(null).`when`(ndkBuild).path
         doReturn(null).`when`(cmake).buildStagingDirectory
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
-        doReturn(gradleVariantConfiguration).`when`(baseVariantData).variantConfiguration
-        doReturn(variantScope).`when`(baseVariantData).scope
-        doReturn(coreExternalNativeBuildOptions).`when`(gradleVariantConfiguration)
-            .externalNativeBuildOptions
-        doReturn(coreNdkOptions).`when`(gradleVariantConfiguration).ndkConfig
         doReturn(setOf<String>()).`when`(coreNdkOptions).abiFilters
         doReturn("debug").`when`(baseVariantData).name
+        doReturn(projectRootDir).`when`(project).rootDir
         projectRootDir.mkdirs()
         sdkDir.mkdirs()
 
         doReturn(sdkComponents).`when`(global).sdkComponents
         doReturn(projectOptions).`when`(global).projectOptions
         doReturn(project).`when`(global).project
-        val app = join(projectRootDir, "app1")
-        val buildDir = File(app, "build")
-        val intermediates = File(buildDir, "intermediates")
-        doReturn(intermediates).`when`(global).intermediatesDir
+
         doReturn(sdkDir).`when`(sdkComponents).getSdkFolder()
         doReturn(false).`when`(projectOptions)
             .get(BooleanOption.ENABLE_NATIVE_COMPILER_SETTINGS_CACHE)
-        doReturn(false).`when`(projectOptions)
+        doReturn(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION.defaultValue).`when`(projectOptions)
             .get(BooleanOption.ENABLE_CMAKE_BUILD_COHABITATION)
         doReturn(true)
             .`when`(projectOptions).get(BooleanOption.BUILD_ONLY_TARGET_ABI)
@@ -269,25 +287,13 @@ open class BasicModuleModelMock {
             .`when`(projectOptions).get(BooleanOption.ENABLE_SIDE_BY_SIDE_CMAKE)
         doReturn(null)
             .`when`(projectOptions).get(StringOption.IDE_BUILD_TARGET_ABI)
-        doReturn(false).`when`(extension).generatePureSplits
-        doReturn(splits).`when`(extension).splits
-        doReturn(abiSplitOptions).`when`(splits).abi
-        doReturn(setOf<String>()).`when`(splits).abiFilters
-        doReturn(false).`when`(abiSplitOptions).isUniversalApk
-        doReturn(":app1").`when`(project).path
-        doReturn(app).`when`(project).projectDir
-        doReturn(buildDir).`when`(project).buildDir
-        doReturn(projectRootDir).`when`(project).rootDir
+
         doReturn(defaultCmakeVersion.toString()).`when`(cmake).version
         doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).supportedAbis
         doReturn(listOf(Abi.X86)).`when`(ndkInstallStatus.getOrThrow()).defaultAbis
-        doReturn(coreBuildType).`when`(gradleVariantConfiguration).buildType
-        doReturn(true).`when`(coreBuildType).isDebuggable
+
         doReturn(Supplier { ndkHandler }).`when`(sdkComponents).ndkHandlerSupplier
         doReturn(ndkInstallStatus).`when`(ndkHandler).ndkPlatform
-        doReturn(productFlavor).`when`(gradleVariantConfiguration).mergedFlavor
-        doReturn(minSdkVersion).`when`(productFlavor).minSdkVersion
-        doReturn(global).`when`(variantScope).globalScope
 
         val ndkInfo = NdkR19Info(ndkFolder)
         doReturn(ndkInfo).`when`(ndkInstallStatus.getOrThrow()).ndkInfo
@@ -296,6 +302,8 @@ open class BasicModuleModelMock {
         doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(join(sdkDir, "cmake", defaultCmakeVersion.toString())).`when`(cmakeFinder)
             .findCmakePath(any(), any(), any(), any())
+
+        mockModule("app1")
     }
 
     class RuntimeExceptionAnswer : Answer<Any> {

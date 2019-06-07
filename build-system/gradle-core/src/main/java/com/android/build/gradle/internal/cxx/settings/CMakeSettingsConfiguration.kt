@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 The Android Open Source Project
+ * Copyright (C) 2019 The Android Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.internal.cxx.settings
+
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 
 /**
  * A 'configurations' element from CMakeSettings.json.
@@ -84,3 +86,13 @@ data class CMakeSettingsConfiguration(
      */
     val variables: List<CMakeSettingsVariable> = listOf()
 )
+
+fun CMakeSettingsConfiguration.getVariableValue(property: CmakeProperty) : String? {
+    var value : String? = null
+    variables.forEach { variable ->
+        if (variable.name == property.name) {
+            value = variable.value
+        }
+    }
+    return value
+}

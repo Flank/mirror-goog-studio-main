@@ -269,6 +269,12 @@ fun List<CommandLineArgument>.onlyKeepServerArguments() =
     }
 
 /**
+ * Keep the [CommandLineArgument]s that should be passed to CMake Server. Remove the rest.
+ */
+fun List<CommandLineArgument>.onlyKeepProperties() =
+    filterIsInstance(DefineProperty::class.java)
+
+/**
  * Remove duplicate property names and other arguments, leaving only the last.
  */
 fun List<CommandLineArgument>.removeSubsumedArguments() =

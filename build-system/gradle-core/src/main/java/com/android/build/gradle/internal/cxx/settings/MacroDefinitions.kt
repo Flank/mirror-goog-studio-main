@@ -18,7 +18,12 @@ package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.configure.ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION
 import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
-import com.android.build.gradle.internal.cxx.settings.Environment.*
+import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
+import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
+import com.android.build.gradle.internal.cxx.settings.Environment.NDK
+import com.android.build.gradle.internal.cxx.settings.Environment.NDK_ABI
+import com.android.build.gradle.internal.cxx.settings.Environment.NDK_EXPOSED_BY_HOST
+import com.android.build.gradle.internal.cxx.settings.Environment.NDK_PLATFORM
 
 /**
  * Define built-in macros for CMakeSettings.json. Built-in means they're defined by the host
@@ -179,6 +184,16 @@ enum class Macro(
         environment = GRADLE,
         tag = "buildType",
         example = "Debug"),
+    GRADLE_SHORT_CONFIGURATION_HASH(
+        description = "First eight characters of \${ndk.configurationHash}.",
+        environment = GRADLE,
+        tag = "shortConfigurationHash",
+        example = "1m6w461r"),
+    GRADLE_CONFIGURATION_HASH(
+        description = "Hash of this CMakeSettings configuration.",
+        environment = GRADLE,
+        tag = "configurationHash",
+        example = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519"),
     BUILT_IN_THIS_FILE(
         description = "Path to this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,

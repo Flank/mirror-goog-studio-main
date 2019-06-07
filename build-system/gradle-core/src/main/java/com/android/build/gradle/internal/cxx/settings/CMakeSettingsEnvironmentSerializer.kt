@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.settings.PropertyValue.LookupPropertyValue
+import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
@@ -23,8 +25,6 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import java.lang.reflect.Type
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.LookupPropertyValue
 
 /**
  * Serializes from json to [CMakeSettingsEnvironment].

@@ -31,7 +31,15 @@ class BuiltInCmakeSettingsJsonKtTest {
     fun `NDK-level CMakeSettings is completely lazy`() {
         EmptyGlobalMock().let {
             val module = tryCreateCxxModuleModel(it.global)!!
-            module.getNdkMetaCmakeSettingsJson()
+            val variant = createCxxVariantModel(
+                module,
+                it.baseVariantData)
+            val abi = createCxxAbiModel(
+                variant,
+                Abi.X86,
+                it.global,
+                it.baseVariantData)
+            abi.getNdkMetaCmakeSettingsJson()
         }
     }
 
@@ -53,8 +61,17 @@ class BuiltInCmakeSettingsJsonKtTest {
 
     @Test
     fun `NDK-level CMakeSettings does not throw exception when evaluated`() {
-        BasicCmakeMock().apply {
-            module.getNdkMetaCmakeSettingsJson().toJsonString()
+        BasicCmakeMock().let {
+            val module = tryCreateCxxModuleModel(it.global)!!
+            val variant = createCxxVariantModel(
+                module,
+                it.baseVariantData)
+            val abi = createCxxAbiModel(
+                variant,
+                Abi.X86,
+                it.global,
+                it.baseVariantData)
+            abi.getNdkMetaCmakeSettingsJson().toJsonString()
         }
     }
 

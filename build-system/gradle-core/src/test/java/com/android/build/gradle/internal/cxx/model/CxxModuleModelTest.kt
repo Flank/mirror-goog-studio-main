@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
 import com.google.common.reflect.ClassPath
@@ -38,27 +39,27 @@ import kotlin.test.fail
  */
 
 private val ALLOWED_MODEL_INTERFACES = setOf(
-    CxxCmakeAbiModel::class.java,
-    CxxBuildModel::class.java,
-    CxxVariantModel::class.java,
-    CxxVariantModel::class.java,
     CxxAbiModel::class.java,
+    CxxBuildModel::class.java,
+    CxxCmakeAbiModel::class.java,
     CxxCmakeModuleModel::class.java,
     CxxModuleModel::class.java,
-    CxxProjectModel::class.java
+    CxxProjectModel::class.java,
+    CxxVariantModel::class.java
 )
 
 private val ALLOWED_PARAMETER_AND_RETURN_TYPES = setOf(
     AbiInfo::class.java,
-    NdkMetaPlatforms::class.java,
+    CMakeSettingsConfiguration::class.java,
     CxxServiceRegistry::class.java,
-    UUID::class.java,
+    File::class.java,
     List::class.java,
+    Map::class.java,
+    NdkMetaPlatforms::class.java,
+    Revision::class.java,
     Set::class.java,
     String::class.java,
-    File::class.java,
-    Revision::class.java,
-    Map::class.java
+    UUID::class.java
 )
 
 class CxxModuleModelTest {
@@ -136,11 +137,19 @@ class CxxModuleModelTest {
     private fun checkTopInterface(type : Class<*>) {
         assertThat(ALLOWED_MODEL_INTERFACES).contains(type)
         assertThat(type.isInterface).isTrue()
-        assertThat(type.fields.size).isEqualTo(0)
+        assertThat(type.fields.size)
+            .named(type.toString())
+            .isLessThan(2) // <-- allow for Companion object
         type.methods.map { checkTopInterfaceMethod(it) }
     }
 
     private fun checkTopLevelClass(type : Class<*>) {
+        if (type.isAnnotation) {
+            return
+        }
+        if (type.isEnum) {
+            return
+        }
         if (type.isInterface) {
             checkTopInterface(type)
             return
@@ -180,7 +189,8 @@ class CxxModuleModelTest {
     }
 
     private fun checkTopInterfaceMethod(method: Method) {
-        if (method.parameterCount != 0) fail("method ${method.name} has parameters")
+        if (method.name == "equals") return
+        if (method.parameterCount != 0) fail("method ${method.toGenericString()} has parameters")
         assertThat(Modifier.toString(method.modifiers))
             .isEqualTo("public abstract")
 

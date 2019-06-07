@@ -55,12 +55,6 @@ interface CxxVariantModel {
     val objFolder: File
 
     /**
-     * Base folder for android_gradle_build.json files
-     *   ex, $moduleRootFolder/.cxx/cmake/debug
-     */
-    val jsonFolder: File
-
-    /**
      * Whether this variant build is debuggable
      */
     val isDebuggableEnabled: Boolean

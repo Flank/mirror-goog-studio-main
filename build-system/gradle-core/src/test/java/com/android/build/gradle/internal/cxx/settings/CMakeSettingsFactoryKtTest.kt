@@ -16,15 +16,10 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
-import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
-import com.android.build.gradle.internal.cxx.model.CxxAbiModelData
-import com.android.build.gradle.internal.cxx.settings.PropertyValue.*
-import com.android.utils.FileUtils.join
+import com.android.build.gradle.internal.cxx.settings.PropertyValue.StringPropertyValue
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import java.io.File
-import java.lang.RuntimeException
 
 class CMakeSettingsFactoryKtTest {
 
@@ -54,28 +49,6 @@ class CMakeSettingsFactoryKtTest {
             assertThat(
                 resolver.resolve("ndk.platformCode", listOf("ndk"))!!.get()
             ).contains("K")
-        }
-    }
-
-    @Test
-    fun `reify single configuration`() {
-        BasicCmakeMock().apply {
-            val configuration =
-                abi.getCMakeSettingsConfiguration(TRADITIONAL_CONFIGURATION_NAME)!!
-            assertThat(configuration.buildRoot)
-                .endsWith(join(File("cmake"), "debug", "x86").path)
-        }
-    }
-
-    @Test
-    fun `fuzz test`() {
-        RandomInstanceGenerator()
-            .strings().forEach { configuration ->
-                RandomInstanceGenerator()
-                .synthetics(CxxAbiModelData::class.java)
-                    .forEach { abi ->
-                        abi.getCMakeSettingsConfiguration(configuration)
-                    }
         }
     }
 
