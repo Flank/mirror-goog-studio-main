@@ -41,6 +41,7 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPI
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
@@ -3159,11 +3160,14 @@ public abstract class TaskManager {
 
         File multiDexKeepProguard =
                 variantScope.getVariantConfiguration().getMultiDexKeepProguard();
-        FileCollection userMainDexListProguardRules;
+        ConfigurableFileCollection mainDexListProguardRules = project.files();
         if (multiDexKeepProguard != null) {
-            userMainDexListProguardRules = project.files(multiDexKeepProguard);
-        } else {
-            userMainDexListProguardRules = project.files();
+            mainDexListProguardRules.from(multiDexKeepProguard);
+        }
+        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
+        if (artifacts.hasFinalProduct(LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)) {
+            mainDexListProguardRules.from(
+                    artifacts.getFinalProduct(LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES));
         }
 
         File multiDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
@@ -3191,7 +3195,7 @@ public abstract class TaskManager {
                 new R8Transform(
                         variantScope,
                         userMainDexListFiles,
-                        userMainDexListProguardRules,
+                        mainDexListProguardRules,
                         inputProguardMapping);
 
         return applyProguardRules(

@@ -21,12 +21,17 @@ import static com.android.testutils.truth.FileSubject.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.fixture.TestVersions;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.ScannerSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.scope.ArtifactTypeUtil;
+import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
@@ -43,9 +48,11 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -157,17 +164,22 @@ public class MultiDexTest {
 
     @Test
     public void checkProguard() throws Exception {
+        Assume.assumeTrue(tool == MainDexListTool.D8);
         checkMinifiedBuild("proguard");
     }
 
     @Test
     public void checkShrinker() throws Exception {
+        Assume.assumeTrue(tool == MainDexListTool.R8);
         checkMinifiedBuild("r8");
     }
 
     public void checkMinifiedBuild(String buildType) throws Exception {
         executor().run(StringHelper.appendCapitalized("assemble", buildType));
+        checkShrunkApk(buildType);
+    }
 
+    private void checkShrunkApk(String buildType) throws Exception {
         assertMainDexContains(buildType, ImmutableList.of());
 
         commonApkChecks(buildType);
@@ -176,6 +188,32 @@ public class MultiDexTest {
                 .doesNotContainClass("Lcom/android/tests/basic/NotUsed;");
         assertThat(project.getApk(ApkType.of(buildType, true), "ics"))
                 .doesNotContainClass("Lcom/android/tests/basic/DeadCode;");
+    }
+
+    /** Regression test for b/133727918. */
+    @Test
+    public void checkLegacyMultidexR8() throws Exception {
+        Assume.assumeTrue(tool == MainDexListTool.R8);
+        GradleBuildResult result =
+                executor()
+                        .withLoggingLevel(LoggingLevel.DEBUG)
+                        .run(StringHelper.appendCapitalized("assemble", "icsR8"));
+
+        try (Scanner scanner = result.getStdout()) {
+            File aaptGeneratedRules =
+                    FileUtils.join(
+                            ArtifactTypeUtil.getOutputDir(
+                                    InternalArtifactType
+                                            .LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES,
+                                    project.getBuildDir()),
+                            "icsR8/manifest_keep.txt");
+
+            ScannerSubject.assertThat(scanner)
+                    .contains(
+                            "[R8] Main dex list config: MainDexListConfig(mainDexRulesFiles=["
+                                    + aaptGeneratedRules
+                                    + "]");
+        }
     }
 
     @Test
