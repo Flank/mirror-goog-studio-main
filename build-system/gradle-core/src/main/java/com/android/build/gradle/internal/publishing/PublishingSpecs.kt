@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.publishing
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS
 import com.android.build.gradle.internal.scope.InternalArtifactType.AIDL_PARCELABLE
@@ -357,7 +356,6 @@ class PublishingSpecs {
         fun api(taskOutputType: T, artifactType: ArtifactType)
         fun runtime(taskOutputType: T, artifactType: ArtifactType)
         fun metadata(taskOutputType: T, artifactType: ArtifactType)
-        fun bundle(taskOutputType: T, artifactType: ArtifactType)
 
         fun testSpec(variantType: VariantType, action: VariantSpecBuilder<com.android.build.api.artifact.ArtifactType>.() -> Unit)
     }
@@ -373,7 +371,6 @@ private val API_ELEMENTS_ONLY = ImmutableList.of(API_ELEMENTS)
 private val RUNTIME_ELEMENTS_ONLY = ImmutableList.of(RUNTIME_ELEMENTS)
 private val API_AND_RUNTIME_ELEMENTS = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS)
 private val METADATA_ELEMENTS_ONLY = ImmutableList.of(METADATA_ELEMENTS)
-private val BUNDLE_ELEMENTS_ONLY = ImmutableList.of(BUNDLE_ELEMENTS)
 
 // --- Implementation of the public Spec interfaces
 
@@ -484,14 +481,6 @@ private class VariantSpecBuilderImpl<in T : com.android.build.api.artifact.Artif
                 taskOutputType)
         specBuilder.artifactType = artifactType
         specBuilder.publishedConfigTypes = METADATA_ELEMENTS_ONLY
-        outputs.add(specBuilder.toSpec())
-    }
-
-    override fun bundle(taskOutputType: T, artifactType: ArtifactType) {
-        val specBuilder = OutputSpecBuilderImpl(
-                taskOutputType)
-        specBuilder.artifactType = artifactType
-        specBuilder.publishedConfigTypes = BUNDLE_ELEMENTS_ONLY
         outputs.add(specBuilder.toSpec())
     }
 

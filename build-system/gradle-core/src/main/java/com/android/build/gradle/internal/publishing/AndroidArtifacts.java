@@ -153,7 +153,6 @@ public class AndroidArtifacts {
         API_ELEMENTS,
         RUNTIME_ELEMENTS,
         METADATA_ELEMENTS,
-        BUNDLE_ELEMENTS,
     }
 
     /** The provenance of artifacts to include. */

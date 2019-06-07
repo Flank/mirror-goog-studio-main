@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dependency;
 
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
@@ -90,8 +89,6 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_LINTPUBLISH = "lintPublish";
 
     public static final String CONFIG_NAME_TESTED_APKS = "testedApks";
-
-    public static final String USAGE_BUNDLE = "android-bundle";
 
     @NonNull private final String variantName;
 
@@ -334,20 +331,6 @@ public class VariantDependencies {
                     wearAttributes.attribute(
                             AndroidTypeAttr.ATTRIBUTE,
                             factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
-
-                    // bundle config for UAM bundle
-                    Configuration bundleElements =
-                            configurations.maybeCreate(variantName + "BundleElements");
-                    bundleElements.setDescription("Bundle elements for " + variantName);
-                    bundleElements.setCanBeResolved(false);
-
-                    final AttributeContainer bundleElementsAttributes =
-                            bundleElements.getAttributes();
-                    VariantAttr variantNameAttr = factory.named(VariantAttr.class, variantName);
-                    bundleElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
-                    bundleElementsAttributes.attribute(
-                            Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, USAGE_BUNDLE));
-                    elements.put(BUNDLE_ELEMENTS, bundleElements);
                 }
 
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
