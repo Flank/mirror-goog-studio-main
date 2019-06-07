@@ -16,13 +16,11 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
-import com.android.build.gradle.internal.scope.GlobalScope
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.Report
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.build.gradle.options.StringOption
-import com.android.utils.appendCapitalized
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
 import org.gradle.api.DefaultTask
@@ -57,13 +55,12 @@ open class BuildArtifactReportTask : DefaultTask() {
                 gson.toJson(report, reportType, writer)
             }
         }
-        for ((type, data) in report.entries) {
+        for ((type, producersData) in report.entries) {
             println(type.name())
             println("-".repeat(type.name().length))
-            for ((index, artifact) in data.withIndex()) {
-                println("BuildableArtifact $index")
-                println("files: ${artifact.files}")
-                println("builtBy: ${artifact.builtBy}")
+            producersData.producers.forEach { producerData: BuildArtifactsHolder.ProducerData ->
+                println("files: ${producerData.files}")
+                println("builtBy: ${producerData.builtBy}")
                 println("")
             }
         }

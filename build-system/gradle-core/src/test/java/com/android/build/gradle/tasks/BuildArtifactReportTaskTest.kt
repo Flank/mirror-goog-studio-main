@@ -16,24 +16,29 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.api.artifact.ArtifactType
 import com.android.build.api.artifact.BuildArtifactType.JAVAC_CLASSES
 import com.android.build.api.artifact.BuildArtifactType.JAVA_COMPILE_CLASSPATH
-import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
+import com.android.build.gradle.internal.api.artifact.toArtifactType
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.fixtures.FakeObjectFactory
+import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
 import com.android.build.gradle.internal.variant2.DslScopeImpl
 import com.google.common.truth.Truth.assertThat
+import com.google.gson.JsonParser
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.RegularFile
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.FileReader
 
 /**
  * Test for [BuildArtifactReportTask].
@@ -47,8 +52,6 @@ class BuildArtifactReportTaskTest {
             FakeEvalIssueReporter(throwOnError = true),
             FakeDeprecationReporter(),
             FakeObjectFactory())
-    private lateinit var task0: Task
-    private lateinit var task1: Task
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().withProjectDir(temporaryFolder.newFolder()).build()
@@ -58,16 +61,28 @@ class BuildArtifactReportTaskTest {
                     "debug",
                     project.file("root"),
                     dslScope)
-        task0 = project.tasks.create("task0")
-        task1 = project.tasks.create("task1")
-        artifactsHolder.createDirectory(JAVAC_CLASSES,
+
+        val output0 = project.objects.fileProperty()
+        val output1 = project.objects.fileProperty()
+        val task0 = project.tasks.register("task0")
+        val task1 = project.tasks.register("task1")
+
+        artifactsHolder.producesFile(
+            InternalArtifactType.MERGED_MANIFESTS,
             BuildArtifactsHolder.OperationType.INITIAL,
-            task0.name,
-            "javac_classes")
-        artifactsHolder.createDirectory(JAVA_COMPILE_CLASSPATH,
-            BuildArtifactsHolder.OperationType.INITIAL,
-            task1.name,
-            "java_compile_classpath")
+            task0,
+            { output0 },
+            "task0_output"
+        )
+
+
+        artifactsHolder.producesFile(
+            InternalArtifactType.MERGED_MANIFESTS,
+            BuildArtifactsHolder.OperationType.APPEND,
+            task1,
+            { output1 },
+            "task1_output"
+        )
     }
 
     @Test
@@ -83,20 +98,15 @@ class BuildArtifactReportTaskTest {
         val outputFile = project.file("report.txt")
         task.init(artifactsHolder::createReport, outputFile)
 
-        artifactsHolder.createBuildableArtifact(
-            JAVAC_CLASSES,
-            BuildArtifactsHolder.OperationType.TRANSFORM,
-            project.files("classes").files,
-            task1.name)
-
         task.report()
 
         val report = BuildArtifactsHolder.parseReport(outputFile)
-        val javacArtifacts = report[JAVAC_CLASSES] ?: throw NullPointerException()
-        assertThat(javacArtifacts).hasSize(2)
-        assertThat(javacArtifacts[0].files.map(File::getName)).containsExactly("javac_classes")
-        assertThat(javacArtifacts[0].builtBy).containsExactly(":task0")
-        assertThat(javacArtifacts[1].files.map(File::getName)).containsExactly("classes")
-        assertThat(javacArtifacts[1].builtBy).containsExactly(":task1")
+        val javacArtifacts = report[InternalArtifactType.MERGED_MANIFESTS] ?: throw NullPointerException()
+        assertThat(javacArtifacts.producers).hasSize(2)
+        assertThat(javacArtifacts.producers[0].files[0]).endsWith("task0_output")
+        assertThat(javacArtifacts.producers[0].builtBy).isEqualTo("task0")
+        assertThat(javacArtifacts.producers[1].files[0]).endsWith("task1_output")
+        assertThat(javacArtifacts.producers[1].builtBy).isEqualTo("task1")
     }
+
 }

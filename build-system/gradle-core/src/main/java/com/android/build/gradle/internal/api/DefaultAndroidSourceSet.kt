@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.api
 
 import com.android.SdkConstants
-import com.android.build.api.artifact.ArtifactType
 import com.android.build.gradle.api.AndroidSourceDirectorySet
 import com.android.build.gradle.api.AndroidSourceFile
 import com.android.build.gradle.api.AndroidSourceSet
@@ -33,12 +32,8 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.DelayedActionsExecutor
-import com.android.build.gradle.internal.scope.VariantBuildArtifactsHolder
-import com.android.builder.model.AndroidProject.FD_INTERMEDIATES
 import com.android.builder.model.SourceProvider
-import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import groovy.lang.Closure
 import org.gradle.api.Project
@@ -67,16 +62,6 @@ open class DefaultAndroidSourceSet @Inject constructor(
     private val jniLibs: AndroidSourceDirectorySet
     private val shaders: AndroidSourceDirectorySet
     private val displayName : String = GUtil.toWords(this.name)
-    private val buildArtifactsHolder: BuildArtifactsHolder =
-            VariantBuildArtifactsHolder(
-                project,
-                name,
-                FileUtils.join(project.buildDir, FD_INTERMEDIATES, "sources", name),
-                dslScope)
-
-    internal val buildArtifactsReport
-            : Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
-        get() = buildArtifactsHolder.createReport()
 
     init {
         javaSource = DefaultAndroidSourceDirectorySet(

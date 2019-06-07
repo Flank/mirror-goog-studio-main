@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.api.dsl.DslScope
 import com.android.utils.FileUtils
 import com.android.utils.appendCapitalized
 import com.google.common.base.Joiner
-import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import org.gradle.api.DefaultTask
@@ -48,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.logging.Logger
 
-typealias Report = Map<ArtifactType, List<BuildArtifactsHolder.BuildableArtifactData>>
+typealias Report = Map<ArtifactType, BuildArtifactsHolder.ProducersData>
 
 /**
  * Buildable artifact holder.
@@ -924,9 +923,9 @@ abstract class BuildArtifactsHolder(
         createOutput(artifactType, BuildableArtifactImpl(project.files()))
     }
 
-    fun createReport() : Report =
-            artifactRecordMap.entries.associate {artifactRecordMap
-                it.key to it.value.history.map(this::newArtifact)
+    fun createReport(): Report =
+            fileProducersMap.entrySet().associate {artifactRecordMap
+                it.key to it.value.toProducersData()
             }
 
     /**
@@ -943,20 +942,6 @@ abstract class BuildArtifactsHolder(
 
 
     /**
-     * Creates a File for a task. Prefer [createFile] when artifact type is known and unique for
-     * the output file. This will stuff all the tasks directly under "multi-types" leading to
-     * potentially confusing directory structure.
-     *
-     * @param task the task creating the output file.
-     * @param filename name of the file.
-     */
-    internal fun createFile(task: Task, filename : String) =
-            FileUtils.join(
-                InternalArtifactType.Category.INTERMEDIATES.getOutputDir(rootOutputDir()),
-                MULTI_TYPES,
-                task.name,
-                filename)
-    /**
      * Return history of all [BuildableArtifact] for an [ArtifactType].
      */
     internal fun getHistory(artifactType: ArtifactType) : List<BuildableArtifact> {
@@ -965,37 +950,36 @@ abstract class BuildArtifactsHolder(
     }
 
     /** A data class for use with GSON. */
-    data class BuildableArtifactData(
-        @SerializedName("files") var files : Collection<File>,
-        @SerializedName("builtBy") var builtBy : List<String>)
+    data class ProducerData(
+        @SerializedName("files")
+        val files: List<String>,
+        @SerializedName("builtBy")
+        val builtBy : String
+    )
 
-    /** Create [BuildableArtifactData] from [BuildableArtifact]. */
-    private fun newArtifact(artifact : BuildableArtifact) =
-            // getDependencies accepts null.
-        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-        BuildableArtifactData(
-                artifact.files,
-                artifact.buildDependencies.getDependencies(null).map(Task::getPath))
+    data class ProducersData(
+        @SerializedName("producer")
+        val producers: List<ProducerData>
+    )
 
     companion object {
-        const val MULTI_TYPES = "multi-types"
 
         fun parseReport(file : File) : Report {
-            val result = mutableMapOf<ArtifactType, List<BuildableArtifactData>>()
+            val result = mutableMapOf<ArtifactType, ProducersData>()
             val parser = JsonParser()
             FileReader(file).use { reader ->
                 for ((key, value) in parser.parse(reader).asJsonObject.entrySet()) {
-                    val history =
-                            value.asJsonArray.map {
-                                val obj = it.asJsonObject
-                                BuildableArtifactData(
-                                        obj.getAsJsonArray("files").map {
-                                            File(it.asJsonObject.get("path").asString)
-                                        },
-                                        obj.getAsJsonArray("builtBy").map(
-                                                JsonElement::getAsString))
-                            }
-                    result[key.toArtifactType()] = history
+                    val obj = value.asJsonObject
+                    val producers = obj.getAsJsonArray("producer").map {
+                        ProducerData(
+                            it.asJsonObject.getAsJsonArray("files").map {
+                                it.asString
+                            },
+                            it.asJsonObject.get("builtBy").asString
+                        )
+                    }
+
+                    result[key.toArtifactType()] = ProducersData(producers)
                 }
             }
             return result

@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemLocation
@@ -115,6 +114,8 @@ class ProducersMap<T: FileSystemLocation>(
         producersMap[artifactType] = source as Producers<T>
     }
 
+    fun entrySet() = producersMap.entries
+
     /**
      * possibly empty list of all the [org.gradle.api.Task]s (and decoration) producing this
      * artifact type.
@@ -189,13 +190,17 @@ class ProducersMap<T: FileSystemLocation>(
         // even if we currently have only one, but more than one was registered, return true so
         // we do not have overlapping tasks output.
         fun hasMultipleProducers() = producerCount.get() > 1
+
+        fun toProducersData() = BuildArtifactsHolder.ProducersData(
+            map { producer -> producer.toProducerData() }
+        )
     }
 
     /**
      * A registered producer of an artifact. The artifact is produced by a Task identified by its
      * name and a requested file name.
      */
-    class Producer<T>(
+    class Producer<T: FileSystemLocation>(
         private val settableLocation: Property<T>,
         private val originalProperty: Provider<Property<T>>,
         val taskName: String,
@@ -212,6 +217,14 @@ class ProducersMap<T: FileSystemLocation>(
                     "Property.get() is not a correct instance type : ${settableLocation.javaClass.name}")
             }
             return originalProperty.get()
+        }
+
+        fun toProducerData(): BuildArtifactsHolder.ProducerData {
+            return if (originalProperty.isPresent && originalProperty.get().isPresent) {
+                BuildArtifactsHolder.ProducerData(listOf(originalProperty.get().get().asFile.path), taskName)
+            } else {
+                BuildArtifactsHolder.ProducerData(listOf(), taskName)
+            }
         }
     }
 }

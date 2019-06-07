@@ -60,7 +60,7 @@ android {
         for ((artifactType, data) in report) {
             // We may reassign ALL_CLASSES
             if (artifactType != AnchorOutputType.ALL_CLASSES) {
-                assertThat(data).hasSize(1)
+                assertThat(data.producers).hasSize(1)
             }
         }
     }
