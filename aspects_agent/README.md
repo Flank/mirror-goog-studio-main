@@ -57,7 +57,11 @@ to make sure it's not called outside EDT. Please note all annotations need to be
 
 It's worth mentioning that an annotation can also specify a `group`. That's useful to make the agent
 aware of which annotations are related and probably shouldn't be used together. For instance, it doesn't make sense to annotate a method with both
-`@UiThread` and `@Slow`, so these annotations should probably belong to the same group.
+`@UiThread` and `@Slow`, so these annotations should probably belong to the same group. If the group
+is specified for an annotation, it's not mandatory to provide the `aspect` field. This is useful
+when you want to prevent annotation conflicts without necessarily intercepting annotated methods. For
+example, we could add `@AnyThread` to the same group as `@UiThread` and `@Slow` without intercepting
+the methods that can run on any thread.
 
 ### com.android.tools.checker.Assertions
 This file defines a few common assertions.

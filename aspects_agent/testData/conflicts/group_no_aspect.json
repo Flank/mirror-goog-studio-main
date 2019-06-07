@@ -1,0 +1,13 @@
+{
+  "annotations":[
+    {
+      "name":"@com.android.tools.checker.AnotherTestAnnotation",
+      "aspect":"#warn3",
+      "group":"threading"
+    },
+    {
+      "name":"@com.android.tools.checker.ConflictingAnnotation",
+      "group":"threading"
+    }
+  ]
+}

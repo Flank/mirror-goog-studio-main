@@ -1,0 +1,9 @@
+{
+  "annotations":[
+    {
+      "name":"annotations.threading.Slow",
+      "aspect":"#warn3",
+      "group":"threading"
+    }
+  ]
+}

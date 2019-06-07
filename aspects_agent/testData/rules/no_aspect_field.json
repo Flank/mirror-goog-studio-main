@@ -1,5 +1,5 @@
 {
-  "annotations":[
+  "methods":[
     {
       "name":"#warn3",
       "group":"threading"

@@ -63,6 +63,18 @@ public class RulesFile {
             JsonObject object = element.getAsJsonObject();
 
             String name = getElementAsString("name", object);
+            if (isAnnotation && !name.startsWith("@")) {
+                throw new RulesFileException(
+                        "\"name\" field of annotation rules must start with @.");
+            }
+
+            // Some annotations can be defined without aspects, for example to specify the
+            // annotation group to avoid conflicts. In this case, the group attribute is mandatory.
+            if (isAnnotation && !object.has("aspect")) {
+                annotationGroups.put(name.substring(1), getElementAsString("group", object));
+                continue;
+            }
+
             String aspect = getElementAsString("aspect", object);
             aspects.put(aspectKeyProcessor.apply(name), aspectValueProcessor.apply(aspect));
 
@@ -75,6 +87,7 @@ public class RulesFile {
         }
     }
 
+    @NonNull
     private static String getElementAsString(
             @NonNull String elementName, @NonNull JsonObject parent) throws RulesFileException {
         JsonElement element = parent.get(elementName);

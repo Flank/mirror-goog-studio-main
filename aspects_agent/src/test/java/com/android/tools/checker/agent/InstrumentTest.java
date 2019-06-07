@@ -150,6 +150,26 @@ public class InstrumentTest {
     }
 
     @Test
+    public void testConflictingAnnotationsNoAspect()
+            throws NoSuchMethodException, IllegalAccessException, IOException,
+                    InstantiationException, RulesFileException {
+        Set<String> notFound = new HashSet<>();
+        ImmutableMap<String, String> matcher =
+                ImmutableMap.of(
+                        "@com.android.tools.checker.AnotherTestAnnotation",
+                        "com.android.tools.checker.TestAssertions#count");
+        Object instance =
+                loadAndTransform("Test2", matcher, notFound::add, "group_threading.json")
+                        .newInstance();
+        TestAssertions.count = 0;
+        // conflictingMethod is not intercepted by @ConflictingAnnotation (method-level) annotation
+        // because there are no aspects defined for it. However, because it belongs to the same
+        // group as the class-level annotation @AnotherTestAnnotation, we ignore the class's.
+        callMethod(instance, "conflictingMethod");
+        assertEquals(0, TestAssertions.count);
+    }
+
+    @Test
     public void testStaticMethod()
             throws IOException, IllegalAccessException, NoSuchMethodException, RulesFileException {
         Set<String> notFound = new HashSet<>();

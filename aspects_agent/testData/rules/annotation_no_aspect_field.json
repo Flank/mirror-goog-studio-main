@@ -1,0 +1,8 @@
+{
+  "annotations":[
+    {
+      "name":"@com.example.MyAnnotation",
+      "group":"random"
+    }
+  ]
+}

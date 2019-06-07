@@ -52,6 +52,16 @@ public class RulesFileTest {
     }
 
     @Test
+    public void annotationWithoutLeadingAt() throws IOException, RulesFileException {
+        try {
+            parserRulesFile("annotation_without_at.json");
+            fail(); // RulesFileException is expected to be thrown.
+        } catch (RulesFileException ignore) {
+            // expected
+        }
+    }
+
+    @Test
     public void annotationsWithoutGroup() throws IOException, RulesFileException {
         RulesFile rulesFile = parserRulesFile("annotations_no_group.json");
 
@@ -113,9 +123,30 @@ public class RulesFileTest {
     }
 
     @Test
-    public void noAspectField() throws IOException {
+    public void methodNoAspect() throws IOException {
         try {
             parserRulesFile("no_aspect_field.json");
+            fail(); // RulesFileException is expected to be thrown.
+        } catch (RulesFileException ignore) {
+            // expected
+        }
+    }
+
+    @Test
+    public void annotationNoAspect() throws IOException, RulesFileException {
+        RulesFile rulesFile = parserRulesFile("annotation_no_aspect_field.json");
+        Map<String, String> aspects = rulesFile.getAspects();
+        assertTrue(aspects.isEmpty());
+
+        Map<String, String> annotationGroups = rulesFile.getAnnotationGroups();
+        assertEquals(1, annotationGroups.size());
+        assertEquals("random", annotationGroups.get("com.example.MyAnnotation"));
+    }
+
+    @Test
+    public void annotationNoAspectNoGroup() throws IOException {
+        try {
+            parserRulesFile("annotation_no_aspect_field_no_group.json");
             fail(); // RulesFileException is expected to be thrown.
         } catch (RulesFileException ignore) {
             // expected
