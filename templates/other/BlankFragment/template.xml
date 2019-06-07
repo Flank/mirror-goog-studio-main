@@ -43,13 +43,6 @@
         default="true"
         help="Generate static fragment factory methods for easy instantiation" />
 
-    <parameter
-        id="includeCallbacks"
-        name="Include interface callbacks?"
-        type="boolean"
-        default="true"
-        help="Generate event callbacks for communication with an Activity or other fragments" />
-
     <thumbs>
         <thumb>template_blank_fragment.png</thumb>
     </thumbs>

@@ -1,7 +1,5 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-<#if includeCallbacks>import android.content.Context
-import android.net.Uri</#if>
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)}
 import android.view.LayoutInflater
@@ -19,11 +17,6 @@ private const val ARG_PARAM2 = "param2"
 </#if>
 /**
  * A simple [Fragment] subclass.
-<#if includeCallbacks>
- * Activities that contain this fragment must implement the
- * [${className}.OnFragmentInteractionListener] interface
- * to handle interaction events.
- </#if>
  <#if includeFactory>
  * Use the [${className}.newInstance] factory method to
  * create an instance of this fragment.
@@ -34,9 +27,6 @@ class ${className} : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
-</#if>
-<#if includeCallbacks>
-    private var listener: OnFragmentInteractionListener? = null
 </#if>
 <#if includeFactory>
 
@@ -60,43 +50,6 @@ class ${className} : Fragment() {
         }
 </#if>
     }
-
-<#if includeCallbacks>
-    // TODO: Rename method, update argument and hook method into UI event
-    fun onButtonPressed(uri: Uri) {
-            listener?.onFragmentInteraction(uri)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is OnFragmentInteractionListener) {
-            listener = context
-        } else {
-            throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
-    }
-
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     *
-     *
-     * See the Android Training lesson [Communicating with Other Fragments]
-     * (http://developer.android.com/training/basics/fragments/communicating.html)
-     * for more information.
-     */
-    interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
-    }
-</#if>
 
 <#if includeFactory>
     companion object {
