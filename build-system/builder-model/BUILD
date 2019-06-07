@@ -2,6 +2,12 @@ load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
 
+fileset(
+    name = "version.properties",
+    srcs = ["//tools/buildSrc/base:version.properties"],
+    mappings = {"//tools/buildSrc/base:": "com/android/builder/model/"},
+)
+
 # managed by go/iml_to_build
 iml_module(
     name = "studio.android.sdktools.builder-model",
@@ -31,6 +37,7 @@ maven_java_library(
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder-model",
+    resources = [":version.properties"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
