@@ -17,11 +17,11 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.NativeModelHelperKt.getFlatCppFlags;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.NativeModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
@@ -122,7 +122,7 @@ public class NativeBuildPlatformVersionTest {
     private static Set<String> getDistinctPlatformArchitectureCombinations(NativeAndroidProject model) {
         Set<String> platformArchitectures = Sets.newHashSet();
         for (NativeArtifact artifact : model.getArtifacts()) {
-            List<String> flags = NativeModelHelper.getFlatCppFlags(model, artifact);
+            List<String> flags = getFlatCppFlags(model, artifact);
             platformArchitectures.addAll(getMatchingPlatformArchitectureFoldersFromSystem(flags));
             platformArchitectures.addAll(getMatchingPlatformArchitectureFoldersFromPrefix(
                     "--isysroot=", flags));
