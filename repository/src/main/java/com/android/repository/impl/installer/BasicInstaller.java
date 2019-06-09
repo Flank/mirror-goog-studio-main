@@ -27,6 +27,7 @@ import com.android.repository.impl.meta.Archive;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -96,10 +97,12 @@ class BasicInstaller extends AbstractInstaller {
             return true;
         } catch (IOException e) {
             String message = e.getMessage();
-            progress.logWarning(String.format(
-              "An error occurred while preparing SDK package %1$s%2$s",
-              getPackage().getDisplayName(),
-              (message.isEmpty() ? "." : ": " + message + ".")), e);
+            progress.logWarning(
+                    String.format(
+                            "An error occurred while preparing SDK package %1$s%2$s",
+                            getPackage().getDisplayName(),
+                            (Strings.isNullOrEmpty(message) ? "." : ": " + message + ".")),
+                    e);
         }
         return false;
     }
