@@ -76,7 +76,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
         })
     }
 
-    private fun defaultEquals(node: UElement): Boolean {
+    private fun defaultEquals(context: JavaContext, node: UElement): Boolean {
         var resolved: PsiMethod?
 
         if (node is UBinaryExpression) {
@@ -84,6 +84,15 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
             if (resolved == null) {
                 val left = node.leftOperand.getExpressionType() as? PsiClassType
                 val cls = left?.resolve() ?: return false
+
+                if (isKotlin(cls) && (context.evaluator.isSealed(cls) ||
+                            context.evaluator.isData(cls))
+                ) {
+                    // Sealed class doesn't guarantee that it defines equals/hashCode
+                    // but it's likely (we'd need to go look at each inner class)
+                    return false
+                }
+
                 for (m in cls.findMethodsByName("equals", true)) {
                     if (m is PsiMethod) {
                         val parameters = m.parameterList.parameters
@@ -108,7 +117,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
     }
 
     private fun checkCall(context: JavaContext, node: UCallExpression) {
-        if (defaultEquals(node)) {
+        if (defaultEquals(context, node)) {
             val targetType = node.receiverType?.canonicalText ?: "target"
             val message = "Suspicious equality check: equals() is not implemented in $targetType"
             val location = context.getCallLocation(node, false, true)
@@ -124,7 +133,7 @@ class DiffUtilDetector : Detector(), SourceCodeScanner {
             val right = node.rightOperand.getExpressionType() ?: return
             if (left is PsiClassType && right is PsiClassType) {
                 if (node.operator == UastBinaryOperator.EQUALS) {
-                    if (defaultEquals(node)) {
+                    if (defaultEquals(context, node)) {
                         val message =
                             "Suspicious equality check: equals() is not implemented in ${left.className}"
                         val location = node.operatorIdentifier?.let {

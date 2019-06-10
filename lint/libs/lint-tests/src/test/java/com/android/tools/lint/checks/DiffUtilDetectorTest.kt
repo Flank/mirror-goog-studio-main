@@ -248,6 +248,34 @@ class DiffUtilDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testSealedClasses() {
+        // Regression test for issue 132234925
+        lint().files(
+            kotlin("""
+                package test.pkg
+
+                import android.support.v7.util.DiffUtil
+
+                sealed class SealedClass {
+                    data class ClassOne(val data: Int) : SealedClass()
+                    data class ClassTwo(val value: String) : SealedClass()
+
+                    object DiffCallback : DiffUtil.ItemCallback<SealedClass>() {
+                        override fun areItemsTheSame(oldItem: SealedClass, newItem: SealedClass): Boolean {
+                            return oldItem === newItem
+                        }
+
+                        override fun areContentsTheSame(oldItem: SealedClass, newItem: SealedClass): Boolean {
+                            // Wrong: Error: Suspicious equality check: equals() is not implemented in SealedClass [DiffUtilEquals]
+                            return oldItem == newItem // OK
+                        }
+                    }
+                }
+                """).indented(),
+            diffUtilStub
+        ).run().expectClean()
+    }
+
     override fun getDetector(): Detector {
         return DiffUtilDetector()
     }

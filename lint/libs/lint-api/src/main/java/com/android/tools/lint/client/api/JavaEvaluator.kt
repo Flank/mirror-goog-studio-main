@@ -45,6 +45,9 @@ import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeVisitor
 import com.intellij.psi.PsiWildcardType
+import org.jetbrains.kotlin.asJava.elements.KtLightModifierList
+import org.jetbrains.kotlin.lexer.KtModifierKeywordToken
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
@@ -270,6 +273,51 @@ class JavaEvaluator {
         if (owner != null) {
             val modifierList = owner.modifierList
             return modifierList != null && modifierList.hasModifierProperty(PsiModifier.FINAL)
+        }
+        return false
+    }
+
+    open fun isInternal(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.INTERNAL_KEYWORD)
+    }
+
+    open fun isSealed(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.SEALED_KEYWORD)
+    }
+
+    open fun isData(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.DATA_KEYWORD)
+    }
+
+    open fun isLateInit(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.LATEINIT_KEYWORD)
+    }
+
+    open fun isInline(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.INLINE_KEYWORD)
+    }
+
+    open fun isOperator(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.OPERATOR_KEYWORD)
+    }
+
+    open fun isInfix(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.INFIX_KEYWORD)
+    }
+
+    open fun isSuspend(owner: PsiModifierListOwner?): Boolean {
+        return hasModifier(owner, KtTokens.SUSPEND_KEYWORD)
+    }
+
+    open fun hasModifier(owner: PsiModifierListOwner?, keyword: KtModifierKeywordToken): Boolean {
+        if (owner != null) {
+            val modifierList = owner.modifierList
+            if (modifierList is KtLightModifierList<*>) {
+                val ktModifierList = modifierList.kotlinOrigin
+                if (ktModifierList != null) {
+                    return ktModifierList.hasModifier(keyword)
+                }
+            }
         }
         return false
     }

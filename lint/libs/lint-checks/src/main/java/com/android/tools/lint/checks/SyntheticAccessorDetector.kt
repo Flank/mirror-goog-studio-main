@@ -231,25 +231,11 @@ class SyntheticAccessorDetector : Detector(), SourceCodeScanner {
                     return
                 }
                 if (isKotlin(member)) {
-                    // Eventually we'll call evaluator.isSealed(member.containingClass) here,
-                    // but it's not yet available; the code to do it would be
-                    //    if (modifierList is KtLightModifierList<*>) {
-                    //        val ktModifierList = modifierList.kotlinOrigin
-                    //        if (ktModifierList != null &&
-                    //            ktModifierList.hasModifier(KtTokens.SEALED_KEYWORD)) {
-                    //            return
-                    //        }
-                    //    }
-                    // but unfortunately this doesn't compile in the IDE yet, so we work
-                    // around it:
-                    if (member.modifierList.text.contains("sealed")) {
+                    // Sealed class? This will create a private constructor we can't delete
+                    if (context.evaluator.isSealed(member)) {
                         return
                     }
-                    // Sealed class? This will create a private constructor we can't delete
-                    val modifierList = target.modifierList
-                    if (modifierList != null &&
-                        modifierList.text.contains("sealed")
-                    ) {
+                    if (context.evaluator.isSealed(target)) {
                         return
                     }
                 }
