@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import static com.android.build.gradle.tasks.ResourceUsageAnalyzer.REPLACE_DELETED_WITH_EMPTY;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
@@ -29,8 +31,10 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -66,19 +70,24 @@ public class ShrinkResourcesTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("shrink").create();
 
-    @Parameterized.Parameters(name = "shrinker {0} bundle={1}")
+    @Parameterized.Parameters(name = "shrinker={0} bundle={1} apkCreatorType={2}")
     public static Iterable<Object[]> data() {
         return ImmutableList.of(
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE},
-                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE},
-                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.BUNDLE},
-                new Object[] {CodeShrinker.R8, ApkPipeline.BUNDLE});
+                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR},
+                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_Z_FILE_CREATOR},
+                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR},
+                new Object[] {CodeShrinker.R8, ApkPipeline.BUNDLE, APK_Z_FILE_CREATOR},
+                new Object[] {CodeShrinker.PROGUARD, ApkPipeline.NO_BUNDLE, APK_FLINGER},
+                new Object[] {CodeShrinker.R8, ApkPipeline.NO_BUNDLE, APK_FLINGER});
     }
 
     @Parameterized.Parameter public CodeShrinker shrinker;
 
     @Parameterized.Parameter(1)
     public ApkPipeline apkPipeline;
+
+    @Parameterized.Parameter(2)
+    public ApkCreatorType apkCreatorType;
 
     private enum ApkPipeline {
         NO_BUNDLE("assemble", ""),
@@ -181,11 +190,24 @@ public class ShrinkResourcesTest {
         throw new IllegalStateException();
     }
 
+    private String getGradleProperties() {
+        switch (apkCreatorType) {
+            case APK_Z_FILE_CREATOR:
+                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=false";
+            case APK_FLINGER:
+                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=true";
+        }
+        throw new IllegalStateException();
+    }
+
+
     @Test
     public void checkShrinkResources() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release.useProguard = " + (shrinker == CodeShrinker.PROGUARD));
+
+        TestFileUtils.appendToFile(project.getGradlePropertiesFile(), getGradleProperties());
 
         project.executor()
                 .with(OptionalBooleanOption.ENABLE_R8, shrinker == CodeShrinker.R8)

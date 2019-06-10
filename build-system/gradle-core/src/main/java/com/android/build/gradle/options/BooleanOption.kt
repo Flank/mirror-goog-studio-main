@@ -83,6 +83,7 @@ enum class BooleanOption(
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     USE_ZIPFLINGER_FOR_JAR_MERGING("android.useZipflingerForJarMerging", false),
+    USE_APK_FLINGER("android.useApkFlinger", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.packaging
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.builder.internal.packaging.ApkCreatorType
 import com.android.builder.model.SigningConfig
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.testutils.TestResources
@@ -112,6 +113,7 @@ class IncrementalPackagerBuilderTest {
             .withOutputFile(outputFile)
             .withKeepTimestampsInApk(false)
             .withIntermediateDir(intermediateDir)
+            .withApkCreatorType(ApkCreatorType.APK_Z_FILE_CREATOR)
             .build().use { }
     }
 }

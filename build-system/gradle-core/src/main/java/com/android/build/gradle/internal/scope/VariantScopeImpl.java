@@ -35,6 +35,7 @@ import static com.android.build.gradle.internal.scope.CodeShrinker.R8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
+import static com.android.build.gradle.options.BooleanOption.USE_APK_FLINGER;
 import static com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
@@ -87,6 +88,7 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.errors.EvalIssueException;
 import com.android.builder.errors.EvalIssueReporter.Type;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -1382,6 +1384,16 @@ public class VariantScopeImpl implements VariantScope {
             return JarCreatorType.JAR_FLINGER;
         } else {
             return JarCreatorType.JAR_MERGER;
+        }
+    }
+
+    @NonNull
+    @Override
+    public ApkCreatorType getApkCreatorType() {
+        if (globalScope.getProjectOptions().get(USE_APK_FLINGER)) {
+            return ApkCreatorType.APK_FLINGER;
+        } else {
+            return ApkCreatorType.APK_Z_FILE_CREATOR;
         }
     }
 }

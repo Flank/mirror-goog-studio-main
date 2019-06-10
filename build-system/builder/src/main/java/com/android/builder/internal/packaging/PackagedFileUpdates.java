@@ -19,9 +19,9 @@ package com.android.builder.internal.packaging;
 import com.android.annotations.NonNull;
 import com.android.builder.files.RelativeFile;
 import com.android.ide.common.resources.FileStatus;
-import com.google.common.collect.Sets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Utilities to handle {@link PackagedFileUpdate} objects.
@@ -29,22 +29,24 @@ import java.util.Set;
 final class PackagedFileUpdates {
 
     /**
-     * Creates a set of updates based on a map of update. This set will
-     * contain one entry per entry in the set in a 1-1 match.
+     * Creates a list of {@link PackagedFileUpdate} based on a {@link Map} of {@link RelativeFile}
+     * to {@link FileStatus}. The returned list will contain one entry per entry in the input map in
+     * a 1-1 match.
      *
-     * @param set the set with updates
-     * @return the transform set
+     * @param map the incremental relative file set, a {@link Map} of {@link RelativeFile} to {@link
+     *     FileStatus}.
+     * @return the list of {@link PackagedFileUpdate}
      */
     @NonNull
-    static Set<PackagedFileUpdate> fromIncrementalRelativeFileSet(
-            @NonNull Map<RelativeFile, FileStatus> set) {
-        Set<PackagedFileUpdate> r = Sets.newHashSet();
-        for (Map.Entry<RelativeFile, FileStatus> entry : set.entrySet()) {
-            r.add(
+    static List<PackagedFileUpdate> fromIncrementalRelativeFileSet(
+            @NonNull Map<RelativeFile, FileStatus> map) {
+        List<PackagedFileUpdate> updates = new ArrayList<>();
+        for (Map.Entry<RelativeFile, FileStatus> entry : map.entrySet()) {
+            updates.add(
                     new PackagedFileUpdate(
                             entry.getKey(), entry.getKey().getRelativePath(), entry.getValue()));
         }
 
-        return r;
+        return updates;
     }
 }

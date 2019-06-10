@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
@@ -121,8 +122,11 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                             .withOutputFile(params.output)
                             .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
+                            .withApkCreatorType(ApkCreatorType.APK_Z_FILE_CREATOR)
+                            .withChangedAndroidResources(
+                                    IncrementalRelativeFileSets.fromZip(params.input))
                             .build()) {
-                pkg.updateAndroidResources(IncrementalRelativeFileSets.fromZip(params.input));
+                pkg.updateFiles();
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

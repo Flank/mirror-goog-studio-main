@@ -19,12 +19,18 @@ package com.android.build.gradle.integration.packaging;
 import static com.android.build.gradle.integration.common.fixture.TemporaryProjectModification.doTest;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER;
+import static com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR;
 import static com.android.testutils.truth.PathSubject.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.AbstractAndroidSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -34,11 +40,18 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-/**
- * test for packaging of java resources.
- */
+/** test for packaging of java resources. */
+@RunWith(FilterableParameterized.class)
 public class JavaResPackagingTest {
+
+    @FilterableParameterized.Parameters(name = "apkCreatorType_{0}")
+    public static ApkCreatorType[] params() {
+        return new ApkCreatorType[] {APK_Z_FILE_CREATOR, APK_FLINGER};
+    }
+
+    @FilterableParameterized.Parameter public ApkCreatorType apkCreatorType;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -93,6 +106,8 @@ public class JavaResPackagingTest {
 
         appendToFile(testProject.getBuildFile(), "android { targetProjectPath ':app' }\n");
 
+        TestFileUtils.appendToFile(project.getGradlePropertiesFile(), getGradleProperties());
+
         // put some default files in the 4 projects, to check non incremental packaging as well,
         // and to provide files to change to test incremental support.
         File appDir = appProject.getTestDir();
@@ -135,6 +150,16 @@ public class JavaResPackagingTest {
         File assetFolder = FileUtils.join(projectFolder, "src", dimension, "resources", "com", "foo");
         FileUtils.mkdirs(assetFolder);
         Files.asCharSink(new File(assetFolder, filename), Charsets.UTF_8).write(content);
+    }
+
+    private String getGradleProperties() {
+        switch (apkCreatorType) {
+            case APK_Z_FILE_CREATOR:
+                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=false";
+            case APK_FLINGER:
+                return BooleanOption.USE_APK_FLINGER.getPropertyName() + "=true";
+        }
+        throw new IllegalStateException();
     }
 
     private void execute(String... tasks) throws IOException, InterruptedException {

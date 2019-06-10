@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-abstract class Source {
+public abstract class Source {
     private final String name;
     private final byte[] nameBytes;
     private long alignment = 0;

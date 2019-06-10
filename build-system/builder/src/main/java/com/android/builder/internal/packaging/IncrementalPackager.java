@@ -16,12 +16,14 @@
 
 package com.android.builder.internal.packaging;
 
+import static com.android.ide.common.resources.FileStatus.CHANGED;
+import static com.android.ide.common.resources.FileStatus.REMOVED;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.files.NativeLibraryAbiPredicate;
 import com.android.builder.files.RelativeFile;
-import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.resources.FileStatus;
 import com.android.tools.build.apkzlib.zfile.ApkCreator;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
@@ -33,6 +35,9 @@ import com.google.common.io.Closer;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -82,11 +87,14 @@ import java.util.stream.StreamSupport;
  */
 public class IncrementalPackager implements Closeable {
 
+    /** APK creator. {@code null} if closed. */
+    @Nullable private ApkCreator mApkCreator;
+
     /**
-     * APK creator. {@code null} if not open.
+     * APK creator type. We make calls differently depending on {@link ApkCreatorType} because
+     * {@link zipflinger.ZipArchive} requires that all delete() calls come before all add() calls.
      */
-    @Nullable
-    private ApkCreator mApkCreator;
+    @NonNull private ApkCreatorType mApkCreatorType;
 
     /**
      * Class that manages the renaming of dex files.
@@ -100,6 +108,15 @@ public class IncrementalPackager implements Closeable {
     @NonNull
     private final NativeLibraryAbiPredicate mAbiPredicate;
 
+    @NonNull private final Map<RelativeFile, FileStatus> mChangedDexFiles;
+
+    @NonNull private final Map<RelativeFile, FileStatus> mChangedJavaResources;
+
+    @NonNull private final Map<RelativeFile, FileStatus> mChangedAssets;
+
+    @NonNull private final Map<RelativeFile, FileStatus> mChangedAndroidResources;
+
+    @NonNull private final Map<RelativeFile, FileStatus> mChangedNativeLibs;
 
     /**
      * Creates a new instance.
@@ -111,55 +128,121 @@ public class IncrementalPackager implements Closeable {
      * @param factory the factory used to create APK creators
      * @param acceptedAbis the set of accepted ABIs; if empty then all ABIs are accepted
      * @param jniDebugMode is JNI debug mode enabled?
-     * @throws PackagerException failed to create the initial APK
+     * @param apkCreatorType the {@link ApkCreatorType}
+     * @param changedDexFiles the changed dex files
+     * @param changedJavaResources the changed java resources
+     * @param changedAssets the changed assets
+     * @param changedAndroidResources the changed android resources
+     * @param changedNativeLibs the changed native libraries
      * @throws IOException failed to create the APK
      */
-    public IncrementalPackager(@NonNull ApkCreatorFactory.CreationData creationData,
-            @NonNull File intermediateDir, @NonNull ApkCreatorFactory factory,
-            @NonNull Set<String> acceptedAbis, boolean jniDebugMode)
-            throws PackagerException, IOException {
+    public IncrementalPackager(
+            @NonNull ApkCreatorFactory.CreationData creationData,
+            @NonNull File intermediateDir,
+            @NonNull ApkCreatorFactory factory,
+            @NonNull Set<String> acceptedAbis,
+            boolean jniDebugMode,
+            @NonNull ApkCreatorType apkCreatorType,
+            @NonNull Map<RelativeFile, FileStatus> changedDexFiles,
+            @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
+            @NonNull Map<RelativeFile, FileStatus> changedAssets,
+            @NonNull Map<RelativeFile, FileStatus> changedAndroidResources,
+            @NonNull Map<RelativeFile, FileStatus> changedNativeLibs)
+            throws IOException {
         if (!intermediateDir.isDirectory()) {
             throw new IllegalArgumentException(
                     "!intermediateDir.isDirectory(): " + intermediateDir);
         }
         checkOutputFile(creationData.getApkPath());
 
-        mApkCreator = factory.make(creationData);
+        if (apkCreatorType == ApkCreatorType.APK_Z_FILE_CREATOR) {
+            mApkCreator = factory.make(creationData);
+        } else if (apkCreatorType == ApkCreatorType.APK_FLINGER) {
+            mApkCreator = new ApkFlinger(creationData);
+        } else {
+            throw new RuntimeException("unexpected apkCreatorType");
+        }
+        mApkCreatorType = apkCreatorType;
+        mChangedDexFiles = changedDexFiles;
+        mChangedJavaResources = changedJavaResources;
+        mChangedAssets = changedAssets;
+        mChangedAndroidResources = changedAndroidResources;
+        mChangedNativeLibs = changedNativeLibs;
         mDexRenamer = new DexIncrementalRenameManager(intermediateDir);
         mAbiPredicate = new NativeLibraryAbiPredicate(acceptedAbis, jniDebugMode);
     }
 
-    /**
-     * Updates the dex files in the archive.
-     *
-     * @param files the the dex files
-     * @throws IOException failed to update the archive
-     */
-    public void updateDex(@NonNull Map<RelativeFile, FileStatus> files) throws IOException {
-        updateFiles(mDexRenamer.update(files));
+    // TODO documention, mention that this method should only be called once.
+    public void updateFiles() throws IOException {
+        // Calculate packagedFileUpdates
+        List<PackagedFileUpdate> packagedFileUpdates = new ArrayList<>();
+        packagedFileUpdates.addAll(mDexRenamer.update(mChangedDexFiles));
+        packagedFileUpdates.addAll(
+                PackagedFileUpdates.fromIncrementalRelativeFileSet(
+                        Maps.filterKeys(
+                                mChangedJavaResources,
+                                rf -> !rf.getRelativePath().endsWith(SdkConstants.DOT_CLASS))));
+        packagedFileUpdates.addAll(
+                PackagedFileUpdates.fromIncrementalRelativeFileSet(mChangedAssets)
+                        .stream()
+                        .map(
+                                pfu ->
+                                        new PackagedFileUpdate(
+                                                pfu.getSource(),
+                                                "assets/" + pfu.getName(),
+                                                pfu.getStatus()))
+                        .collect(Collectors.toList()));
+        packagedFileUpdates.addAll(
+                PackagedFileUpdates.fromIncrementalRelativeFileSet(mChangedAndroidResources));
+        packagedFileUpdates.addAll(
+                PackagedFileUpdates.fromIncrementalRelativeFileSet(
+                        Maps.filterKeys(
+                                mChangedNativeLibs,
+                                rf -> mAbiPredicate.test(rf.getRelativePath()))));
+
+        // First delete all REMOVED (and maybe CHANGED) files, then add all NEW or CHANGED files.
+        deleteFiles(packagedFileUpdates);
+        addFiles(packagedFileUpdates);
     }
 
     /**
-     * Updates files in the archive.
+     * Deletes files in the archive.
      *
-     * @param updates the updates to perform
+     * @param updates the collection of updates, some of which will be deleted, depending on their
+     *     {@link FileStatus}
      * @throws IOException failed to update the archive
      */
-    private void updateFiles(@NonNull Set<PackagedFileUpdate> updates) throws IOException {
+    private void deleteFiles(@NonNull Collection<PackagedFileUpdate> updates) throws IOException {
         Preconditions.checkNotNull(mApkCreator, "mApkCreator == null");
+
+        Predicate<PackagedFileUpdate> deletePredicate =
+                mApkCreatorType == ApkCreatorType.APK_FLINGER
+                        ? (p) -> p.getStatus() == REMOVED || p.getStatus() == CHANGED
+                        : (p) -> p.getStatus() == REMOVED;
 
         Iterable<String> deletedPaths =
                 updates.stream()
-                        .filter(p -> p.getStatus() == FileStatus.REMOVED)
+                        .filter(deletePredicate)
                         .map(PackagedFileUpdate::getName)
                         .collect(Collectors.toList());
 
         for (String deletedPath : deletedPaths) {
             mApkCreator.deleteFile(deletedPath);
         }
+    }
+
+    /**
+     * Add files to the archive.
+     *
+     * @param updates the collection of updates, some of which will be added, depending on their
+     *     {@link FileStatus}
+     * @throws IOException failed to update the archive
+     */
+    private void addFiles(@NonNull Collection<PackagedFileUpdate> updates) throws IOException {
+        Preconditions.checkNotNull(mApkCreator, "mApkCreator == null");
 
         Predicate<PackagedFileUpdate> isNewOrChanged =
-                pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == FileStatus.CHANGED;
+                pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == CHANGED;
 
         Iterable<PackagedFileUpdate> newOrChangedNonArchiveFiles =
                 updates.stream()
@@ -203,66 +286,6 @@ public class IncrementalPackager implements Closeable {
         for (File arch : archives) {
             mApkCreator.writeZip(arch, pathNameMap::get, name -> !names.contains(name));
         }
-    }
-
-    /**
-     * Updates java resources in the archive.
-     *
-     * <p>The implementation of the transform API means that some streams will contain classes and
-     * resources intermingled. This is true for when proguard is used and because annotation
-     * processors can generate resources. Therefore this method ignores resources ending with {@code
-     * .class}.
-     *
-     * @param files the resources to update
-     * @throws IOException failed to update the archive
-     */
-    public void updateJavaResources(@NonNull Map<RelativeFile, FileStatus> files)
-            throws IOException {
-        updateFiles(
-                PackagedFileUpdates.fromIncrementalRelativeFileSet(
-                        Maps.filterKeys(
-                                files,
-                                rf -> !rf.getRelativePath().endsWith(SdkConstants.DOT_CLASS))));
-    }
-
-    /**
-     * Updates assets in the archive.
-     *
-     * @param files the assets to update
-     * @throws IOException failed to update the archive
-     */
-    public void updateAssets(@NonNull Map<RelativeFile, FileStatus> files) throws IOException {
-        updateFiles(
-                PackagedFileUpdates.fromIncrementalRelativeFileSet(files).stream()
-                        .map(pfu -> new PackagedFileUpdate(
-                                pfu.getSource(),
-                                "assets/" + pfu.getName(),
-                                pfu.getStatus()))
-                        .collect(Collectors.toSet()));
-    }
-
-    /**
-     * Updates Android resources in the archive.
-     *
-     * @param files the resources to update
-     * @throws IOException failed to update the archive
-     */
-    public void updateAndroidResources(@NonNull Map<RelativeFile, FileStatus> files)
-            throws IOException {
-        updateFiles(PackagedFileUpdates.fromIncrementalRelativeFileSet(files));
-    }
-
-    /**
-     * Updates native libraries in the archive.
-     *
-     * @param files the resources to update
-     * @throws IOException failed to update the archive
-     */
-    public void updateNativeLibraries(@NonNull Map<RelativeFile, FileStatus> files)
-            throws IOException {
-        updateFiles(
-                PackagedFileUpdates.fromIncrementalRelativeFileSet(
-                        Maps.filterKeys(files, rf -> mAbiPredicate.test(rf.getRelativePath()))));
     }
 
     /**
@@ -310,10 +333,6 @@ public class IncrementalPackager implements Closeable {
                         file.getAbsolutePath()), e);
             }
         }
-    }
-
-    public boolean hasPendingChangesWithWait() throws IOException {
-        return mApkCreator != null && mApkCreator.hasPendingChangesWithWait();
     }
 
     @Override

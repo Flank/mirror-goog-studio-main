@@ -22,10 +22,12 @@ import com.android.build.gradle.internal.incremental.CapturingChangesApkCreator;
 import com.android.build.gradle.internal.incremental.FolderBasedApkCreator;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.ManifestAttributeSupplier;
+import com.android.builder.files.RelativeFile;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
-import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.ide.common.resources.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
@@ -33,14 +35,17 @@ import com.android.tools.build.apkzlib.sign.SigningOptions;
 import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
 import com.android.tools.build.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -116,16 +121,15 @@ public class IncrementalPackagerBuilder {
     @NonNull private ApkFormat apkFormat;
 
     /**
-     * How should native libraries be packaged. If not defined, it can be inferred if
-     * {@link #manifest} is defined.
+     * How should native libraries be packaged. If not defined, it can be inferred if {@link
+     * #manifestFile} is defined.
      */
-    @Nullable
-    private NativeLibrariesPackagingMode nativeLibrariesPackagingMode;
+    @Nullable private NativeLibrariesPackagingMode nativeLibrariesPackagingMode;
 
     /**
      * The no-compress predicate: returns {@code true} for paths that should not be compressed. If
-     * not defined, but {@link #aaptOptionsNoCompress} and {@link #manifest} are both defined, it
-     * can be inferred.
+     * not defined, but {@link #aaptOptionsNoCompress} and {@link #manifestFile} are both defined,
+     * it can be inferred.
      */
     @Nullable private Predicate<String> noCompressPredicate;
 
@@ -161,6 +165,14 @@ public class IncrementalPackagerBuilder {
     @Nullable private Collection<String> aaptOptionsNoCompress;
 
     @NonNull private BuildType buildType;
+
+    @NonNull private ApkCreatorType apkCreatorType = ApkCreatorType.APK_Z_FILE_CREATOR;
+
+    @NonNull private Map<RelativeFile, FileStatus> changedDexFiles = new HashMap<>();
+    @NonNull private Map<RelativeFile, FileStatus> changedJavaResources = new HashMap<>();
+    @NonNull private Map<RelativeFile, FileStatus> changedAssets = new HashMap<>();
+    @NonNull private Map<RelativeFile, FileStatus> changedAndroidResources = new HashMap<>();
+    @NonNull private Map<RelativeFile, FileStatus> changedNativeLibs = new HashMap<>();
 
     /** Creates a new builder. */
     public IncrementalPackagerBuilder(@NonNull ApkFormat apkFormat, @NonNull BuildType buildType) {
@@ -427,6 +439,77 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
+     * Sets the {@link ApkCreatorType}
+     *
+     * @param apkCreatorType the {@link ApkCreatorType}
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withApkCreatorType(@NonNull ApkCreatorType apkCreatorType) {
+        this.apkCreatorType = apkCreatorType;
+        return this;
+    }
+
+    /**
+     * Sets the changed dex files
+     *
+     * @param changedDexFiles the changed dex files
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedDexFiles(
+            @NonNull Map<RelativeFile, FileStatus> changedDexFiles) {
+        this.changedDexFiles = ImmutableMap.copyOf(changedDexFiles);
+        return this;
+    }
+
+    /**
+     * Sets the changed java resources
+     *
+     * @param changedJavaResources the changed java resources
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedJavaResources(
+            @NonNull Map<RelativeFile, FileStatus> changedJavaResources) {
+        this.changedJavaResources = ImmutableMap.copyOf(changedJavaResources);
+        return this;
+    }
+
+    /**
+     * Sets the changed assets
+     *
+     * @param changedAssets the changed assets
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedAssets(
+            @NonNull Map<RelativeFile, FileStatus> changedAssets) {
+        this.changedAssets = ImmutableMap.copyOf(changedAssets);
+        return this;
+    }
+
+    /**
+     * Sets the changed android resources
+     *
+     * @param changedAndroidResources the changed android resources
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedAndroidResources(
+            @NonNull Map<RelativeFile, FileStatus> changedAndroidResources) {
+        this.changedAndroidResources = ImmutableMap.copyOf(changedAndroidResources);
+        return this;
+    }
+
+    /**
+     * Sets the changed native libs
+     *
+     * @param changedNativeLibs the changed native libs
+     * @return {@code this} for use with fluent-style notation
+     */
+    public IncrementalPackagerBuilder withChangedNativeLibs(
+            @NonNull Map<RelativeFile, FileStatus> changedNativeLibs) {
+        this.changedNativeLibs = ImmutableMap.copyOf(changedNativeLibs);
+        return this;
+    }
+
+    /**
      * Creates the packager, verifying that all the minimum data has been provided. The required
      * information are:
      *
@@ -475,8 +558,14 @@ public class IncrementalPackagerBuilder {
                     intermediateDir,
                     apkFormat.factory(keepTimestampsInApk, debuggableBuild),
                     abiFilters,
-                    jniDebuggableBuild);
-        } catch (PackagerException|IOException e) {
+                    jniDebuggableBuild,
+                    apkCreatorType,
+                    changedDexFiles,
+                    changedJavaResources,
+                    changedAssets,
+                    changedAndroidResources,
+                    changedNativeLibs);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

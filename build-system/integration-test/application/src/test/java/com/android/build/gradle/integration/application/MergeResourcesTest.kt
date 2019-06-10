@@ -25,9 +25,14 @@ import org.junit.Assert.assertTrue
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.SUPPORT_LIB_VERSION
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.IntegerOption
 import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.testutils.apk.Apk
 import com.android.testutils.apk.Zip
 import com.android.utils.FileUtils
@@ -35,13 +40,28 @@ import java.io.File
 import java.nio.file.Files
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 
-class MergeResourcesTest {
+@RunWith(FilterableParameterized::class)
+class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
+
+    companion object {
+        @Parameterized.Parameters(name = "apkCreatorType_{0}")
+        @JvmStatic
+        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
+    }
 
     @get:Rule
     val project = GradleTestProject.builder()
         .fromTestProject("projectWithModules")
+        .addGradleProperties(getGradleProperties())
         .create()
+
+    private fun getGradleProperties() = when (apkCreatorType) {
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
+    }
 
     @Test
     fun mergesRawWithLibraryWithOverride() {

@@ -32,6 +32,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
@@ -293,4 +294,7 @@ public interface VariantScope extends TransformVariantScope {
 
     @NonNull
     JarCreatorType getJarCreatorType();
+
+    @NonNull
+    ApkCreatorType getApkCreatorType();
 }
