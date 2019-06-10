@@ -18,11 +18,15 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_BACKGROUND;
+import static com.android.SdkConstants.ATTR_CLICKABLE;
+import static com.android.SdkConstants.ATTR_FOCUSABLE;
 import static com.android.SdkConstants.ATTR_LAYOUT_WEIGHT;
 import static com.android.SdkConstants.ATTR_SCALE_TYPE;
 import static com.android.SdkConstants.IMAGE_VIEW;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.TEXT_VIEW;
+import static com.android.utils.XmlUtils.getFirstSubTag;
+import static com.android.utils.XmlUtils.getNextTag;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -32,7 +36,6 @@ import com.android.tools.lint.detector.api.LayoutDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import com.android.utils.XmlUtils;
 import java.util.Collection;
 import java.util.Collections;
 import org.w3c.dom.Element;
@@ -70,37 +73,27 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         // Look for exactly 2 children
-        Element first = XmlUtils.getFirstSubTag(element);
+        Element first = getFirstSubTag(element);
         if (first == null) {
             return;
         }
-        Element second = XmlUtils.getNextTag(first);
+        Element second = getNextTag(first);
         if (second == null) {
             return;
         }
-        if (XmlUtils.getNextTag(second) != null) {
+        if (getNextTag(second) != null) {
             return;
         }
 
         if ((first.getTagName().equals(IMAGE_VIEW)
                         && second.getTagName().equals(TEXT_VIEW)
-                        && !first.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT))
-                || ((second.getTagName().equals(IMAGE_VIEW)
+                        && canCombineImage(first))
+                || (second.getTagName().equals(IMAGE_VIEW)
                         && first.getTagName().equals(TEXT_VIEW)
-                        && !second.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)))) {
+                        && canCombineImage((second)))) {
             // If the layout has a background, ignore since it would disappear from
             // the TextView
             if (element.hasAttributeNS(ANDROID_URI, ATTR_BACKGROUND)) {
-                return;
-            }
-
-            // Certain scale types cannot be done with compound drawables
-            String scaleType =
-                    first.getTagName().equals(IMAGE_VIEW)
-                            ? first.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE)
-                            : second.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
-            if (scaleType != null && !scaleType.isEmpty()) {
-                // For now, ignore if any scale type is set
                 return;
             }
 
@@ -111,5 +104,23 @@ public class UseCompoundDrawableDetector extends LayoutDetector {
                     "This tag and its children can be replaced by one `<TextView/>` and "
                             + "a compound drawable");
         }
+    }
+
+    private static boolean canCombineImage(@NonNull Element image) {
+        if (image.hasAttributeNS(ANDROID_URI, ATTR_LAYOUT_WEIGHT)
+                || image.hasAttributeNS(ANDROID_URI, ATTR_CLICKABLE)
+                || image.hasAttributeNS(ANDROID_URI, ATTR_FOCUSABLE)) {
+            return false;
+        }
+
+        // Certain scale types cannot be done with compound drawables
+        String scaleType = image.getAttributeNS(ANDROID_URI, ATTR_SCALE_TYPE);
+        //noinspection RedundantIfStatement
+        if (scaleType != null && !scaleType.isEmpty()) {
+            // For now, ignore if any scale type is set
+            return false;
+        }
+
+        return true;
     }
 }
