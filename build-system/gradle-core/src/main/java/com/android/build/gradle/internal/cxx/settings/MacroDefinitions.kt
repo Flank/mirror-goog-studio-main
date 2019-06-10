@@ -132,12 +132,12 @@ enum class Macro(
         description = "Version number major part.",
         environment = NDK,
         tag = "versionMajor",
-        example = "19"),
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[0]),
     NDK_VERSION_MINOR(
         description = "Version number minor part.",
         environment = NDK,
         tag = "versionMinor",
-        example = "2"),
+        example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[1]),
     GRADLE_PROJECT_DIR(
         description = "Folder of the gradle root project build.gradle.",
         environment = GRADLE,

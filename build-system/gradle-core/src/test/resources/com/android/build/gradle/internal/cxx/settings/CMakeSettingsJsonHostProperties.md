@@ -82,7 +82,7 @@ The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.
 
 ## ${ndk.dir}
 Folder of the current Android NDK.
-- example: ${ndk.sdkDir}/ndk/19.2.5345600
+- example: ${ndk.sdkDir}/ndk/20.0.5594570
 - environment: android-ndk
 
 ## ${ndk.libraryOutputDir}
@@ -157,16 +157,16 @@ Name of the gradle variant.
 
 ## ${ndk.version}
 Version of NDK.
-- example: 19.2.5345600
+- example: 20.0.5594570
 - environment: android-ndk
 
 ## ${ndk.versionMajor}
 Version number major part.
-- example: 19
+- example: 20
 - environment: android-ndk
 
 ## ${ndk.versionMinor}
 Version number minor part.
-- example: 2
+- example: 0
 - environment: android-ndk
 
