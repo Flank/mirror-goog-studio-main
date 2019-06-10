@@ -672,11 +672,15 @@ public class GradleModelMocker {
     private static String getUnquotedValue(String key) {
         int index = key.indexOf('\'');
         if (index != -1) {
-            return key.substring(index + 1, key.length() - 1);
+            return key.substring(index + 1, key.indexOf('\'', index + 1));
+        }
+        index = key.indexOf('"');
+        if (index != -1) {
+            return key.substring(index + 1, key.indexOf('"', index + 1));
         }
         index = key.indexOf(' ');
         if (index != -1) {
-            return key.substring(index + 1, key.length());
+            return key.substring(index + 1);
         }
         return key;
     }
@@ -720,6 +724,8 @@ public class GradleModelMocker {
 
         String key = context.isEmpty() ? line : context + "." + line;
         if (key.startsWith("dependencies.compile ")
+                || key.startsWith("dependencies.compile(")
+                || key.startsWith("dependencies.implementation(")
                 || key.startsWith("dependencies.implementation ")) {
             String declaration = getUnquotedValue(key);
             if (GradleCoordinate.parseCoordinateString(declaration) != null) {

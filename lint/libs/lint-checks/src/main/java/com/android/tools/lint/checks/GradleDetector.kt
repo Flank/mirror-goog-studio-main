@@ -387,9 +387,10 @@ open class GradleDetector : Detector(), GradleScanner {
             if (value.startsWith("files('") && value.endsWith("')")) {
                 val path = value.substring("files('".length, value.length - 2)
                 if (path.contains("\\\\")) {
+                    val fix = fix().replace().text(path).with(path.replace("\\\\", "/")).build()
                     val message =
                         "Do not use Windows file separators in .gradle files; use / instead"
-                    report(context, valueCookie, PATH, message)
+                    report(context, valueCookie, PATH, message, fix)
                 } else if (path.startsWith("/") || File(
                         path.replace(
                             '/',

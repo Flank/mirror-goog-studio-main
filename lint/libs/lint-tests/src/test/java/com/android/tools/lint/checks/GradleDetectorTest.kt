@@ -256,6 +256,39 @@ class GradleDetectorTest : AbstractCheckTest() {
             )
     }
 
+    fun testDependenciesWithCallSyntax() {
+        // Regression test for 134692580
+        val expected = "" +
+                "build.gradle:7: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n" +
+                "    implementation(\"com.google.firebase:firebase-messaging:10.2.1\")\n" +
+                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings"
+
+        lint().files(
+            gradle(
+                "" +
+                        "buildscript {\n" +
+                        "    repositories {\n" +
+                        "        jcenter()\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "dependencies {\n" +
+                        "    implementation(\"com.google.firebase:firebase-messaging:10.2.1\")\n" +
+                        "}\n"
+            )
+        )
+            .issues(DEPENDENCY)
+            .run()
+            .expect(expected)
+            .expectFixDiffs(
+                "" +
+                        "Fix for build.gradle line 7: Change to 11.0.0:\n" +
+                        "@@ -7 +7\n" +
+                        "-     implementation(\"com.google.firebase:firebase-messaging:10.2.1\")\n" +
+                        "+     implementation(\"com.google.firebase:firebase-messaging:11.0.0\")"
+            )
+    }
+
     fun testVersionFromIDE() {
         // Hardcoded cache lookup for the test in GroovyGradleDetector below. In the IDE
         // it consults SDK lib.
@@ -750,7 +783,14 @@ class GradleDetectorTest : AbstractCheckTest() {
                         "    compile files('/libs/android-support-v4.jar')\n" +
                         "}\n"
             )
-        ).issues(PATH).ignoreUnknownGradleConstructs().run().expect(expected)
+        ).issues(PATH).ignoreUnknownGradleConstructs().run().expect(expected).expectFixDiffs(
+            """
+            Fix for build.gradle line 4: Replace with my/libs/http.jar:
+            @@ -4 +4
+            -     compile files('my\\libs\\http.jar')
+            +     compile files('my/libs/http.jar')
+            """
+        )
     }
 
     fun testIdSuffix() {
