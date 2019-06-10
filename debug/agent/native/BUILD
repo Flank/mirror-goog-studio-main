@@ -7,8 +7,8 @@ load(
     "dex_library",
 )
 
-cc_binary(
-    name = "libdebug.so",
+cc_library(
+    name = "agent_lib",
     srcs = [
         "agent.cc",
         "agent.h",
@@ -29,6 +29,18 @@ cc_binary(
         "-Wpedantic",
         "-Werror",
     ],
+    linkopts = ANDROID_LINKOPTS,
+    tags = [
+        "no_windows",
+    ],
+    deps = [
+        "//external:slicer",
+        "//prebuilts/studio/jdk:jni_headers",
+    ],
+)
+
+cc_binary(
+    name = "libdebug.so",
     linkopts = ANDROID_LINKOPTS + select({
         # Undefined symbols cause confusing failures when ART tries to
         # attach the agent, so we enforce that all symbols are defined.
@@ -43,8 +55,37 @@ cc_binary(
         "no_windows",
     ],
     deps = [
+        ":agent_lib",
+    ],
+)
+
+# Note: to run this stress test with sanitizers, add the following flags
+# to your Bazel invocation:
+#   --copt=-fsanitize=address,undefined
+#   --linkopt=-fsanitize=address,undefined
+cc_test(
+    name = "async_stack_stress_test",
+    srcs = [
+        "test/async-stack/stress_test.cc",
+    ],
+    args = [
+        package_name() + "/test/data/medium.dex",
+    ],
+    copts = [
+        "-Wall",
+        "-Wpedantic",
+        "-Werror",
+    ],
+    data = [
+        "test/data/medium.dex",
+    ],
+    linkstatic = 1,
+    tags = [
+        "no_windows",
+    ],
+    deps = [
+        ":agent_lib",
         "//external:slicer",
-        "//prebuilts/studio/jdk:jni_headers",
     ],
 )
 
