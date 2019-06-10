@@ -2240,6 +2240,7 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     ATTR_TEXT_IS_SELECTABLE == name ||
                     "textAlignment" == name ||
                     "roundIcon" == name ||
+                    "importantForAutofill" == name ||
                     ATTR_FULL_BACKUP_CONTENT == name)
         }
 

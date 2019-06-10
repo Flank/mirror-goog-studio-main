@@ -410,6 +410,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        android:id=\"@+id/dynamictext\"\n"
                                         + "        android:layout_width=\"wrap_content\"\n"
                                         + "        android:layout_height=\"wrap_content\"\n"
+                                        + "        android:importantForAutofill=\"no\"\n"
                                         + "        android:textIsSelectable=\"true\" />\n"
                                         + "\n"
                                         + "</LinearLayout>\n"),
