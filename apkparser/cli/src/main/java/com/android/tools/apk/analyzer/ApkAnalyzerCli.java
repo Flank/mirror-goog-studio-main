@@ -16,6 +16,7 @@
 
 package com.android.tools.apk.analyzer;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -97,13 +98,6 @@ public class ApkAnalyzerCli {
     private final ApkAnalyzerImpl impl;
 
     private static final class HelpFormatter extends BuiltinHelpFormatter {
-        /**
-         * Makes a formatter with a given overall row width and column separator width.
-         *
-         * @param desiredOverallWidth how many characters wide to make the overall help display
-         * @param desiredColumnSeparatorWidth how many characters wide to make the separation
-         *     between option column and
-         */
         public HelpFormatter() {
             super(120, 2);
         }
@@ -112,7 +106,7 @@ public class ApkAnalyzerCli {
         protected boolean shouldShowNonOptionArgumentDisplay(OptionDescriptor nonOptionDescriptor) {
             return false;
         }
-    };
+    }
 
     public ApkAnalyzerCli(
             @NonNull PrintStream out, @NonNull PrintStream err, ApkAnalyzerImpl impl) {
@@ -245,15 +239,16 @@ public class ApkAnalyzerCli {
                 if (!toolsDirProp.isEmpty()) {
                     try {
                         tools = new File(toolsDirProp).getCanonicalFile();
-                        osSdkFolder = tools.getParent();
+                        osSdkFolder = findSdkRoot(tools);
                     } catch (IOException e) {
                         // try using "." below
                     }
                 }
                 if (osSdkFolder == null) {
                     try {
-                        tools = new File(".").getCanonicalFile();
-                        osSdkFolder = tools.getParent();
+                        // "." should be bin/, and the component dir itself is the parent.
+                        tools = new File(".").getCanonicalFile().getParentFile();
+                        osSdkFolder = findSdkRoot(tools);
                     } catch (IOException e) {
                         // Will print an error below since mSdkFolder is not defined
                     }
@@ -270,15 +265,31 @@ public class ApkAnalyzerCli {
                 throw new IllegalStateException(
                         String.format(
                                 "The tools directory property is not set, please make sure you are "
-                                        + "executing %1$s",
-                                cmdName));
+                                        + "executing %1$s. Got %2$s",
+                                cmdName, toolsDirProp));
             }
         }
         AndroidSdkHandler sdkHandler = AndroidSdkHandler.getInstance(new File(osSdkFolder));
         return new AaptInvoker(sdkHandler, new NullLogger());
     }
 
-    static enum Action {
+    @Nullable
+    private static String findSdkRoot(@Nullable File toolDir) {
+        if (toolDir == null) {
+            return null;
+        }
+        // Assume we're in something similar to the expected place, "cmdline-tools/1.2.3".
+        // The parent of that should be the root.
+        File toolRoot = toolDir.getParentFile();
+        if (toolRoot != null) {
+            if (toolRoot.getName().equals(SdkConstants.FD_CMDLINE_TOOLS)) {
+                return toolRoot.getParent();
+            }
+        }
+        return null;
+    }
+
+    enum Action {
         APK_SUMMARY(
                 SUBJECT_APK,
                 ACTION_SUMMARY,
