@@ -36,4 +36,9 @@ interface ArtifactType {
         FILE,
         DIRECTORY
     }
+
+    /**
+     * @return the folder name to use when persisting artifacts, by default, we use the [name]
+     */
+    fun getFolderName(): String
 }

@@ -24,6 +24,7 @@ import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.scope.VariantScope
@@ -74,7 +75,7 @@ class DexSplitterTransformTest {
     private lateinit var baseClasses: File
     private lateinit var featureClasses: File
 
-    @Mock private lateinit var mappingFileSrc: BuildableArtifact
+    @Mock private lateinit var mappingFileSrc: RegularFile
     @Mock private lateinit var baseJars: RegularFile
 
     @Before
@@ -117,9 +118,7 @@ class DexSplitterTransformTest {
 
     @Test
     fun testNonExistentMappingFile() {
-
-        Mockito.`when`(mappingFileSrc.iterator())
-            .thenReturn(listOf(File("/path/to/nowhere")).iterator())
+        Mockito.`when`(mappingFileSrc.asFile).thenReturn(File("/path/to/nowhere"))
 
         // We run R8 first to generate dex file from jar files.
         runR8(listOf(baseClasses, featureClasses), "class **")
@@ -132,7 +131,7 @@ class DexSplitterTransformTest {
             File(r8OutputProviderDir, "main"),
             listOf(featureClasses),
             FakeGradleProvider(baseJars),
-            mappingFileSrc)
+            FakeGradleProperty(mappingFileSrc))
 
         checkDexSplitterOutputs()
     }
@@ -178,7 +177,7 @@ class DexSplitterTransformTest {
         dexDir: File,
         featureJars: List<File>,
         baseJars: Provider<RegularFile>,
-        mappingFileSrc: BuildableArtifact? = null,
+        mappingFileSrc: Provider<RegularFile>? = null,
         mainDexList: Provider<RegularFile>? = null
     ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
@@ -253,7 +252,7 @@ class DexSplitterTransformTest {
         minSdkVersion: Int = 21
     ): R8Transform {
         val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        return R8Transform(
+        val transform= R8Transform(
                 bootClasspath = classpath,
                 minSdkVersion = minSdkVersion,
                 isDebuggable = true,
@@ -263,12 +262,16 @@ class DexSplitterTransformTest {
                 mainDexListFiles = FakeFileCollection(),
                 mainDexRulesFiles = mainDexRulesFiles,
                 inputProguardMapping = FakeFileCollection(),
-                outputProguardMapping = outputProguardMapping,
                 proguardConfigurationFiles = proguardRulesFiles,
                 variantType = VariantTypeImpl.BASE_APK,
                 includeFeaturesInScopes = false,
                 dexingType = DexingType.NATIVE_MULTIDEX,
                 messageReceiver= NoOpMessageReceiver()
         )
+        val regularFileMock = Mockito.mock(RegularFile::class.java)
+        `when`(regularFileMock.asFile).thenReturn(outputProguardMapping)
+        transform.setOutputFile(FakeGradleProperty<RegularFile>(regularFileMock))
+
+        return transform
     }
 }

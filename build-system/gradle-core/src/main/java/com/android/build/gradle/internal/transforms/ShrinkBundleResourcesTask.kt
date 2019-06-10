@@ -69,8 +69,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:Optional
-    var mappingFileSrc: BuildableArtifact? = null
-        private set
+    abstract val mappingFileSrc: RegularFileProperty
 
     @get:InputFiles
     abstract val mergedManifests: DirectoryProperty
@@ -84,7 +83,7 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
         val classes = dex.files
 
         var reportFile: File? = null
-        val mappingFile = mappingFileSrc?.singleFile()
+        val mappingFile = mappingFileSrc.orNull?.asFile
         if (mappingFile != null) {
             val logDir = mappingFile.parentFile
             if (logDir != null) {
@@ -191,13 +190,11 @@ abstract class ShrinkBundleResourcesTask : NonIncrementalTask() {
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.MERGED_NOT_COMPILED_RES,
                 task.resourceDir)
-            task.mappingFileSrc =
-                    if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING))
-                        variantScope
-                            .artifacts
-                            .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
-                    else
-                        null
+
+            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING))
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.APK_MAPPING,
+                    task.mappingFileSrc)
 
             variantScope.artifacts.setTaskInputToFinalProduct(
                 InternalArtifactType.BUNDLE_MANIFEST,

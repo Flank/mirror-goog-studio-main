@@ -21,6 +21,8 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASS
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -34,11 +36,14 @@ import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import org.objectweb.asm.Type
 import java.nio.file.Path
 
@@ -51,12 +56,14 @@ class R8MainDexListTransformTest {
     private lateinit var context: Context
     private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
+    private lateinit var outputProguard: RegularFile
 
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
         outputProvider = TestTransformOutputProvider(outputDir)
         context = Mockito.mock(Context::class.java)
+        outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
     @Test
@@ -87,6 +94,8 @@ class R8MainDexListTransformTest {
         val transform =
             createTransform(mainDexRulesFiles = mainDexRulesFileCollection, minSdkVersion = 19)
         transform.keep("class **")
+        `when`(outputProguard.asFile).thenReturn(tmp.newFile("mapping.txt"))
+        transform.setOutputFile(FakeGradleProperty(outputProguard))
 
         transform.transform(invocation)
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
@@ -133,6 +142,10 @@ class R8MainDexListTransformTest {
                 minSdkVersion = 19,
                 dexingType = DexingType.MONO_DEX
             )
+
+        `when`(outputProguard.asFile).thenReturn(tmp.newFolder("mapping"))
+        transform.setOutputFile(FakeGradleProperty(outputProguard))
+
         transform.keep("class **")
         transform.transform(invocation)
 
@@ -163,7 +176,6 @@ class R8MainDexListTransformTest {
             mainDexListFiles = FakeFileCollection(),
             mainDexRulesFiles = mainDexRulesFiles,
             inputProguardMapping = FakeFileCollection(),
-            outputProguardMapping = tmp.newFile(),
             proguardConfigurationFiles = FakeConfigurableFileCollection(),
             variantType = VariantTypeImpl.BASE_APK,
             includeFeaturesInScopes = false,

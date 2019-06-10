@@ -30,7 +30,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Incubating;
-import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
 
 /**
  * A Transform that processes intermediary build artifacts.
@@ -244,8 +246,9 @@ public abstract class Transform {
      *
      * @param directory
      */
-    public void setOutputDirectory(DirectoryProperty directory) {}
+    public void setOutputDirectory(@NonNull Property<Directory> directory) {}
 
+    public void setOutputFile(@NonNull Property<RegularFile> file) {}
 
     /**
      * @deprecated replaced by {@link #transform(TransformInvocation)}.

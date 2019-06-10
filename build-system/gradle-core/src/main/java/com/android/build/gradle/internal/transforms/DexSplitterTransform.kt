@@ -16,21 +16,21 @@
 
 package com.android.build.gradle.internal.transforms
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX
 import com.android.builder.dexing.DexSplitterTool
 import com.android.utils.FileUtils
-import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Files
@@ -41,12 +41,12 @@ import java.nio.file.Files
 class DexSplitterTransform(
         private val featureJars: FileCollection,
         private val baseJars: Provider<RegularFile>,
-        private val mappingFileSrc: BuildableArtifact?,
+        private val mappingFileSrc: Provider<RegularFile>?,
         private val mainDexList: Provider<RegularFile>?
 ) :
         Transform() {
 
-    private lateinit var outputDirectoryProperty: DirectoryProperty
+    private lateinit var outputDirectoryProperty: Property<Directory>
 
     override fun getName(): String = "dexSplitter"
 
@@ -63,7 +63,7 @@ class DexSplitterTransform(
         val secondaryFiles: MutableCollection<SecondaryFile> = mutableListOf()
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
         secondaryFiles.add(SecondaryFile.nonIncremental(baseJars.get().asFile))
-        mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it)) }
+        mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
         mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
         return secondaryFiles
     }
@@ -76,9 +76,9 @@ class DexSplitterTransform(
 
         try {
             val mappingFile =
-                if (mappingFileSrc?.singleFile()?.exists() == true
-                    && !mappingFileSrc.singleFile().isDirectory) {
-                mappingFileSrc.singleFile()
+                if (mappingFileSrc?.orNull?.asFile?.exists() == true
+                    && mappingFileSrc.orNull?.asFile?.isFile == true) {
+                mappingFileSrc.orNull?.asFile
             } else {
                 null
             }
@@ -123,7 +123,7 @@ class DexSplitterTransform(
         }
     }
 
-    override fun setOutputDirectory(directory: DirectoryProperty) {
+    override fun setOutputDirectory(directory: Property<Directory>) {
         outputDirectoryProperty= directory
     }
 }

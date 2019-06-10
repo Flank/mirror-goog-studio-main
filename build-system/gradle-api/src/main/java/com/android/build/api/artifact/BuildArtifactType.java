@@ -17,6 +17,7 @@
 package com.android.build.api.artifact;
 
 import com.android.annotations.NonNull;
+import java.util.Locale;
 import org.gradle.api.Incubating;
 
 /**
@@ -34,5 +35,11 @@ public enum BuildArtifactType implements ArtifactType {
     @Override
     public Kind kind() {
         return Kind.DIRECTORY;
+    }
+
+
+    @Override
+    public String getFolderName() {
+        return name().toLowerCase(Locale.US);
     }
 }

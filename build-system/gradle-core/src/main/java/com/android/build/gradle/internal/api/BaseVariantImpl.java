@@ -46,7 +46,6 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -498,11 +497,10 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public File getMappingFile() {
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
-        if (artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
-            // bypass the configuration time resolution check as some calls this API during
+        if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+            //     bypass the configuration time resolution check as some calls this API during
             // configuration.
-            return Iterables.getOnlyElement(
-                    artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING).get());
+            return artifacts.getFinalProduct(InternalArtifactType.APK_MAPPING).get().getAsFile();
         }
         return null;
     }

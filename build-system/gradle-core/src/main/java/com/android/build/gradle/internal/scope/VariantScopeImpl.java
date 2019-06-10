@@ -1339,17 +1339,6 @@ public class VariantScopeImpl implements VariantScope {
 
     @NonNull
     @Override
-    public File getOutputProguardMappingFile() {
-        return FileUtils.join(
-                globalScope.getBuildDir(),
-                FD_OUTPUTS,
-                "mapping",
-                getVariantConfiguration().getDirName(),
-                "mapping.txt");
-    }
-
-    @NonNull
-    @Override
     public FileCollection getBootClasspath() {
         return globalScope.getBootClasspath();
     }

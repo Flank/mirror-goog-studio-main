@@ -22,6 +22,7 @@ import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.core.GradleVariantConfiguration
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.BaseVariantData
@@ -32,11 +33,15 @@ import com.android.testutils.TestUtils
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
+import org.mockito.Mockito.`when`
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -51,6 +56,7 @@ class ProGuardTransformTest {
     private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
     private lateinit var variantConfigDirName: String
+    private lateinit var outputMappingFile: Property<RegularFile>
 
     @Before
     fun setUp() {
@@ -80,6 +86,7 @@ class ProGuardTransformTest {
         val transform = ProGuardTransform(createScope())
 
         transform.keep("public class test.A")
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -109,6 +116,7 @@ class ProGuardTransformTest {
         val rulesFile = newFile("-keep public class test.A")
 
         val transform = ProGuardTransform(createScope(setOf(rulesFile)))
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -147,6 +155,7 @@ class ProGuardTransformTest {
         val transform = ProGuardTransform(createScope())
 
         transform.setConfigurationFiles(FakeFileCollection(configFile))
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -187,6 +196,7 @@ class ProGuardTransformTest {
         val transform = ProGuardTransform(createScope(setOf(rulesFile)))
 
         transform.setConfigurationFiles(FakeFileCollection(configFile))
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -241,6 +251,7 @@ class ProGuardTransformTest {
         val transform = ProGuardTransform(createScope())
 
         transform.setConfigurationFiles(FakeFileCollection(configFileA, configFileC))
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -281,6 +292,7 @@ class ProGuardTransformTest {
         val transform = ProGuardTransform(createScope())
 
         transform.setConfigurationFiles(FakeFileCollection(configFile))
+        transform.setOutputFile(outputMappingFile)
 
         transform.transform(invocation)
 
@@ -323,8 +335,9 @@ class ProGuardTransformTest {
         Mockito.`when`(scope.variantData).thenReturn(variantData)
         Mockito.`when`(scope.variantConfiguration).thenReturn(variantConfig)
         Mockito.`when`(scope.bootClasspath).thenReturn(FakeFileCollection(bootClassPath))
-        Mockito.`when`(scope.outputProguardMappingFile)
-            .thenReturn(tmp.root.resolve("mapping/mapping.txt"))
+        val mappingFile = Mockito.mock(RegularFile::class.java)
+        `when`(mappingFile.asFile).thenReturn(tmp.root.resolve("mapping/mapping.txt"))
+        outputMappingFile= FakeGradleProperty(mappingFile)
         return scope
     }
 }

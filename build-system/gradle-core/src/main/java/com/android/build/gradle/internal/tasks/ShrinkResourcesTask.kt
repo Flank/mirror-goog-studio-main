@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.api.transform.QualifiedContent.DefaultContentType
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
 import com.android.build.gradle.internal.pipeline.TransformManager
@@ -53,7 +51,6 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
@@ -89,10 +86,9 @@ abstract class ShrinkResourcesTask
     abstract val resourceDir: DirectoryProperty
 
     @get:Optional
-    @get:InputFiles
+    @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    var mappingFileSrc: BuildableArtifact? = null
-        private set
+    abstract val mappingFileSrc: RegularFileProperty
 
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -202,9 +198,9 @@ abstract class ShrinkResourcesTask
                 task.resourceDir
             )
 
-            if (artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
-                task.mappingFileSrc = artifacts
-                    .getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+            if (artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+                artifacts.setTaskInputToFinalProduct(InternalArtifactType.APK_MAPPING,
+                    task.mappingFileSrc)
             }
 
             artifacts.setTaskInputToFinalProduct<Directory>(
@@ -341,7 +337,7 @@ abstract class ShrinkResourcesTask
             "resources-${apkInfo.baseName}-stripped.ap_"
         )
         val mergedManifest: BuildOutput? = mergedManifests.element(apkInfo)
-        val mappingFile: File? = task.mappingFileSrc?.singleFile()
+        val mappingFile: File? = task.mappingFileSrc.orNull?.asFile
         val buildTypeName: String = task.buildTypeName
         val lightRClasses: File = task.lightRClasses.get().asFile
         val resourceDir: File = task.resourceDir.get().asFile

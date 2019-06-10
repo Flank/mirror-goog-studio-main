@@ -51,8 +51,10 @@ import java.util.Set;
 import javax.annotation.concurrent.GuardedBy;
 import org.gradle.api.UncheckedIOException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.provider.Property;
 import proguard.ClassPath;
 import proguard.ParseException;
 
@@ -70,15 +72,8 @@ public class ProGuardTransform extends BaseProguardAction {
 
     private static final Logger LOG = Logging.getLogger(ProGuardTransform.class);
 
-
     private final VariantScope variantScope;
-
-    private final File proguardOut;
-
-    private final File printMapping;
-    private final File printSeeds;
-    private final File printUsage;
-    private final ImmutableList<File> secondaryFileOutputs;
+    private Property<RegularFile> printMapping;
 
     private File testedMappingFile = null;
     private FileCollection testMappingConfiguration = null;
@@ -86,13 +81,11 @@ public class ProGuardTransform extends BaseProguardAction {
     public ProGuardTransform(@NonNull VariantScope variantScope) {
         super(variantScope);
         this.variantScope = variantScope;
+    }
 
-        printMapping = variantScope.getOutputProguardMappingFile();
-
-        proguardOut = printMapping.getParentFile();
-        printSeeds = new File(proguardOut, "seeds.txt");
-        printUsage = new File(proguardOut, "usage.txt");
-        secondaryFileOutputs = ImmutableList.of(printMapping, printSeeds, printUsage);
+    @Override
+    public void setOutputFile(@NonNull Property<RegularFile> file) {
+        printMapping = file;
     }
 
     @NonNull
@@ -101,11 +94,6 @@ public class ProGuardTransform extends BaseProguardAction {
             proguardWorkLimiter = new WorkLimiter(PROGUARD_CONCURRENCY_LIMIT);
         }
         return proguardWorkLimiter;
-    }
-
-    @Nullable
-    public File getMappingFile() {
-        return printMapping;
     }
 
     public void applyTestedMapping(@Nullable File testedMappingFile) {
@@ -148,7 +136,11 @@ public class ProGuardTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Collection<File> getSecondaryFileOutputs() {
-        return secondaryFileOutputs;
+        File printMappingFile = printMapping.get().getAsFile();
+        File proguardOut = printMappingFile.getParentFile();
+        File printSeeds = new File(proguardOut, "seeds.txt");
+        File printUsage = new File(proguardOut, "usage.txt");
+        return ImmutableList.of(printMappingFile, printSeeds, printUsage);
     }
 
     @NonNull
@@ -174,6 +166,10 @@ public class ProGuardTransform extends BaseProguardAction {
     public void transform(@NonNull final TransformInvocation invocation) throws TransformException {
         // only run PROGUARD_CONCURRENCY_LIMIT proguard invocations at a time (across projects)
         try {
+            if (printMapping == null) {
+                throw new RuntimeException("printMapping not initialized");
+            }
+            File printMappingFile = printMapping.get().getAsFile();
             getWorkLimiter()
                     .limit(
                             () -> {
@@ -185,8 +181,8 @@ public class ProGuardTransform extends BaseProguardAction {
                                 // make sure the mapping file is always created. Since the file is always published as
                                 // an artifact, it's important that it is always present even if empty so that it
                                 // can be published to a repo.
-                                if (!printMapping.isFile()) {
-                                    Files.asCharSink(printMapping, Charsets.UTF_8).write("");
+                                if (!printMappingFile.isFile()) {
+                                    Files.asCharSink(printMappingFile, Charsets.UTF_8).write("");
                                 }
                                 return null;
                             });
@@ -240,6 +236,8 @@ public class ProGuardTransform extends BaseProguardAction {
 
             // proguard doesn't verify that the seed/mapping/usage folders exist and will fail
             // if they don't so create them.
+            File printMappingFile = printMapping.get().getAsFile();
+            File proguardOut = printMappingFile.getParentFile();
             FileUtils.cleanOutputDir(proguardOut);
 
             for (File configFile : getAllConfigurationFiles()) {
@@ -247,7 +245,9 @@ public class ProGuardTransform extends BaseProguardAction {
                 applyConfigurationFile(configFile);
             }
 
-            configuration.printMapping = printMapping;
+            File printSeeds = new File(proguardOut, "seeds.txt");
+            File printUsage = new File(proguardOut, "usage.txt");
+            configuration.printMapping = printMappingFile;
             configuration.printSeeds = printSeeds;
             configuration.printUsage = printUsage;
 

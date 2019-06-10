@@ -281,9 +281,6 @@ public interface VariantScope extends TransformVariantScope {
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();
 
     @NonNull
-    File getOutputProguardMappingFile();
-
-    @NonNull
     FileCollection getBootClasspath();
 
     @NonNull

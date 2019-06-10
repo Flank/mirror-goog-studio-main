@@ -37,7 +37,7 @@ fun ArtifactType.getOutputDir(parentFile: File)=
         } else {
             InternalArtifactType.Category.INTERMEDIATES.getOutputDir(parentFile)
         },
-        name().toLowerCase(Locale.US)
+        getFolderName()
     )
 
 /**

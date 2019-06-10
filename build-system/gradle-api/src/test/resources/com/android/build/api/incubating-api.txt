@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-cbea0f655b110492d5c7cd9f293752db403be26503ca888b935c0f747a687713
+63ef7dcc37f8e87a201131cf7b84aba559c1e237b9209d9d260052e88c2f5ecf
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -12,9 +12,11 @@ com.android.build.api.artifact.ArtifactType
 com.android.build.api.artifact.ArtifactType$Kind
 com.android.build.api.artifact.ArtifactType$Kind.valueOf: com.android.build.api.artifact.ArtifactType$Kind (java.lang.String)
 com.android.build.api.artifact.ArtifactType$Kind.values: com.android.build.api.artifact.ArtifactType$Kind[] ()
+com.android.build.api.artifact.ArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.ArtifactType.kind: com.android.build.api.artifact.ArtifactType$Kind ()
 com.android.build.api.artifact.ArtifactType.name: java.lang.String ()
 com.android.build.api.artifact.BuildArtifactType
+com.android.build.api.artifact.BuildArtifactType.getFolderName: java.lang.String ()
 com.android.build.api.artifact.BuildArtifactType.kind: com.android.build.api.artifact.ArtifactType$Kind ()
 com.android.build.api.artifact.BuildArtifactType.valueOf: com.android.build.api.artifact.BuildArtifactType (java.lang.String)
 com.android.build.api.artifact.BuildArtifactType.values: com.android.build.api.artifact.BuildArtifactType[] ()

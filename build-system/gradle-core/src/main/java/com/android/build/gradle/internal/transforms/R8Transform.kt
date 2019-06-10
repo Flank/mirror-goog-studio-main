@@ -43,6 +43,7 @@ import com.android.ide.common.blame.MessageReceiver
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import java.io.File
 import java.nio.file.Files
@@ -66,7 +67,6 @@ class R8Transform(
     private val mainDexListFiles: FileCollection,
     private val mainDexRulesFiles: FileCollection,
     private val inputProguardMapping: FileCollection,
-    private val outputProguardMapping: File,
     proguardConfigurationFiles: ConfigurableFileCollection,
     variantType: VariantType,
     includeFeaturesInScopes: Boolean,
@@ -80,13 +80,13 @@ class R8Transform(
     private val proguardConfigurations: MutableList<String> = mutableListOf("-ignorewarnings")
 
     var mainDexListOutput: Provider<RegularFile>? = null
+    lateinit var outputProguardMapping: Property<RegularFile>
 
     constructor(
         scope: VariantScope,
         mainDexListFiles: FileCollection,
         mainDexRulesFiles: FileCollection,
-        inputProguardMapping: FileCollection,
-        outputProguardMapping: File
+        inputProguardMapping: FileCollection
     ) :
             this(
                 scope.globalScope.fullBootClasspath,
@@ -98,7 +98,6 @@ class R8Transform(
                 mainDexListFiles,
                 mainDexRulesFiles,
                 inputProguardMapping,
-                outputProguardMapping,
                 scope.globalScope.project.files(),
                 scope.variantData.type,
                 scope.consumesFeatureJars(),
@@ -142,7 +141,7 @@ class R8Transform(
         )
 
     override fun getSecondaryFileOutputs(): MutableCollection<File> =
-        listOfNotNull(outputProguardMapping, mainDexListOutput?.orNull?.asFile).toMutableList()
+        listOfNotNull(outputProguardMapping.get().asFile, mainDexListOutput?.orNull?.asFile).toMutableList()
 
     override fun keep(keep: String) {
         proguardConfigurations.add("-keep $keep")
@@ -162,6 +161,10 @@ class R8Transform(
         if (!actions.isOptimize) {
             proguardConfigurations.add("-dontoptimize")
         }
+    }
+
+    override fun setOutputFile(file: Property<RegularFile>) {
+        outputProguardMapping = file
     }
 
     override fun transform(transformInvocation: TransformInvocation) {
@@ -205,7 +208,7 @@ class R8Transform(
                 if (inputProguardMapping.isEmpty) null else inputProguardMapping.singleFile.toPath()
         val proguardConfig = ProguardConfig(
                 allConfigurationFiles.files.map { it.toPath() },
-                outputProguardMapping.toPath(),
+                outputProguardMapping.orNull?.asFile?.toPath(),
                 proguardMappingInput,
                 proguardConfigurations
         )

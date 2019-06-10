@@ -51,6 +51,7 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
@@ -59,6 +60,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -135,10 +137,14 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
     }
 
     @OutputDirectory
-    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     @NonNull
     public abstract DirectoryProperty getOutputDirectory();
+
+    @OutputFile
+    @Optional
+    @NonNull
+    public abstract RegularFileProperty getOutputFile();
 
     @OutputDirectories
     public Map<String, File> getOtherFolderOutputs() {
@@ -547,6 +553,7 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
         public void configure(@NonNull TransformTask task) {
             task.transform = transform;
             transform.setOutputDirectory(task.getOutputDirectory());
+            transform.setOutputFile(task.getOutputFile());
             task.consumedInputStreams = consumedInputStreams;
             task.referencedInputStreams = referencedInputStreams;
             task.outputStream = outputStream;

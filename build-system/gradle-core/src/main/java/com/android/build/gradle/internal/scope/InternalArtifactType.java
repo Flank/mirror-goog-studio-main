@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.artifact.ArtifactType;
 import java.io.File;
 import java.util.Locale;
@@ -248,7 +249,7 @@ public enum InternalArtifactType implements ArtifactType {
     FULL_APK,
     APK,
     APK_FOR_LOCAL_TEST(Kind.FILE),
-    APK_MAPPING,
+    APK_MAPPING(Category.OUTPUTS, Kind.FILE, "mapping"),
     AAR,
     INSTANTAPP_BUNDLE,
     SPLIT_LIST,
@@ -363,6 +364,7 @@ public enum InternalArtifactType implements ArtifactType {
 
     final Category category;
     final Kind kind;
+    @Nullable final String folderName;
 
     @Override
     @NonNull
@@ -386,19 +388,30 @@ public enum InternalArtifactType implements ArtifactType {
     }
 
     InternalArtifactType() {
-        this(Category.INTERMEDIATES, Kind.DIRECTORY);
+        this(Category.INTERMEDIATES, Kind.DIRECTORY, null);
     }
 
     InternalArtifactType(Category category) {
-        this(category, Kind.DIRECTORY);
+        this(category, Kind.DIRECTORY, null);
     }
 
     InternalArtifactType(Kind kind) {
-        this(Category.INTERMEDIATES, kind);
+        this(Category.INTERMEDIATES, kind, null);
     }
 
     InternalArtifactType(Category category, Kind kind) {
+        this(category, kind, null);
+    }
+
+    InternalArtifactType(Category category, Kind kind, @Nullable String folderName) {
         this.category = category;
         this.kind = kind;
+        this.folderName = folderName;
+    }
+
+    @NonNull
+    @Override
+    public String getFolderName() {
+        return folderName != null ? folderName : name().toLowerCase(Locale.US);
     }
 }

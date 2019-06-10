@@ -79,8 +79,7 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
-    var obsfuscationMappingFile: BuildableArtifact? = null
-        private set
+    abstract val obsfuscationMappingFile: RegularFileProperty
 
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
@@ -110,7 +109,7 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
                     baseModuleFile = baseModuleZip.get().asFileTree.singleFile,
                     featureFiles = featureZips.files,
                     mainDexList = mainDexList.orNull?.asFile,
-                    obfuscationMappingFile = obsfuscationMappingFile?.singleFile(),
+                    obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
@@ -277,9 +276,11 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
                 // not reprocess the dex files.
             }
 
-            if (variantScope.artifacts.hasArtifact(InternalArtifactType.APK_MAPPING)) {
-                task.obsfuscationMappingFile =
-                        variantScope.artifacts.getFinalArtifactFiles(InternalArtifactType.APK_MAPPING)
+            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APK_MAPPING)) {
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.APK_MAPPING,
+                    task.obsfuscationMappingFile
+                )
             }
         }
     }

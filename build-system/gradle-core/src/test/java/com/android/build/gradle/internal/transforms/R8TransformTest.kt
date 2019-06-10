@@ -22,6 +22,7 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOU
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -40,6 +41,7 @@ import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -71,6 +73,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
     private lateinit var context: Context
     private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
+    private lateinit var outputProguard: RegularFile
 
     companion object {
         @Parameterized.Parameters
@@ -83,6 +86,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
         outputDir = tmp.newFolder().toPath()
         outputProvider = TestTransformOutputProvider(outputDir)
         context = Mockito.mock(Context::class.java)
+        outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
     @Test
@@ -606,7 +610,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
 
 
         val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        return R8Transform(
+        val r8Transform = R8Transform(
             bootClasspath = classpath,
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
@@ -616,7 +620,6 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             mainDexListFiles = FakeFileCollection(),
             mainDexRulesFiles = mainDexRulesFiles,
             inputProguardMapping = FakeFileCollection(),
-            outputProguardMapping = outputProguardMapping,
             proguardConfigurationFiles = proguardRulesFiles,
             variantType = variantType,
             includeFeaturesInScopes = false,
@@ -624,5 +627,10 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             dexingType = DexingType.NATIVE_MULTIDEX,
             useFullR8 = useFullR8
         )
+
+        Mockito.`when`(outputProguard.asFile).thenReturn(outputProguardMapping)
+        r8Transform.setOutputFile(FakeGradleProperty(outputProguard))
+
+        return r8Transform
     }
 }
