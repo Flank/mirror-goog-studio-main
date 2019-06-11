@@ -22,7 +22,6 @@ import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.UiMode;
 import com.google.common.base.Objects;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +47,9 @@ public class Hardware {
     private EnumSet<UiMode> mUiModes = EnumSet.noneOf(UiMode.class);
     private PowerType mPluggedIn;
     private File mSkinFile;
+    // Set default value to be false, DeviceParser will change it to true
+    // when devices has <removable-storage>
+    private boolean mSdCard = false;
 
     public void setSkinFile(@Nullable File skinFile) {
       mSkinFile = skinFile;
@@ -165,6 +167,14 @@ public class Hardware {
         mInternalStorage.addAll(is);
     }
 
+    public boolean hasSdCard() {
+        return mSdCard;
+    }
+
+    public void setSdCard(boolean sdcard) {
+        this.mSdCard = sdcard;
+    }
+
     @NonNull
     public List<Storage> getRemovableStorage() {
         return mRemovableStorage;
@@ -271,6 +281,7 @@ public class Hardware {
         hw.mUiModes = mUiModes.clone();
         hw.mPluggedIn = mPluggedIn;
         hw.mSkinFile = mSkinFile;
+        hw.mSdCard = mSdCard;
         return hw;
     }
 
@@ -287,6 +298,7 @@ public class Hardware {
                 && mNetworking.equals(hw.getNetworking())
                 && mSensors.equals(hw.getSensors())
                 && mMic == hw.hasMic()
+                && mSdCard == hw.hasSdCard()
                 && mCameras.equals(hw.getCameras())
                 && mKeyboard == hw.getKeyboard()
                 && mNav == hw.getNav()
@@ -322,6 +334,7 @@ public class Hardware {
 
         hash = 31 * hash + temp;
         hash = 31 * hash + (mMic ? 1 : 0);
+        hash = 31 * hash + (mSdCard ? 1 : 0);
         hash = mCameras.hashCode();
         hash = 31 * hash + mKeyboard.ordinal();
         hash = 31 * hash + mNav.ordinal();
@@ -367,6 +380,8 @@ public class Hardware {
         sb.append(mSensors);
         sb.append(", mMic=");
         sb.append(mMic);
+        sb.append(", mSdCard=");
+        sb.append(mSdCard);
         sb.append(", mCameras=");
         sb.append(mCameras);
         sb.append(", mKeyboard=");

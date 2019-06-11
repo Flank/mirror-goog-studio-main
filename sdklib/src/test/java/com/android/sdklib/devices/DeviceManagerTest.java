@@ -46,8 +46,8 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class DeviceManagerTest {
 
-    static final String WSVGA_HASH             = "MD5:886bf70516706f933c01ecec92c4cad1";
-    static final String WSVGA_TRACKBALL_HASH   = "MD5:fa4c45fa0cfde5f07572cd148003700a";
+    static final String WSVGA_HASH             = "MD5:176ce220cc833bcb6dc60ff13b82c716";
+    static final String WSVGA_TRACKBALL_HASH   = "MD5:e964715d73bc8b2cc7ca2fadcb12fa41";
     static final String NEXUS_ONE_HASH         = "MD5:ef39e456bf2cab397201c2ac251f35fc";
     static final String NEXUS_ONE_PLUGGED_HASH = "MD5:474a72646a55e61e94f69bdd94758ceb";
 

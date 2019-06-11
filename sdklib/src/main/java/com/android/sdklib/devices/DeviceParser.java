@@ -35,14 +35,8 @@ import com.android.resources.TouchScreen;
 import com.android.resources.UiMode;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
-
 import java.awt.Point;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -51,11 +45,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class DeviceParser {
     public static final String ROUND_BOOT_PROP = "ro.emulator.circular";
@@ -255,6 +252,7 @@ public class DeviceParser {
                         mHardware.addRemovableStorage(new Storage(val, mUnit));
                     }
                 }
+                mHardware.setSdCard(true);
             } else if (DeviceSchema.NODE_CPU.equals(localName)) {
                 mHardware.setCpu(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_GPU.equals(localName)) {

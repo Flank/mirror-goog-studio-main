@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 <d:devices xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xmlns:d="http://schemas.android.com/sdk/devices/1">
+           xmlns:d="http://schemas.android.com/sdk/devices/5">
     <d:device>
         <d:name>Automotive (1024p landscape)</d:name>
         <d:id>automotive_1024p_landscape</d:id>
@@ -53,7 +53,6 @@
             <d:ram unit="KiB">3774492</d:ram>
             <d:buttons>soft</d:buttons>
             <d:internal-storage unit="KiB">10255672</d:internal-storage>
-            <d:removable-storage unit="MiB">0</d:removable-storage>
             <d:cpu>Generic CPU</d:cpu>
             <d:gpu>Generic GPU</d:gpu>
             <d:abi>
@@ -118,7 +117,6 @@
             <d:ram unit="GiB">2</d:ram>
             <d:buttons>soft</d:buttons>
             <d:internal-storage unit="GiB">7811891</d:internal-storage>
-            <d:removable-storage unit="MiB">0</d:removable-storage>
             <d:cpu>Generic CPU</d:cpu>
             <d:gpu>Generic GPU</d:gpu>
             <d:abi>

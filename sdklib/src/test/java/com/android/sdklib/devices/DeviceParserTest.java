@@ -28,18 +28,15 @@ import com.android.resources.ScreenRound;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.sdklib.devices.Storage.Unit;
-
 import com.google.common.collect.Table;
-import junit.framework.TestCase;
-
-import org.xml.sax.SAXParseException;
-
 import java.awt.Dimension;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
+import org.xml.sax.SAXParseException;
 
 public class DeviceParserTest extends TestCase {
 
@@ -108,6 +105,7 @@ public class DeviceParserTest extends TestCase {
             assertEquals(new Storage(16, Unit.GiB), storage.get(0));
             storage = hw.getRemovableStorage();
             assertEquals(0, storage.size());
+            assertTrue(hw.hasSdCard());
             assertEquals("OMAP 4460", hw.getCpu());
             assertEquals("PowerVR SGX540", hw.getGpu());
             Set<Abi> abis = hw.getSupportedAbis();
@@ -283,6 +281,35 @@ public class DeviceParserTest extends TestCase {
             assertEquals(device3.getChinSize(), 30);
             assertTrue(device3.isScreenRound());
             assertEquals(device3.getDefaultHardware().getScreen().getScreenRound(), ScreenRound.ROUND);
+        } finally {
+            stream.close();
+        }
+    }
+
+    public void testValidDevicesFull_v5() throws Exception {
+        InputStream stream = DeviceSchemaTest.class.getResourceAsStream("devices_v5.xml");
+        try {
+            Table<String, String, Device> devices = DeviceParser.parse(stream);
+            assertEquals(
+                    "Parsing devices.xml produces the wrong number of devices", 2, devices.size());
+
+            Device device0 = devices.get("automotive_1024p_landscape", "Google");
+            assertEquals(null, device0.getTagId());
+            assertEquals("{}", device0.getBootProps().toString());
+            assertEquals("Generic CPU", device0.getDefaultHardware().getCpu());
+            assertEquals(
+                    "[armeabi-v7a, x86]",
+                    device0.getDefaultHardware().getSupportedAbis().toString());
+
+            assertTrue(!device0.getDefaultHardware().hasSdCard());
+
+            Device device1 = devices.get("polestar_2", "Volvo");
+            assertEquals("android-automotive", device1.getTagId());
+            assertEquals("Generic CPU", device1.getDefaultHardware().getCpu());
+            assertEquals("[x86]", device1.getDefaultHardware().getSupportedAbis().toString());
+
+            assertTrue(device1.getDefaultHardware().hasSdCard());
+
         } finally {
             stream.close();
         }

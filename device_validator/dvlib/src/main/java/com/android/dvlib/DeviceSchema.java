@@ -50,10 +50,10 @@ public class DeviceSchema {
     // ---- XSD ----
 
     /**
-     * The latest version of the device XML Schema.
-     * Valid version numbers are between 1 and this number, included.
+     * The latest version of the device XML Schema. Valid version numbers are between 1 and this
+     * number, included.
      */
-    public static final int NS_LATEST_VERSION = 4;
+    public static final int NS_LATEST_VERSION = 5;
 
     /** The XML namespace of the latest device XML. */
     public static final String NS_DEVICES_URI = getSchemaUri(NS_LATEST_VERSION);
