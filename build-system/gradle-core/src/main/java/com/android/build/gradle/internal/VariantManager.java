@@ -30,7 +30,6 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.api.attributes.BuildTypeAttr;
 import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.BaseExtension;
@@ -74,6 +73,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
+import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
@@ -532,12 +532,7 @@ public class VariantManager implements VariantModel {
             }
 
             if (buildArtifactsHolder.hasArtifact(buildArtifactType)) {
-                BuildableArtifact artifact =
-                        buildArtifactsHolder.getFinalArtifactFiles(buildArtifactType);
-                variantScope.publishIntermediateArtifact(
-                        artifact,
-                        outputSpec.getArtifactType(),
-                        outputSpec.getPublishedConfigTypes());
+                throw new RuntimeException(buildArtifactType + " is still using old APIs.");
             }
 
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
@@ -548,6 +543,13 @@ public class VariantManager implements VariantModel {
                         finalProduct.getFirst(),
                         outputSpec.getArtifactType(),
                         outputSpec.getPublishedConfigTypes());
+            } else {
+                if (buildArtifactType == AnchorOutputType.ALL_CLASSES) {
+                    variantScope.publishIntermediateArtifact(
+                            buildArtifactsHolder.getFinalProductAsFileCollection(buildArtifactType),
+                            outputSpec.getArtifactType(),
+                            outputSpec.getPublishedConfigTypes());
+                }
             }
         }
     }

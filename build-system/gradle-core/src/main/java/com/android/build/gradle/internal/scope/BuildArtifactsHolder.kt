@@ -43,6 +43,7 @@ import java.io.File
 import java.io.FileReader
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -74,6 +75,9 @@ abstract class BuildArtifactsHolder(
         project.objects,
         project.layout.buildDirectory,
         this::getIdentifier)
+
+    // because of existing public APIs, we cannot move [AnchorOutputType.ALL_CLASSES] to Provider<>
+    private val allClasses= project.files()
 
     /**
      * Types of operation on [BuildableArtifact] as indicated by tasks producing the artifact.
@@ -436,6 +440,22 @@ abstract class BuildArtifactsHolder(
                     producers.map { it.taskName})}""".trimMargin())
         }
         return producers.injectable as Provider<T>
+    }
+
+    /**
+     * Returns a [FileCollection] for the passed [ArtifactType]. The [FileCollection] will
+     * represent the final value of the built artifact irrespective of when this call is made.
+     *
+     * @param  artifactType the identifier for thje built artifact.
+     */
+    fun getFinalProductAsFileCollection(artifactType: ArtifactType): FileCollection {
+        return if (artifactType == AnchorOutputType.ALL_CLASSES) {
+            getAllClasses()
+        } else {
+            if (hasFinalProduct(artifactType)) {
+                project.files(getFinalProduct<FileSystemLocation>(artifactType))
+            } else project.files()
+        }
     }
 
     /**
@@ -921,6 +941,24 @@ abstract class BuildArtifactsHolder(
         return artifactRecordMap[artifactType] ?:
         createOutput(artifactType, BuildableArtifactImpl(project.files()))
     }
+
+    /**
+     * Appends a [FileCollection] to the [AnchorOutputType.ALL_CLASSES] artifact.
+     *
+     * @param files the [FileCollection] to add.
+     */
+    fun appendToAllClasses(files: FileCollection) {
+        synchronized(allClasses) {
+            allClasses.from(files)
+        }
+    }
+
+    /**
+     * Returns the current [FileCollection] for [AnchorOutputType.ALL_CLASSES] as of now.
+     * The returned file collection is final but its content can change.
+     */
+    fun getAllClasses(): FileCollection = allClasses
+
 
     fun createReport(): Report =
             fileProducersMap.entrySet().associate {artifactRecordMap

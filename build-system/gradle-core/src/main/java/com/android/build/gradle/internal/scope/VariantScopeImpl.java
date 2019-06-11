@@ -42,7 +42,6 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.internal.BaseConfigAdapter;
 import com.android.build.gradle.internal.PostprocessingFeatures;
@@ -215,14 +214,13 @@ public class VariantScopeImpl implements VariantScope {
     /**
      * Publish an intermediate artifact.
      *
-     * @param artifact BuildableArtifact to be published. Must not be an appendable
-     *     BuildableArtifact.
+     * @param artifact FileCollection to be published.
      * @param artifactType the artifact type.
      * @param configTypes the PublishedConfigType. (e.g. api, runtime, etc)
      */
     @Override
     public void publishIntermediateArtifact(
-            @NonNull BuildableArtifact artifact,
+            @NonNull FileCollection artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
         // Create Provider so that the BuildableArtifact is not resolved until needed.
@@ -643,11 +641,8 @@ public class VariantScopeImpl implements VariantScope {
                     .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 mainCollection =
                         mainCollection.plus(
-                                getProject()
-                                        .files(
-                                                artifacts.getFinalProduct(
-                                                        InternalArtifactType
-                                                                .NAMESPACED_CLASSES_JAR)));
+                                artifacts.getFinalProductAsFileCollection(
+                                        InternalArtifactType.NAMESPACED_CLASSES_JAR));
 
                 mainCollection =
                         mainCollection.plus(
@@ -841,25 +836,12 @@ public class VariantScopeImpl implements VariantScope {
                     final com.android.build.api.artifact.ArtifactType taskOutputType =
                             taskOutputSpec.getOutputType();
                     BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
-                    if (testedArtifacts.hasFinalProduct(taskOutputType)) {
-                        artifacts =
-                                ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
-                                        artifacts,
-                                        getProject()
-                                                .files(
-                                                        testedArtifacts.getFinalProduct(
-                                                                taskOutputType)),
-                                        getProject().getPath(),
-                                        testedScope.getFullVariantName());
-                    }
-                    if (testedArtifacts.hasArtifact(taskOutputType)) {
-                        artifacts =
-                                ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
-                                        artifacts,
-                                        testedArtifacts.getFinalArtifactFiles(taskOutputType).get(),
-                                        getProject().getPath(),
-                                        testedScope.getFullVariantName());
-                    }
+                    artifacts =
+                            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
+                                    artifacts,
+                                    testedArtifacts.getFinalProductAsFileCollection(taskOutputType),
+                                    getProject().getPath(),
+                                    testedScope.getFullVariantName());
                 }
             }
         }

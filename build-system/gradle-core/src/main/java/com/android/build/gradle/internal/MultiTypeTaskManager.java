@@ -23,7 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.gradle.BaseExtension;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.VariantFactory;
@@ -119,6 +118,6 @@ public class MultiTypeTaskManager extends TaskManager {
                                 scope.getArtifacts().getFinalProduct(JAVAC),
                                 scope.getVariantData().getAllPreJavacGeneratedBytecode(),
                                 scope.getVariantData().getAllPostJavacGeneratedBytecode());
-        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
+        scope.getArtifacts().appendToAllClasses(files);
     }
 }

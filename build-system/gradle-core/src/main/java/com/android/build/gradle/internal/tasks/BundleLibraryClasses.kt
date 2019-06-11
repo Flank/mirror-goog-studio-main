@@ -118,7 +118,7 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
                             && scopes.size == 1 && scopes.contains(QualifiedContent.Scope.PROJECT)
                 }
             } else {
-                variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES).get()
+                variantScope.artifacts.getAllClasses()
             }
         }
 

@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.ide;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.TaskManager;
@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider;
 import com.android.build.gradle.internal.publishing.PublishingSpecs;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
@@ -58,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
@@ -365,9 +365,8 @@ public class ModelBuilderTest {
         when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
 
         when(testVariantScope.getArtifacts()).thenReturn(artifacts);
-        BuildableArtifact testBuildableArtifact = Mockito.mock(BuildableArtifact.class);
-        when(artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES))
-                .thenReturn(testBuildableArtifact);
+        FileCollection testBuildableArtifact = Mockito.mock(FileCollection.class);
+        when(artifacts.getFinalProductAsFileCollection(any())).thenReturn(testBuildableArtifact);
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.android.utils.PathUtils;
@@ -71,7 +70,7 @@ public class JacocoTaskDelegate {
 
     @NonNull private final FileCollection jacocoAntTaskConfiguration;
     @NonNull private final Provider<Directory> output;
-    @NonNull private final BuildableArtifact inputClasses;
+    @NonNull private final FileCollection inputClasses;
     @NonNull private final WorkerExecutorFacade.IsolationMode isolationMode;
     @NonNull private final Provider<Directory> outputJars;
 
@@ -79,7 +78,7 @@ public class JacocoTaskDelegate {
             @NonNull FileCollection jacocoAntTaskConfiguration,
             @NonNull Provider<Directory> output,
             @NonNull Provider<Directory> outputJars,
-            @NonNull BuildableArtifact inputClasses,
+            @NonNull FileCollection inputClasses,
             @NonNull WorkerExecutorFacade.IsolationMode isolationMode) {
         this.jacocoAntTaskConfiguration = jacocoAntTaskConfiguration;
         this.output = output;

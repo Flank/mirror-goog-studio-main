@@ -1083,7 +1083,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                                             variantData.getVariantConfiguration().getVersionCode(),
                                             variantScope
                                                     .getArtifacts()
-                                                    .getFinalArtifactFiles(testedOutputType)
+                                                    .getFinalProductAsFileCollection(
+                                                            testedOutputType)
                                                     // We used to call .getSingleFile() but Kotlin
                                                     // projects currently have 2 output dirs
                                                     // specified for test classes. This supplier is

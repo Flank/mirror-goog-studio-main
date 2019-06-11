@@ -20,7 +20,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.AnchorOutputType.ALL_CLASSES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -122,7 +121,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            task.setTestClassesDirs(scope.getArtifacts().getFinalArtifactFiles(ALL_CLASSES).get());
+            task.setTestClassesDirs(scope.getArtifacts().getAllClasses());
             task.setClasspath(computeClasspath(includeAndroidResources));
 
             if (includeAndroidResources) {
@@ -181,7 +180,7 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             }
 
             // 2. the test component classes and java_res
-            collection.from(artifacts.getFinalArtifactFiles(ALL_CLASSES).get());
+            collection.from(artifacts.getAllClasses());
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
             collection.from(artifacts.getFinalProduct(InternalArtifactType.JAVA_RES));
 

@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
@@ -276,7 +275,7 @@ public class ApplicationTaskManager extends TaskManager {
                 scope.getGlobalScope()
                         .getProject()
                         .files(javacOutput, preJavacGeneratedBytecode, postJavacGeneratedBytecode);
-        scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, files);
+        scope.getArtifacts().appendToAllClasses(files);
     }
 
     @Override

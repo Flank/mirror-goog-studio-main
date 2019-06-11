@@ -91,7 +91,6 @@ import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.ParseLibraryResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.ApkData;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.CodeShrinker;
@@ -654,30 +653,22 @@ public abstract class TaskManager {
             com.android.build.api.artifact.ArtifactType testedOutputType =
                     taskOutputSpec.getOutputType();
 
-            FileCollection testedCodeClasses;
-            if (testedVariantScope.getArtifacts().hasArtifact(testedOutputType)) {
-                testedCodeClasses =
-                        testedVariantScope
-                                .getArtifacts()
-                                .getFinalArtifactFiles(testedOutputType)
-                                .get();
-            } else {
-                Provider<FileSystemLocation> finalProduct =
-                        testedVariantScope.getArtifacts().getFinalProduct(testedOutputType);
-                testedCodeClasses = project.files(finalProduct);
-            }
-
-            variantScope.getArtifacts().createBuildableArtifact(
-                    InternalArtifactType.TESTED_CODE_CLASSES,
-                    BuildArtifactsHolder.OperationType.INITIAL,
-                    testedCodeClasses);
+            variantScope
+                    .getArtifacts()
+                    .copy(
+                            InternalArtifactType.TESTED_CODE_CLASSES,
+                            testedVariantScope.getArtifacts(),
+                            testedOutputType);
 
             // create two streams of different types.
             transformManager.addStream(
                     OriginalStream.builder(project, "tested-code-classes")
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setFileCollection(testedCodeClasses)
+                            .setFileCollection(
+                                    testedVariantScope
+                                            .getArtifacts()
+                                            .getFinalProductAsFileCollection(testedOutputType))
                             .build());
 
             transformManager.addStream(
@@ -988,7 +979,7 @@ public abstract class TaskManager {
                                     .setFileCollection(rFiles)
                                     .build());
 
-            scope.getArtifacts().appendArtifact(AnchorOutputType.ALL_CLASSES, rFiles);
+            scope.getArtifacts().appendToAllClasses(rFiles);
             return;
         }
         createNonNamespacedResourceTasks(
@@ -1046,8 +1037,7 @@ public abstract class TaskManager {
 
             if (!projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
                 scope.getArtifacts()
-                        .appendArtifact(
-                                AnchorOutputType.ALL_CLASSES,
+                        .appendToAllClasses(
                                 project.files(
                                         artifacts.getFinalProduct(
                                                 COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
@@ -1319,11 +1309,8 @@ public abstract class TaskManager {
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.EXTERNAL_LIBRARIES)
                                     .setFileCollection(
-                                            artifacts
-                                                    .getFinalArtifactFiles(
-                                                            InternalArtifactType
-                                                                    .NAMESPACED_CLASSES_JAR)
-                                                    .get())
+                                            artifacts.getFinalProductAsFileCollection(
+                                                    InternalArtifactType.NAMESPACED_CLASSES_JAR))
                                     .build());
         }
     }

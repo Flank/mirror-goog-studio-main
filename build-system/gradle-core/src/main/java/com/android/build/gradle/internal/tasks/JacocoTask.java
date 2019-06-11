@@ -16,9 +16,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -44,7 +42,7 @@ import org.gradle.workers.WorkerExecutor;
 public abstract class JacocoTask extends AndroidVariantTask {
     @NonNull private final WorkerExecutorFacade workers;
     private FileCollection jacocoAntTaskConfiguration;
-    private BuildableArtifact inputClasses;
+    private FileCollection inputClasses;
     private JacocoTaskDelegate delegate;
     private WorkerExecutorFacade.IsolationMode isolationMode;
 
@@ -59,7 +57,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
     }
 
     @InputFiles
-    public BuildableArtifact getInputClasses() {
+    public FileCollection getInputClasses() {
         return inputClasses;
     }
 
@@ -145,8 +143,7 @@ public abstract class JacocoTask extends AndroidVariantTask {
             super.configure(task);
             VariantScope scope = getVariantScope();
 
-            task.inputClasses =
-                    scope.getArtifacts().getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES);
+            task.inputClasses = scope.getArtifacts().getAllClasses();
             task.jacocoAntTaskConfiguration =
                     JacocoConfigurations.getJacocoAntTaskConfiguration(
                             scope.getGlobalScope().getProject(), getJacocoVersion(scope));

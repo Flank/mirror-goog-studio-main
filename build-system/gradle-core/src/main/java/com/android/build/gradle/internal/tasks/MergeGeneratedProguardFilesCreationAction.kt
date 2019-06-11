@@ -48,8 +48,7 @@ class MergeGeneratedProguardFilesCreationAction(variantScope: VariantScope)
     override fun configure(task: MergeFileTask) {
         super.configure(task)
 
-        val allClasses =
-            variantScope.artifacts.getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES).get()
+        val allClasses = variantScope.artifacts.getAllClasses()
 
         val proguardRulesFolder = SdkConstants.PROGUARD_RULES_FOLDER.replace('/', File.separatorChar)
         val proguardFiles = allClasses.asFileTree.filter { f ->

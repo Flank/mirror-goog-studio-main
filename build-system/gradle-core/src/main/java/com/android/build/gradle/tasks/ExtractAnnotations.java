@@ -28,9 +28,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
@@ -97,7 +95,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
 
     private String encoding;
 
-    private BuildableArtifact classDir;
+    private FileCollection classDir;
 
     private ArtifactCollection libraries;
 
@@ -180,11 +178,11 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     @Optional
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public BuildableArtifact getClassDir() {
+    public FileCollection getClassDir() {
         return classDir;
     }
 
-    public void setClassDir(BuildableArtifact classDir) {
+    public void setClassDir(FileCollection classDir) {
         this.classDir = classDir;
     }
 
@@ -212,7 +210,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                 new ExtractAnnotationRequest(
                         getTypedefFile().get().getAsFile(),
                         getLogger(),
-                        getClassDir().get(),
+                        getClassDir(),
                         getOutput().get().getAsFile(),
                         sourceFiles,
                         roots);
@@ -350,10 +348,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
 
-            task.setClassDir(
-                    variantScope
-                            .getArtifacts()
-                            .getFinalArtifactFiles(AnchorOutputType.ALL_CLASSES));
+            task.setClassDir(variantScope.getArtifacts().getAllClasses());
 
             task.source(variantScope.getVariantData().getJavaSources());
             task.setEncoding(

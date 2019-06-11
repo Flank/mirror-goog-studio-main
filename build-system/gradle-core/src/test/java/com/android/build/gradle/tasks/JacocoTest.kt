@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.fixtures.FakeIncrementalTaskInputs
-import com.android.build.gradle.internal.fixtures.createBuildArtifact
 import com.android.build.gradle.internal.tasks.JacocoTaskDelegate
 import com.android.build.gradle.internal.tasks.Workers
 import com.android.ide.common.workers.WorkerExecutorFacade
@@ -81,7 +80,7 @@ class JacocoTest {
             FakeFileCollection(),
             FakeGradleProvider(FakeGradleDirectory(outputDir)),
             outputJarDirProvider,
-            createBuildArtifact(inputDir, inputJar),
+            FakeFileCollection(inputDir, inputJar),
             WorkerExecutorFacade.IsolationMode.CLASSLOADER
         )
 
