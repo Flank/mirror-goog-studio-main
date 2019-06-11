@@ -291,12 +291,27 @@ public class Screenshot {
     }
 
     private static String getAdbLocation() {
-        String toolsDir = System.getProperty("com.android.screenshot.bindir"); //$NON-NLS-1$
-        if (toolsDir == null) {
+        String toolPath = System.getProperty("com.android.sdklib.toolsdir"); //$NON-NLS-1$
+        if (toolPath == null) {
             return null;
         }
+        File toolsDir = new File(toolPath);
+        if (!toolsDir.exists()) {
+            return null;
+        }
+        String sdk = null;
 
-        File sdk = new File(toolsDir).getParentFile();
+        // Assume we're in something similar to the expected place, "cmdline-tools/1.2.3".
+        // The parent of that should be the root.
+        File toolRoot = toolsDir.getParentFile();
+        if (toolRoot != null) {
+            if (toolRoot.getName().equals(SdkConstants.FD_CMDLINE_TOOLS)) {
+                sdk = toolRoot.getParent();
+            }
+        }
+        if (sdk == null) {
+            return null;
+        }
 
         // check if adb is present in platform-tools
         File platformTools = new File(sdk, "platform-tools");
