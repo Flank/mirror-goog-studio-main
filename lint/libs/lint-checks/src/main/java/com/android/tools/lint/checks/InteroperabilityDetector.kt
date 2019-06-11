@@ -38,16 +38,21 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiKeyword
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.PsiModifier
+import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiPrimitiveType
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiTypeParameter
+import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UAnonymousClass
+import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParameter
+import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
@@ -186,13 +191,38 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
 
             return false
         }
+
+        private fun isNullableAnnotation(qualifiedName: String): Boolean {
+            return qualifiedName.endsWith("Nullable")
+        }
+
+        private fun isNonNullAnnotation(qualifiedName: String): Boolean {
+            return qualifiedName.endsWith("NonNull") ||
+                    qualifiedName.endsWith("NotNull") ||
+                    qualifiedName.endsWith("Nonnull")
+        }
+
+        private fun isApi(context: JavaContext, declaration: UDeclaration): Boolean {
+            val evaluator = context.evaluator
+            if (evaluator.isPublic(declaration) || evaluator.isProtected(declaration)) {
+                val cls = declaration.getParentOfType<UClass>(UClass::class.java) ?: return true
+                return evaluator.isPublic(cls) && cls !is UAnonymousClass
+            }
+
+            return false
+        }
     }
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
         // using deprecated psi field here instead of sourcePsi because the IDE
         // still uses older version of UAST
         if (isKotlin(context.uastFile?.psi)) {
-            // These checks apply only to Java code
+            val checkNullness = context.isEnabled(PLATFORM_NULLNESS)
+            if (checkNullness) {
+                return KotlinVisitor(context)
+            }
+
+            // The remaining checks apply only to Java code
             return null
         }
         return JavaVisitor(context)
@@ -202,6 +232,92 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         return listOf(UMethod::class.java, UField::class.java)
     }
 
+    class KotlinVisitor(val context: JavaContext) : UElementHandler() {
+        override fun visitMethod(node: UMethod) {
+            if (isApi(context, node) && node.returnTypeReference == null) {
+                // Not explicitly setting return type. See if it's a nullable type:
+                val type = node.returnType ?: return
+                if (type is PsiPrimitiveType) {
+                    return
+                }
+
+                // Already annotated?
+                if (hasNullnessAnnotation(node as UAnnotated)) {
+                    return
+                }
+
+                val body = node.uastBody as? UBlockExpression ?: return
+                val expressions = body.expressions
+                if (expressions.size == 1) {
+                    val statement = expressions[0] as? UReturnExpression ?: return
+                    val expression = statement.returnExpression as? UReferenceExpression ?: return
+                    val resolved = expression.resolve() ?: return
+                    if (isKotlin(resolved)) {
+                        return
+                    }
+
+                    if (resolved is PsiModifierListOwner && hasNullnessAnnotation(resolved)) {
+                        return
+                    }
+
+                    reportMissingExplicitType(node)
+                }
+            }
+        }
+
+        override fun visitField(node: UField) {
+            // Currently this provides a type reference even for implicit types
+            // which is not correct
+            if (isApi(context, node) && node.typeReference == null) {
+                // Not explicitly setting return type. See if it's a nullable type:
+                val type = node.type ?: return
+                if (type is PsiPrimitiveType) {
+                    return
+                }
+
+                // Already annotated?
+                if (hasNullnessAnnotation(node as UAnnotated)) {
+                    return
+                }
+
+                val expression = node.uastInitializer as? UReferenceExpression ?: return
+                val resolved = expression.resolve() ?: return
+                if (isKotlin(resolved)) {
+                    return
+                }
+
+                reportMissingExplicitType(node)
+            }
+        }
+
+        private fun reportMissingExplicitType(node: UElement) {
+            context.report(
+                PLATFORM_NULLNESS, node, context.getNameLocation(node),
+                "Should explicitly declare type here since implicit type does not specify nullness"
+            )
+        }
+
+        private fun hasNullnessAnnotation(node: UAnnotated): Boolean {
+            for (annotation in context.evaluator.getAllAnnotations(node, false)) {
+                val name = annotation.qualifiedName ?: continue
+                if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        private fun hasNullnessAnnotation(node: PsiModifierListOwner): Boolean {
+            for (annotation in context.evaluator.getAllAnnotations(node, false)) {
+                val name = annotation.qualifiedName ?: continue
+                if (isNullableAnnotation(name) || isNonNullAnnotation(name)) {
+                    return true
+                }
+            }
+            return false
+        }
+    }
+
     class JavaVisitor(val context: JavaContext) : UElementHandler() {
         private val checkForKeywords = context.isEnabled(NO_HARD_KOTLIN_KEYWORDS)
         private val checkNullness = context.isEnabled(PLATFORM_NULLNESS)
@@ -209,7 +325,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         private val checkPropertyAccess = context.isEnabled(KOTLIN_PROPERTY)
 
         override fun visitMethod(node: UMethod) {
-            if (isApi(node)) {
+            if (isApi(context, node)) {
                 val methodName = node.name
 
                 if (checkForKeywords) {
@@ -237,7 +353,7 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
         }
 
         override fun visitField(node: UField) {
-            if (isApi(node)) {
+            if (isApi(context, node)) {
                 if (checkForKeywords) {
                     ensureNonKeyword(node.name, node, "field")
                 }
@@ -256,16 +372,6 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     node.uastParameters.size == 1 &&
                     context.evaluator.isPublic(node) &&
                     !context.evaluator.isStatic(node)
-        }
-
-        private fun isApi(declaration: UDeclaration): Boolean {
-            val evaluator = context.evaluator
-            if (evaluator.isPublic(declaration) || evaluator.isProtected(declaration)) {
-                val cls = declaration.getParentOfType<UClass>(UClass::class.java) ?: return true
-                return evaluator.isPublic(cls) && cls !is UAnonymousClass
-            }
-
-            return false
         }
 
         private fun ensureValidProperty(setter: UMethod, methodName: String) {
@@ -484,7 +590,8 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
             ) {
                 return
             }
-            for (annotation in node.annotations) {
+
+            for (annotation in context.evaluator.getAllAnnotations(node as UAnnotated, false)) {
                 val name = annotation.qualifiedName ?: continue
 
                 if (isNullableAnnotation(name)) {
@@ -639,16 +746,6 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                 nonNullAnnotation = "@android.support.annotation.NonNull"
                 nullableAnnotation = "@android.support.annotation.Nullable"
             }
-        }
-
-        private fun isNullableAnnotation(qualifiedName: String): Boolean {
-            return qualifiedName.endsWith("Nullable")
-        }
-
-        private fun isNonNullAnnotation(qualifiedName: String): Boolean {
-            return qualifiedName.endsWith("NonNull") ||
-                    qualifiedName.endsWith("NotNull") ||
-                    qualifiedName.endsWith("Nonnull")
         }
 
         private fun ensureNonKeyword(name: String, node: UDeclaration, typeLabel: String) {
