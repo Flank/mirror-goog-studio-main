@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,56 +14,44 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.Context
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
-import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
-import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.R8Task
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
+import com.android.builder.dexing.ProguardOutputFiles
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
 import org.objectweb.asm.Type
+import java.io.File
 import java.nio.file.Path
 
 /**
- * Testing scenarios for R8 transform processing class files which outputs DEX.
+ * Testing scenarios for R8 task processing class files which outputs DEX.
  */
-class R8MainDexListTransformTest {
+class R8MainDexListTaskTest {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
-    private lateinit var context: Context
-    private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
     private lateinit var outputProguard: RegularFile
 
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
-        outputProvider = TestTransformOutputProvider(outputDir)
-        context = Mockito.mock(Context::class.java)
         outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
@@ -74,31 +62,20 @@ class R8MainDexListTransformTest {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES)
-            .build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
 
         val mainDexRuleFile = tmp.newFile()
         mainDexRuleFile.printWriter().use {
             it.println("-keep class " + Animal::class.java.name)
         }
-        val mainDexRulesFileCollection = FakeFileCollection(setOf(mainDexRuleFile))
 
-        val transform =
-            createTransform(mainDexRulesFiles = mainDexRulesFileCollection, minSdkVersion = 19)
-        transform.keep("class **")
-        `when`(outputProguard.asFile).thenReturn(tmp.newFile("mapping.txt"))
-        transform.setOutputFile(FakeGradleProperty(outputProguard))
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            mainDexRulesFiles = listOf(mainDexRuleFile),
+            minSdkVersion = 19,
+            r8Keep = "class **"
+        )
 
-        transform.transform(invocation)
         val mainDex = Dex(outputDir.resolve("main").resolve("classes.dex"))
         assertThat(mainDex)
             .containsExactlyClassesIn(
@@ -119,36 +96,21 @@ class R8MainDexListTransformTest {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java)
         )
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES)
-            .build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
 
         val mainDexRuleFile = tmp.newFile()
         mainDexRuleFile.printWriter().use {
             it.println("-keep class " + CarbonForm::class.java.name)
         }
-        val mainDexRulesFileCollection = FakeFileCollection(setOf(mainDexRuleFile))
 
-        val transform =
-            createTransform(
-                mainDexRulesFiles = mainDexRulesFileCollection,
-                minSdkVersion = 19,
-                dexingType = DexingType.MONO_DEX
-            )
-
-        `when`(outputProguard.asFile).thenReturn(tmp.newFolder("mapping"))
-        transform.setOutputFile(FakeGradleProperty(outputProguard))
-
-        transform.keep("class **")
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            mainDexRulesFiles = listOf(mainDexRuleFile),
+            minSdkVersion = 19,
+            dexingType = DexingType.MONO_DEX,
+            r8Keep = "class **",
+            mappingFile = tmp.newFolder("mapping")
+        )
 
         assertThatDex(outputDir.resolve("main/classes.dex").toFile())
             .containsExactlyClassesIn(
@@ -161,29 +123,53 @@ class R8MainDexListTransformTest {
         assertThat(outputDir.resolve("main/classes2.dex")).doesNotExist()
     }
 
-    private fun createTransform(
-        mainDexRulesFiles: FileCollection = FakeFileCollection(),
+    private fun runR8(
+        classes: List<File>,
+        resources: List<File>,
+        referencedInputs: List<File> = listOf(),
+        mainDexRulesFiles: List<File> = listOf(),
         minSdkVersion: Int = 21,
-        dexingType: DexingType = DexingType.LEGACY_MULTIDEX
-    ): R8Task {
-        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        return R8Task(
-            bootClasspath = classpath,
+        dexingType: DexingType = DexingType.LEGACY_MULTIDEX,
+        r8Keep: String? = null,
+        mappingFile: File = outputDir.resolve("mapping.txt").toFile()
+    ) {
+
+
+        val proguardConfigurations: MutableList<String> = mutableListOf(
+            "-ignorewarnings")
+
+        r8Keep?.let { proguardConfigurations.add("-keep $it") }
+
+
+        val output: File = outputDir.resolve("main").toFile()
+
+        R8Task.shrink(
+            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
-            java8Support = VariantScope.Java8LangSupport.UNUSED,
+            enableDesugaring = false,
             disableTreeShaking = false,
             disableMinification = true,
-            mainDexListFiles = FakeFileCollection(),
+            mainDexListFiles = listOf(),
             mainDexRulesFiles = mainDexRulesFiles,
-            inputProguardMapping = FakeFileCollection(),
-            proguardConfigurationFiles = FakeConfigurableFileCollection(),
+            inputProguardMapping = null,
+            proguardConfigurationFiles = listOf(),
+            proguardConfigurations = proguardConfigurations,
             variantType = VariantTypeImpl.BASE_APK,
-            includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
             dexingType = dexingType,
             useFullR8 = false,
-            duplicateClassesCheck = FakeFileCollection()
+            referencedInputs = referencedInputs,
+            classes = classes,
+            resources = resources,
+            proguardOutputFiles =
+                ProguardOutputFiles(
+                    mappingFile.toPath(),
+                    tmp.root.resolve("seeds.txt").toPath(),
+                    tmp.root.resolve("usage.txt").toPath()),
+            output = output,
+            outputResources = outputDir.resolve("java_res.jar").toFile(),
+            mainDexListOutput = null
         )
     }
 }

@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.builder.dexing.DexSplitterTool
 import com.android.utils.FileUtils
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -71,8 +73,7 @@ abstract class DexSplitterTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    lateinit var inputDirs: FileCollection
-        private set
+    abstract val inputDirs: ConfigurableFileCollection
 
     @get:OutputDirectory
     abstract val featureDexDir: DirectoryProperty
@@ -98,31 +99,6 @@ abstract class DexSplitterTask : NonIncrementalTask() {
     ) : VariantTaskCreationAction<DexSplitterTask>(variantScope)  {
         override val type = DexSplitterTask::class.java
         override val name =  variantScope.getTaskName("split", "Dex")
-
-        private val inputDirs: FileCollection
-
-        init {
-            // Get inputs from the stream and consume them
-
-            val scopeSet = mutableSetOf(
-                QualifiedContent.Scope.PROJECT,
-                QualifiedContent.Scope.SUB_PROJECTS,
-                QualifiedContent.Scope.EXTERNAL_LIBRARIES,
-                InternalScope.FEATURES)
-
-            val contentType = ExtendedContentType.DEX
-
-            inputDirs = variantScope.transformManager
-                .getPipelineOutputAsFileCollection {contentTypes, scopes ->
-                    scopes.intersect(scopeSet).isNotEmpty()
-                            && contentTypes.contains(contentType)
-                }.filter{ file: File ->
-                    file.isDirectory
-                }
-
-            variantScope.transformManager
-                .consumeStreams(scopeSet, setOf(contentType))
-        }
 
         override fun handleProvider(taskProvider: TaskProvider<out DexSplitterTask>) {
             super.handleProvider(taskProvider)
@@ -164,7 +140,10 @@ abstract class DexSplitterTask : NonIncrementalTask() {
                     InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
                     task.mainDexList)
 
-            task.inputDirs = inputDirs
+            task.inputDirs.from(
+                artifacts
+                    .getFinalProducts<Directory>(InternalArtifactType.DEX)
+            )
         }
     }
 

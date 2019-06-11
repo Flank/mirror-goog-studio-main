@@ -364,7 +364,7 @@ public class OriginalStream extends TransformStream {
                 .add("fileCollection", getFileCollection())
                 .toString();
     }
-    
+
     @NonNull
     @Override
     FileCollection getOutputFileCollection(

@@ -307,7 +307,7 @@ public class MinifyTest {
         TaskStateList.TaskInfo taskInfo =
                 minifiedAndroidTest.findTask(
                         codeShrinker == CodeShrinker.R8
-                                ? ":transformClassesAndResourcesWithR8ForMinifiedAndroidTest"
+                                ? ":minifyMinifiedAndroidTestWithR8"
                                 : ":transformClassesAndResourcesWithProguardForMinifiedAndroidTest");
 
         assertThat(taskInfo).didWork();

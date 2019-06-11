@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.Context
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.PostprocessingFeatures
-import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.R8Task
-import com.android.build.gradle.internal.tasks.DexSplitterTask
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
+import com.android.builder.dexing.ProguardOutputFiles
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.TestUtils
@@ -37,16 +29,10 @@ import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,10 +46,7 @@ import kotlin.streams.toList
 class DexSplitterTaskTest {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
-    private lateinit var r8Context: Context
-    private lateinit var r8OutputProvider: TransformOutputProvider
-    private lateinit var r8OutputProviderDir: File
-    private lateinit var dexSplitterContext: Context
+    private lateinit var shrunkDexDir: File
     private lateinit var dexSplitterBaseOutputDir: File
     private lateinit var dexSplitterFeatureOutputDir: File
     private lateinit var baseClasses: File
@@ -71,11 +54,7 @@ class DexSplitterTaskTest {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
-        r8OutputProviderDir = tmp.newFolder()
-        r8OutputProvider = TestTransformOutputProvider(r8OutputProviderDir.toPath())
-        r8Context = Mockito.mock(Context::class.java)
-        dexSplitterContext = Mockito.mock(Context::class.java)
+        shrunkDexDir = tmp.newFolder("shrunkDex")
         dexSplitterBaseOutputDir = tmp.newFolder()
         dexSplitterFeatureOutputDir = tmp.newFolder()
 
@@ -96,7 +75,7 @@ class DexSplitterTaskTest {
         runR8(listOf(baseClasses, featureClasses), "class **")
 
         // Check that r8 ran as expected before running dexSplitter
-        val r8Dex = getDex(r8OutputProviderDir.toPath())
+        val r8Dex = getDex(shrunkDexDir.toPath())
         assertThat(r8Dex).containsClasses(
             "Lbase/A;",
             "Lbase/B;",
@@ -104,7 +83,7 @@ class DexSplitterTaskTest {
             "Lfeature/B;")
 
         runDexSplitter(
-            File(r8OutputProviderDir, "main"),
+            shrunkDexDir,
             setOf(featureClasses),
             baseClasses)
 
@@ -118,7 +97,7 @@ class DexSplitterTaskTest {
         runR8(listOf(baseClasses, featureClasses), "class **")
 
         // Check that r8 ran as expected before running dexSplitter
-        val r8Dex = getDex(r8OutputProviderDir.toPath())
+        val r8Dex = getDex(shrunkDexDir.toPath())
         assertThat(r8Dex).containsClasses(
             "Lbase/A;",
             "Lbase/B;",
@@ -126,7 +105,7 @@ class DexSplitterTaskTest {
             "Lfeature/B;")
 
         runDexSplitter(
-            File(r8OutputProviderDir, "main"),
+            shrunkDexDir,
             setOf(featureClasses),
             baseClasses,
             File("/path/to/nowhere"))
@@ -160,7 +139,7 @@ class DexSplitterTaskTest {
         }
 
         runDexSplitter(
-            File(r8OutputProviderDir, "main"),
+            shrunkDexDir,
             setOf(featureClasses),
             baseSplit,
             mappingFileSrc = null,
@@ -191,23 +170,40 @@ class DexSplitterTaskTest {
     }
 
     private fun runR8(jars: List<File>, r8Keep: String? = null) {
-        val jarInputs =
-            jars.asSequence().map {
-                TransformTestHelper.singleJarBuilder(it).setContentTypes(RESOURCES, CLASSES).build()
-            }.toSet()
-        val r8Invocation =
-                TransformTestHelper
-                        .invocationBuilder()
-                        .setInputs(jarInputs)
-                        .setContext(this.r8Context)
-                        .setTransformOutputProvider(r8OutputProvider)
-                        .build()
 
-        val r8Transform = getR8Transform()
-        r8Transform.setActions(PostprocessingFeatures(false, false, false))
-        r8Keep?.let { r8Transform.keep(it) }
+        val proguardConfigurations: MutableList<String> = mutableListOf(
+            "-ignorewarnings")
 
-        r8Transform.transform(r8Invocation)
+        r8Keep?.let { proguardConfigurations.add("-keep $it") }
+
+        R8Task.shrink(
+            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
+            minSdkVersion = 21,
+            isDebuggable = true,
+            enableDesugaring = false,
+            disableTreeShaking = false,
+            disableMinification = true,
+            mainDexListFiles = listOf(),
+            mainDexRulesFiles = listOf(),
+            inputProguardMapping = null,
+            proguardConfigurationFiles = listOf(),
+            proguardConfigurations = proguardConfigurations,
+            variantType = VariantTypeImpl.BASE_APK,
+            messageReceiver = NoOpMessageReceiver(),
+            dexingType = DexingType.NATIVE_MULTIDEX,
+            useFullR8 = false,
+            referencedInputs = listOf(),
+            classes = jars,
+            resources = jars,
+            proguardOutputFiles =
+                ProguardOutputFiles(
+                    tmp.newFile("mapping.txt").toPath(),
+                    tmp.newFile("seeds.txt").toPath(),
+                    tmp.newFile("usage.txt").toPath()),
+            output = shrunkDexDir,
+            outputResources = tmp.newFile("shrunkResources.jar"),
+            mainDexListOutput = null
+        )
     }
 
     private fun checkDexSplitterOutputs() {
@@ -228,36 +224,5 @@ class DexSplitterTaskTest {
         return Dex(dexFiles.single())
     }
 
-    private fun getR8Transform(
-        mainDexRulesFiles: FileCollection = FakeFileCollection(),
-        java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
-        proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
-        outputProguardMapping: File = tmp.newFile(),
-        disableMinification: Boolean = true,
-        minSdkVersion: Int = 21
-    ): R8Task {
-        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        val transform= R8Task(
-                bootClasspath = classpath,
-                minSdkVersion = minSdkVersion,
-                isDebuggable = true,
-                java8Support = java8Support,
-                disableTreeShaking = false,
-                disableMinification = disableMinification,
-                mainDexListFiles = FakeFileCollection(),
-                mainDexRulesFiles = mainDexRulesFiles,
-                inputProguardMapping = FakeFileCollection(),
-                proguardConfigurationFiles = proguardRulesFiles,
-                variantType = VariantTypeImpl.BASE_APK,
-                includeFeaturesInScopes = false,
-                dexingType = DexingType.NATIVE_MULTIDEX,
-                messageReceiver= NoOpMessageReceiver(),
-                duplicateClassesCheck = FakeFileCollection()
-        )
-        val regularFileMock = Mockito.mock(RegularFile::class.java)
-        `when`(regularFileMock.asFile).thenReturn(outputProguardMapping)
-        transform.setOutputFile(FakeGradleProperty<RegularFile>(regularFileMock))
 
-        return transform
-    }
 }

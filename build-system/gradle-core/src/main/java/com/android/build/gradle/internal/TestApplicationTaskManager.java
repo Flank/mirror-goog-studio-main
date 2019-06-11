@@ -192,7 +192,8 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
-                            AndroidArtifacts.ArtifactType.APK_MAPPING));
+                            AndroidArtifacts.ArtifactType.APK_MAPPING),
+                    true);
         } else {
             TaskProvider<CheckTestedAppObfuscation> checkObfuscation =
                     taskFactory.register(

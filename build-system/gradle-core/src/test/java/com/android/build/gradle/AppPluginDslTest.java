@@ -39,14 +39,13 @@ import org.junit.rules.TemporaryFolder;
 /** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
     public static final String PROGUARD_DEBUG = "transformClassesAndResourcesWithProguardForDebug";
-    public static final String R8_DEBUG = "transformClassesAndResourcesWithR8ForDebug";
+    public static final String R8_DEBUG = "minifyDebugWithR8";
     public static final String PROGUARD_DEBUG_ANDROID_TEST =
             "transformClassesAndResourcesWithProguardForDebugAndroidTest";
     public static final String PROGUARD_RELEASE =
             "transformClassesAndResourcesWithProguardForRelease";
-    public static final String R8_RELEASE = "transformClassesAndResourcesWithR8ForRelease";
-    public static final String R8_DEBUG_ANDROID_TEST =
-            "transformClassesAndResourcesWithR8ForDebugAndroidTest";
+    public static final String R8_RELEASE = "minifyReleaseWithR8";
+    public static final String R8_DEBUG_ANDROID_TEST = "minifyDebugAndroidTestWithR8";
 
     private static final String DEFAULT_DEBUG;
     private static final String DEFAULT_DEBUG_ANDROID_TEST;

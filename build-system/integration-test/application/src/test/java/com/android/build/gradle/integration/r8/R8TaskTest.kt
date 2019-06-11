@@ -24,7 +24,7 @@ import org.junit.Rule
 import org.junit.Test
 import com.google.common.truth.Truth.assertThat
 
-class R8TransformTaskTest {
+class R8TaskTest {
 
     @get:Rule
     val project = GradleTestProject.builder()
@@ -50,7 +50,7 @@ class R8TransformTaskTest {
     @Test
     fun testCheckDuplicateClassesTaskDidWork() {
         val buildResult =
-            project.executor().run(":transformClassesAndResourcesWithR8ForRelease")
+            project.executor().run(":minifyReleaseWithR8")
         assertThat(buildResult.didWorkTasks).contains(":checkReleaseDuplicateClasses")
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.transform.Context
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES
-import com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES
-import com.android.build.api.transform.TransformOutputProvider
-import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
-import com.android.build.gradle.internal.fixtures.FakeFileCollection
-import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.R8Task
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
 import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
+import com.android.builder.dexing.ProguardOutputFiles
 import com.android.builder.dexing.R8OutputType
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
@@ -40,8 +34,6 @@ import com.android.testutils.apk.Zip
 import com.android.testutils.truth.MoreTruth.assertThat
 import com.android.testutils.truth.PathSubject.assertThat
 import com.google.common.truth.Truth.assertThat
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.junit.Before
 import org.junit.Rule
@@ -64,15 +56,13 @@ import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
 /**
- * Testing the basic scenarios for R8 transform processing class files. Both dex and class file
+ * Testing the basic scenarios for R8 task processing class files. Both dex and class file
  * backend are tested.
  */
 @RunWith(Parameterized::class)
-class R8TaskTest(val r8OutputType: R8OutputType) {
+class R8Test(val r8OutputType: R8OutputType) {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
-    private lateinit var context: Context
-    private lateinit var outputProvider: TransformOutputProvider
     private lateinit var outputDir: Path
     private lateinit var outputProguard: RegularFile
 
@@ -85,8 +75,6 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
     @Before
     fun setUp() {
         outputDir = tmp.newFolder().toPath()
-        outputProvider = TestTransformOutputProvider(outputDir)
-        context = Mockito.mock(Context::class.java)
         outputProguard = Mockito.mock(RegularFile::class.java)
     }
 
@@ -95,21 +83,11 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A", "test/B"))
 
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES)
-            .build()
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class **")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            r8Keep = "class **"
+        )
 
         assertClassExists("test/A")
         assertClassExists("test/B")
@@ -127,26 +105,17 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             zip.closeEntry()
         }
 
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES, RESOURCES).build()
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class test.A")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(classes.toFile()),
+            r8Keep = "class test.A"
+        )
 
         assertClassExists("test/A")
         assertClassDoesNotExist("test/B")
     }
 
-    // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
+    // This test verifies that R8 task does NOT extract the rules from the jars if these jars
     // are not explicitly set as a source for rule extraction. This is done in order to control
     // the proguard rules, being able to filter out undesired ones in a non-command-line scenario
     @Test
@@ -164,26 +133,17 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             zip.closeEntry()
         }
 
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(RESOURCES, CLASSES).build()
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class test.A")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(classes.toFile()),
+            r8Keep = "class test.A"
+        )
 
         assertClassExists("test/A")
         assertClassDoesNotExist("test/B")
     }
 
-    // This test verifies that R8 transform does NOT extract the rules from the jars if these jars
+    // This test verifies that R8 task does NOT extract the rules from the jars if these jars
     // are not explicitly set as a source for rule extraction. This is done in order to control
     // the proguard rules, being able to filter out undesired ones in a non-command-line scenario
     @Test
@@ -201,20 +161,11 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             zip.closeEntry()
         }
 
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES).build()
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class test.A")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            r8Keep = "class test.A"
+        )
 
         assertClassExists("test/A")
         assertClassDoesNotExist("test/B")
@@ -224,26 +175,16 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
     fun testLibraryClassesPassedToR8() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.pathWithClasses(classes, listOf(Animal::class.java))
-        val jarInput = TransformTestHelper.singleJarBuilder(classes.toFile())
-            .setContentTypes(CLASSES).build()
 
         val libraryClasses = tmp.root.toPath().resolve("library_classes.jar")
         TestInputsGenerator.pathWithClasses(libraryClasses, listOf(CarbonForm::class.java))
-        val jarLibrary = TransformTestHelper.singleJarBuilder(libraryClasses.toFile()).build()
 
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .addReferenceInput(jarLibrary)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class **")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            referencedInputs = listOf(libraryClasses.toFile()),
+            r8Keep = "class **"
+        )
 
         assertClassExists(Animal::class.java)
         assertClassDoesNotExist(CarbonForm::class.java)
@@ -256,21 +197,14 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-        val transform =
-            createTransform(java8Support = VariantScope.Java8LangSupport.R8, disableTreeShaking = true)
-        transform.keep("class ***")
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            disableTreeShaking = true,
+            r8Keep = "class ***"
+        )
 
         assertClassExists(Animal::class.java)
         assertClassExists(CarbonForm::class.java)
@@ -295,29 +229,18 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
 
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
         }
-        val proguardConfigurationFileCollection =
-            FakeConfigurableFileCollection(setOf(proguardConfiguration))
-        val transform = createTransform(
-            java8Support = VariantScope.Java8LangSupport.R8,
-            proguardRulesFiles = proguardConfigurationFileCollection
-        )
 
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            proguardRulesFiles = listOf(proguardConfiguration)
+        )
 
         assertClassExists(Animal::class.java)
         assertClassExists(CarbonForm::class.java)
@@ -326,10 +249,12 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
         // Check proguard compatibility mode
         assertClassHasAnnotations(Type.getInternalName(Toy::class.java))
 
-        val transform2 = createTransform(java8Support = VariantScope.Java8LangSupport.R8)
-        transform2.keep("class " + CarbonForm::class.java.name)
-
-        transform2.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            java8Support = VariantScope.Java8LangSupport.R8,
+            r8Keep = "class " + CarbonForm::class.java.name
+        )
 
         assertClassExists(CarbonForm::class.java)
         assertClassDoesNotExist(Animal::class.java)
@@ -344,30 +269,19 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             classes,
             listOf(Animal::class.java, CarbonForm::class.java, Cat::class.java, Toy::class.java)
         )
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
 
         val proguardConfiguration = tmp.newFile()
         proguardConfiguration.printWriter().use {
             it.println("-keep class " + Cat::class.java.name + " {*;}")
         }
-        val proguardConfigurationFileCollection =
-            FakeConfigurableFileCollection(setOf(proguardConfiguration))
-        val transform = createTransform(
+
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
             java8Support = VariantScope.Java8LangSupport.R8,
-            proguardRulesFiles = proguardConfigurationFileCollection,
+            proguardRulesFiles = listOf(proguardConfiguration),
             useFullR8 = true
         )
-
-        transform.transform(invocation)
 
         assertClassExists(Animal::class.java)
         assertClassExists(CarbonForm::class.java)
@@ -376,13 +290,13 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
         // Check full R8 mode
         assertClassDoesNotHaveAnnotations(Type.getInternalName(Toy::class.java))
 
-        val transform2 = createTransform(
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
             java8Support = VariantScope.Java8LangSupport.R8,
-            useFullR8 = true
+            useFullR8 = true,
+            r8Keep = "class " + CarbonForm::class.java.name
         )
-        transform2.keep("class " + CarbonForm::class.java.name)
-
-        transform2.transform(invocation)
 
         assertClassExists(CarbonForm::class.java)
         assertClassDoesNotExist(Animal::class.java)
@@ -396,20 +310,12 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
         val nonAsciiName = "com/android/tests/basic/Ubicación"
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf(nonAsciiName))
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
 
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-        val transform = createTransform()
-        transform.keep("class " + nonAsciiName.replace("/", "."))
-
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            r8Keep = "class " + nonAsciiName.replace("/", ".")
+        )
 
         assertClassExists(nonAsciiName)
     }
@@ -418,22 +324,16 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
     fun testMappingProduced() {
         val classes = tmp.root.toPath().resolve("classes.jar")
         TestInputsGenerator.jarWithEmptyClasses(classes, listOf("test/A"))
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(classes.toFile()).setContentTypes(CLASSES).build()
-
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .addInput(jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
         val outputMapping = tmp.newFile()
-        val transform =
-            createTransform(disableMinification = false, outputProguardMapping = outputMapping)
-        transform.keep("class **")
 
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(classes.toFile()),
+            resources = listOf(),
+            disableMinification = false,
+            outputProguardMapping = outputMapping,
+            r8Keep = "class **"
+        )
+
         assertThat(outputMapping).exists()
     }
 
@@ -446,10 +346,6 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             zip.putNextEntry(ZipEntry("metadata2.txt"))
             zip.closeEntry()
         }
-        val resInput =
-            TransformTestHelper.singleJarBuilder(resources.toFile())
-                .setContentTypes(RESOURCES)
-                .build()
 
         val mixedResources = tmp.root.toPath().resolve("classes_and_res.jar")
         ZipOutputStream(mixedResources.toFile().outputStream()).use { zip ->
@@ -461,22 +357,12 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
             zip.write(TestClassesGenerator.emptyClass("test", "A"));
             zip.closeEntry()
         }
-        val jarInput =
-            TransformTestHelper.singleJarBuilder(mixedResources.toFile())
-                .setContentTypes(CLASSES, RESOURCES)
-                .build()
 
-        val invocation =
-            TransformTestHelper
-                .invocationBuilder()
-                .setInputs(resInput, jarInput)
-                .setContext(this.context)
-                .setTransformOutputProvider(outputProvider)
-                .build()
-
-        val transform = createTransform()
-        transform.keep("class **")
-        transform.transform(invocation)
+        runR8(
+            classes = listOf(mixedResources.toFile()),
+            resources = listOf(mixedResources.toFile(), resources.toFile()),
+            r8Keep = "class **"
+        )
 
         assertClassExists("test/A")
 
@@ -571,13 +457,10 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
                 it.closeEntry()
             }
 
-        val dirInput = TransformTestHelper.directoryBuilder(resDir).setContentType(RESOURCES).build()
-        val jarInput = TransformTestHelper.singleJarBuilder(resJar).setContentTypes(RESOURCES).build()
-
-        val invocation = TransformTestHelper.invocationBuilder().setInputs(jarInput, dirInput)
-            .setContext(this.context).setTransformOutputProvider(outputProvider).build()
-
-        createTransform().transform(invocation)
+        runR8(
+            classes = listOf(),
+            resources = listOf(resDir, resJar)
+        )
 
         assertThat(outputDir.resolve("main/classes.dex")).doesNotExist()
         Zip(outputDir.resolve("java_res.jar")).use {
@@ -593,16 +476,25 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
         return Dex(dexFiles.single())
     }
 
-    private fun createTransform(
-        mainDexRulesFiles: FileCollection = FakeFileCollection(),
+    private fun runR8(
+        classes: List<File>,
+        resources: List<File>,
+        mainDexRulesFiles: List<File> = listOf(),
         java8Support: VariantScope.Java8LangSupport = VariantScope.Java8LangSupport.UNUSED,
-        proguardRulesFiles: ConfigurableFileCollection = FakeConfigurableFileCollection(),
-        outputProguardMapping: File = tmp.newFile(),
+        proguardRulesFiles: List<File> = listOf(),
+        outputProguardMapping: File = outputDir.resolve("mapping.txt").toFile(),
         disableMinification: Boolean = true,
         disableTreeShaking: Boolean = false,
         minSdkVersion: Int = 21,
-        useFullR8: Boolean = false
-    ): R8Task {
+        useFullR8: Boolean = false,
+        r8Keep: String? = null,
+        referencedInputs: List<File> = listOf()
+    ) {
+        val proguardConfigurations: MutableList<String> = mutableListOf(
+            "-ignorewarnings")
+
+        r8Keep?.let { proguardConfigurations.add("-keep $it") }
+
         val variantType =
             if (r8OutputType == R8OutputType.DEX)
                 VariantTypeImpl.BASE_APK
@@ -610,30 +502,43 @@ class R8TaskTest(val r8OutputType: R8OutputType) {
                 VariantTypeImpl.LIBRARY
 
 
-        val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        val r8Task = R8Task(
-            bootClasspath = classpath,
+
+        val output: File =
+            if (variantType.isAar) {
+                outputDir.resolve("main.jar").toFile()
+            } else {
+                outputDir.resolve("main").toFile()
+            }
+
+        R8Task.shrink(
+            bootClasspath = listOf(TestUtils.getPlatformFile("android.jar")),
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
-            java8Support = java8Support,
+            enableDesugaring =
+                java8Support == VariantScope.Java8LangSupport.R8
+                    && !variantType.isAar,
             disableTreeShaking = disableTreeShaking,
             disableMinification = disableMinification,
-            mainDexListFiles = FakeFileCollection(),
+            mainDexListFiles = listOf(),
             mainDexRulesFiles = mainDexRulesFiles,
-            inputProguardMapping = FakeFileCollection(),
-            outputProguardMapping = outputProguardMapping,
+            inputProguardMapping = null,
             proguardConfigurationFiles = proguardRulesFiles,
+            proguardConfigurations = proguardConfigurations,
             variantType = variantType,
-            includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
             dexingType = DexingType.NATIVE_MULTIDEX,
             useFullR8 = useFullR8,
-            duplicateClassesCheck = FakeFileCollection()
+            referencedInputs = referencedInputs,
+            classes = classes,
+            resources = resources,
+            proguardOutputFiles =
+                ProguardOutputFiles(
+                    outputProguardMapping.toPath(),
+                    tmp.root.resolve("seeds.txt").toPath(),
+                    tmp.root.resolve("usage.txt").toPath()),
+            output = output,
+            outputResources = outputDir.resolve("java_res.jar").toFile(),
+            mainDexListOutput = null
         )
-
-        Mockito.`when`(outputProguard.asFile).thenReturn(outputProguardMapping)
-        r8Task.setOutputFile(FakeGradleProperty(outputProguard))
-
-        return r8Task
     }
 }

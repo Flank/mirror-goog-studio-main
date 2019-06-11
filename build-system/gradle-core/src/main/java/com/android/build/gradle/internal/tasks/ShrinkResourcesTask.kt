@@ -214,7 +214,13 @@ abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
             // When R8 produces dex files, this task analyzes them. If R8 or Proguard produce
             // class files, this task will analyze those. That is why both types are specified.
-            task.classes.from(classes)
+            when {
+                artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES) -> task.classes.from(
+                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES))
+                artifacts.hasFinalProduct(InternalArtifactType.DEX) -> task.classes.from(
+                    artifacts.getFinalProductAsFileCollection(InternalArtifactType.DEX))
+                else -> task.classes.from(classes)
+            }
         }
     }
 

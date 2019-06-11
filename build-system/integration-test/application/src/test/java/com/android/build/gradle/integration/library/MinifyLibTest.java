@@ -111,7 +111,7 @@ public class MinifyLibTest {
 
 
         if (codeShrinker == CodeShrinker.R8) {
-            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebug")).didWork();
+            assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
         } else {
             assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
                     .didWork();
@@ -144,9 +144,8 @@ public class MinifyLibTest {
         GradleBuildResult result = getExecutor().run(":app:assembleAndroidTest");
 
         if (codeShrinker == CodeShrinker.R8) {
-            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebug")).didWork();
-            assertThat(result.getTask(":app:transformClassesAndResourcesWithR8ForDebugAndroidTest"))
-                    .didWork();
+            assertThat(result.getTask(":app:minifyDebugWithR8")).didWork();
+            assertThat(result.getTask(":app:minifyDebugAndroidTestWithR8")).didWork();
         } else {
             assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
                     .didWork();

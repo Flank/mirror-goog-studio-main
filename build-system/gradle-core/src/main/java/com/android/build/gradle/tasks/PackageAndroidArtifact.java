@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.SHRUNK_JAVA_RES;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -1012,22 +1013,26 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 return artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
                         .get();
+            } else {
+                return project.files(artifacts.getFinalProducts(InternalArtifactType.DEX));
             }
-            return getVariantScope()
-                    .getTransformManager()
-                    .getPipelineOutputAsFileCollection(StreamFilter.DEX);
         }
 
         @NonNull
         public FileCollection getJavaResources() {
-            if (getVariantScope().getNeedsMergedJavaResStream()) {
+            if (getVariantScope().getArtifacts().hasFinalProduct(SHRUNK_JAVA_RES)) {
+                Provider<RegularFile> mergedJavaResProvider =
+                        getVariantScope().getArtifacts().getFinalProduct(SHRUNK_JAVA_RES);
+                return project.getLayout().files(mergedJavaResProvider);
+            } else if (getVariantScope().getNeedsMergedJavaResStream()) {
                 return getVariantScope()
                         .getTransformManager()
                         .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES);
+            } else {
+                Provider<RegularFile> mergedJavaResProvider =
+                        getVariantScope().getArtifacts().getFinalProduct(MERGED_JAVA_RES);
+                return project.getLayout().files(mergedJavaResProvider);
             }
-            Provider<RegularFile> mergedJavaResProvider =
-                    getVariantScope().getArtifacts().getFinalProduct(MERGED_JAVA_RES);
-            return project.getLayout().files(mergedJavaResProvider);
         }
 
         @Nullable

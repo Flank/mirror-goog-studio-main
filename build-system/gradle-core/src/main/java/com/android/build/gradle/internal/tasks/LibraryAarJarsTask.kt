@@ -354,22 +354,38 @@ abstract class LibraryAarJarsTask : NonIncrementalTask() {
              * Need to check if they exist during the task action [mergeInputsToLocation],
              * which means gradle will have to deal with possibly non-existent files in the cache
              */
-            task.mainScopeClassFiles = variantScope.transformManager
-                .getPipelineOutputAsFileCollection (
-                    {contentTypes, scopes ->
-                        contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
-                                && scopes.contains(Scope.PROJECT)
-                    },
-                    {contentTypes, scopes ->
-                        (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
-                                && !contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES))
-                                && scopes.contains(Scope.PROJECT)})
+            task.mainScopeClassFiles =
+                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_CLASSES)) {
+                    artifacts
+                        .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_CLASSES)
+                        .get()
+                } else {
+                    variantScope.transformManager
+                        .getPipelineOutputAsFileCollection(
+                            { contentTypes, scopes ->
+                                contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
+                                        && scopes.contains(Scope.PROJECT)
+                            },
+                            { contentTypes, scopes ->
+                                (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)
+                                        && !contentTypes.contains(
+                                    QualifiedContent.DefaultContentType.RESOURCES))
+                                        && scopes.contains(Scope.PROJECT)
+                            })
+                }
 
-            task.mainScopeResourceFiles = variantScope.transformManager
-                .getPipelineOutputAsFileCollection {contentTypes, scopes ->
-                    contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)
-                            && scopes.contains(Scope.PROJECT)}
-
+            task.mainScopeResourceFiles =
+                if (artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                    artifacts
+                        .getFinalProductAsFileCollection(InternalArtifactType.SHRUNK_JAVA_RES)
+                        .get()
+                } else {
+                    variantScope.transformManager
+                        .getPipelineOutputAsFileCollection { contentTypes, scopes ->
+                            contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)
+                                    && scopes.contains(Scope.PROJECT)
+                        }
+                }
             task.localScopeInputFiles = variantScope.transformManager
                 .getPipelineOutputAsFileCollection {contentTypes, scopes ->
                     (contentTypes.contains(QualifiedContent.DefaultContentType.CLASSES)

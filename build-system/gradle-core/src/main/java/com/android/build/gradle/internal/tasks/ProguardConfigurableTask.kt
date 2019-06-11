@@ -107,7 +107,7 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
 
 
         private val includeFeaturesInScopes: Boolean = variantScope.consumesFeatureJars()
-        private val variantType: VariantType = variantScope.variantData.type
+        protected val variantType: VariantType = variantScope.variantData.type
         private val testedVariantData: BaseVariantData? = variantScope.testedVariantData
 
 
@@ -251,6 +251,8 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     )
                 )
             }
+
+            task.variantType.set(variantType)
 
             task.includeFeaturesInScopes.set(includeFeaturesInScopes)
 

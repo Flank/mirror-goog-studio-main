@@ -115,6 +115,6 @@ class MappingFileAccessTest {
         """.trimIndent())
         val result = project.executor().run("mappingFileRelease")
         TruthHelper.assertThat(result.getTask(":mappingFileRelease")).didWork()
-        TruthHelper.assertThat(result.getTask(":transformClassesAndResourcesWithR8ForRelease")).didWork()
+        TruthHelper.assertThat(result.getTask(":minifyReleaseWithR8")).didWork()
     }
 }

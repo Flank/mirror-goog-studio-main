@@ -40,7 +40,6 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.COMPI
 import static com.android.build.gradle.internal.scope.InternalArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.LINT_PUBLISH_JAR;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_JAVA_RES;
@@ -80,7 +79,6 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
-import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
@@ -253,7 +251,6 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -2222,20 +2219,6 @@ public abstract class TaskManager {
                 taskFactory.register(configAction);
             }
         }
-
-        variantScope
-                .getTransformManager()
-                .addStream(
-                        OriginalStream.builder(project, "final-dex")
-                                .addContentTypes(ExtendedContentType.DEX)
-                                .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        variantScope.getGlobalScope().getProject().files(
-                                            variantScope
-                                                    .getArtifacts()
-                                                    .getFinalProducts(InternalArtifactType.DEX)
-                                        ))
-                                .build());
     }
 
     @NonNull
@@ -2843,54 +2826,46 @@ public abstract class TaskManager {
      * only used by test-only modules. Returns a type of the {@link CodeShrinker} shrinker that was
      * created, or {@code null} if none was created.
      */
-    @Nullable
+    @NonNull
     protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
-        Optional<TaskProvider<TransformTask>> transformTask;
+        return doCreateJavaCodeShrinkerTransform(
+                variantScope, codeShrinker, mappingFileCollection, false);
+    }
+
+    @NonNull
+    protected final CodeShrinker doCreateJavaCodeShrinkerTransform(
+            @NonNull final VariantScope variantScope,
+            @NonNull CodeShrinker codeShrinker,
+            @Nullable FileCollection mappingFileCollection,
+            Boolean isTestApplication) {
+        @Nullable TaskProvider<? extends Task> task;
         CodeShrinker createdShrinker = codeShrinker;
         switch (codeShrinker) {
             case PROGUARD:
-                transformTask = createProguardTransform(variantScope, mappingFileCollection);
+                task = createProguardTransform(variantScope, mappingFileCollection).orElse(null);
                 break;
             case R8:
                 if (variantScope.getVariantConfiguration().getType().isAar()
                         && !projectOptions.get(BooleanOption.ENABLE_R8_LIBRARIES)) {
-                    transformTask = createProguardTransform(variantScope, mappingFileCollection);
+                    task =
+                            createProguardTransform(variantScope, mappingFileCollection)
+                                    .orElse(null);
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {
-                    RegularFileProperty outputMainList = project.getObjects().fileProperty();
-                    transformTask =
-                            createR8Transform(
-                                    variantScope,
-                                    mappingFileCollection,
-                                    (transform, taskName) -> {
-                                        if (variantScope.getNeedsMainDexListForBundle()) {
-                                            ((R8Task) transform)
-                                                    .setMainDexListOutput(outputMainList);
-                                        }
-                                    });
-                    if (transformTask.isPresent() && variantScope.getNeedsMainDexListForBundle()) {
-                        variantScope
-                                .getArtifacts()
-                                .producesFile(
-                                        InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
-                                        BuildArtifactsHolder.OperationType.INITIAL,
-                                        transformTask.get(),
-                                        (task) -> outputMainList,
-                                        "mainDexList.txt");
-                    }
+                    task = createR8Task(variantScope, mappingFileCollection != null);
                 }
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
-        if (variantScope.getPostprocessingFeatures() != null && transformTask.isPresent()) {
+        if (variantScope.getPostprocessingFeatures() != null && task != null) {
             TaskProvider<CheckProguardFiles> checkFilesTask =
                     taskFactory.register(new CheckProguardFiles.CreationAction(variantScope));
 
-            TaskFactoryUtils.dependsOn(transformTask.get(), checkFilesTask);
+            TaskFactoryUtils.dependsOn(task, checkFilesTask);
         }
 
         return createdShrinker;
@@ -3100,58 +3075,9 @@ public abstract class TaskManager {
     }
 
     @NonNull
-    private Optional<TaskProvider<TransformTask>> createR8Transform(
-            @NonNull VariantScope variantScope,
-            @Nullable FileCollection mappingFileCollection,
-            @Nullable ProGuardTransformCallback callback) {
-        final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
-
-        File multiDexKeepProguard =
-                variantScope.getVariantConfiguration().getMultiDexKeepProguard();
-        ConfigurableFileCollection mainDexListProguardRules = project.files();
-        if (multiDexKeepProguard != null) {
-            mainDexListProguardRules.from(multiDexKeepProguard);
-        }
-        BuildArtifactsHolder artifacts = variantScope.getArtifacts();
-        if (artifacts.hasFinalProduct(LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES)) {
-            mainDexListProguardRules.from(
-                    artifacts.getFinalProduct(LEGACY_MULTIDEX_AAPT_DERIVED_PROGUARD_RULES));
-        }
-
-        File multiDexKeepFile = variantScope.getVariantConfiguration().getMultiDexKeepFile();
-        FileCollection userMainDexListFiles;
-        if (multiDexKeepFile != null) {
-            userMainDexListFiles = project.files(multiDexKeepFile);
-        } else {
-            userMainDexListFiles = project.files();
-        }
-
-        FileCollection inputProguardMapping;
-        if (testedVariantData != null
-                && testedVariantData.getScope().getArtifacts().hasFinalProduct(APK_MAPPING)) {
-            inputProguardMapping =
-                    project.files(
-                            testedVariantData
-                                    .getScope()
-                                    .getArtifacts()
-                                    .getFinalProduct(APK_MAPPING));
-        } else {
-            inputProguardMapping = MoreObjects.firstNonNull(mappingFileCollection, project.files());
-        }
-
-        R8Task transform =
-                new R8Task(
-                        variantScope,
-                        userMainDexListFiles,
-                        mainDexListProguardRules,
-                        inputProguardMapping);
-
-        return applyProguardRules(
-                variantScope,
-                inputProguardMapping,
-                testedVariantData,
-                transform,
-                callback);
+    private TaskProvider<R8Task> createR8Task(
+            @NonNull VariantScope variantScope, Boolean isTestApplication) {
+        return taskFactory.register(new R8Task.CreationAction(variantScope, isTestApplication));
     }
 
     private void maybeCreateDexSplitterTask(@NonNull VariantScope variantScope) {

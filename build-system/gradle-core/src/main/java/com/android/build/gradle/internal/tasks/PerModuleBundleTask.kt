@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.MODULE_PATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.CodeShrinker.R8
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_NATIVE_LIBS
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
@@ -225,6 +226,10 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                     variantScope
                         .artifacts
                         .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
+                } else if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.DEX)) {
+                    variantScope.globalScope.project.files(variantScope
+                        .artifacts
+                        .getFinalProducts<Directory>(InternalArtifactType.DEX))
                 } else {
                     variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
                 }
@@ -236,7 +241,11 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                     AndroidArtifacts.ArtifactType.FEATURE_DEX,
                     mapOf(MODULE_PATH to variantScope.globalScope.project.path)
                 )
-            task.javaResFiles = if (variantScope.needsMergedJavaResStream) {
+            task.javaResFiles = if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.SHRUNK_JAVA_RES)) {
+                variantScope.globalScope.project.layout.files(
+                    artifacts.getFinalProduct<RegularFile>(InternalArtifactType.SHRUNK_JAVA_RES)
+                )
+            } else if (variantScope.needsMergedJavaResStream) {
                 variantScope.transformManager
                     .getPipelineOutputAsFileCollection(StreamFilter.RESOURCES)
             } else {
