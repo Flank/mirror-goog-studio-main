@@ -142,6 +142,8 @@ message TraceStopStatus {
 
   Status status = 1;
   string error_message = 2;
+  // The time taken to stop the trace;
+  int64 stopping_time_ns = 3;
 }
 
 // A CpuTraceInfo contains the information regarding a trace

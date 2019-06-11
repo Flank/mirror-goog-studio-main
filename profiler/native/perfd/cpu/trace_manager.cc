@@ -15,6 +15,8 @@
  */
 #include "perfd/cpu/trace_manager.h"
 
+#include "utils/stopwatch.h"
+
 using profiler::proto::TraceStartStatus;
 using profiler::proto::TraceStopStatus;
 
@@ -131,6 +133,7 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
     // in the app.
     ongoing_capture->end_timestamp = request_timestamp_ns;
   } else {
+    Stopwatch stopwatch;
     auto trace_type =
         ongoing_capture->configuration.user_options().trace_type();
     if (trace_type == proto::CpuTraceType::SIMPLEPERF) {
@@ -151,6 +154,7 @@ ProfilingApp* TraceManager::StopProfiling(int64_t request_timestamp_ns,
               proto::INITIATED_BY_STARTUP);
     }
     ongoing_capture->end_timestamp = clock_->GetCurrentTime();
+    status->set_stopping_time_ns(stopwatch.GetElapsed());
   }
 
   status->set_status(stop_status);
