@@ -102,22 +102,22 @@ class JavaEvaluator {
     ): Boolean
 
     open fun isMemberInSubClassOf(
-        method: PsiMember,
+        member: PsiMember,
         className: String,
         strict: Boolean
     ): Boolean {
-        val containingClass = method.containingClass
+        val containingClass = member.containingClass
         return containingClass != null && extendsClass(containingClass, className, strict)
     }
 
     open fun isMemberInClass(
-        method: PsiMember?,
+        member: PsiMember?,
         className: String
     ): Boolean {
-        if (method == null) {
+        if (member == null) {
             return false
         }
-        val containingClass = method.containingClass
+        val containingClass = member.containingClass
         return containingClass != null && className == containingClass.qualifiedName
     }
 
@@ -697,6 +697,8 @@ class JavaEvaluator {
     abstract fun findClass(qualifiedName: String): PsiClass?
 
     abstract fun getClassType(psiClass: PsiClass?): PsiClassType?
+
+    abstract fun getTypeClass(psiType: PsiType?): PsiClass?
 
     abstract fun getAllAnnotations(
         owner: UAnnotated,

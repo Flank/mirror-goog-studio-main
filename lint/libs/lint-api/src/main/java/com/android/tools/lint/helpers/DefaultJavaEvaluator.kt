@@ -106,6 +106,10 @@ open class DefaultJavaEvaluator(
         else null
     }
 
+    override fun getTypeClass(psiType: PsiType?): PsiClass? {
+        return (psiType as? PsiClassType)?.resolve()
+    }
+
     override fun getAllAnnotations(
         owner: UAnnotated,
         inHierarchy: Boolean

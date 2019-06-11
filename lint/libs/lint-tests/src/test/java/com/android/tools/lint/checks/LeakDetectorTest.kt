@@ -492,4 +492,98 @@ class LeakDetectorTest : AbstractCheckTest() {
             ).indented()
         ).run().expectClean()
     }
+
+    fun testKotlin() {
+        lint().files(
+            kotlin(
+                """
+                package test.pkg
+
+                import android.annotation.SuppressLint
+                import android.app.Activity
+                import android.content.Context
+                import android.app.Fragment
+                import android.widget.Button
+
+                class LeakTest {
+                    private val mField5: Int = 0
+                    private val mField6: Activity? = null
+                    private val mField11: MyObject? = null
+
+                    private class MyObject {
+                        private val mKey: Int = 0
+                        private val mActivity: Activity? = null
+                    }
+
+                    companion object {
+                        private val sField1: Int = 0
+                        private val sField2: Any? = null
+                        private val sField3: String? = null
+                        private val sField4: List<*>? = null
+                        private val sField7: Activity? = null // LEAK!
+                        private val sField8: Fragment? = null // LEAK!
+                        private val sField9: Button? = null // LEAK!
+                        private val sField10: MyObject? = null
+                        @SuppressLint("StaticFieldLeak")
+                        private val sField12: Activity? = null
+                        private val sAppContext1: Activity? = null // LEAK
+                        private val sAppContext2: Context? = null // Probably app context leak
+                        private val applicationCtx: Context? = null // Probably app context leak
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(
+            """
+            src/test/pkg/LeakTest.kt:24: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+                    private val sField7: Activity? = null // LEAK!
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/LeakTest.kt:25: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+                    private val sField8: Fragment? = null // LEAK!
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/LeakTest.kt:26: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+                    private val sField9: Button? = null // LEAK!
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/LeakTest.kt:27: Warning: Do not place Android context classes in static fields (static reference to MyObject which has field mActivity pointing to Activity); this is a memory leak [StaticFieldLeak]
+                    private val sField10: MyObject? = null
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            src/test/pkg/LeakTest.kt:30: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+                    private val sAppContext1: Activity? = null // LEAK
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            0 errors, 5 warnings
+            """
+        )
+    }
+
+    fun testLateInit() {
+        lint().files(
+            kotlin(
+                """
+                @file:Suppress("unused")
+
+                package test.pkg
+
+                import android.app.Fragment
+                import android.view.View
+
+                class MyClass {
+                    lateinit var view: MyView // OK - not in a fragment context
+                }
+
+                class MyFragment : Fragment() {
+                    lateinit var view: MyView // ERROR
+                }
+
+                abstract class MyView : View(null)
+                """
+            ).indented()
+        ).run().expect(
+            """
+src/test/pkg/MyClass.kt:13: Warning: Views should not be lateinit in fragments; they need to be nulled out in onDestroyView [StaticFieldLeak]
+    lateinit var view: MyView // ERROR
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+0 errors, 1 warnings
+            """
+        )
+    }
 }

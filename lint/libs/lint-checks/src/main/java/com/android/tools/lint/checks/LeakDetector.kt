@@ -19,6 +19,7 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.CLASS_APPLICATION
 import com.android.SdkConstants.CLASS_CONTEXT
 import com.android.SdkConstants.CLASS_FRAGMENT
+import com.android.SdkConstants.CLASS_V4_FRAGMENT
 import com.android.SdkConstants.CLASS_VIEW
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UElementHandler
@@ -150,8 +151,23 @@ class LeakDetector : Detector(), SourceCodeScanner {
     private class FieldChecker(private val context: JavaContext) : UElementHandler() {
 
         override fun visitField(node: UField) {
-            val modifierList = node.modifierList
-            if (modifierList == null || !modifierList.hasModifierProperty(PsiModifier.STATIC)) {
+            val modifierList = node.modifierList ?: return
+
+            // Make sure we don't try to use lateinit on views in fragments; see
+            // https://medium.com/@keyboardsurfer/migrating-an-android-project-to-kotlin-f93ecaa329b7
+            val evaluator = context.evaluator
+            if (evaluator.isLateInit(node) &&
+                    (evaluator.isMemberInSubClassOf(node, CLASS_FRAGMENT, false) ||
+                            evaluator.isMemberInSubClassOf(node, CLASS_V4_FRAGMENT.oldName(), false) ||
+                            evaluator.isMemberInSubClassOf(node, CLASS_V4_FRAGMENT.newName(), false))) {
+                val cls = evaluator.getTypeClass(node.getType())
+                if (cls != null && evaluator.extendsClass(cls, CLASS_VIEW, false)) {
+                    val message = "Views should not be `lateinit` in fragments; they need to be nulled out in `onDestroyView`"
+                    report(node, modifierList, message)
+                }
+            }
+
+            if (!modifierList.hasModifierProperty(PsiModifier.STATIC)) {
                 return
             }
 
