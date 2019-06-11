@@ -24,7 +24,7 @@ import java.io.File;
  * Default implementation of the 'File' methods which are all pass-through. These are here to be
  * overridden in tests that work with -nB scripts from other platforms.
  */
-abstract class AbstractOsFileConventions implements OsFileConventions {
+public abstract class AbstractOsFileConventions implements OsFileConventions {
 
     /**
      * Return an implementation of ScriptOSFileConventions that will work when the Host OS is the

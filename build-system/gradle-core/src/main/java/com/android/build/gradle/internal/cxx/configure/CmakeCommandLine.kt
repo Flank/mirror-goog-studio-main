@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.external.gnumake.AbstractOsFileConventions
+import com.android.build.gradle.external.gnumake.OsFileConventions
 import com.android.build.gradle.internal.cxx.cmake.isCmakeConstantTruthy
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.BinaryOutputPath
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.CmakeListsPath
@@ -134,9 +136,37 @@ fun parseCmakeArguments(args : List<String>) : List<CommandLineArgument> {
 }
 
 /**
+ * Parse a CMake command-line and returns the corresponding list of [CommandLineArgument].
+ */
+fun parseCmakeCommandLine(
+    commandLine : String,
+    hostConventions : OsFileConventions =
+        AbstractOsFileConventions.createForCurrentHost()) : List<CommandLineArgument> {
+    val combinedTokens =
+        hostConventions.tokenizeCommandLineToEscaped(commandLine) zip
+            hostConventions.tokenizeCommandLineToRaw(commandLine)
+    var prior : Pair<String, String>? = null
+    val result = mutableListOf<CommandLineArgument>()
+    val combinable = listOf("-D", "-H", "-B", "-G")
+    for(combinedToken in combinedTokens) {
+        val (escaped, raw) = combinedToken
+        when {
+            prior != null -> {
+                result +=
+                    "${prior.first} $escaped".toCmakeArgument("${prior.second} $raw")
+                prior = null
+            }
+            combinable.contains(escaped) -> prior = combinedToken
+            else -> result += escaped.toCmakeArgument(raw)
+        }
+    }
+    return result
+}
+
+/**
  * Parse a single CMake command line argument.
  */
-fun String.toCmakeArgument(): CommandLineArgument {
+fun String.toCmakeArgument(sourceArgument: String = this): CommandLineArgument {
     return when {
         /*
         Parse a property like -DX=Y. CMake supports typed properties as in -DX:STRING=Y but
@@ -144,25 +174,25 @@ fun String.toCmakeArgument(): CommandLineArgument {
         be passed through as part of the name.
          */
         startsWith("-D") && contains("=") -> {
-            val propertyName = substringAfter("-D").substringBefore("=")
-            val propertyValue = substringAfter("=")
-            DefineProperty(this, propertyName, propertyValue)
+            val propertyName = substringAfter("-D").substringBefore("=").trim()
+            val propertyValue = substringAfter("=").trim()
+            DefineProperty(sourceArgument, propertyName, propertyValue)
         }
         startsWith("-H") -> {
             val path = substringAfter("-H")
-            CmakeListsPath(this, path)
+            CmakeListsPath(sourceArgument, path)
         }
         startsWith("-B") -> {
             val path = substringAfter("-B")
-            BinaryOutputPath(this, path)
+            BinaryOutputPath(sourceArgument, path)
         }
         startsWith("-G") -> {
             val path = substringAfter("-G")
-            GeneratorName(this, path)
+            GeneratorName(sourceArgument, path)
         }
         else ->
             // Didn't recognize the flag so return unknown argument
-            UnknownArgument(this)
+            UnknownArgument(sourceArgument)
     }
 }
 
@@ -180,48 +210,84 @@ fun List<CommandLineArgument>.getCmakeBooleanProperty(property : CmakeProperty) 
  * Returns the value of the property. Null if not present. If the value is present more than once
  * then the last value is taken.
  */
-fun List<CommandLineArgument>.getCmakeProperty(property : CmakeProperty) : String? {
-    var result : String? = null
-    onEach { arg ->
-        when(arg) {
-            is DefineProperty -> {
-                if (arg.propertyName == property.name) {
-                    result = arg.propertyValue
-                }
-            }
-        }
-    }
-    return result
-}
+fun List<CommandLineArgument>.getCmakeProperty(property : CmakeProperty) =
+    getCmakeProperty(property.name)
 
 /**
- * Returns the value CMakeLists.txt folder (the -H arg). Null if not present. If the value is
- * present more than once then the last value is taken.
+ * Returns the value of the property. Null if not present. If the value is present more than once
+ * then the last value is taken.
  */
-fun List<CommandLineArgument>.getCmakeListsPathValue() : String? {
-    var result : String? = null
-    onEach { arg ->
-        when(arg) {
-            is CmakeListsPath -> {
-                result = arg.path
-            }
-        }
-    }
-    return result
-}
+fun List<CommandLineArgument>.getCmakeProperty(property : String) =
+    filterType<DefineProperty> { it.propertyName == property }?.propertyValue
+
+/**
+ * Returns the generator. Null if none present
+ */
+fun List<CommandLineArgument>.getGenerator() = filterType<GeneratorName>()?.generator
+
+/**
+ * Returns the folder of CMakeLists.txt.
+ */
+fun List<CommandLineArgument>.getCmakeListsFolder() = filterType<CmakeListsPath>()?.path
+
+/**
+ * Returns the buildRoot folder.
+ */
+fun List<CommandLineArgument>.getBuildRootFolder() = filterType<BinaryOutputPath>()?.path
 
 /**
  * Remove all instances of the given property from the list of args
  */
-fun List<CommandLineArgument>.removeProperty(property : CmakeProperty)
-        : List<CommandLineArgument> {
-    return filter {
+fun List<CommandLineArgument>.removeProperty(property : CmakeProperty) =
+    filter {
         !(it is DefineProperty &&  it.propertyName == property.name)
     }
-}
+
+/**
+ * Utility method for filtering [CommandLineArgument] list by type and optional predicate.
+ */
+private inline fun <reified T : CommandLineArgument> List<CommandLineArgument>.filterType(
+    predicate: (T) -> Boolean = { true }) = filterIsInstance<T>().lastOrNull { predicate(it) }
 
 /**
  * Convert to the equivalent command-line arguments String list.
  */
-fun List<CommandLineArgument>.convertCmakeCommandLineArgumentsToStringList()
-    = map { it.sourceArgument }
+fun List<CommandLineArgument>.convertCmakeCommandLineArgumentsToStringList() =
+    map { it.sourceArgument }
+
+/**
+ * Keep the [CommandLineArgument]s that should be passed to CMake Server. Remove the rest.
+ */
+fun List<CommandLineArgument>.onlyKeepServerArguments() =
+    filter { argument ->
+        when(argument) {
+            is BinaryOutputPath,
+            is CmakeListsPath,
+            is GeneratorName -> false
+            else -> true
+        }
+    }
+
+/**
+ * Remove duplicate property names and other arguments, leaving only the last.
+ */
+fun List<CommandLineArgument>.removeSubsumedArguments() =
+    reversed()
+    .distinctBy {
+        when (it) {
+            is DefineProperty -> it.propertyName
+            else -> it.javaClass
+        }
+    }
+    .reversed()
+
+/**
+ * Remove properties that don't set a value.
+ */
+fun List<CommandLineArgument>.removeBlankProperties() =
+    filter { argument ->
+        when(argument) {
+            is DefineProperty -> argument.propertyValue.isNotBlank()
+            else -> true
+        }
+    }

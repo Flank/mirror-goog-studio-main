@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.cxx
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
 import java.io.File
@@ -33,7 +35,7 @@ import java.util.Random
  */
 @Suppress("UNCHECKED_CAST")
 class RandomInstanceGenerator {
-    private val defaultSequenceLength = 50
+    private val defaultSequenceLength = 100
     private val random = Random(192)
     private val factoryMap = mutableMapOf<Type, (RandomInstanceGenerator) -> Any>()
 
@@ -54,12 +56,15 @@ class RandomInstanceGenerator {
         }
         provide(File::class.java) { file() }
     }
-
+    fun <T> oneOf(vararg creators : () -> T) = creators[abs(int()) % creators.size]()
+    fun <T> makeListOf(create : ()->T) = (0 until sample(LIST_SIZE_DOMAIN)).map { create() }
     fun file() = File(string().trimEnd('/', '\\'))
-    fun string() = (0 until sample(LIST_SIZE_DOMAIN)).map { sample(CHAR_DOMAIN) }.joinToString("")
+    fun string() = (0 until sample(LIST_SIZE_DOMAIN)).joinToString("") { sample(SEGMENT_DOMAIN) }
     fun strings(sequenceLength : Int = defaultSequenceLength) = (0 until sequenceLength).map { string() }
-    private fun humanReadableString() = (0 until sample(LIST_SIZE_DOMAIN)).map { sample(HUMAN_READABLE_CHAR_DOMAIN) }.joinToString("")
-    fun humanReadableStrings(sequenceLength : Int = defaultSequenceLength) = (0 until sequenceLength).map { humanReadableString() }
+    fun nullableString(chanceOfNull : Int = 5) : String? {
+        val roll = abs(int()) % 100
+        return if (roll < chanceOfNull) null else string()
+    }
     private fun unsignedInt() = sample(UNSIGNED_INT_DOMAIN)
     fun int() = sample(INT_DOMAIN)
     fun boolean() = sample(BOOLEAN_DOMAIN)
@@ -133,14 +138,38 @@ class RandomInstanceGenerator {
     }
 
     companion object {
-        val HUMAN_READABLE_CHAR_DOMAIN = listOf(
-            '*', '\'', '\"', '0', '.', ',', ';', '<', '>', '&', '{', '}',
-            'a', 'A', '花', '_', 'I', '$', '[', ']', ' ', '\\', '/'
+        private val HUMAN_READABLE_SEGMENT_DOMAIN = listOf(
+            "*", "\'", "\"", "0", ".", ",", ";", "<", ">", "&", "{", "}",
+            "a", "A", "花", "_", "I", "$", "[", "]", " ", "\\", "/", "^",
+            "\\\\", "//", "\n", "&", "&&", "bar&", "bar&&", "bar\"&\"",
+            "bar\"&&\"", "bar^&", "bar^&^&", "^&", "\"&\"", "\t",
+            "a\\\\\\\\\\\\b", "a\\\\\\\\\"b\" c", "?"
         )
-        val CHAR_DOMAIN = listOf('\u0000', '\uffff') + HUMAN_READABLE_CHAR_DOMAIN
+        private val VERSION_DOMAIN = listOf(
+            "17", "17.1", "17.1.2", "17.1.2-"
+        )
+        private val POSIX_FILE_PATHS_DOMAIN = listOf(
+            "", "/", "/usr", "/usr/"
+        )
+        private val COMMAND_LINE_DOMAIN =
+            listOf("B", "D", "H", "G", "W", "help", "?")
+                .flatMap { expandCommandLine(it) }
+                .flatMap { expandPropertyEquals(it) }
+        val SEGMENT_DOMAIN = listOf("\u0000", "\u0000") +
+                HUMAN_READABLE_SEGMENT_DOMAIN +
+                COMMAND_LINE_DOMAIN +
+                VERSION_DOMAIN +
+                POSIX_FILE_PATHS_DOMAIN
         val LIST_SIZE_DOMAIN = listOf(0, 1, 2, 3, 10, 50)
         val BOOLEAN_DOMAIN = listOf(true, false)
         val UNSIGNED_INT_DOMAIN = listOf(0, 1, 32, 64, 256, Int.MAX_VALUE)
         val INT_DOMAIN = UNSIGNED_INT_DOMAIN + UNSIGNED_INT_DOMAIN.map { -it }
+
+        private fun expandCommandLine(value : String) =
+            listOf("-$value", "--$value", " -$value", " --$value", "-$value ", "--$value ")
+
+        private fun expandPropertyEquals(value : String) =
+                listOf(value, "$value$C_TEST_WAS_RUN=", "$value $C_TEST_WAS_RUN=",
+                    "$value$C_TEST_WAS_RUN =", "$value $C_TEST_WAS_RUN =")
     }
 }

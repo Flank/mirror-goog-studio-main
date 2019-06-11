@@ -29,7 +29,7 @@ import java.util.List;
  * <p>If the current host is different from the host that produced the -nB output then it is up to
  * the caller to provide a policy that will work.
  */
-interface OsFileConventions {
+public interface OsFileConventions {
     @NonNull
     List<String> tokenizeCommandLineToEscaped(@NonNull String commandString);
 

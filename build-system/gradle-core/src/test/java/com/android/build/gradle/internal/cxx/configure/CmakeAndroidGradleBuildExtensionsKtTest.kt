@@ -16,7 +16,18 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_GRADLE_BUILD_COMPILER_SETTINGS_CACHE_ENABLED
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_ABI_COMPILED
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_COMPILER_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_CXX_SIZEOF_DATA_PTR
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_ABI_COMPILED
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_COMPILER_ABI
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_C_SIZEOF_DATA_PTR
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SIZEOF_VOID_P
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CXX_TEST_WAS_RUN
+import com.android.build.gradle.internal.cxx.configure.CmakeProperty.C_TEST_WAS_RUN
 import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
 import com.android.build.gradle.internal.cxx.model.cacheKeyFile
@@ -28,7 +39,6 @@ import com.android.build.gradle.internal.cxx.model.toolchainWrapperFile
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
 import org.junit.Rule
-
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
@@ -239,7 +249,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
                 .isEqualTo(cmakeWrappingBaseFolder)
 
             val parsed = parseCmakeArguments(executionState.args)
-            val cmakeListsFromArgs = parsed.getCmakeListsPathValue()
+            val cmakeListsFromArgs = parsed.getCmakeListsFolder()
 
             assertThat(File(cmakeListsFromArgs))
                 .named("CMakeLists.txt was not wrapped in the expected location")
