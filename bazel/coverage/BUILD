@@ -142,7 +142,6 @@ coverage_report(
         "//tools/base/build-system/integration-test/native:RenderscriptNdkTest",
         "//tools/base/build-system/integration-test/native:RsEnabledAnnotationTest",
         "//tools/base/build-system/integration-test/native:RsSupportModeTest",
-        "//tools/base/build-system/integration-test/native:UnresolveableNdkVersionTest",
         "//tools/base/build-system/integration-test/native:VulkanTest",
         "//tools/base/build-system/java-lib-plugin/java-lib-model-builder:builder_tests.test",
         "//tools/base/build-system/profile:tests",
