@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.R8Task
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Toy
@@ -164,9 +165,9 @@ class R8MainDexListTransformTest {
         mainDexRulesFiles: FileCollection = FakeFileCollection(),
         minSdkVersion: Int = 21,
         dexingType: DexingType = DexingType.LEGACY_MULTIDEX
-    ): R8Transform {
+    ): R8Task {
         val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        return R8Transform(
+        return R8Task(
             bootClasspath = classpath,
             minSdkVersion = minSdkVersion,
             isDebuggable = true,

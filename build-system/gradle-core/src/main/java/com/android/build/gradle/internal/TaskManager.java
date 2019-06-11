@@ -129,6 +129,7 @@ import com.android.build.gradle.internal.tasks.PackageForUnitTest;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.PrepareLintJarForPublish;
 import com.android.build.gradle.internal.tasks.ProcessJavaResTask;
+import com.android.build.gradle.internal.tasks.R8Task;
 import com.android.build.gradle.internal.tasks.RecalculateStackFramesTask;
 import com.android.build.gradle.internal.tasks.ShrinkResourcesTask;
 import com.android.build.gradle.internal.tasks.SigningConfigWriterTask;
@@ -156,7 +157,6 @@ import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
-import com.android.build.gradle.internal.transforms.R8Transform;
 import com.android.build.gradle.internal.transforms.ShrinkBundleResourcesTask;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -2867,7 +2867,7 @@ public abstract class TaskManager {
                                     mappingFileCollection,
                                     (transform, taskName) -> {
                                         if (variantScope.getNeedsMainDexListForBundle()) {
-                                            ((R8Transform) transform)
+                                            ((R8Task) transform)
                                                     .setMainDexListOutput(outputMainList);
                                         }
                                     });
@@ -3139,8 +3139,8 @@ public abstract class TaskManager {
             inputProguardMapping = MoreObjects.firstNonNull(mappingFileCollection, project.files());
         }
 
-        R8Transform transform =
-                new R8Transform(
+        R8Task transform =
+                new R8Task(
                         variantScope,
                         userMainDexListFiles,
                         mainDexListProguardRules,

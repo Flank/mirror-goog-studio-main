@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.R8Task
 import com.android.build.gradle.internal.tasks.DexSplitterTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
@@ -234,9 +235,9 @@ class DexSplitterTaskTest {
         outputProguardMapping: File = tmp.newFile(),
         disableMinification: Boolean = true,
         minSdkVersion: Int = 21
-    ): R8Transform {
+    ): R8Task {
         val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        val transform= R8Transform(
+        val transform= R8Task(
                 bootClasspath = classpath,
                 minSdkVersion = minSdkVersion,
                 isDebuggable = true,

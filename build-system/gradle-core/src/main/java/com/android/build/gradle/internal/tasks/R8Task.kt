@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_W
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
 import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.getPlatformRules
+import com.android.build.gradle.internal.transforms.ProguardConfigurable
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.core.VariantType
@@ -59,7 +59,7 @@ import java.nio.file.Path
  * configuration files, main dex list configuration files, other tool-specific parameters. Output
  * is dex or class files, depending on whether we are building an APK, or AAR.
  */
-class R8Transform(
+class R8Task(
     private val bootClasspath: FileCollection,
     private val minSdkVersion: Int,
     private val isDebuggable: Boolean,
@@ -178,7 +178,7 @@ class R8Transform(
     }
 
     override fun transform(transformInvocation: TransformInvocation) {
-        LoggerWrapper.getLogger(R8Transform::class.java)
+        LoggerWrapper.getLogger(R8Task::class.java)
             .info(
                 """
                 |R8 is a new Android code shrinker. If you experience any issues, please file a bug at

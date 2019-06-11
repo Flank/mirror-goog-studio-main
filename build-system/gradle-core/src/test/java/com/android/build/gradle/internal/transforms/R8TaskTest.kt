@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
 import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.R8Task
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
 import com.android.build.gradle.internal.transforms.testdata.Cat
@@ -67,7 +68,7 @@ import kotlin.streams.toList
  * backend are tested.
  */
 @RunWith(Parameterized::class)
-class R8TransformTest(val r8OutputType: R8OutputType) {
+class R8TaskTest(val r8OutputType: R8OutputType) {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var context: Context
@@ -601,7 +602,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
         disableTreeShaking: Boolean = false,
         minSdkVersion: Int = 21,
         useFullR8: Boolean = false
-    ): R8Transform {
+    ): R8Task {
         val variantType =
             if (r8OutputType == R8OutputType.DEX)
                 VariantTypeImpl.BASE_APK
@@ -610,7 +611,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
 
 
         val classpath = FakeFileCollection(TestUtils.getPlatformFile("android.jar"))
-        val r8Transform = R8Transform(
+        val r8Task = R8Task(
             bootClasspath = classpath,
             minSdkVersion = minSdkVersion,
             isDebuggable = true,
@@ -620,6 +621,7 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             mainDexListFiles = FakeFileCollection(),
             mainDexRulesFiles = mainDexRulesFiles,
             inputProguardMapping = FakeFileCollection(),
+            outputProguardMapping = outputProguardMapping,
             proguardConfigurationFiles = proguardRulesFiles,
             variantType = variantType,
             includeFeaturesInScopes = false,
@@ -630,8 +632,8 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
         )
 
         Mockito.`when`(outputProguard.asFile).thenReturn(outputProguardMapping)
-        r8Transform.setOutputFile(FakeGradleProperty(outputProguard))
+        r8Task.setOutputFile(FakeGradleProperty(outputProguard))
 
-        return r8Transform
+        return r8Task
     }
 }
