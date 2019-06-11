@@ -55,13 +55,6 @@
             help="If true, this activity will have a CATEGORY_LAUNCHER intent filter, making it visible in the launcher"/>
 
     <parameter
-            id="useFragment"
-            name="Use a Fragment"
-            type="boolean"
-            default="false"
-            help="If true, the content will be a fragment"/>
-
-    <parameter
             id="contentLayoutName"
             name="Content Layout Name"
             type="string"
@@ -72,14 +65,22 @@
             help="The name of the App Bar layout to create for the activity"/>
 
     <parameter
-            id="fragmentLayoutName"
-            name="Fragment Layout Name"
+            id="firstFragmentLayoutName"
+            name="First Fragment Layout Name"
             type="string"
             constraints="layout|unique|nonempty"
-            suggest="${activityToLayout(activityClass, 'fragment')}"
-            default="fragment_main"
+            default="fragment_first"
             visibility="false"
-            help="The name of the layout to create for the activity's content fragment"/>
+            help="The name of the layout of the Fragment as the initial destination in Navigation"/>
+
+    <parameter
+            id="secondFragmentLayoutName"
+            name="Second Fragment Layout Name"
+            type="string"
+            constraints="layout|unique|nonempty"
+            default="fragment_second"
+            visibility="false"
+            help="The name of the layout of the Fragment as the second destination in Navigation"/>
 
     <parameter
             id="packageName"
@@ -92,8 +93,6 @@
     <thumbs>
         <!-- default thumbnail is required -->
         <thumb>template_basic_activity.png</thumb>
-        <!-- attributes act as selectors based on chosen parameters -->
-        <thumb useFragment="true">template_basic_activity_fragment.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl"/>
