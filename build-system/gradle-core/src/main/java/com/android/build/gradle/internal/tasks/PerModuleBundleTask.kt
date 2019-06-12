@@ -219,8 +219,16 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
                     } else {
                         InternalArtifactType.LINKED_RES_FOR_BUNDLE
                     }, task.resFiles)
-            task.dexFiles = variantScope.transformManager.getPipelineOutputAsFileCollection(
-                StreamFilter.DEX)
+
+            task.dexFiles =
+                if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+                    variantScope
+                        .artifacts
+                        .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX).get()
+                } else {
+                    variantScope.transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX)
+                }
+
             task.featureDexFiles =
                 variantScope.getArtifactFileCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

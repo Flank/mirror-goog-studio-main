@@ -156,8 +156,8 @@ class DexArchiveBuilderTransform internal constructor(
     override fun getScopes(): ImmutableSet<in Scope> {
         return when {
             enableDexingArtifactTransform -> ImmutableSet.of(Scope.PROJECT)
-            includeFeaturesInScopes -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_WITH_IR_AND_FEATURES)
-            else -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING)
+            includeFeaturesInScopes -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_WITH_FEATURES)
+            else -> ImmutableSet.copyOf(TransformManager.SCOPE_FULL_PROJECT)
         }
     }
 

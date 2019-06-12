@@ -2011,7 +2011,7 @@ public abstract class TaskManager {
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(variantScope);
-            maybeCreateDexSplitterTransform(variantScope);
+            maybeCreateDexSplitterTask(variantScope);
             // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
             return;
         }
@@ -2043,8 +2043,7 @@ public abstract class TaskManager {
 
         maybeCreateResourcesShrinkerTasks(variantScope);
 
-        // TODO: support DexSplitterTask when IR enabled (http://b/77585545)
-        maybeCreateDexSplitterTransform(variantScope);
+        maybeCreateDexSplitterTask(variantScope);
         // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
     }
 
@@ -3221,68 +3220,14 @@ public abstract class TaskManager {
                 callback);
     }
 
-    private void maybeCreateDexSplitterTransform(@NonNull VariantScope variantScope) {
+    private void maybeCreateDexSplitterTask(@NonNull VariantScope variantScope) {
         if (!variantScope.consumesFeatureJars()) {
             return;
         }
 
-        FileCollection featureJars =
-                variantScope.getArtifactFileCollection(METADATA_VALUES, PROJECT, METADATA_CLASSES);
-        Provider<RegularFile> baseJars =
-                variantScope
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.MODULE_AND_RUNTIME_DEPS_CLASSES);
-        Provider<RegularFile> mappingFileSrc =
-                variantScope.getArtifacts().hasFinalProduct(APK_MAPPING)
-                        ? variantScope
-                                .getArtifacts()
-                                .getFinalProduct(InternalArtifactType.APK_MAPPING)
-                        : null;
-        Provider<RegularFile> mainDexList =
-                variantScope
-                        .getArtifacts()
-                        .getFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE);
+        taskFactory.register(new DexSplitterTask.CreationAction(variantScope));
 
-        DexSplitterTask transform =
-                new DexSplitterTask(featureJars, baseJars, mappingFileSrc, mainDexList);
-
-        Optional<TaskProvider<TransformTask>> transformTask =
-                variantScope
-                        .getTransformManager()
-                        .addTransform(
-                                taskFactory,
-                                variantScope,
-                                transform,
-                                null,
-                                null,
-                                taskProvider ->
-                                        variantScope
-                                                .getArtifacts()
-                                                .producesDir(
-                                                        InternalArtifactType.FEATURE_DEX,
-                                                        BuildArtifactsHolder.OperationType.INITIAL,
-                                                        taskProvider,
-                                                        TransformTask::getOutputDirectory,
-                                                        ""));
-
-
-        if (transformTask.isPresent()) {
-            publishFeatureDex(variantScope);
-            transformTask
-                    .get()
-                    .configure(
-                            it -> {
-                                it.dependsOn(mainDexList);
-                                it.dependsOn(baseJars);
-                            });
-        } else {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(
-                            Type.GENERIC,
-                            new EvalIssueException(
-                                    "Internal error, could not add the DexSplitterTask"));
-        }
+        publishFeatureDex(variantScope);
     }
 
     /**

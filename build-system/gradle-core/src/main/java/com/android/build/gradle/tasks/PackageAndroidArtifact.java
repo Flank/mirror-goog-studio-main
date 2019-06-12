@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.ApkData;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.BuildElements;
 import com.android.build.gradle.internal.scope.BuildElementsTransformParams;
 import com.android.build.gradle.internal.scope.BuildElementsTransformRunnable;
@@ -993,6 +994,13 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         @NonNull
         public FileCollection getDexFolders() {
+            BuildArtifactsHolder artifacts = getVariantScope().getArtifacts();
+
+            if (artifacts.hasFinalProduct(InternalArtifactType.BASE_DEX)) {
+                return artifacts
+                        .getFinalProductAsFileCollection(InternalArtifactType.BASE_DEX)
+                        .get();
+            }
             return getVariantScope()
                     .getTransformManager()
                     .getPipelineOutputAsFileCollection(StreamFilter.DEX);
