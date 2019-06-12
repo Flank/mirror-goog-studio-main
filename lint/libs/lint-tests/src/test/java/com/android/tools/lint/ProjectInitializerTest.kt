@@ -25,6 +25,7 @@ import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.checks.AbstractCheckTest.base64gzip
 import com.android.tools.lint.checks.AbstractCheckTest.jar
 import com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest.bytes
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
 import com.android.tools.lint.checks.infrastructure.TestFile
@@ -466,6 +467,90 @@ class ProjectInitializerTest {
             // Args
             arrayOf(
                 "--quiet",
+                "--project",
+                descriptorFile.path
+            ),
+
+            null, null
+        )
+    }
+
+    @Test
+    fun testGradleDetectorsFiring() { // Regression test for b/132992488
+        val root = temp.newFolder()
+        val projects = lint().files(
+            java(
+                "src/main/pkg/MainActivity.java", """
+                    package pkg;
+
+                    import android.app.Activity;
+                    import android.os.Bundle;
+
+                    public class MainActivity extends Activity {
+                        @Override
+                        public void onCreate(Bundle savedInstanceState) {
+                            super.onCreate(savedInstanceState);
+                        }
+                    }
+                    """
+            ).indented(),
+            xml(
+                "AndroidManifest.xml", """
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.android.tools.lint.test"
+                    android:versionCode="1"
+                    android:versionName="1.0" >
+                    <uses-sdk
+                        android:minSdkVersion="15"
+                        android:targetSdkVersion="22" />
+
+                </manifest>"""
+            ).indented(),
+            xml(
+                "res/values/strings.xml", """
+                <resources xmlns:tools="http://schemas.android.com/tools">
+                    <string name="nam${'\ufeff'}e">Value</string>
+                </resources>"""
+            ).indented(),
+            bytes(
+                "res/raw/dummy.txt",
+                "a\uFEFFb".toByteArray()
+            )
+        ).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project incomplete="true">
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+            <module name="M" android="true" library="true">
+                <manifest file="AndroidManifest.xml" />
+                <resource file="res/raw/dummy.txt" />
+                <resource file="res/values/strings.xml" />
+                <src file="src/main/pkg/MainActivity.java" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+            """
+            res/values/strings.xml:2: Error: Found byte-order-mark in the middle of a file [ByteOrderMark]
+                <string name="nam﻿e">Value</string>
+                                 ~
+            1 errors, 0 warnings
+            """,
+            "",
+
+            // Expected exit code
+            ERRNO_SUCCESS,
+
+            // Args
+            arrayOf(
+                "--quiet",
+                "--check",
+                "ByteOrderMark",
                 "--project",
                 descriptorFile.path
             ),

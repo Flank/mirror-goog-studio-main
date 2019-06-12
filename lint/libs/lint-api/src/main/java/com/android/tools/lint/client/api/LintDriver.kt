@@ -20,6 +20,7 @@ import com.android.SdkConstants.ATTR_IGNORE
 import com.android.SdkConstants.CLASS_CONSTRUCTOR
 import com.android.SdkConstants.CONSTRUCTOR_NAME
 import com.android.SdkConstants.DOT_CLASS
+import com.android.SdkConstants.DOT_GRADLE
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
@@ -1193,7 +1194,7 @@ class LintDriver
 
                         uastParser.dispose()
                         fileCount++
-                    } else {
+                    } else if (file.path.endsWith(DOT_GRADLE)) {
                         val gradleVisitor = project.client.getGradleVisitor()
                         val context = GradleContext(gradleVisitor, this, project, main, file)
                         fireEvent(EventType.SCANNING_FILE, context)
