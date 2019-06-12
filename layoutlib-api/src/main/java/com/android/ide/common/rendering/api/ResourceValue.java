@@ -82,9 +82,9 @@ public interface ResourceValue extends Serializable {
     }
 
     /**
-     * Similar to {@link #getValue()}, but returns the raw XML value. This is <b>usually</b> the
-     * same as getValue, but with a few exceptions. For example, for markup strings, you can have
-     * {@code <string name="markup">This is <b>bold</b></string>}. Here, {@link #getValue()} will
+     * Similar to {@link #getValue}, but returns the raw XML value. This is <b>usually</b> the same
+     * as {@link #getValue}, but with a few exceptions. For example, for markup strings, you can
+     * have {@code <string name="markup">This is <b>bold</b></string>}. Here, {@link #getValue} will
      * return "{@code This is bold}" -- e.g. just the plain text flattened. However, this method
      * will return "{@code This is <b>bold</b>}", which preserves the XML markup elements.
      */
