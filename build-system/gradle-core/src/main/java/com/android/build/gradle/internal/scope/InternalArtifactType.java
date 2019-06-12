@@ -372,21 +372,6 @@ public enum InternalArtifactType implements ArtifactType {
         return kind;
     }
 
-    public Provider<? extends FileSystemLocation> createOutputLocation(
-            BuildArtifactsHolder artifacts,
-            BuildArtifactsHolder.OperationType operationType,
-            String taskName,
-            String outputLocation) {
-        switch (kind) {
-            case DIRECTORY:
-                return artifacts.createDirectory(this, operationType, taskName, outputLocation);
-            case FILE:
-                return artifacts.createArtifactFile(this, operationType, taskName, outputLocation);
-            default:
-                throw new RuntimeException("ArtifactType.Kind not handled " + kind);
-        }
-    }
-
     InternalArtifactType() {
         this(Category.INTERMEDIATES, Kind.DIRECTORY, null);
     }

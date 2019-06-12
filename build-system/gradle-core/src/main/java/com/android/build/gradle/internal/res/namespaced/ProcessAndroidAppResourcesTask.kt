@@ -164,7 +164,7 @@ abstract class ProcessAndroidAppResourcesTask
             val artifacts = variantScope.artifacts
             task.manifestFileDirectory =
                     when {
-                        artifacts.hasArtifact(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
+                        artifacts.hasFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                             -> artifacts.getFinalProduct(InternalArtifactType.AAPT_FRIENDLY_MERGED_MANIFESTS)
                         variantScope.globalScope.projectOptions.get(BooleanOption.IDE_DEPLOY_AS_INSTANT_APP)
                             -> artifacts.getFinalProduct(InternalArtifactType.INSTANT_APP_MANIFEST)

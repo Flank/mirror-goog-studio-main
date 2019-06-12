@@ -4,7 +4,7 @@ ATTENTION REVIEWER: If this needs to be changed, please make sure changes
 below are backwards compatible.
 -------------------------------------------------------------------------
 Sha256 of below classes:
-63ef7dcc37f8e87a201131cf7b84aba559c1e237b9209d9d260052e88c2f5ecf
+897e3237e37a95c52638ff70fc9932b6cc7901ebf38f61d9687c542f32b39ccc
 -------------------------------------------------------------------------
 com.android.build.api.artifact.ArtifactConfigurationException
 com.android.build.api.artifact.ArtifactConfigurationException.<init>: com.android.build.api.artifact.ArtifactConfigurationException (java.lang.String)
@@ -20,9 +20,6 @@ com.android.build.api.artifact.BuildArtifactType.getFolderName: java.lang.String
 com.android.build.api.artifact.BuildArtifactType.kind: com.android.build.api.artifact.ArtifactType$Kind ()
 com.android.build.api.artifact.BuildArtifactType.valueOf: com.android.build.api.artifact.BuildArtifactType (java.lang.String)
 com.android.build.api.artifact.BuildArtifactType.values: com.android.build.api.artifact.BuildArtifactType[] ()
-com.android.build.api.artifact.BuildableArtifact
-com.android.build.api.artifact.BuildableArtifact.getFiles: java.util.Set<java.io.File> ()
-com.android.build.api.artifact.BuildableArtifact.isEmpty: boolean ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle.api.tasks.util.PatternFilterable ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()

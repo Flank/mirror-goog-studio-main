@@ -128,8 +128,11 @@ public abstract class TestServerTask extends NonIncrementalTask {
 
             task.setTestServer(testServer);
 
-            if (testedVariantData != null && testedVariantData.getScope()
-                    .getArtifacts().hasArtifact(InternalArtifactType.APK)) {
+            if (testedVariantData != null
+                    && testedVariantData
+                            .getScope()
+                            .getArtifacts()
+                            .hasFinalProduct(InternalArtifactType.APK)) {
                 testedVariantData
                         .getScope()
                         .getArtifacts()

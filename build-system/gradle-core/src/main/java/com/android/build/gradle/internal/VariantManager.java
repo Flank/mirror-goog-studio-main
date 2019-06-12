@@ -531,10 +531,6 @@ public class VariantManager implements VariantModel {
                                 buildArtifactType.name()));
             }
 
-            if (buildArtifactsHolder.hasArtifact(buildArtifactType)) {
-                throw new RuntimeException(buildArtifactType + " is still using old APIs.");
-            }
-
             if (buildArtifactsHolder.hasFinalProduct(buildArtifactType)) {
                 Pair<Provider<String>, Provider<FileSystemLocation>> finalProduct =
                         buildArtifactsHolder.getFinalProductWithTaskName(buildArtifactType);

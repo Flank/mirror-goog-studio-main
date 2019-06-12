@@ -44,54 +44,14 @@ class NonParameterizedBuildArtifactsHolderTest {
         FakeDeprecationReporter(),
         FakeObjectFactory()
     )
-    private lateinit var holder : TestBuildArtifactsHolder
-    private lateinit var task1 : Task
-    private lateinit var task2 : Task
-    private lateinit var task3 : Task
 
     @Before
     fun setUp() {
         project = ProjectBuilder.builder().build()
         root = project.file("build")
-        holder = TestBuildArtifactsHolder(
-            project,
-            "debug",
-            ::root,
-            dslScope)
-        task1 = project.tasks.create("task1")
-        task2 = project.tasks.create("task2")
-        task3 = project.tasks.create("task3")
     }
 
     private val initializedTasks = mutableMapOf<String, TaskWithOutput<*>>()
-
-    @Test
-    fun addBuildableArtifact() {
-        holder.createBuildableArtifact(
-            InternalArtifactType.MERGED_MANIFESTS,
-            BuildArtifactsHolder.OperationType.INITIAL,
-            project.files(holder.file(InternalArtifactType.MERGED_MANIFESTS,"task1", "task1File")).files,
-            task1.name)
-        val javaClasses = holder.getArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
-
-        // register the buildable artifact under a different type.
-        val newHolder = TestBuildArtifactsHolder(
-            project,
-            "test",
-            ::root,
-            dslScope
-        )
-        newHolder.createBuildableArtifact(
-            InternalArtifactType.MERGED_MANIFESTS,
-            BuildArtifactsHolder.OperationType.INITIAL,
-            javaClasses)
-        // and verify that files and dependencies are carried over.
-        val newJavaClasses = newHolder.getArtifactFiles(InternalArtifactType.MERGED_MANIFESTS)
-        Truth.assertThat(newJavaClasses.single())
-            .isEqualTo(holder.file(InternalArtifactType.MERGED_MANIFESTS,"task1", "task1File"))
-        @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
-        Truth.assertThat(newJavaClasses.buildDependencies.getDependencies(null)).containsExactly(task1)
-    }
 
     @Test
     fun setOutputFileLocationTest() {

@@ -16,9 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.FeatureExtension
-import com.android.build.gradle.internal.api.artifact.singleFile
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder

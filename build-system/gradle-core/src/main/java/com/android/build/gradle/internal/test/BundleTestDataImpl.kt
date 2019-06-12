@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.test
 
-import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.tasks.getApkFiles
 import com.android.build.gradle.internal.utils.toImmutableList
 import com.android.build.gradle.internal.variant.TestVariantData
