@@ -72,9 +72,10 @@ import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.jvm.modules.JavaModuleResolver
 import org.jetbrains.kotlin.resolve.lazy.declarations.CliDeclarationProviderFactoryService
 import org.jetbrains.kotlin.resolve.lazy.declarations.DeclarationProviderFactoryService
-import org.jetbrains.kotlin.script.ScriptDefinitionProvider
-import org.jetbrains.kotlin.script.StandardScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
+import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
+import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.uast.kotlin.KotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.CliKotlinUastResolveProviderService
 import org.jetbrains.uast.kotlin.internal.UastAnalysisHandlerExtension
@@ -338,8 +339,8 @@ class KotlinLintAnalyzerFacade(private val performanceManager: CommonCompilerPer
         val configuration = CompilerConfiguration()
         configuration.put(CommonConfigurationKeys.MODULE_NAME, moduleName)
         configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
-        if (configuration.getList(JVMConfigurationKeys.SCRIPT_DEFINITIONS).isEmpty()) {
-            configuration.add(JVMConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
+        if (configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS).isEmpty()) {
+            configuration.add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
         }
 
         val sourceRoots = javaSourceRoots.map { VfsUtilCore.virtualToIoFile(it.file) }

@@ -18,4 +18,5 @@ dependencies {
     api project(':lib')
     androidTestImplementation "com.android.support.test:runner:${project.testSupportLibVersion}"
     androidTestImplementation "com.android.support.test:rules:${project.testSupportLibVersion}"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${rootProject.kotlinVersion}"
 }

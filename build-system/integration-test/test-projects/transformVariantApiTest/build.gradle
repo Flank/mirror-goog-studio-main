@@ -47,5 +47,5 @@ android {
 }
 
 dependencies {
-  api 'com.google.code.gson:gson:2.8.0'
+  api 'com.google.code.gson:gson:2.8.5'
 }
