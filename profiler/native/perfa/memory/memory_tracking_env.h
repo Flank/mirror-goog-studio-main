@@ -16,9 +16,8 @@
 #ifndef MEMORY_TRACKING_ENV_H
 #define MEMORY_TRACKING_ENV_H
 
-#include "jvmti.h"
-
 #include <unistd.h>
+
 #include <atomic>
 #include <mutex>
 #include <unordered_map>
@@ -26,6 +25,7 @@
 #include <vector>
 
 #include "jni_function_table.h"
+#include "jvmti.h"
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"
@@ -42,7 +42,8 @@ using profiler::Clock;
 using profiler::proto::AgentConfig;
 using profiler::proto::AllocatedClass;
 using profiler::proto::AllocationEvent;
-using profiler::proto::BatchAllocationSample;
+using profiler::proto::BatchAllocationContexts;
+using profiler::proto::BatchAllocationEvents;
 using profiler::proto::BatchJNIGlobalRefEvent;
 using profiler::proto::JNIGlobalReferenceEvent;
 using profiler::proto::MemoryControlRequest;
@@ -161,19 +162,21 @@ class MemoryTrackingEnv : public GlobalRefListener {
   // Thread to send allocation data to perfd.
   static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
 
-  // Drain allocation_event_queue_ and send events to perfd
-  void DrainAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni);
+  // Sends the input list of allocation events to perfd
+  void SendAllocationEvents(jvmtiEnv* jvmti, JNIEnv* jni,
+                            std::deque<AllocationEvent>& queue);
 
-  // Drain jni_ref_event_queue_ and send events to perfd
-  void DrainJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni);
+  // Sends the input list of jni ref events to perfd
+  void SendJNIRefEvents(jvmtiEnv* jvmti, JNIEnv* jni,
+                        std::deque<JNIGlobalReferenceEvent>& queue);
 
   // Thread to send allocation count data to perfd.
   static void JNICALL AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
 
   // Helper method for retrieving methods names and line numbers corresponding
-  // to |method_id| and cache them into |sample| and our MethodIdMap
+  // to |method_id| and cache them into |contexts| and our MethodIdMap
   static void CacheMethodInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
-                              JNIEnv* jni, BatchAllocationSample& sample,
+                              JNIEnv* jni, BatchAllocationContexts& contexts,
                               int64_t method_id);
 
   // Helper method for retrieivng line number.
@@ -192,7 +195,7 @@ class MemoryTrackingEnv : public GlobalRefListener {
 
   // Lookup a thread id by a thread name and create a new enty if needed.
   int32_t ObtainThreadId(
-      const std::string& thread_name, int64_t timestamp,
+      const std::string& thread_name,
       google::protobuf::RepeatedPtrField<proto::ThreadInfo>* threads);
 
   void FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch);

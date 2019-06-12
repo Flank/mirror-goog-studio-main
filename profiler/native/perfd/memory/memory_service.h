@@ -97,7 +97,7 @@ class MemoryServiceImpl final
   ::grpc::Status GetLegacyAllocationContexts(
       ::grpc::ServerContext* context,
       const ::profiler::proto::LegacyAllocationContextsRequest* request,
-      ::profiler::proto::AllocationContextsResponse* response) override {
+      ::profiler::proto::LegacyAllocationContextsResponse* response) override {
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                           "Not implemented on device");
   }

@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 #include "memory_cache.h"
+
+#include <gtest/gtest.h>
+
 #include "proto/memory.pb.h"
 #include "utils/fake_clock.h"
 #include "utils/file_cache.h"
 #include "utils/fs/memory_file_system.h"
 
-#include <gtest/gtest.h>
-
 using profiler::proto::AllocationSamplingRateEvent;
 using profiler::proto::AllocationsInfo;
-using profiler::proto::BatchAllocationSample;
+using profiler::proto::BatchAllocationContexts;
+using profiler::proto::BatchAllocationEvents;
 using profiler::proto::BatchJNIGlobalRefEvent;
 using profiler::proto::MemoryData;
 using profiler::proto::TrackAllocationsResponse;
@@ -176,26 +178,30 @@ TEST(MemoryCache, GetMemoryJvmtiData) {
   profiler::MemoryCache cache(&fake_clock, &file_cache, 2);
   MemoryData response;
 
-  fake_clock.Elapse(1);
-
-  BatchAllocationSample alloc_sample;
-  cache.SaveAllocationEvents(alloc_sample);
+  BatchAllocationEvents alloc_events;
+  BatchAllocationContexts alloc_contexts;
+  alloc_events.set_timestamp(1);
+  alloc_contexts.set_timestamp(1);
+  cache.SaveAllocationEvents(alloc_contexts, alloc_events);
 
   BatchJNIGlobalRefEvent jni_ref_event;
-  cache.SaveJNIRefEvents(jni_ref_event);
+  jni_ref_event.set_timestamp(2);
+  alloc_contexts.set_timestamp(2);
+  cache.SaveJNIRefEvents(alloc_contexts, jni_ref_event);
 
   AllocationSamplingRateEvent event;
-  event.set_timestamp(1);
+  event.set_timestamp(3);
   event.mutable_sampling_rate()->set_sampling_num_interval(10);
   cache.SaveAllocationSamplingRateEvent(event);
 
-  cache.LoadMemoryJvmtiData(0, 1, &response);
-  EXPECT_EQ(1, response.allocation_samples_size());
+  cache.LoadMemoryJvmtiData(0, 3, &response);
+  EXPECT_EQ(2, response.batch_allocation_contexts_size());
+  EXPECT_EQ(1, response.batch_allocation_events_size());
   EXPECT_EQ(1, response.jni_reference_event_batches_size());
   EXPECT_EQ(1, response.alloc_sampling_rate_events_size());
-  EXPECT_EQ(1, response.alloc_sampling_rate_events(0).timestamp());
+  EXPECT_EQ(3, response.alloc_sampling_rate_events(0).timestamp());
   EXPECT_EQ(10, response.alloc_sampling_rate_events(0)
                     .sampling_rate()
                     .sampling_num_interval());
-  EXPECT_EQ(1, response.end_timestamp());
+  EXPECT_EQ(3, response.end_timestamp());
 }

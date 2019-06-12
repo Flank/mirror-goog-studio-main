@@ -63,7 +63,7 @@ service MemoryService {
   // Pre-O only: Returns class names and callstacks info associated with the
   // ids provided in the request.
   rpc GetLegacyAllocationContexts(LegacyAllocationContextsRequest)
-      returns (AllocationContextsResponse) {}
+      returns (LegacyAllocationContextsResponse) {}
   // Pre-O only: Used by Studio only for exporting legacy tracking data.
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
   // Pre-O only: Import saved allocation records.
@@ -73,13 +73,8 @@ service MemoryService {
   // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
   // This returns all allocation deallocation events that happened
   // within the request's start and end times.
-  rpc GetAllocations(AllocationSnapshotRequest)
-      returns (BatchAllocationSample) {}
-
-  // O+ studio-side only: inquire for the latest timestamp for which alloc/free
-  // data is available for a particular session.
-  rpc GetLatestAllocationTime(LatestAllocationTimeRequest)
-      returns (LatestAllocationTimeResponse) {}
+  rpc GetAllocationEvents(AllocationSnapshotRequest)
+      returns (AllocationEventsResponse) {}
 
   // O+ studio-side only: Grabs the allocation classes and callstack info for
   // GetAllocations results.
@@ -166,9 +161,10 @@ message MemoryData {
   repeated GcStatsSample gc_stats_samples = 4;
   repeated HeapDumpInfo heap_dump_infos = 5;
   repeated AllocationsInfo allocations_info = 6;
-  repeated BatchAllocationSample allocation_samples = 7;
-  repeated BatchJNIGlobalRefEvent jni_reference_event_batches = 8;
-  repeated AllocationSamplingRateEvent alloc_sampling_rate_events = 9;
+  repeated BatchAllocationContexts batch_allocation_contexts = 7;
+  repeated BatchAllocationEvents batch_allocation_events = 8;
+  repeated BatchJNIGlobalRefEvent jni_reference_event_batches = 9;
+  repeated AllocationSamplingRateEvent alloc_sampling_rate_events = 10;
 }
 // Proto for describing a heap dump record.
 // A HeapDumpInfo is returned if either the start_time or end_time falls
@@ -318,9 +314,8 @@ message ImportLegacyAllocationsRequest {
   // The allocation events that should be returned when
   // GetLegacyAllocationEvents is called.
   LegacyAllocationEventsResponse allocations = 3;
-  // The classes and stack traces that should be returned
-  // when GetLegacyAllocationContexts is called.
-  AllocationContextsResponse contexts = 4;
+  repeated AllocatedClass classes = 4;
+  repeated AllocationStack stacks = 5;
 }
 
 message ImportLegacyAllocationsResponse {
@@ -366,12 +361,9 @@ message LegacyAllocationContextsRequest {
   repeated int32 stack_ids = 3;
 }
 
-message LatestAllocationTimeRequest {
-  Session session = 1;
-}
-
-message LatestAllocationTimeResponse {
-  int64 timestamp = 1;
+message LegacyAllocationContextsResponse {
+  repeated AllocatedClass classes = 4;
+  repeated AllocationStack stacks = 5;
 }
 
 message AllocationContextsRequest {
@@ -381,13 +373,7 @@ message AllocationContextsRequest {
 }
 
 message AllocationContextsResponse {
-  // O+ only. Records the timestamp of the latest class/stack
-  // entry returned by the response.
-  int64 timestamp = 1;
-  repeated AllocatedClass allocated_classes = 2;
-  repeated AllocationStack allocation_stacks = 3;
-  // O+ only. All seen thread Ids -> Strings mapping
-  repeated ThreadInfo allocation_threads = 4;
+  repeated BatchAllocationContexts contexts = 1;
 }
 
 message StackFrameInfoRequest {
@@ -414,6 +400,10 @@ message AllocationSnapshotRequest {
   // Ignore |start_time| - include only objects that are still
   // alive at point in time specified by |end_time|
   bool live_objects_only = 4;
+}
+
+message AllocationEventsResponse {
+  repeated BatchAllocationEvents events = 1;
 }
 
 message JNIGlobalRefsEventsRequest {

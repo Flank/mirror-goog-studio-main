@@ -41,8 +41,10 @@ class MemoryCache {
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveAllocStatsSample(const proto::MemoryData::AllocStatsSample& sample);
   void SaveGcStatsSample(const proto::MemoryData::GcStatsSample& sample);
-  void SaveAllocationEvents(const proto::BatchAllocationSample& sample);
-  void SaveJNIRefEvents(const proto::BatchJNIGlobalRefEvent& sample);
+  void SaveAllocationEvents(const proto::BatchAllocationContexts& contexts,
+                            const proto::BatchAllocationEvents& events);
+  void SaveJNIRefEvents(const proto::BatchAllocationContexts& contexts,
+                        const proto::BatchJNIGlobalRefEvent& events);
   void SaveAllocationSamplingRateEvent(
       const proto::AllocationSamplingRateEvent& event);
 
@@ -67,11 +69,6 @@ class MemoryCache {
                                 proto::DumpDataResponse* response);
 
  private:
-  // Gets the index into |*_samples_| for the corresponding |id|.
-  int32_t GetSampleIndex(int32_t id);
-  // Gets the next index into |*_samples_| for the corresponding |id|.
-  int32_t GetNextSampleIndex(int32_t id);
-
   Clock* clock_;
   FileCache* file_cache_;
 
@@ -80,7 +77,8 @@ class MemoryCache {
   CircularBuffer<proto::MemoryData::GcStatsSample> gc_stats_samples_;
   CircularBuffer<proto::HeapDumpInfo> heap_dump_infos_;
   CircularBuffer<proto::AllocationsInfo> allocations_info_;
-  CircularBuffer<proto::BatchAllocationSample> allocations_samples_;
+  CircularBuffer<proto::BatchAllocationContexts> allocation_contexts_;
+  CircularBuffer<proto::BatchAllocationEvents> allocation_events_;
   CircularBuffer<proto::BatchJNIGlobalRefEvent> jni_refs_event_batches_;
   CircularBuffer<proto::AllocationSamplingRateEvent>
       alloc_sampling_rate_events_;
@@ -89,7 +87,7 @@ class MemoryCache {
   std::mutex gc_stats_samples_mutex_;
   std::mutex heap_dump_infos_mutex_;
   std::mutex allocations_info_mutex_;
-  std::mutex allocations_samples_mutex_;
+  std::mutex allocation_events_mutex_;
   std::mutex jni_ref_batches_mutex_;
   std::mutex alloc_sampling_rate_mutex_;
 

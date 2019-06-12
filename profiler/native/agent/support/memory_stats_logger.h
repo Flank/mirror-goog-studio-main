@@ -30,11 +30,15 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 // TODO: add count+bytes freed information.
 void EnqueueGcStats(int64_t start_time, int64_t end_time);
 
-// Queues the BatchAlllocationSample to be sent to perfd.
-void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample);
+// Queues the BatchAllocationContexts and BatchAllocationEvents to be sent to
+// perfd.
+void EnqueueAllocationEvents(const proto::BatchAllocationContexts& contexts,
+                             const proto::BatchAllocationEvents& events);
 
-// Queues the BatchJNIGlobalRefEvent to be sent to perfd.
-void EnqueueJNIGlobalRefEvents(const proto::BatchJNIGlobalRefEvent& sample);
+// Queues the BatchAllocationContexts and BatchJNIGlobalRefEvent to be sent to
+// perfd.
+void EnqueueJNIGlobalRefEvents(const proto::BatchAllocationContexts& contexts,
+                               const proto::BatchJNIGlobalRefEvent& events);
 
 // Queues the AllocationSamplingRateEvent to be sent to perfd.
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,

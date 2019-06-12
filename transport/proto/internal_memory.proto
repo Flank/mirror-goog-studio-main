@@ -86,12 +86,14 @@ message AllocationSamplingRateEventRequest {
 
 message AllocationEventsRequest {
   int32 pid = 1;
-  BatchAllocationSample sample = 2;
+  BatchAllocationEvents events = 2;
+  BatchAllocationContexts contexts = 3;
 }
 
 message JNIRefEventsRequest {
   int32 pid = 1;
-  BatchJNIGlobalRefEvent sample = 2;
+  BatchJNIGlobalRefEvent events = 2;
+  BatchAllocationContexts contexts = 3;
 }
 
 message EmptyMemoryReply {}

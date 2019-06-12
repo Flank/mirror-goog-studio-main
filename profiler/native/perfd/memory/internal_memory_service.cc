@@ -17,6 +17,7 @@
 
 #include <grpc++/grpc++.h>
 #include <unistd.h>
+
 #include <cassert>
 
 namespace profiler {
@@ -101,7 +102,8 @@ grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->SaveAllocationEvents(request->sample());
+  result->second.memory_cache()->SaveAllocationEvents(request->contexts(),
+                                                      request->events());
   return Status::OK;
 }
 
@@ -115,7 +117,8 @@ grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->SaveJNIRefEvents(request->sample());
+  result->second.memory_cache()->SaveJNIRefEvents(request->contexts(),
+                                                  request->events());
   return Status::OK;
 }
 

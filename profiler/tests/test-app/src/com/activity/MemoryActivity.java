@@ -34,19 +34,13 @@ public class MemoryActivity extends PerfdTestActivity {
 
     static class MemNoiseEntity {}
 
-    public MemoryActivity() {
-        super("MemoryActivity");
-        makeSureTestEntityClassLoaded(null);
+    static {
+        MemTestEntity TEST_ENTITY = null;
+        MemNoiseEntity NOISE_ENTITY = null;
     }
 
-    // This functions is really doing nothing except making sure
-    // MemTestEntity class is loaded by the time we start real testing.
-    private MemTestEntity makeSureTestEntityClassLoaded(MemTestEntity o)
-    {
-        if (o != null) {
-            return new MemTestEntity(1);
-        }
-        return o;
+    public MemoryActivity() {
+        super("MemoryActivity");
     }
 
     ArrayList<Object> entities = new ArrayList<Object>();
@@ -81,7 +75,7 @@ public class MemoryActivity extends PerfdTestActivity {
     }
 
     public void gc() {
-        System.gc();
+        Runtime.getRuntime().gc();
         System.out.println("MemoryActivity.gc");
     }
 }

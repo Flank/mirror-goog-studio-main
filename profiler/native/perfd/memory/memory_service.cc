@@ -16,6 +16,7 @@
 #include "memory_service.h"
 
 #include <unistd.h>
+
 #include <cassert>
 
 #include "proto/internal_memory.grpc.pb.h"

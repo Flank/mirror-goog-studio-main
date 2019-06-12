@@ -105,14 +105,16 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
   }
 }
 
-void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample) {
+void EnqueueAllocationEvents(const proto::BatchAllocationContexts& contexts,
+                             const proto::BatchAllocationEvents& events) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 
   AllocationEventsRequest request;
   request.set_pid(getpid());
-  request.mutable_sample()->CopyFrom(sample);
+  request.mutable_contexts()->CopyFrom(contexts);
+  request.mutable_events()->CopyFrom(events);
   Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
@@ -120,14 +122,16 @@ void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample) {
       }});
 }
 
-void EnqueueJNIGlobalRefEvents(const proto::BatchJNIGlobalRefEvent& sample) {
+void EnqueueJNIGlobalRefEvents(const proto::BatchAllocationContexts& contexts,
+                               const proto::BatchJNIGlobalRefEvent& events) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
     return;
   }
 
   JNIRefEventsRequest request;
   request.set_pid(getpid());
-  request.mutable_sample()->CopyFrom(sample);
+  request.mutable_contexts()->CopyFrom(contexts);
+  request.mutable_events()->CopyFrom(events);
   Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
       {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
         EmptyMemoryReply reply;
