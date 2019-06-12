@@ -31,6 +31,8 @@ import java.io.File
  */
 interface CxxModuleModel {
 
+    val cxxFolder : File
+
     /**
      * The abiFilters from build.gradle
      *   ex, android.splits.abiFilters 'x86', 'x86_64'

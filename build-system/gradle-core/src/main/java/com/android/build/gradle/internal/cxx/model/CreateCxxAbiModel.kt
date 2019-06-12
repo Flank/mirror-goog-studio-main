@@ -41,7 +41,7 @@ fun createCxxAbiModel(
             variant.module.ndkMetaAbiList.single { it.abi == abi }
         }
         override val cxxBuildFolder by lazy {
-            join(variant.jsonFolder(global), abi.tag)
+            join(variant.jsonFolder, abi.tag)
         }
         override val abiPlatformVersion by lazy {
             val minSdkVersion =
@@ -64,10 +64,10 @@ fun createCxxAbiModel(
                 object : CxxCmakeAbiModel {
                     override val effectiveConfiguration by lazy { CMakeSettingsConfiguration() }
                     override val cmakeWrappingBaseFolder by lazy {
-                       join(variant.gradleBuildOutputFolder(global), abi.tag)
+                       join(variant.gradleBuildOutputFolder, abi.tag)
                     }
                     override val cmakeArtifactsBaseFolder by lazy {
-                        join(variant.jsonFolder(global), abi.tag)
+                        join(variant.jsonFolder, abi.tag)
                     }
                 }
             } else {

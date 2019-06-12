@@ -79,7 +79,7 @@ class TryCreateCxxModuleModelTest {
                 doReturn(File("my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
-                val finalStagingDir = module.cxxFolder(it.global)
+                val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(0)
                 assertThat(finalStagingDir.path).contains("my-build-staging-directory")
             }
@@ -93,8 +93,7 @@ class TryCreateCxxModuleModelTest {
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
-                assertThat(logEnvironment.errors).hasSize(0)
-                val finalStagingDir = module.cxxFolder(it.global)
+                val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(1)
                 assertThat(logEnvironment.errors[0])
                     .contains("The build staging directory you specified")

@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.cxx.logging.errorln
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.services.createDefaultServiceRegistry
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild
+import com.android.build.gradle.internal.ndk.NdkHandler
 import com.android.build.gradle.internal.ndk.Stl
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -44,6 +45,7 @@ import com.android.utils.FileUtils.join
 import org.gradle.api.InvalidUserDataException
 import java.io.File
 import java.io.FileReader
+import java.lang.NumberFormatException
 import java.util.function.Consumer
 
 /**
@@ -87,8 +89,71 @@ fun tryCreateCxxModuleModel(
     cmakeLocator: CmakeLocator
 ) : CxxModuleModel? {
 
-    val (buildSystem, makeFile, buildStagingDirectory) =
+    val (buildSystem, makeFile, buildStagingFolder) =
         getProjectPath(global.extension.externalNativeBuild) ?: return null
+
+    val cxxFolder = findCxxFolder(
+        global.project.projectDir,
+        buildStagingFolder,
+        global.project.buildDir)
+
+    /**
+     * Construct an [NdkHandler] and attempt to auto-download an NDK. If auto-download fails then
+     * allow valid [errorln]s to pass or throw exception that will trigger download hyperlinks
+     * in Android Studio
+     */
+    fun ndkHandler(): NdkHandler {
+        val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
+        val locatorRecord = join(cxxFolder, "ndk_locator_record.json")
+        try {
+            if (!ndkHandler.ndkPlatform.isConfigured) {
+                if (ndkHandler.userExplicityRequestedNdkVersion) {
+                    try {
+                        global.sdkComponents.installNdk(ndkHandler)
+                    } catch (e : NumberFormatException) {
+                        // This is likely a mis-formatted NDK version in build.gradle. Just issue
+                        // an infoln because an appropriate errorln will have been emitted by
+                        // NdkLocator.
+                        infoln(
+                            "NDK auto-download failed, possibly due to a malformed NDK version in " +
+                                    "build.gradle. If manual download is necessary from SDK manager " +
+                                    "then the preferred NDK version is " +
+                                    "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'."
+                        )
+                        return ndkHandler
+                    }
+                } else {
+                    // Don't auto-download if the user has not explicitly specified an NDK
+                    // version in build.gradle. The default version may not be the one that
+                    // the user prefers but he hasn't had a chance yet to set
+                    // android.ndkVersion. We don't want to auto-download a massive NDK without
+                    // confirmation that it's the right one.
+                    infoln(
+                        "NDK auto-download is disabled. To enable auto-download, " +
+                                "set an explicit version in build.gradle by setting " +
+                                "android.ndkVersion. The preferred NDK version is " +
+                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'."
+                    )
+                }
+                if (!ndkHandler.ndkPlatform.isConfigured) {
+                    throw InvalidUserDataException(
+                        "NDK not configured. Download " +
+                                "it with SDK manager. Preferred NDK version is " +
+                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'. " +
+                                "Log: $locatorRecord"
+                    )
+                }
+            }
+        } finally {
+            ndkHandler.writeNdkLocatorRecord(locatorRecord)
+        }
+        return ndkHandler
+    }
+    val ndkHandler = ndkHandler()
+    if (!ndkHandler.ndkPlatform.isConfigured) {
+        infoln("Not creating C/C++ model because NDK could not be configured.")
+        return null
+    }
 
     fun localPropertyFile(property : String) : File? {
         val path = gradleLocalProperties(global.project.rootDir)
@@ -96,38 +161,9 @@ fun tryCreateCxxModuleModel(
         return File(path)
     }
     return object : CxxModuleModel {
+        override val cxxFolder get() = cxxFolder
         override val project by lazy { createCxxProjectModel(global) }
         override val services by lazy { createDefaultServiceRegistry(global) }
-        private val ndkHandler by lazy {
-            val ndkHandler = global.sdkComponents.ndkHandlerSupplier.get()
-            val locatorRecord = join(cxxFolder(global), "ndk_locator_record.json")
-            try {
-                if (!ndkHandler.ndkPlatform.isConfigured) {
-                    if (ndkHandler.userExplicityRequestedNdkVersion) {
-                        global.sdkComponents.installNdk(ndkHandler)
-                    } else {
-                        // Don't auto-download if the user has not explicitly specified an NDK
-                        // version in build.gradle. The default version may not be the one that
-                        // the user prefers but he hasn't had a chance yet to set
-                        // android.ndkVersion. We don't want to auto-download a massive NDK without
-                        // confirmation that it's the right one.
-                        infoln("NDK auto-download is disabled. To enable auto-download, " +
-                                "set an explicit version in build.gradle by setting " +
-                                "android.ndkVersion. The preferred NDK version is " +
-                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'.")
-                    }
-                    if (!ndkHandler.ndkPlatform.isConfigured) {
-                        throw InvalidUserDataException("NDK not configured. Download " +
-                                "it with SDK manager. Preferred NDK version is " +
-                                "'$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION'. " +
-                                "Log: $locatorRecord")
-                    }
-                }
-            } finally {
-                ndkHandler.writeNdkLocatorRecord(locatorRecord)
-            }
-            ndkHandler
-        }
         override val ndkMetaPlatforms by lazy {
             val ndkMetaPlatformsFile = NdkMetaPlatforms.jsonFile(ndkFolder)
             if (ndkMetaPlatformsFile.isFile) {
@@ -169,7 +205,7 @@ fun tryCreateCxxModuleModel(
         override val ndkFolder by lazy {
             trySymlinkNdk(
                 ndkHandler.ndkPlatform.getOrThrow().ndkDirectory,
-                cxxFolder(global),
+                cxxFolder,
                 localPropertyFile(NDK_SYMLINK_DIR))
         }
         override val ndkVersion by lazy {
@@ -195,7 +231,7 @@ fun tryCreateCxxModuleModel(
         override val moduleRootFolder by lazy {
             global.project.projectDir
         }
-        override val buildStagingFolder get() = buildStagingDirectory
+        override val buildStagingFolder get() = buildStagingFolder
         override val stlSharedObjectMap by lazy {
             val map: MutableMap<Stl, Map<Abi, File>> = mutableMapOf()
             val ndkInfo = ndkHandler.ndkPlatform.getOrThrow().ndkInfo
@@ -211,15 +247,6 @@ fun tryCreateCxxModuleModel(global : GlobalScope) = tryCreateCxxModuleModel(
     global,
     CmakeLocator()
 )
-
-/**
- * Get the module-level cxxFolder.
- */
-fun CxxModuleModel.cxxFolder(global : GlobalScope) =
-    findCxxFolder(
-        global.project.projectDir,
-        buildStagingFolder,
-        global.project.buildDir)
 
 /**
  * Resolve the CMake or ndk-build path and buildStagingDirectory of native build project.

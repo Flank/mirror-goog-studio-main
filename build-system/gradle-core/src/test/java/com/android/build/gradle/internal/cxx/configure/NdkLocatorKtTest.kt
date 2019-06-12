@@ -16,15 +16,22 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
+import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.lang.RuntimeException
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
+import com.android.build.gradle.internal.cxx.logging.LoggingEnvironment
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel
 import com.android.build.gradle.internal.cxx.logging.LoggingRecord
+import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.errorRecordOf
+import com.android.build.gradle.internal.cxx.logging.infoRecordOf
+import com.android.build.gradle.internal.cxx.logging.warnRecordOf
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.util.regex.Pattern
 
 class NdkLocatorKtTest {
 
@@ -32,10 +39,9 @@ class NdkLocatorKtTest {
     val temporaryFolder = TemporaryFolder()
 
     private fun String.toSlash() : String {
-        check(contains("/"))
         return replace("/", File.separator)
     }
-    private fun String.toSlashFile() = File(toSlash())
+    private fun String?.toSlashFile() = if (this == null) null else File(toSlash())
 
     private fun List<LoggingRecord>.filterByLevel(level : LoggingLevel) : List<String> {
         return filter { it.level == level }.map { it.message }
@@ -44,13 +50,55 @@ class NdkLocatorKtTest {
     private fun List<LoggingRecord>.warnings() = filterByLevel(LoggingLevel.WARN)
     private fun List<LoggingRecord>.infos() = filterByLevel(LoggingLevel.INFO)
 
-    private fun assertHasInsufficientPrecisionError(record : List<LoggingRecord>) {
+    private fun assertHasInsufficientPrecisionError(path : File?, record : List<LoggingRecord>) {
+        assertThat(path).isNull()
+
         if (!record.any { it.level == LoggingLevel.ERROR }) {
             throw RuntimeException("Expected at least one error")
         }
         if (!record.any { it.message.contains("precision") }) {
             throw RuntimeException("Expected a precision error but got $record")
         }
+    }
+
+    private fun assertHasMismatchedNdkDirVersion(path : File?, record : List<LoggingRecord>) {
+        assertThat(path).isNull()
+        if (!record.any { it.level == LoggingLevel.ERROR }) {
+            throw RuntimeException("Expected at least one error")
+        }
+        val error = record.single { it.level == LoggingLevel.ERROR }.message
+        assertThat(error).containsMatch(
+            Pattern.compile("Requested NDK version.*did not match.*requested by ndk\\.dir"))
+    }
+
+    private fun assertNdkDirHadInvalidNdk(path : File?, record : List<LoggingRecord>) {
+        assertThat(path).isNull()
+        if (!record.any { it.level == LoggingLevel.ERROR }) {
+            throw RuntimeException("Expected at least one error")
+        }
+        val error = record.single { it.level == LoggingLevel.ERROR }.message
+        assertThat(error).containsMatch(
+            Pattern.compile("Location specified by ndk\\.dir .* did not contain a valid NDK and and couldn't be used"))
+    }
+
+    private fun assertNoMatchingVersionFoundWithLocalVersionsAvailable(path : File?, record : List<LoggingRecord>) {
+        assertThat(path).isNull()
+        if (!record.any { it.level == LoggingLevel.ERROR }) {
+            throw RuntimeException("Expected at least one error")
+        }
+        val error = record.single { it.level == LoggingLevel.ERROR }.message
+        assertThat(error).containsMatch(
+            Pattern.compile("No version of NDK matched the requested version .*. Versions available locally: .*"))
+    }
+
+    private fun assertHasUnparseableVersion(path : File?, record : List<LoggingRecord>) {
+        assertThat(path).isNull()
+        if (!record.any { it.level == LoggingLevel.ERROR }) {
+            throw RuntimeException("Expected at least one error")
+        }
+        val error = record.single { it.level == LoggingLevel.ERROR }.message
+        assertThat(error).containsMatch(
+            Pattern.compile("Requested NDK version .* could not be parsed"))
     }
 
     @Test
@@ -68,19 +116,19 @@ class NdkLocatorKtTest {
 
     @Test
     fun getVersionedFolderNamesNonExistent() {
-        val versionRoot = "./getVersionedFolderNamesNonExistent".toSlashFile()
+        val versionRoot = "./getVersionedFolderNamesNonExistent".toSlashFile()!!
         assertThat(getNdkVersionedFolders(versionRoot).toList()).isEmpty()
     }
 
     @Test
     fun getNdkVersionInfoNoFolder() {
-        val versionRoot = "./non-existent-folder".toSlashFile()
+        val versionRoot = "./non-existent-folder".toSlashFile()!!
         assertThat(getNdkVersionInfo(versionRoot)).isNull()
     }
 
-    // TODO Reenable tests that are disabled in a follow-up CL
+    @Test
     fun `non-existing ndk dir without NDK version in DSL (bug 129789776)`() {
-        val (_, record) =
+        val (path, record) =
             findNdkPathWithRecord(
                 ndkVersionFromDsl = null,
                 ndkDirProperty = "/my/ndk/folder".toSlash(),
@@ -93,11 +141,12 @@ class NdkLocatorKtTest {
                         SDK_PKG_REVISION.key to ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION))
                     else -> throw RuntimeException(path.path)
                 } })
-         assertHasInsufficientPrecisionError(record)
+        assertNdkDirHadInvalidNdk(path, record)
     }
 
+    @Test
     fun `non-existing ndk dir without NDK version in DSL and with side-by-side versions available (bug 129789776)`() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = null,
                     ndkDirProperty = "/my/ndk/folder".toSlash(),
@@ -119,9 +168,10 @@ class NdkLocatorKtTest {
                             else -> null
                         }
                     })
-        assertHasInsufficientPrecisionError(record)
+        assertNdkDirHadInvalidNdk(path, record)
     }
 
+    @Test
     fun `same version in legacy folder and side-by-side folder (bug 129488603)`() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -144,9 +194,7 @@ class NdkLocatorKtTest {
                     else -> null
                 }
             })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
     @Test
@@ -234,8 +282,9 @@ class NdkLocatorKtTest {
         assertThat(record.errors()).isEmpty()
     }
 
+    @Test
     fun nonExistingNdkDirWithNdkVersionInDsl() {
-        val (_, record) = findNdkPathWithRecord(
+        val (path, record) = findNdkPathWithRecord(
                 ndkVersionFromDsl = "18.1",
                 ndkDirProperty = "/my/ndk/folder".toSlash(),
                 androidNdkHomeEnvironmentVariable = "/my/ndk/environment-folder".toSlash(),
@@ -247,7 +296,7 @@ class NdkLocatorKtTest {
                         SDK_PKG_REVISION.key to "18.1.23456"))
                     else -> throw RuntimeException(path.path)
                 } })
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
     @Test
@@ -692,6 +741,7 @@ class NdkLocatorKtTest {
         assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
     }
 
+    @Test
     fun multipleMatchingVersions1() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -714,10 +764,10 @@ class NdkLocatorKtTest {
                     else -> null
                 }
             })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.99999".toSlashFile())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun multipleMatchingVersions2() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -740,9 +790,7 @@ class NdkLocatorKtTest {
                     else -> null
                 }
             })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
     @Test
@@ -813,8 +861,9 @@ class NdkLocatorKtTest {
             .trimIndent().toSlash())    
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithWrongDslVersion() {
-        val (_, record) =
+        val (path, record) =
             findNdkPathWithRecord(
                 ndkVersionFromDsl = "17.1.23456",
                 ndkDirProperty = "/my/ndk/folder".toSlash(),
@@ -832,11 +881,12 @@ class NdkLocatorKtTest {
                     }
                 })
 
-        assertHasInsufficientPrecisionError(record)
+        assertHasMismatchedNdkDirVersion(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithWrongDslVersion() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.23456",
                     ndkDirProperty = null,
@@ -854,11 +904,12 @@ class NdkLocatorKtTest {
                         }
                     })
 
-        assertHasInsufficientPrecisionError(record)
+        assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithWrongDslVersion() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.23456",
                     ndkDirProperty = null,
@@ -875,7 +926,7 @@ class NdkLocatorKtTest {
                             else -> throw RuntimeException(path.path)
                         }
                     })
-         assertHasInsufficientPrecisionError(record)
+        assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
     }
 
     @Test
@@ -947,8 +998,9 @@ class NdkLocatorKtTest {
             .trimIndent().toSlash())
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithWrongDslVersionWithVersionedNdk() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.23456",
                     ndkDirProperty = "/my/ndk/folder".toSlash(),
@@ -965,11 +1017,12 @@ class NdkLocatorKtTest {
                             else -> throw RuntimeException(path.path)
                         }
                     })
-        assertHasInsufficientPrecisionError(record)
+        assertHasMismatchedNdkDirVersion(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithWrongDslVersionWithVersionedNdk() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.23456",
                     ndkDirProperty = null,
@@ -986,11 +1039,12 @@ class NdkLocatorKtTest {
                             else -> throw RuntimeException(path.path)
                         }
                     })
-        assertHasInsufficientPrecisionError(record)
+        assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithWrongDslVersionWithVersionedNdk() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.23456",
                     ndkDirProperty = null,
@@ -1007,11 +1061,12 @@ class NdkLocatorKtTest {
                             else -> null
                         }
                     })
-         assertHasInsufficientPrecisionError(record)
+        assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
     }
 
+    @Test
     fun unparseableNdkVersionFromDsl() {
-        val (_, record) =
+        val (path, record) =
                 findNdkPathWithRecord(
                     ndkVersionFromDsl = "17.1.unparseable",
                     ndkDirProperty = null,
@@ -1028,9 +1083,10 @@ class NdkLocatorKtTest {
                             else -> null
                         }
                     })
-        assertHasInsufficientPrecisionError(record)
+        assertHasUnparseableVersion(path, record)
     }
 
+    @Test
     fun ndkNotConfiguredWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1040,13 +1096,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.warnings()).contains("""
-            Compatible side by side NDK version was not found for android.ndkVersion '18.1'"""
-            .trimIndent())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationDoesntExistWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1056,15 +1109,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsButNoPkgRevisionWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1078,15 +1126,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1102,15 +1145,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1128,11 +1166,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1145,12 +1182,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings())
-            .containsExactly("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithTwoPartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1163,11 +1198,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkNotConfiguredWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1177,13 +1211,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf("18.1.23456")  },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.warnings()).contains("""
-            Compatible side by side NDK version was not found for android.ndkVersion '18.1'"""
-            .trimIndent())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationDoesntExistWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1193,15 +1224,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf("18.1.23456") },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsButNoPkgRevisionWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1213,13 +1239,10 @@ class NdkLocatorKtTest {
             "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
-            .trimIndent().toSlash())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1237,15 +1260,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1258,11 +1276,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1275,12 +1292,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings())
-            .containsExactly("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithTwoPartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18.1",
@@ -1298,10 +1313,11 @@ class NdkLocatorKtTest {
                     else -> null
                 }
             })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
-        assertHasInsufficientPrecisionError(record)
+        assertThat(path).isEqualTo(null)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkNotConfiguredWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1311,15 +1327,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.warnings()).contains(
-            """
-        Compatible side by side NDK version was not found for android.ndkVersion '18'"""
-                .trimIndent()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationDoesntExistWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1329,15 +1340,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf() },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsButNoPkgRevisionWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1351,15 +1357,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1377,15 +1378,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location had source.properties with invalid Pkg.Revision=bob"""
-                .trimIndent().toSlash()
-        )
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1403,12 +1399,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertThat(record.errors()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1421,12 +1415,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings())
-            .containsExactly("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithOnePartDslVersion() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1439,11 +1431,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk-bundle".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkNotConfiguredWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1453,13 +1444,10 @@ class NdkLocatorKtTest {
             getNdkVersionedFolderNames = { listOf("18.1.23456")  },
             getNdkSourceProperties = { null }
         )
-        assertThat(path).isNull()
-        assertThat(record.warnings()).contains("""
-            Compatible side by side NDK version was not found for android.ndkVersion '18'"""
-            .trimIndent())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationDoesntExistWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1470,13 +1458,10 @@ class NdkLocatorKtTest {
             getNdkSourceProperties = { null }
         )
         assertThat(path).isNull()
-        assertThat(record.infos()).contains(
-            """
-        Rejected /my/ndk/folder by ndk.dir because that location has no source.properties"""
-                .trimIndent().toSlash()
-        )
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsButNoPkgRevisionWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1488,13 +1473,10 @@ class NdkLocatorKtTest {
             "/my/ndk/folder".toSlash() -> SdkSourceProperties(mapOf())
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isNull()
-        assertThat(record.infos()).contains("""
-            Rejected /my/ndk/folder by ndk.dir because that location had source.properties with no Pkg.Revision"""
-            .trimIndent().toSlash())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsInvalidPkgRevisionWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1513,9 +1495,10 @@ class NdkLocatorKtTest {
                 }
             })
         assertThat(path).isNull()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun ndkDirPropertyLocationExistsWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1528,11 +1511,10 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> throw RuntimeException(path.path)
         } })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings()).isEmpty()
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun androidHomeLocationExistsWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1550,12 +1532,10 @@ class NdkLocatorKtTest {
                     else -> throw RuntimeException(path.path)
                 }
             })
-        assertThat(path).isEqualTo("/my/ndk/folder".toSlashFile())
-        assertThat(record.warnings())
-            .containsExactly("Support for ANDROID_NDK_HOME is deprecated and will be removed in the future. Use android.ndkVersion in build.gradle instead.")
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
     }
 
+    @Test
     fun sdkFolderNdkBundleExistsWithOnePartDslVersionWithVersionedNdk() {
         val (path, record) = findNdkPathWithRecord(
             ndkVersionFromDsl = "18",
@@ -1568,7 +1548,103 @@ class NdkLocatorKtTest {
                 SDK_PKG_REVISION.key to "18.1.23456"))
             else -> null
         } })
-        assertThat(path).isEqualTo("/my/sdk/folder/ndk/18.1.23456".toSlashFile())
-        assertHasInsufficientPrecisionError(record)
+        assertHasInsufficientPrecisionError(path, record)
+    }
+
+    @Test
+    fun `from fuzz, blank ndkVersionFromDsl`() {
+        val (path, record) = findNdkPathWithRecord(
+            ndkVersionFromDsl = "",
+            ndkDirProperty = null,
+            androidNdkHomeEnvironmentVariable = null,
+            sdkFolder = "/my/sdk/folder".toSlashFile(),
+            getNdkVersionedFolderNames = { listOf("18.1.23456") },
+            getNdkSourceProperties = { path -> when(path.path) {
+                "/my/sdk/folder/ndk/18.1.23456".toSlash() -> SdkSourceProperties(mapOf(
+                    SDK_PKG_REVISION.key to "18.1.23456"))
+                else -> null
+            } })
+        assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
+    }
+
+    /**
+     * Only show unique messages so the console window doesn't fill up too much
+     */
+    open class UniqueMessageReportingErrorLogger : ThreadLoggingEnvironment() {
+        private val records = mutableSetOf<LoggingRecord>()
+        private val parent : LoggingEnvironment = parentLogger()
+
+        override fun error(message: String) {
+            val record = errorRecordOf(message)
+            if (!records.contains(record)) {
+                parent.error(message)
+                records += record
+            }
+        }
+
+        override fun warn(message: String) {
+            val record = warnRecordOf(message)
+            if (!records.contains(record)) {
+                parent.warn(message)
+                records += record
+            }
+        }
+
+        override fun info(message: String) {
+            val record = infoRecordOf(message)
+            if (!records.contains(record)) {
+                parent.info(message)
+                records += record
+            }
+        }
+    }
+
+    @Test
+    fun `fuzz test`() {
+        RandomInstanceGenerator().apply {
+            UniqueMessageReportingErrorLogger().use {
+                for (i in 0..10000) {
+                    val veryOldVersion = "10.1.2"
+                    val properVersion = "18.1.23456"
+                    val properSdkPath = "/my/sdk/folder"
+                    val properNdkPath = "$properSdkPath/ndk/$properVersion"
+                    val properLegacyNdkPath = "$properSdkPath/ndk-bundle"
+                    fun interestingString() = oneOf(
+                        {nullableString()},
+                        {"16"},
+                        {veryOldVersion},
+                        {"17.1"},
+                        {"17.1.2"},
+                        {properVersion},
+                        {properNdkPath},
+                        {"/my/sdk/folder/ndk/17.1.2"},
+                        {"/my/sdk/folder"},
+                        {SDK_PKG_REVISION.key})
+
+                    fun pathToNdk() = oneOf({ properNdkPath }, { properLegacyNdkPath }, { null }, { interestingString() })
+                    fun pathToSdk() = oneOf({ properSdkPath }, { null }, { interestingString() })
+                    fun ndkVersion() = oneOf({ properVersion }, { veryOldVersion }, { null }, { interestingString() })
+                    fun ndkVersionList() = makeListOf { ndkVersion() }.filterNotNull()
+                    fun sourcePropertyVersionKey() = oneOf({ SDK_PKG_REVISION.key }, { SDK_PKG_REVISION.key }, { null }, { interestingString() })
+
+                    findNdkPathWithRecord(
+                        ndkVersionFromDsl = ndkVersion(),
+                        ndkDirProperty = pathToNdk(),
+                        androidNdkHomeEnvironmentVariable = pathToNdk(),
+                        sdkFolder = pathToSdk().toSlashFile(),
+                        getNdkVersionedFolderNames = { ndkVersionList() },
+                        getNdkSourceProperties = { path ->
+                            when (path.path) {
+                                pathToNdk() -> SdkSourceProperties(
+                                    mapOf(
+                                        (sourcePropertyVersionKey() ?: "") to (ndkVersion() ?: "")
+                                    )
+                                )
+                                else -> null
+                            }
+                        })
+                }
+            }
+        }
     }
 }

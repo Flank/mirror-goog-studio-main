@@ -77,13 +77,13 @@ fun createCxxVariantModel(
  * Base folder for android_gradle_build.json files
  *   ex, $moduleRootFolder/.cxx/cmake/debug
  */
-fun CxxVariantModel.jsonFolder(global : GlobalScope)
-        = join(module.cxxFolder(global), module.buildSystem.tag, variantName)
+val CxxVariantModel.jsonFolder
+        get() = join(module.cxxFolder, module.buildSystem.tag, variantName)
 
 /**
  * The gradle build output folder
  *   ex, '$moduleRootFolder/.cxx/cxx/debug'
  */
-fun CxxVariantModel.gradleBuildOutputFolder(global : GlobalScope)
-        = join(module.cxxFolder(global), "cxx", variantName)
+val CxxVariantModel.gradleBuildOutputFolder
+        get() = join(module.cxxFolder, "cxx", variantName)
 

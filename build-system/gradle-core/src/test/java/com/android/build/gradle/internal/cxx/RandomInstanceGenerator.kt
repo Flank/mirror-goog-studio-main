@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.cxx
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision

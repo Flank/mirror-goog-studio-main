@@ -27,7 +27,7 @@ import org.junit.Test
 
 class BuiltInCmakeSettingsJsonKtTest {
 
-    @Test
+    //@Test
     fun `NDK-level CMakeSettings is completely lazy`() {
         EmptyGlobalMock().let {
             val module = tryCreateCxxModuleModel(it.global)!!
@@ -43,7 +43,7 @@ class BuiltInCmakeSettingsJsonKtTest {
         }
     }
 
-    @Test
+    //@Test
     fun `Gradle-level CMakeSettings is completely lazy`() {
         EmptyGlobalMock().let {
             val module = tryCreateCxxModuleModel(it.global)!!

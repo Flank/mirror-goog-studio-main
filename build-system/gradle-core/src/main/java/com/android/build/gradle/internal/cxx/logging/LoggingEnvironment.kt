@@ -161,7 +161,7 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
          */
         @JvmStatic // error: using non-JVM static members protected in the superclass companion
                    // is unsupported yet
-        protected fun parentLogger() = loggerStack.get()?.next?.logger ?: BOTTOM_LOGGING_ENVIRONMENT
+        fun parentLogger() = loggerStack.get()?.next?.logger ?: BOTTOM_LOGGING_ENVIRONMENT
 
         /**
          * Report an error.
