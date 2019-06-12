@@ -1,19 +1,26 @@
+plugins {
+    id 'maven-publish'
+}
+
 apply plugin: 'java-library'
-apply plugin: 'maven'
-
 apply from: "../commonLocalRepo.gradle"
-
-group = 'com.example.android.multiproject'
-archivesBaseName = 'util'
-version = '1.0'
 
 sourceCompatibility = "1.6"
 targetCompatibility = "1.6"
 
-uploadArchives {
+publishing {
     repositories {
-        mavenDeployer {
-            repository(url: uri("../testrepo"))
+        maven { url '../testrepo' }
+    }
+    publishing {
+        publications {
+            java(MavenPublication) {
+                groupId = 'com.example.android.multiproject'
+                artifactId = 'util'
+                version = '1.0'
+
+                from components.java
+            }
         }
     }
 }

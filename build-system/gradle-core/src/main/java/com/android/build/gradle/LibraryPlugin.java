@@ -35,14 +35,16 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin extends BasePlugin {
 
     @Inject
-    public LibraryPlugin(ToolingModelBuilderRegistry registry) {
-        super(registry);
+    public LibraryPlugin(
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
+        super(registry, componentFactory);
     }
 
     @NonNull

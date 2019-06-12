@@ -3,11 +3,6 @@ import com.android.build.OutputFile
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
 
-
-if (buildToolsVersion < '21.0.0') {
-    println ("Warning : this sample requires build-tools version 21 or above")
-}
-
 apply plugin: 'com.android.application'
 
 android {
@@ -22,6 +17,13 @@ android {
     testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     buildConfigField "String", "FOO", "\"bar\""
+  }
+  
+  buildTypes {
+    release {
+      minifyEnabled true
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+    }
   }
 
   splits {

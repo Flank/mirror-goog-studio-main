@@ -19,6 +19,8 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -29,6 +31,8 @@ import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dependency.ConfigurationVariantMapping;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -72,6 +76,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.TaskProvider;
@@ -341,13 +347,26 @@ public class LibraryTaskManager extends TaskManager {
 
         TaskFactoryUtils.dependsOn(variantScope.getTaskContainer().getAssembleTask(), bundle);
 
-        // if the variant is the default published, then publish the aar
-        // FIXME: only generate the tasks if this is the default published variant?
+        final VariantDependencies variantDependencies = variantScope.getVariantDependencies();
+
+        AdhocComponentWithVariants component =
+                globalScope.getComponentFactory().adhoc(variantScope.getFullVariantName());
+
+        final Configuration apiPub = variantDependencies.getElements(API_PUBLICATION);
+        final Configuration runtimePub = variantDependencies.getElements(RUNTIME_PUBLICATION);
+
+        component.addVariantsFromConfiguration(
+                apiPub, new ConfigurationVariantMapping("compile", false));
+        component.addVariantsFromConfiguration(
+                runtimePub, new ConfigurationVariantMapping("runtime", false));
+
+        project.getComponents().add(component);
+
+        // Old style publishing. This is likely to go away at some point.
         if (extension
                 .getDefaultPublishConfig()
                 .equals(variantScope.getVariantConfiguration().getFullName())) {
-            VariantHelper.setupArchivesConfig(
-                    project, variantScope.getVariantDependencies().getRuntimeClasspath());
+            VariantHelper.setupArchivesConfig(project, variantDependencies.getRuntimeClasspath());
 
             // add the artifact that will be published.
             // it must be default so that it can be found by other library modules during

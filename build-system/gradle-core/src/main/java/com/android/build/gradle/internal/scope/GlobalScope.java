@@ -33,14 +33,11 @@ import com.android.build.gradle.internal.SdkComponents;
 import com.android.build.gradle.internal.api.dsl.DslScope;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
-import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MessageReceiver;
-import com.android.ide.common.process.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -49,6 +46,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -64,6 +62,7 @@ public class GlobalScope implements TransformGlobalScope {
     @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
     @NonNull private final MessageReceiver messageReceiver;
+    @NonNull private final SoftwareComponentFactory componentFactory;
 
     @NonNull private final String createdBy;
     @NonNull private final DslScope dslScope;
@@ -85,7 +84,8 @@ public class GlobalScope implements TransformGlobalScope {
             @NonNull SdkComponents sdkComponents,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @Nullable FileCache buildCache,
-            @NonNull MessageReceiver messageReceiver) {
+            @NonNull MessageReceiver messageReceiver,
+            @NonNull SoftwareComponentFactory componentFactory) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
@@ -97,6 +97,7 @@ public class GlobalScope implements TransformGlobalScope {
         this.projectOptions = checkNotNull(projectOptions);
         this.buildCache = buildCache;
         this.messageReceiver = messageReceiver;
+        this.componentFactory = componentFactory;
         this.globalArtifacts = new GlobalBuildArtifactsHolder(project, this::getBuildDir, dslScope);
 
         // Create empty configurations before these have been set.
@@ -383,5 +384,10 @@ public class GlobalScope implements TransformGlobalScope {
                 getSdkComponents().getAnnotationsJarProvider(),
                 true,
                 ImmutableList.of());
+    }
+
+    @NonNull
+    public SoftwareComponentFactory getComponentFactory() {
+        return componentFactory;
     }
 }

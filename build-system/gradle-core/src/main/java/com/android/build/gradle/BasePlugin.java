@@ -106,6 +106,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.model.ObjectFactory;
@@ -139,7 +140,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private SourceSetManager sourceSetManager;
 
-    private ToolingModelBuilderRegistry registry;
+    @NonNull private final ToolingModelBuilderRegistry registry;
+    @NonNull private final SoftwareComponentFactory componentFactory;
 
     private LoggerWrapper loggerWrapper;
 
@@ -151,9 +153,12 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
 
     private boolean hasCreatedTasks = false;
 
-    BasePlugin(@NonNull ToolingModelBuilderRegistry registry) {
+    BasePlugin(
+            @NonNull ToolingModelBuilderRegistry registry,
+            @NonNull SoftwareComponentFactory componentFactory) {
         ClasspathVerifier.checkClasspathSanity();
         this.registry = registry;
+        this.componentFactory = componentFactory;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
     }
@@ -327,7 +332,8 @@ public abstract class BasePlugin implements Plugin<Project>, ToolingRegistryProv
                         sdkComponents,
                         registry,
                         buildCache,
-                        extraModelInfo.getMessageReceiver());
+                        extraModelInfo.getMessageReceiver(),
+                        componentFactory);
 
         project.getTasks()
                 .named("assemble")

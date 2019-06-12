@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -24,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Integration test for uploadAchives with multiple projects. */
+/** Integration test for maven publishing with multiple projects. */
 public class RepoTest {
 
     @ClassRule
@@ -50,10 +51,12 @@ public class RepoTest {
             GradleTestProject.builder().withName("util").fromTestProject("repo/util").create();
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws IOException {
         // Clean testRepo
         File testRepo = new File(app.getTestDir(), "../testrepo");
-        testRepo.delete();
+        if (testRepo.isDirectory()) {
+            FileUtils.deleteDirectoryContents(testRepo);
+        }
     }
 
     @AfterClass
@@ -66,9 +69,15 @@ public class RepoTest {
 
     @Test
     public void repo() throws IOException, InterruptedException {
-        util.execute("clean", "uploadArchives");
-        baseLibrary.execute("clean", "uploadArchives");
-        library.execute("clean", "uploadArchives");
-        app.execute("clean", "assembleDebug");
+        // publish the libraries in the order needed to build each
+        util.execute("clean", "publishJavaPublicationToMavenRepository");
+        baseLibrary.execute("clean", "publishReleasePublicationToMavenRepository");
+        library.execute(
+                "clean",
+                "publishReleasePublicationToMavenRepository",
+                "publishDebugPublicationToMavenRepository");
+
+        // build the app which should consume all the libraries.
+        app.execute("clean", "assembleDebug", "assembleRelease");
     }
 }

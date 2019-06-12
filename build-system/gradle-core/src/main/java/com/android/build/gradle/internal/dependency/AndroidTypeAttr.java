@@ -19,14 +19,20 @@ package com.android.build.gradle.internal.dependency;
 import static com.android.builder.core.VariantTypeKt.ATTR_AAR;
 import static com.android.builder.core.VariantTypeKt.ATTR_APK;
 import static com.android.builder.core.VariantTypeKt.ATTR_FEATURE;
+import static com.android.builder.core.VariantTypeKt.ATTR_PUBLICATION;
 
 import org.gradle.api.attributes.Attribute;
 
-/** Type for Build Type attributes in Gradle's configuration objects. */
+/**
+ * Type for the attribute holding publishing information.
+ *
+ * <p>This gives us the ability to disambiguate between Apk, AAR, and Features.
+ */
 public interface AndroidTypeAttr extends org.gradle.api.Named {
     Attribute<AndroidTypeAttr> ATTRIBUTE = Attribute.of(AndroidTypeAttr.class);
 
     String APK = ATTR_APK;
     String AAR = ATTR_AAR;
     String FEATURE = ATTR_FEATURE;
+    String PUBLICATION = ATTR_PUBLICATION;
 }

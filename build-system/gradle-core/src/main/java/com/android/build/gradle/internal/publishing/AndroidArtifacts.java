@@ -39,6 +39,8 @@ public class AndroidArtifacts {
     private static final String TYPE_BUNDLE = "aab";
     // The apks produced from the android app bundle
     private static final String TYPE_APKS_FROM_BUNDLE = "bundle-apks";
+    // zip of apks for publishing single or multi-apks to a repo.
+    private static final String TYPE_APK_ZIP = "zip";
 
     // type for processed jars (the jars may need to be processed, e.g. jetified to AndroidX, before
     // they can be used)
@@ -151,9 +153,13 @@ public class AndroidArtifacts {
     }
 
     public enum PublishedConfigType {
-        API_ELEMENTS,
-        RUNTIME_ELEMENTS,
-        METADATA_ELEMENTS,
+        API_ELEMENTS, // inter-project publishing (API)
+        RUNTIME_ELEMENTS, // inter-project publishing (RUNTIME)
+        METADATA_ELEMENTS, // inter-project publishing (META-DATA)
+        API_PUBLICATION, // Maven/SoftwareComponent AAR publishing (API)
+        RUNTIME_PUBLICATION, // Maven/SoftwareComponent AAR publishing (RUNTIME)
+        APK_PUBLICATION, // Maven/SoftwareComponent APK publishing
+        AAB_PUBLICATION, // Maven/SoftwareComponent AAB publishing
     }
 
     /** The provenance of artifacts to include. */
@@ -234,6 +240,8 @@ public class AndroidArtifacts {
         APK_MAPPING(TYPE_MAPPING),
         APK_METADATA(TYPE_METADATA),
         APK(TYPE_APK),
+        // zip of apks for publishing single or multi-apks to a repo.
+        APK_ZIP(TYPE_APK_ZIP),
 
         // intermediate bundle that only contains one module. This is to be input into bundle-tool
         MODULE_BUNDLE(TYPE_MODULE_BUNDLE),

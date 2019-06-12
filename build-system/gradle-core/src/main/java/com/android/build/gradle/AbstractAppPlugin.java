@@ -36,6 +36,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
@@ -43,8 +44,11 @@ public abstract class AbstractAppPlugin extends BasePlugin {
     private final boolean isBaseApplication;
 
     @Inject
-    public AbstractAppPlugin(ToolingModelBuilderRegistry registry, boolean isBaseApplication) {
-        super(registry);
+    public AbstractAppPlugin(
+            ToolingModelBuilderRegistry registry,
+            SoftwareComponentFactory componentFactory,
+            boolean isBaseApplication) {
+        super(registry, componentFactory);
         this.isBaseApplication = isBaseApplication;
     }
 

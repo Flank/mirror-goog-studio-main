@@ -34,14 +34,16 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'feature' projects. */
 public class FeaturePlugin extends LibraryPlugin {
 
     @Inject
-    public FeaturePlugin(ToolingModelBuilderRegistry registry) {
-        super(registry);
+    public FeaturePlugin(
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
+        super(registry, componentFactory);
     }
 
     @Override

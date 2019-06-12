@@ -27,13 +27,15 @@ import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.component.SoftwareComponentFactory;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects, applied on the base application module */
 public class AppPlugin extends AbstractAppPlugin {
     @Inject
-    public AppPlugin(ToolingModelBuilderRegistry registry) {
-        super(registry, true /*isBaseApplication*/);
+    public AppPlugin(
+            ToolingModelBuilderRegistry registry, SoftwareComponentFactory componentFactory) {
+        super(registry, componentFactory, true /*isBaseApplication*/);
     }
 
     @Override

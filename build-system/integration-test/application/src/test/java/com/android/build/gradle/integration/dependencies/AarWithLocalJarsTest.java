@@ -30,10 +30,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Integration test for uploadAchives with multiple projects. */
+/** Integration test for AAR publishing with local jar dependencies. */
 public class AarWithLocalJarsTest {
 
     @ClassRule
@@ -58,6 +59,15 @@ public class AarWithLocalJarsTest {
     public static GradleTestProject util =
             GradleTestProject.builder().fromTestProject("repo/util").withName("util").create();
 
+    @BeforeClass
+    public static void setUp() throws IOException {
+        // Clean testRepo
+        File testRepo = new File(app.getTestDir(), "../testrepo");
+        if (testRepo.isDirectory()) {
+            FileUtils.deleteDirectoryContents(testRepo);
+        }
+    }
+
     @AfterClass
     public static void cleanUp() {
         app = null;
@@ -72,8 +82,8 @@ public class AarWithLocalJarsTest {
         util.execute("clean", "assemble");
 
         // copy it inside the baseLibrary
-        File from = FileUtils.join(util.getTestDir(), "build", "libs", "util-1.0.jar");
-        File to = FileUtils.join(baseLibrary.getTestDir(), "libs", "util-1.0.jar");
+        File from = FileUtils.join(util.getTestDir(), "build", "libs", "util.jar");
+        File to = FileUtils.join(baseLibrary.getTestDir(), "libs", "util.jar");
         FileUtils.mkdirs(to.getParentFile());
         Files.copy(from, to);
 
@@ -81,11 +91,14 @@ public class AarWithLocalJarsTest {
         TestFileUtils.searchAndReplace(
                 baseLibrary.getBuildFile(),
                 "api 'com.example.android.multiproject:util:1.0'",
-                "api files('libs/util-1.0.jar')");
+                "api files('libs/util.jar')");
 
         // build and publish the 2 AArs and then build the app.
-        baseLibrary.execute("clean", "uploadArchives");
-        library.execute("clean", "uploadArchives");
+        baseLibrary.execute("clean", "publishReleasePublicationToMavenRepository");
+        library.execute(
+                "clean",
+                "publishReleasePublicationToMavenRepository",
+                "publishDebugPublicationToMavenRepository");
         app.execute("clean", "assembleDebug");
 
         Apk apk = app.getApk(GradleTestProject.ApkType.DEBUG);

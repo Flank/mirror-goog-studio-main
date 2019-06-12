@@ -1,16 +1,16 @@
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
+apply from: "../commonLocalRepo.gradle"
 
 apply plugin: 'com.android.application'
-apply plugin: 'maven'
 
 repositories {
     maven { url '../testrepo' }
 }
-apply from: "../commonLocalRepo.gradle"
 
 dependencies {
-    api 'com.example.android.multiproject:lib:1.0'
+    debugImplementation 'com.example.android.multiproject:lib-debug:1.0'
+    releaseImplementation 'com.example.android.multiproject:lib-release:1.0'
 }
 
 android {

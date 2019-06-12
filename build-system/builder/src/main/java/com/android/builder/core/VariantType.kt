@@ -149,6 +149,7 @@ interface VariantType {
 const val ATTR_APK = "Apk"
 const val ATTR_AAR = "Aar"
 const val ATTR_FEATURE = "Feature"
+const val ATTR_PUBLICATION = "Publication"
 
 enum class VariantTypeImpl(
     override val isAar: Boolean = false,

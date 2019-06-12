@@ -19,6 +19,8 @@ package com.android.build.gradle.internal;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.AAB_PUBLICATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.APK_PUBLICATION;
 import static com.android.build.gradle.internal.scope.InternalArtifactType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -30,9 +32,11 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.feature.BundleAllClasses;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.ApkZipPackagingTask;
 import com.android.build.gradle.internal.tasks.AppClasspathCheckTask;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
@@ -78,6 +82,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.component.AdhocComponentWithVariants;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
@@ -232,6 +237,28 @@ public class ApplicationTaskManager extends TaskManager {
         taskFactory.register(new PackagedDependenciesWriterTask.CreationAction(variantScope));
 
         createDynamicBundleTask(variantScope);
+
+        taskFactory.register(new ApkZipPackagingTask.CreationAction(variantScope));
+
+        // do not publish the APK(s) if there are dynamic feature.
+        if (!variantScope.getGlobalScope().hasDynamicFeatures()) {
+            createSoftwareComponent(variantScope, "_apk", APK_PUBLICATION);
+        }
+        createSoftwareComponent(variantScope, "_aab", AAB_PUBLICATION);
+    }
+
+    private void createSoftwareComponent(
+            @NonNull VariantScope variantScope,
+            @NonNull String suffix,
+            @NonNull AndroidArtifacts.PublishedConfigType publication) {
+        AdhocComponentWithVariants component =
+                globalScope.getComponentFactory().adhoc(variantScope.getFullVariantName() + suffix);
+
+        final Configuration config = variantScope.getVariantDependencies().getElements(publication);
+
+        component.addVariantsFromConfiguration(config, details -> {});
+
+        project.getComponents().add(component);
     }
 
     @Override
