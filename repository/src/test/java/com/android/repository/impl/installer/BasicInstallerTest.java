@@ -255,30 +255,23 @@ public class BasicInstallerTest extends TestCase {
         assertEquals(1, pkgs.getLocalPackages().size());
         assertEquals(2, pkgs.getRemotePackages().size());
 
-        FakeProgressIndicator progress = new FakeProgressIndicator(true) {
-            @Override
-            public void setFraction(double fraction) {
-                // Cancel somewhere in the middle during unzipping.
-                if (!isCanceled() && fraction > 0.3) {
-                    cancel();
-                }
-                super.setFraction(fraction);
-            }
-        };
-        // Install one of the packages.
-        RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
-        Installer basicInstaller =
-          spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
-        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
-        File packageOperationDir = new File(repoTempDir, String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
-        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
-        assertFalse(fop.exists(unzipDir));
-        basicInstaller.prepare(progress.createSubProgress(0.5));
-        assertFalse(fop.exists(unzipDir));
-        basicInstaller.complete(progress.createSubProgress(1));
-        assertFalse(fop.exists(unzipDir));
-        progress.assertNoErrorsOrWarnings();
-        verify((BasicInstaller)basicInstaller, times(1)).cleanup(any());
+        FakeProgressIndicator cancellingProgress1 =
+                new FakeProgressIndicator(true) {
+                    @Override
+                    public void setFraction(double fraction) {
+                        // Cancel somewhere in the middle during unzipping.
+                        if (!isCanceled() && fraction > 0.2) {
+                            cancel();
+                        }
+                        super.setFraction(fraction);
+                    }
+                };
+        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1, fop);
+
+        FakeProgressIndicator cancellingProgress2 = new FakeProgressIndicator(true);
+        // Cancel right away - this will lead to installer exit when it first checks for the cancellation marker.
+        cancellingProgress2.cancel();
+        doTestCleanupWithProgress(pkgs, mgr, downloader, cancellingProgress1, fop);
 
         runner = new FakeProgressRunner();
         // Reload the packages.
@@ -288,7 +281,7 @@ public class BasicInstallerTest extends TestCase {
         runner.getProgressIndicator().assertNoErrorsOrWarnings();
         File[] contents = fop.listFiles(new File(root, "dummy"));
 
-        // Ensure it is not on the filesystem
+        // Ensure the package we cancelled the installation for is not on the filesystem
         assertEquals(1, contents.length);
         assertEquals(new File(root, "dummy/foo"), contents[0]);
 
@@ -296,6 +289,30 @@ public class BasicInstallerTest extends TestCase {
         Map<String, ? extends LocalPackage> locals = mgr.getPackages().getLocalPackages();
         assertEquals(1, locals.size());
         assertTrue(!locals.containsKey("dummy;bar"));
+    }
+
+    private void doTestCleanupWithProgress(
+            RepositoryPackages pkgs,
+            RepoManager mgr,
+            Downloader downloader,
+            FakeProgressIndicator progress,
+            MockFileOp fop) {
+        RemotePackage p = pkgs.getRemotePackages().get("dummy;bar");
+        Installer basicInstaller =
+                spy(new BasicInstallerFactory().createInstaller(p, mgr, downloader, fop));
+        File repoTempDir = new File(mgr.getLocalPath(), AbstractPackageOperation.REPO_TEMP_DIR_FN);
+        File packageOperationDir =
+                new File(
+                        repoTempDir,
+                        String.format("%1$s01", AbstractPackageOperation.TEMP_DIR_PREFIX));
+        File unzipDir = new File(packageOperationDir, BasicInstaller.FN_UNZIP_DIR);
+        assertFalse(fop.exists(unzipDir));
+        basicInstaller.prepare(progress.createSubProgress(0.5));
+        assertFalse(fop.exists(unzipDir));
+        basicInstaller.complete(progress.createSubProgress(1));
+        assertFalse(fop.exists(unzipDir));
+        progress.assertNoErrorsOrWarnings();
+        verify((BasicInstaller) basicInstaller, times(1)).cleanup(any());
     }
 
 

@@ -111,7 +111,9 @@ class BasicInstaller extends AbstractInstaller {
     protected void cleanup(@NonNull ProgressIndicator progress) {
         super.cleanup(progress);
         mFop.deleteFileOrFolder(getLocation(progress));
-        mFop.deleteFileOrFolder(myUnzipDir);
+        if (myUnzipDir != null) {
+            mFop.deleteFileOrFolder(myUnzipDir);
+        }
     }
 
     /**
