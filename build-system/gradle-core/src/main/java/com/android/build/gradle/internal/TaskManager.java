@@ -110,6 +110,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
 import com.android.build.gradle.internal.tasks.DexMergingAction;
 import com.android.build.gradle.internal.tasks.DexMergingTask;
+import com.android.build.gradle.internal.tasks.DexSplitterTask;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
@@ -154,7 +155,6 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
-import com.android.build.gradle.internal.transforms.DexSplitterTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
@@ -2043,7 +2043,7 @@ public abstract class TaskManager {
 
         maybeCreateResourcesShrinkerTasks(variantScope);
 
-        // TODO: support DexSplitterTransform when IR enabled (http://b/77585545)
+        // TODO: support DexSplitterTask when IR enabled (http://b/77585545)
         maybeCreateDexSplitterTransform(variantScope);
         // TODO: create JavaResSplitterTransform and call it here (http://b/77546738)
     }
@@ -3243,8 +3243,8 @@ public abstract class TaskManager {
                         .getArtifacts()
                         .getFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE);
 
-        DexSplitterTransform transform =
-                new DexSplitterTransform(featureJars, baseJars, mappingFileSrc, mainDexList);
+        DexSplitterTask transform =
+                new DexSplitterTask(featureJars, baseJars, mappingFileSrc, mainDexList);
 
         Optional<TaskProvider<TransformTask>> transformTask =
                 variantScope
@@ -3281,7 +3281,7 @@ public abstract class TaskManager {
                     .reportError(
                             Type.GENERIC,
                             new EvalIssueException(
-                                    "Internal error, could not add the DexSplitterTransform"));
+                                    "Internal error, could not add the DexSplitterTask"));
         }
     }
 

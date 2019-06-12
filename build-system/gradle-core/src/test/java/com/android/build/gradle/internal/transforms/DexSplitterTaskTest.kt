@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.fixtures.FakeFileCollection
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
 import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.DexSplitterTask
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.dexing.DexingType
 import com.android.testutils.TestClassesGenerator
@@ -58,9 +59,9 @@ import java.util.zip.ZipOutputStream
 import kotlin.streams.toList
 
 /**
- * Testing the basic scenarios for DexSplitterTransform.
+ * Testing the basic scenarios for DexSplitterTask.
  */
-class DexSplitterTransformTest {
+class DexSplitterTaskTest {
     @get: Rule
     val tmp: TemporaryFolder = TemporaryFolder()
     private lateinit var r8Context: Context
@@ -194,11 +195,12 @@ class DexSplitterTransformTest {
                         .build()
 
         val dexSplitterTransform =
-                DexSplitterTransform(
-                        FakeFileCollection(featureJars),
-                        baseJars,
-                        mappingFileSrc = mappingFileSrc,
-                        mainDexList = mainDexList)
+            DexSplitterTask(
+                FakeFileCollection(featureJars),
+                baseJars,
+                mappingFileSrc = mappingFileSrc,
+                mainDexList = mainDexList
+            )
 
         val directoryMock = Mockito.mock(Directory::class.java)
         `when`(directoryMock.asFile).thenReturn(dexSplitterOutputDir)

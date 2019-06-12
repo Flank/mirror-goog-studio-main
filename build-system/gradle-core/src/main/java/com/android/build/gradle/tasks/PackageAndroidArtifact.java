@@ -543,7 +543,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
             } else {
                 // We reach this code if we're in a feature module and minification is enabled in the
                 // base module. In this case, we want to use the classes.dex file from the base
-                // module's DexSplitterTransform.
+                // module's DexSplitterTask.
                 dexFiles =
                         IncrementalChangesUtils.getChangesInSerializableForm(
                                 changes, task.getFeatureDexFolder());

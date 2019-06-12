@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms
+package com.android.build.gradle.internal.tasks
 
 import com.android.build.api.transform.Format
 import com.android.build.api.transform.QualifiedContent
@@ -24,6 +24,7 @@ import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX
+import com.android.build.gradle.internal.transforms.TransformInputUtil
 import com.android.builder.dexing.DexSplitterTool
 import com.android.utils.FileUtils
 import org.gradle.api.file.Directory
@@ -38,7 +39,7 @@ import java.nio.file.Files
 /**
  * Transform that splits dex files depending on their feature sources
  */
-class DexSplitterTransform(
+class DexSplitterTask(
         private val featureJars: FileCollection,
         private val baseJars: Provider<RegularFile>,
         private val mappingFileSrc: Provider<RegularFile>?,
@@ -97,7 +98,9 @@ class DexSplitterTransform(
                 outputDir.toPath(), mappingFile?.toPath(), mainDexList?.orNull?.asFile?.toPath()
             )
 
-            for (dirInput in TransformInputUtil.getDirectories(transformInvocation.inputs)) {
+            for (dirInput in TransformInputUtil.getDirectories(
+                transformInvocation.inputs
+            )) {
                 dirInput.listFiles()?.toList()?.map { it.toPath() }?.forEach { builder.addInputArchive(it) }
             }
 
