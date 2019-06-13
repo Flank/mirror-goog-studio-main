@@ -108,10 +108,11 @@ final class ConnectionHandler implements Runnable {
                             "Command not handled [" + request.mCommand + "] " + request.mArguments);
                 }
             }
-        } catch (RuntimeException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        } catch (IOException ignored) {
             sendFailWithReason("IOException occurred when processing request.");
+        } catch (Throwable t) {
+            t.printStackTrace();
         } finally {
             try {
                 mSocket.close();

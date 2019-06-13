@@ -15,6 +15,7 @@
  */
 package com.android.fakeadbserver.devicecommandhandlers.ddmsHandlers;
 
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,8 +38,7 @@ public class JdwpDdmsPacket {
     // Reads a packet from a stream
     public static JdwpDdmsPacket readFrom(InputStream iStream) throws IOException {
         byte[] packetHeader = new byte[JDWP_DDMS_HEADER_LENGTH];
-        int readCount = iStream.read(packetHeader);
-        assert (JDWP_DDMS_HEADER_LENGTH == readCount);
+        ByteStreams.readFully(iStream, packetHeader);
 
         ByteBuffer headerBuffer = ByteBuffer.wrap(packetHeader);
         int length = headerBuffer.getInt();
@@ -48,6 +48,7 @@ public class JdwpDdmsPacket {
         byte command = headerBuffer.get();
         int chunkType = headerBuffer.getInt();
         int chunkLength = headerBuffer.getInt();
+        int readCount;
 
         assert length >= JDWP_DDMS_HEADER_LENGTH;
         assert commandSet == DDMS_CMD_SET;
