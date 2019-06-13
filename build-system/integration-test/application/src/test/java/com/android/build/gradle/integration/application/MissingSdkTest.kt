@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.sdk
+package com.android.build.gradle.integration.application
 
 import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
