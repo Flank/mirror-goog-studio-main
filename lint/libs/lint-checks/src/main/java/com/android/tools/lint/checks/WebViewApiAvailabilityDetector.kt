@@ -65,9 +65,9 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
         val ISSUE = Issue.create(
             id = "WebViewApiAvailability",
             briefDescription = "WebView API Availability",
-            explanation = "The `androidx.webkit` library is a static library you can add to your "
-                    + "Android application allowing you to use new APIs on older platform "
-                    + "versions, targeting more devices.",
+            explanation = "The `androidx.webkit` library is a static library you can add to your " +
+                    "Android application allowing you to use new APIs on older platform " +
+                    "versions, targeting more devices.",
             category = Category.CORRECTNESS,
             priority = 7,
             severity = Severity.WARNING,
@@ -90,7 +90,6 @@ class WebViewApiAvailabilityDetector : Detector(), SourceCodeScanner {
         return if (!context.mainProject.isAndroidProject) {
             null
         } else Handler(context)
-
     }
 
     private class Handler(private val context: JavaContext) : UElementHandler() {

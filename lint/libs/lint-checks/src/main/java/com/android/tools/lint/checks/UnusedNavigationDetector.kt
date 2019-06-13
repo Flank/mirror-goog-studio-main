@@ -123,11 +123,10 @@ class UnusedNavigationDetector : ResourceXmlDetector() {
                             return true
                         }
                     }
-                }
-                else if (tag == SdkConstants.TAG_INCLUDE) {
+                } else if (tag == SdkConstants.TAG_INCLUDE) {
                     val include: String? = parser.getAttributeValue(
-                      SdkConstants.AUTO_URI,
-                      SdkConstants.ATTR_GRAPH
+                        SdkConstants.AUTO_URI,
+                        SdkConstants.ATTR_GRAPH
                     )
 
                     if (include == target) {
