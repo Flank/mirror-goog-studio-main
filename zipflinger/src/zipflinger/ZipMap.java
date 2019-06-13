@@ -288,10 +288,13 @@ class ZipMap {
     }
 
     private static void parseExtra(ByteBuffer buf, int length) {
-        while (length > 0) {
+        while (length >= 4) { // Only parse if this is a value ID-size-payload pair.
             buf.getShort(); // id
             // TODO: Zip64 -> id==1 is where offset, size and usize and specified.
             int size = buf.getShort() & 0xFFFF;
+            if (buf.remaining() < size) {
+                throw new IllegalStateException("Invalid zip entry, extra size > remaining data");
+            }
             buf.position(buf.position() + size);
             length -=
                     size

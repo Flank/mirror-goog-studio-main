@@ -44,4 +44,11 @@ public class TestParsing extends TestBase {
         entry = entries.get("empty2.txt");
         Assert.assertEquals("First entry location", new Location(83, 84), entry.getLocation());
     }
+
+    // Gradle Plug-in features a "resource stripped" which generates invalid extra field (e.g:size=1)
+    // Namely, they do not feature a valid ID-size-payload combination.
+    @Test
+    public void testStripped() throws Exception {
+        ZipMap map = ZipMap.from(getFile("stripped.ap_"), true);
+    }
 }

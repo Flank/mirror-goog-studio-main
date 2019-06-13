@@ -67,6 +67,7 @@ java_test(
     data = glob([
         "test/resource/zip_no_fd.zip",
         "test/resource/zip_with_fd.zip",
+        "test/resource/stripped.ap_",
     ]),
     jvm_flags = ["-Dtest.suite.jar=testParsing.jar"],
     test_class = "com.android.testutils.JarTestSuite",
