@@ -896,7 +896,7 @@ public class ConstantEvaluator {
                 // value checked for some other later assigned value
                 // ...but only if it's not the condition!
                 UExpression condition = curr.getCondition();
-                if (!UastUtils.isChildOf(node, condition, true)) {
+                if (!UastUtils.isUastChildOf(node, condition, false)) {
                     return true;
                 }
             }

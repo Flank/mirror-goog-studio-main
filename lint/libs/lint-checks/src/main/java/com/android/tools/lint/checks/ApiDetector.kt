@@ -151,7 +151,7 @@ import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.isChildOf
+import org.jetbrains.uast.isUastChildOf
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.util.isInstanceCheck
@@ -2406,14 +2406,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                 if (curr is USwitchClauseExpression) {
                     val caseValues = curr.caseValues
                     for (condition in caseValues) {
-                        if (node.isChildOf(condition, false)) {
+                        if (node.isUastChildOf(condition, false)) {
                             return true
                         }
                     }
                     return false
                 } else if (curr is UIfExpression) {
                     val condition = curr.condition
-                    return node.isChildOf(condition, false)
+                    return node.isUastChildOf(condition, false)
                 } else if (curr is UMethod || curr is UClass) {
                     break
                 }

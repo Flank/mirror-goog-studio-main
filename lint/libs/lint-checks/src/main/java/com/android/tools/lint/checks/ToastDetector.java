@@ -149,7 +149,7 @@ public class ToastDetector extends Detector implements SourceCodeScanner {
 
         @Override
         public boolean visitReturnExpression(UReturnExpression node) {
-            if (UastUtils.isChildOf(target, node.getReturnExpression(), true)) {
+            if (UastUtils.isUastChildOf(target, node.getReturnExpression(), true)) {
                 // If you just do "return Toast.makeText(...) don't warn
                 found = true;
             }

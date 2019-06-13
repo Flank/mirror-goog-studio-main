@@ -250,13 +250,13 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
                     breakedExpression = getBreakedExpression((UBreakExpression) node);
                 } else if (node instanceof UContinueExpression) {
                     UExpression expression = getContinuedExpression((UContinueExpression) node);
-                    if (expression != null && UastUtils.isChildOf(target, expression, false)) {
+                    if (expression != null && UastUtils.isUastChildOf(target, expression, false)) {
                         isTargetReachable = true;
                         isFinished = true;
                     } else {
                         continuedExpression = expression;
                     }
-                } else if (UastUtils.isChildOf(target, node, false)) {
+                } else if (UastUtils.isUastChildOf(target, node, false)) {
                     isTargetReachable = true;
                     isFinished = true;
                 }
@@ -286,7 +286,7 @@ public class CutPasteDetector extends Detector implements SourceCodeScanner {
                     ((ULoopExpression) node).getBody().accept(this);
 
                     if (isFromReached != this.isFromReached
-                            && UastUtils.isChildOf(target, node, false)) {
+                            && UastUtils.isUastChildOf(target, node, false)) {
                         isTargetReachable = true;
                         isFinished = true;
                     }
