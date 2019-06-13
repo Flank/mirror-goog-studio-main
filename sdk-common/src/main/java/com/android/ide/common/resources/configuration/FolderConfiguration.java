@@ -26,7 +26,14 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Streams;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -423,7 +430,6 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
         return false;
     }
-
 
     /**
      * Creates a {@link FolderConfiguration} matching the given folder name.
@@ -1392,5 +1398,15 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         }
 
         return array;
+    }
+
+    /**
+     * Returns qualifier of a folder name, e.g. "zh-rHK-watch" for "values-zh-rHK-watch" or an empty
+     * string for "drawable".
+     */
+    @NonNull
+    public static String getQualifier(@NonNull String folderName) {
+        int dashPos = folderName.indexOf('-');
+        return dashPos < 0 ? "" : folderName.substring(dashPos + 1);
     }
 }
