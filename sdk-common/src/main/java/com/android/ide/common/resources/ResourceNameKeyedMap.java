@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.resources;
 
-import com.google.common.collect.ForwardingMap;
 import gnu.trove.THashMap;
 import gnu.trove.TObjectHashingStrategy;
 import java.util.Map;
@@ -32,20 +31,14 @@ import org.jetbrains.annotations.NotNull;
  * {@link #keySet()} uses the same strategy for normalizing strings, so it will equate resource
  * names that normalize to the same string in calls to {@link java.util.Set#contains(Object)} etc.
  */
-public class ResourceNameKeyedMap<T> extends ForwardingMap<String, T> {
-    private final THashMap<String, T> myDelegate;
+public class ResourceNameKeyedMap<T> extends THashMap<String, T> {
 
     public ResourceNameKeyedMap() {
-        myDelegate = new THashMap<>(NORMALIZED_RESOURCE_NAME_STRATEGY);
+        super(NORMALIZED_RESOURCE_NAME_STRATEGY);
     }
 
     public ResourceNameKeyedMap(int expectedSize) {
-        myDelegate = new THashMap<>(expectedSize, NORMALIZED_RESOURCE_NAME_STRATEGY);
-    }
-
-    @Override
-    protected Map<String, T> delegate() {
-        return myDelegate;
+        super(expectedSize, NORMALIZED_RESOURCE_NAME_STRATEGY);
     }
 
     private static TObjectHashingStrategy<String> NORMALIZED_RESOURCE_NAME_STRATEGY =
