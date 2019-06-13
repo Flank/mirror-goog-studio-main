@@ -74,7 +74,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @Nullable private final GradleVersion myParsedModelVersion;
     @Nullable private final String myBuildToolsVersion;
     @Nullable private final String myResourcePrefix;
-    @NonNull private final boolean mySupportsPluginGeneration;
+    @Nullable private final String myGroupId;
+    private final boolean mySupportsPluginGeneration;
     private final int myApiVersion;
     private final int myProjectType;
     private final boolean myBaseSplit;
@@ -192,6 +193,13 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                                 new IdeViewBindingOptions(
                                         project.getViewBindingOptions(), modelCache),
                         null);
+
+        if (myParsedModelVersion != null
+                && myParsedModelVersion.isAtLeast(3, 6, 0, "alpha", 5, false)) {
+            myGroupId = project.getGroupId();
+        } else {
+            myGroupId = null;
+        }
 
         myHashCode = calculateHashCode();
     }
@@ -391,6 +399,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         return myViewBindingOptions;
     }
 
+    @Nullable
+    @Override
+    public String getGroupId() {
+        return myGroupId;
+    }
+
     @Override
     public void forEachVariant(@NonNull Consumer<IdeVariant> action) {
         for (Variant variant : myVariants) {
@@ -456,7 +470,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && Objects.equals(myBuildFolder, project.myBuildFolder)
                 && Objects.equals(myResourcePrefix, project.myResourcePrefix)
                 && Objects.equals(myDynamicFeatures, project.myDynamicFeatures)
-                && Objects.equals(myViewBindingOptions, project.myViewBindingOptions);
+                && Objects.equals(myViewBindingOptions, project.myViewBindingOptions)
+                && Objects.equals(myGroupId, project.myGroupId);
     }
 
     @Override
@@ -493,7 +508,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myAaptOptions,
                 myBaseSplit,
                 myDynamicFeatures,
-                myViewBindingOptions);
+                myViewBindingOptions,
+                myGroupId);
     }
 
     @Override
@@ -558,6 +574,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + myDynamicFeatures
                 + ", myViewBindingOptions="
                 + myViewBindingOptions
+                + ", myGroupId="
+                + myGroupId
                 + "}";
     }
 }

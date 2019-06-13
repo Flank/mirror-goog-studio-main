@@ -72,6 +72,7 @@ import com.android.sdklib.SdkVersionInfo;
 import com.android.support.AndroidxNameUtils;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.DefaultMavenCoordinates;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.SdkInfo;
@@ -988,6 +989,15 @@ public class Project {
      */
     @Nullable
     public MavenCoordinates getMavenCoordinates() {
+        if (mavenCoordinates == null) {
+            IdeAndroidProject androidProject = getGradleProjectModel();
+            if (androidProject != null) {
+                String groupId = androidProject.getGroupId();
+                if (groupId != null) {
+                    mavenCoordinates = new DefaultMavenCoordinates(groupId, "");
+                }
+            }
+        }
         return mavenCoordinates;
     }
 

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.RestrictToDetector.Companion.sameLibraryGroupPrefix
 import com.android.tools.lint.detector.api.Detector
 import org.mockito.Mockito
 import java.io.File
@@ -1378,5 +1379,162 @@ class RestrictToDetectorTest : AbstractCheckTest() {
                 "B6kOOIDvpiE99vCR0aQc+ruD4G4u0mFMzlUN/LtjE2ky9xrfvxaKlnSY749i" +
                 "IUPF0+413PdHc5OhG/dAkw37X0LsdEzSXipLRrR2MNHew383PekTL06uM8P/" +
                 "1Z4NdA4Bd2DM2y/p7b1iGHe+/RsdMTpPtBEAAA=="
+    }
+
+    fun testRestrictToLibraryViaGradleModel() {
+        val library = project().files(
+            java(
+                """
+                package com.example.mylibrary;
+
+                import androidx.annotation.RestrictTo;
+
+                public class LibraryCode {
+                    // No restriction: any access is fine.
+                    public static int FIELD1;
+
+                    // Scoped to same library: accessing from
+                    // lib is okay, from app is not.
+                    @RestrictTo(RestrictTo.Scope.LIBRARY)
+                    public static int FIELD2;
+
+                    // Scoped to same library group: whether accessing
+                    // from app is okay depends on whether they are in
+                    // the same library group (=groupId). In this test
+                    // project we don't know what they are so there's
+                    // no warning generated.
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                    public static int FIELD3;
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+                    public static int FIELD4;
+
+                    public static void method1() {
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY)
+                    public static void method2() {
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+                    public static void method3() {
+                    }
+
+                    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+                    public static void method4() {
+                    }
+                }
+                """
+            ).indented(),
+            java(
+                """
+                package test.pkg;
+
+                import com.example.mylibrary.LibraryCode;
+
+                // Access within the same library -- all OK
+                public class LibraryCode2 {
+                    public void method() {
+                        LibraryCode.method1(); // OK
+                        LibraryCode.method2(); // OK
+                        LibraryCode.method3(); // OK
+                        LibraryCode.method4(); // OK
+                        int f1 =  LibraryCode.FIELD1; // OK
+                        int f2 =  LibraryCode.FIELD2; // OK
+                        int f3 =  LibraryCode.FIELD3; // OK
+                        int f4 =  LibraryCode.FIELD4; // OK
+                    }
+                }
+                """
+            ).indented(),
+            gradle(
+                """
+                    apply plugin: 'com.android.library'
+                    group=test.pkg.library
+                    """
+            ).indented(),
+            restrictToAnnotation
+        ).name("lib1")
+
+        val library2 = project().files(
+            kotlin(
+                """
+                package com.example.myapplication
+
+                import com.example.mylibrary.LibraryCode
+
+                fun test() {
+                    LibraryCode.method1()
+                    LibraryCode.method2()
+                    LibraryCode.method3()
+                    LibraryCode.method4()
+                    val f1 = LibraryCode.FIELD1
+                    val f2 = LibraryCode.FIELD2
+                    val f3 = LibraryCode.FIELD3
+                    val f4 = LibraryCode.FIELD4
+                }
+                """
+            ).indented(),
+            gradle(
+                """
+                    apply plugin: 'com.android.library'
+                    group=other.app
+                    """
+            ).indented()
+        ).name("lib2").dependsOn(library)
+
+        lint().projects(library, library2).run().expect(
+            """
+            lib2/src/main/kotlin/com/example/myapplication/test.kt:8: Error: LibraryCode.method3 can only be called from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+                LibraryCode.method3()
+                            ~~~~~~~
+            lib2/src/main/kotlin/com/example/myapplication/test.kt:9: Error: LibraryCode.method4 can only be called from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+                LibraryCode.method4()
+                            ~~~~~~~
+            lib2/src/main/kotlin/com/example/myapplication/test.kt:12: Error: LibraryCode.FIELD3 can only be accessed from within the same library group (groupId=test.pkg.library) [RestrictedApi]
+                val f3 = LibraryCode.FIELD3
+                                     ~~~~~~
+            lib2/src/main/kotlin/com/example/myapplication/test.kt:13: Error: LibraryCode.FIELD4 can only be accessed from within the same library group prefix (referenced groupId=test.pkg.library with prefix test.pkg from groupId=other.app) [RestrictedApi]
+                val f4 = LibraryCode.FIELD4
+                                     ~~~~~~
+            4 errors, 0 warnings
+            """
+        )
+    }
+
+    val restrictToAnnotation = java(
+        """
+        package androidx.annotation;
+
+        import static java.lang.annotation.ElementType.*;
+        import static java.lang.annotation.RetentionPolicy.CLASS;
+        import java.lang.annotation.*;
+        @Retention(CLASS)
+        @Target({ANNOTATION_TYPE, TYPE, METHOD, CONSTRUCTOR, FIELD, PACKAGE})
+        public @interface RestrictTo {
+            Scope[] value();
+            enum Scope {
+                LIBRARY,
+                LIBRARY_GROUP,
+                LIBRARY_GROUP_PREFIX,
+                @Deprecated
+                GROUP_ID,
+                TESTS,
+                SUBCLASSES,
+            }
+        }
+        """
+    ).indented()
+
+    fun testLibraryGroupPrefixMatches() {
+        assertTrue(sameLibraryGroupPrefix("foo", "foo"))
+        assertFalse(sameLibraryGroupPrefix("foo", "bar"))
+        assertTrue(sameLibraryGroupPrefix("foo.bar", "foo.bar"))
+        assertFalse(sameLibraryGroupPrefix("foo.bar", "bar"))
+        assertFalse(sameLibraryGroupPrefix("foo.bar", "foo"))
+
+        assertTrue(sameLibraryGroupPrefix("foo.bar", "foo.baz"))
+        assertTrue(sameLibraryGroupPrefix("com.foo.bar", "com.foo.baz"))
+        assertFalse(sameLibraryGroupPrefix("com.foo.bar", "com.bar.qux"))
     }
 }

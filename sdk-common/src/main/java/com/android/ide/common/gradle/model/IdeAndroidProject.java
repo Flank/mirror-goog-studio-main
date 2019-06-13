@@ -255,6 +255,14 @@ public interface IdeAndroidProject extends Serializable {
     @Nullable
     GradleVersion getParsedModelVersion();
 
+    /**
+     * Returns the optional group-id of the artifact represented by this project.
+     *
+     * @since 3.6
+     */
+    @Nullable
+    String getGroupId();
+
     void forEachVariant(@NonNull Consumer<IdeVariant> action);
 
     /**

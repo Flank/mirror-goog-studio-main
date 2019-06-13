@@ -792,7 +792,7 @@ class JavaEvaluator {
      */
     open fun getLibrary(element: PsiElement): MavenCoordinates? {
         if (element !is PsiCompiledElement) {
-            return null
+            return getProject(element)?.mavenCoordinates
         }
         return getLibrary(findJarPath(element))
     }
@@ -803,7 +803,12 @@ class JavaEvaluator {
      */
     open fun getLibrary(element: UElement): MavenCoordinates? {
         if (element !is PsiCompiledElement) {
-            return null
+            val psi = element.sourcePsi
+            if (psi != null) {
+                return getProject(psi)?.mavenCoordinates
+            } else {
+                return null
+            }
         }
         return getLibrary(findJarPath(element as UElement))
     }
@@ -845,7 +850,11 @@ class JavaEvaluator {
                                     c = jarFile[j]
                                     if (c == '/' || c == File.separatorChar) {
                                         val artifactId = jarFile.substring(i, j)
-                                        coordinates = MyMavenCoordinates(groupId, artifactId)
+                                        coordinates =
+                                            DefaultMavenCoordinates(
+                                                groupId,
+                                                artifactId
+                                            )
                                         break
                                     }
                                 }
@@ -856,11 +865,11 @@ class JavaEvaluator {
                     }
                 }
                 if (coordinates == null) {
-                    coordinates = MyMavenCoordinates.NONE
+                    coordinates = DefaultMavenCoordinates.NONE
                 }
                 jarToGroup!![jarFile] = coordinates
             }
-            return if (coordinates === MyMavenCoordinates.NONE) null else coordinates
+            return if (coordinates === DefaultMavenCoordinates.NONE) null else coordinates
         }
 
         return null
@@ -1142,44 +1151,6 @@ class JavaEvaluator {
         }
 
         return false
-    }
-
-    /**
-     * Dummy implementation of [com.android.builder.model.MavenCoordinates] which
-     * only stores group and artifact id's for now
-     */
-    private class MyMavenCoordinates(
-        private val groupId: String,
-        private val artifactId: String
-    ) : MavenCoordinates {
-
-        override fun getGroupId(): String {
-            return groupId
-        }
-
-        override fun getArtifactId(): String {
-            return artifactId
-        }
-
-        override fun getVersion(): String {
-            return ""
-        }
-
-        override fun getPackaging(): String {
-            return ""
-        }
-
-        override fun getClassifier(): String? {
-            return ""
-        }
-
-        override fun getVersionlessId(): String {
-            return groupId + ':' + artifactId
-        }
-
-        companion object {
-            val NONE = MyMavenCoordinates("", "")
-        }
     }
 
     companion object {

@@ -261,10 +261,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         node: UElement,
         desc: String
     ) {
-        val message = String.format(
-            "This method should only be accessed from tests " +
-                    "or within %1\$s scope", desc
-        )
+        val message = "This method should only be accessed from tests or within $desc scope"
         val location: Location = if (node is UCallExpression) {
             context.getCallLocation(node, false, false)
         } else {
@@ -356,18 +353,36 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
             val thisGroup = thisCoordinates?.groupId
             val methodGroup = methodCoordinates?.groupId
             if (thisGroup != methodGroup && methodGroup != null) {
-                val where = String.format(
-                    "from within the same library group (groupId=%1\$s)",
-                    methodGroup
-                )
+                val where = "from within the same library group (groupId=$methodGroup)"
                 reportRestriction(
                     where, containingClass, member, context,
                     node, isClassAnnotation
                 )
             }
-        }
-
-        if (scope and RESTRICT_TO_LIBRARY != 0 && member != null) {
+        } else if (scope and RESTRICT_TO_LIBRARY_GROUP_PREFIX != 0 && member != null) {
+            val evaluator = context.evaluator
+            val thisCoordinates = evaluator.getLibrary(node) ?: context.project.mavenCoordinates
+            val methodCoordinates = evaluator.getLibrary(member) ?: run {
+                if (thisCoordinates != null && member !is PsiCompiledElement) {
+                    // Local source?
+                    context.evaluator.getProject(member)?.mavenCoordinates
+                } else {
+                    null
+                }
+            }
+            val thisGroup = thisCoordinates?.groupId
+            val methodGroup = methodCoordinates?.groupId
+            if (methodGroup != null &&
+                (thisGroup == null || !sameLibraryGroupPrefix(thisGroup, methodGroup))) {
+                val expectedPrefix = methodGroup.substring(0, methodGroup.lastIndexOf('.'))
+                val where =
+                    "from within the same library group prefix (referenced groupId=`$methodGroup` with prefix $expectedPrefix${if (thisGroup != null) " from groupId=`$thisGroup`" else ""})"
+                reportRestriction(
+                    where, containingClass, member, context,
+                    node, isClassAnnotation
+                )
+            }
+        } else if (scope and RESTRICT_TO_LIBRARY != 0 && member != null) {
             val evaluator = context.evaluator
             val thisCoordinates = evaluator.getLibrary(node) ?: context.project.mavenCoordinates
             val methodCoordinates = evaluator.getLibrary(member)
@@ -377,11 +392,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                 val thisArtifact = thisCoordinates?.artifactId
                 val methodArtifact = methodCoordinates.artifactId
                 if (thisArtifact != methodArtifact) {
-                    val where = String.format(
-                        "from within the same library (%1\$s:%2\$s)",
-                        methodGroup,
-                        methodArtifact
-                    )
+                    val where = "from within the same library ($methodGroup:$methodArtifact)"
                     reportRestriction(
                         where, containingClass, member, context,
                         node, isClassAnnotation
@@ -573,11 +584,13 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
         private const val RESTRICT_TO_LIBRARY_GROUP = 1 shl 0
         /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
         private const val RESTRICT_TO_LIBRARY = 1 shl 1
+        /** `RestrictTo(RestrictTo.Scope.GROUP_ID`  */
+        private const val RESTRICT_TO_LIBRARY_GROUP_PREFIX = 1 shl 2
         /** `RestrictTo(RestrictTo.Scope.TESTS`  */
-        private const val RESTRICT_TO_TESTS = 1 shl 2
+        private const val RESTRICT_TO_TESTS = 1 shl 3
         /** `RestrictTo(RestrictTo.Scope.SUBCLASSES`  */
-        private const val RESTRICT_TO_SUBCLASSES = 1 shl 3
-        private const val RESTRICT_TO_ALL = 1 shl 4
+        private const val RESTRICT_TO_SUBCLASSES = 1 shl 4
+        private const val RESTRICT_TO_ALL = 1 shl 5
 
         private fun getRestrictionScope(annotation: UAnnotation): Int {
             val value = annotation.findDeclaredAttributeValue(ATTR_VALUE)
@@ -610,12 +623,34 @@ class RestrictToDetector : AbstractAnnotationDetector(), SourceCodeScanner {
                             scope = scope or RESTRICT_TO_TESTS
                         } else if ("LIBRARY" == name) {
                             scope = scope or RESTRICT_TO_LIBRARY
+                        } else if ("LIBRARY_GROUP_PREFIX" == name) {
+                            scope = scope or RESTRICT_TO_LIBRARY_GROUP_PREFIX
                         }
                     }
                 }
             }
 
             return scope
+        }
+
+        /**
+         * Implements the group prefix equality that is described in the documentation
+         * for the RestrictTo.Scope.LIBRARY_GROUP_PREFIX enum constant
+         */
+        fun sameLibraryGroupPrefix(group1: String, group2: String): Boolean {
+            // TODO: Allow group1.startsWith(group2) || group2.startsWith(group1) ?
+
+            if (group1 == group2) {
+                return true
+            }
+
+            val i1 = group1.lastIndexOf('.')
+            val i2 = group2.lastIndexOf('.')
+            if (i2 != i1 || i1 == -1) {
+                return false
+            }
+
+            return group1.regionMatches(0, group2, 0, i1)
         }
 
         /** Using a restricted API */
