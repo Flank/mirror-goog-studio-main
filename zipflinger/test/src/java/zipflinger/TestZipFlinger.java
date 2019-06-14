@@ -439,4 +439,22 @@ public class TestZipFlinger extends TestBase {
         Assert.assertFalse("File1 found", entries.get("contents/folder/b.txt").isDirectory());
         Assert.assertFalse("File2 found", entries.get("contents/a.txt").isDirectory());
     }
+
+    @Test
+    public void testCompressionDetection() throws Exception {
+        Path src = getPath("1-2-3files.zip");
+        Path dst = getPath("testCompressionDetection.zip");
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+
+        try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
+            BytesSource source = new BytesSource(new byte[0], "file4.txt", false);
+            zipArchive.add(source);
+        }
+
+        Map<String, Entry> entries = ZipArchive.listEntries(dst.toFile());
+        Assert.assertTrue("file1.txt is compressed", entries.get("file1.txt").isCompressed());
+        Assert.assertTrue("file2.txt is compressed", entries.get("file2.txt").isCompressed());
+        Assert.assertTrue("file3.txt is compressed", entries.get("file3.txt").isCompressed());
+        Assert.assertFalse("file4.txt is not compressed", entries.get("file4.txt").isCompressed());
+    }
 }

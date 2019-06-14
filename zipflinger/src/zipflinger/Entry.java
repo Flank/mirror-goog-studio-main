@@ -62,6 +62,10 @@ public class Entry {
         return name.charAt(name.length() - 1) == '/';
     }
 
+    public boolean isCompressed() {
+        return compressionFlag != LocalFileHeader.COMPRESSION_NONE;
+    }
+
     @NonNull
     Location getCdLocation() {
         return cdLocation;
