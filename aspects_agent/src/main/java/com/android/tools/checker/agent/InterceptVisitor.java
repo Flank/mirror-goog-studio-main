@@ -15,6 +15,7 @@ import org.objectweb.asm.commons.Method;
 
 public class InterceptVisitor extends AdviceAdapter {
     private static final Logger LOGGER = Logger.getLogger(InterceptVisitor.class.getName());
+    private static final String LAMBDA_METHOD_PREFIX = "lambda$";
     private final Function<String, String> aspects;
     private final String className;
     private final String name;
@@ -81,6 +82,14 @@ public class InterceptVisitor extends AdviceAdapter {
 
     @Override
     protected void onMethodEnter() {
+        // Lambdas are translated to static methods named something like "lambda$methodNop$0". As
+        // such, they would be intercepted here so we need to explicitly ignore them since we don't
+        // want that.
+        boolean isStatic = (this.methodAccess & Opcodes.ACC_STATIC) != 0;
+        if (isStatic && name.startsWith(LAMBDA_METHOD_PREFIX)) {
+            return;
+        }
+
         // Check if there is an aspect defined for this method. If there is, we add the static
         // call at the beginning of the method.
         // Aspects can also be added by adding annotations. Multiple aspects can be added via

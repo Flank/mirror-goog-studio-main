@@ -35,4 +35,12 @@ public class TestClass {
 
     @ConflictingAnnotation
     public void conflictingMethod() {}
+
+    public void methodWithLambda() {
+        Runnable r =
+                () -> {
+                    // No-op
+                };
+        r.run();
+    }
 }
