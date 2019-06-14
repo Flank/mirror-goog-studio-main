@@ -30,21 +30,23 @@ public class AgentBasedClassRedefinerRClassTest extends AgentBasedClassRedefiner
         Deploy.SwapRequest request = createRequest("app.R$Strings", "app/R$Strings.dex", false);
         redefiner.redefine(request);
 
+        Deploy.JvmtiError foo = null;
+
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
-        List<Deploy.JvmtiErrorDetails> details = response.getJvmtiErrorDetailsList();
+        List<Deploy.JvmtiError.Details> details = response.getJvmtiError().getDetailsList();
 
-        HashMap<String, Deploy.JvmtiErrorDetails.Type> fieldErrors = new HashMap<>();
-        for (Deploy.JvmtiErrorDetails detail : details) {
+        HashMap<String, Deploy.JvmtiError.Details.Type> fieldErrors = new HashMap<>();
+        for (Deploy.JvmtiError.Details detail : details) {
             fieldErrors.put(detail.getName(), detail.getType());
             Assert.assertEquals("app/R$Strings", detail.getClassName());
         }
 
         Assert.assertTrue(fieldErrors.containsKey("FIELD_B"));
         Assert.assertEquals(
-                fieldErrors.get("FIELD_B"), Deploy.JvmtiErrorDetails.Type.FIELD_REMOVED);
+                fieldErrors.get("FIELD_B"), Deploy.JvmtiError.Details.Type.FIELD_REMOVED);
         Assert.assertTrue(fieldErrors.containsKey("FIELD_C"));
-        Assert.assertEquals(fieldErrors.get("FIELD_C"), Deploy.JvmtiErrorDetails.Type.FIELD_ADDED);
+        Assert.assertEquals(fieldErrors.get("FIELD_C"), Deploy.JvmtiError.Details.Type.FIELD_ADDED);
     }
 }

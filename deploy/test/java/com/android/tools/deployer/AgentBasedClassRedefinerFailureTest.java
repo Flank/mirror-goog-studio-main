@@ -18,40 +18,10 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Test cases where the agent fail to redefine classes for various reasons. */
 public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefinerTestBase {
-
-    @Ignore("b/117240186")
-    @Test
-    public void testFailedClassRedefinitionWithActivityRestart() throws Exception {
-        android.loadDex(DEX_LOCATION);
-        android.launchActivity(ACTIVITY_CLASS);
-
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
-        Assert.assertTrue(android.waitForInput("NOT SWAPPED 0", RETURN_VALUE_TIMEOUT));
-
-        Deploy.SwapRequest request = createRequest("app.Target", "app/ClinitTarget.dex", true);
-        redefiner.redefine(request);
-
-        // Agent should request an activity restart.
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
-
-        // Fake an app info changed event.
-        android.triggerMethod(ACTIVITY_CLASS, "updateAppInfo");
-        Assert.assertTrue(
-                android.waitForInput("APPLICATION_INFO_CHANGED aborted", RETURN_VALUE_TIMEOUT));
-
-        response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
-
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
-        Assert.assertTrue(android.waitForInput("NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
-    }
 
     @Test
     public void testFailHotSwap() throws Exception {
@@ -66,7 +36,7 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
         Assert.assertTrue(android.waitForInput("FailedTarget NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
@@ -95,7 +65,7 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getFailedTargetStatus");
         Assert.assertTrue(android.waitForInput("FailedTarget NOT SWAPPED 1", RETURN_VALUE_TIMEOUT));
@@ -116,6 +86,7 @@ public class AgentBasedClassRedefinerFailureTest extends AgentBasedClassRedefine
         redefiner.redefine(new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+        Assert.assertEquals(
+                Deploy.AgentSwapResponse.Status.REQUEST_PARSE_FAILED, response.getStatus());
     }
 }

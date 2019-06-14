@@ -17,19 +17,20 @@
 #ifndef HOTSWAP_H
 #define HOTSWAP_H
 
-#include <string>
-
 #include <jni.h>
 #include <jvmti.h>
+
+#include <string>
 
 #include "tools/base/deploy/proto/deploy.pb.h"
 
 namespace deploy {
 
 struct SwapResult {
-  bool success;
-  std::string error_code;
-  std::vector<proto::JvmtiErrorDetails> error_details;
+  enum Status { SUCCESS, CLASS_NOT_FOUND, JVMTI_ERROR };
+  Status status;
+  std::string error_details;
+  std::vector<proto::JvmtiError::Details> jvmti_error_details;
 };
 
 class HotSwap {

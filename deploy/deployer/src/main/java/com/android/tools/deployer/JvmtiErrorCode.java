@@ -16,7 +16,7 @@
 package com.android.tools.deployer;
 
 /** All possible JVMTI error codes, in enum form. Sourced from art/openjdkjvmti/include/jvmti.h */
-public enum JvmtiError {
+public enum JvmtiErrorCode {
     UNKNOWN_JVMTI_ERROR,
     JVMTI_ERROR_NONE,
     JVMTI_ERROR_INVALID_THREAD,

@@ -82,9 +82,9 @@ public class DeployerException extends Exception {
 
         // Errors pertaining to un-swappable changes.
 
-        CANNOT_SWAP_NEW_CLASS(
-                "Adding classes requires an app restart.",
-                "Found new class: %s",
+        CLASS_NOT_FOUND(
+                "Class not found: %s",
+                "Class '%s' was not found during swap.",
                 "Reinstall and restart app",
                 ResolutionAction.RUN_APP),
 
@@ -178,6 +178,9 @@ public class DeployerException extends Exception {
         SWAP_FAILED(
                 "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
 
+        AGENT_SWAP_FAILED(
+                "We were unable to deploy your changes%s", "%s", "Retry", ResolutionAction.RETRY),
+
         PARSE_FAILED(
                 "We were unable to deploy your changes.", "%s", "Retry", ResolutionAction.RETRY),
 
@@ -261,10 +264,6 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.DIFFERENT_APK_NAMES);
     }
 
-    public static DeployerException addedNewClass(String className) {
-        return new DeployerException(Error.CANNOT_SWAP_NEW_CLASS, NO_ARGS, className);
-    }
-
     public static DeployerException changedSharedObject(String filePath) {
         return new DeployerException(Error.CANNOT_SWAP_STATIC_LIB, NO_ARGS, filePath);
     }
@@ -285,32 +284,37 @@ public class DeployerException extends Exception {
         return new DeployerException(Error.CANNOT_REMOVE_RESOURCE, NO_ARGS, name, type);
     }
 
+    public static DeployerException classNotFound(String className) {
+        return new DeployerException(Error.CLASS_NOT_FOUND, new String[] {className}, className);
+    }
+
     // JVMTI error codes for which we have specific error messages.
-    private static final ImmutableMap<JvmtiError, Error> ERROR_CODE_TO_ERROR =
-            ImmutableMap.<JvmtiError, Error>builder()
+    private static final ImmutableMap<JvmtiErrorCode, Error> ERROR_CODE_TO_ERROR =
+            ImmutableMap.<JvmtiErrorCode, Error>builder()
                     .put(
-                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_ADDED,
+                            JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_ADDED,
                             Error.CANNOT_ADD_METHOD)
                     .put(
-                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED,
+                            JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_SCHEMA_CHANGED,
                             Error.CANNOT_MODIFY_FIELDS)
                     .put(
-                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_HIERARCHY_CHANGED,
+                            JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_HIERARCHY_CHANGED,
                             Error.CANNOT_CHANGE_INHERITANCE)
                     .put(
-                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_DELETED,
+                            JvmtiErrorCode.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_DELETED,
                             Error.CANNOT_DELETE_METHOD)
                     .put(
-                            JvmtiError.JVMTI_ERROR_UNSUPPORTED_REDEFINITION_CLASS_MODIFIERS_CHANGED,
+                            JvmtiErrorCode
+                                    .JVMTI_ERROR_UNSUPPORTED_REDEFINITION_CLASS_MODIFIERS_CHANGED,
                             Error.CANNOT_CHANGE_CLASS_MODIFIERS)
                     .put(
-                            JvmtiError
+                            JvmtiErrorCode
                                     .JVMTI_ERROR_UNSUPPORTED_REDEFINITION_METHOD_MODIFIERS_CHANGED,
                             Error.CANNOT_CHANGE_METHOD_MODIFIERS)
-                    .put(JvmtiError.JVMTI_ERROR_FAILS_VERIFICATION, Error.VERIFICATION_ERROR)
+                    .put(JvmtiErrorCode.JVMTI_ERROR_FAILS_VERIFICATION, Error.VERIFICATION_ERROR)
                     .build();
 
-    public static DeployerException jvmtiError(JvmtiError code) {
+    public static DeployerException jvmtiError(JvmtiErrorCode code) {
         if (ERROR_CODE_TO_ERROR.containsKey(code)) {
             return new DeployerException(ERROR_CODE_TO_ERROR.get(code));
         }
@@ -337,6 +341,11 @@ public class DeployerException extends Exception {
     public static DeployerException swapFailed(Deploy.SwapResponse.Status code) {
         String suffix = code != Deploy.SwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
         return new DeployerException(Error.SWAP_FAILED, code, new String[] {suffix}, "");
+    }
+
+    public static DeployerException agentSwapFailed(Deploy.AgentSwapResponse.Status code) {
+        String suffix = code != Deploy.AgentSwapResponse.Status.UNKNOWN ? ": " + code.name() : ".";
+        return new DeployerException(Error.AGENT_SWAP_FAILED, code, new String[] {suffix}, "");
     }
 
     // TODO: There are things calling swapFailed() that should have a more specific error. Once we fix those, remove this overload.

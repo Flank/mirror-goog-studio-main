@@ -14,7 +14,7 @@ namespace deploy {
 
 namespace {
 std::unordered_map<std::string, ClassInfo> classes_to_compare;
-std::vector<proto::JvmtiErrorDetails>* errors;
+std::vector<proto::JvmtiError::Details>* errors;
 
 // Guards classes_to_compare and errors.
 std::mutex verify_mutex;
@@ -40,8 +40,8 @@ void CompareClasses(const char* class_name, ir::Class* old_class,
     if (iter != old_fields.end()) {
       old_fields.erase(iter);
     } else {
-      proto::JvmtiErrorDetails error;
-      error.set_type(proto::JvmtiErrorDetails::FIELD_ADDED);
+      proto::JvmtiError::Details error;
+      error.set_type(proto::JvmtiError::Details::FIELD_ADDED);
       error.set_name(field_name);
       error.set_class_name(class_name);
       errors->emplace_back(std::move(error));
@@ -51,8 +51,8 @@ void CompareClasses(const char* class_name, ir::Class* old_class,
   // Checks for deleted fields by determining which fields in old_class didn't
   // have a corresponding match in new_class.
   for (std::string deleted_field : old_fields) {
-    proto::JvmtiErrorDetails error;
-    error.set_type(proto::JvmtiErrorDetails::FIELD_REMOVED);
+    proto::JvmtiError::Details error;
+    error.set_type(proto::JvmtiError::Details::FIELD_REMOVED);
     error.set_name(deleted_field);
     error.set_class_name(class_name);
     errors->emplace_back(std::move(error));
@@ -104,9 +104,9 @@ extern "C" void JNICALL Agent_VerifyClassFileLoadHook(
 
 }  // namespace
 
-void CheckForClassErrors(jvmtiEnv* jvmti,
-                         const std::vector<ClassInfo>& class_list,
-                         std::vector<proto::JvmtiErrorDetails>* error_details) {
+void CheckForClassErrors(
+    jvmtiEnv* jvmti, const std::vector<ClassInfo>& class_list,
+    std::vector<proto::JvmtiError::Details>* error_details) {
   Phase p("verifyClasses");
   if (class_list.empty()) {
     return;

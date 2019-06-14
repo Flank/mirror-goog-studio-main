@@ -43,9 +43,9 @@ struct ClassInfo {
 // Currently only checks for added/removed fields using field names, which is
 // enough to support validation of inner R classes. Field types and access
 // modifiers are NOT examined.
-void CheckForClassErrors(jvmtiEnv* jvmti,
-                         const std::vector<ClassInfo>& classes_to_verify,
-                         std::vector<proto::JvmtiErrorDetails>* error_details);
+void CheckForClassErrors(
+    jvmtiEnv* jvmti, const std::vector<ClassInfo>& classes_to_verify,
+    std::vector<proto::JvmtiError::Details>* error_details);
 
 }  // namespace deploy
 

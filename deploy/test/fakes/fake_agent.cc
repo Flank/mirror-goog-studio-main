@@ -35,7 +35,7 @@ bool FakeAgent::RespondSuccess() {
 bool FakeAgent::RespondFailure() {
   proto::AgentSwapResponse response;
   response.set_pid(pid_);
-  response.set_status(proto::AgentSwapResponse::ERROR);
+  response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);
@@ -47,7 +47,7 @@ bool FakeAgent::RespondFailure() {
 bool FakeAgent::RespondCrash() {
   proto::AgentSwapResponse response;
   response.set_pid(pid_);
-  response.set_status(proto::AgentSwapResponse::ERROR);
+  response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
 
   std::string response_bytes;
   response.SerializeToString(&response_bytes);

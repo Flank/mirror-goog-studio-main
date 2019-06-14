@@ -59,7 +59,7 @@ void Swapper::Swap(JNIEnv* jni) {
   std::string request_bytes;
   if (!socket_->Read(&request_bytes)) {
     LogEvent("Could not read request from socket");
-    response.set_status(proto::AgentSwapResponse::ERROR);
+    response.set_status(proto::AgentSwapResponse::SOCKET_READ_FAILED);
     SendResponse(response);
     return;
   }
@@ -67,14 +67,14 @@ void Swapper::Swap(JNIEnv* jni) {
   request_ = std::unique_ptr<proto::SwapRequest>(new proto::SwapRequest());
   if (!request_->ParseFromString(request_bytes)) {
     LogEvent("Could not parse swap request");
-    response.set_status(proto::AgentSwapResponse::ERROR);
+    response.set_status(proto::AgentSwapResponse::REQUEST_PARSE_FAILED);
     SendResponse(response);
     return;
   }
 
   if (!InstrumentApplication(jvmti_, jni, request_->package_name())) {
     LogEvent("Could not instrument application");
-    response.set_status(proto::AgentSwapResponse::ERROR);
+    response.set_status(proto::AgentSwapResponse::INSTRUMENTATION_FAILED);
     SendResponse(response);
     return;
   }
@@ -82,15 +82,17 @@ void Swapper::Swap(JNIEnv* jni) {
   HotSwap code_swap(jvmti_, jni);
 
   SwapResult result = code_swap.DoHotSwap(*request_);
-  if (!result.success) {
-    response.set_status(proto::AgentSwapResponse::ERROR);
-    response.set_jvmti_error_code(result.error_code);
-    for (auto& details : result.error_details) {
-      *response.add_jvmti_error_details() = details;
-    }
-  } else {
+  if (result.status == SwapResult::SUCCESS) {
     response.set_status(proto::AgentSwapResponse::OK);
-    LogEvent("Swap was successful");
+  } else if (result.status == SwapResult::CLASS_NOT_FOUND) {
+    response.set_status(proto::AgentSwapResponse::CLASS_NOT_FOUND);
+    response.set_class_name(result.error_details);
+  } else {
+    response.set_status(proto::AgentSwapResponse::JVMTI_ERROR);
+    response.mutable_jvmti_error()->set_error_code(result.error_details);
+    for (auto& details : result.jvmti_error_details) {
+      *response.mutable_jvmti_error()->add_details() = details;
+    }
   }
 
   // Prepare the instrumented code to restart after the package installation (if

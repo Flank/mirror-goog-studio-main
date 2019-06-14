@@ -18,7 +18,6 @@ package com.android.tools.deployer;
 import com.android.tools.deploy.proto.Deploy;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Test very simple cases on class redefinitions. */
@@ -35,35 +34,6 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
-
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
-        Assert.assertTrue(android.waitForInput("JUST SWAPPED", RETURN_VALUE_TIMEOUT));
-    }
-
-    @Ignore("b/117240186")
-    @Test
-    public void testSimpleClassRedefinitionWithActivityRestart() throws Exception {
-        android.loadDex(DEX_LOCATION);
-        android.launchActivity(ACTIVITY_CLASS);
-
-        android.triggerMethod(ACTIVITY_CLASS, "getStatus");
-        Assert.assertTrue(android.waitForInput("NOT SWAPPED", RETURN_VALUE_TIMEOUT));
-
-        Deploy.SwapRequest request = createRequest("app.Target", "app/Target.dex", true);
-        redefiner.redefine(request);
-
-        // Agent should request an activity restart.
-        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(
-                Deploy.AgentSwapResponse.Status.NEED_ACTIVITY_RESTART, response.getStatus());
-
-        // Fake an app info changed event.
-        android.triggerMethod(ACTIVITY_CLASS, "updateAppInfo");
-        Assert.assertTrue(
-                android.waitForInput("APPLICATION_INFO_CHANGED triggered", RETURN_VALUE_TIMEOUT));
-
-        response = redefiner.getAgentResponse();
         Assert.assertEquals(Deploy.AgentSwapResponse.Status.OK, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getStatus");
@@ -118,5 +88,17 @@ public class AgentBasedClassRedefinerSimpleTest extends AgentBasedClassRedefiner
 
         android.triggerMethod(ACTIVITY_CLASS, "getNewClassStatus");
         Assert.assertTrue(android.waitForInput("public=1package=1", RETURN_VALUE_TIMEOUT));
+    }
+
+    @Test
+    public void testRedefineMissingClass() throws Exception {
+        android.loadDex(DEX_LOCATION);
+        android.launchActivity(ACTIVITY_CLASS);
+
+        Deploy.SwapRequest request = createRequest("app.NonExistentClass", "app/Target.dex", false);
+        redefiner.redefine(request);
+
+        Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.CLASS_NOT_FOUND, response.getStatus());
     }
 }

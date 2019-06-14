@@ -57,7 +57,7 @@ public class AgentBasedClassRedefinerKotlinTest extends AgentBasedClassRedefiner
         redefiner.redefine(request);
 
         Deploy.AgentSwapResponse response = redefiner.getAgentResponse();
-        Assert.assertEquals(Deploy.AgentSwapResponse.Status.ERROR, response.getStatus());
+        Assert.assertEquals(Deploy.AgentSwapResponse.Status.JVMTI_ERROR, response.getStatus());
 
         android.triggerMethod(ACTIVITY_CLASS, "getKotlinFailedTargetStatus");
         Assert.assertTrue(

@@ -163,8 +163,8 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
     def[i].klass = FindClass(name);
     if (def[i].klass == nullptr) {
-      result.success = false;
-      result.error_code = "Could not find class '" + name + "'";
+      result.status = SwapResult::CLASS_NOT_FOUND;
+      result.error_details = class_def.name();
       return result;
     }
 
@@ -189,17 +189,18 @@ SwapResult HotSwap::DoHotSwap(const proto::SwapRequest& swap_request) const {
 
   if (error_num == JVMTI_ERROR_NONE) {
     // If there was no error, we're done.
-    result.success = true;
-    result.error_code = "";
+    result.status = SwapResult::SUCCESS;
   } else {
     // If we failed, try to get some detailed information.
-    CheckForClassErrors(jvmti_, detailed_error_classes, &result.error_details);
+    CheckForClassErrors(jvmti_, detailed_error_classes,
+                        &result.jvmti_error_details);
 
-    // Otherwise, get the error associated with the error code from JVMTI.
-    result.success = false;
+    result.status = SwapResult::JVMTI_ERROR;
+
+    // Get the error associated with the error code from JVMTI.
     char* error = nullptr;
     jvmti_->GetErrorName(error_num, &error);
-    result.error_code = error == nullptr ? "Unknown" : std::string(error);
+    result.error_details = error == nullptr ? "" : error;
     jvmti_->Deallocate((unsigned char*)error);
   }
 

@@ -288,24 +288,18 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
     return proto::SwapResponse::WRITE_TO_SERVER_FAILED;
   }
 
+  size_t total_agents = request_.process_ids().size() + request_.extra_agents();
+
   std::string response_bytes;
   std::unordered_map<int, proto::AgentSwapResponse> agent_responses;
-  auto overall_status = proto::AgentSwapResponse::UNKNOWN;
-  while (agent_responses.size() <
-             request_.process_ids().size() + request_.extra_agents() &&
+
+  while (agent_responses.size() < total_agents &&
          server_output.Read(&response_bytes)) {
     proto::AgentSwapResponse agent_response;
 
     if (!agent_response.ParseFromString(response_bytes)) {
-      ErrEvent("Received unparseable response from agent");
       waitpid(agent_server_pid, &status, 0);
       return proto::SwapResponse::UNPARSEABLE_AGENT_RESPONSE;
-    }
-
-    if (agent_responses.size() == 0) {
-      overall_status = agent_response.status();
-    } else if (agent_response.status() != overall_status) {
-      overall_status = proto::AgentSwapResponse::ERROR;
     }
 
     agent_responses.emplace(agent_response.pid(), agent_response);
@@ -316,25 +310,21 @@ proto::SwapResponse::Status SwapCommand::Swap() const {
       AddRawEvent(ConvertProtoEventToEvent(event));
     }
 
-    std::string jvmti_error_code = agent_response.jvmti_error_code();
-    if (!jvmti_error_code.empty()) {
-      response_->add_jvmti_error_code(jvmti_error_code);
+    if (agent_response.status() != proto::AgentSwapResponse::OK) {
+      auto failed_agent = response_->add_failed_agents();
+      *failed_agent = agent_response;
     }
-
-    response_->mutable_jvmti_error_details()->MergeFrom(
-        agent_response.jvmti_error_details());
   }
 
   // Cleanup zombie agent-server status from the kernel.
   waitpid(agent_server_pid, &status, 0);
 
   // Ensure all of the agents have responded.
-  if (agent_responses.size() <
-      request_.process_ids().size() + request_.extra_agents()) {
+  if (agent_responses.size() < total_agents) {
     return proto::SwapResponse::MISSING_AGENT_RESPONSES;
   }
 
-  if (overall_status != proto::AgentSwapResponse::OK) {
+  if (response_->failed_agents_size() > 0) {
     return proto::SwapResponse::AGENT_ERROR;
   }
 
