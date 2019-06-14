@@ -57,6 +57,17 @@ public class Am extends ShellCommand {
                     }
                 }
                 return start(device, name, intent, stdout);
+            case "force-stop":
+                String arg = args.nextArgument();
+                if (arg == null) {
+                    stdout.println("\nException occurred while executing:");
+                    stdout.println(
+                            "java.lang.IllegalArgumentException: Argument expected after \"force-stop\"");
+                    stdout.println("...message...");
+                    return 255;
+                }
+                device.stopApp(arg);
+                return 0;
             default:
                 return processUsage(stdout);
         }

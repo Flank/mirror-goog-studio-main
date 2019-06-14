@@ -18,6 +18,8 @@ package com.android.tools.deployer;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -32,7 +34,6 @@ import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
 import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -1071,9 +1072,34 @@ public class DeployerRunnerTest {
 
         String cmd = "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
         assertEquals(0, device.executeScript(cmd, new byte[]{}).value);
-        ImmutableList<FakeDevice.Application> processes = device.getProcesses();
+        List<FakeDevice.Application> processes = device.getProcesses();
         assertEquals(1, processes.size());
         assertEquals("com.example.simpleapp", processes.get(0).packageName);
+
+        assertEquals(0, device.executeScript("am force-stop com.foo", new byte[] {}).value);
+        processes = device.getProcesses();
+        assertEquals(1, processes.size());
+        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+
+        assertEquals(
+                0,
+                device.executeScript("am force-stop com.example.simpleapp.bar", new byte[] {})
+                        .value);
+        processes = device.getProcesses();
+        assertEquals(1, processes.size());
+        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+
+        assertNotEquals(0, device.executeScript("am force-stop", new byte[] {}).value);
+        processes = device.getProcesses();
+        assertEquals(1, processes.size());
+        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+
+        assertEquals(
+                0,
+                device.executeScript("am force-stop com.example.simpleapp", new byte[] {}).value);
+        processes = device.getProcesses();
+        assertEquals(1, processes.size());
+        assertNull(processes.get(0));
     }
 
     @Test

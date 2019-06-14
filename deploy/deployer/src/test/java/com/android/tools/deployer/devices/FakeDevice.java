@@ -194,8 +194,17 @@ public class FakeDevice {
         return false;
     }
 
-    public ImmutableList<Application> getProcesses() {
-        return ImmutableList.copyOf(processes);
+    public void stopApp(String pkgName) {
+        if (apps.containsKey(pkgName)) {
+            Application app = apps.get(pkgName);
+            if (processes.contains(app)) {
+                processes.set(processes.indexOf(app), null);
+            }
+        }
+    }
+
+    public List<Application> getProcesses() {
+        return new ArrayList<>(processes);
     }
 
     public int createSession(String inherit) {
