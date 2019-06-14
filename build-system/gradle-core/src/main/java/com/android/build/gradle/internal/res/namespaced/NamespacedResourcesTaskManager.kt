@@ -91,7 +91,7 @@ class NamespacedResourcesTaskManager(
                 useAaptToGenerateLegacyMultidexMainDexProguardRules = useAaptToGenerateLegacyMultidexMainDexProguardRules
             )
         }
-        taskFactory.register(CompileRClassTask.CreationAction(variantScope))
+        taskFactory.register(CompileRClassTaskCreationAction(variantScope))
     }
 
     private fun createNamespacedAppProcessTask(

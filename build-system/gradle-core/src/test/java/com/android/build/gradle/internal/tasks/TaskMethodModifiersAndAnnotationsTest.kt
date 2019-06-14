@@ -108,7 +108,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setDebuggable",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setMergeBlameLogFolder",
                 "com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask::setType",
-                "com.android.build.gradle.internal.res.namespaced.CompileRClassTask::setVariantName",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setIgnoreFailures",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportType",
                 "com.android.build.gradle.internal.tasks.AndroidReportTask::setReportsDir",

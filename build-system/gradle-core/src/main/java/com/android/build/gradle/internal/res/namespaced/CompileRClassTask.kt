@@ -15,20 +15,17 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.gradle.internal.profile.PROPERTY_VARIANT_NAME_KEY
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-import com.android.build.gradle.internal.scope.InternalArtifactType
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_CLASSES
+import com.android.build.gradle.internal.scope.InternalArtifactType.RUNTIME_R_CLASS_SOURCES
+import com.android.build.gradle.internal.scope.MutableTaskContainer
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.VariantAwareTask
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.internal.scope.getOutputDirectory
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.compile.JavaCompile
-import java.io.File
 
 /**
  * Task to compile a directory containing R.java file(s) and jar the result.
@@ -38,49 +35,48 @@ import java.io.File
  *
  * In the future, this might not call javac at all, but it needs to be profiled first.
  */
-@CacheableTask
-abstract class CompileRClassTask : JavaCompile(), VariantAwareTask {
+class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
+    TaskCreationAction<JavaCompile>() {
 
-    @get:OutputDirectory
-    abstract val outputDirectory: DirectoryProperty
+    private val output = variantScope.globalScope.project.objects.directoryProperty()
 
-    @Internal
-    override lateinit var variantName: String
+    override val name: String
+        get() = variantScope.getTaskName("compile", "FinalRClass")
 
+    override val type: Class<JavaCompile>
+        get() = JavaCompile::class.java
 
-    // Override without the OutputDirectory annotation, it is already present on the above property.
-    @Suppress("RedundantOverride")
-    override fun getDestinationDir(): File {
-        return super.getDestinationDir()
-    }
+    override fun handleProvider(taskProvider: TaskProvider<out JavaCompile>) {
+        super.handleProvider(taskProvider)
 
-    class CreationAction(variantScope: VariantScope) :
-        VariantTaskCreationAction<CompileRClassTask>(variantScope) {
-
-        override val name: String
-            get() = variantScope.getTaskName("compile", "FinalRClass")
-        override val type: Class<CompileRClassTask>
-            get() = CompileRClassTask::class.java
-
-        override fun handleProvider(taskProvider: TaskProvider<out CompileRClassTask>) {
-            super.handleProvider(taskProvider)
-            variantScope.artifacts.producesDir(
-                InternalArtifactType.RUNTIME_R_CLASS_CLASSES,
-                BuildArtifactsHolder.OperationType.INITIAL,
-                taskProvider,
-                CompileRClassTask::outputDirectory
+        output.set(
+            RUNTIME_R_CLASS_CLASSES.getOutputDirectory(
+                variantScope.globalScope.project.layout.buildDirectory,
+                variantScope.artifacts.getIdentifier(),
+                name
             )
-        }
+        )
 
-        override fun configure(task: CompileRClassTask) {
-            super.configure(task)
-
-            val artifacts = variantScope.artifacts
-            task.classpath = task.project.files()
-            task.source(
-                artifacts.getFinalProduct<Directory>(InternalArtifactType.RUNTIME_R_CLASS_SOURCES))
-            task.setDestinationDir(task.outputDirectory.map { it.asFile })
-        }
+        variantScope.artifacts.producesDir(
+            RUNTIME_R_CLASS_CLASSES,
+            BuildArtifactsHolder.OperationType.INITIAL,
+            taskProvider,
+            { output },
+            name
+        )
     }
 
+    override fun configure(task: JavaCompile) {
+        val taskContainer: MutableTaskContainer = variantScope.taskContainer
+        task.dependsOn(taskContainer.preBuildTask)
+        task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.fullVariantName)
+
+        task.classpath = task.project.files()
+        task.source(variantScope.artifacts.getFinalProduct<Directory>(RUNTIME_R_CLASS_SOURCES))
+        task.destinationDir = output.get().asFile
+
+        // manually declare our output directory as a Task output since it's not annotated as
+        // an OutputDirectoy on the task implementation.
+        task.outputs.dir(output)
+    }
 }
