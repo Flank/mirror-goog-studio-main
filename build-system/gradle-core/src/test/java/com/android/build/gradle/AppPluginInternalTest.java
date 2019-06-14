@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.model.SigningConfig;
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
 import junit.framework.TestCase;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -485,8 +485,8 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks();
 
-        AndroidJavaCompile compileDebugJavaWithJavac =
-                (AndroidJavaCompile) project.getTasks().getByName("compileDebugJavaWithJavac");
+        JavaCompile compileDebugJavaWithJavac =
+                (JavaCompile) project.getTasks().getByName("compileDebugJavaWithJavac");
         Set<File> bootclasspath =
                 compileDebugJavaWithJavac.getOptions().getBootstrapClasspath().getFiles();
         assertThat(bootclasspath.stream().map(File::getName).collect(Collectors.toSet()))

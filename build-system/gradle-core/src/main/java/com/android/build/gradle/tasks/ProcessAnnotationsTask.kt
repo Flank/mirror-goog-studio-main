@@ -33,7 +33,7 @@ import org.gradle.api.tasks.compile.JavaCompile
  * Task to perform annotation processing only, without compiling.
  *
  * This task may or may not be created depending on whether it is needed. See the documentation of
- * [AndroidJavaCompile] for more details.
+ * [AndroidJavaCompileCreationAction] for more details.
  */
 class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScope) :
     TaskCreationAction<JavaCompile>() {
@@ -52,7 +52,7 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
         output.set(AP_GENERATED_SOURCES.getOutputDirectory(
             variantScope.globalScope.project.layout.buildDirectory,
             variantScope.artifacts.getIdentifier(),
-            name
+            "out" // in order to preserve previous output path, pass out as taskName
         ))
 
         variantScope.artifacts.producesDir(
@@ -101,8 +101,8 @@ class ProcessAnnotationsTaskCreationAction(private val variantScope: VariantScop
 /**
  * Determine whether task for separate annotation processing should be created.
  *
- * As documented at [AndroidJavaCompile], separate annotation processing is needed if all of the
- * following conditions are met:
+ * As documented at [AndroidJavaCompileCreationAction], separate annotation processing is needed if
+ * all of the following conditions are met:
  *   1. Incremental compilation is requested (either by the user through the DSL or by
  *      default)
  *   2. Kapt is not used

@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.build.gradle.tasks.AndroidJavaCompile;
 import com.android.builder.core.ToolsRevisionUtils;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestOptions.Execution;
@@ -51,6 +50,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -500,9 +500,8 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        AndroidJavaCompile compileReleaseJavaWithJavac =
-                (AndroidJavaCompile)
-                        project.getTasks().getByName(checker.getReleaseJavacTaskName());
+        JavaCompile compileReleaseJavaWithJavac =
+                (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
 
         assertThat(compileReleaseJavaWithJavac.getTargetCompatibility())
                 .named("target compat")
@@ -527,9 +526,8 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        AndroidJavaCompile compileReleaseJavaWithJavac =
-                (AndroidJavaCompile)
-                        project.getTasks().getByName(checker.getReleaseJavacTaskName());
+        JavaCompile compileReleaseJavaWithJavac =
+                (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
 
         assertThat(compileReleaseJavaWithJavac.getTargetCompatibility())
                 .named("target compat")
@@ -574,9 +572,8 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks();
 
-        AndroidJavaCompile compileReleaseJavaWithJavac =
-                (AndroidJavaCompile)
-                        project.getTasks().getByName(checker.getReleaseJavacTaskName());
+        JavaCompile compileReleaseJavaWithJavac =
+                (JavaCompile) project.getTasks().getByName(checker.getReleaseJavacTaskName());
 
         assertThat(compileReleaseJavaWithJavac.getOptions().getEncoding())
                 .named("source encoding")

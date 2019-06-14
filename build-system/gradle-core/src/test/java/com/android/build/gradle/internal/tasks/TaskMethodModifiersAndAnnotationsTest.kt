@@ -152,7 +152,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.UninstallTask::setVariant",
                 "com.android.build.gradle.tasks.factory.AndroidUnitTest::setVariantName",
                 "com.android.build.gradle.tasks.AidlCompile::setPackageWhitelist",
-                "com.android.build.gradle.tasks.AndroidJavaCompile::setVariantName",
                 "com.android.build.gradle.tasks.BundleAar::setVariantName",
                 "com.android.build.gradle.tasks.CleanBuildCache::setBuildCache",
                 "com.android.build.gradle.tasks.ExtractAnnotations::setBootClasspath",

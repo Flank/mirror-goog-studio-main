@@ -20,13 +20,13 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/** Unit test for [AndroidJavaCompile]. */
+/** Unit test for AndroidJavaCompile (created in [AndroidJavaCompileCreationAction]). */
 class AndroidJavaCompileTest {
 
     @Test
     fun `configureCompileArgumentsForLombok - with -proc-none, without -processor`() {
         val compilerArgs = mutableListOf("-cp", "sample.jar", "-proc:none")
-        AndroidJavaCompile.configureCompilerArgumentsForLombok(compilerArgs)
+        configureCompilerArgumentsForLombok(compilerArgs)
         assertEquals(
             listOf(
                 "-cp",
@@ -42,7 +42,7 @@ class AndroidJavaCompileTest {
     fun `configureCompileArgumentsForLombok - with -proc-none, with -processor`() {
         val compilerArgs =
             mutableListOf("-cp", "sample.jar", "-proc:none", "-processor", "SampleProcessor")
-        AndroidJavaCompile.configureCompilerArgumentsForLombok(compilerArgs)
+        configureCompilerArgumentsForLombok(compilerArgs)
         assertEquals(
             listOf(
                 "-cp",
@@ -58,7 +58,7 @@ class AndroidJavaCompileTest {
     fun `configureCompileArgumentsForLombok - without -proc-none, with -processor`() {
         val compilerArgs = mutableListOf("-cp", "sample.jar", "-processor", "SampleProcessor")
         val exception = assertFailsWith<IllegalStateException> {
-            AndroidJavaCompile.configureCompilerArgumentsForLombok(compilerArgs)
+            configureCompilerArgumentsForLombok(compilerArgs)
         }
         assertEquals(
             "compilerArgs [-cp, sample.jar, -processor, SampleProcessor]" +
@@ -71,7 +71,7 @@ class AndroidJavaCompileTest {
     fun `configureCompileArgumentsForLombok - without -proc-none, without -processor`() {
         val compilerArgs = mutableListOf("-cp", "sample.jar")
         val exception = assertFailsWith<IllegalStateException> {
-            AndroidJavaCompile.configureCompilerArgumentsForLombok(compilerArgs)
+            configureCompilerArgumentsForLombok(compilerArgs)
         }
         assertEquals(
             "compilerArgs [-cp, sample.jar] does not contain -proc:none",
