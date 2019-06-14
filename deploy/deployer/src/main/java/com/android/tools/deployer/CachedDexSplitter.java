@@ -17,6 +17,8 @@ package com.android.tools.deployer;
 
 import com.android.tools.deployer.model.ApkEntry;
 import com.android.tools.deployer.model.DexClass;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -36,7 +38,10 @@ public class CachedDexSplitter implements DexSplitter {
         // Try a cached version
         List<DexClass> classes = db.getClasses(dex);
         if (classes.isEmpty() || keepCode != null) {
-            if (dex.apk.path == null) {
+            // TODO: Calling CacheDexSplitter.split() on a remote APK is fine but actually calling the real splitter on an remote
+            // APK is going to crash. Checking path == null isn't going to work as that gives the remote path of the APK.
+            // The File.exists() check is a temp fix. See b/135202430.
+            if (dex.apk.path == null || Files.notExists(Paths.get(dex.apk.path))) {
                 throw DeployerException.remoteApkNotFound();
             }
             classes = splitter.split(dex, keepCode);

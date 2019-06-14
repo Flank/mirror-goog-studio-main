@@ -26,7 +26,6 @@ import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.devices.FakeDevice;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
-import com.android.tools.deployer.devices.shell.Am;
 import com.android.tools.deployer.devices.shell.Arguments;
 import com.android.tools.deployer.devices.shell.ShellCommand;
 import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
@@ -36,8 +35,6 @@ import com.android.tools.idea.protobuf.CodedOutputStream;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1148,6 +1145,81 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         ImmutableList<FakeDevice.Application> processes = device.getProcesses();
         assertEquals(1, processes.size());
         assertEquals("com.example.simpleapp", processes.get(0).packageName);
+    }
+
+    @Test
+    public void testApkNotRecognized() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        // Install the base apk:
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(DeployerTestUtils.getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        File installersPath = DeployerTestUtils.prepareInstaller();
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        String[] args = {
+            "install",
+            "com.example.simpleapp",
+            file.getAbsolutePath(),
+            "--installers-path=" + installersPath.getAbsolutePath()
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.simpleapp", file);
+
+        if (device.getApi() < 24) {
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:API_NOT_SUPPORTED",
+                    "INSTALL:OK",
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
+        } else {
+            assertMetrics(
+                    runner.getMetrics(),
+                    "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
+                    "INSTALL:OK",
+                    "DDMLIB_UPLOAD",
+                    "DDMLIB_INSTALL");
+        }
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        args =
+                new String[] {
+                    "codeswap",
+                    "com.example.simpleapp",
+                    file.getAbsolutePath(),
+                    "--installers-path=" + installersPath.getAbsolutePath()
+                };
+
+        // We create a empty database. This simulate an installed APK not found in the database.
+        db = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
+        device.getShell().clearHistory();
+        runner = new DeployerRunner(db, service);
+        retcode = runner.run(args, logger);
+        if (device.supportsJvmti()) {
+            assertEquals(DeployerException.Error.REMOTE_APK_NOT_FOUND_IN_DB.ordinal(), retcode);
+        } else {
+            assertEquals(DeployerException.Error.CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+        }
+        if (device.getApi() < 26) {
+            assertTrue(runner.getMetrics().isEmpty());
+            assertHistory(device, "getprop");
+        } else {
+            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+            assertHistory(
+                    device,
+                    "getprop",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+                    "/system/bin/run-as com.example.simpleapp id -u",
+                    "id -u",
+                    "/system/bin/cmd package path com.example.simpleapp",
+                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+                    "/system/bin/cmd package install-create -t -r --dont-kill",
+                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+        }
     }
 
     private class InstallerCommand extends ShellCommand {
