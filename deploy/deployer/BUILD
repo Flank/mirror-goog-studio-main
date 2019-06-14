@@ -92,6 +92,12 @@ java_binary(
     ],
 )
 
+filegroup(
+    name = "test_apks",
+    srcs = glob(["src/test/resource/apks/*.apk"]),
+    visibility = ["//visibility:public"],
+)
+
 coverage_java_test(
     name = "deployer.tests",
     size = "medium",
