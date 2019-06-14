@@ -20,27 +20,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.fakeadbserver.FakeAdbServer;
+import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.testutils.AssumeUtil;
 import com.android.testutils.TestUtils;
-import com.android.tools.deploy.proto.Deploy;
 import com.android.tools.deployer.devices.FakeDevice;
+import com.android.tools.deployer.devices.FakeDeviceHandler;
 import com.android.tools.deployer.devices.FakeDeviceLibrary;
 import com.android.tools.deployer.devices.FakeDeviceLibrary.DeviceId;
-import com.android.tools.deployer.devices.shell.Arguments;
-import com.android.tools.deployer.devices.shell.ShellCommand;
-import com.android.tools.deployer.devices.shell.interpreter.ShellContext;
-import com.android.tools.idea.protobuf.ByteString;
-import com.android.tools.idea.protobuf.CodedInputStream;
-import com.android.tools.idea.protobuf.CodedOutputStream;
-import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
+import com.android.utils.ILogger;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,9 +49,14 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 @RunWith(Parameterized.class)
-public class DeployerRunnerTest extends FakeAdbTestBase {
+public class DeployerRunnerTest {
+
+    private static final String BASE = "tools/base/deploy/deployer/src/test/resource/";
 
     private UIService service;
+    private final FakeDevice device;
+    private FakeAdbServer myAdbServer;
+    private ILogger logger;
 
     @Parameterized.Parameters(name = "{0}")
     public static DeviceId[] getDevices() {
@@ -65,17 +64,29 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
     }
 
     public DeployerRunnerTest(DeviceId id) {
-        super(new FakeDeviceLibrary().build(id));
+        this.device = new FakeDeviceLibrary().build(id);
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        builder.setHostCommandHandler(
+                TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
+        builder.addDeviceHandler(new FakeDeviceHandler(device));
+
+        myAdbServer = builder.build();
+        device.connectTo(myAdbServer);
+        myAdbServer.start();
         this.service = Mockito.mock(UIService.class);
+        logger = new TestLogger();
+        AndroidDebugBridge.enableFakeAdbServerMode(myAdbServer.getPort());
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         Mockito.verifyNoMoreInteractions(service);
+        AndroidDebugBridge.terminate();
+        myAdbServer.close();
     }
 
     @Test
@@ -1043,6 +1054,102 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         }
     }
 
+
+    @Test
+    public void testStartApp() throws Exception {
+        // Install the base apk:
+        assertTrue(device.getApps().isEmpty());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        String[] args = {"install", "com.example.simpleapp", file.getAbsolutePath()};
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.simpleapp", file);
+
+        String cmd = "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
+        assertEquals(0, device.executeScript(cmd, new byte[]{}).value);
+        ImmutableList<FakeDevice.Application> processes = device.getProcesses();
+        assertEquals(1, processes.size());
+        assertEquals("com.example.simpleapp", processes.get(0).packageName);
+    }
+
+    @Test
+    public void testApkNotRecognized() throws Exception {
+        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
+
+        // Install the base apk:
+        assertTrue(device.getApps().isEmpty());
+        device.setShellBridge(DeployerTestUtils.getShell());
+        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
+        File installersPath = DeployerTestUtils.prepareInstaller();
+        DeployerRunner runner = new DeployerRunner(db, service);
+        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
+        String[] args = {
+          "install",
+          "com.example.simpleapp",
+          file.getAbsolutePath(),
+          "--installers-path=" + installersPath.getAbsolutePath()
+        };
+        int retcode = runner.run(args, logger);
+        assertEquals(0, retcode);
+        assertEquals(1, device.getApps().size());
+        assertInstalled("com.example.simpleapp", file);
+
+        if (device.getApi() < 24) {
+            assertMetrics(
+              runner.getMetrics(),
+              "DELTAINSTALL:API_NOT_SUPPORTED",
+              "INSTALL:OK",
+              "DDMLIB_UPLOAD",
+              "DDMLIB_INSTALL");
+        } else {
+            assertMetrics(
+              runner.getMetrics(),
+              "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
+              "INSTALL:OK",
+              "DDMLIB_UPLOAD",
+              "DDMLIB_INSTALL");
+        }
+
+        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
+        args =
+          new String[] {
+            "codeswap",
+            "com.example.simpleapp",
+            file.getAbsolutePath(),
+            "--installers-path=" + installersPath.getAbsolutePath()
+          };
+
+        // We create a empty database. This simulate an installed APK not found in the database.
+        db = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
+        device.getShell().clearHistory();
+        runner = new DeployerRunner(db, service);
+        retcode = runner.run(args, logger);
+        if (device.supportsJvmti()) {
+            assertEquals(DeployerException.Error.REMOTE_APK_NOT_FOUND_IN_DB.ordinal(), retcode);
+        } else {
+            assertEquals(DeployerException.Error.CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
+        }
+        if (device.getApi() < 26) {
+            assertTrue(runner.getMetrics().isEmpty());
+            assertHistory(device, "getprop");
+        } else {
+            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
+            assertHistory(
+              device,
+              "getprop",
+              "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
+              "/system/bin/run-as com.example.simpleapp id -u",
+              "id -u",
+              "/system/bin/cmd package path com.example.simpleapp",
+              "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
+              "/system/bin/cmd package install-create -t -r --dont-kill",
+              "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
+        }
+    }
+
     private static void assertHistory(FakeDevice device, String... expectedHistory)
             throws IOException {
         List<String> actualHistory = device.getShell().getHistory();
@@ -1092,227 +1199,30 @@ public class DeployerRunnerTest extends FakeAdbTestBase {
         assertArrayEquals(expected, actual);
     }
 
-    @Test
-    public void testBasicSwap() throws Exception {
-        // Install the base apk:
-        assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
-        DeployerRunner runner = new DeployerRunner(db, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
-        String[] args = {"install", "com.android.test.uibench", file.getAbsolutePath()};
-        int retcode = runner.run(args, logger);
-        assertEquals(0, retcode);
-        assertEquals(1, device.getApps().size());
-        assertInstalled("com.android.test.uibench", file);
+    private static class TestLogger implements ILogger {
+        List<String> errors = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        List<String> infos = new ArrayList<>();
+        List<String> verboses = new ArrayList<>();
 
-        File installers = Files.createTempDirectory("installers").toFile();
-        FileUtils.writeToFile(new File(installers, "x86/installer"), "INSTALLER");
-
-        device.getShell().addCommand(new InstallerCommand());
-
-        file = TestUtils.getWorkspaceFile(BASE + "signed_app/base.apk");
-        args =
-                new String[] {
-                    "codeswap",
-                    "com.android.test.uibench",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installers.getAbsolutePath()
-                };
-        retcode = runner.run(args, logger);
-
-        if (device.supportsJvmti()) {
-            assertEquals(0, retcode);
-        } else {
-            assertEquals(DeployerException.Error.CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
-        }
-    }
-
-    @Test
-    public void testStartApp() throws Exception {
-        // Install the base apk:
-        assertTrue(device.getApps().isEmpty());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
-        DeployerRunner runner = new DeployerRunner(db, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        String[] args = {"install", "com.example.simpleapp", file.getAbsolutePath()};
-        int retcode = runner.run(args, logger);
-        assertEquals(0, retcode);
-        assertEquals(1, device.getApps().size());
-        assertInstalled("com.example.simpleapp", file);
-
-        String cmd = "am start -n com.example.simpleapp/.MainActivity -a android.intent.action.MAIN";
-        assertEquals(0, device.executeScript(cmd, new byte[]{}).value);
-        ImmutableList<FakeDevice.Application> processes = device.getProcesses();
-        assertEquals(1, processes.size());
-        assertEquals("com.example.simpleapp", processes.get(0).packageName);
-    }
-
-    @Test
-    public void testApkNotRecognized() throws Exception {
-        AssumeUtil.assumeNotWindows(); // This test runs the installer on the host
-
-        // Install the base apk:
-        assertTrue(device.getApps().isEmpty());
-        device.setShellBridge(DeployerTestUtils.getShell());
-        ApkFileDatabase db = new SqlApkFileDatabase(File.createTempFile("test_db", ".bin"), null);
-        File installersPath = DeployerTestUtils.prepareInstaller();
-        DeployerRunner runner = new DeployerRunner(db, service);
-        File file = TestUtils.getWorkspaceFile(BASE + "apks/simple.apk");
-        String[] args = {
-            "install",
-            "com.example.simpleapp",
-            file.getAbsolutePath(),
-            "--installers-path=" + installersPath.getAbsolutePath()
-        };
-        int retcode = runner.run(args, logger);
-        assertEquals(0, retcode);
-        assertEquals(1, device.getApps().size());
-        assertInstalled("com.example.simpleapp", file);
-
-        if (device.getApi() < 24) {
-            assertMetrics(
-                    runner.getMetrics(),
-                    "DELTAINSTALL:API_NOT_SUPPORTED",
-                    "INSTALL:OK",
-                    "DDMLIB_UPLOAD",
-                    "DDMLIB_INSTALL");
-        } else {
-            assertMetrics(
-                    runner.getMetrics(),
-                    "DELTAINSTALL:DUMP_UNKNOWN_PACKAGE",
-                    "INSTALL:OK",
-                    "DDMLIB_UPLOAD",
-                    "DDMLIB_INSTALL");
-        }
-
-        file = TestUtils.getWorkspaceFile(BASE + "apks/simple+code.apk");
-        args =
-                new String[] {
-                    "codeswap",
-                    "com.example.simpleapp",
-                    file.getAbsolutePath(),
-                    "--installers-path=" + installersPath.getAbsolutePath()
-                };
-
-        // We create a empty database. This simulate an installed APK not found in the database.
-        db = new SqlApkFileDatabase(File.createTempFile("test_db_empty", ".bin"), null);
-        device.getShell().clearHistory();
-        runner = new DeployerRunner(db, service);
-        retcode = runner.run(args, logger);
-        if (device.supportsJvmti()) {
-            assertEquals(DeployerException.Error.REMOTE_APK_NOT_FOUND_IN_DB.ordinal(), retcode);
-        } else {
-            assertEquals(DeployerException.Error.CANNOT_SWAP_BEFORE_API_26.ordinal(), retcode);
-        }
-        if (device.getApi() < 26) {
-            assertTrue(runner.getMetrics().isEmpty());
-            assertHistory(device, "getprop");
-        } else {
-            assertMetrics(runner.getMetrics(), "DELTAPREINSTALL_WRITE");
-            assertHistory(
-                    device,
-                    "getprop",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION dump com.example.simpleapp",
-                    "/system/bin/run-as com.example.simpleapp id -u",
-                    "id -u",
-                    "/system/bin/cmd package path com.example.simpleapp",
-                    "/data/local/tmp/.studio/bin/installer -version=$VERSION deltapreinstall",
-                    "/system/bin/cmd package install-create -t -r --dont-kill",
-                    "cmd package install-write -S ${size:com.example.simpleapp} 2 base.apk");
-        }
-    }
-
-    private class InstallerCommand extends ShellCommand {
         @Override
-        public int execute(
-                ShellContext context, String[] args, InputStream stdin, PrintStream stdout)
-                throws IOException {
-            Arguments arguments = new Arguments(args);
-            String version = arguments.nextOption();
-            // We assume the version is fine
-            String action = arguments.nextArgument();
-            Deploy.InstallerResponse.Builder builder = Deploy.InstallerResponse.newBuilder();
-            switch (action) {
-                case "dump":
-                    {
-                        String pkg = arguments.nextArgument();
-                        Deploy.DumpResponse.Builder dump = Deploy.DumpResponse.newBuilder();
-                        dump.setStatus(Deploy.DumpResponse.Status.OK);
-                        byte[] block =
-                                Files.readAllBytes(
-                                        TestUtils.getWorkspaceFile(
-                                                        BASE + "/signed_app/base.apk.remoteblock")
-                                                .toPath());
-                        byte[] cd =
-                                Files.readAllBytes(
-                                        TestUtils.getWorkspaceFile(
-                                                        BASE + "/signed_app/base.apk.remotecd")
-                                                .toPath());
-
-                        Deploy.PackageDump packageDump =
-                                Deploy.PackageDump.newBuilder()
-                                        .setName(pkg)
-                                        .addProcesses(42)
-                                        .addApks(
-                                                Deploy.ApkDump.newBuilder()
-                                                        .setName("base.apk")
-                                                        .setCd(ByteString.copyFrom(cd))
-                                                        .setSignature(ByteString.copyFrom(block))
-                                                        .build())
-                                        .build();
-                        dump.addPackages(packageDump);
-                        builder.setDumpResponse(dump);
-                        break;
-                    }
-                case "deltapreinstall":
-                    {
-                        byte[] bytes = new byte[4];
-                        ByteStreams.readFully(stdin, bytes);
-                        int size = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-                        bytes = new byte[size];
-                        ByteStreams.readFully(stdin, bytes);
-                        CodedInputStream cis = CodedInputStream.newInstance(bytes);
-                        Deploy.InstallInfo info = Deploy.InstallInfo.parser().parseFrom(cis);
-
-                        Deploy.DeltaPreinstallResponse.Builder preinstall =
-                                Deploy.DeltaPreinstallResponse.newBuilder();
-                        preinstall.setStatus(Deploy.DeltaPreinstallResponse.Status.OK);
-                        preinstall.setSessionId("1234");
-                        builder.setDeltapreinstallResponse(preinstall);
-
-                        break;
-                    }
-                case "swap":
-                    {
-                        byte[] bytes = new byte[4];
-                        ByteStreams.readFully(stdin, bytes);
-                        int size = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).getInt();
-                        bytes = new byte[size];
-                        ByteStreams.readFully(stdin, bytes);
-                        CodedInputStream cis = CodedInputStream.newInstance(bytes);
-                        Deploy.SwapRequest request = Deploy.SwapRequest.parser().parseFrom(cis);
-
-                        Deploy.SwapResponse.Builder swap = Deploy.SwapResponse.newBuilder();
-                        swap.setStatus(Deploy.SwapResponse.Status.OK);
-                        builder.setSwapResponse(swap);
-                        break;
-                    }
-            }
-
-            Deploy.InstallerResponse response = builder.build();
-            int size = response.getSerializedSize();
-            byte[] bytes = new byte[Integer.BYTES + size];
-            ByteBuffer sizeWritter = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
-            sizeWritter.putInt(size);
-            CodedOutputStream cos = CodedOutputStream.newInstance(bytes, Integer.BYTES, size);
-            response.writeTo(cos);
-            stdout.write(bytes);
-            return 0;
+        public void error(@Nullable Throwable t, @Nullable String msgFormat, Object... args) {
+            errors.add(String.format(msgFormat, args));
         }
 
         @Override
-        public String getExecutable() {
-            return "/data/local/tmp/.studio/bin/installer";
+        public void warning(@NonNull String msgFormat, Object... args) {
+            warnings.add(String.format(msgFormat, args));
+        }
+
+        @Override
+        public void info(@NonNull String msgFormat, Object... args) {
+            infos.add(String.format(msgFormat, args));
+        }
+
+        @Override
+        public void verbose(@NonNull String msgFormat, Object... args) {
+            verboses.add(String.format(msgFormat, args));
         }
     }
 }
