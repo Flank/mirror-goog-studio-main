@@ -216,7 +216,7 @@ public class ZipArchive implements Closeable {
         Location loc;
         int paddingForAlignment;
         if (source.isAligned()) {
-            loc = freestore.alloc(bytesNeeded, headerSize);
+            loc = freestore.alloc(bytesNeeded, headerSize, source.getAlignment());
             paddingForAlignment = (int) (loc.size() - bytesNeeded);
         } else {
             loc = freestore.ualloc(bytesNeeded);

@@ -20,7 +20,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestFreeStore {
+public class TestFreeStore extends TestBase {
 
     private static class AllocRequest {
         long size;
@@ -195,50 +195,76 @@ public class TestFreeStore {
 
     @Test
     public void testAlignment() {
-        Location allocated;
-        AllocRequest allocationRequest = new AllocRequest();
+        for (long alignment : ALIGNMENTS) {
+            testAlignment(alignment);
+        }
+    }
 
-        for (int offset = 0; offset < FreeStore.ALIGNMENT; offset++) {
+    private void testAlignment(long alignment) {
+        for (int offset = 0; offset < alignment; offset++) {
+            Location allocated;
+            AllocRequest allocationRequest = new AllocRequest();
             allocationRequest.size = 40;
             allocationRequest.offsetToPayload = offset;
             FreeStore store = new FreeStore(new HashMap<>());
-            allocated = store.alloc(allocationRequest.size, allocationRequest.offsetToPayload);
+            allocated =
+                    store.alloc(
+                            allocationRequest.size, allocationRequest.offsetToPayload, alignment);
             long padding = allocated.size() - allocationRequest.size;
             Assert.assertEquals(
-                    "Aligned alloc size=" + allocationRequest.size + " offset=" + offset,
+                    "Aligned alloc size="
+                            + allocationRequest.size
+                            + " offset="
+                            + offset
+                            + ", alignement="
+                            + alignment,
                     0,
-                    (allocated.first + padding + allocationRequest.offsetToPayload)
-                            % FreeStore.ALIGNMENT);
+                    (allocated.first + padding + allocationRequest.offsetToPayload) % alignment);
         }
     }
 
     @Test
     public void testMultipleAlignment() {
+        for (long alignment : ALIGNMENTS) {
+            testMultipleAlignment(alignment);
+        }
+    }
+
+    private void testMultipleAlignment(long alignment) {
         Location allocated;
         AllocRequest allocationRequest = new AllocRequest();
 
         FreeStore store = new FreeStore(new HashMap<>());
-        for (int offset = 0; offset < FreeStore.ALIGNMENT; offset++) {
+        for (int offset = 0; offset < alignment; offset++) {
             allocationRequest.size = 40;
             allocationRequest.offsetToPayload = offset;
-            allocated = store.alloc(allocationRequest.size, allocationRequest.offsetToPayload);
+            allocated =
+                    store.alloc(
+                            allocationRequest.size, allocationRequest.offsetToPayload, alignment);
             long padding = allocated.size() - allocationRequest.size;
             Assert.assertEquals(
-                    "Aligned alloc size=" + allocationRequest.size + " offset=" + offset,
+                    "Aligned alloc size="
+                            + allocationRequest.size
+                            + " offset="
+                            + offset
+                            + ",alignment="
+                            + alignment,
                     0,
-                    (allocated.first + padding + allocationRequest.offsetToPayload)
-                            % FreeStore.ALIGNMENT);
+                    (allocated.first + padding + allocationRequest.offsetToPayload) % alignment);
         }
     }
 
     @Test
     public void testPadding() {
-        for (long address = 0; address < FreeStore.ALIGNMENT; address++) {
-            for (long offset = 0; offset < FreeStore.ALIGNMENT; offset++) {
-                long padding = FreeStore.padFor(address, offset);
-                long alignment = (address + offset + padding) % FreeStore.ALIGNMENT;
+        int alignment = 4;
+        for (long address = 0; address < alignment; address++) {
+            for (long offset = 0; offset < alignment; offset++) {
+                long padding = FreeStore.padFor(address, offset, alignment);
                 Assert.assertEquals(
-                        "Padding with address=" + address + ", offset=" + offset, 0L, alignment, 0);
+                        "Padding with address=" + address + ", offset=" + offset,
+                        0L,
+                        (address + offset + padding) % alignment,
+                        0);
             }
         }
     }

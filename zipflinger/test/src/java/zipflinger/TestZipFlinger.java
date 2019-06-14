@@ -205,95 +205,55 @@ public class TestZipFlinger extends TestBase {
 
     @Test
     public void testFileSourceAlignment() throws IOException {
-        Path src = getPath("1-2-3files.zip");
+        for (long aligment : ALIGNMENTS) {
+            testFileSourceAlignment(aligment);
+        }
+    }
+
+    private String makeString(char character, int size) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < size; i++) {
+            sb.append(character);
+        }
+        return sb.toString();
+    }
+
+    private void testFileSourceAlignment(long alignment) throws IOException {
         Path dst = getPath("testFileSourceAlignment.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
-
-        FileSource fileSource = new FileSource(getFile("file4.txt"), "f", false);
-        fileSource.align();
-        zipArchive.add(fileSource);
-        zipArchive.close();
-
-        Map<String, Entry> entries = verifyArchive(dst.toFile());
-        Entry entry = entries.get("f");
-
-        Assert.assertEquals(
-                "FileSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
-    }
-
-    @Test
-    public void testFileSourceAlignment2() throws IOException {
-        Path src = getPath("1-2-3files.zip");
-        Path dst = getPath("testFileSourceAlignment2.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
-
-        FileSource fileSource = new FileSource(getFile("file4.txt"), "ff", false);
-        fileSource.align();
-        zipArchive.add(fileSource);
-        zipArchive.close();
+        try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
+            for (int length = 0; length < alignment; length++) {
+                String name = makeString('f', length);
+                FileSource fileSource = new FileSource(getFile("file4.txt"), name, false);
+                fileSource.align(alignment);
+                zipArchive.add(fileSource);
+            }
+        }
 
         Map<String, Entry> entries = verifyArchive(dst.toFile());
-        Entry entry = entries.get("ff");
 
-        Assert.assertEquals(
-                "FileSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
-    }
-
-    @Test
-    public void testFileSourceAlignment3() throws IOException {
-        Path src = getPath("1-2-3files.zip");
-        Path dst = getPath("testFileSourceAlignment3.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
-
-        FileSource fileSource = new FileSource(getFile("file4.txt"), "fff", false);
-        fileSource.align();
-        zipArchive.add(fileSource);
-        zipArchive.close();
-
-        Map<String, Entry> entries = verifyArchive(dst.toFile());
-        Entry entry = entries.get("fff");
-
-        Assert.assertEquals(
-                "FileSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
-    }
-
-    @Test
-    public void testFileSourceAlignment4() throws IOException {
-        Path src = getPath("1-2-3files.zip");
-        Path dst = getPath("testFileSourceAlignment4.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
-
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
-
-        FileSource fileSource = new FileSource(getFile("file4.txt"), "ffff", false);
-        fileSource.align();
-        zipArchive.add(fileSource);
-        zipArchive.close();
-
-        Map<String, Entry> entries = verifyArchive(dst.toFile());
-        Entry entry = entries.get("ffff");
-
-        Assert.assertEquals(
-                "FileSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
+        for (Entry entry : entries.values()) {
+            String name = entry.getName();
+            String message = "FileSource align on " + alignment + "namesize=" + name.length();
+            Assert.assertEquals(message, 0, entry.getPayloadLocation().first % alignment);
+        }
+        Files.delete(dst);
     }
 
     @Test
     public void testBytesSourceAlignment() throws IOException {
-        Path src = getPath("1-2-3files.zip");
+        for (long aligment : ALIGNMENTS) {
+            testBytesSourceAlignment(aligment);
+        }
+    }
+
+    public void testBytesSourceAlignment(long alignment) throws IOException {
         Path dst = getPath("testBytesSourceAlignment.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
         byte[] bytes = Files.readAllBytes(getPath("file4.txt"));
         BytesSource fileSource = new BytesSource(bytes, "file4.txt", false);
-        fileSource.align();
+        fileSource.align(alignment);
         zipArchive.add(fileSource);
         zipArchive.close();
 
@@ -301,45 +261,53 @@ public class TestZipFlinger extends TestBase {
         Entry entry = entries.get("file4.txt");
 
         Assert.assertEquals(
-                "BytesSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
+                "BytesSource alignment", 0, entry.getPayloadLocation().first % alignment);
+        Files.delete(dst);
     }
 
     @Test
     public void testZipSourceAlignment() throws IOException {
-        Path src = getPath("1-2-3files.zip");
+        for (long aligment : ALIGNMENTS) {
+            testZipSourceAlignment(aligment);
+        }
+    }
+
+    public void testZipSourceAlignment(long alignment) throws IOException {
         Path dst = getPath("testZipSourceAlignment.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipSource source = new ZipSource(getFile("4-5files.zip"));
-        source.select("file4.txt", "file4.txt").align();
-        source.select("file5.txt", "file5.txt").align();
+        source.select("file4.txt", "file4.txt").align(alignment);
+        source.select("file5.txt", "file5.txt").align(alignment);
 
-        ZipArchive zipArchive = new ZipArchive(dst.toFile());
-        zipArchive.add(source);
-        zipArchive.close();
+        try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
+            zipArchive.add(source);
+        }
 
         Map<String, Entry> entries = verifyArchive(dst.toFile());
 
         Entry entry = entries.get("file4.txt");
-        Assert.assertEquals(
-                "ZipSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
+        Assert.assertEquals("ZipSource alignment", 0, entry.getPayloadLocation().first % alignment);
 
         entry = entries.get("file5.txt");
-        Assert.assertEquals(
-                "ZipSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
+        Assert.assertEquals("ZipSource alignment", 0, entry.getPayloadLocation().first % alignment);
+        Files.delete(dst);
     }
 
     @Test
     public void testInputSourceAlignment() throws IOException {
-        Path src = getPath("1-2-3files.zip");
+        for (long aligment : ALIGNMENTS) {
+            testInputSourceAlignment(aligment);
+        }
+    }
+
+    public void testInputSourceAlignment(long alignment) throws IOException {
         Path dst = getPath("testInputSourceAlignment.zip");
-        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
         InputStream stream = new FileInputStream(getFile("file4.txt"));
         InputStreamSource fileSource = new InputStreamSource(stream, "file4.txt", false);
-        fileSource.align();
+        fileSource.align(alignment);
         zipArchive.add(fileSource);
         zipArchive.close();
         stream.close();
@@ -348,7 +316,8 @@ public class TestZipFlinger extends TestBase {
         Entry entry = entries.get("file4.txt");
 
         Assert.assertEquals(
-                "InputSource alignment", 0, entry.getPayloadLocation().first % FreeStore.ALIGNMENT);
+                "InputSource alignment", 0, entry.getPayloadLocation().first % alignment);
+        Files.delete(dst);
     }
 
     @Test

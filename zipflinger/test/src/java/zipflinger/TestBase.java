@@ -30,6 +30,7 @@ import java.util.zip.ZipInputStream;
 import org.junit.Assert;
 
 public class TestBase {
+    protected static long[] ALIGNMENTS = {FreeStore.DEFAULT_ALIGNMENT, FreeStore.PAGE_ALIGNMENT};
 
     protected static final int BENCHMARK_SAMPLE_SIZE = 3;
 

@@ -25,7 +25,8 @@ import java.util.Map;
 // memory address space.
 class FreeStore {
 
-    static final long ALIGNMENT = 4;
+    static final long DEFAULT_ALIGNMENT = 4;
+    static final long PAGE_ALIGNMENT = 4096;
 
     private Zone head;
 
@@ -118,10 +119,10 @@ class FreeStore {
     // This method may return more than requested. If it does the extra space is padding that must
     // be consumed by an "extra" field.
     @NonNull
-    Location alloc(long requestedSize, long payloadOffset) {
+    Location alloc(long requestedSize, long payloadOffset, long alignment) {
         Zone cursor = head.next;
         while (cursor != null) {
-            long padding = padFor(cursor.loc.first, payloadOffset);
+            long padding = padFor(cursor.loc.first, payloadOffset, alignment);
             // We are searching for a block big enough to contain:
             // - The requested size
             // - Pre-padding space for extra field ALIGNMENT
@@ -207,17 +208,16 @@ class FreeStore {
 
     // How much padding is needed if this address+offset is not aligned (a.k.a: An extra field will
     // have to be created in order to fill this space).
-    static long padFor(long address, long offset) {
+    static long padFor(long address, long offset, long alignment) {
         long pointer = address + offset;
-        long alignment = pointer % ALIGNMENT;
-        if (alignment == 0) {
+        if ((pointer % alignment) == 0) {
             return 0;
         } else {
             long fixedPadding =
                     CentralDirectoryRecord.EXTRA_SIZE_FIELD_SIZE
                             + CentralDirectoryRecord.EXTRA_ID_FIELD_SIZE;
-            long newAlignment = (pointer + fixedPadding) % ALIGNMENT;
-            return fixedPadding + ALIGNMENT - newAlignment;
+            long newAlignment = (pointer + fixedPadding) % alignment;
+            return fixedPadding + alignment - newAlignment;
         }
     }
 }
