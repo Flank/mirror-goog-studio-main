@@ -33,13 +33,16 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.WorkLimiter;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
@@ -56,13 +59,20 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import proguard.ClassPath;
+import proguard.ClassPathEntry;
+import proguard.ClassSpecification;
+import proguard.Configuration;
+import proguard.ConfigurationParser;
+import proguard.KeepClassSpecification;
 import proguard.ParseException;
+import proguard.ProGuard;
+import proguard.classfile.util.ClassUtil;
+import proguard.util.ListUtil;
 
-/**
- * ProGuard support as a transform
- */
-public class ProGuardTransform extends BaseProguardAction {
+/** ProGuard support as a transform */
+public class ProGuardTransform extends ProguardConfigurable {
 
+    protected static final List<String> JAR_FILTER = ImmutableList.of("!META-INF/MANIFEST.MF");
     /** This constant replaces that in now-deleted SimpleWorkQueue */
     private static final int PROGUARD_CONCURRENCY_LIMIT = 4;
 
@@ -71,16 +81,32 @@ public class ProGuardTransform extends BaseProguardAction {
     private static WorkLimiter proguardWorkLimiter;
 
     private static final Logger LOG = Logging.getLogger(ProGuardTransform.class);
+    protected final Configuration configuration = new Configuration();
 
     private final VariantScope variantScope;
+    // keep hold of the file that are added as inputs, to avoid duplicates. This is mainly because
+    // of the handling of local jars for library projects where they show up both in the LOCAL_DEPS
+    // and the EXTERNAL stream
+    ListMultimap<File, List<String>> fileToFilter = ArrayListMultimap.create();
     private Property<RegularFile> printMapping;
 
     private File testedMappingFile = null;
     private FileCollection testMappingConfiguration = null;
 
     public ProGuardTransform(@NonNull VariantScope variantScope) {
-        super(variantScope);
+        super(
+                variantScope.getGlobalScope().getProject().files(),
+                variantScope.getVariantData().getType(),
+                variantScope.consumesFeatureJars());
+        configuration.useMixedCaseClassNames = false;
+        configuration.programJars = new ClassPath();
+        configuration.libraryJars = new ClassPath();
+
         this.variantScope = variantScope;
+    }
+
+    private static String fileDescription(String fileName) {
+        return "file '" + fileName + "'";
     }
 
     @Override
@@ -94,10 +120,6 @@ public class ProGuardTransform extends BaseProguardAction {
             proguardWorkLimiter = new WorkLimiter(PROGUARD_CONCURRENCY_LIMIT);
         }
         return proguardWorkLimiter;
-    }
-
-    public void applyTestedMapping(@Nullable File testedMappingFile) {
-        this.testedMappingFile = testedMappingFile;
     }
 
     public void applyTestedMapping(@Nullable FileCollection testMappingConfiguration) {
@@ -178,8 +200,10 @@ public class ProGuardTransform extends BaseProguardAction {
                                         invocation.getReferencedInputs(),
                                         invocation.getOutputProvider());
 
-                                // make sure the mapping file is always created. Since the file is always published as
-                                // an artifact, it's important that it is always present even if empty so that it
+                                // make sure the mapping file is always created. Since the file is
+                                // always published as
+                                // an artifact, it's important that it is always present even if
+                                // empty so that it
                                 // can be published to a repo.
                                 if (!printMappingFile.isFile()) {
                                     Files.asCharSink(printMappingFile, Charsets.UTF_8).write("");
@@ -263,8 +287,7 @@ public class ProGuardTransform extends BaseProguardAction {
     }
 
     private void addInputsToConfiguration(
-            @NonNull Collection<TransformInput> inputs,
-            boolean referencedOnly) {
+            @NonNull Collection<TransformInput> inputs, boolean referencedOnly) {
         ClassPath classPath;
         List<String> baseFilter;
 
@@ -315,10 +338,127 @@ public class ProGuardTransform extends BaseProguardAction {
     private File computeMappingFile() {
         if (testedMappingFile != null && testedMappingFile.isFile()) {
             return testedMappingFile;
-        } else if (testMappingConfiguration != null && testMappingConfiguration.getSingleFile().isFile()) {
+        } else if (testMappingConfiguration != null
+                && testMappingConfiguration.getSingleFile().isFile()) {
             return testMappingConfiguration.getSingleFile();
         }
 
         return null;
+    }
+
+    @Override
+    public void keep(@NonNull String keep) {
+        if (configuration.keep == null) {
+            configuration.keep = Lists.newArrayList();
+        }
+
+        ClassSpecification classSpecification;
+        try {
+            ConfigurationParser parser = new ConfigurationParser(new String[] {keep}, null);
+            classSpecification = parser.parseClassSpecificationArguments();
+        } catch (IOException e) {
+            // No IO happens when parsing in-memory strings.
+            throw new AssertionError(e);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        //noinspection unchecked
+        configuration.keep.add(
+                new KeepClassSpecification(
+                        true, false, false, false, false, false, false, null, classSpecification));
+    }
+
+    public void runProguard() throws IOException {
+        new ProGuard(configuration).execute();
+        fileToFilter.clear();
+    }
+
+    @Override
+    public void keepattributes() {
+        configuration.keepAttributes = Lists.newArrayListWithExpectedSize(0);
+    }
+
+    @Override
+    public void dontwarn(@NonNull String dontwarn) {
+        if (configuration.warn == null) {
+            configuration.warn = Lists.newArrayList();
+        }
+
+        dontwarn = ClassUtil.internalClassName(dontwarn);
+
+        //noinspection unchecked
+        configuration.warn.addAll(ListUtil.commaSeparatedList(dontwarn));
+    }
+
+    @Override
+    public void setActions(@NonNull PostprocessingFeatures actions) {
+        configuration.obfuscate = actions.isObfuscate();
+        configuration.optimize = actions.isOptimize();
+        configuration.shrink = actions.isRemoveUnusedCode();
+    }
+
+    public void forceprocessing() {
+        configuration.lastModified = Long.MAX_VALUE;
+    }
+
+    public void applyConfigurationFile(@NonNull File file) throws IOException, ParseException {
+        // file might not actually exist if it comes from a sub-module library where publication
+        // happen whether the file is there or not.
+        if (!file.isFile()) {
+            return;
+        }
+
+        applyConfigurationText(
+                Files.asCharSource(file, Charsets.UTF_8).read(),
+                fileDescription(file.getPath()),
+                file.getParentFile());
+    }
+
+    private void applyConfigurationText(@NonNull String lines, String description, File baseDir)
+            throws IOException, ParseException {
+        ConfigurationParser parser =
+                new ConfigurationParser(lines, description, baseDir, System.getProperties());
+        try {
+            parser.parse(configuration);
+        } finally {
+            parser.close();
+        }
+    }
+
+    protected void applyConfigurationText(@NonNull String lines, String fileName)
+            throws IOException, ParseException {
+        applyConfigurationText(lines, fileDescription(fileName), null);
+    }
+
+    protected void applyMapping(@NonNull File testedMappingFile) {
+        configuration.applyMapping = testedMappingFile;
+    }
+
+    protected void outJar(@NonNull File file) {
+        ClassPathEntry classPathEntry = new ClassPathEntry(file, true /*output*/);
+        configuration.programJars.add(classPathEntry);
+    }
+
+    protected void libraryJar(@NonNull File jarFile) {
+        inputJar(configuration.libraryJars, jarFile, null);
+    }
+
+    protected void inputJar(
+            @NonNull ClassPath classPath, @NonNull File file, @Nullable List<String> filter) {
+
+        if (!file.exists() || fileToFilter.containsEntry(file, filter)) {
+            return;
+        }
+
+        fileToFilter.put(file, filter);
+
+        ClassPathEntry classPathEntry = new ClassPathEntry(file, false /*output*/);
+
+        if (filter != null) {
+            classPathEntry.setFilter(filter);
+        }
+
+        classPath.add(classPathEntry);
     }
 }
