@@ -52,7 +52,9 @@ class ExistingBuildElements {
          */
         @JvmStatic
         fun from(artifactType: ArtifactType, directoryProvider: Provider<Directory>): BuildElements {
-            return from(artifactType, directoryProvider.get().asFile)
+            return if (directoryProvider.isPresent) {
+                from(artifactType, directoryProvider.get().asFile)
+            } else BuildElements(listOf())
         }
 
         /**

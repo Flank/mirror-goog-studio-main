@@ -99,8 +99,8 @@ class BuildArtifactsHolderTest(
     @Test
     fun earlyFinalOutput() {
         val finalVersion = holder.getFinalProduct<Directory>(MERGED_MANIFESTS)
-        // no-one appends or replaces, we should be empty files if resolved.
-        assertThat(finalVersion.isPresent).isTrue()
+        // no-one appends or replaces, it's not provided.
+        assertThat(finalVersion.isPresent).isFalse()
     }
 
     private val initializedTasks = mutableMapOf<String, TaskWithOutput<*>>()

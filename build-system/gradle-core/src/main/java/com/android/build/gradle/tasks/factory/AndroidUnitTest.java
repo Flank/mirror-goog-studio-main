@@ -198,11 +198,11 @@ public class AndroidUnitTest extends Test implements VariantAwareTask {
             BuildArtifactsHolder testedArtifacts = testedScope.getArtifacts();
             if (testedScope.getType().isAar()) {
                 collection.from(
-                        testedArtifacts.getFinalProduct(
+                        testedArtifacts.getFinalProductAsFileCollection(
                                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
             } else if (testedScope.getType().isApk()) {
                 collection.from(
-                        testedArtifacts.getFinalProduct(
+                        testedArtifacts.getFinalProductAsFileCollection(
                                 InternalArtifactType
                                         .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
             }

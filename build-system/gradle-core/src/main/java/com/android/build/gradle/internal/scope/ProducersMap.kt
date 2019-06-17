@@ -43,6 +43,11 @@ class ProducersMap<T: FileSystemLocation>(
 
     private val producersMap = ConcurrentHashMap<ArtifactType, Producers<T>>()
 
+    // unset properties that represent a non satisfied file or directory dependency. This is ok
+    // when the dependency is Optional.
+    private val emptyFileProperty = objectFactory.fileProperty().also { it.finalizeValue() }
+    private val emptyDirectoryProperty = objectFactory.directoryProperty().also { it.finalizeValue() }
+
     /**
      * Returns true if there is at least one [Producer] registered for the passed [ArtifactType]
      *
@@ -78,8 +83,8 @@ class ProducersMap<T: FileSystemLocation>(
                 identifier,
                 outputLocationResolver,
                 when (artifactType.kind()) {
-                    ArtifactType.Kind.DIRECTORY -> this.buildDirectory.dir("__EMPTY_DIR__$artifactType")
-                    ArtifactType.Kind.FILE -> this.buildDirectory.file("__EMPTY_FILE__")
+                    ArtifactType.Kind.DIRECTORY -> emptyDirectoryProperty
+                    ArtifactType.Kind.FILE -> emptyFileProperty
                 } as Provider<T>,
                 objectFactory.listProperty(
                     when (artifactType.kind()) {

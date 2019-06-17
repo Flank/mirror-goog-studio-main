@@ -131,6 +131,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.BuildIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.provider.Provider;
 import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /** Builder for the custom Android model. */
@@ -753,15 +755,13 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .get()
                             .getAsFile());
         }
+
         if (testedArtifacts.hasFinalProduct(
                 InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)) {
-            additionalTestClasses.add(
-                    testedArtifacts
-                            .getFinalProduct(
-                                    InternalArtifactType
-                                            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
-                            .get()
-                            .getAsFile());
+            Provider<FileSystemLocation> rClassJar =
+                    testedArtifacts.getFinalProduct(
+                            InternalArtifactType.COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
+            additionalTestClasses.add(rClassJar.get().getAsFile());
         }
 
         // No files are possible if the SDK was not configured properly.
@@ -1090,6 +1090,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                                                     // specified for test classes. This supplier is
                                                     // going away in beta3, so this is obsolete in
                                                     // any case.
+                                                    .get()
                                                     .iterator()
                                                     .next()));
                         };
@@ -1213,7 +1214,8 @@ public class ModelBuilder<Extension extends BaseExtension>
                             .get()
                             .getAsFile());
         }
-        if (addBindingSources) {
+        if (addBindingSources
+                && scope.getArtifacts().hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)) {
             folders.add(
                     scope.getArtifacts()
                             .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)

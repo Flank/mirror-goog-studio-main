@@ -128,7 +128,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 task.from(artifacts.getFinalProduct<RegularFile>(
                     InternalArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR))
             }
-            task.from(artifacts.getFinalProduct<RegularFile>(InternalArtifactType.RES_STATIC_LIBRARY))
+            task.from(artifacts.getFinalProductAsFileCollection(InternalArtifactType.RES_STATIC_LIBRARY))
             task.from(
                 artifacts.getFinalProduct<Directory>(LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI)

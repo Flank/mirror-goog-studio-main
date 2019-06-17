@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT;
 
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
@@ -584,7 +585,9 @@ public abstract class BaseVariantData {
                         scope.getArtifacts()
                                 .getFinalProduct(
                                         InternalArtifactType.NOT_NAMESPACED_R_CLASS_SOURCES);
-                sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
+                if (rClassSource.isPresent()) {
+                    sourceSets.add(project.fileTree(rClassSource).builtBy(rClassSource));
+                }
             }
 
             // for the other, there's no duplicate so no issue.
@@ -612,11 +615,12 @@ public abstract class BaseVariantData {
                                             scope.getTaskContainer()
                                                     .getDataBindingExportBuildInfoTask()));
                 }
-                Provider<FileSystemLocation> baseClassSource =
-                        scope.getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType.DATA_BINDING_BASE_CLASS_SOURCE_OUT);
-                sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource));
+                if (scope.getArtifacts().hasFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT)) {
+                    Provider<FileSystemLocation> baseClassSource =
+                            scope.getArtifacts()
+                                    .getFinalProduct(DATA_BINDING_BASE_CLASS_SOURCE_OUT);
+                    sourceSets.add(project.fileTree(baseClassSource).builtBy(baseClassSource));
+                }
             }
 
             if (!variantConfiguration.getRenderscriptNdkModeEnabled()

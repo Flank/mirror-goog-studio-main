@@ -42,7 +42,7 @@ class DexSplitterTransform(
         private val featureJars: FileCollection,
         private val baseJars: Provider<RegularFile>,
         private val mappingFileSrc: Provider<RegularFile>?,
-        private val mainDexList: Provider<RegularFile>?
+        private val mainDexList: Provider<RegularFile>
 ) :
         Transform() {
 
@@ -64,7 +64,9 @@ class DexSplitterTransform(
         secondaryFiles.add(SecondaryFile.nonIncremental(featureJars))
         secondaryFiles.add(SecondaryFile.nonIncremental(baseJars.get().asFile))
         mappingFileSrc?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
-        mainDexList?.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
+        if (mainDexList.isPresent) {
+            mainDexList.let { secondaryFiles.add(SecondaryFile.nonIncremental(it.get().asFile)) }
+        }
         return secondaryFiles
     }
 

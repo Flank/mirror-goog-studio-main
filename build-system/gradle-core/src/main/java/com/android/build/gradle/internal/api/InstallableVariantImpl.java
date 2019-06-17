@@ -31,6 +31,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 
 /**
@@ -115,11 +116,11 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
      * <p>Provides a facility to retrieve the final version of an artifact type.
      *
      * @param artifactType requested artifact type.
-     * @return the {@see FileCollection} for this artifact type, possibly empty.
+     * @return a {@see Provider} of a {@see FileCollection} for this artifact type, possibly empty.
      */
     @NonNull
     @Incubating
-    public FileCollection getFinalArtifact(@NonNull ArtifactType artifactType) {
+    public Provider<FileCollection> getFinalArtifact(@NonNull ArtifactType artifactType) {
         BuildArtifactsHolder artifacts = getVariantData().getScope().getArtifacts();
         return artifacts.getFinalProductAsFileCollection(artifactType);
     }

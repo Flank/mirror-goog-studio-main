@@ -42,6 +42,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
+    @get:Optional
     abstract val validatedSigningOutput: DirectoryProperty
 
     @get:Nested

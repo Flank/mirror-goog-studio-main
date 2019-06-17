@@ -72,7 +72,7 @@ class CompileRClassTaskCreationAction(private val variantScope: VariantScope) :
         task.extensions.add(PROPERTY_VARIANT_NAME_KEY, variantScope.fullVariantName)
 
         task.classpath = task.project.files()
-        task.source(variantScope.artifacts.getFinalProduct<Directory>(RUNTIME_R_CLASS_SOURCES))
+        task.source(variantScope.artifacts.getFinalProductAsFileCollection(RUNTIME_R_CLASS_SOURCES))
         task.destinationDir = output.get().asFile
 
         // manually declare our output directory as a Task output since it's not annotated as

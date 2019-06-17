@@ -59,7 +59,7 @@ public interface VariantScope extends TransformVariantScope {
     PublishingSpecs.VariantSpec getPublishingSpec();
 
     void publishIntermediateArtifact(
-            @NonNull FileCollection artifact,
+            @NonNull Provider<FileCollection> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<AndroidArtifacts.PublishedConfigType> configTypes);
 

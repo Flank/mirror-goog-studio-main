@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.internal.dsl.AaptOptions
 import com.android.build.gradle.internal.feature.BundleAllClasses
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
 import com.android.build.gradle.internal.packaging.JarCreatorType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.GlobalScope
@@ -55,7 +56,7 @@ class BundleAllClassesTest {
     @Mock private lateinit var extension: BaseExtension
     @Mock private lateinit var aaptOptions: AaptOptions
     @Mock private lateinit var taskContainer: MutableTaskContainer
-    @Mock private lateinit var rClasses: Provider<RegularFile>
+    @Mock private lateinit var rClasses: FileCollection
 
     @get:Rule
     val testFolder = TemporaryFolder()
@@ -91,8 +92,9 @@ class BundleAllClassesTest {
         task = project.tasks.create("test", BundleAllClasses::class.java)
 
         Mockito.`when`(globalScope.project).thenReturn(project)
-        Mockito.`when`(artifacts.getFinalProduct<RegularFile>(InternalArtifactType
-            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(rClasses)
+        Mockito.`when`(artifacts.getFinalProductAsFileCollection(InternalArtifactType
+            .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)).thenReturn(
+            FakeGradleProvider(rClasses))
 
         Mockito.`when`(scope.jarCreatorType).thenReturn(JarCreatorType.JAR_FLINGER)
 

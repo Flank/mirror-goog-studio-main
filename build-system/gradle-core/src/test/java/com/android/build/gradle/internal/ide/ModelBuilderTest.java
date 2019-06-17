@@ -366,7 +366,8 @@ public class ModelBuilderTest {
 
         when(testVariantScope.getArtifacts()).thenReturn(artifacts);
         FileCollection testBuildableArtifact = Mockito.mock(FileCollection.class);
-        when(artifacts.getFinalProductAsFileCollection(any())).thenReturn(testBuildableArtifact);
+        when(artifacts.getFinalProductAsFileCollection(any()))
+                .thenReturn(new FakeGradleProvider(testBuildableArtifact));
         when(testBuildableArtifact.iterator())
                 .thenReturn(ImmutableSet.of(temporaryFolder.getRoot()).iterator());
 

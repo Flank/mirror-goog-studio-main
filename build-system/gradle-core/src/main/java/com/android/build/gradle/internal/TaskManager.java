@@ -171,7 +171,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.JavaCompileCreationAction;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -184,6 +183,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
+import com.android.build.gradle.tasks.JavaCompileCreationAction;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.LintFixTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
@@ -256,6 +256,7 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -669,7 +670,8 @@ public abstract class TaskManager {
                             .setFileCollection(
                                     testedVariantScope
                                             .getArtifacts()
-                                            .getFinalProductAsFileCollection(testedOutputType))
+                                            .getFinalProductAsFileCollection(testedOutputType)
+                                            .get())
                             .build());
 
             transformManager.addStream(
@@ -1039,9 +1041,10 @@ public abstract class TaskManager {
             if (!projectOptions.get(BooleanOption.GENERATE_R_JAVA)) {
                 scope.getArtifacts()
                         .appendToAllClasses(
-                                project.files(
-                                        artifacts.getFinalProduct(
-                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)));
+                                artifacts
+                                        .getFinalProductAsFileCollection(
+                                                COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR)
+                                        .get());
             }
         }
     }
@@ -1309,8 +1312,11 @@ public abstract class TaskManager {
                                     .addContentTypes(DefaultContentType.CLASSES)
                                     .addScope(Scope.EXTERNAL_LIBRARIES)
                                     .setFileCollection(
-                                            artifacts.getFinalProductAsFileCollection(
-                                                    InternalArtifactType.NAMESPACED_CLASSES_JAR))
+                                            artifacts
+                                                    .getFinalProductAsFileCollection(
+                                                            InternalArtifactType
+                                                                    .NAMESPACED_CLASSES_JAR)
+                                                    .get())
                                     .build());
         }
     }
@@ -1545,13 +1551,12 @@ public abstract class TaskManager {
             return;
         }
 
-        FileCollection rClassJar =
-                project.files(
-                        variantScope
-                                .getArtifacts()
-                                .getFinalProduct(
-                                        InternalArtifactType
-                                                .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR));
+        Provider<FileCollection> rClassJar =
+                variantScope
+                        .getArtifacts()
+                        .getFinalProductAsFileCollection(
+                                InternalArtifactType
+                                        .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
 
         variantScope
                 .getTransformManager()
@@ -1559,7 +1564,7 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "compile-and-runtime-light-r-classes")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
                                 .addScope(QualifiedContent.Scope.PROJECT)
-                                .setFileCollection(rClassJar)
+                                .setFileCollection(rClassJar.get())
                                 .build());
     }
 
@@ -2943,22 +2948,27 @@ public abstract class TaskManager {
                     transformTask = createProguardTransform(variantScope, mappingFileCollection);
                     createdShrinker = CodeShrinker.PROGUARD;
                 } else {
+                    RegularFileProperty outputMainList = project.getObjects().fileProperty();
                     transformTask =
                             createR8Transform(
                                     variantScope,
                                     mappingFileCollection,
                                     (transform, taskName) -> {
                                         if (variantScope.getNeedsMainDexListForBundle()) {
-                                            Provider<RegularFile> mainDexListFile =
-                                                    variantScope
-                                                            .getArtifacts()
-                                                            .getFinalProduct(
-                                                                    InternalArtifactType
-                                                                            .MAIN_DEX_LIST_FOR_BUNDLE);
                                             ((R8Transform) transform)
-                                                    .setMainDexListOutput(mainDexListFile);
+                                                    .setMainDexListOutput(outputMainList);
                                         }
                                     });
+                    if (transformTask.isPresent() && variantScope.getNeedsMainDexListForBundle()) {
+                        variantScope
+                                .getArtifacts()
+                                .producesFile(
+                                        InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE,
+                                        BuildArtifactsHolder.OperationType.INITIAL,
+                                        transformTask.get(),
+                                        (task) -> outputMainList,
+                                        "mainDexList.txt");
+                    }
                 }
                 break;
             default:
@@ -3230,12 +3240,8 @@ public abstract class TaskManager {
                         : null;
         Provider<RegularFile> mainDexList =
                 variantScope
-                                .getArtifacts()
-                                .hasFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
-                        ? variantScope
-                                .getArtifacts()
-                                .getFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE)
-                        : null;
+                        .getArtifacts()
+                        .getFinalProduct(InternalArtifactType.MAIN_DEX_LIST_FOR_BUNDLE);
 
         DexSplitterTransform transform =
                 new DexSplitterTransform(featureJars, baseJars, mappingFileSrc, mainDexList);
@@ -3266,9 +3272,7 @@ public abstract class TaskManager {
                     .get()
                     .configure(
                             it -> {
-                                if (mainDexList != null) {
-                                    it.dependsOn(mainDexList);
-                                }
+                                it.dependsOn(mainDexList);
                                 it.dependsOn(baseJars);
                             });
         } else {

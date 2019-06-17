@@ -109,7 +109,12 @@ class DexSplitterTransformTest {
         val r8Dex = getDex(r8OutputProviderDir.toPath())
         assertThat(r8Dex).containsClasses("Lbase/A;", "Lbase/B;", "Lfeature/A;", "Lfeature/B;")
 
-        runDexSplitter(File(r8OutputProviderDir, "main"), listOf(featureClasses), FakeGradleProvider(baseJars))
+        runDexSplitter(
+            File(r8OutputProviderDir, "main"),
+            listOf(featureClasses),
+            FakeGradleProvider(baseJars),
+            FakeGradleProperty(null),
+            FakeGradleProperty(null))
 
         checkDexSplitterOutputs()
     }
@@ -129,7 +134,8 @@ class DexSplitterTransformTest {
             File(r8OutputProviderDir, "main"),
             listOf(featureClasses),
             FakeGradleProvider(baseJars),
-            FakeGradleProperty(mappingFileSrc))
+            FakeGradleProperty(mappingFileSrc),
+            FakeGradleProperty(null))
 
         checkDexSplitterOutputs()
     }
@@ -176,7 +182,7 @@ class DexSplitterTransformTest {
         featureJars: List<File>,
         baseJars: Provider<RegularFile>,
         mappingFileSrc: Provider<RegularFile>? = null,
-        mainDexList: Provider<RegularFile>? = null
+        mainDexList: Provider<RegularFile>
     ) {
         val dexSplitterInput = TransformTestHelper.directoryBuilder(dexDir).build()
         val dexSplitterInvocation =

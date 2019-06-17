@@ -99,7 +99,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -222,12 +221,11 @@ public class VariantScopeImpl implements VariantScope {
      */
     @Override
     public void publishIntermediateArtifact(
-            @NonNull FileCollection artifact,
+            @NonNull Provider<FileCollection> artifact,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
         // Create Provider so that the BuildableArtifact is not resolved until needed.
-        Provider<File> file =
-                getProject().provider(() -> Iterables.getOnlyElement(artifact.getFiles()));
+        Provider<File> file = artifact.map(fileCollection -> fileCollection.getSingleFile());
 
         Preconditions.checkState(!configTypes.isEmpty());
 
@@ -643,8 +641,10 @@ public class VariantScopeImpl implements VariantScope {
                     .get(BooleanOption.CONVERT_NON_NAMESPACED_DEPENDENCIES)) {
                 mainCollection =
                         mainCollection.plus(
-                                artifacts.getFinalProductAsFileCollection(
-                                        InternalArtifactType.NAMESPACED_CLASSES_JAR));
+                                artifacts
+                                        .getFinalProductAsFileCollection(
+                                                InternalArtifactType.NAMESPACED_CLASSES_JAR)
+                                        .get());
 
                 mainCollection =
                         mainCollection.plus(
@@ -674,8 +674,8 @@ public class VariantScopeImpl implements VariantScope {
                                 InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = getProject().files(mainCollection, rJar);
             } else if (getType().isApk()) {
-                Provider<FileSystemLocation> rJar =
-                        artifacts.getFinalProduct(
+                Provider<FileCollection> rJar =
+                        artifacts.getFinalProductAsFileCollection(
                                 InternalArtifactType
                                         .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
                 mainCollection = getProject().files(mainCollection, rJar);
@@ -691,8 +691,8 @@ public class VariantScopeImpl implements VariantScope {
                                     InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
                     mainCollection = getProject().files(mainCollection, rJar);
                 } else if (testedScope.getType().isApk()) {
-                    Provider<FileSystemLocation> rJar =
-                            testedArtifacts.getFinalProduct(
+                    Provider<FileCollection> rJar =
+                            testedArtifacts.getFinalProductAsFileCollection(
                                     InternalArtifactType
                                             .COMPILE_AND_RUNTIME_NOT_NAMESPACED_R_CLASS_JAR);
                     mainCollection = getProject().files(mainCollection, rJar);
@@ -841,7 +841,9 @@ public class VariantScopeImpl implements VariantScope {
                     artifacts =
                             ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
                                     artifacts,
-                                    testedArtifacts.getFinalProductAsFileCollection(taskOutputType),
+                                    testedArtifacts
+                                            .getFinalProductAsFileCollection(taskOutputType)
+                                            .get(),
                                     getProject().getPath(),
                                     testedScope.getFullVariantName());
                 }
