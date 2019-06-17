@@ -26,6 +26,7 @@ kotlin_library(
         "//prebuilts/r8:r8-master",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
+    lint_baseline = "lint_baseline.xml",
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
