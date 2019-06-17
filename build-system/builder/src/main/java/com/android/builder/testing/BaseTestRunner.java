@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,8 +83,10 @@ public abstract class BaseTestRunner implements TestRunner {
         fakeRunListener.testFailed(
                 fakeTest,
                 String.format(
+                        Locale.US,
                         "Found %d connected device(s), %d of which were compatible.",
-                        totalDevices, availableDevices.size()));
+                        totalDevices,
+                        availableDevices.size()));
         fakeRunListener.testEnded(fakeTest, emptyMetrics);
 
         // end the run to generate the XML file.
@@ -105,7 +108,8 @@ public abstract class BaseTestRunner implements TestRunner {
         TestIdentifier fakeTest = new TestIdentifier(variantName, ": found unauthorized devices.");
         fakeRunListener.testStarted(fakeTest);
         fakeRunListener.testFailed(
-                fakeTest, String.format("Found %d unauthorized device(s).", unauthorizedDevices));
+                fakeTest,
+                String.format(Locale.US, "Found %d unauthorized device(s).", unauthorizedDevices));
         fakeRunListener.testEnded(fakeTest, emptyMetrics);
 
         // end the run to generate the XML file.

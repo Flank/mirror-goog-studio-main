@@ -45,13 +45,14 @@ import java.io.BufferedOutputStream
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.Locale
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 fun isProguardRule(name: String): Boolean {
-    val lowerCaseName = name.toLowerCase()
+    val lowerCaseName = name.toLowerCase(Locale.US)
     return lowerCaseName.startsWith("$PROGUARD_RULES_FOLDER/")
             || lowerCaseName.startsWith("/$PROGUARD_RULES_FOLDER/")
 }

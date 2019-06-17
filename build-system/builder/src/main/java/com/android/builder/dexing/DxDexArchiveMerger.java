@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
@@ -292,7 +293,8 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
         if (classesDexIndex == 0) {
             return SdkConstants.FN_APK_CLASSES_DEX;
         } else {
-            return String.format(SdkConstants.FN_APK_CLASSES_N_DEX, (classesDexIndex + 1));
+            return String.format(
+                    Locale.US, SdkConstants.FN_APK_CLASSES_N_DEX, (classesDexIndex + 1));
         }
     }
 }

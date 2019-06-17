@@ -19,6 +19,7 @@ package com.android.builder.internal.packaging;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Supplier;
+import java.util.Locale;
 
 /**
  * Supplier that provides sequential names for dex files.
@@ -44,7 +45,7 @@ class DexFileNameSupplier implements Supplier<String> {
         if (mIndex == 1) {
             dexFileName = SdkConstants.FN_APK_CLASSES_DEX;
         } else {
-            dexFileName = String.format(SdkConstants.FN_APK_CLASSES_N_DEX, mIndex);
+            dexFileName = String.format(Locale.US, SdkConstants.FN_APK_CLASSES_N_DEX, mIndex);
         }
 
         mIndex++;
