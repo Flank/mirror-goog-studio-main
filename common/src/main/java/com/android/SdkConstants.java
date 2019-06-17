@@ -1854,6 +1854,8 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_MANAGER = "layoutManager"; //$NON-NLS-1$
     public static final String ATTR_SPAN_COUNT = "spanCount";
     public static final String ATTR_NAVIGATION_ICON = "navigationIcon";
+    public static final String ATTR_LIFT_ON_SCROLL_TARGET_VIEW_ID = "liftOnScrollTargetViewId";
+    public static final String ATTR_STATUS_BAR_FOREGROUND = "statusBarForeground";
 
     // Material BottomAppBar Attributes
     public static final String ATTR_FAB_ALIGNMENT_MODE = "fabAlignmentMode";
@@ -1895,10 +1897,14 @@ public final class SdkConstants {
     // Material NavigationView
     public static final String ATTR_INSET_BACKGROUND = "insetBackground";
     public static final String ATTR_INSET_FOREGROUND = "insetForeground";
+    public static final String ATTR_ITEM_SHAPE_APPEARANCE = "itemShapeAppearance";
+    public static final String ATTR_ITEM_SHAPE_APPEARANCE_OVERLAY = "itemShapeAppearanceOverlay";
+    public static final String ATTR_ITEM_SHAPE_FILL_COLOR = "itemShapeFillColor";
 
     // Material BottomNavigationView Attributes
     public static final String ATTR_ITEM_HORIZONTAL_TRANSLATION_ENABLED =
             "itemHorizontalTranslationEnabled";
+    public static final String ATTR_ITEM_RIPPLE_COLOR = "itemRippleColor";
     public static final String ATTR_LABEL_VISIBILITY_MODE = "labelVisibilityMode";
 
     // Material ChipGroup Attributes
@@ -1909,12 +1915,17 @@ public final class SdkConstants {
     public static final String ATTR_CHECKED_CHIP = "checkedChip";
 
     // Material Chip (ChipDrawable) Attributes
+    public static final String ATTR_CHIP_BACKGROUND_COLOR = "chipBackgroundColor";
     public static final String ATTR_CHIP_TEXT = "chipText";
     public static final String ATTR_CHIP_ICON = "chipIcon";
+    public static final String ATTR_CHIP_ICON_TINT = "chipIconTint";
     public static final String ATTR_CHIP_ICON_VISIBLE = "chipIconVisible";
+    public static final String ATTR_CHIP_STROKE_COLOR = "chipStrokeColor";
+    public static final String ATTR_CHIP_SURFACE_COLOR = "chipSurfaceColor";
     public static final String ATTR_CHECKED_ICON = "checkedIcon";
     public static final String ATTR_CHECKED_ICON_VISIBLE = "checkedIconVisible";
     public static final String ATTR_CLOSE_ICON = "closeIcon";
+    public static final String ATTR_CLOSE_ICON_TINT = "closeIconTint";
     public static final String ATTR_CLOSE_ICON_VISIBLE = "closeIconVisible";
 
     // Material TabLayout Attributes
@@ -1947,12 +1958,19 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_SCROLL_INTERPOLATOR = "layout_scrollInterpolator";
 
     // Material TextInputLayout Attributes
+    public static final String ATTR_END_ICON_TINT = "endIconTint";
+    public static final String ATTR_ERROR_TEXT_COLOR = "errorTextColor";
+    public static final String ATTR_HELPER_TEXT_TEXT_COLOR = "helperTextTextColor";
     public static final String ATTR_HINT_ENABLED = "hintEnabled";
     public static final String ATTR_HINT_ANIMATION_ENABLED = "hintAnimationEnabled";
     public static final String ATTR_HINT_TEXT_APPEARANCE = "hintTextAppearance";
+    public static final String ATTR_HINT_TEXT_COLOR = "hintTextColor";
     public static final String ATTR_HELPER_TEXT = "helperText";
     public static final String ATTR_HELPER_TEXT_ENABLED = "helperTextEnabled";
     public static final String ATTR_HELPER_TEXT_TEXT_APPEARANCE = "helperTextTextAppearance";
+    public static final String ATTR_SHAPE_APPEARANCE = "shapeAppearance";
+    public static final String ATTR_SHAPE_APPEARANCE_OVERLAY = "shapeAppearanceOverlay";
+    public static final String ATTR_START_ICON_TINT = "startIconTint";
     public static final String ATTR_ERROR_ENABLED = "errorEnabled";
     public static final String ATTR_ERROR_TEXT_APPEARANCE = "errorTextAppearance";
     public static final String ATTR_COUNTER_ENABLED = "counterEnabled";
