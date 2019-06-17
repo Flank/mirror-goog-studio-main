@@ -30,7 +30,6 @@ import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.testutils.TestUtils
 import com.android.testutils.truth.PathSubject.assertThat
-import com.android.utils.FileUtils
 import com.android.utils.FileUtils.join
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Lists
@@ -258,9 +257,11 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         // at the same time. See b/133222337
         Assume.assumeTrue(TestUtils.runningFromBazel())
         project.execute("clean", "assembleDebug")
-        val files = FileUtils.join(project.testDir, ".cxx", "attribution").listFiles()
-        assertThat(files!!.size).isEqualTo(1)
-        val attributionFile = files[0]
+        val directories = join(project.testDir, ".cxx", "attribution").listFiles()
+        assertThat(directories!!.size).isEqualTo(1)
+        val attributionFiles = directories[0].listFiles()
+        assertThat(attributionFiles!!.size).isEqualTo(1)
+        val attributionFile = attributionFiles[0]
         assertThat(attributionFile.name).matches("ninja_build_log_\\d+\\.zip")
         ZipFile(attributionFile).use { z ->
             assertThat(

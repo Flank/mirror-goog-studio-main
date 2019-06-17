@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.model
 
+import com.android.Version
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -39,7 +40,12 @@ interface CxxProjectModel {
      * Folder for storing build attribution data for the entire project
      *   ex, source-root/.cxx/attribution
      */
-    val buildAttributionFolder: File get() = join(cxxFolder, "attribution")
+    val buildAttributionFolder: File
+        get() = join(
+            cxxFolder,
+            "attribution",
+            Version.ANDROID_GRADLE_PLUGIN_VERSION
+        )
 
     /**
      * Location of project-wide compiler settings cache
