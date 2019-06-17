@@ -14,21 +14,17 @@
 
     <#include "../common/recipe_manifest.xml.ftl" />
 
-    <#if useNavController>
-        <#assign activityMainLayout="navigation_activity_main" />
-        <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
+    <#assign activityMainLayout="navigation_activity_main" />
+    <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
 
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="dashboard" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="notifications" />
-        <@navigation.navigationDependencies />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="dashboard" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="notifications" />
+    <@navigation.navigationDependencies />
 
-        <instantiate from="root/res/navigation/mobile_navigation.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
-        <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
-    <#else>
-        <#assign activityMainLayout="activity_main" />
-    </#if>
+    <instantiate from="root/res/navigation/mobile_navigation.xml.ftl"
+                 to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
+    <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 
     <copy from="root/res/drawable"
             to="${escapeXmlAttribute(resOut)}/drawable" />

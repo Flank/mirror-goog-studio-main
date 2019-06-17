@@ -4,16 +4,10 @@ import android.os.Bundle;
 import ${getMaterialComponentName('android.support.design.widget.FloatingActionButton', useMaterial2)};
 import ${getMaterialComponentName('android.support.design.widget.Snackbar', useMaterial2)};
 import android.view.View;
-<#if useNavController>
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
-<#else>
-import ${getMaterialComponentName('android.support.v4.view.GravityCompat', useAndroidX)};
-import ${getMaterialComponentName('android.support.v7.app.ActionBarDrawerToggle', useAndroidX)};
-import android.view.MenuItem;
-</#if>
 import ${getMaterialComponentName('android.support.design.widget.NavigationView', useMaterial2)};
 import ${getMaterialComponentName('android.support.v4.widget.DrawerLayout', useAndroidX)};
 
@@ -21,12 +15,10 @@ import ${getMaterialComponentName('android.support.v7.app.AppCompatActivity', us
 import ${getMaterialComponentName('android.support.v7.widget.Toolbar', useAndroidX)};
 import android.view.Menu;
 
-public class ${activityClass} extends AppCompatActivity <#if !useNavController>
-        implements NavigationView.OnNavigationItemSelectedListener </#if>{
+public class ${activityClass} extends AppCompatActivity {
 
-<#if useNavController>
     private AppBarConfiguration mAppBarConfiguration;
-</#if>
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,7 +35,6 @@ public class ${activityClass} extends AppCompatActivity <#if !useNavController>
         });
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
-<#if useNavController>
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
@@ -54,26 +45,8 @@ public class ${activityClass} extends AppCompatActivity <#if !useNavController>
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
-<#else>
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-        navigationView.setNavigationItemSelectedListener(this);
-</#if>
     }
 
-<#if !useNavController>
-    @Override
-    public void onBackPressed() {
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-</#if>
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -81,52 +54,10 @@ public class ${activityClass} extends AppCompatActivity <#if !useNavController>
         return true;
     }
 
-<#if !useNavController>
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_home) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_tools) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
-        }
-
-        DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
-    }
-<#else>
     @Override
     public boolean onSupportNavigateUp() {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
     }
-</#if>
 }

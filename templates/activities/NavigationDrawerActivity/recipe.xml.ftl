@@ -35,31 +35,27 @@
         <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
     </#if>
 
-    <#if useNavController>
-        <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+    <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
 
-        <instantiate from="root/res-buildApi22/layout/navigation_content_main.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
+    <instantiate from="root/res-buildApi22/layout/navigation_content_main.xml.ftl"
+                 to="${escapeXmlAttribute(resOut)}/layout/${simpleLayoutName}.xml" />
 
-        <#if (isNewProject!false) && !(excludeMenu!false)>
-            <#include "../common/recipe_simple_menu.xml.ftl" />
-        </#if>
-
-        <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="gallery" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="slideshow" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="tools" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="share" />
-        <@navigation.instantiateFragmentAndViewModel fragmentPrefix="send" />
-        <@navigation.navigationDependencies />
-
-        <instantiate from="root/res-buildApi22/navigation/mobile_navigation.xml.ftl"
-                     to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
-        <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
-    <#else>
-        <#include "../common/recipe_simple.xml.ftl" />
+    <#if (isNewProject!false) && !(excludeMenu!false)>
+        <#include "../common/recipe_simple_menu.xml.ftl" />
     </#if>
+
+    <#import "root://activities/common/navigation/navigation_common_macros.ftl" as navigation>
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="home" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="gallery" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="slideshow" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="tools" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="share" />
+    <@navigation.instantiateFragmentAndViewModel fragmentPrefix="send" />
+    <@navigation.navigationDependencies />
+
+    <instantiate from="root/res-buildApi22/navigation/mobile_navigation.xml.ftl"
+                 to="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
+    <open file="${escapeXmlAttribute(resOut)}/navigation/mobile_navigation.xml" />
 
     <#include "../common/recipe_app_bar.xml.ftl" />
     <#if buildApi gte 21>
