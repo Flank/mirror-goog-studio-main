@@ -70,7 +70,9 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
             }
         }
         val location = context.getNameLocation(locationNode)
-        val suggested = getAppCompatDelegate(superClass)
+        val widgetName = superClass.name ?: return
+        val suggested = findAppCompatDelegate(context, widgetName)?.qualifiedName
+            ?: getAppCompatDelegate(widgetName, false)
         val message = "This custom view should extend `$suggested` instead"
         val actionLabel = "Extend AppCompat widget instead"
         val fix = fix().name(actionLabel)
@@ -107,8 +109,20 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
             )
         )
 
-        private fun getAppCompatDelegate(superClass: PsiClass): String {
-            return "android.support.v7.widget.AppCompat" + superClass.name
+        private fun getAppCompatDelegate(widgetName: String, androidx: Boolean): String {
+            val pkg = if (androidx) {
+                "androidx.appcompat.widget"
+            } else {
+                "android.support.v7.widget"
+            }
+            return "$pkg.AppCompat$widgetName"
+        }
+
+        private fun findAppCompatDelegate(context: JavaContext, widgetName: String): PsiClass? {
+            val evaluator = context.evaluator
+            val supportName = getAppCompatDelegate(widgetName, false)
+            val androidxName = getAppCompatDelegate(widgetName, true)
+            return evaluator.findClass(supportName) ?: evaluator.findClass(androidxName)
         }
 
         private fun hasAppCompatDelegate(
@@ -132,7 +146,8 @@ class AppCompatCustomViewDetector : Detector(), SourceCodeScanner {
 
             // Extending some other android.widget. Instead of hardcoding "no", look for
             // the expected app compat class in the current compilation context.
-            return context.evaluator.findClass(getAppCompatDelegate(superClass)) != null
+            val widgetName = superClass.name ?: return false
+            return findAppCompatDelegate(context, widgetName) != null
         }
     }
 }

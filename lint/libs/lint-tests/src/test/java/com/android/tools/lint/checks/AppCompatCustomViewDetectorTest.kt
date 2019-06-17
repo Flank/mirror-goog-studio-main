@@ -246,4 +246,33 @@ class AppCompatCustomViewDetectorTest : AbstractCheckTest() {
                 """
             )
     }
+
+    fun testAndroidX() {
+        // Regression test for https://issuetracker.google.com/132668553
+        val expected = """
+            src/test/pkg/MyButton.java:7: Error: This custom view should extend androidx.appcompat.widget.AppCompatButton instead [AppCompatCustomView]
+            public class MyButton extends Button implements Runnable {
+                                          ~~~~~~
+            1 errors, 0 warnings
+            """
+        lint().files(
+            mTestClass,
+            appCompatJar,
+            manifest().minSdk(20),
+            java(
+                """
+                package androidx.appcompat.widget;
+                import android.content.Context;
+                import android.util.AttributeSet;
+                import android.widget.Button;
+                @SuppressWarnings("AppCompatCustomView")
+                public class AppCompatButton extends android.widget.Button {
+                    public AppCompatButton(Context context, AttributeSet attrs, int defStyleAttr) {
+                        super(context, null, null);
+                    }
+                }
+                """
+            ).indented()
+        ).run().expect(expected)
+    }
 }
