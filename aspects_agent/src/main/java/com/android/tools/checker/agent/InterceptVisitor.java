@@ -82,11 +82,9 @@ public class InterceptVisitor extends AdviceAdapter {
 
     @Override
     protected void onMethodEnter() {
-        // Lambdas are translated to static methods named something like "lambda$methodNop$0". As
-        // such, they would be intercepted here so we need to explicitly ignore them since we don't
-        // want that.
-        boolean isStatic = (this.methodAccess & Opcodes.ACC_STATIC) != 0;
-        if (isStatic && name.startsWith(LAMBDA_METHOD_PREFIX)) {
+        // Lambdas are desugared to methods named something like "lambda$methodNop$0". Therefore,
+        // we would intercept them here but we need to avoid that by explicitly ignoring them.
+        if (name.startsWith(LAMBDA_METHOD_PREFIX)) {
             return;
         }
 

@@ -6,6 +6,9 @@ import com.android.tools.checker.ConflictingAnnotation;
 
 @AnotherTestAnnotation
 public class TestClass {
+
+    private boolean someField = true;
+
     public static void staticMethodThrows() {
         // This will throw after instrumentation
     }
@@ -36,10 +39,20 @@ public class TestClass {
     @ConflictingAnnotation
     public void conflictingMethod() {}
 
-    public void methodWithLambda() {
+    public void methodWithStaticLambda() {
         Runnable r =
                 () -> {
                     // No-op
+                };
+        r.run();
+    }
+
+    public void methodWithLambda() {
+        Runnable r =
+                () -> {
+                    if (someField) {
+                        // No-op
+                    }
                 };
         r.run();
     }

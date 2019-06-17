@@ -181,12 +181,16 @@ public class InstrumentTest {
         Object instance = loadAndTransform("Test2", matcher, notFound::add).newInstance();
         TestAssertions.count = 0;
         assertEquals(0, TestAssertions.count);
-        callMethod(instance, "methodWithLambda");
+        callMethod(instance, "methodWithStaticLambda");
         // methodWithLambda contains a call to a lambda. Lambdas are internally converted into
         // methods but we explicitly ignore them in InterceptVisitor. Therefore, count should be 1
         // instead of 2, which would be the case if we considered the lambda in addition to the
         // method itself.
         assertEquals(1, TestAssertions.count);
+        callMethod(instance, "methodWithLambda");
+        // As aforementioned, we should not intercept the lambda method. Therefore, we increment
+        // count by 1 instead of 2.
+        assertEquals(2, TestAssertions.count);
     }
 
     @Test
