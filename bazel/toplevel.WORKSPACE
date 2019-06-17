@@ -16,6 +16,11 @@ local_repository(
       path = "tools/external/bazelbuild-rules-kotlin",
 )
 
+local_repository(
+      name = "windows_toolchains",
+      path = "tools/base/bazel/windows_toolchains",
+)
+
 http_archive(
   name = "bazel_toolchains",
   urls = [

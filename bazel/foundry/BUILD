@@ -29,6 +29,20 @@ platform(
          """,
 )
 
+platform(
+    name = "rbe_windows1803_as",
+    constraint_values = [
+        "@bazel_tools//platforms:x86_64",
+        "@bazel_tools//platforms:windows",
+    ],
+    remote_execution_properties = """
+        properties: {
+          name: "container-image"
+          value: "docker://gcr.io/google.com/android-studio-alphasource/rbe-windows1803-as@sha256:e75260564cf7f4236867382a9d6340f25afb0afe8d65a9f65e0a748a92d1d5a3"
+        }
+       """,
+)
+
 # This test is run explicitly on the foundry bot as will not pass on
 # a standard linux machine, because validates a very custom /dev/random condition.
 java_test(
