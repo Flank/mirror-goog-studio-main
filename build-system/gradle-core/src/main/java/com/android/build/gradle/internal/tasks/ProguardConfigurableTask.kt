@@ -20,6 +20,7 @@ import com.android.build.api.transform.QualifiedContent
 import com.android.build.api.transform.QualifiedContent.Scope
 import com.android.build.gradle.internal.InternalScope
 import com.android.build.gradle.internal.PostprocessingFeatures
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.pipeline.StreamFilter
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.VariantScope
@@ -32,7 +33,7 @@ import org.gradle.api.tasks.TaskProvider
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
@@ -41,6 +42,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.APK_MAPPING
 import com.android.build.gradle.internal.scope.InternalArtifactType.GENERATED_PROGUARD_FILE
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.google.common.base.Preconditions
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -53,6 +55,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import java.io.File
+import java.util.Collections
 import java.util.concurrent.Callable
 
 /**
@@ -277,7 +280,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     val configurationFiles = task.project.files(
                         Callable<Collection<File>> { testedScope.testProguardFiles },
                         variantScope.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            FILTERED_PROGUARD_RULES,
+                            maybeGetCodeShrinkerAttrMap(variantScope)
                         ))
                     task.configurationFiles.from(configurationFiles)
                 }
@@ -289,7 +295,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                     val configurationFiles = task.project.files(
                         Callable<Collection<File>> { variantScope.testProguardFiles },
                         variantScope.getArtifactFileCollection(
-                            RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            FILTERED_PROGUARD_RULES,
+                            maybeGetCodeShrinkerAttrMap(variantScope)
                         ))
                     task.configurationFiles.from(configurationFiles)
                 }
@@ -338,7 +347,10 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
                 variantScope.artifacts.getFinalProduct<FileSystemLocation>(aaptProguardFileType),
                 variantScope.artifacts.getFinalProduct<FileSystemLocation>(GENERATED_PROGUARD_FILE),
                 variantScope.getArtifactFileCollection(
-                    RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES
+                    RUNTIME_CLASSPATH,
+                    ALL,
+                    FILTERED_PROGUARD_RULES,
+                    maybeGetCodeShrinkerAttrMap(variantScope)
                 )
             )
 
@@ -371,9 +383,22 @@ abstract class ProguardConfigurableTask : NonIncrementalTask() {
         private fun addFeatureProguardRules(configurationFiles: ConfigurableFileCollection) {
             configurationFiles.from(
                 variantScope.getArtifactFileCollection(
-                    METADATA_VALUES, PROJECT, CONSUMER_PROGUARD_RULES
+                    METADATA_VALUES,
+                    PROJECT,
+                    FILTERED_PROGUARD_RULES,
+                    maybeGetCodeShrinkerAttrMap(variantScope)
                 )
             )
+        }
+
+        private fun maybeGetCodeShrinkerAttrMap(
+            variantScope: VariantScope
+        ): Map<Attribute<String>, String>? {
+            return if (variantScope.codeShrinker != null) {
+                mapOf(VariantManager.SHRINKER_ATTR to variantScope.codeShrinker.toString())
+            } else {
+                null
+            }
         }
 
         protected abstract fun keep(keep: String)

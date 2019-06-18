@@ -154,6 +154,7 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
         exclude("/META-INF/*.RSA");
         exclude("/META-INF/maven/**");
         exclude("/META-INF/proguard/*");
+        exclude("/META-INF/com.android.tools/**");
         exclude("/NOTICE");
         exclude("/NOTICE.txt");
         exclude("/LICENSE.txt");

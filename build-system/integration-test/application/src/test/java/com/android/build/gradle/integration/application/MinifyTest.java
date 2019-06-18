@@ -30,8 +30,10 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.utils.Pair;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +44,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -59,6 +62,8 @@ public class MinifyTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minify").create();
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Test
     public void appApkIsMinified() throws Exception {
@@ -147,6 +152,82 @@ public class MinifyTest {
         assertThat(minified).hasClass("Lexample/ToBeKept;").that().hasMethods("foo", "baz");
 
         assertThat(minified).hasClass("Lexample/ToBeKept;").that().doesNotHaveMethod("fab");
+    }
+
+    @Test
+    public void appTestExtractedJarKeepRules() throws Exception {
+        String classContent = "package example;\n" + "public class ToBeKept { }";
+        Path toBeKept = project.getMainSrcDir().toPath().resolve("example/ToBeKept.java");
+        Files.createDirectories(toBeKept.getParent());
+        Files.write(toBeKept, classContent.getBytes());
+
+        String classContent2 = "package example;\n" + "public class ToBeRemoved { }";
+        Path toBeRemoved = project.getMainSrcDir().toPath().resolve("example/ToBeRemoved.java");
+        Files.createDirectories(toBeRemoved.getParent());
+        Files.write(toBeRemoved, classContent2.getBytes());
+
+        File jarFile = temporaryFolder.newFile("libkeeprules.jar");
+        String keepRule = "-keep class example.ToBeKept";
+        String keepRuleToBeIgnored = "-keep class example.ToBeRemoved";
+
+        TestInputsGenerator.writeJarWithTextEntries(
+                jarFile.toPath(),
+                Pair.of("META-INF/com.android.tools/r8/rules.pro", keepRule),
+                Pair.of("META-INF/com.android.tools/proguard/rules.pro", keepRule),
+                Pair.of("META-INF/proguard/rules.pro", keepRuleToBeIgnored));
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "dependencies {\n"
+                        + "    implementation files ('"
+                        + jarFile.getAbsolutePath()
+                        + "')\n"
+                        + "}");
+
+        project.executor()
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified");
+
+        Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
+        assertThat(minified).containsClass("Lexample/ToBeKept;");
+        assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;");
+    }
+
+    @Test
+    public void appTestExtractedLegacyJarKeepRules() throws Exception {
+        String classContent = "package example;\n" + "public class ToBeKept { }";
+        Path toBeKept = project.getMainSrcDir().toPath().resolve("example/ToBeKept.java");
+        Files.createDirectories(toBeKept.getParent());
+        Files.write(toBeKept, classContent.getBytes());
+
+        String classContent2 = "package example;\n" + "public class ToBeRemoved { }";
+        Path toBeRemoved = project.getMainSrcDir().toPath().resolve("example/ToBeRemoved.java");
+        Files.createDirectories(toBeRemoved.getParent());
+        Files.write(toBeRemoved, classContent2.getBytes());
+
+        File jarFile = temporaryFolder.newFile("libkeeprules.jar");
+        String keepRule = "-keep class example.ToBeKept";
+
+        TestInputsGenerator.writeJarWithTextEntries(
+                jarFile.toPath(), Pair.of("META-INF/proguard/rules.pro", keepRule));
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "dependencies {\n"
+                        + "   implementation files ('"
+                        + jarFile.getAbsolutePath()
+                        + "')\n"
+                        + "}");
+
+        project.executor()
+                .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+                .run("assembleMinified");
+
+        Apk minified = project.getApk(GradleTestProject.ApkType.of("minified", true));
+        assertThat(minified).containsClass("Lexample/ToBeKept;");
+        assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;");
     }
 
     @Test

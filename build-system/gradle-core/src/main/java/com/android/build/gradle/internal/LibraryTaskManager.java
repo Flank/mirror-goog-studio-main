@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BundleLibraryClasses;
 import com.android.build.gradle.internal.tasks.BundleLibraryJavaRes;
+import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.LibraryAarJarsTask;
 import com.android.build.gradle.internal.tasks.LibraryDexingTask;
 import com.android.build.gradle.internal.tasks.LibraryJniLibsTask;
@@ -185,6 +186,8 @@ public class LibraryTaskManager extends TaskManager {
 
         // merge consumer proguard files from different build types and flavors
         taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
+
+        taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(variantScope));
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this

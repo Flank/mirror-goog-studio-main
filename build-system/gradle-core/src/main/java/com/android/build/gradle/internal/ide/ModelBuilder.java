@@ -55,8 +55,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
-import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -651,7 +651,7 @@ public class ModelBuilder<Extension extends BaseExtension>
             List<File> consumerProguardFiles = variantScope.getConsumerProguardFilesForFeatures();
 
             boolean isDynamicFeature = variantScope.getType().isDynamicFeature();
-            MergeConsumerProguardFilesTask.checkProguardFiles(
+            ExportConsumerProguardFilesTask.checkProguardFiles(
                     project,
                     isDynamicFeature,
                     hasFeaturePlugin,

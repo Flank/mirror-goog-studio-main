@@ -21,22 +21,18 @@ import static com.android.build.gradle.internal.scope.InternalArtifactType.GENER
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.FeaturePlugin;
-import com.android.build.gradle.ProguardFiles;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
 import com.android.builder.errors.EvalIssueException;
-import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 
 /** Configuration action for a merge-Proguard-files task. */
@@ -45,7 +41,10 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
     private boolean isDynamicFeature;
     private boolean isBaseFeature;
     private boolean hasFeaturePlugin;
-    private List<File> consumerProguardFiles;
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public abstract ConfigurableFileCollection getConsumerProguardFiles();
 
     @Override
     public void doTaskAction() throws IOException {
@@ -53,50 +52,16 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
 
         // We check for default files unless it's a base feature, which can include default files.
         if (!isBaseFeature) {
-            checkProguardFiles(
+            ExportConsumerProguardFilesTask.checkProguardFiles(
                     project,
                     isDynamicFeature,
                     hasFeaturePlugin,
-                    consumerProguardFiles,
+                    getConsumerProguardFiles().getFiles(),
                     errorMessage -> {
                         throw new EvalIssueException(errorMessage);
                     });
         }
         super.doTaskAction();
-    }
-
-    public static void checkProguardFiles(
-            Project project,
-            boolean isDynamicFeature,
-            boolean hasFeaturePlugin,
-            List<File> consumerProguardFiles,
-            Consumer<String> errorHandler) {
-        Map<File, String> defaultFiles = new HashMap<>();
-        for (String knownFileName : ProguardFiles.KNOWN_FILE_NAMES) {
-            defaultFiles.put(
-                    ProguardFiles.getDefaultProguardFile(knownFileName, project), knownFileName);
-        }
-
-        for (File consumerProguardFile : consumerProguardFiles) {
-            if (defaultFiles.containsKey(consumerProguardFile)) {
-                final String errorMessage;
-                if (isDynamicFeature || hasFeaturePlugin) {
-                    errorMessage =
-                            "Default file "
-                                    + defaultFiles.get(consumerProguardFile)
-                                    + " should not be specified in this module."
-                                    + " It can be specified in the base module instead.";
-
-                } else {
-                    errorMessage =
-                            "Default file "
-                                    + defaultFiles.get(consumerProguardFile)
-                                    + " should not be used as a consumer configuration file.";
-                }
-
-                errorHandler.accept(errorMessage);
-            }
-        }
     }
 
     public static class CreationAction extends TaskCreationAction<MergeConsumerProguardFilesTask> {
@@ -119,7 +84,6 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             return MergeConsumerProguardFilesTask.class;
         }
 
-
         @Override
         public void handleProvider(
                 @NonNull TaskProvider<? extends MergeConsumerProguardFilesTask> taskProvider) {
@@ -128,7 +92,7 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
             variantScope
                     .getArtifacts()
                     .producesFile(
-                            InternalArtifactType.CONSUMER_PROGUARD_FILE,
+                            InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE,
                             BuildArtifactsHolder.OperationType.INITIAL,
                             taskProvider,
                             MergeConsumerProguardFilesTask::getOutputFile,
@@ -148,19 +112,13 @@ public abstract class MergeConsumerProguardFilesTask extends MergeFileTask {
                 task.isDynamicFeature = variantScope.getType().isDynamicFeature();
             }
 
-            task.consumerProguardFiles = variantScope.getConsumerProguardFilesForFeatures();
+            task.getConsumerProguardFiles()
+                    .from(variantScope.getConsumerProguardFilesForFeatures());
 
             ConfigurableFileCollection inputFiles =
                     project.files(
-                            task.consumerProguardFiles,
+                            task.getConsumerProguardFiles(),
                             variantScope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE));
-            if (variantScope.getType().isFeatureSplit()) {
-                inputFiles.from(
-                        variantScope.getArtifactFileCollection(
-                                AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                                AndroidArtifacts.ArtifactScope.ALL,
-                                AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES));
-            }
             task.setInputFiles(inputFiles);
         }
     }

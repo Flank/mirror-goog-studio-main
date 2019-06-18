@@ -39,10 +39,10 @@ import com.android.build.gradle.internal.tasks.BundleReportDependenciesTask;
 import com.android.build.gradle.internal.tasks.BundleToApkTask;
 import com.android.build.gradle.internal.tasks.BundleToStandaloneApkTask;
 import com.android.build.gradle.internal.tasks.CheckMultiApkLibrariesTask;
+import com.android.build.gradle.internal.tasks.ExportConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ExtractApksTask;
 import com.android.build.gradle.internal.tasks.FinalizeBundleTask;
 import com.android.build.gradle.internal.tasks.InstallVariantViaBundleTask;
-import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesTask;
 import com.android.build.gradle.internal.tasks.ModuleMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.PackageBundleTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTask;
@@ -202,7 +202,7 @@ public class ApplicationTaskManager extends TaskManager {
                 taskFactory.register(
                         new DataBindingExportFeatureInfoTask.CreationAction(variantScope));
             }
-            taskFactory.register(new MergeConsumerProguardFilesTask.CreationAction(variantScope));
+            taskFactory.register(new ExportConsumerProguardFilesTask.CreationAction(variantScope));
         }
 
         // Add data binding tasks if enabled

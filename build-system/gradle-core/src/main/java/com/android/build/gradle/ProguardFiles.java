@@ -59,7 +59,6 @@ public class ProguardFiles {
         }
     }
 
-    @VisibleForTesting
     public static final Set<String> KNOWN_FILE_NAMES =
             Arrays.stream(ProguardFile.values()).map(pf -> pf.fileName).collect(Collectors.toSet());
 

@@ -87,7 +87,7 @@ abstract class BundleAar : Zip(), VariantAwareTask {
                 prependToCopyPath(SdkConstants.FD_AIDL)
             )
             task.from(artifacts.getFinalProduct<RegularFile>(
-                InternalArtifactType.CONSUMER_PROGUARD_FILE))
+                InternalArtifactType.MERGED_CONSUMER_PROGUARD_FILE))
             if (variantScope.globalScope.extension.dataBinding.isEnabled) {
                 task.from(
                     variantScope.globalScope.project.provider {

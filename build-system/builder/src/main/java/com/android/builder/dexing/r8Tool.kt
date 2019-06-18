@@ -20,6 +20,7 @@ package com.android.builder.dexing
 
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.PROGUARD_RULES_FOLDER
+import com.android.SdkConstants.TOOLS_CONFIGURATION_FOLDER
 import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.ide.common.blame.MessageReceiver
 import com.android.tools.r8.ArchiveProgramResourceProvider
@@ -55,6 +56,12 @@ fun isProguardRule(name: String): Boolean {
     val lowerCaseName = name.toLowerCase(Locale.US)
     return lowerCaseName.startsWith("$PROGUARD_RULES_FOLDER/")
             || lowerCaseName.startsWith("/$PROGUARD_RULES_FOLDER/")
+}
+
+fun isToolsConfigurationFile(name: String): Boolean {
+    val lowerCaseName = name.toLowerCase(Locale.US)
+    return lowerCaseName.startsWith("$TOOLS_CONFIGURATION_FOLDER/")
+            || lowerCaseName.startsWith("/$TOOLS_CONFIGURATION_FOLDER/")
 }
 
 fun getR8Version(): String = Version.getVersionString()
@@ -261,7 +268,7 @@ private class ProGuardRulesFilteringVisitor(
     }
 
     override fun visit(resource: DataEntryResource) {
-        if (!isProguardRule(resource.getName())) {
+        if (!isProguardRule(resource.getName()) && !isToolsConfigurationFile(resource.getName())) {
             visitor?.visit(resource)
         }
     }

@@ -2798,4 +2798,10 @@ public final class SdkConstants {
 
     /** Folder where proguard rules are located in jar, aar and project generated resources */
     public static final String PROGUARD_RULES_FOLDER = "meta-inf/proguard";
+
+    /** Folder where configuration files for R8 and other tools are located in jar files */
+    public static final String COM_ANDROID_TOOLS_FOLDER = "com.android.tools";
+
+    /** Folder where configuration files for R8 and other tools are located in jar files */
+    public static final String TOOLS_CONFIGURATION_FOLDER = "meta-inf/" + COM_ANDROID_TOOLS_FOLDER;
 }

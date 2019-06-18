@@ -30,18 +30,22 @@ import com.android.build.gradle.options.OptionalBooleanOption
 import com.android.builder.model.AppBundleProjectBuildOutput
 import com.android.builder.model.AppBundleVariantBuildOutput
 import com.android.builder.model.SyncIssue
+import com.android.testutils.TestInputsGenerator
 import com.android.testutils.apk.Dex
 import com.android.testutils.apk.Zip
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.FileSubject
 import com.android.testutils.truth.FileSubject.assertThat
 import com.android.utils.FileUtils
+import com.android.utils.Pair
 import com.google.common.truth.Truth
 import org.junit.Assume
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.nio.file.Files
 import kotlin.test.fail
 
 /**
@@ -667,6 +671,9 @@ class MinifyFeaturesTest(
     @get:Rule
     val project = GradleTestProject.builder().fromTestApp(testApp).create()
 
+    @get:Rule
+    val temporaryFolder = TemporaryFolder()
+
     @Test
     fun testApksAreMinified() {
 
@@ -902,6 +909,67 @@ class MinifyFeaturesTest(
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("should not be specified in this module.")
+    }
+
+    // Tests new shrinker rules filtering done by FilterShrinkerRulesTransform to select only rules
+    // targeted to specific R8 or Proguard versions.
+    @Test
+    fun appTestExtractedJarKeepRules() {
+
+        val executor = project.executor()
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+
+        when (multiApkMode) {
+            MultiApkMode.DYNAMIC_APP -> executor.run("assembleMinified")
+            MultiApkMode.INSTANT_APP -> executor.run("app:assembleMinified", "instantApp:assembleMinified")
+        }
+
+
+        val classContent = "package example;\n" + "public class ToBeKept { }"
+        val toBeKept = project.getSubproject("baseModule").mainSrcDir.toPath().resolve("example/ToBeKept.java")
+        Files.createDirectories(toBeKept.parent)
+        Files.write(toBeKept, classContent.toByteArray())
+
+        val classContent2 = "package example;\n" + "public class ToBeRemoved { }"
+        val toBeRemoved = project.getSubproject("baseModule").mainSrcDir.toPath().resolve("example/ToBeRemoved.java")
+        Files.createDirectories(toBeRemoved.parent)
+        Files.write(toBeRemoved, classContent2.toByteArray())
+
+        val jarFile = temporaryFolder.newFile("libkeeprules.jar")
+        val keepRule = "-keep class example.ToBeKept"
+        val keepRuleToBeIgnored = "-keep class example.ToBeRemoved"
+
+        TestInputsGenerator.writeJarWithTextEntries(
+            jarFile.toPath(),
+            Pair.of("META-INF/com.android.tools/r8/rules.pro", keepRule),
+            Pair.of("META-INF/com.android.tools/proguard/rules.pro", keepRule),
+            Pair.of("META-INF/proguard/rules.pro", keepRuleToBeIgnored)
+        )
+
+        TestFileUtils.appendToFile(
+            project.getSubproject(":foo:otherFeature1").buildFile,
+            ""
+                    + "dependencies {\n"
+                    + "    implementation files ('" + jarFile.absolutePath + "')\n"
+                    + "}"
+        )
+
+        project.executor()
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+            .run("assembleMinified")
+
+        val apkType = GradleTestProject.ApkType.of("minified", true)
+
+        project.getSubproject("baseModule")
+            .let {
+                when (multiApkMode) {
+                    MultiApkMode.DYNAMIC_APP -> it.getApk(apkType)
+                    MultiApkMode.INSTANT_APP -> it.getFeatureApk(apkType)
+                }
+            }.use { minified ->
+                assertThat(minified).containsClass("Lexample/ToBeKept;")
+                assertThat(minified).doesNotContainClass("Lexample/ToBeRemoved;")
+            }
     }
 
     /** Regression test for https://issuetracker.google.com/79090176 */

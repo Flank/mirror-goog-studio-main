@@ -28,7 +28,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APKS_FROM_BUNDLE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
@@ -226,6 +226,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -2957,7 +2958,10 @@ public abstract class TaskManager {
                     project.files(
                             (Callable<Collection<File>>) testedScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
+                                    RUNTIME_CLASSPATH,
+                                    ALL,
+                                    FILTERED_PROGUARD_RULES,
+                                    maybeGetCodeShrinkerAttrMap(variantScope)));
             maybeAddFeatureProguardRules(variantScope, configurationFiles);
             transform.setConfigurationFiles(configurationFiles);
         } else if (variantScope.getType().isForTesting()
@@ -2970,7 +2974,10 @@ public abstract class TaskManager {
                     project.files(
                             (Callable<Collection<File>>) variantScope::getTestProguardFiles,
                             variantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
+                                    RUNTIME_CLASSPATH,
+                                    ALL,
+                                    FILTERED_PROGUARD_RULES,
+                                    maybeGetCodeShrinkerAttrMap(variantScope)));
             maybeAddFeatureProguardRules(variantScope, configurationFiles);
             transform.setConfigurationFiles(configurationFiles);
         } else {
@@ -3054,7 +3061,10 @@ public abstract class TaskManager {
                         scope.getArtifacts().getFinalProduct(aaptProguardFileType),
                         scope.getArtifacts().getFinalProduct(GENERATED_PROGUARD_FILE),
                         scope.getArtifactFileCollection(
-                                RUNTIME_CLASSPATH, ALL, CONSUMER_PROGUARD_RULES));
+                                RUNTIME_CLASSPATH,
+                                ALL,
+                                FILTERED_PROGUARD_RULES,
+                                maybeGetCodeShrinkerAttrMap(scope)));
 
         if (scope.getType().isHybrid() && scope.getType().isBaseModule()) {
             Callable<Collection<File>> consumerProguardFiles = scope::getConsumerProguardFiles;
@@ -3078,14 +3088,26 @@ public abstract class TaskManager {
         }
     }
 
-    private void maybeAddFeatureProguardRules(
+    private static void maybeAddFeatureProguardRules(
             @NonNull VariantScope variantScope,
             @NonNull ConfigurableFileCollection configurationFiles) {
         if (variantScope.consumesFeatureJars()) {
             configurationFiles.from(
                     variantScope.getArtifactFileCollection(
-                            METADATA_VALUES, PROJECT, CONSUMER_PROGUARD_RULES));
+                            METADATA_VALUES,
+                            PROJECT,
+                            FILTERED_PROGUARD_RULES,
+                            maybeGetCodeShrinkerAttrMap(variantScope)));
         }
+    }
+
+    @Nullable
+    private static Map<Attribute<String>, String> maybeGetCodeShrinkerAttrMap(
+            @NonNull VariantScope variantScope) {
+        return variantScope.getCodeShrinker() != null
+                ? Collections.singletonMap(
+                        VariantManager.SHRINKER_ATTR, variantScope.getCodeShrinker().toString())
+                : null;
     }
 
     @NonNull

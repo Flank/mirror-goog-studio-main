@@ -18,11 +18,13 @@ package com.android.testutils;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.utils.Pair;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -80,6 +82,17 @@ public final class TestInputsGenerator {
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(jar))) {
             for (String name : entries) {
                 zipOutputStream.putNextEntry(new ZipEntry(name));
+                zipOutputStream.closeEntry();
+            }
+        }
+    }
+
+    public static void writeJarWithTextEntries(
+            @NonNull Path jar, @NonNull Pair<String, String>... entries) throws Exception {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(jar))) {
+            for (Pair<String, String> pair : entries) {
+                zipOutputStream.putNextEntry(new ZipEntry(pair.getFirst()));
+                zipOutputStream.write(pair.getSecond().getBytes(Charset.forName("UTF-8")));
                 zipOutputStream.closeEntry();
             }
         }

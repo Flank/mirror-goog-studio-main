@@ -18,10 +18,11 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.dependency.DexingTransformKt.getDexingArtifactConfigurations;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.AAR;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CONSUMER_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROCESSED_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.UNFILTERED_PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.MOCKABLE_JAR_RETURN_DEFAULT_VALUES;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantTypeImpl.ANDROID_TEST;
@@ -53,6 +54,7 @@ import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitutio
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
+import com.android.build.gradle.internal.dependency.FilterShrinkerRulesTransform;
 import com.android.build.gradle.internal.dependency.IdentityTransform;
 import com.android.build.gradle.internal.dependency.JetifyTransform;
 import com.android.build.gradle.internal.dependency.LibraryDefinedSymbolTableTransform;
@@ -61,6 +63,7 @@ import com.android.build.gradle.internal.dependency.MockableJarTransform;
 import com.android.build.gradle.internal.dependency.PlatformAttrTransform;
 import com.android.build.gradle.internal.dependency.SourceSetManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dependency.VersionedCodeShrinker;
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension;
 import com.android.build.gradle.internal.dsl.BaseFlavor;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -74,6 +77,7 @@ import com.android.build.gradle.internal.publishing.PublishingSpecs;
 import com.android.build.gradle.internal.res.Aapt2MavenUtils;
 import com.android.build.gradle.internal.scope.AnchorOutputType;
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -115,7 +119,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import kotlin.Pair;
@@ -175,6 +181,8 @@ public class VariantManager implements VariantModel {
     // We cannot use gradle's state of executed as that returns true while inside afterEvalute.
     // Wew want this to only be true after all tasks have been create.
     private boolean hasCreatedTasks = false;
+    public static final Attribute<String> SHRINKER_ATTR =
+            Attribute.of("codeShrinker", String.class);
 
     public VariantManager(
             @NonNull GlobalScope globalScope,
@@ -758,7 +766,7 @@ public class VariantManager implements VariantModel {
             dependencies.registerTransform(
                     reg -> {
                         reg.getFrom().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
-                        reg.getTo().attribute(ARTIFACT_FORMAT, CONSUMER_PROGUARD_RULES.getType());
+                        reg.getTo().attribute(ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
                         reg.artifactTransform(ExtractProGuardRulesTransform.class);
                     });
         }
@@ -838,6 +846,36 @@ public class VariantManager implements VariantModel {
                         dependencies,
                         globalScope.getBootClasspath(),
                         SyncOptions.getErrorFormatMode(globalScope.getProjectOptions()));
+            }
+        }
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
+            Set<CodeShrinker> shrinkers =
+                    variantScopes
+                            .stream()
+                            .map(VariantScope::getCodeShrinker)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toSet());
+            for (CodeShrinker shrinker : shrinkers) {
+                dependencies.registerTransform(
+                        FilterShrinkerRulesTransform.class,
+                        reg -> {
+                            reg.getFrom()
+                                    .attribute(
+                                            ARTIFACT_FORMAT, UNFILTERED_PROGUARD_RULES.getType());
+                            reg.getTo()
+                                    .attribute(ARTIFACT_FORMAT, FILTERED_PROGUARD_RULES.getType());
+
+                            reg.getFrom().attribute(SHRINKER_ATTR, shrinker.toString());
+                            reg.getTo().attribute(SHRINKER_ATTR, shrinker.toString());
+
+                            reg.parameters(
+                                    params -> {
+                                        params.getShrinker()
+                                                .set(VersionedCodeShrinker.of(shrinker));
+                                        params.getProjectName().set(project.getName());
+                                    });
+                        });
             }
         }
     }
