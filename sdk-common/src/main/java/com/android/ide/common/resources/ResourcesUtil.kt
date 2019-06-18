@@ -17,6 +17,8 @@
 @file:JvmName("ResourcesUtil")
 package com.android.ide.common.resources
 
+import com.android.SdkConstants
+
 /**
  * Replicates the key flattening done by AAPT. If the passed key contains '.', '-' or ':', they
  * will be replaced by '_' and a a new [String] returned. If none of those characters are
@@ -46,4 +48,15 @@ fun flattenResourceName(resourceName: String): String {
 
 fun isInvalidResourceNameCharacter(c: Char): Boolean {
   return c == ':' || c == '.' || c == '-'
+}
+
+/**
+ * Returns the given id without an `@id/` or `@+id` prefix.
+ */
+fun stripPrefixFromId(id: String): String {
+  return when {
+    id.startsWith(SdkConstants.NEW_ID_PREFIX) -> id.substring(SdkConstants.NEW_ID_PREFIX.length)
+    id.startsWith(SdkConstants.ID_PREFIX) -> id.substring(SdkConstants.ID_PREFIX.length)
+    else -> id
+  }
 }
