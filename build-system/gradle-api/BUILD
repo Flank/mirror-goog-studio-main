@@ -10,9 +10,9 @@ kotlin_library(
     resource_strip_prefix = "tools/base/build-system/gradle-api",
     visibility = ["//visibility:public"],
     deps = [
+        ":builder-model_neverlink",  # Only present for legacy reasons.
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
-        "//tools/base/build-system/builder-model",
         "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
@@ -41,10 +41,17 @@ kotlin_test(
         ":gradle-api",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system/builder-model",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
+)
+
+java_library(
+    name = "builder-model_neverlink",
+    neverlink = 1,
+    exports = ["//tools/base/build-system/builder-model"],
 )

@@ -8,16 +8,17 @@ configurations {
 }
 
 dependencies {
-    compile project(':base:builder-model')
     compile project(':base:builder-test-api')
     compile libs.guava
     compile libs.kotlin_stdlib
 
     provided gradleApi()
+    provided project(':base:builder-model') // Only present for legacy reasons.
 
     testCompile libs.junit
     testCompile project(':base:testutils')
     testCompile gradleApi()
+    testCompile project(':base:builder-model')
 }
 
 sourceSets {
