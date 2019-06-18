@@ -30,7 +30,7 @@ import java.util.Objects;
 /** Creates a deep copy of a {@link ProductFlavor}. */
 public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlavor {
     // Increase the value when adding/removing fields or when changing the serialization/deserialization mechanism.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NonNull private final Map<String, String> myTestInstrumentationRunnerArguments;
     @NonNull private final Collection<String> myResourceConfigurations;
@@ -44,6 +44,8 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
     @Nullable private final Integer myMaxSdkVersion;
     @Nullable private final String myTestApplicationId;
     @Nullable private final String myTestInstrumentationRunner;
+    @Nullable private final Boolean myTestFunctionalTest;
+    @Nullable private final Boolean myTestHandleProfiling;
     @Nullable private final SigningConfig mySigningConfig;
     private final int myHashCode;
 
@@ -63,6 +65,8 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
         myMaxSdkVersion = flavor.getMaxSdkVersion();
         myTestApplicationId = flavor.getTestApplicationId();
         myTestInstrumentationRunner = flavor.getTestInstrumentationRunner();
+        myTestFunctionalTest = flavor.getTestFunctionalTest();
+        myTestHandleProfiling = flavor.getTestHandleProfiling();
         mySigningConfig = copy(modelCache, flavor.getSigningConfig());
 
         myHashCode = calculateHashCode();
@@ -204,13 +208,13 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
     @Override
     @Nullable
     public Boolean getTestHandleProfiling() {
-        throw new UnusedModelMethodException("getTestHandleProfiling");
+        return myTestHandleProfiling;
     }
 
     @Override
     @Nullable
     public Boolean getTestFunctionalTest() {
-        throw new UnusedModelMethodException("getTestFunctionalTest");
+        return myTestFunctionalTest;
     }
 
     @Override
@@ -252,6 +256,8 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
                 && Objects.equals(myMaxSdkVersion, flavor.myMaxSdkVersion)
                 && Objects.equals(myTestApplicationId, flavor.myTestApplicationId)
                 && Objects.equals(myTestInstrumentationRunner, flavor.myTestInstrumentationRunner)
+                && Objects.equals(myTestFunctionalTest, flavor.myTestFunctionalTest)
+                && Objects.equals(myTestHandleProfiling, flavor.myTestHandleProfiling)
                 && Objects.equals(mySigningConfig, flavor.mySigningConfig);
     }
 
@@ -281,6 +287,8 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
                 myMaxSdkVersion,
                 myTestApplicationId,
                 myTestInstrumentationRunner,
+                myTestFunctionalTest,
+                myTestHandleProfiling,
                 mySigningConfig);
     }
 
@@ -317,6 +325,10 @@ public final class IdeProductFlavor extends IdeBaseConfig implements ProductFlav
                 + ", myTestInstrumentationRunner='"
                 + myTestInstrumentationRunner
                 + '\''
+                + ", myTestFunctionalTest="
+                + myTestFunctionalTest
+                + ", myTestHandleProfiling="
+                + myTestHandleProfiling
                 + ", mySigningConfig="
                 + mySigningConfig
                 + "}";
