@@ -16,14 +16,17 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import static com.android.builder.core.VariantTypeKt.ATTR_AAR;
+import static com.android.builder.core.VariantTypeKt.ATTR_APK;
+import static com.android.builder.core.VariantTypeKt.ATTR_FEATURE;
+
 import org.gradle.api.attributes.Attribute;
 
 /** Type for Build Type attributes in Gradle's configuration objects. */
 public interface AndroidTypeAttr extends org.gradle.api.Named {
     Attribute<AndroidTypeAttr> ATTRIBUTE = Attribute.of(AndroidTypeAttr.class);
 
-    String APK = "Apk";
-    String AAR = "Aar";
-    String FEATURE = "Feature";
-    String METADATA = "Metadata";
+    String APK = ATTR_APK;
+    String AAR = ATTR_AAR;
+    String FEATURE = ATTR_FEATURE;
 }

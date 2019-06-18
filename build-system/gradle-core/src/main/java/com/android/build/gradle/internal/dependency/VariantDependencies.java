@@ -209,6 +209,7 @@ public class VariantDependencies {
 
             final Usage apiUsage = factory.named(Usage.class, Usage.JAVA_API);
             final Usage runtimeUsage = factory.named(Usage.class, Usage.JAVA_RUNTIME);
+            final Usage metadataUsage = factory.named(Usage.class, "android-meta-data");
 
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
@@ -382,10 +383,7 @@ public class VariantDependencies {
                             metadataElements.getAttributes();
                     applyVariantAttributes(
                             metadataElementsAttributes, buildType, publicationFlavorMap);
-                    metadataElementsAttributes.attribute(
-                            AndroidTypeAttr.ATTRIBUTE,
-                            factory.named(AndroidTypeAttr.class, AndroidTypeAttr.METADATA));
-                    metadataElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+                    metadataElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, metadataUsage);
                     elements.put(METADATA_ELEMENTS, metadataElements);
                 }
 
@@ -429,13 +427,9 @@ public class VariantDependencies {
                     metadataValues.setDescription(
                             "Metadata Values dependencies for the base Split");
                     metadataValues.setCanBeConsumed(false);
-                    final AttributeContainer featureMetadataAttributes =
-                            metadataValues.getAttributes();
-                    featureMetadataAttributes.attribute(
-                            AndroidTypeAttr.ATTRIBUTE,
-                            factory.named(AndroidTypeAttr.class, AndroidTypeAttr.METADATA));
-                    applyVariantAttributes(
-                            featureMetadataAttributes, buildType, consumptionFlavorMap);
+                    final AttributeContainer metadataAttributes = metadataValues.getAttributes();
+                    metadataAttributes.attribute(Usage.USAGE_ATTRIBUTE, metadataUsage);
+                    applyVariantAttributes(metadataAttributes, buildType, consumptionFlavorMap);
                 }
             }
 
