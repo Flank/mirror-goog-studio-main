@@ -16,7 +16,6 @@
 
 package com.android.builder.dexing;
 
-import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE;
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
 
 import com.android.annotations.NonNull;
@@ -30,6 +29,7 @@ import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -144,7 +144,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                 addHint(DexParser.DEX_LIMIT_EXCEEDED_ERROR);
             }
 
-            if (diagnostic.getDiagnosticMessage().startsWith(ERROR_DUPLICATE)) {
+            if (diagnostic instanceof DuplicateTypesDiagnostic) {
                 addHint(diagnostic.getDiagnosticMessage());
                 addHint(ERROR_DUPLICATE_HELP_PAGE);
             }

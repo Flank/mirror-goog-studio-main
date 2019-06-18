@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.options.SyncOptions
-import com.android.builder.dexing.ERROR_DUPLICATE
 import com.android.builder.dexing.ERROR_DUPLICATE_HELP_PAGE
 import com.android.builder.multidex.D8MainDexList
 import com.android.testutils.TestClassesGenerator
@@ -166,7 +165,7 @@ class D8MainDexListTaskTest {
             ).run()
         }
 
-        assertThat(exception.message).contains(ERROR_DUPLICATE)
+        assertThat(exception.message).contains("is defined multiple times")
         assertThat(exception.message).contains(ERROR_DUPLICATE_HELP_PAGE)
     }
 

@@ -412,7 +412,7 @@ public class DexArchiveMergerTest {
             DexArchiveTestUtil.mergeMonoDex(dexArchives, outputDex, dexMerger);
             fail("dex merging should fail when there are classes with same name and package");
         } catch (DexArchiveMergerException e) {
-            Truth.assertThat(e.getMessage()).contains("Program type already present");
+            Truth.assertThat(e.getMessage()).contains("is defined multiple times");
         } catch (Exception e) {
             Truth.assertThat(Throwables.getStackTraceAsString(e))
                     .contains("Multiple dex files define");

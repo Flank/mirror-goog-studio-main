@@ -16,7 +16,6 @@
 
 package com.android.builder.multidex;
 
-import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE;
 import static com.android.builder.dexing.D8ErrorMessagesKt.ERROR_DUPLICATE_HELP_PAGE;
 import static com.android.utils.PathUtils.toSystemIndependentPath;
 
@@ -28,6 +27,7 @@ import com.android.ide.common.blame.MessageReceiver;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.GenerateMainDexList;
 import com.android.tools.r8.GenerateMainDexListCommand;
+import com.android.tools.r8.errors.DuplicateTypesDiagnostic;
 import com.android.tools.r8.origin.Origin;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
@@ -121,7 +121,7 @@ public final class D8MainDexList {
 
         @Override
         protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
-            if (diagnostic.getDiagnosticMessage().startsWith(ERROR_DUPLICATE)) {
+            if (diagnostic instanceof DuplicateTypesDiagnostic) {
                 addHint(diagnostic.getDiagnosticMessage());
                 addHint(ERROR_DUPLICATE_HELP_PAGE);
             }
