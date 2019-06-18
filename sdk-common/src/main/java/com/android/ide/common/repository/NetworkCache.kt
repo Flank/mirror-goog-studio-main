@@ -15,6 +15,7 @@
  */
 package com.android.ide.common.repository
 
+import com.android.annotations.concurrency.Slow
 import com.google.common.io.Files
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
@@ -53,6 +54,7 @@ abstract class NetworkCache constructor(
 ) {
 
     /** Reads the given query URL in, with the given time out, and returns the bytes found */
+    @Slow
     protected abstract fun readUrlData(url: String, timeout: Int): ByteArray?
 
     /** Provides the data from offline/local storage, if possible */
