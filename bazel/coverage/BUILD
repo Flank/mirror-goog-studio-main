@@ -15,11 +15,27 @@ py_library(
     srcs = ["merge_lcov.py"],
 )
 
+# This should be a py_binary, but due to a Bazel bug
+# using py_binary as a tool in a genrule doesn't work
+py_library(
+    name = "filter_lcov",
+    srcs = ["filter_lcov.py"],
+)
+
 # This is just an example report for testing during development
 # run tests: bazel test --define agent_coverage=true --config=remote -- @cov//:example:suite
 # make lcov: bazel build --config=remote -- @cov//:example.lcov
 coverage_report(
     name = "example",
+    srcpath_exclude = [
+        "tools/base/lint/libs",
+        "tools/base/usb-devices/src/com/android/tools/usb/parser",
+    ],
+    srcpath_include = [
+        "tools/adt/idea/adt-branding",
+        "tools/base/lint",
+        "tools/base/usb-devices",
+    ],
     tests = [
         "//tools/adt/idea/android-kotlin:intellij.android.kotlin.tests_tests",  # 5 shard 1 exec
         "//tools/base/build-system/integration-test/application:automatic-tests",  # 8 shard 2 exec
