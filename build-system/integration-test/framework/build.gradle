@@ -24,7 +24,6 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')
-    compile project(':base:java-lib-model')
 
     compile libs.kotlin_stdlib
 

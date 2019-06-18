@@ -193,9 +193,7 @@ maven_repo(
 # m2 repository packaged inside studio.
 maven_repo(
     name = "studio_repo",
-    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
-        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
-    ],
+    artifacts = GRADLE_PLUGIN_ARTIFACTS,
     include_sources = True,
     visibility = ["//visibility:public"],
 )

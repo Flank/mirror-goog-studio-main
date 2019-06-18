@@ -54,7 +54,6 @@ public class JarContentsTest {
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
     private static final String GMAVEN_ZIP = "tools/base/gmaven.zip";
-    private static final String JAVALIBMODELBUILDER_ZIP = "tools/base/java-lib-model-builder.zip";
 
     private static final SetMultimap<String, String> EXPECTED;
 
@@ -641,10 +640,6 @@ public class JarContentsTest {
                 "versions-offline/com/android/databinding/group-index.xml",
                 "versions-offline/com/android/installreferrer/",
                 "versions-offline/com/android/installreferrer/group-index.xml",
-                "versions-offline/com/android/java/",
-                "versions-offline/com/android/java/tools/",
-                "versions-offline/com/android/java/tools/build/",
-                "versions-offline/com/android/java/tools/build/group-index.xml",
                 "versions-offline/com/android/support/",
                 "versions-offline/com/android/support/constraint/",
                 "versions-offline/com/android/support/constraint/group-index.xml",
@@ -1142,29 +1137,6 @@ public class JarContentsTest {
                 "META-INF/MANIFEST.MF",
                 "NOTICE");
         expected.putAll(
-                "com/android/java/tools/build/java-lib-model",
-                "com/",
-                "com/android/",
-                "com/android/java/",
-                "com/android/java/model/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE");
-        expected.putAll(
-                "com/android/java/tools/build/java-lib-model-builder",
-                "com/",
-                "com/android/",
-                "com/android/java/",
-                "com/android/java/model/",
-                "com/android/java/model/builder/",
-                "com/android/java/model/impl/",
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NOTICE",
-                "META-INF/gradle-plugins/",
-                "META-INF/gradle-plugins/com.android.java.properties");
-
-        expected.putAll(
                 "com/android/tools/apkparser/binary-resources",
                 "com/",
                 "com/google/",
@@ -1316,11 +1288,6 @@ public class JarContentsTest {
         checkGroup("androidx/databinding/databinding-compiler", GMAVEN_ZIP);
         // pre-android X
         checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
-    }
-
-    @Test
-    public void checkJava() throws Exception {
-        checkGroup("com/android/java", JAVALIBMODELBUILDER_ZIP);
     }
 
     private void checkGroup(String groupPrefix, String zipLocation) throws Exception {

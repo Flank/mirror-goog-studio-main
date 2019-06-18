@@ -17,7 +17,6 @@ dependencies {
     testCompile project(':base:sdk-common')
     testCompile project(':base:testing-infrastructure:device-pool:device-provider')
     testCompile project(':base:testutils')
-    testCompile project(':base:java-lib-model')
     testCompile project(':base:zipflinger')
 
     testCompile libs.kotlin_stdlib
@@ -109,8 +108,6 @@ task automaticTest(type: Test) {
 task sanityTest(type: Test) {
     include "com/android/build/gradle/integration/sanity/**"
     environment = testEnvironment
-    dependsOn ':base:java-lib-model:publishLocal'
-    dependsOn ':base:java-lib-model-builder:publishLocal'
     dependsOn ':publishLocal'
 }
 
