@@ -141,7 +141,6 @@ class PublishingSpecs {
 
                 metadata(METADATA_INSTALLED_BASE_DECLARATION, ArtifactType.METADATA_BASE_MODULE_DECLARATION)
 
-                metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
                 runtime(NAVIGATION_JSON, ArtifactType.NAVIGATION_JSON)
 
                 // output of bundle-tool
@@ -191,7 +190,6 @@ class PublishingSpecs {
 
                 // The intermediate bundle containing only this module. Input for bundle-tool
                 metadata(MODULE_BUNDLE, ArtifactType.MODULE_BUNDLE)
-                metadata(BUNDLE_MANIFEST, ArtifactType.BUNDLE_MANIFEST)
                 metadata(METADATA_LIBRARY_DEPENDENCIES_REPORT, ArtifactType.LIB_DEPENDENCIES)
 
                 // this is only for non-base modules.

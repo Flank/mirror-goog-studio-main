@@ -111,8 +111,6 @@ public class AndroidArtifacts {
     // attr info extracted from the platform android.jar
     public static final String TYPE_PLATFORM_ATTR = "android-platform-attr";
 
-    private static final String TYPE_BUNDLE_MANIFEST = "android-bundle-manifest";
-
     private static final String TYPE_NAVIGATION_JSON = "android-navigation-json";
 
     public enum ConsumedConfigType {
@@ -239,8 +237,6 @@ public class AndroidArtifacts {
         BUNDLE(TYPE_BUNDLE),
         // apks produced from the bundle, for consumption by tests.
         APKS_FROM_BUNDLE(TYPE_APKS_FROM_BUNDLE),
-        // the manifest to be used by bundle-tool
-        BUNDLE_MANIFEST(TYPE_BUNDLE_MANIFEST),
         // intermediate library dependencies on a per module basis for eventual packaging in the
         // bundle.
         LIB_DEPENDENCIES(TYPE_LIB_DEPENDENCIES),
