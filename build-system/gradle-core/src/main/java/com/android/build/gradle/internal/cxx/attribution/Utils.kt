@@ -84,4 +84,5 @@ internal fun collectNinjaLogs(cxxBuildModel: CxxBuildModel) {
             zipOs.closeEntry()
         }
     }
+    generateChromeTrace(zipFile)
 }

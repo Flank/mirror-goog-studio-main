@@ -259,9 +259,11 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
         project.execute("clean", "assembleDebug")
         val directories = join(project.testDir, ".cxx", "attribution").listFiles()
         assertThat(directories!!.size).isEqualTo(1)
-        val attributionFiles = directories[0].listFiles()
-        assertThat(attributionFiles!!.size).isEqualTo(1)
-        val attributionFile = attributionFiles[0]
+        val attributionFiles = directories[0].listFiles().sorted()
+        assertThat(attributionFiles.size).isEqualTo(2)
+        val traceFile = attributionFiles[0]
+        assertThat(traceFile.name).matches("ninja_build_log_\\d+\\.json.gz")
+        val attributionFile = attributionFiles[1]
         assertThat(attributionFile.name).matches("ninja_build_log_\\d+\\.zip")
         ZipFile(attributionFile).use { z ->
             assertThat(
