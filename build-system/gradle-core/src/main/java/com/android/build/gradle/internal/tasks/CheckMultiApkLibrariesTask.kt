@@ -107,7 +107,7 @@ open class CheckMultiApkLibrariesTask : NonIncrementalTask() {
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.METADATA_VALUES,
                         AndroidArtifacts.ArtifactScope.PROJECT,
-                        AndroidArtifacts.ArtifactType.FEATURE_TRANSITIVE_DEPS
+                        AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES
                     )
             task.fakeOutputDir =
                     FileUtils.join(

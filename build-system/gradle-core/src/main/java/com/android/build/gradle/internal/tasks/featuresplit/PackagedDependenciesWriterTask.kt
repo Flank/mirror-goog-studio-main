@@ -42,7 +42,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
 /** Task to write the list of transitive dependencies.  */
-abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
+abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -99,25 +99,25 @@ abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
      * This cannot depend on preBuild as it would introduce a dependency cycle.
      */
     class CreationAction(private val variantScope: VariantScope) :
-        TaskCreationAction<FeatureSplitTransitiveDepsWriterTask>() {
+        TaskCreationAction<PackagedDependenciesWriterTask>() {
 
         override val name: String
             get() = variantScope.getTaskName("generate", "FeatureTransitiveDeps")
-        override val type: Class<FeatureSplitTransitiveDepsWriterTask>
-            get() = FeatureSplitTransitiveDepsWriterTask::class.java
+        override val type: Class<PackagedDependenciesWriterTask>
+            get() = PackagedDependenciesWriterTask::class.java
 
-        override fun handleProvider(taskProvider: TaskProvider<out FeatureSplitTransitiveDepsWriterTask>) {
+        override fun handleProvider(taskProvider: TaskProvider<out PackagedDependenciesWriterTask>) {
             super.handleProvider(taskProvider)
             variantScope.artifacts.producesFile(
-                InternalArtifactType.FEATURE_TRANSITIVE_DEPS,
+                InternalArtifactType.PACKAGED_DEPENDENCIES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                FeatureSplitTransitiveDepsWriterTask::outputFile,
+                PackagedDependenciesWriterTask::outputFile,
                 "deps.txt"
             )
         }
 
-        override fun configure(task: FeatureSplitTransitiveDepsWriterTask) {
+        override fun configure(task: PackagedDependenciesWriterTask) {
             task.variantName = variantScope.fullVariantName
             task.projectPath = variantScope.globalScope.project.path
             task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
@@ -125,8 +125,8 @@ abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
             task.transitivePackagedDeps =
                 variantScope.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
-                    AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                    AndroidArtifacts.ArtifactScope.PROJECT,
+                    AndroidArtifacts.ArtifactType.PACKAGED_DEPENDENCIES)
         }
     }
 }

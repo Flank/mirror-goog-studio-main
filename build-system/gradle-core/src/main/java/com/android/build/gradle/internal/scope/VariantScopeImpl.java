@@ -750,13 +750,13 @@ public class VariantScopeImpl implements VariantScope {
 
         if (configType == RUNTIME_CLASSPATH
                 && getType().isFeatureSplit()
-                && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
+                && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
                     computeArtifactCollection(
                                     RUNTIME_CLASSPATH,
                                     PROJECT,
-                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                                    ArtifactType.PACKAGED_DEPENDENCIES,
                                     attributeMap)
                             .getArtifactFiles();
 
@@ -792,13 +792,13 @@ public class VariantScopeImpl implements VariantScope {
 
         if (configType == RUNTIME_CLASSPATH
                 && getType().isFeatureSplit()
-                && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
+                && artifactType != ArtifactType.PACKAGED_DEPENDENCIES) {
 
             FileCollection excludedDirectories =
                     computeArtifactCollection(
                                     RUNTIME_CLASSPATH,
                                     PROJECT,
-                                    ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                                    ArtifactType.PACKAGED_DEPENDENCIES,
                                     null)
                             .getArtifactFiles();
             artifacts =

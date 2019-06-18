@@ -55,7 +55,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingExportFeat
 import com.android.build.gradle.internal.tasks.factory.TaskFactoryUtils;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadataWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.PackagedDependenciesWriterTask;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -230,7 +230,7 @@ public class ApplicationTaskManager extends TaskManager {
         // Create the lint tasks, if enabled
         createLintTasks(variantScope, variantScopesForLint);
 
-        taskFactory.register(new FeatureSplitTransitiveDepsWriterTask.CreationAction(variantScope));
+        taskFactory.register(new PackagedDependenciesWriterTask.CreationAction(variantScope));
 
         createDynamicBundleTask(variantScope);
     }

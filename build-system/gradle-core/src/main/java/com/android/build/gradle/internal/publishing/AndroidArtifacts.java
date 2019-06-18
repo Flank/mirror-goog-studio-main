@@ -88,11 +88,13 @@ public class AndroidArtifacts {
     private static final String TYPE_MAPPING = "android-mapping";
     private static final String TYPE_METADATA = "android-metadata";
 
+    // types for APK to APK support (base/feature/tests)
+    private static final String TYPE_PACKAGED_DEPENDENCIES = "android-packaged-dependencies";
+
     // types for feature-split content.
     private static final String TYPE_FEATURE_SET_METADATA = "android-feature-all-metadata";
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
-    private static final String TYPE_FEATURE_TRANSITIVE_DEPS = "android-feature-transitive-deps";
     private static final String TYPE_FEATURE_DEX = "android-feature-dex";
     private static final String TYPE_FEATURE_SIGNING_CONFIG = "android-feature-signing-config";
 
@@ -256,9 +258,9 @@ public class AndroidArtifacts {
         // ?
         FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG),
 
-        // File containing the list of transitive dependencies of a given feature. This is consumed
-        // by other features to avoid repackaging the same thing.
-        FEATURE_TRANSITIVE_DEPS(TYPE_FEATURE_TRANSITIVE_DEPS),
+        // File containing the list of dependencies packaged in a given APK. This is consumed
+        // by other APKs to avoid repackaging the same thing.
+        PACKAGED_DEPENDENCIES(TYPE_PACKAGED_DEPENDENCIES),
 
         // The feature dex files output by the DexSplitter from the base. The base produces and
         // publishes these files when there's multi-apk code shrinking.
