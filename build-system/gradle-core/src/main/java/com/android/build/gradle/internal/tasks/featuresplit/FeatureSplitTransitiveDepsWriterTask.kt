@@ -24,47 +24,72 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
 import com.android.utils.FileUtils
-import com.google.common.base.Charsets
 import com.google.common.base.Joiner
-import com.google.common.io.Files
 import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.artifacts.result.ResolvedComponentResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import java.util.stream.Collectors
 
 /** Task to write the list of transitive dependencies.  */
-@CacheableTask
 abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
-
-    // list of runtime classpath.
-    private lateinit var runtimeJars: ArtifactCollection
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    // use CompileClasspath to get as little notifications as possible.
-    // technically we only care when the list changes, not the content but there's no way
-    // to get this right now.
-    @CompileClasspath
-    fun getInputJars() : FileCollection = runtimeJars.artifactFiles
+    @get:Input
+    val content: Set<String> by lazy {
+        runtimeClasspath.incoming.resolutionResult.allComponents
+            .asSequence()
+            .map { it.toIdString() }
+            .toSortedSet()
+    }
+
+    // the list of packaged dependencies by transitive dependencies.
+    private lateinit var transitivePackagedDeps : ArtifactCollection
+
+    private lateinit var runtimeClasspath: Configuration
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    val transitivePackagedDepsFC : FileCollection
+        get() = transitivePackagedDeps.artifactFiles
+
+    private lateinit var projectPath: String
 
     override fun doTaskAction() {
+        val apkFilters = mutableSetOf<String>()
+        val contentFilters = mutableSetOf<String>()
+        // load the transitive information and remove from the full content.
+        // We know this is correct because this information is also used in
+        // FilteredArtifactCollection to remove this content from runtime-based ArtifactCollection.
+        // However since we directly use the Configuration here, we have to manually remove it.
+        for (transitiveDep in transitivePackagedDeps) {
+            // register the APK that generated this list to remove it from our list
+            apkFilters.add(transitiveDep.toIdString())
+            // read its packaged content to also remove it.
+            val lines = transitiveDep.file.readLines()
+            contentFilters.addAll(lines)
+        }
 
-        val content: Set<String> = runtimeJars.artifacts
-                .stream()
-                .map { artifact -> compIdToString(artifact) }
-                .collect(Collectors.toSet())
+        // compute the overall content
+        val filteredContent = content.asSequence()
+            .filter { !apkFilters.contains(it) && !contentFilters.contains(it) && it != projectPath }
+            .toSortedSet()
 
-        FileUtils.mkdirs(outputFile.get().asFile.parentFile)
-        Files.asCharSink(outputFile.get().asFile, Charsets.UTF_8)
-                .write(Joiner.on(System.lineSeparator()).join(content))
+        val asFile = outputFile.get().asFile
+        FileUtils.mkdirs(asFile.parentFile)
+        asFile.writeText(Joiner.on(System.lineSeparator()).join(filteredContent))
     }
 
     /**
@@ -94,33 +119,64 @@ abstract class FeatureSplitTransitiveDepsWriterTask : NonIncrementalTask() {
 
         override fun configure(task: FeatureSplitTransitiveDepsWriterTask) {
             task.variantName = variantScope.fullVariantName
+            task.projectPath = variantScope.globalScope.project.path
+            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
 
-            task.runtimeJars = variantScope.getArtifactCollection(
+            task.transitivePackagedDeps =
+                variantScope.getArtifactCollection(
                     AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                     AndroidArtifacts.ArtifactScope.ALL,
-                    AndroidArtifacts.ArtifactType.CLASSES)
+                    AndroidArtifacts.ArtifactType.FEATURE_TRANSITIVE_DEPS)
         }
     }
 }
 
-fun compIdToString(artifact: ResolvedArtifactResult) : String {
+private fun ResolvedComponentResult.toIdString() : String {
+    return id.toIdString {
+        getAndroidVariant()
+    }
+}
 
-    val id = artifact.id.componentIdentifier
-    when (id) {
+fun ResolvedArtifactResult.toIdString(): String {
+    return id.componentIdentifier.toIdString {
+        variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
+    }
+}
+
+private inline fun ComponentIdentifier.toIdString(variantProvider: () -> String?) : String {
+    return when (this) {
         is ProjectComponentIdentifier -> {
-            val variant = getVariant(artifact)
+            val variant = variantProvider()
             if (variant == null) {
-                return id.projectPath
+                projectPath
             } else {
-                return id.projectPath + "::" + variant
+                "$projectPath::$variant"
             }
         }
-        is ModuleComponentIdentifier -> return id.group + ":" + id.module
-        else -> {
-            return id.toString()
-        }
+        is ModuleComponentIdentifier -> "$group:$module"
+        else -> toString()
     }
 }
 
-fun getVariant(artifact: ResolvedArtifactResult) = artifact.variant.attributes.getAttribute(VariantAttr.ATTRIBUTE)?.name
+private fun ResolvedComponentResult.getAndroidVariant(): String? = variants
+    .asSequence()
+    .map { result ->
+        // what we have access here are the attributes of the variant that was selected
+        // rather than the one setup on the resolved variant (if one were to access this via
+        // ArtifactCollection).
+        // In order to handle cross project boundaries (in the case of composite projects where
+        // both side have different classloader for instance), the attributes are desugared into
+        // Strings.
+        // So in this case all the attributes are Attribute<String> with the value being the
+        // original generic type.
+        val key = result.attributes.keySet().firstOrNull {
+            it.name == VariantAttr::class.java.name
+        }
+
+        if (key != null) {
+            result.attributes.getAttribute(key) as String?
+        } else null
+    }
+    .filter { it != null }
+    .firstOrNull()
 

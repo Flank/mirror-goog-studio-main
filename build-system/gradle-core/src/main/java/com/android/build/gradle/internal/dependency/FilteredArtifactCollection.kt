@@ -17,18 +17,11 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.scope.InternalArtifactType
-import com.android.build.gradle.internal.tasks.featuresplit.compIdToString
-import com.google.common.collect.ImmutableList
-import com.google.common.io.Files
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
-import java.io.File
-import java.util.concurrent.Callable
 import java.util.function.Consumer
-import java.util.stream.Collectors
 
 /**
  * Implementation of a [ArtifactCollection] on top of a main collection, and a component

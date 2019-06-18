@@ -818,7 +818,7 @@ public class VariantScopeImpl implements VariantScope {
         TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
         final VariantScope testedScope = tested.getScope();
 
-        // we only add the tested component to the MODULE | ALL scopes.
+        // we only add the tested component to the PROJECT | ALL scopes.
         if (scope == ArtifactScope.PROJECT || scope == ALL) {
             VariantSpec testedSpec = testedScope.getPublishingSpec().getTestingSpec(getType());
 

@@ -43,7 +43,6 @@ open class CheckMultiApkLibrariesTask : NonIncrementalTask() {
     private lateinit var featureTransitiveDeps : ArtifactCollection
 
     @InputFiles
-    @NonNull
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getFeatureTransitiveDepsFiles() : FileCollection = featureTransitiveDeps.artifactFiles
 

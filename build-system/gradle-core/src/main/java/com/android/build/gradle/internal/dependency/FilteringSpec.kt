@@ -16,18 +16,15 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.tasks.featuresplit.*
-import com.google.common.collect.ImmutableList
+import com.android.build.gradle.internal.tasks.featuresplit.toIdString
 import com.google.common.io.Files
 import org.gradle.api.Project
-import java.io.File
-import java.io.IOException
-import java.util.stream.Collectors
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.FileCollection
 import org.gradle.api.specs.Spec
+import java.io.File
+import java.util.stream.Collectors
 
 /**
  * Implementation of [Spec] to filter out directories from a [FileCollection]
@@ -48,11 +45,7 @@ class FilteringSpec(
     override fun isSatisfiedBy(file: File): Boolean {
         if (excluded.isEmpty()) return true
         val keptFiles = artifacts.artifacts.asSequence()
-            .filter { it ->
-                !excluded.contains(
-                    compIdToString(it)
-                )
-            }
+            .filter { !excluded.contains(it.toIdString()) }
             .map { it.file }.toSet()
         return keptFiles.contains(file)
     }
@@ -75,7 +68,7 @@ class FilteringSpec(
         }
 
         return artifacts.artifacts.asSequence()
-            .filter { !excluded.contains(compIdToString(it)) }.toSet()
+            .filter { !excluded.contains(it.toIdString()) }.toSet()
     }
 
     fun getFilteredFileCollection(project: Project): FileCollection =
