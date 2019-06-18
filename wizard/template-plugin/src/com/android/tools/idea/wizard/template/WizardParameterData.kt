@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.tools.idea.wizard.template.impl
-
-import com.android.tools.idea.wizard.template.Template
-import com.android.tools.idea.wizard.template.WizardTemplateProvider
+package com.android.tools.idea.wizard.template
 
 /**
- * Implementation of the Android Wizard Template plugin extension point.
+ * Data used for rendering template UI, provided by the wizards
+ *
+ * Useful when rendering UI according to templates (e.g. visibility may depend on [isNewModule]).
+ * It is not passed to the template renderer, in contrast to [TemplateData].
  */
-class WizardTemplateProviderImpl : WizardTemplateProvider() {
-  override fun getTemplates(): List<Template> {
-    TODO("not implemented")
-  }
-}
+data class WizardParameterData(
+  val packageName: String,
+  val isNewModule: Boolean,
+  /**
+   * Name of the source provider.
+   * Also known as "flavor". E.g. "main", "debug" etc.
+   */
+  val sourceProviderName: String
+)
