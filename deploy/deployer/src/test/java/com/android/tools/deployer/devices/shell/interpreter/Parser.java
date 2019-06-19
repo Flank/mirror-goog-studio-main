@@ -50,6 +50,7 @@ import com.android.tools.deployer.devices.shell.interpreter.Expression.ForExpres
 import com.android.tools.deployer.devices.shell.interpreter.Expression.IfExpression;
 import com.android.tools.deployer.devices.shell.interpreter.Expression.ListExpression;
 import com.android.tools.deployer.devices.shell.interpreter.Expression.PipeStatement;
+import com.android.tools.deployer.devices.shell.interpreter.Expression.SubshellExpression;
 import com.android.tools.deployer.devices.shell.interpreter.Expression.VarSubExpression;
 import java.util.ArrayList;
 import java.util.List;
@@ -167,7 +168,7 @@ public class Parser {
      */
     @NonNull
     private static Expression parseExpression(@NonNull BashTokenizer tokenizer) {
-        Token token = tokenizer.peekToken(IF, FOR, FILE_PATH, QUOTED_STRING, BACKTICK, VAR);
+        Token token = tokenizer.peekToken(IF, FOR, VAR, FILE_PATH, QUOTED_STRING, BACKTICK);
         switch (token.getType()) {
             case IF:
                 return parseIf(tokenizer);
@@ -203,7 +204,10 @@ public class Parser {
             switch (value.getType()) {
                 case BACKTICK:
                     assignmentExpression =
-                            new AssignmentExpression(varName, parseScript(tokenizer));
+                            new AssignmentExpression(
+                                    varName,
+                                    new SubshellExpression(
+                                            parseScript(tokenizer.extractToEndingBacktick())));
                     tokenizer.parseToken(BACKTICK);
                     break;
                 case QUOTED_STRING:
@@ -223,7 +227,9 @@ public class Parser {
         CommandExpression commandExpression;
         if (command.getType() == BACKTICK) {
             commandExpression =
-                    new CommandExpression(parseScript(tokenizer.extractToEndingBacktick()), true);
+                    new CommandExpression(
+                            new SubshellExpression(
+                                    parseScript(tokenizer.extractToEndingBacktick())));
             tokenizer.parseToken(BACKTICK);
         } else {
             commandExpression = new CommandExpression(new VarSubExpression(command.getText()));
@@ -253,7 +259,9 @@ public class Parser {
                     break;
                 case BACKTICK:
                     tokenizer.parseToken(BACKTICK);
-                    commandExpression.addParam(parseScript(tokenizer));
+                    commandExpression.addParam(
+                            new SubshellExpression(
+                                    parseScript(tokenizer.extractToEndingBacktick())));
                     tokenizer.parseToken(BACKTICK);
                     break;
                 default:

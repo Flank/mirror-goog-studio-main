@@ -164,6 +164,30 @@ public interface Expression {
         }
     }
 
+    class SubshellExpression implements Expression {
+        // Wrapped expressesion to be executed in the subshell.
+        @NonNull private final Expression expression;
+
+        public SubshellExpression(@NonNull Expression expression) {
+            this.expression = expression;
+        }
+
+        @Override
+        public ExecutionResult execute(@NonNull ShellContext env) {
+            ExecutionResult result = expression.execute(env);
+            try {
+                if (result.code == 0) {
+                    // Backticks trims the result and replaces newlines/multiple spaces
+                    // with a single space. But we'll only handle newlines here.
+                    return new ExecutionResult(env.readStringFromPipe().trim().replace('\n', ' '));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return result;
+        }
+    }
+
     class AssignmentExpression implements Expression {
         @NonNull private final String variableName;
         @NonNull private final Expression expression;
@@ -186,16 +210,10 @@ public interface Expression {
     class CommandExpression implements Expression {
         @NonNull private final Expression commandExpression;
         @NonNull private final List<Expression> params;
-        private final boolean subshell;
 
         public CommandExpression(@NonNull Expression commandExpression) {
-            this(commandExpression, false);
-        }
-
-        public CommandExpression(@NonNull Expression commandExpression, boolean subshell) {
             this.commandExpression = commandExpression;
             params = new ArrayList<>();
-            this.subshell = subshell;
         }
 
         public void addParam(@NonNull Expression expression) {
@@ -210,7 +228,7 @@ public interface Expression {
                 List<String> paramResults = new ArrayList<>();
                 for (Expression expression : params) {
                     result = expression.execute(env);
-                    if (subshell && (commandName == null || commandName.isEmpty())) {
+                    if (commandName == null || commandName.isEmpty()) {
                         // Backticks can eval to empty, then the next param becomes the command.
                         commandName = result.text;
                     }
@@ -222,7 +240,8 @@ public interface Expression {
                 InputStream stdin = env.takeStdin();
                 PrintStream stdout = env.getPrintStdout();
 
-                if (subshell && (commandName == null || commandName.isEmpty())) {
+                // Empty subshell (e.g. ``) returns success.
+                if (commandName == null || commandName.isEmpty()) {
                     return new ExecutionResult(0);
                 }
 

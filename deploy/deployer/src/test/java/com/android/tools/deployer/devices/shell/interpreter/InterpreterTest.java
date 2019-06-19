@@ -110,6 +110,12 @@ public class InterpreterTest {
     }
 
     @Test
+    public void varBacktickTest() throws IOException {
+        assertEquals(0, Parser.parse("asdf=`echo foo`; echo $asdf").execute(env).code);
+        assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
+    }
+
+    @Test
     public void ifTest() throws IOException {
         assertEquals(0, Parser.parse("if [[ a == a* ]]; then echo foo; fi").execute(env).code);
         assertEquals(String.format("foo%s", System.lineSeparator()), env.readStringFromPipe());
