@@ -20,14 +20,12 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Multimap
 import com.intellij.psi.LambdaUtil
 import com.intellij.psi.PsiClassType
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiModifier
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UCallableReferenceExpression
 import org.jetbrains.uast.UClass
-import org.jetbrains.uast.UDeclarationsExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.ULambdaExpression
@@ -42,12 +40,11 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastCallKind
 import org.jetbrains.uast.getContainingUMethod
+import org.jetbrains.uast.kotlin.KotlinUFunctionCallExpression
 import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
+import org.jetbrains.uast.tryResolve
 import org.jetbrains.uast.visitor.AbstractUastVisitor
-import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
 /**
  * Maps expressions and variables to likely receivers,
@@ -330,43 +327,13 @@ fun UCallExpression.getDispatchReceivers(
     receiverEval: DispatchReceiverEvaluator
 ): Collection<DispatchReceiver> {
 
-    // TODO(kotlin-uast-cleanup)
-    // Kotlin variable function calls require some special care.
-    // In particular, there seems to be no way (through the UAST interface) of resolving a
-    // callable variable to its declaration; only a UIdentifier is available. So we use reflection
-    // to access the resolved variable from the Kotlin compiler frontend.
-    //
-    // Note that the nullity check for [classReference] is there as an extra heuristic for
-    // for determining whether this is a function expression invocation rather than
-    // a normal method call.
-    if (methodName == "invoke" && classReference != null) {
-        val lambda =
-            methodIdentifier?.sourcePsi?.navigationElement.toUElementOfType<ULambdaExpression>()
-        if (lambda != null)
-            return receiverEval[lambda]
-
-        fun Any.getProperty(name: String) =
-            javaClass.kotlin.memberProperties.find { it.name == name }
-                ?.apply { isAccessible = true }
-                ?.get(this)
-
-        fun Any.invokeMemberFunction(name: String, vararg args: Any?) =
-            javaClass.kotlin.memberFunctions.find { it.name == name }
-                ?.apply { isAccessible = true }
-                ?.call(this, *args)
-
-        val ktDecl = getProperty("resolvedCall")
-            ?.getProperty("variableCall")
-            ?.getProperty("candidateDescriptor")
-            ?.invokeMemberFunction("getSource")
-            ?.getProperty("psi")
-                as? PsiElement
-
-        val uDecl = ktDecl.toUElementOfType<UDeclarationsExpression>()?.declarations?.singleOrNull()
-            ?: ktDecl.toUElement()
-            ?: return emptyList()
-
-        return receiverEval[uDecl]
+    // If this function call is really an 'invoke' on a local lambda variable,
+    // we resolve to the variable declaration before consulting the dispatch receiver evaluator.
+    // TODO(kotlin-uast-cleanup): For now we use heuristics to decide whether this is an
+    //  invoke on a local lambda variable; it's not obvious that there's a better way.
+    if (this is KotlinUFunctionCallExpression && methodName == "invoke") {
+        val decl = receiver?.tryResolve().toUElement() ?: return emptyList()
+        return receiverEval[decl]
     }
 
     // "Normal" method calls.
