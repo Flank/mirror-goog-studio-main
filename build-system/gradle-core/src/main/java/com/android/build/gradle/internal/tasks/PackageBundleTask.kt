@@ -75,6 +75,11 @@ abstract class PackageBundleTask : NonIncrementalTask() {
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
     abstract val obsfuscationMappingFile: RegularFileProperty
 
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NAME_ONLY)
+    abstract val integrityConfigFile: RegularFileProperty
+
     @get:Input
     lateinit var aaptOptionsNoCompress: Collection<String>
         private set
@@ -108,6 +113,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     featureFiles = featureZips.files,
                     mainDexList = mainDexList.orNull?.asFile,
                     obfuscationMappingFile = if (obsfuscationMappingFile.isPresent) obsfuscationMappingFile.get().asFile else null,
+                    integrityConfigFile = if (integrityConfigFile.isPresent) integrityConfigFile.get().asFile else null,
                     aaptOptionsNoCompress = aaptOptionsNoCompress,
                     bundleOptions = bundleOptions,
                     bundleFlags = bundleFlags,
@@ -126,6 +132,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val featureFiles: Set<File>,
         val mainDexList: File?,
         val obfuscationMappingFile: File?,
+        val integrityConfigFile: File?,
         val aaptOptionsNoCompress: Collection<String>,
         val bundleOptions: BundleOptions,
         val bundleFlags: BundleFlags,
@@ -134,7 +141,7 @@ abstract class PackageBundleTask : NonIncrementalTask() {
         val uncompressBundle: Boolean
     ) : Serializable
 
-    private class BundleToolRunnable @Inject constructor(private val params: Params): Runnable {
+    private class BundleToolRunnable @Inject constructor(private val params: Params) : Runnable {
         override fun run() {
             // BundleTool requires that the destination directory for the bundle file exists,
             // and that the bundle file itself does not
@@ -165,8 +172,6 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                         Config.Optimizations.newBuilder()
                             .setSplitsConfig(splitsConfig)
                             .setUncompressNativeLibraries(uncompressNativeLibrariesConfig))
-
-
             val command = BuildBundleCommand.builder()
                 .setUncompressedBundle(params.uncompressBundle)
                 .setBundleConfig(bundleConfig.build())
@@ -184,6 +189,16 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                     "proguard.map",
                     it.toPath()
                 )
+            }
+
+            params.integrityConfigFile?.let {
+                if (it.isFile) {
+                    command.addMetadataFile(
+                        "com.google.play.apps.integrity",
+                        "AppIntegrityConfig.pb",
+                        it.toPath()
+                    )
+                }
             }
 
             command.build().execute()
@@ -254,6 +269,13 @@ abstract class PackageBundleTask : NonIncrementalTask() {
                 InternalArtifactType.BUNDLE_DEPENDENCY_REPORT,
                 task.bundleDeps
             )
+
+            if (variantScope.artifacts.hasFinalProduct(InternalArtifactType.APP_INTEGRITY_CONFIG)) {
+                variantScope.artifacts.setTaskInputToFinalProduct(
+                    InternalArtifactType.APP_INTEGRITY_CONFIG,
+                    task.integrityConfigFile
+                )
+            }
 
             task.aaptOptionsNoCompress =
                     variantScope.globalScope.extension.aaptOptions.noCompress ?: listOf()

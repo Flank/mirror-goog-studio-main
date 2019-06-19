@@ -364,6 +364,9 @@ public enum InternalArtifactType implements ArtifactType {
     // package in the bundle.
     BUNDLE_DEPENDENCY_REPORT(Kind.FILE),
 
+    // Config file specifying how to protect app's integrity
+    APP_INTEGRITY_CONFIG(Kind.FILE),
+
     INSTANT_RUN_APP_INFO_OUTPUT_FILE,
 
     // A dummy output (folder) result of CheckDuplicateClassesTask execution
