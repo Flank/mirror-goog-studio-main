@@ -44,6 +44,21 @@ coverage_report(
     ],
 )
 
+coverage_report(
+    name = "databinding",
+    srcpath_include = [
+        "tools/adt/idea/android-lang-databinding",
+        "tools/adt/idea/databinding/",
+        "tools/adt/idea/android/src/com/android/tools/idea/databinding",
+        "tools/adt/idea/android/src/com/android/tools/idea/lang/databinding",
+    ],
+    tests = [
+        "//tools/adt/idea/android:intellij.android.core.tests_tests",
+        "//tools/adt/idea/android-lang-databinding:intellij.android.lang-databinding.tests_tests",
+        "//tools/adt/idea/databinding:intellij.android.databinding.tests_tests",
+    ],
+)
+
 # All coverage enabled tests should go here
 coverage_report(
     name = "all",
