@@ -100,3 +100,9 @@ class BinaryPrimitive(val resValue: ResValue): Item() {
     return newPrimitive
   }
 }
+
+data class UntranslatableSection(var startIndex: Int, var endIndex: Int = startIndex) {
+  fun shift(offset : Int): UntranslatableSection {
+    return UntranslatableSection(startIndex + offset, endIndex + offset)
+  }
+}
