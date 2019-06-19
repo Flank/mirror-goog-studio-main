@@ -61,6 +61,7 @@ java_library(
 
 java_test(
     name = "testParsing",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestParsing.java",
     ],
@@ -81,6 +82,7 @@ java_test(
 
 java_test(
     name = "testsFreeStore",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestFreeStore.java",
     ],
@@ -122,6 +124,7 @@ java_test(
 
 java_test(
     name = "testsCompressor",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestCompressor.java",
     ],
@@ -140,6 +143,7 @@ java_test(
 
 java_test(
     name = "testsMerge",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestZipMerge.java",
     ],
@@ -159,6 +163,7 @@ java_test(
 
 java_test(
     name = "testsJarFlinger",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestJarFlinger.java",
     ],
