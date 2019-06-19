@@ -97,6 +97,28 @@ class LintFixVerifierTest {
             )
     }
 
+    @Test
+    fun testSuppressImportWarningOnClass() {
+        // Regression test for https://issuetracker.google.com/121092580
+        lint()
+            .allowCompilationErrors()
+            .files(
+                java(
+                    """
+                      package foo;
+                      import org.assertj.core.api.Assertions;
+                      @SuppressWarnings("_AssertjImport")
+                      public class Foo {
+                      }
+                      """
+                ).indented()
+            )
+            .sdkHome(TestUtils.getSdk())
+            .issues(AssertjDetector.ISSUE_ASSERTJ_IMPORT)
+            .run()
+            .expectClean()
+    }
+
     // Copied from above bug report:
     //     https://issuetracker.google.com/80491636
     // which in turn looks like it comes from

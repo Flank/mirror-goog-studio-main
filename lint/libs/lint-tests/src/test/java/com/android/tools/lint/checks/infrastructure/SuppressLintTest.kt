@@ -22,6 +22,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.kotlin
 import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -50,6 +51,13 @@ class SuppressLintTest {
                     fun forbidden() {
                         forbidden()
                     }"""
+                ).indented(),
+                java(
+                    """
+                    import forbidden;
+                    class Test {
+                    }
+                    """
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
@@ -57,10 +65,13 @@ class SuppressLintTest {
             .run()
             .expect(
                 """
+                src/Test.java:1: Warning: Some error message here [_SecureIssue]
+                import forbidden;
+                ~~~~~~~~~~~~~~~~~
                 src/test.kt:2: Warning: Some error message here [_SecureIssue]
                     forbidden()
                     ~~~~~~~~~~~
-                0 errors, 1 warnings
+                0 errors, 2 warnings
                 """
             )
     }
@@ -77,6 +88,18 @@ class SuppressLintTest {
                     fun forbidden() {
                         forbidden()
                     }"""
+                ).indented(),
+                java(
+                    """
+                    import foo.bar.MyOwnAnnotation;
+                    import forbidden;
+                    @MyOwnAnnotation
+                    class Test {
+                        public void forbidden() {
+                            forbidden();
+                        }
+                    }
+                    """
                 ).indented(),
                 java(
                     """
@@ -134,6 +157,15 @@ class SuppressLintTest {
                     fun forbidden() {
                         forbidden()
                     }"""
+                ).indented(),
+                java(
+                    """
+                    import android.annotation.SuppressLint
+                    import forbidden;
+                    @SuppressLint("_SecureIssue")
+                    class Test {
+                    }
+                    """
                 ).indented()
             )
             .issues(MySecurityDetector.TEST_ISSUE)
@@ -141,13 +173,19 @@ class SuppressLintTest {
             .run()
             .expect(
                 """
+                src/Test.java:3: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
+                @SuppressLint("_SecureIssue")
+                ^
                 src/test.kt:2: Error: Issue _SecureIssue is not allowed to be suppressed (but can be with @MyOwnAnnotation) [LintError]
                 @SuppressLint("_SecureIssue")
                 ^
+                src/Test.java:2: Warning: Some error message here [_SecureIssue]
+                import forbidden;
+                ~~~~~~~~~~~~~~~~~
                 src/test.kt:4: Warning: Some error message here [_SecureIssue]
                     forbidden()
                     ~~~~~~~~~~~
-                1 errors, 1 warnings
+                2 errors, 2 warnings
                 """
             )
     }
@@ -313,6 +351,20 @@ class SuppressLintTest {
             val message = "Some error message here"
             val location = context.getLocation(node)
             context.report(TEST_ISSUE, node, location, message)
+        }
+
+        override fun createUastHandler(context: JavaContext) = AssertjDetectorHandler(context)
+
+        class AssertjDetectorHandler(private val context: JavaContext) : UElementHandler() {
+            override fun visitImportStatement(node: UImportStatement) {
+                node.importReference?.let { importReference ->
+                    if (importReference.asSourceString().contains("forbidden")) {
+                        val message = "Some error message here"
+                        val location = context.getLocation(node)
+                        context.report(TEST_ISSUE, node, location, message)
+                    }
+                }
+            }
         }
 
         companion object {

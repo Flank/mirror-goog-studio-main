@@ -105,6 +105,8 @@ import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
 import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.java.JavaUFile
+import org.jetbrains.uast.java.JavaUImportStatement
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -2669,6 +2671,15 @@ class LintDriver
 
             if (currentScope is UFile) {
                 return false
+            } else if (currentScope is JavaUImportStatement) {
+                // Special case: if the error is on an import statement in Java
+                // you don't have the option of suppressing on the file, so
+                // allow suppressing on the top level class instead, if any
+                val topLevelClass = (currentScope.uastParent as? JavaUFile)?.classes?.firstOrNull()
+                if (topLevelClass != null) {
+                    currentScope = topLevelClass
+                    continue
+                }
             }
             currentScope = currentScope.uastParent
         }
