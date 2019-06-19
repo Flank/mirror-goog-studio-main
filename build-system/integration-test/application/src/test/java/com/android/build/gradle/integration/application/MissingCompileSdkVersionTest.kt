@@ -21,6 +21,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.SyncIssue
+import com.android.sdklib.SdkVersionInfo
 import com.android.testutils.TestUtils
 import com.android.utils.FileUtils
 import org.junit.Rule
@@ -70,13 +71,20 @@ class MissingCompileSdkVersionTest {
         val modelContainer = project.model().ignoreSyncIssues().fetchAndroidProjects()
         val syncIssues = modelContainer.onlyModelSyncIssues
 
-        assertThat(syncIssues).hasSize(2)
-        val compileSdkIssue = syncIssues.elementAt(0)
+        val compileSdkNotSetSyncIssues = syncIssues.filter { it.type == SyncIssue.TYPE_COMPILE_SDK_VERSION_NOT_SET }
+        assertThat(compileSdkNotSetSyncIssues).hasSize(1)
+        val compileSdkIssue = compileSdkNotSetSyncIssues.elementAt(0)
+        assertThat(compileSdkIssue.message).isEqualTo(
+            "compileSdkVersion is not specified. Please add it to build.gradle")
 
-        assertThat(compileSdkIssue.type).isEqualTo(SyncIssue.TYPE_COMPILE_SDK_VERSION_NOT_SET)
-        assertThat(compileSdkIssue.message).isEqualTo("compileSdkVersion is not specified. Please add it to build.gradle")
+        val missingSdkPackageSyncIssues = syncIssues.filter { it.type == SyncIssue.TYPE_MISSING_SDK_PACKAGE }
+        assertThat(missingSdkPackageSyncIssues).hasSize(1)
+        val missingSdkIssue = missingSdkPackageSyncIssues.elementAt(0)
+        assertThat(missingSdkIssue.message).contains(
+            "Failed to find target with hash string 'android-${SdkVersionInfo.HIGHEST_KNOWN_STABLE_API}'")
 
-        assertThat(modelContainer.onlyModel.compileTarget).isEqualTo("android-"+GradleTestProject.DEFAULT_COMPILE_SDK_VERSION)
+        assertThat(modelContainer.onlyModel.compileTarget).isEqualTo(
+            "android-${SdkVersionInfo.HIGHEST_KNOWN_STABLE_API}")
     }
 
     /**
