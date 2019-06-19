@@ -20,25 +20,26 @@ import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.zip.Deflater;
 
 public class InputStreamSource extends Source {
 
     private ByteBuffer buffer;
     private final InputStream inputStream;
-    private final boolean compress;
+    private final int compressionLevel;
 
     /**
      * InputStreamSource takes takes ownership of the InputStream and close it after emptying it.
      *
      * @param inputStream
      * @param name
-     * @param compress
+     * @param compressionLevel One of java.util.zip.Deflater compression level.
      */
     public InputStreamSource(
-            @NonNull InputStream inputStream, @NonNull String name, boolean compress) {
+            @NonNull InputStream inputStream, @NonNull String name, int compressionLevel) {
         super(name);
         this.inputStream = inputStream;
-        this.compress = compress;
+        this.compressionLevel = compressionLevel;
     }
 
     @Override
@@ -53,14 +54,14 @@ public class InputStreamSource extends Source {
 
         uncompressedSize = ncbos.getCount();
         crc = Crc32.crc32(ncbos.buf(), 0, ncbos.getCount());
-        if (compress) {
-            buffer = Compressor.deflate(ncbos.buf(), 0, ncbos.getCount());
-            compressedSize = buffer.limit();
-            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
-        } else {
+        if (compressionLevel == Deflater.NO_COMPRESSION) {
             buffer = ncbos.getByteBuffer();
             compressedSize = uncompressedSize;
             compressionFlag = LocalFileHeader.COMPRESSION_NONE;
+        } else {
+            buffer = Compressor.deflate(ncbos.buf(), 0, ncbos.getCount(), compressionLevel);
+            compressedSize = buffer.limit();
+            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
     }
 

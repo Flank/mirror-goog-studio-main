@@ -30,6 +30,7 @@ import java.io.File
 import java.io.IOException
 import java.lang.RuntimeException
 import java.nio.file.InvalidPathException
+import java.util.zip.Deflater
 
 // TODO support signing - https://issuetracker.google.com/135202380
 // TODO ensure that all input zip entries have desired compression -
@@ -131,7 +132,8 @@ class ApkFlinger(creationData: ApkCreatorFactory.CreationData) : ApkCreator {
     @Throws(IOException::class)
     override fun writeFile(inputFile: File, apkPath: String) {
         val mayCompress = !noCompressPredicate.apply(apkPath)
-        val fileSource = FileSource(inputFile, apkPath, mayCompress)
+        val compressionLevel = if (mayCompress) Deflater.BEST_SPEED else Deflater.NO_COMPRESSION
+        val fileSource = FileSource(inputFile, apkPath, compressionLevel)
         if (!mayCompress) {
             if (pageAlignPredicate.apply(apkPath)) {
                 fileSource.align(PAGE_ALIGNMENT)

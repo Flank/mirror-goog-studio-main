@@ -107,6 +107,7 @@ java_test(
         "test/resource/1-2-3files.zip",
         "test/resource/4-5files.zip",
         "test/resource/file4.txt",
+        "test/resource/text.txt",
         "test/resource/zip_with_directories.zip",
     ]),
     jvm_flags = ["-Dtest.suite.jar=testsZipFlinger.jar"],

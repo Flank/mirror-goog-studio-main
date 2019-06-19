@@ -26,6 +26,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.zip.Deflater;
 
 class BenchmarkAdd extends TestBase {
 
@@ -77,7 +78,7 @@ class BenchmarkAdd extends TestBase {
         ZipArchive archive = new ZipArchive(dst.toFile());
         for (String name : dexes.keySet()) {
             Path path = dexes.get(name);
-            FileSource fileSource = new FileSource(path.toFile(), name, false);
+            FileSource fileSource = new FileSource(path.toFile(), name, Deflater.BEST_SPEED);
             archive.add(fileSource);
         }
         archive.close();

@@ -43,7 +43,7 @@ public class JarFlinger implements JarCreator {
     private final Predicate<String> filter;
 
     // Compress inputs when building the jar archive.
-    private boolean compress = true;
+    private int compressionLevel = Deflater.DEFAULT_COMPRESSION;
 
     public JarFlinger(@NonNull Path jarFile) throws IOException {
         this(jarFile, null);
@@ -98,13 +98,14 @@ public class JarFlinger implements JarCreator {
                         new BufferedInputStream(Files.newInputStream(entry.getValue()))) {
                     @Nullable InputStream is2 = transformer.filter(entryPath, is);
                     if (is2 != null) {
-                        InputStreamSource source = new InputStreamSource(is2, entryPath, compress);
+                        InputStreamSource source =
+                                new InputStreamSource(is2, entryPath, compressionLevel);
                         zipArchive.add(source);
                     }
                 }
                 } else {
-                    FileSource source =
-                            new FileSource(entry.getValue().toFile(), entryPath, compress);
+                FileSource source =
+                        new FileSource(entry.getValue().toFile(), entryPath, compressionLevel);
                     zipArchive.add(source);
                 }
         }
@@ -146,23 +147,19 @@ public class JarFlinger implements JarCreator {
 
     @Override
     public void addFile(@NonNull String entryPath, @NonNull Path path) throws IOException {
-        FileSource source = new FileSource(path.toFile(), entryPath, compress);
+        FileSource source = new FileSource(path.toFile(), entryPath, compressionLevel);
         zipArchive.add(source);
     }
 
     @Override
     public void addEntry(@NonNull String entryPath, @NonNull InputStream input) throws IOException {
-        InputStreamSource source = new InputStreamSource(input, entryPath, compress);
+        InputStreamSource source = new InputStreamSource(input, entryPath, compressionLevel);
         zipArchive.add(source);
     }
 
     @Override
-    public void setCompressionLevel(int level) {
-        if (level == Deflater.NO_COMPRESSION) {
-            compress = false;
-        } else {
-            compress = true;
-        }
+    public void setCompressionLevel(int compressionLevel) {
+        this.compressionLevel = compressionLevel;
     }
 
     @Override
@@ -183,7 +180,8 @@ public class JarFlinger implements JarCreator {
         manifest.write(os);
 
         ByteArrayInputStream is = new ByteArrayInputStream(os.buf(), 0, os.getCount());
-        InputStreamSource source = new InputStreamSource(is, JarFile.MANIFEST_NAME, false);
+        InputStreamSource source =
+                new InputStreamSource(is, JarFile.MANIFEST_NAME, Deflater.NO_COMPRESSION);
         zipArchive.add(source);
     }
 }

@@ -23,10 +23,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.zip.Deflater;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class TestZipFlinger extends TestBase {
+
+    private static final int COMP_SPED = Deflater.BEST_SPEED;
+    private static final int COMP_NONE = Deflater.NO_COMPRESSION;
 
     @Test
     public void testDeleteRecord() throws Exception {
@@ -56,7 +60,7 @@ public class TestZipFlinger extends TestBase {
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
-        FileSource fs = new FileSource(getFile("file4.txt"), "file4.txt", false);
+        FileSource fs = new FileSource(getFile("file4.txt"), "file4.txt", COMP_NONE);
         zipArchive.add(fs);
         zipArchive.close();
 
@@ -78,7 +82,7 @@ public class TestZipFlinger extends TestBase {
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
-        FileSource fs = new FileSource(getFile("file4.txt"), "file4.txt", true);
+        FileSource fs = new FileSource(getFile("file4.txt"), "file4.txt", COMP_SPED);
         zipArchive.add(fs);
         zipArchive.close();
 
@@ -104,7 +108,7 @@ public class TestZipFlinger extends TestBase {
 
         boolean exceptionCaught = false;
         try {
-            zipArchive.add(new FileSource(new File(""), "", false));
+            zipArchive.add(new FileSource(new File(""), "", COMP_NONE));
         } catch (IllegalStateException e) {
             exceptionCaught = true;
         }
@@ -112,7 +116,7 @@ public class TestZipFlinger extends TestBase {
 
         exceptionCaught = false;
         try {
-            zipArchive.add(new InputStreamSource(null, "deadbeed", false));
+            zipArchive.add(new InputStreamSource(null, "deadbeed", COMP_NONE));
         } catch (IllegalStateException e) {
             exceptionCaught = true;
         }
@@ -150,7 +154,7 @@ public class TestZipFlinger extends TestBase {
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
-        FileSource source = new FileSource(getFile("file4.txt"), "file4.txt", true);
+        FileSource source = new FileSource(getFile("file4.txt"), "file4.txt", COMP_SPED);
         zipArchive.add(source);
         zipArchive.close();
 
@@ -170,7 +174,7 @@ public class TestZipFlinger extends TestBase {
 
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
             InputStream stream = new FileInputStream(getFile("file4.txt"));
-            InputStreamSource source = new InputStreamSource(stream, "file4.txt", true);
+            InputStreamSource source = new InputStreamSource(stream, "file4.txt", COMP_SPED);
             zipArchive.add(source);
         }
 
@@ -191,7 +195,7 @@ public class TestZipFlinger extends TestBase {
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
         byte[] bytes = Files.readAllBytes(getPath("file4.txt"));
-        BytesSource source = new BytesSource(bytes, "file4.txt", true);
+        BytesSource source = new BytesSource(bytes, "file4.txt", COMP_SPED);
         zipArchive.add(source);
         zipArchive.close();
 
@@ -223,7 +227,7 @@ public class TestZipFlinger extends TestBase {
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
             for (int length = 0; length < alignment; length++) {
                 String name = makeString('f', length);
-                FileSource fileSource = new FileSource(getFile("file4.txt"), name, false);
+                FileSource fileSource = new FileSource(getFile("file4.txt"), name, COMP_NONE);
                 fileSource.align(alignment);
                 zipArchive.add(fileSource);
             }
@@ -252,7 +256,7 @@ public class TestZipFlinger extends TestBase {
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
         byte[] bytes = Files.readAllBytes(getPath("file4.txt"));
-        BytesSource fileSource = new BytesSource(bytes, "file4.txt", false);
+        BytesSource fileSource = new BytesSource(bytes, "file4.txt", COMP_NONE);
         fileSource.align(alignment);
         zipArchive.add(fileSource);
         zipArchive.close();
@@ -306,7 +310,7 @@ public class TestZipFlinger extends TestBase {
         ZipArchive zipArchive = new ZipArchive(dst.toFile());
 
         InputStream stream = new FileInputStream(getFile("file4.txt"));
-        InputStreamSource fileSource = new InputStreamSource(stream, "file4.txt", false);
+        InputStreamSource fileSource = new InputStreamSource(stream, "file4.txt", COMP_NONE);
         fileSource.align(alignment);
         zipArchive.add(fileSource);
         zipArchive.close();
@@ -324,7 +328,7 @@ public class TestZipFlinger extends TestBase {
     public void testNameCollision() throws IOException {
         ZipArchive zipArchive = new ZipArchive(new File("nonexistant.bla"));
         File file = getFile("1-2-3files.zip");
-        FileSource fileSource = new FileSource(file, "name", false);
+        FileSource fileSource = new FileSource(file, "name", COMP_NONE);
 
         boolean exceptionCaught = false;
         try {
@@ -359,15 +363,15 @@ public class TestZipFlinger extends TestBase {
         ZipArchive archive = new ZipArchive(file);
 
         byte[] entry1Bytes = new byte[1_000];
-        BytesSource source1 = new BytesSource(entry1Bytes, "entry1", false);
+        BytesSource source1 = new BytesSource(entry1Bytes, "entry1", COMP_NONE);
         archive.add(source1);
 
         byte[] entry2Bytes = new byte[1_000];
-        BytesSource source2 = new BytesSource(entry2Bytes, "entry2", false);
+        BytesSource source2 = new BytesSource(entry2Bytes, "entry2", COMP_NONE);
         archive.add(source2);
 
         byte[] entry3Bytes = new byte[1_000];
-        BytesSource source3 = new BytesSource(entry3Bytes, "entry3", false);
+        BytesSource source3 = new BytesSource(entry3Bytes, "entry3", COMP_NONE);
         archive.add(source3);
 
         archive.close();
@@ -382,15 +386,15 @@ public class TestZipFlinger extends TestBase {
         ZipArchive archive = new ZipArchive(file);
 
         byte[] entry1Bytes = new byte[1_000];
-        BytesSource source1 = new BytesSource(entry1Bytes, "entry1", false);
+        BytesSource source1 = new BytesSource(entry1Bytes, "entry1", COMP_NONE);
         archive.add(source1);
 
         byte[] entry2Bytes = new byte[128_000_000];
-        BytesSource source2 = new BytesSource(entry2Bytes, "entry2", false);
+        BytesSource source2 = new BytesSource(entry2Bytes, "entry2", COMP_NONE);
         archive.add(source2);
 
         byte[] entry3Bytes = new byte[1_000];
-        BytesSource source3 = new BytesSource(entry3Bytes, "entry3", false);
+        BytesSource source3 = new BytesSource(entry3Bytes, "entry3", COMP_NONE);
         archive.add(source3);
 
         archive.close();
@@ -416,7 +420,7 @@ public class TestZipFlinger extends TestBase {
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         try (ZipArchive zipArchive = new ZipArchive(dst.toFile())) {
-            BytesSource source = new BytesSource(new byte[0], "file4.txt", false);
+            BytesSource source = new BytesSource(new byte[0], "file4.txt", COMP_NONE);
             zipArchive.add(source);
         }
 
@@ -425,5 +429,36 @@ public class TestZipFlinger extends TestBase {
         Assert.assertTrue("file2.txt is compressed", entries.get("file2.txt").isCompressed());
         Assert.assertTrue("file3.txt is compressed", entries.get("file3.txt").isCompressed());
         Assert.assertFalse("file4.txt is not compressed", entries.get("file4.txt").isCompressed());
+    }
+
+    @Test
+    public void testCompressionMode() throws Exception {
+        File archiveFile = getFile("testCompressionMode.zip");
+        File input = getFile("text.txt");
+
+        try (ZipArchive zipArchive = new ZipArchive(archiveFile)) {
+            FileSource fileSource = new FileSource(input, "text.tx", Deflater.NO_COMPRESSION);
+            zipArchive.add(fileSource);
+        }
+        long storedSize = Files.size(archiveFile.toPath());
+
+        Files.deleteIfExists(archiveFile.toPath());
+        try (ZipArchive zipArchive = new ZipArchive(archiveFile)) {
+            FileSource fileSource = new FileSource(input, "text.tx", Deflater.BEST_SPEED);
+            zipArchive.add(fileSource);
+        }
+        long speedSize = Files.size(archiveFile.toPath());
+
+        Assert.assertTrue("NO_COMPRESSION is bigger than BEST_SPEED", storedSize > speedSize);
+
+        Files.deleteIfExists(archiveFile.toPath());
+        try (ZipArchive zipArchive = new ZipArchive(archiveFile)) {
+            FileSource fileSource = new FileSource(input, "text.tx", Deflater.BEST_COMPRESSION);
+            zipArchive.add(fileSource);
+        }
+        long compressionSize = Files.size(archiveFile.toPath());
+
+        Assert.assertTrue(
+                "BEST_SPEED is bigger than BEST_COMPRESSION", speedSize > compressionSize);
     }
 }

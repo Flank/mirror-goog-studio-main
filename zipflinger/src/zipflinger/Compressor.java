@@ -25,11 +25,10 @@ import java.util.zip.DeflaterOutputStream;
 public class Compressor {
 
     @NonNull
-    public static ByteBuffer deflate(@NonNull byte[] bytes, int offset, int size)
-            throws IOException {
+    public static ByteBuffer deflate(
+            @NonNull byte[] bytes, int offset, int size, int compressionLevel) throws IOException {
         NoCopyByteArrayOutputStream out = new NoCopyByteArrayOutputStream(size);
 
-        int compressionLevel = Deflater.DEFAULT_COMPRESSION;
         Deflater deflater = new Deflater(compressionLevel, true);
 
         try (DeflaterOutputStream dout = new DeflaterOutputStream(out, deflater)) {
@@ -41,7 +40,8 @@ public class Compressor {
     }
 
     @NonNull
-    public static ByteBuffer deflate(@NonNull byte[] bytes) throws IOException {
-        return deflate(bytes, 0, bytes.length);
+    public static ByteBuffer deflate(@NonNull byte[] bytes, int compressionLevel)
+            throws IOException {
+        return deflate(bytes, 0, bytes.length, compressionLevel);
     }
 }

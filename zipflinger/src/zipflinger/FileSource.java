@@ -21,16 +21,22 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.zip.Deflater;
 
 public class FileSource extends Source {
     private final File file;
     private ByteBuffer buffer;
-    private final boolean compress;
+    private final int compressionLevel;
 
-    public FileSource(@NonNull File file, @NonNull String name, boolean compress) {
+    /**
+     * @param file
+     * @param name
+     * @param compressionLevel One of java.util.zip.Deflater compression level.
+     */
+    public FileSource(@NonNull File file, @NonNull String name, int compressionLevel) {
         super(name);
         this.file = file;
-        this.compress = compress;
+        this.compressionLevel = compressionLevel;
     }
 
     @Override
@@ -40,14 +46,14 @@ public class FileSource extends Source {
 
         crc = Crc32.crc32(rawBytes);
         uncompressedSize = rawBytes.length;
-        if (compress) {
-            buffer = Compressor.deflate(rawBytes);
-            compressedSize = buffer.limit();
-            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
-        } else {
+        if (compressionLevel == Deflater.NO_COMPRESSION) {
             buffer = ByteBuffer.wrap(rawBytes);
             compressedSize = rawBytes.length;
             compressionFlag = LocalFileHeader.COMPRESSION_NONE;
+        } else {
+            buffer = Compressor.deflate(rawBytes, compressionLevel);
+            compressedSize = buffer.limit();
+            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
     }
 

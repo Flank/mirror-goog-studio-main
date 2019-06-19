@@ -19,31 +19,37 @@ package zipflinger;
 import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.zip.Deflater;
 
 public class BytesSource extends Source {
 
     private ByteBuffer buffer;
-    private final boolean compress;
+    private final int compressionLevel;
     private final byte[] bytes;
 
-    public BytesSource(@NonNull byte[] bytes, @NonNull String name, boolean compress) {
+    /**
+     * @param bytes
+     * @param name
+     * @param compressionLevel One of java.util.zip.Deflater compression level.
+     */
+    public BytesSource(@NonNull byte[] bytes, @NonNull String name, int compressionLevel) {
         super(name);
         this.bytes = bytes;
-        this.compress = compress;
+        this.compressionLevel = compressionLevel;
     }
 
     @Override
     void prepare() throws IOException {
         crc = Crc32.crc32(bytes);
         uncompressedSize = bytes.length;
-        if (compress) {
-            buffer = Compressor.deflate(bytes);
-            compressedSize = buffer.limit();
-            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
-        } else {
+        if (compressionLevel == Deflater.NO_COMPRESSION) {
             buffer = ByteBuffer.wrap(bytes);
             compressedSize = uncompressedSize;
             compressionFlag = LocalFileHeader.COMPRESSION_NONE;
+        } else {
+            buffer = Compressor.deflate(bytes, compressionLevel);
+            compressedSize = buffer.limit();
+            compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
     }
 

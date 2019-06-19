@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,7 +31,7 @@ public class TestCompressor extends TestBase {
     public void testDeflateInflate() throws IOException, DataFormatException {
         Path src = getPath("file4.txt");
         byte[] uncompressed = Files.readAllBytes(src);
-        ByteBuffer compressed = Compressor.deflate(uncompressed);
+        ByteBuffer compressed = Compressor.deflate(uncompressed, Deflater.DEFAULT_COMPRESSION);
 
         int uncompressedSize = uncompressed.length;
         int compressedSize = compressed.limit();
