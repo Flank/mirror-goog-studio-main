@@ -57,7 +57,8 @@ open class BaseAppModuleExtension(
         project.objects.newInstance(
             BundleOptions::class.java,
             project.objects,
-            extraModelInfo.deprecationReporter
+            extraModelInfo.deprecationReporter,
+            project
         )
 
     fun bundle(action: Action<BundleOptions>) {
