@@ -346,7 +346,6 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
         }
     }
 
-
     @Nullable
     private static String getImpliedUnsupportedHardware(@NonNull String permission) {
         switch (permission) {
@@ -423,7 +422,6 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
                     && UNSUPPORTED_ORIENTATIONS.contains(activityOrientation.getValue())) {
                 lockedOrientationActivities.add(element.getAttributeNS(ANDROID_URI, ATTR_NAME));
             }
-
         }
     }
 
@@ -513,4 +511,3 @@ public class ChromeOsDetector extends Detector implements XmlScanner {
         return nodes;
     }
 }
-

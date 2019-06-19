@@ -776,6 +776,11 @@ class InteroperabilityDetector : Detector(), SourceCodeScanner {
                     for (i in lastIndex - 1 downTo 0) {
                         val parameter = parameters[i]
                         if (isFunctionalInterface(parameter.type)) {
+                            // Don't flag Executor; see b/135275901
+                            if (parameter.type.canonicalText == "java.util.concurrent.Executor") {
+                                continue
+                            }
+
                             val message =
                                 "Functional interface parameters (such as parameter ${i + 1}, \"${parameter.name}\", in ${
                                 method.containingClass?.qualifiedName}.${method.name

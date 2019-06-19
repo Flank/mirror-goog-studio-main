@@ -121,6 +121,29 @@ class InteroperabilityDetectorTest : AbstractCheckTest() {
         )
     }
 
+    fun testLambdaLast2() {
+        // Regression test for https://issuetracker.google.com/135275901
+        lint().files(
+            java(
+                """
+                package test.pkg;
+
+                import java.util.concurrent.Executor;
+
+                public class LambdaLastTest {
+                    public void registerCallback(Executor executor, Callback callback) {
+                    }
+                }
+
+                class Callback {
+                    public void action() {
+                    }
+                }
+                """
+            ).indented()
+        ).issues(InteroperabilityDetector.LAMBDA_LAST).run().expectClean()
+    }
+
     fun testNullness() {
         lint().files(
             java(

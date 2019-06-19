@@ -16,10 +16,9 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
-class ChromeOsSourceDetectorTest: AbstractCheckTest() {
+class ChromeOsSourceDetectorTest : AbstractCheckTest() {
 
     override fun getDetector(): Detector {
         return ChromeOsSourceDetector()

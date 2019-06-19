@@ -462,7 +462,12 @@ open class GradleDetector : Detector(), GradleScanner {
                                     "for faster incremental build.", null
                         )
                     }
-                    checkAnnotationProcessorOnCompilePath(property, dependency, context, propertyCookie)
+                    checkAnnotationProcessorOnCompilePath(
+                        property,
+                        dependency,
+                        context,
+                        propertyCookie
+                    )
                 }
                 checkDeprecatedConfigurations(property, context, propertyCookie)
             }
@@ -618,8 +623,9 @@ open class GradleDetector : Detector(), GradleScanner {
         propertyCookie: Any
     ) {
         for (compileConfiguration in CompileConfiguration.values()) {
-            if (compileConfiguration.matches(configuration)
-                && isCommonAnnotationProcessor(dependency)) {
+            if (compileConfiguration.matches(configuration) &&
+                isCommonAnnotationProcessor(dependency)
+            ) {
                 val replacement: String = compileConfiguration.replacement(configuration)
                 val fix = fix()
                     .name("Replace $configuration with $replacement")
@@ -1063,7 +1069,8 @@ open class GradleDetector : Detector(), GradleScanner {
                 context.isEnabled(COMPATIBILITY)
             ) {
                 if (compileSdkVersion >= 29 && dependency.majorVersion < 29) {
-                    reportNonFatalCompatibilityIssue(context, cookie,
+                    reportNonFatalCompatibilityIssue(
+                        context, cookie,
                         "Version 28 (intended for Android Pie and below) is the last " +
                                 "version of the legacy support library, so we recommend that " +
                                 "you migrate to AndroidX libraries when using Android Q and " +
@@ -2767,8 +2774,8 @@ open class GradleDetector : Detector(), GradleScanner {
             private val compileConfigSuffix = compileConfigName.usLocaleCapitalize()
 
             fun matches(configurationName: String): Boolean {
-               return configurationName == compileConfigName
-                       || configurationName.endsWith(compileConfigSuffix)
+                return configurationName == compileConfigName ||
+                        configurationName.endsWith(compileConfigSuffix)
             }
 
             fun replacement(configurationName: String): String {
