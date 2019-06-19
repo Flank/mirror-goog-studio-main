@@ -20,8 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.tasks.JavaCompileUtils;
 import com.android.builder.profile.ProcessProfileWriter;
+
 import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,12 +35,9 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-/** Test for AndroidJavaCompileTest. */
-public class AndroidJavaCompileTest {
+/** Test for JavaCompileTest. */
+public class JavaCompileTest {
     private static final String VARIANT_NAME = "variant";
     private static final String projectPath = ":app";
 

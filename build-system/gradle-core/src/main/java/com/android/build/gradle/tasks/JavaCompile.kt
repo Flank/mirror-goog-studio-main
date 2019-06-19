@@ -40,7 +40,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import java.util.concurrent.Callable
 
 /**
- * Task to perform compilation for Java source code (AndroidJavaCompile), without or with annotation
+ * Task to perform compilation for Java source code (JavaCompile), without or with annotation
  * processing depending on whether annotation processing is done by a separate task or not.
  *
  * The separate annotation processing task can be either KaptTask or the process-annotations task
@@ -54,18 +54,17 @@ import java.util.concurrent.Callable
  * When Kapt is used (e.g., in most Kotlin-only or hybrid Kotlin-Java projects):
  *   + Process-annotations task is not created.
  *   + KaptTask performs annotation processing only, without compiling.
- *   + AndroidJavaCompile and KotlinCompile perform compilation only, without annotation
- *     processing.
+ *   + JavaCompile and KotlinCompile perform compilation only, without annotation processing.
 
  * When Kapt is not used, (e.g., in Java-only projects):
  *   + If process-annotations task is needed (see above), process-annotations task first performs
- *     annotation processing only, without compiling, and AndroidJavaCompile then performs
+ *     annotation processing only, without compiling, and JavaCompile then performs
  *     compilation only, without annotation processing.
- *   + Otherwise, process-annotations task is not created, and AndroidJavaCompile performs both
+ *   + Otherwise, process-annotations task is not created, and JavaCompile performs both
  *     annotation processing and compilation.
  */
 
-class AndroidJavaCompileCreationAction(
+class JavaCompileCreationAction(
     private val variantScope: VariantScope,
     private val processAnnotationsTaskCreated: Boolean
 ) : TaskCreationAction<JavaCompile>() {
@@ -79,7 +78,7 @@ class AndroidJavaCompileCreationAction(
 
     init {
         // Initialize in the constructor as configure can be invoked before handleProvider,
-        // and the invoke get() on this provider.
+        // and it invokes get() on this provider.
         classesOutputDirectory.set(
             JAVAC.getOutputDirectory(
                 variantScope.globalScope.project.layout.buildDirectory,
@@ -160,16 +159,15 @@ class AndroidJavaCompileCreationAction(
             .projectOptions
             .get(BooleanOption.ENABLE_SEPARATE_ANNOTATION_PROCESSING)
 
-        // Configure properties that are shared between AndroidJavaCompile and
-        // process-annotations task.
+        // Configure properties that are shared between JavaCompile and process-annotations task.
         task.configureProperties(variantScope)
 
         val sourcesToCompile = if (processAnnotationsTaskCreated) {
             // Don't run if only annotation processing is requested, and separate task runs.
             task.onlyIf { PROC_ONLY !in task.options.compilerArgs}
-            // We will disable annotation processing.
-            //
-            // We still need to set the annotation processor path because:
+
+            // Although we will disable annotation processing (see handleAnnotationProcessors()),
+            // we still need to set the annotation processor path because:
             //   1. Java compiler plugins like Error Prone share their classpath with annotation
             //      processors.
             //   2. We may enable annotation processing at execution time to support the Lombok
@@ -220,6 +218,8 @@ class AndroidJavaCompileCreationAction(
         }
 
         task.destinationDir = classesOutputDirectory.asFile.get()
+        // Manually declare our output directory as a Task output since it's not annotated as
+        // an OutputDirectoy on the task implementation.
         task.outputs.dir(classesOutputDirectory)
         task.outputs.dir(annotationProcessorOutputDirectory).optional()
         task.outputs.dir(bundleArtifactFolderForDataBinding).optional()

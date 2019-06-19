@@ -171,7 +171,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.AndroidJavaCompileCreationAction;
+import com.android.build.gradle.tasks.JavaCompileCreationAction;
 import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
@@ -1245,7 +1245,7 @@ public abstract class TaskManager {
 
         final TaskProvider<? extends JavaCompile> javacTask =
                 taskFactory.register(
-                        new AndroidJavaCompileCreationAction(scope, processAnnotationsTaskCreated));
+                        new JavaCompileCreationAction(scope, processAnnotationsTaskCreated));
 
         postJavacCreation(scope);
 

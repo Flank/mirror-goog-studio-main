@@ -20,8 +20,8 @@ import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-/** Unit test for AndroidJavaCompile (created in [AndroidJavaCompileCreationAction]). */
-class AndroidJavaCompileTest {
+/** Unit test for JavaCompile (created in [JavaCompileCreationAction]). */
+class JavaCompileTest {
 
     @Test
     fun `configureCompileArgumentsForLombok - with -proc-none, without -processor`() {

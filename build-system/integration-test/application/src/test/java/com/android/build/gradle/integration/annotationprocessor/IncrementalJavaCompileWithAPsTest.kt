@@ -59,7 +59,7 @@ class IncrementalJavaCompileWithAPsTest(
         @Parameterized.Parameters(name = "kapt_{0}_separateAP_{1}_incrementalAPs_{2}")
         @JvmStatic
         fun parameters() = listOf(
-            // When Kapt is used, process-annotations task is not created and AndroidJavaCompile
+            // When Kapt is used, process-annotations task is not created and JavaCompile
             // performs incremental compilation regardless of the values of the other two
             // parameters. Therefore, testing one scenario is good enough (as we want to save test
             // execution time).
@@ -570,16 +570,15 @@ class IncrementalJavaCompileWithAPsTest(
          */
         val incrementalMode = withKapt || withSeparateAP || withIncrementalAPs
 
-        // This is the case when AndroidJavaCompile performs both annotation processing and
-        // compilation
-        val annotationProcessingByAndroidJavaCompile = !withKapt && !withSeparateAP
+        // This is the case when JavaCompile performs both annotation processing and compilation
+        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
 
         // The relevant original source files should be recompiled always
         assertFileHasChanged(annotation1Class1)
 
         // In incremental mode, the irrelevant original source files should not be recompiled
         if (incrementalMode) {
-            if (annotationProcessingByAndroidJavaCompile) {
+            if (annotationProcessingByJavaCompile) {
                 // EXPECTATION-NOT-MET: This is a limitation of Gradle. mainActivityClass references
                 // the generated source files and Gradle considers mainActivityClass as relevant to
                 // the change even though the re-generated source files' contents haven't changed.
@@ -601,7 +600,7 @@ class IncrementalJavaCompileWithAPsTest(
         // contents haven't changed, and they also do not directly or transitively reference the
         // changed original source file
         if (incrementalMode) {
-            if (annotationProcessingByAndroidJavaCompile) {
+            if (annotationProcessingByJavaCompile) {
                 // EXPECTATION-NOT-MET: As documented at
                 // https://docs.gradle.org/current/userguide/java_plugin.html
                 // #sec:incremental_annotation_processing, "Gradle will always recompile any files
@@ -658,14 +657,13 @@ class IncrementalJavaCompileWithAPsTest(
          */
         val incrementalMode = withKapt || withSeparateAP || withIncrementalAPs
 
-        // This is the case when AndroidJavaCompile performs both annotation processing and
-        // compilation
-        val annotationProcessingByAndroidJavaCompile = !withKapt && !withSeparateAP
+        // This is the case when JavaCompile performs both annotation processing and compilation
+        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
 
         // None of the original source files are changed, so in incremental mode, none of them
         // should be recompiled
         if (incrementalMode) {
-            if (annotationProcessingByAndroidJavaCompile) {
+            if (annotationProcessingByJavaCompile) {
                 // EXPECTATION-NOT-MET: This is a limitation of Gradle.
                 assertFileHasChanged(mainActivityClass)
                 assertFileHasChanged(annotation1Class1)
@@ -691,7 +689,7 @@ class IncrementalJavaCompileWithAPsTest(
         // contents haven't changed, and they also do not directly or transitively reference the
         // deleted generated source file
         if (incrementalMode) {
-            if (annotationProcessingByAndroidJavaCompile) {
+            if (annotationProcessingByJavaCompile) {
                 // EXPECTATION-NOT-MET: As documented at
                 // https://docs.gradle.org/current/userguide/java_plugin.html
                 // #sec:incremental_annotation_processing, "Gradle will always recompile any files
@@ -714,7 +712,7 @@ class IncrementalJavaCompileWithAPsTest(
             assertThat(result.getTask(PROCESS_ANNOTATIONS_TASK)).didWork()
         }
         if (incrementalMode) {
-            if (annotationProcessingByAndroidJavaCompile) {
+            if (annotationProcessingByJavaCompile) {
                 assertThat(result.getTask(COMPILE_TASK)).didWork()
             } else {
                 assertThat(result.getTask(COMPILE_TASK)).wasUpToDate()
@@ -737,12 +735,12 @@ class IncrementalJavaCompileWithAPsTest(
          * EXPECTATION: None of the generated source files are changed, so annotation processing
          * should be UP-TO-DATE.
          */
-        // This is the case when AndroidJavaCompile performs both annotation processing and
+        // This is the case when JavaCompile performs both annotation processing and
         // compilation
-        val annotationProcessingByAndroidJavaCompile = !withKapt && !withSeparateAP
+        val annotationProcessingByJavaCompile = !withKapt && !withSeparateAP
 
         // None of the generated source files should be re-generated
-        if (annotationProcessingByAndroidJavaCompile) {
+        if (annotationProcessingByJavaCompile) {
             // EXPECTATION-NOT-MET: This is a limitation of Gradle.
             assertFileHasChanged(annotation1GeneratedJavaFile)
             assertFileHasChanged(annotation2GeneratedJavaFile)
