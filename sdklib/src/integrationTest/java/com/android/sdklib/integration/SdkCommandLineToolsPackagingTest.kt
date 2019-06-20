@@ -38,7 +38,8 @@ class SdkCommandLineToolsPackagingTest(private val platform: AndroidSdkCommandLi
         val expectedNonLibEntries = listOf(
             "tools/bin/apkanalyzer$suffix",
             "tools/bin/avdmanager$suffix",
-            "tools/bin/jobb$suffix",
+	    // b/135688047
+            // "tools/bin/jobb$suffix",
             "tools/bin/lint$suffix",
             "tools/bin/screenshot2$suffix",
             "tools/bin/sdkmanager$suffix",

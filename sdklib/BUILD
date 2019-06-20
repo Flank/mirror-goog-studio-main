@@ -191,7 +191,8 @@ sdk_package(
         ":avdmanager",
         ":sdkmanager",
         "//tools/base/apkparser/cli:apkanalyzer",
-        "//tools/base/jobb:jobb",
+        # b/135688047
+        # "//tools/base/jobb:jobb",
         "//tools/base/lint/cli:lint",
         "//tools/base/misc/screenshot2:screenshot2",
     ],
