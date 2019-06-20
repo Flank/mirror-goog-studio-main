@@ -42,6 +42,7 @@ import java.nio.file.Files
 import java.util.function.Predicate
 import java.util.function.Supplier
 import java.util.regex.Pattern
+import java.util.zip.Deflater
 import javax.inject.Inject
 
 private val CLASS_PATTERN = Pattern.compile(".*\\.class$")
@@ -193,7 +194,7 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         ).use { out ->
             // Don't compress because compressing takes extra time, and this jar doesn't go into any
             // APKs or AARs
-            out.setCompressionLevel(0)
+            out.setCompressionLevel(Deflater.NO_COMPRESSION)
             params.input.forEach { base ->
                 if (base.isDirectory) {
                     out.addDirectory(base.toPath())

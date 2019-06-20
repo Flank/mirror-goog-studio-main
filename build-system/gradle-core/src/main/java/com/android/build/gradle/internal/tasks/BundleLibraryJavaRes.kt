@@ -39,6 +39,7 @@ import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
 import java.util.function.Predicate
+import java.util.zip.Deflater
 import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
@@ -64,6 +65,10 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
     lateinit var jarCreatorType: JarCreatorType
         private set
 
+    @get:Input
+    var isDebugBuild: Boolean = false
+        private set
+
     // The runnable implementing the processing is not able to deal with fine-grained file but
     // instead is expecting directories of files. Use the unfiltered collection (since the filtering
     // changes the FileCollection of directories into a FileTree of files) to process, but don't
@@ -77,7 +82,8 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
                 BundleLibraryJavaResRunnable.Params(
                     output = output!!.get().asFile,
                     inputs = unfilteredResources.files,
-                    jarCreatorType = jarCreatorType
+                    jarCreatorType = jarCreatorType,
+                    compressionLevel = if (isDebugBuild) Deflater.BEST_SPEED else null
                 )
             )
         }
@@ -123,6 +129,7 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
             }
 
             task.jarCreatorType = variantScope.jarCreatorType
+            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
         }
     }
 }
@@ -131,7 +138,8 @@ class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Run
     data class Params(
         val output: File,
         val inputs: Set<File>,
-        val jarCreatorType: JarCreatorType
+        val jarCreatorType: JarCreatorType,
+        val compressionLevel: Int?
     ) : Serializable
 
     override fun run() {
@@ -143,12 +151,13 @@ class BundleLibraryJavaResRunnable @Inject constructor(val params: Params) : Run
             params.output.toPath(),
             predicate,
             params.jarCreatorType
-        ).use { out ->
+        ).use { jarCreator ->
+            params.compressionLevel?.let { jarCreator.setCompressionLevel(it) }
             params.inputs.forEach { base ->
                 if (base.isDirectory) {
-                    out.addDirectory(base.toPath())
+                    jarCreator.addDirectory(base.toPath())
                 } else if (base.toString().endsWith(SdkConstants.DOT_JAR)) {
-                    out.addJar(base.toPath())
+                    jarCreator.addJar(base.toPath())
                 }
             }
         }

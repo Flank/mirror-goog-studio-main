@@ -36,6 +36,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.util.function.Predicate
+import java.util.zip.Deflater
 
 /** Task to merge the res/classes intermediate jars from a library into a single one  */
 @CacheableTask
@@ -76,7 +77,7 @@ abstract class ZipMergingTask : NonIncrementalTask() {
         ).use {
             // Don't compress because compressing takes extra time, and this jar doesn't go into any
             // APKs or AARs.
-            it.setCompressionLevel(0)
+            it.setCompressionLevel(Deflater.NO_COMPRESSION)
             val lib = libraryInputFile.get().asFile
             if (lib.exists()) {
                 it.addJar(lib.toPath())

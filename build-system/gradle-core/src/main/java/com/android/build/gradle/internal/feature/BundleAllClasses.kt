@@ -44,6 +44,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.util.zip.Deflater
 import javax.inject.Inject
 
 /**
@@ -116,7 +117,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
                     jarCreatorType = jarCreatorType,
                     fromJars = dependencyRClassClasses?.files?.toList() ?: listOf(),
                     fromFiles = files,
-                    compressionLevel = 0
+                    compressionLevel = Deflater.NO_COMPRESSION
                 )
             )
         }

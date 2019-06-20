@@ -38,6 +38,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
+import java.util.zip.Deflater
 import javax.inject.Inject
 
 /**
@@ -94,7 +95,7 @@ abstract class MergeClassesTask
                         fromDirectories = fromDirectories,
                         fromJars = fromJars,
                         filter = { CLASS_MATCHER.test(it) },
-                        compressionLevel = 0
+                        compressionLevel = Deflater.NO_COMPRESSION
                     )
                 )
             }

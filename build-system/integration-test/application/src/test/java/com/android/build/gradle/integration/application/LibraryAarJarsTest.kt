@@ -27,6 +27,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
 import java.util.function.Predicate
+import java.util.zip.Deflater
 
 class LibraryAarJarsTest {
 
@@ -149,7 +150,8 @@ class LibraryAarJarsTest {
             jars["classes.jar"]!!,
             excludes,
             null,
-            JarCreatorType.JAR_FLINGER
+            JarCreatorType.JAR_FLINGER,
+            Deflater.BEST_SPEED
         )
 
         assertThat(Zip(jars["classes.jar"]!!).entries.map(Path::toString)).containsExactly(

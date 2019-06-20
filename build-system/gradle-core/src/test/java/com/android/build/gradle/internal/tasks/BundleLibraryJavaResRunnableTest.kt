@@ -25,6 +25,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -53,7 +54,11 @@ class BundleLibraryJavaResRunnableTest {
             }
         )
         BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(output, input, JarCreatorType.JAR_FLINGER)
+            BundleLibraryJavaResRunnable.Params(
+                output,
+                input,
+                JarCreatorType.JAR_FLINGER,
+                Deflater.BEST_SPEED)
         ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).contains("b.txt")
@@ -70,7 +75,11 @@ class BundleLibraryJavaResRunnableTest {
             }
         )
         BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(output, input, JarCreatorType.JAR_FLINGER)
+            BundleLibraryJavaResRunnable.Params(
+                output,
+                input,
+                JarCreatorType.JAR_FLINGER,
+                Deflater.BEST_SPEED)
         ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).doesNotContain("A.class")
@@ -93,7 +102,11 @@ class BundleLibraryJavaResRunnableTest {
         }
 
         BundleLibraryJavaResRunnable(
-            BundleLibraryJavaResRunnable.Params(output, setOf(inputJar), JarCreatorType.JAR_FLINGER)
+            BundleLibraryJavaResRunnable.Params(
+                output,
+                setOf(inputJar),
+                JarCreatorType.JAR_FLINGER,
+                Deflater.BEST_SPEED)
         ).run()
         assertThatZip(output).contains("a.txt")
         assertThatZip(output).contains("sub/a.txt")
@@ -114,8 +127,10 @@ class BundleLibraryJavaResRunnableTest {
 
         BundleLibraryJavaResRunnable(
             BundleLibraryJavaResRunnable.Params(
-                output, setOf(inputDirWithJar), JarCreatorType.JAR_FLINGER
-            )
+                output,
+                setOf(inputDirWithJar),
+                JarCreatorType.JAR_FLINGER,
+                Deflater.BEST_SPEED)
         ).run()
         assertThatZip(output).contains("subJar.jar")
         assertThatZip(output).doesNotContain("A.class")

@@ -49,6 +49,7 @@ import java.io.File
 import java.util.function.Predicate
 import java.util.function.Supplier
 import java.util.regex.Pattern
+import java.util.zip.Deflater
 import javax.inject.Inject
 
 /**
@@ -112,6 +113,10 @@ abstract class LibraryAarJarsTask
     lateinit var jarCreatorType: JarCreatorType
         private set
 
+    @get:Input
+    var isDebugBuild: Boolean = false
+        private set
+
     override fun doTaskAction() {
         // non incremental task, need to clear out outputs.
         // main class jar will get rewritten, just delete local jar folder content.
@@ -141,7 +146,8 @@ abstract class LibraryAarJarsTask
             } else {
                 null
             },
-            jarCreatorType
+            jarCreatorType,
+            if (isDebugBuild) Deflater.BEST_SPEED else null
         )
     }
 
@@ -165,7 +171,8 @@ abstract class LibraryAarJarsTask
             toFile: File,
             filter: Predicate<String>,
             typedefRemover: JarCreator.Transformer?,
-            jarCreatorType: JarCreatorType) {
+            jarCreatorType: JarCreatorType,
+            compressionLevel: Int?) {
 
             // process main scope.
             mergeInputsToLocation(
@@ -174,18 +181,20 @@ abstract class LibraryAarJarsTask
                 toFile,
                 filter,
                 typedefRemover,
-                jarCreatorType
+                jarCreatorType,
+                compressionLevel
             )
 
             // process local scope
-            processLocalJars(localJars, localJarsLocation, jarCreatorType)
+            processLocalJars(localJars, localJarsLocation, jarCreatorType, compressionLevel)
         }
 
 
         private fun processLocalJars(
             inputs: MutableSet<File>,
             localJarsLocation: File,
-            jarCreatorType: JarCreatorType
+            jarCreatorType: JarCreatorType,
+            compressionLevel: Int?
         ) {
 
             /*
@@ -206,7 +215,9 @@ abstract class LibraryAarJarsTask
                     File(localJarsLocation, jar.name).toPath(),
                     JarMerger.CLASSES_ONLY,
                     jarCreatorType
-                ).use { it.addJar(jar.toPath()) }
+                ).use { jarCreator ->
+                    compressionLevel?.let { jarCreator.setCompressionLevel(it) }
+                    jarCreator.addJar(jar.toPath()) }
             }
 
             // now handle the folders.
@@ -229,11 +240,13 @@ abstract class LibraryAarJarsTask
             toFile: File,
             filter: Predicate<String>,
             typedefRemover: JarCreator.Transformer?,
-            jarCreatorType: JarCreatorType
+            jarCreatorType: JarCreatorType,
+            compressionLevel: Int?
         ) {
             val filterAndOnlyClasses = JarMerger.CLASSES_ONLY.and(filter)
 
             JarCreatorFactory.make(toFile.toPath(), jarCreatorType).use { jarCreator ->
+                compressionLevel?.let { jarCreator.setCompressionLevel(it) }
                 // Merge only class files on CLASS type inputs
                 for (input in classFiles) {
                     // Skip if file doesn't exist
@@ -332,6 +345,8 @@ abstract class LibraryAarJarsTask
             task.packageBuildConfig = packageBuildConfig
 
             task.jarCreatorType = variantScope.jarCreatorType
+
+            task.isDebugBuild = variantScope.variantConfiguration.buildType.isDebuggable
 
             /*
              * Only get files that are CLASS, and exclude files that are both CLASS and RESOURCES

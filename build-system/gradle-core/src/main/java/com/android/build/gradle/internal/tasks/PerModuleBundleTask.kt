@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Predicate
 import java.util.function.Supplier
+import java.util.zip.Deflater
 
 /**
  * Task that zips a module's bundle elements into a zip file. This gets published
@@ -115,7 +116,7 @@ abstract class PerModuleBundleTask : NonIncrementalTask() {
 
         // Disable compression for module zips, since this will only be used in bundletool and it
         // will need to uncompress them anyway.
-        jarCreator.setCompressionLevel(0)
+        jarCreator.setCompressionLevel(Deflater.NO_COMPRESSION)
 
         val filters = abiFilters
         val abiFilter: Predicate<String>? = if (filters != null) NativeLibraryAbiPredicate(filters, false) else null
