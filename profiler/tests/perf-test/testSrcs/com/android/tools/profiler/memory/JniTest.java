@@ -16,8 +16,6 @@
 
 package com.android.tools.profiler.memory;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
@@ -25,17 +23,21 @@ import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Memory.*;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
-import java.util.HashSet;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
+
+import java.util.HashSet;
+import java.util.List;
+
+import static com.google.common.truth.Truth.assertThat;
 
 public class JniTest {
     private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
     private static final int RETRY_INTERVAL_MILLIS = 50;
 
     // We currently only test O+ test scenarios.
-    @Rule public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
+    @Rule
+    public final PerfDriver myPerfDriver = new MemoryPerfDriver(ACTIVITY_CLASS, 26);
 
     private int findClassTag(List<BatchAllocationContexts> samples, String className) {
         for (BatchAllocationContexts sample : samples) {
@@ -128,7 +130,13 @@ public class JniTest {
                 }
             }
 
+
             for (BatchJNIGlobalRefEvent batch : jvmtiData.getJniReferenceEventBatchesList()) {
+                // the context list count would be larger than the jni events because we also have context
+                // events from alloc/free batches, but we should always have a context of the same timestamp
+                // as the batched jni ref event.
+                BatchAllocationContexts contexts = jvmtiData.getBatchAllocationContextsList().stream()
+                        .filter(context -> context.getTimestamp() == batch.getTimestamp()).findFirst().get();
                 assertThat(batch.getTimestamp()).isGreaterThan(startTime);
                 for (JNIGlobalReferenceEvent event : batch.getEventsList()) {
                     long refValue = event.getRefValue();
@@ -157,7 +165,7 @@ public class JniTest {
                             allRefsAccounted = true;
                         }
                     }
-                    validateMemoryMap(batch.getMemoryMap(), event.getBacktrace());
+                    validateMemoryMap(contexts.getMemoryMap(), event.getBacktrace());
                 }
             }
 

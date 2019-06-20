@@ -149,6 +149,9 @@ message BatchAllocationContexts {
   repeated AllocationStack.StackFrame methods = 3;
   repeated AllocationStack encoded_stacks = 4;
   repeated ThreadInfo thread_infos = 5;
+
+  // For JNI native backtrace.
+  MemoryMap memory_map = 6;
 }
 
 // Batched AllocationEvents to minimize number of grpc
@@ -169,6 +172,19 @@ message NativeBacktrace {
   // stack walk. Addresses are ordered bottom-up e.g. the first one
   // is the return address of the innermost function.
   repeated uint64 addresses = 1;
+}
+
+message NativeCallStack {
+  message NativeFrame {
+    int64 address = 1;
+    int64 module_offset = 2;
+    string module_name = 3;
+    string symbol_name = 4;
+    string file_name = 5;
+    int32 line_number = 6;
+  }
+
+  repeated NativeFrame frames = 1;
 }
 
 message MemoryMap {
@@ -208,8 +224,6 @@ message JNIGlobalReferenceEvent {
 message BatchJNIGlobalRefEvent {
   int64 timestamp = 1;
   repeated JNIGlobalReferenceEvent events = 2;
-  MemoryMap memory_map = 3;
-  repeated ThreadInfo thread_infos = 4;
 }
 
 // Proto format for handling O+ allocation data.

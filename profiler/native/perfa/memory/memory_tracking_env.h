@@ -198,7 +198,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
       const std::string& thread_name,
       google::protobuf::RepeatedPtrField<proto::ThreadInfo>* threads);
 
-  void FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch);
+  void FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch,
+                              proto::MemoryMap* memory_map);
 
   // For a particular class object, populate |klass_info| with the corresponding
   // values.

@@ -880,7 +880,8 @@ void MemoryTrackingEnv::SendAllocationEvents(
   }
 }
 
-void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch) {
+void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch,
+                                               proto::MemoryMap* memory_map) {
   bool memory_map_is_updated = false;
   std::unordered_set<uintptr_t> reported_regions;
   MemoryMap::MemoryRegion last_seen_region{"", 0, 0, 0};
@@ -930,7 +931,7 @@ void MemoryTrackingEnv::FillJniEventsModuleMap(BatchJNIGlobalRefEvent* batch) {
         if (reported_regions.insert(region.start_address).second) {
           // This region hasn't been reported before, we need to add it
           // to the region map in the batch.
-          auto proto_region = batch->mutable_memory_map()->add_regions();
+          auto proto_region = memory_map->add_regions();
           proto_region->set_name(region.name);
           proto_region->set_start_address(region.start_address);
           proto_region->set_end_address(region.end_address);
@@ -963,7 +964,7 @@ void MemoryTrackingEnv::SendJNIRefEvents(
       int64_t sample_time = g_env->clock_.GetCurrentTime();
       contexts.set_timestamp(sample_time);
       batch.set_timestamp(sample_time);
-      FillJniEventsModuleMap(&batch);
+      FillJniEventsModuleMap(&batch, contexts.mutable_memory_map());
       profiler::EnqueueJNIGlobalRefEvents(contexts, batch);
       batch.Clear();
       contexts.Clear();
@@ -974,7 +975,7 @@ void MemoryTrackingEnv::SendJNIRefEvents(
     int64_t sample_time = g_env->clock_.GetCurrentTime();
     contexts.set_timestamp(sample_time);
     batch.set_timestamp(sample_time);
-    FillJniEventsModuleMap(&batch);
+    FillJniEventsModuleMap(&batch, contexts.mutable_memory_map());
     profiler::EnqueueJNIGlobalRefEvents(contexts, batch);
   }
 }

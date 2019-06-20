@@ -94,11 +94,7 @@ service MemoryService {
   // O+ studio-side only: Given a time interval returns a set of all events
   // related to creations and deletions of global JNI references.
   rpc GetJNIGlobalRefsEvents(JNIGlobalRefsEventsRequest)
-      returns (BatchJNIGlobalRefEvent) {}
-
-  // Turn list of addresses into symbolized native callstack frames.
-  rpc ResolveNativeBacktrace(ResolveNativeBacktraceRequest)
-      returns (NativeCallStack) {}
+      returns (JNIGlobalRefsEventsResponse) {}
 }
 
 message MemoryStartRequest {
@@ -368,28 +364,10 @@ message JNIGlobalRefsEventsRequest {
   Session session = 1;
   int64 start_time = 2;  // inclusive;
   int64 end_time = 3; // exclusive;
-
-  // Ignore |start_time| - include only objects that are still
-  // alive at point in time specified by |end_time|
-  bool live_objects_only = 4;
 }
 
-message ResolveNativeBacktraceRequest {
-  Session session = 1;
-  NativeBacktrace backtrace = 2;
-}
-
-message NativeCallStack {
-  message NativeFrame {
-    int64 address = 1;
-    int64 module_offset = 2;
-    string module_name = 3;
-    string symbol_name = 4;
-    string file_name = 5;
-    int32 line_number = 6;
-  }
-
-  repeated NativeFrame frames = 1;
+message JNIGlobalRefsEventsResponse {
+  repeated BatchJNIGlobalRefEvent events = 1;
 }
 
 message ForceGarbageCollectionRequest {
