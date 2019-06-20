@@ -10,6 +10,7 @@
         android:name="${packageName}.${firstFragmentClass}"
         android:label="@string/first_fragment_label"
         tools:layout="@layout/${firstFragmentLayoutName}" >
+
         <action
             android:id="@+id/action_${firstFragmentClass}_to_${secondFragmentClass}"
             app:destination="@id/${secondFragmentClass}" />
@@ -19,8 +20,13 @@
         android:name="${packageName}.${secondFragmentClass}"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/${secondFragmentLayoutName}" >
+
         <action
             android:id="@+id/action_${secondFragmentClass}_to_${firstFragmentClass}"
             app:destination="@id/${firstFragmentClass}" />
+
+        <argument
+            android:name="myArg"
+            app:argType="string" />
     </fragment>
 </navigation>
