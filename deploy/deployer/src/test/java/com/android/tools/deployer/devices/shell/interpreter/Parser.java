@@ -299,16 +299,27 @@ public class Parser {
 
         BinaryExpression conditionalExpression = new ChainedStatement(new EmptyExpression());
         while (true) {
-            Token firstParam = tokenizer.parseToken(DOUBLE_CONDITIONAL_UNARY, FILE_PATH);
+            Token firstParam = tokenizer.parseToken(DOUBLE_CONDITIONAL_UNARY, BACKTICK, FILE_PATH);
             String operator;
             Expression firstExpression;
             Expression secondExpression;
-            if (firstParam.getType() == DOUBLE_CONDITIONAL_UNARY) {
-                firstExpression = new EmptyExpression();
-                operator = firstParam.getText();
-            } else {
-                firstExpression = new VarSubExpression(firstParam.getText());
-                operator = tokenizer.parseToken(DOUBLE_CONDITIONAL_BINARY).getText();
+            switch (firstParam.getType()) {
+                case DOUBLE_CONDITIONAL_UNARY:
+                    firstExpression = new EmptyExpression();
+                    operator = firstParam.getText();
+                    break;
+                case BACKTICK:
+                    firstExpression =
+                            new SubshellExpression(
+                                    parseScript(tokenizer.extractToEndingBacktick()));
+                    tokenizer.parseToken(BACKTICK);
+                    operator = tokenizer.parseToken(DOUBLE_CONDITIONAL_BINARY).getText();
+                    break;
+                case FILE_PATH:
+                default:
+                    firstExpression = new VarSubExpression(firstParam.getText());
+                    operator = tokenizer.parseToken(DOUBLE_CONDITIONAL_BINARY).getText();
+                    break;
             }
             secondExpression =
                     new VarSubExpression(tokenizer.parseToken(FILE_PATH, QUOTED_STRING).getText());
@@ -327,6 +338,7 @@ public class Parser {
         tokenizer.parseToken(SEMICOLON); // We're hacking the list.
         tokenizer.parseToken(THEN);
 
+        // TODO support "else if" and "else"
         Expression body = parseBody(tokenizer);
         tokenizer.parseToken(FI);
 

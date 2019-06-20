@@ -122,6 +122,14 @@ public class InterpreterTest {
     }
 
     @Test
+    public void ifBacktickTest() throws IOException {
+        assertEquals(
+                0,
+                Parser.parse("if [[ `echo foo` == foo ]]; then echo bar; fi;").execute(env).code);
+        assertEquals(String.format("bar%s", System.lineSeparator()), env.readStringFromPipe());
+    }
+
+    @Test
     public void forTest() throws IOException {
         assertEquals(0, Parser.parse("for pid in 123 456; do echo $pid; done").execute(env).code);
         assertEquals(String.format("123%s456%s", System.lineSeparator(), System.lineSeparator()), env.readStringFromPipe());
