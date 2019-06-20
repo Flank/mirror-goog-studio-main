@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks.manifest
 
 import com.android.SdkConstants.DOT_XML
+import com.android.ide.common.blame.SourceFile
 import com.android.ide.common.blame.SourceFilePosition
 import com.android.ide.common.blame.SourcePosition
 import com.android.manifmerger.ManifestMerger2
@@ -199,6 +200,12 @@ fun findOriginalManifestFilePosition(
     manifestMergeBlameContents: List<String>,
     mergedFilePosition: SourceFilePosition
 ): SourceFilePosition {
+    if (mergedFilePosition.file == SourceFile.UNKNOWN || mergedFilePosition.file.sourceFile?.absolutePath?.contains(
+            "merged_manifests"
+        ) == false
+    ) {
+        return mergedFilePosition
+    }
     try {
         val linePrefix = (mergedFilePosition.position.startLine + 1).toString() + "-->"
         manifestMergeBlameContents.forEach { line ->

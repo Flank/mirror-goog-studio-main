@@ -28,6 +28,8 @@ class ManifestHelperTest {
     @Test
     fun testFindingOriginalManifestFilePosition() {
         val filePath = "/usr/src/MyApplication/app/src/main/AndroidManifest.xml"
+        val mergedManifestFile =
+            File("/usr/src/MyApplication/app/build/intermediates/merged_manifests/debug/AndroidManifest.xml")
 
         val outputList = """
             1<?xml version="1.0" encoding="utf-8"?>
@@ -77,24 +79,57 @@ class ManifestHelperTest {
             28
             29</manifest>
         """.trimIndent().split("\n")
-        checkSourcePosition(9, outputList, filePath, SourcePosition.UNKNOWN)
+        checkSourcePosition(9, outputList, filePath, SourcePosition.UNKNOWN, mergedManifestFile)
 
-        checkSourcePosition(11, outputList, filePath, SourcePosition(4, 4, -1, 18, 18, -1))
+        checkSourcePosition(
+            11,
+            outputList,
+            filePath,
+            SourcePosition(4, 4, -1, 18, 18, -1),
+            mergedManifestFile
+        )
 
-        checkSourcePosition(18, outputList, filePath, SourcePosition(9, 8, -1, 9, 10, -1))
+        checkSourcePosition(
+            18,
+            outputList,
+            filePath,
+            SourcePosition(9, 8, -1, 9, 10, -1),
+            mergedManifestFile
+        )
 
-        checkSourcePosition(22, outputList, filePath, SourcePosition(13, 16, -1, -1, -1, -1))
+        checkSourcePosition(
+            22,
+            outputList,
+            filePath,
+            SourcePosition(13, 16, -1, -1, -1, -1),
+            mergedManifestFile
+        )
 
-        checkSourcePosition(24, outputList, filePath, SourcePosition(15, -1, -1, -1, -1, -1))
+        checkSourcePosition(
+            24,
+            outputList,
+            filePath,
+            SourcePosition(15, -1, -1, -1, -1, -1),
+            mergedManifestFile
+        )
 
         checkSourcePosition(
             13,
             outputList,
             "/usr/.gradle/caches/transforms-2/files-2.1/cb5e0295e6631df8cf1172ae152a4ad4/AndroidManifest.xml",
-            SourcePosition(21, 17, -1, 21, 85, -1)
+            SourcePosition(21, 17, -1, 21, 85, -1),
+            mergedManifestFile
         )
 
-        val oldPos = SourceFilePosition(SourceFile.UNKNOWN, SourcePosition(26, -1, -1))
+        var oldPos = SourceFilePosition(SourceFile(mergedManifestFile), SourcePosition(26, -1, -1))
+
+        assertThat(findOriginalManifestFilePosition(outputList, oldPos)).isEqualTo(oldPos)
+
+        oldPos =
+            SourceFilePosition(
+                SourceFile(File("/usr/src/MyApplication/app/src/res/layout/layout.xml")),
+                SourcePosition(23, -1, -1)
+            )
 
         assertThat(findOriginalManifestFilePosition(outputList, oldPos)).isEqualTo(oldPos)
     }
@@ -103,9 +138,11 @@ class ManifestHelperTest {
         lineNumber: Int,
         outputList: List<String>,
         filePath: String,
-        expectedSourcePosition: SourcePosition
+        expectedSourcePosition: SourcePosition,
+        originalFile: File
     ) {
-        val oldPos = SourceFilePosition(SourceFile.UNKNOWN, SourcePosition(lineNumber - 1, -1, -1))
+        val oldPos =
+            SourceFilePosition(SourceFile(originalFile), SourcePosition(lineNumber - 1, -1, -1))
         val newPos = findOriginalManifestFilePosition(outputList, oldPos)
         assertThat(newPos).isEqualTo(
             SourceFilePosition(
