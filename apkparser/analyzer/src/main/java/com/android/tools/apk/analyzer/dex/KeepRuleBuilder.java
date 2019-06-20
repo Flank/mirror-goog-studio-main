@@ -20,7 +20,7 @@ public class KeepRuleBuilder {
     public static final String KEEP_PREAMBLE =
             "# Add *one* of the following rules to your Proguard configuration file.\n"
                     + "# Alternatively, you can annotate classes "
-                    + "and class members with @android.support.annotation.Keep\n\n";
+                    + "and class members with @androidx.annotation.Keep\n\n";
     public static final String KEEP_RULE =
             "# keep the class and specified members from being removed or renamed\n";
     public static final String KEEPCLASSMEMBERS_RULE =
