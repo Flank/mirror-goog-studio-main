@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import java.util.zip.Deflater;
 
 /**
  * Makes the final app package. The packager allows build an APK from:
@@ -128,6 +129,7 @@ public class IncrementalPackager implements Closeable {
      * @param factory the factory used to create APK creators
      * @param acceptedAbis the set of accepted ABIs; if empty then all ABIs are accepted
      * @param jniDebugMode is JNI debug mode enabled?
+     * @param debuggableBuild is this a debuggable build?
      * @param apkCreatorType the {@link ApkCreatorType}
      * @param changedDexFiles the changed dex files
      * @param changedJavaResources the changed java resources
@@ -142,6 +144,7 @@ public class IncrementalPackager implements Closeable {
             @NonNull ApkCreatorFactory factory,
             @NonNull Set<String> acceptedAbis,
             boolean jniDebugMode,
+            boolean debuggableBuild,
             @NonNull ApkCreatorType apkCreatorType,
             @NonNull Map<RelativeFile, FileStatus> changedDexFiles,
             @NonNull Map<RelativeFile, FileStatus> changedJavaResources,
@@ -158,7 +161,9 @@ public class IncrementalPackager implements Closeable {
         if (apkCreatorType == ApkCreatorType.APK_Z_FILE_CREATOR) {
             mApkCreator = factory.make(creationData);
         } else if (apkCreatorType == ApkCreatorType.APK_FLINGER) {
-            mApkCreator = new ApkFlinger(creationData);
+            int compressionLevel =
+                    debuggableBuild ? Deflater.BEST_SPEED : Deflater.BEST_COMPRESSION;
+            mApkCreator = new ApkFlinger(creationData, compressionLevel);
         } else {
             throw new RuntimeException("unexpected apkCreatorType");
         }
@@ -172,7 +177,13 @@ public class IncrementalPackager implements Closeable {
         mAbiPredicate = new NativeLibraryAbiPredicate(acceptedAbis, jniDebugMode);
     }
 
-    // TODO documention, mention that this method should only be called once.
+    /**
+     * Updates all new, changed, and deleted files in the archive.
+     *
+     * <p>This method should only be called once.
+     *
+     * @throws IOException failed to update the archive.
+     */
     public void updateFiles() throws IOException {
         // Calculate packagedFileUpdates
         List<PackagedFileUpdate> packagedFileUpdates = new ArrayList<>();

@@ -559,6 +559,7 @@ public class IncrementalPackagerBuilder {
                     apkFormat.factory(keepTimestampsInApk, debuggableBuild),
                     abiFilters,
                     jniDebuggableBuild,
+                    debuggableBuild,
                     apkCreatorType,
                     changedDexFiles,
                     changedJavaResources,

@@ -31,6 +31,7 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import zipflinger.JarFlinger
 import java.io.File
+import java.util.zip.Deflater
 
 class ApkFlingerTest {
 
@@ -63,7 +64,7 @@ class ApkFlingerTest {
                 jarFlinger.addFile(path, fileInput.toPath())
             }
         }
-        ApkFlinger(creationData).use { it.writeZip(jarInput, null, null) }
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.writeZip(jarInput, null, null) }
         assertThatZip(apkFile).exists()
         fileInputMap.forEach { (path, content) ->
             assertThatZip(apkFile).containsFileWithContent(path, content)
@@ -73,7 +74,7 @@ class ApkFlingerTest {
     @Test
     fun writeFile() {
         val fileInputMap = mapOf ("foo.txt" to "foo", "bar.txt" to "bar", "foo/bar.txt" to "foobar")
-        ApkFlinger(creationData).use { apkFlinger ->
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use { apkFlinger ->
             fileInputMap.forEach { (path, content) ->
                 val fileInput = tmp.root.resolve(path)
                 fileInput.parentFile.mkdirs()
@@ -90,7 +91,7 @@ class ApkFlingerTest {
     @Test
     fun deleteFile() {
         val fileInputMap = mapOf ("foo.txt" to "foo", "bar.txt" to "bar", "foo/bar.txt" to "foobar")
-        ApkFlinger(creationData).use { apkFlinger ->
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use { apkFlinger ->
             fileInputMap.forEach { (path, content) ->
                 val fileInput = tmp.root.resolve(path)
                 fileInput.parentFile.mkdirs()
@@ -102,7 +103,7 @@ class ApkFlingerTest {
         fileInputMap.forEach { (path, content) ->
             assertThatZip(apkFile).containsFileWithContent(path, content)
         }
-        ApkFlinger(creationData).use { it.deleteFile("bar.txt") }
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.deleteFile("bar.txt") }
         assertThatZip(apkFile).exists()
         assertThatZip(apkFile).doesNotContain("bar.txt")
         assertThatZip(apkFile).containsFileWithContent("foo.txt", "foo")
@@ -114,14 +115,14 @@ class ApkFlingerTest {
         // first write compressed file
         val bigFile = tmp.root.resolve("bigFile.txt")
         bigFile.writeText("foo".repeat(1000))
-        ApkFlinger(creationData).use { it.writeFile(bigFile, "bigFile.txt") }
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use { it.writeFile(bigFile, "bigFile.txt") }
         assertThatZip(apkFile).exists()
         val compressedSize = apkFile.length()
 
         // then write uncompressed file
         Mockito.`when`(creationData.noCompressPredicate)
             .thenReturn(Predicate<String> { it == "bigFile.txt" })
-        ApkFlinger(creationData).use {
+        ApkFlinger(creationData, Deflater.BEST_SPEED).use {
             it.deleteFile("bigFile.txt")
             it.writeFile(bigFile, "bigFile.txt")
         }
@@ -131,6 +132,4 @@ class ApkFlingerTest {
         // check that the compressed file is smaller than the uncompressed file
         assertThat(compressedSize).isLessThan(uncompressedSize)
     }
-
-    // TODO test alignment
 }

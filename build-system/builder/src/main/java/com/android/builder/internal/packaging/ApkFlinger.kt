@@ -37,7 +37,10 @@ import java.util.zip.Deflater
 //  https://issuetracker.google.com/135275558
 
 /** An implementation of [ApkCreator] using the zipflinger library */
-class ApkFlinger(creationData: ApkCreatorFactory.CreationData) : ApkCreator {
+class ApkFlinger(
+    creationData: ApkCreatorFactory.CreationData,
+    private val compressionLevel: Int
+) : ApkCreator {
 
     /** The zipArchive file.  */
     private val zipArchive: ZipArchive
@@ -132,8 +135,11 @@ class ApkFlinger(creationData: ApkCreatorFactory.CreationData) : ApkCreator {
     @Throws(IOException::class)
     override fun writeFile(inputFile: File, apkPath: String) {
         val mayCompress = !noCompressPredicate.apply(apkPath)
-        val compressionLevel = if (mayCompress) Deflater.BEST_SPEED else Deflater.NO_COMPRESSION
-        val fileSource = FileSource(inputFile, apkPath, compressionLevel)
+        val fileSource = FileSource(
+            inputFile,
+            apkPath,
+            if (mayCompress) compressionLevel else Deflater.NO_COMPRESSION
+        )
         if (!mayCompress) {
             if (pageAlignPredicate.apply(apkPath)) {
                 fileSource.align(PAGE_ALIGNMENT)
