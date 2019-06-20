@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
@@ -753,8 +752,7 @@ public abstract class MergeResources extends ResourceAwareTask {
 
             task.errorFormatMode = SyncOptions.getErrorFormatMode(globalScope.getProjectOptions());
 
-            task.precompileRemoteResources =
-                    globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES);
+            task.precompileRemoteResources = variantScope.isPrecompileRemoteResourcesEnabled();
 
             task.dependsOn(variantScope.getTaskContainer().getResourceGenTask());
 

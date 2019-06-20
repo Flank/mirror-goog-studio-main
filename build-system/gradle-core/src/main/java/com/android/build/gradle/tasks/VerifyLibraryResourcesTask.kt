@@ -234,7 +234,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
                 variantScope.globalScope.projectOptions
             )
 
-            if (variantScope.globalScope.projectOptions.get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
+            if (variantScope.isPrecompileRemoteResourcesEnabled) {
                 task.compiledRemoteResources =
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

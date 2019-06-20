@@ -319,8 +319,7 @@ abstract class LinkAndroidResForBundleTask
                 InternalArtifactType.MANIFEST_MERGE_BLAME_FILE
             )
 
-            if (variantScope.globalScope.projectOptions.
-                    get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)) {
+            if (variantScope.isPrecompileRemoteResourcesEnabled) {
                 task.compiledRemoteResources =
                     variantScope.getArtifactCollection(
                         AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

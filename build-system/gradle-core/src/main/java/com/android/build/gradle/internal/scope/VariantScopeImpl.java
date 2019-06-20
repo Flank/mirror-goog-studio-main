@@ -336,6 +336,15 @@ public class VariantScopeImpl implements VariantScope {
     }
 
     @Override
+    public boolean isPrecompileRemoteResourcesEnabled() {
+        // Resource shrinker expects MergeResources task to have all the resources merged and with
+        // overlay rules applied, so we have to go through the MergeResources pipeline in case it's
+        // enabled, see b/134766811.
+        return globalScope.getProjectOptions().get(BooleanOption.PRECOMPILE_REMOTE_RESOURCES)
+                && !useResourceShrinker();
+    }
+
+    @Override
     public boolean isCrunchPngs() {
         // If set for this build type, respect that.
         Boolean buildTypeOverride = getVariantConfiguration().getBuildType().isCrunchPngs();

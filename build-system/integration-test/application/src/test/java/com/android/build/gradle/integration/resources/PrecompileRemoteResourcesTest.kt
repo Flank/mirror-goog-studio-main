@@ -23,8 +23,11 @@ import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.OptionalBooleanOption
+import com.android.build.gradle.tasks.ResourceUsageAnalyzer
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.testutils.apk.Apk
+import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
@@ -52,6 +55,15 @@ class PrecompileRemoteResourcesTest {
         )
         .withFile(
             "src/main/res/drawable-v26/ic_launcher_background.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+                     <item
+                      android:drawable="@drawable/button"/>
+                </layer-list>
+            """.trimIndent()
+        )
+        .withFile(
+            "src/main/res/drawable-v26/button.xml",
             """<?xml version="1.0" encoding="utf-8"?>
                 <vector xmlns:android="http://schemas.android.com/apk/res/android"
                     android:width="108dp"
@@ -90,11 +102,26 @@ class PrecompileRemoteResourcesTest {
                 </adaptive-icon>
             """.trimIndent()
         )
+        .withFile(
+            "src/main/AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.localLib" >
+                </manifest>""".trimIndent()
+        )
 
     private val app = MinimalSubProject.app("com.example.app")
         .appendToBuild(
             """repositories { flatDir { dirs rootProject.file('publishedLib/build/outputs/aar/') } }
                 dependencies { implementation name: 'publishedLib-release', ext:'aar' }
+                android {
+                    buildTypes {
+                        release {
+                            shrinkResources true
+                            minifyEnabled true
+                        }
+                    }
+                }
             """.trimIndent()
         )
         .withFile(
@@ -110,6 +137,22 @@ class PrecompileRemoteResourcesTest {
                     <background android:drawable="@drawable/ic_launcher_background" />
                 </adaptive-icon>
             """.trimIndent()
+        )
+        .withFile(
+            "src/main/AndroidManifest.xml",
+            """<?xml version="1.0" encoding="utf-8"?>
+                <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+                    package="com.example.app" >
+                    <application android:label="app_name" android:icon="@mipmap/ic_launcher">
+                        <activity android:name="MainActivity"
+                                  android:label="app_name">
+                            <intent-filter>
+                                <action android:name="android.intent.action.MAIN" />
+                                <category android:name="android.intent.category.LAUNCHER" />
+                            </intent-filter>
+                        </activity>
+                    </application>
+                </manifest>""".trimIndent()
         )
 
     private val testApp =
@@ -153,6 +196,37 @@ class PrecompileRemoteResourcesTest {
         assertThat(result.getTask(":localLib:verifyReleaseResources").didWork()).isTrue()
     }
 
+    @Test
+    fun testIntegrationWithResourceShrinker() {
+        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+            .run(":publishedLib:assembleRelease")
+
+        project.executor().with(BooleanOption.PRECOMPILE_REMOTE_RESOURCES, true)
+            .with(OptionalBooleanOption.ENABLE_R8, true)
+            .run(":app:assembleRelease")
+
+        val compressed = project.getSubproject(":app").getIntermediateFile(
+            "shrunk_processed_res",
+            "release",
+            "out",
+            "resources-release-stripped.ap_"
+        )
+
+        assertThat(compressed.isFile).isTrue()
+
+        ZFile.openReadOnly(compressed).use {
+            assertThat(it.get("res/layout/layout_random_name.xml")!!.read()).isEqualTo(
+                ResourceUsageAnalyzer.TINY_BINARY_XML
+            )
+            assertThat(it.get("res/drawable-v26/button.xml")!!.read()).isNotEqualTo(
+                ResourceUsageAnalyzer.TINY_BINARY_XML
+            )
+            assertThat(it.get("res/drawable-v26/ic_launcher_background.xml")!!.read()).isNotEqualTo(
+                ResourceUsageAnalyzer.TINY_BINARY_XML
+            )
+        }
+    }
+
     private fun checkAarResourcesCompilerTransformOutput() {
         val transformCacheDir = FileUtils.join(
             GradleTestProject.getGradleUserHome(GradleTestProject.BUILD_DIR).toFile(),
@@ -164,7 +238,7 @@ class PrecompileRemoteResourcesTest {
         assertThat(transformCacheDir.isDirectory).isTrue()
 
         var outputDir: File? = null
-        for (subdirectory in transformCacheDir.listFiles()) {
+        for (subdirectory in transformCacheDir.listFiles()!!) {
             if (subdirectory.isDirectory) {
                 val outputDirCandidate = File(subdirectory, "com.example.publishedLib")
                 if (outputDirCandidate.exists() && outputDirCandidate.isDirectory) {
@@ -175,17 +249,22 @@ class PrecompileRemoteResourcesTest {
         }
         // values and layout resources shouldn't be here
         assertThat(outputDir).isNotNull()
-        assertThat(outputDir!!.listFiles()).hasLength(1)
-        assertThat(outputDir.listFiles()[0].name).isEqualTo(
-            Aapt2RenamingConventions.compilationRename(
-                File(File("drawable-v26"), "ic_launcher_background.xml")
+        assertThat(outputDir!!.listFiles()).hasLength(2)
+        assertThat(outputDir.listFiles()!!.map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
+            listOf(
+                Aapt2RenamingConventions.compilationRename(
+                    File(File("drawable-v26"), "ic_launcher_background.xml")
+                ),
+                Aapt2RenamingConventions.compilationRename(
+                    File(File("drawable-v26"), "button.xml")
+                )
             )
         )
     }
 
     private fun checkValuesAndLayoutResourcedAreMerged(mergedResDir: File) {
         assertThat(mergedResDir.listFiles()).hasLength(4)
-        assertThat(mergedResDir.listFiles().map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
+        assertThat(mergedResDir.listFiles()!!.map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
             listOf(
                 Aapt2RenamingConventions.compilationRename(
                     File(File("layout"), "layout_random_name.xml")

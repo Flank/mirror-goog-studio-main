@@ -100,6 +100,8 @@ public interface VariantScope extends TransformVariantScope {
 
     boolean useResourceShrinker();
 
+    boolean isPrecompileRemoteResourcesEnabled();
+
     boolean isCrunchPngs();
 
     boolean consumesFeatureJars();
