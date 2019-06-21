@@ -108,6 +108,7 @@ public abstract class ExtractAnnotations extends NonIncrementalTask {
     /** Lint classpath */
     @InputFiles
     @Nullable
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getLintClassPath() {
         return lintClassPath;
     }
