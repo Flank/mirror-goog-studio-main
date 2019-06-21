@@ -64,14 +64,14 @@ open class DefaultAndroidSourceSet @Inject constructor(
         javaSource = DefaultAndroidSourceDirectorySet(
             "$displayName Java source", project, SourceArtifactType.JAVA_SOURCES
         )
-        javaSource.getFilter().include("**/*.java")
+        javaSource.filter.include("**/*.java")
 
         javaResources = DefaultAndroidSourceDirectorySet(
             "$displayName Java resources",
             project,
             SourceArtifactType.JAVA_RESOURCES
         )
-        javaResources.getFilter().exclude("**/*.java")
+        javaResources.filter.exclude("**/*.java", "**/*.kt")
 
         manifest = DefaultAndroidSourceFile("$displayName manifest", project)
 
