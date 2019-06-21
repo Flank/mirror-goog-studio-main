@@ -61,7 +61,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
     public void testSrcCompat() {
         String expected =
                 ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
+                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]\n"
                         + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
                         + "               ~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";
@@ -84,7 +84,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
     public void testSrcCompat_incremental() {
         String expected =
                 ""
-                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
+                        + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true in test_project/build.gradle [VectorDrawableCompat]\n"
                         + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
                         + "               ~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n";

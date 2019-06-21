@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -223,9 +224,17 @@ public class VectorDrawableCompatDetector extends ResourceXmlDetector {
                 && ATTR_SRC_COMPAT.equals(name)
                 && isVector.test(resourceUrl.name)) {
             Location location = context.getNameLocation(attribute);
+            Project project = context.getProject();
+            String path = "build.gradle";
+            IdeAndroidProject model = project.getGradleProjectModel();
+            if (model != null) {
+                path = model.getName() + File.separator + path;
+            }
             String message =
                     "To use VectorDrawableCompat, you need to set "
-                            + "`android.defaultConfig.vectorDrawables.useSupportLibrary = true`.";
+                            + "`android.defaultConfig.vectorDrawables.useSupportLibrary = true` in `"
+                            + path
+                            + "`";
             context.report(ISSUE, attribute, location, message);
         }
     }

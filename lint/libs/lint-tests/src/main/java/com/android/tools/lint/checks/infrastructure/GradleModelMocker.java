@@ -279,6 +279,7 @@ public class GradleModelMocker {
         int apiVersion = modelVersion.getMajor() >= 2 ? 3 : 2;
         when(project.getApiVersion()).thenReturn(apiVersion);
         when(project.getFlavorDimensions()).thenReturn(Lists.newArrayList());
+        when(project.getName()).thenReturn("test_project");
 
         variant = mock(Variant.class);
 
