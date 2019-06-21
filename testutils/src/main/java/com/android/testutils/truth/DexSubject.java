@@ -69,6 +69,12 @@ public class DexSubject extends Subject<DexSubject, Dex> {
         return () -> assertAbout(DexClassSubject.dexClasses()).that(null);
     }
 
+    public void containsString(@NonNull String regex) throws IOException {
+        if (!actual().getStrings().stream().anyMatch(str -> str.matches(regex))) {
+            fail("Cannot location any dex string that matches " + regex + " in " + actual());
+        }
+    }
+
     public void containsClassesIn(@NonNull Iterable<String> expected) throws IOException {
         for (String clazz : expected) {
             checkClassName(clazz);

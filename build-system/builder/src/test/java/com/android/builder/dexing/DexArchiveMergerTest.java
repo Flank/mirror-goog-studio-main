@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
+import static com.android.builder.dexing.DexArchiveTestUtil.createClasses;
 import static com.android.testutils.truth.DexSubject.assertThat;
 import static com.android.testutils.truth.PathSubject.assertThat;
 import static org.junit.Assert.fail;
@@ -27,11 +28,14 @@ import com.android.annotations.NonNull;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.apk.Dex;
+import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
@@ -43,6 +47,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.CRC32;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -419,6 +425,40 @@ public class DexArchiveMergerTest {
             Truth.assertThat(Throwables.getStackTraceAsString(e))
                     .contains("Multiple dex files define");
         }
+    }
+
+    @Test
+    public void testMergingWithChecksum() throws Exception {
+        // Checksum is a feature only available in D8.
+        Assume.assumeTrue(dexerTool == DexerTool.D8);
+        Assume.assumeTrue(dexMerger == DexMergerTool.D8);
+
+        // Compile A.class and record the CRC.
+        Path firstDir = temporaryFolder.getRoot().toPath().resolve("fst");
+        Path classesInput = firstDir.resolve("input");
+        createClasses(classesInput, Sets.newHashSet("A"));
+        Path classFile =
+                Iterators.getOnlyElement(
+                        Files.walk(classesInput).filter(Files::isRegularFile).iterator());
+        CRC32 crc = new CRC32();
+        crc.update(Files.readAllBytes(classFile));
+        String crcHexMatcher = ".*" + Long.toHexString(crc.getValue()) + ".*";
+        Path fstArchive = firstDir.resolve("dex_archive.jar");
+        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, fstArchive, dexerTool);
+
+        // Compile B.class.
+        Path sndDir = temporaryFolder.getRoot().toPath().resolve("snd");
+        classesInput = sndDir.resolve("input");
+        createClasses(classesInput, Sets.newHashSet("B"));
+        Path sndArchive = sndDir.resolve("dex_archive.jar");
+        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, sndArchive, dexerTool);
+
+        // The combined dex file should contains the checksum.
+        Path output = temporaryFolder.getRoot().toPath().resolve("output");
+        DexArchiveTestUtil.mergeMonoDex(
+                ImmutableList.of(fstArchive, sndArchive), output, dexMerger);
+        Dex dex = new Dex(output.resolve("classes.dex"));
+        MoreTruth.assertThat(dex).containsString(crcHexMatcher);
     }
 
     @NonNull

@@ -28,6 +28,7 @@ import com.android.annotations.NonNull;
 import com.android.testutils.apk.Dex;
 import com.android.tools.build.apkzlib.zip.ZFile;
 import com.android.utils.PathUtils;
+import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -44,6 +45,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -205,6 +207,41 @@ public class DexArchiveBuilderTest {
         Path output = fs.getPath("tmp\\output");
         Files.createDirectories(output);
         DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+    }
+
+    @Test
+    public void checkChecksumInfoExists() throws Exception {
+        // Checksum is a feature only available in D8.
+        Assume.assumeTrue(dexerTool == DexerTool.D8);
+
+        // We are going to build a dex with debug output mode.
+        Path input = writeToInput(ImmutableList.of("A"));
+        ClassFileInput cfInput = ClassFileInputs.fromPath(input);
+        CRC32 crc = new CRC32();
+        crc.update(cfInput.entries(Predicates.alwaysTrue()).findFirst().get().readAllBytes());
+        String crcHexMatcher = ".*" + Long.toHexString(crc.getValue()) + ".*";
+        Path output = createOutput();
+
+        // DexArchiveTestUtil always do debug build which should contains the checksums.
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
+        Dex dex = null;
+
+        // Look into the string contend of the dex file. It should have at least one string
+        // that has the CRC in it.
+        if (outputFormat == DexArchiveFormat.JAR) {
+            Path jar =
+                    Iterators.getOnlyElement(
+                            Files.walk(output).filter(Files::isRegularFile).iterator());
+            try (ZFile zf = ZFile.openReadOnly(jar.toFile())) {
+                dex = new Dex(zf.entries().iterator().next().read(), "input.dex");
+            }
+        } else {
+            Path dexFile =
+                    Iterators.getOnlyElement(
+                            Files.walk(output).filter(Files::isRegularFile).iterator());
+            dex = new Dex(dexFile);
+        }
+        assertThat(dex).containsString(crcHexMatcher);
     }
 
     @Test

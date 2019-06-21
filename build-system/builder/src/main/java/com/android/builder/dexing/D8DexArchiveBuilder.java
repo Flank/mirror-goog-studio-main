@@ -93,7 +93,8 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             builder.setMode(compilationMode)
                     .setMinApiLevel(minSdkVersion)
                     .setIntermediate(true)
-                    .setOutput(output, outputMode);
+                    .setOutput(output, outputMode)
+                    .setIncludeClassesChecksum(compilationMode == compilationMode.DEBUG);
 
             if (desugaring) {
                 builder.addLibraryResourceProvider(bootClasspath.getOrderedProvider());

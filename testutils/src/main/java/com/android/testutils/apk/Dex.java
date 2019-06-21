@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.testutils.truth.DexUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.raw.HeaderItem;
+import org.jf.dexlib2.dexbacked.reference.DexBackedStringReference;
 
 @Immutable
 public final class Dex {
@@ -40,6 +42,8 @@ public final class Dex {
     @SuppressWarnings("NonFinalFieldInImmutable")
     @Nullable
     private ImmutableMap<String, DexBackedClassDef> classes;
+
+    @Nullable private ImmutableList<String> strings;
 
     public Dex(@NonNull Path path) {
         this(path, path.toString());
@@ -77,6 +81,19 @@ public final class Dex {
         }
         classes = mapBuilder.build();
         return classes;
+    }
+
+    @NonNull
+    public ImmutableList<String> getStrings() throws IOException {
+        if (strings != null) {
+            return strings;
+        }
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        for (DexBackedStringReference stringReference :
+                DexUtils.loadDex(fileBytesSupplier.get()).getStrings()) {
+            builder.add(stringReference.getString());
+        }
+        return strings = builder.build();
     }
 
     public int getVersion() {
