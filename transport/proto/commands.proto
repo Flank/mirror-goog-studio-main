@@ -43,6 +43,8 @@ message Command {
     GET_CPU_CORE_CONFIG = 303;
 
     // Memory Profiler Prefix = 400
+    GC = 401; // No payload associated with GC command
+
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
 
@@ -80,6 +82,8 @@ message Command {
     GetCpuCoreConfig get_cpu_core_config = 303;
 
     // Memory Profiler Prefix = 400
+    // 401 Reserved for CommandType.GC
+
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
 

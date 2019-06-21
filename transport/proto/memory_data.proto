@@ -29,6 +29,14 @@ message MemoryUsageData {
   int32 total_mem = 7;
 }
 
+message MemoryGcData {
+  // GC duration is only used as metadata and is not represented
+  // on the timeline, so we only send one message per GC event
+  // instead of a pair of start/stop event.
+  int64 duration = 1;
+  // TODO add deallocation stats
+}
+
 message AllocatedClass {
   int32 class_id = 1;
   string class_name = 2;

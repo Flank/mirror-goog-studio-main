@@ -70,6 +70,8 @@ message Event {
     // Memory Profiler Prefix = 400
     // no specified group id.
     MEMORY_USAGE = 401;
+    // no specified group id.
+    MEMORY_GC = 402;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -165,6 +167,7 @@ message Event {
 
     // Memory Profiler Prefix = 400
     MemoryUsageData memory_usage = 401;
+    MemoryGcData memory_gc = 402;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

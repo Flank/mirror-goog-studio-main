@@ -26,14 +26,18 @@ using grpc::ClientContext;
 using grpc::Status;
 using profiler::Agent;
 using profiler::SteadyClock;
+using profiler::proto::AgentService;
 using profiler::proto::AllocationEventsRequest;
 using profiler::proto::AllocationSamplingRateEventRequest;
 using profiler::proto::AllocStatsRequest;
 using profiler::proto::EmptyMemoryReply;
+using profiler::proto::EmptyResponse;
+using profiler::proto::Event;
 using profiler::proto::GcStatsRequest;
 using profiler::proto::InternalMemoryService;
 using profiler::proto::JNIRefEventsRequest;
 using profiler::proto::MemoryData;
+using profiler::proto::SendEventRequest;
 
 namespace {
 const SteadyClock& GetClock() {
@@ -69,23 +73,36 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
 
 void EnqueueGcStats(int64_t start_time, int64_t end_time) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+    Agent::Instance().SubmitAgentTasks(
+        {[start_time, end_time](AgentService::Stub& stub, ClientContext& ctx) {
+          SendEventRequest request;
+          auto* event = request.mutable_event();
+          event->set_pid(getpid());
+          event->set_kind(Event::MEMORY_GC);
+          event->set_timestamp(start_time);
+
+          auto* data = event->mutable_memory_gc();
+          data->set_duration(end_time - start_time);
+
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
+
+  } else {
+    Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
+        {[start_time, end_time](InternalMemoryService::Stub& stub,
+                                ClientContext& ctx) {
+          GcStatsRequest gc_stats_request;
+          gc_stats_request.set_pid(getpid());
+          MemoryData::GcStatsSample* stats =
+              gc_stats_request.mutable_gc_stats_sample();
+          stats->set_start_time(start_time);
+          stats->set_end_time(end_time);
+
+          EmptyMemoryReply reply;
+          return stub.RecordGcStats(&ctx, gc_stats_request, &reply);
+        }});
   }
-
-  int32_t pid = getpid();
-  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
-      {[start_time, end_time, pid](InternalMemoryService::Stub& stub,
-                                   ClientContext& ctx) {
-        GcStatsRequest gc_stats_request;
-        gc_stats_request.set_pid(pid);
-        MemoryData::GcStatsSample* stats =
-            gc_stats_request.mutable_gc_stats_sample();
-        stats->set_start_time(start_time);
-        stats->set_end_time(end_time);
-
-        EmptyMemoryReply reply;
-        return stub.RecordGcStats(&ctx, gc_stats_request, &reply);
-      }});
 }
 
 void EnqueueAllocationEvents(const proto::BatchAllocationSample& sample) {
