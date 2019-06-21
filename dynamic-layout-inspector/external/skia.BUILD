@@ -1,4 +1,5 @@
 # TODO: ensure building with clang
+# TODO: use info from external/skia/public.bzl?
 
 config_setting(
     name = "windows",
@@ -15,6 +16,7 @@ config_setting(
 cc_library(
     name = "libskia",
     srcs = glob([
+        "src/**/*.h",
         "src/c/*.cpp",
         "src/core/*.cpp",
         "src/codec/*.cpp",
@@ -31,10 +33,13 @@ cc_library(
         "src/shaders/*.cpp",
         "src/shaders/gradients/*.cpp",
         "src/utils/*.cpp",
-        #        "src/xps/*.cpp",
+        "src/utils/*.inc",
         "third_party/etc1/*.cpp",
+        "third_party/etc1/*.h",
         "third_party/gif/*.cpp",
+        "third_party/gif/*.h",
         "third_party/skcms/*.cc",
+        "third_party/skcms/**/*.h",
     ], exclude = [
         "src/core/SkPicture_none.cpp",
         "src/codec/SkRawCodec.cpp",
@@ -53,7 +58,6 @@ cc_library(
         "src/pdf/SkDocument_PDF_None.cpp",
         "src/ports/SkFontMgr_custom.cpp",
         "src/ports/SkFontMgr_custom_empty.cpp",
-        "src/ports/SkFontMgr_custom_empty_factory.cpp",
         "src/ports/SkImageGenerator_skia.cpp",
         "src/ports/SkDiscardableMemory_none.cpp",
         "src/ports/SkGlobalInitialization_default.cpp",
@@ -64,16 +68,24 @@ cc_library(
             "src/ports/SkOSFile_win.cpp",
             "src/ports/SkOSLibrary_win.cpp",
             "src/ports/SkTLS_win.cpp",
-            #"src/ports/SkImageGeneratorWIC.cpp",
             "src/ports/SkDebug_win.cpp",
+            "src/ports/SkFontMgr_custom_empty_factory.cpp",
         ],
+        "mac": [
+            "src/ports/SkOSFile_posix.cpp",
+            "src/ports/SkTLS_pthread.cpp",
+            "src/ports/SkDebug_stdio.cpp",
+            "src/ports/SkOSLibrary_posix.cpp",
+        ] + glob(["src/utils/mac/*.cpp"]),
         "//conditions:default": [
             "src/ports/SkOSFile_posix.cpp",
             "src/ports/SkTLS_pthread.cpp",
             "src/ports/SkDebug_stdio.cpp",
             "src/ports/SkOSLibrary_posix.cpp",
+            "src/ports/SkFontMgr_custom_empty_factory.cpp",
         ],
     }),
+    hdrs = glob(["include/**/*.h"]),
     copts = [
         "-DATRACE_TAG=ATRACE_TAG_VIEW",
         "-DSKIA_IMPLEMENTATION=1",
@@ -95,6 +107,10 @@ cc_library(
             "-std=c++14",
         ],
     }),
+    linkopts = select({"mac": [
+        "-framework CoreGraphics",
+        "-framework CoreText",
+    ], "//conditions:default": []}),
     includes = [
         "include/atlastext/",
         "include/c/",
@@ -133,7 +149,7 @@ cc_library(
         "third_party/etc1/",
         "third_party/gif/",
         "third_party/skcms/",
-    ],
+    ] + select({"mac": ["include/utils/mac"], "//conditions:default": []}),
     visibility = ["//visibility:public"],
     deps = [
         "@freetype_repo//:libft2",

@@ -24,8 +24,8 @@ cc_library(
         "pngwrite.c",
         "pngwtran.c",
         "pngwutil.c",
-    ],
-    hdrs = ["."],
+    ] + glob(["*.h"], exclude = ["png.h"]),
+    hdrs = ["png.h"],
     copts = select({
         "windows": [],
         "//conditions:default": [

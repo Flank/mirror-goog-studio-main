@@ -1,5 +1,12 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 
+# Unused, but built by the script that runs on ab/ to ensure that the build actually works.
+# TODO: remove this once libskia is consumed by a real target.
+cc_library(
+    name = "temporary_library_target_to_test_skia_build",
+    deps = ["@skia_repo//:libskia"],
+)
+
 cc_library(
     name = "agent_command",
     srcs = [

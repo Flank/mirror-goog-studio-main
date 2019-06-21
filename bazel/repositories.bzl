@@ -10,6 +10,7 @@ _repositories = [
         "path": "external/skia",
     },
     {
+        # files in tools/base that need to be referenced by the skia_repo BUILD
         "name": "skia_extra",
         "path": "tools/base/dynamic-layout-inspector/external/skia-extra",
     },
