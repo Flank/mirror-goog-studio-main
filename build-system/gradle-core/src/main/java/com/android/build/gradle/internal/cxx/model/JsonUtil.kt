@@ -249,6 +249,7 @@ internal data class CxxAbiModelData(
     override val cmake: CxxCmakeAbiModelData? = null,
     override val cxxBuildFolder: File = File("."),
     override val info: AbiInfo = AbiInfo(),
+    override val originalCxxBuildFolder: File = File("."),
     override val variant: CxxVariantModelData = CxxVariantModelData()
 ) : CxxAbiModel {
     override val services: CxxServiceRegistry
@@ -261,6 +262,7 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     cmake = cmake?.toData(),
     cxxBuildFolder = cxxBuildFolder,
     info = info,
+    originalCxxBuildFolder = originalCxxBuildFolder,
     variant = variant.toData()
 )
 
@@ -271,12 +273,15 @@ private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
 @VisibleForTesting
 internal data class CxxCmakeAbiModelData(
     override val cmakeArtifactsBaseFolder: File,
+    override val cmakeServerLogFile: File,
     override val cmakeWrappingBaseFolder: File,
     override val effectiveConfiguration: CMakeSettingsConfiguration
+
 ) : CxxCmakeAbiModel
 
 private fun CxxCmakeAbiModel.toData() = CxxCmakeAbiModelData(
     cmakeArtifactsBaseFolder = cmakeArtifactsBaseFolder,
+    cmakeServerLogFile = cmakeServerLogFile,
     cmakeWrappingBaseFolder = cmakeWrappingBaseFolder,
     effectiveConfiguration = effectiveConfiguration
 )

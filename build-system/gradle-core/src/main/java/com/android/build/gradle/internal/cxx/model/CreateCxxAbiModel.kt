@@ -40,6 +40,9 @@ fun createCxxAbiModel(
         override val info by lazy {
             variant.module.ndkMetaAbiList.single { it.abi == abi }
         }
+        override val originalCxxBuildFolder by lazy {
+            join(variant.jsonFolder, abi.tag)
+        }
         override val cxxBuildFolder by lazy {
             join(variant.jsonFolder, abi.tag)
         }
@@ -62,6 +65,9 @@ fun createCxxAbiModel(
         override val cmake by lazy {
             if (variant.module.buildSystem == NativeBuildSystem.CMAKE) {
                 object : CxxCmakeAbiModel {
+                    override val cmakeServerLogFile by lazy {
+                        join(cmakeArtifactsBaseFolder, "cmake_server_log.txt")
+                    }
                     override val effectiveConfiguration by lazy { CMakeSettingsConfiguration() }
                     override val cmakeWrappingBaseFolder by lazy {
                        join(variant.gradleBuildOutputFolder, abi.tag)

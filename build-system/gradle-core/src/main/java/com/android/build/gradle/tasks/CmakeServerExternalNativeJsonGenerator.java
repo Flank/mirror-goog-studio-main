@@ -29,7 +29,6 @@ import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
-import static com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModelKt.getCmakeServerLogFile;
 import static com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModelKt.getCompileCommandsJsonFile;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getFinalCmakeCommandLineArguments;
 
@@ -143,11 +142,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
+        File cmakeServerLogFile = abi.getCmake().getCmakeServerLogFile().getAbsoluteFile();
+        cmakeServerLogFile.getParentFile().mkdirs();
         try (ThreadLoggingEnvironment ignore =
                 new PassThroughPrintWriterLoggingEnvironment(
-                        new PrintWriter(
-                                getCmakeServerLogFile(abi.getCmake()).getAbsoluteFile(), "UTF-8"),
-                        CMAKE_SERVER_LOG_PREFIX)) {
+                        new PrintWriter(cmakeServerLogFile, "UTF-8"), CMAKE_SERVER_LOG_PREFIX)) {
             // Create a new cmake server for the given Cmake and configure the given project.
             ServerReceiver serverReceiver =
                     new ServerReceiver()

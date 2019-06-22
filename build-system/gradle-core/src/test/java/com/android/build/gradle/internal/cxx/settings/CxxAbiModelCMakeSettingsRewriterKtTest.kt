@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.core.Abi
+import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty
 import com.android.build.gradle.internal.cxx.configure.getBuildRootFolder
 import com.android.build.gradle.internal.cxx.configure.getCmakeProperty
@@ -26,8 +27,12 @@ import com.android.build.gradle.internal.cxx.model.CmakeSettingsMock
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.android.build.gradle.internal.cxx.model.DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION
+import com.android.build.gradle.internal.cxx.model.buildCommandFile
+import com.android.build.gradle.internal.cxx.model.buildOutputFile
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
+import com.android.build.gradle.internal.cxx.model.jsonGenerationLoggingRecordFile
+import com.android.build.gradle.internal.cxx.model.modelOutputFile
 import com.android.build.gradle.internal.cxx.model.soFolder
 import com.android.build.gradle.internal.cxx.model.toJsonString
 import com.android.build.gradle.internal.cxx.settings.Macro.*
@@ -39,6 +44,27 @@ import org.mockito.Mockito
 import java.io.File
 
 class CxxAbiModelCMakeSettingsRewriterKtTest {
+
+    @Test
+    fun `ensure that Android Gradle Plugin per-abi file names are invariant`() {
+        CmakeSettingsMock().apply {
+            RandomInstanceGenerator().cmakeSettingsJsons().forEach { settingsJson ->
+                val cmakeSettingsFile = File(abi.resolveMacroValue(BUILT_IN_THIS_FILE))
+                cmakeSettingsFile.writeText(settingsJson)
+                abi.toJsonString() // Force lazy fields to evaluate
+                val rewritten = abi.rewriteCxxAbiModelWithCMakeSettings()
+                rewritten.toJsonString() // Force lazy fields to evaluate
+
+                // All of these files should not change during rewrite because they need to
+                // be in a predictable location that can't be altered by CMakeSettings.json.
+                assertThat(abi.jsonGenerationLoggingRecordFile).isEqualTo(rewritten.jsonGenerationLoggingRecordFile)
+                assertThat(abi.modelOutputFile).isEqualTo(rewritten.modelOutputFile)
+                assertThat(abi.buildCommandFile).isEqualTo(rewritten.buildCommandFile)
+                assertThat(abi.buildOutputFile).isEqualTo(rewritten.buildOutputFile)
+                assertThat(abi.cmake!!.cmakeServerLogFile).isEqualTo(rewritten.cmake!!.cmakeServerLogFile)
+            }
+        }
+    }
 
     @Test
     fun `ensure traditional environment rewrite above ABI is nop`() {

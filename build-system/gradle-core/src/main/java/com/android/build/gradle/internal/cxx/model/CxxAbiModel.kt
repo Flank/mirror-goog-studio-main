@@ -38,6 +38,14 @@ interface CxxAbiModel {
     val info: AbiInfo
 
     /**
+     * The gradle-controlled .cxx build folder. By default, the same as [cxxBuildFolder] but this
+     * can be overridden by CMakeSettings.json.
+     *
+     *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
+     */
+    val originalCxxBuildFolder: File
+
+    /**
      * The .cxx build folder
      *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a
      */
@@ -64,8 +72,6 @@ interface CxxAbiModel {
      */
     val services: CxxServiceRegistry
 }
-
-
 
 /**
  * The model json
@@ -104,24 +110,24 @@ val CxxAbiModel.soFolder: File
  *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_command.txt
  */
 val CxxAbiModel.buildCommandFile: File
-    get() = FileUtils.join(cxxBuildFolder, "build_command.txt")
+    get() = FileUtils.join(originalCxxBuildFolder, "build_command.txt")
 
 /**
  * Output of the build
  *   ex $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_output.txt
  */
 val CxxAbiModel.buildOutputFile: File
-    get() = FileUtils.join(cxxBuildFolder, "build_output.txt")
+    get() = FileUtils.join(originalCxxBuildFolder, "build_output.txt")
 
 /**
  * Output file of the Cxx*Model structure
  *   ex, $moduleRootFolder/.cxx/ndkBuild/debug/armeabi-v7a/build_model.json
  */
 val CxxAbiModel.modelOutputFile: File
-    get() = FileUtils.join(cxxBuildFolder, "build_model.json")
+    get() = FileUtils.join(originalCxxBuildFolder, "build_model.json")
 
 /**
  * Json Generation logging record
  */
 val CxxAbiModel.jsonGenerationLoggingRecordFile: File
-    get() = FileUtils.join(cxxBuildFolder, "json_generation_record.json")
+    get() = FileUtils.join(originalCxxBuildFolder, "json_generation_record.json")

@@ -60,6 +60,9 @@ class RandomInstanceGenerator {
     fun file() = File(string().trimEnd('/', '\\'))
     fun string() = (0 until sample(LIST_SIZE_DOMAIN)).joinToString("") { sample(SEGMENT_DOMAIN) }
     fun strings(sequenceLength : Int = defaultSequenceLength) = (0 until sequenceLength).map { string() }
+    fun cmakeSettingsJson() = sample(PARSABLE_CMAKE_SETTINGS_JSON_DOMAIN)
+    fun cmakeSettingsJsons(sequenceLength : Int = defaultSequenceLength) = (0 until sequenceLength).map { cmakeSettingsJson() }
+
     fun nullableString(chanceOfNull : Int = 5) : String? {
         val roll = abs(int()) % 100
         return if (roll < chanceOfNull) null else string()
