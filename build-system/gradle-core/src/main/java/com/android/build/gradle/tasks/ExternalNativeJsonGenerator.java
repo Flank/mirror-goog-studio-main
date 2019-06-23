@@ -22,7 +22,7 @@ import static com.android.build.gradle.internal.cxx.configure.CmakeLocatorKt.isC
 import static com.android.build.gradle.internal.cxx.configure.ExternalNativeJsonGenerationUtilKt.registerWriteModelAfterJsonGeneration;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.errorln;
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.infoln;
-import static com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironmentKt.toJsonString;
+import static com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironmentKt.toJsonString;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxAbiModelKt.createCxxAbiModel;
 import static com.android.build.gradle.internal.cxx.model.CreateCxxVariantModelKt.createCxxVariantModel;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getBuildCommandFile;
@@ -44,7 +44,7 @@ import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment;
-import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment;
+import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModelKt;
@@ -221,8 +221,10 @@ public abstract class ExternalNativeJsonGenerator {
 
     private void buildForOneConfiguration(boolean forceJsonGeneration, CxxAbiModel abi)
             throws GradleException, IOException, ProcessException {
-        try (PassThroughRecordingLoggingEnvironment recorder =
-                new PassThroughRecordingLoggingEnvironment()) {
+        try (PassThroughPrefixingLoggingEnvironment recorder =
+                new PassThroughPrefixingLoggingEnvironment(
+                        abi.getVariant().getModule().getMakeFile(),
+                        abi.getVariant().getVariantName() + "|" + abi.getAbi().getTag())) {
 
             GradleBuildVariant.NativeBuildConfigInfo.Builder variantStats =
                     GradleBuildVariant.NativeBuildConfigInfo.newBuilder();

@@ -17,18 +17,13 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
-import com.google.common.truth.Truth.assertThat
-import org.junit.Test
-import java.lang.RuntimeException
-import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.*
-import com.android.build.gradle.internal.cxx.logging.LoggingEnvironment
+import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
 import com.android.build.gradle.internal.cxx.logging.LoggingLevel
-import com.android.build.gradle.internal.cxx.logging.LoggingRecord
-import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment
-import com.android.build.gradle.internal.cxx.logging.errorRecordOf
-import com.android.build.gradle.internal.cxx.logging.infoRecordOf
-import com.android.build.gradle.internal.cxx.logging.warnRecordOf
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 import java.util.regex.Pattern
@@ -43,14 +38,14 @@ class NdkLocatorKtTest {
     }
     private fun String?.toSlashFile() = if (this == null) null else File(toSlash())
 
-    private fun List<LoggingRecord>.filterByLevel(level : LoggingLevel) : List<String> {
+    private fun List<LoggingMessage>.filterByLevel(level : LoggingLevel) : List<String> {
         return filter { it.level == level }.map { it.message }
     }
-    private fun List<LoggingRecord>.errors() = filterByLevel(LoggingLevel.ERROR)
-    private fun List<LoggingRecord>.warnings() = filterByLevel(LoggingLevel.WARN)
-    private fun List<LoggingRecord>.infos() = filterByLevel(LoggingLevel.INFO)
+    private fun List<LoggingMessage>.errors() = filterByLevel(LoggingLevel.ERROR)
+    private fun List<LoggingMessage>.warnings() = filterByLevel(LoggingLevel.WARN)
+    private fun List<LoggingMessage>.infos() = filterByLevel(LoggingLevel.INFO)
 
-    private fun assertHasInsufficientPrecisionError(path : File?, record : List<LoggingRecord>) {
+    private fun assertHasInsufficientPrecisionError(path : File?, record : List<LoggingMessage>) {
         assertThat(path).isNull()
 
         if (!record.any { it.level == LoggingLevel.ERROR }) {
@@ -61,7 +56,7 @@ class NdkLocatorKtTest {
         }
     }
 
-    private fun assertHasMismatchedNdkDirVersion(path : File?, record : List<LoggingRecord>) {
+    private fun assertHasMismatchedNdkDirVersion(path : File?, record : List<LoggingMessage>) {
         assertThat(path).isNull()
         if (!record.any { it.level == LoggingLevel.ERROR }) {
             throw RuntimeException("Expected at least one error")
@@ -71,7 +66,7 @@ class NdkLocatorKtTest {
             Pattern.compile("Requested NDK version.*did not match.*requested by ndk\\.dir"))
     }
 
-    private fun assertNdkDirHadInvalidNdk(path : File?, record : List<LoggingRecord>) {
+    private fun assertNdkDirHadInvalidNdk(path : File?, record : List<LoggingMessage>) {
         assertThat(path).isNull()
         if (!record.any { it.level == LoggingLevel.ERROR }) {
             throw RuntimeException("Expected at least one error")
@@ -81,7 +76,7 @@ class NdkLocatorKtTest {
             Pattern.compile("Location specified by ndk\\.dir .* did not contain a valid NDK and and couldn't be used"))
     }
 
-    private fun assertNoMatchingVersionFoundWithLocalVersionsAvailable(path : File?, record : List<LoggingRecord>) {
+    private fun assertNoMatchingVersionFoundWithLocalVersionsAvailable(path : File?, record : List<LoggingMessage>) {
         assertThat(path).isNull()
         if (!record.any { it.level == LoggingLevel.ERROR }) {
             throw RuntimeException("Expected at least one error")
@@ -91,7 +86,7 @@ class NdkLocatorKtTest {
             Pattern.compile("No version of NDK matched the requested version .*. Versions available locally: .*"))
     }
 
-    private fun assertHasUnparseableVersion(path : File?, record : List<LoggingRecord>) {
+    private fun assertHasUnparseableVersion(path : File?, record : List<LoggingMessage>) {
         assertThat(path).isNull()
         if (!record.any { it.level == LoggingLevel.ERROR }) {
             throw RuntimeException("Expected at least one error")
@@ -1567,42 +1562,11 @@ class NdkLocatorKtTest {
         assertNoMatchingVersionFoundWithLocalVersionsAvailable(path, record)
     }
 
-    /**
-     * Only show unique messages so the console window doesn't fill up too much
-     */
-    open class UniqueMessageReportingErrorLogger : ThreadLoggingEnvironment() {
-        private val records = mutableSetOf<LoggingRecord>()
-        private val parent : LoggingEnvironment = parentLogger()
-
-        override fun error(message: String) {
-            val record = errorRecordOf(message)
-            if (!records.contains(record)) {
-                parent.error(message)
-                records += record
-            }
-        }
-
-        override fun warn(message: String) {
-            val record = warnRecordOf(message)
-            if (!records.contains(record)) {
-                parent.warn(message)
-                records += record
-            }
-        }
-
-        override fun info(message: String) {
-            val record = infoRecordOf(message)
-            if (!records.contains(record)) {
-                parent.info(message)
-                records += record
-            }
-        }
-    }
 
     @Test
     fun `fuzz test`() {
         RandomInstanceGenerator().apply {
-            UniqueMessageReportingErrorLogger().use {
+            PassThroughDeduplicatingLoggingEnvironment().use {
                 for (i in 0..10000) {
                     val veryOldVersion = "10.1.2"
                     val properVersion = "18.1.23456"

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.utils.FileUtils.join
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -64,10 +64,10 @@ class TryCreateCxxModuleModelTest {
     fun `both cmake and ndk-build`() {
         BasicCmakeMock().let {
             doReturn(join(it.projectRootDir, "Android.mk")).`when`(it.ndkBuild).path
-            RecordingLoggingEnvironment().use { logEnvironment ->
+            PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 assertThat(tryCreateCxxModuleModel(it.global)).isNull()
                 assertThat(logEnvironment.errors).hasSize(1)
-                assertThat(logEnvironment.errors[0]).contains("More than one")
+                assertThat(logEnvironment.errors[0].toString()).contains("More than one")
             }
         }
     }
@@ -75,7 +75,7 @@ class TryCreateCxxModuleModelTest {
     @Test
     fun `remap of buildStagingDirectory`() {
         BasicCmakeMock().let {
-            RecordingLoggingEnvironment().use { logEnvironment ->
+            PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 doReturn(File("my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
@@ -89,13 +89,13 @@ class TryCreateCxxModuleModelTest {
     @Test
     fun `remap of buildStagingDirectory into build folder`() {
         BasicCmakeMock().let {
-            RecordingLoggingEnvironment().use { logEnvironment ->
+            PassThroughDeduplicatingLoggingEnvironment().use { logEnvironment ->
                 doReturn(File(it.project.buildDir, "my-build-staging-directory"))
                     .`when`(it.cmake).buildStagingDirectory
                 val module = tryCreateCxxModuleModel(it.global)!!
                 val finalStagingDir = module.cxxFolder
                 assertThat(logEnvironment.errors).hasSize(1)
-                assertThat(logEnvironment.errors[0])
+                assertThat(logEnvironment.errors[0].toString())
                     .contains("The build staging directory you specified")
                 assertThat(finalStagingDir.path).doesNotContain("build-dir")
                 assertThat(finalStagingDir.path).contains(".cxx")

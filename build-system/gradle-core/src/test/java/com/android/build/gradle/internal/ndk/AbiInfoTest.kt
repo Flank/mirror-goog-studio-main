@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.ndk
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.truth.Truth
 import org.junit.Test
 
@@ -25,7 +25,7 @@ class AbiInfoTest {
 
     @Test
     fun `abi with wrong bitness`() {
-        RecordingLoggingEnvironment().use { log ->
+        PassThroughDeduplicatingLoggingEnvironment().use { log ->
             AbiInfo(Abi.X86, 63, false, false)
             Truth.assertThat(log.errors).hasSize(1)
         }

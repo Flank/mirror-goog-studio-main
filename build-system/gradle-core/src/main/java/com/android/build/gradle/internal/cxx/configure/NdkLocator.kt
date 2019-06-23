@@ -29,8 +29,8 @@ import com.android.build.gradle.internal.cxx.configure.LocationType.NDK_VERSIONE
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
 
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
-import com.android.build.gradle.internal.cxx.logging.LoggingRecord
-import com.android.build.gradle.internal.cxx.logging.PassThroughRecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.LoggingMessage
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.logging.warnln
@@ -342,7 +342,7 @@ fun findNdkPathWithRecord(
     getNdkVersionedFolderNames: (File) -> List<String>,
     getNdkSourceProperties: (File) -> SdkSourceProperties?
 ): NdkLocatorRecord {
-    PassThroughRecordingLoggingEnvironment().use { loggingEnvironment ->
+    PassThroughDeduplicatingLoggingEnvironment().use { loggingEnvironment ->
         val ndkFolder = findNdkPathImpl(
             ndkDirProperty,
             androidNdkHomeEnvironmentVariable,
@@ -394,7 +394,7 @@ fun getNdkVersionedFolders(ndkVersionRoot: File): List<String> {
 
 data class NdkLocatorRecord(
     val ndkFolder: File?,
-    val messages: List<LoggingRecord> = listOf()
+    val messages: List<LoggingMessage> = listOf()
 )
 
 /**

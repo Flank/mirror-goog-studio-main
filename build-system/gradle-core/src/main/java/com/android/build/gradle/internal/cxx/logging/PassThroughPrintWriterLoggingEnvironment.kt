@@ -22,25 +22,15 @@ import java.io.PrintWriter
  * [ThreadLoggingEnvironment] that will write lines to a [PrintWriter] and then forward to a parent
  * logger.
  */
-open class PassThroughPrintWriterLoggingEnvironment(
+class PassThroughPrintWriterLoggingEnvironment(
     val log : PrintWriter,
     val prefix : String)
-    : ThreadLoggingEnvironment() {
+    : PassThroughDeduplicatingLoggingEnvironment() {
     private val parent : LoggingEnvironment = parentLogger()
 
-    override fun error(message: String) {
-        log.println(prefix + message)
-        parent.error(message)
-    }
-
-    override fun warn(message: String) {
-        log.println(prefix + message)
-        parent.warn(message)
-    }
-
-    override fun info(message: String) {
-        log.println(prefix + message)
-        parent.info(message)
+    override fun log(message: LoggingMessage) {
+        log.println(prefix + message.toString())
+        parent.log(message)
     }
 
     override fun close() {

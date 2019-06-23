@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_SIZEO
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CMAKE_TOOLCHAIN_FILE
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.CXX_TEST_WAS_RUN
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.C_TEST_WAS_RUN
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.build.gradle.internal.cxx.model.buildGenerationStateFile
 import com.android.build.gradle.internal.cxx.model.cacheKeyFile
 import com.android.build.gradle.internal.cxx.model.cmakeListsWrapperFile
@@ -47,7 +47,7 @@ class CmakeAndroidGradleBuildExtensionsKtTest {
     @Rule
     @JvmField
     val projectParentFolder = TemporaryFolder()
-    private val logger = RecordingLoggingEnvironment()
+    private val logger = PassThroughDeduplicatingLoggingEnvironment()
     private val abi = createCmakeProjectCxxAbiForTest(projectParentFolder)
     private val cmakeListsFolder = abi.variant.module.makeFile
     private val cmakeToolchainFile = abi.variant.module.cmakeToolchainFile

@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.sdklib.AndroidVersion
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -46,7 +46,7 @@ class PlatformConfiguratorTest {
             "    \"P\": 28\n" +
             "  }\n" +
             "}"
-    private val logger = RecordingLoggingEnvironment()
+    private val logger = PassThroughDeduplicatingLoggingEnvironment()
     @After
     fun after() {
         logger.close()

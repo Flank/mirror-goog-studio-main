@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.cxx.settings
 
+import com.android.build.gradle.internal.cxx.logging.PassThroughPrefixingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.errorln
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -33,9 +35,15 @@ fun createCmakeSettingsJsonFromString(
 ) : CMakeSettings {
     val reader = JsonReader(StringReader(json))
     reader.isLenient = lenient
-    val settings = Gson()
-        .getAdapter<CMakeSettings>(object : TypeToken<CMakeSettings>() {})
-        .read(reader)
+    val settings =  try {
+        Gson()
+            .getAdapter<CMakeSettings>(object : TypeToken<CMakeSettings>() {})
+            .read(reader)
+    } catch (e: Throwable) {
+        // Parse errors are "recoverable" by issuing an error and returning an empty result
+        errorln(e.message ?: e.cause?.message ?: e.javaClass.name)
+        CMakeSettings()
+    }
     return CMakeSettings(
         // [filterNotNull] needed to remove nulls introduced by Gson when there is a trailing comma
         environments = settings.environments.filterNotNull(),
@@ -52,7 +60,11 @@ fun createCmakeSettingsJsonFromString(
  */
 fun createCmakeSettingsJsonFromFile(
     json: File
-) : CMakeSettings = createCmakeSettingsJsonFromString(json.readText())
+) : CMakeSettings {
+    PassThroughPrefixingLoggingEnvironment(file = json).use {
+        return createCmakeSettingsJsonFromString(json.readText())
+    }
+}
 
 
 /**

@@ -207,9 +207,13 @@ open class BasicModuleModelMock {
             ProductFlavor::class.java,
             throwUnmocked
         )
+
+        doReturn(project).`when`(global).project
         doReturn(intermediates).`when`(global).intermediatesDir
         doReturn(appFolder).`when`(project).projectDir
         doReturn(buildDir).`when`(project).buildDir
+        doReturn(join(buildDir, "build.gradle")).`when`(project).buildFile
+        doReturn(projectRootDir).`when`(project).rootDir
         doReturn(extension).`when`(global).extension
 
         doReturn(extension).`when`(global).extension
@@ -268,13 +272,12 @@ open class BasicModuleModelMock {
         doReturn(null).`when`(ndkBuild).buildStagingDirectory
         doReturn(setOf<String>()).`when`(coreNdkOptions).abiFilters
         doReturn("debug").`when`(baseVariantData).name
-        doReturn(projectRootDir).`when`(project).rootDir
+
         projectRootDir.mkdirs()
         sdkDir.mkdirs()
 
         doReturn(sdkComponents).`when`(global).sdkComponents
         doReturn(projectOptions).`when`(global).projectOptions
-        doReturn(project).`when`(global).project
 
         doReturn(sdkDir).`when`(sdkComponents).getSdkFolder()
         doReturn(false).`when`(projectOptions)

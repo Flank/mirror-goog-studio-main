@@ -58,6 +58,11 @@ interface CxxModuleModel {
     val moduleRootFolder: File
 
     /**
+     * The build.gradle file
+     */
+    val moduleBuildFile: File
+
+    /**
      * The makefile
      *   ex, android.externalNativeBuild.cmake.path 'CMakeLists.txt'
      */

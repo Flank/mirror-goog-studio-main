@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.repository.Revision
 import com.android.repository.api.LocalPackage
 import com.android.repository.testframework.FakePackage
@@ -57,7 +57,7 @@ class CmakeLocatorTest {
         downloader: () -> Unit = {}
     ): FindCmakeEncounter {
         val encounter = FindCmakeEncounter()
-        RecordingLoggingEnvironment().use { logger ->
+        PassThroughDeduplicatingLoggingEnvironment().use { logger ->
             val fileResult = findCmakePathLogic(
                 cmakeVersionFromDsl = cmakeVersionFromDsl,
                 cmakePathFromLocalProperties = cmakePathFromLocalProperties,
@@ -535,7 +535,7 @@ class CmakeLocatorTest {
 
     /**
      * User request: "3.7.0+", "3.7.0-rc1+", "3.10.2+", "3.10.2-rc1+"
-     * Canidates from Local Repository: 3.6.411459, 3.10.2
+     * Candidates from Local Repository: 3.6.411459, 3.10.2
      * Result: 3.10.2 is selected, because it is higher and -rc1 is ignored.
      */
     private fun sdkCmakeWithPlusTestCase(cmakeVersion: String) {

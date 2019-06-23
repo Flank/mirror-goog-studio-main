@@ -20,7 +20,7 @@ import com.android.build.gradle.internal.cxx.configure.CmakeProperty.ANDROID_NDK
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument.DefineProperty
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_DESC
 import com.android.build.gradle.internal.cxx.configure.SdkSourceProperties.Companion.SdkSourceProperty.SDK_PKG_REVISION
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.android.Version
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -30,7 +30,7 @@ import java.io.File
 class CmakeCompilerCacheKeyBuilderKtTest {
     private val ndkFolder = File("./my-ndk")
     private val sourceProperties = File(ndkFolder, "source.properties")
-    private val logger = RecordingLoggingEnvironment()
+    private val logger = PassThroughDeduplicatingLoggingEnvironment()
 
     @After
     fun after() {
@@ -59,7 +59,7 @@ class CmakeCompilerCacheKeyBuilderKtTest {
         ndkFolder.deleteRecursively()
         val key = makeCmakeCompilerCacheKey(
             listOf(
-                CommandLineArgument.DefineProperty.from(ANDROID_NDK, ndkFolder.path)
+                DefineProperty.from(ANDROID_NDK, ndkFolder.path)
             )
         )
         assertThat(key).isNull()

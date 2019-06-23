@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.configure
 
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 
@@ -114,7 +114,7 @@ class NdkSymlinkerKtTest {
 
     @Test
     fun workingAndIdempotent() {
-        RecordingLoggingEnvironment().use { log ->
+        PassThroughDeduplicatingLoggingEnvironment().use { log ->
             val originalNdk = tmpFolder.root.toPath().resolve("ndk").toFile()
             originalNdk.mkdirs()
             val sourceProperties = originalNdk.toPath().resolve("source.properties").toFile()

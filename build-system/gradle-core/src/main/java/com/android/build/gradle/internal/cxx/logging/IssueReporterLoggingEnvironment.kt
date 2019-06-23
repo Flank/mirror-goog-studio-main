@@ -17,51 +17,38 @@
 package com.android.build.gradle.internal.cxx.logging
 
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
 import com.android.builder.errors.EvalIssueReporter.Severity.ERROR
 import com.android.builder.errors.EvalIssueReporter.Severity.WARNING
+import com.android.builder.errors.EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
-
-// See b/130363042, not all errors from C++ can be seen at sync time.
-private const val FORCE_EXCEPTION_ON_ERROR = false
 
 /**
  * A logging environment that will report errors and warnings to an [EvalIssueReporter].
  * Messages are also logger to a standard [org.gradle.api.logging.Logger].
  */
 class IssueReporterLoggingEnvironment(
-    private val issueReporter : EvalIssueReporter) : ThreadLoggingEnvironment() {
+    private val issueReporter : EvalIssueReporter) : PassThroughDeduplicatingLoggingEnvironment() {
     private val logger = Logging.getLogger(IssueReporterLoggingEnvironment::class.java)
-    private val errors = mutableListOf<LoggingRecord>()
 
-    override fun error(message: String) {
-        if (!FORCE_EXCEPTION_ON_ERROR) {
-            issueReporter.reportIssue(EXTERNAL_NATIVE_BUILD_CONFIGURATION, ERROR, message)
-        } else {
-            errors += errorRecordOf(message)
-        }
-        logger.error(message)
-    }
-
-    override fun warn(message: String) {
-        issueReporter.reportIssue(EXTERNAL_NATIVE_BUILD_CONFIGURATION, WARNING, message)
-        logger.warn(message)
-    }
-
-    override fun info(message: String) {
-        logger.info(message)
-    }
-
-    override fun close() {
-        // Close will cause the next logger to popped to the top of the stack.
-        super.close()
-
-        if (FORCE_EXCEPTION_ON_ERROR) {
-            errors.onEach { (level, message) ->
-                if (level == LoggingLevel.ERROR) {
-                    throw GradleException(message)
-                }
+    override fun log(message: LoggingMessage) {
+        when (message.level) {
+            LoggingLevel.INFO -> logger.info(message.toString())
+            LoggingLevel.WARN -> {
+                issueReporter.reportIssue(
+                    EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                    WARNING,
+                    message.toString()
+                )
+                logger.warn(message.toString())
+            }
+            LoggingLevel.ERROR -> {
+                issueReporter.reportIssue(
+                    EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                    ERROR,
+                    message.toString()
+                )
+                logger.error(message.toString())
             }
         }
     }

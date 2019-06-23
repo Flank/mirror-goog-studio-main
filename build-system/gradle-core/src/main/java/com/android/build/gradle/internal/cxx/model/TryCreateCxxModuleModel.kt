@@ -161,6 +161,7 @@ fun tryCreateCxxModuleModel(
         return File(path)
     }
     return object : CxxModuleModel {
+        override val moduleBuildFile by lazy { global.project.buildFile }
         override val cxxFolder get() = cxxFolder
         override val project by lazy { createCxxProjectModel(global) }
         override val services by lazy { createDefaultServiceRegistry(global) }

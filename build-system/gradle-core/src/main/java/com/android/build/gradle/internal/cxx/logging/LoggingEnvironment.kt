@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.cxx.logging
 
+import com.android.build.gradle.internal.cxx.logging.LoggingLevel.*
 import com.android.utils.ILogger
 import org.gradle.api.logging.Logging
 
@@ -78,9 +79,7 @@ private fun checkedFormat(format: String, args: Array<out Any>): String {
  * Interface for logging environment.
  */
 interface LoggingEnvironment : AutoCloseable {
-    fun error(message : String)
-    fun warn(message : String)
-    fun info(message : String)
+    fun log(message : LoggingMessage)
 }
 
 /**
@@ -123,18 +122,13 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         private class BottomLoggingEnvironment : LoggingEnvironment {
             private val logger = Logging.getLogger(BottomLoggingEnvironment::class.java)
 
-            override fun error(message: String) {
-                logger.error(message)
+            override fun log(message: LoggingMessage) {
+                when(message.level) {
+                    ERROR -> logger.error(message.toString())
+                    WARN -> logger.warn(message.toString())
+                    INFO -> logger.info(message.toString())
+                }
             }
-
-            override fun warn(message: String) {
-                logger.warn(message)
-            }
-
-            override fun info(message: String) {
-                logger.info(message)
-            }
-
             override fun close() {
             }
         }
@@ -166,17 +160,20 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         /**
          * Report an error.
          */
-        fun reportFormattedErrorToCurrentLogger(message: String) = logger.error(message)
+        fun reportFormattedErrorToCurrentLogger(message: String) =
+            logger.log(errorRecordOf(message))
 
         /**
          * Report a warning.
          */
-        fun reportFormattedWarningToCurrentLogger(message: String) = logger.warn(message)
+        fun reportFormattedWarningToCurrentLogger(message: String) =
+            logger.log(warnRecordOf(message))
 
         /**
          * Report diagnostic/informational message.
          */
-        fun reportFormattedInfoToCurrentLogger(message: String) = logger.info(message)
+        fun reportFormattedInfoToCurrentLogger(message: String) =
+            logger.log(infoRecordOf(message))
 
         /**
          * Produce an ILogger over the current logger.
@@ -184,16 +181,16 @@ abstract class ThreadLoggingEnvironment : LoggingEnvironment {
         fun getILogger() = object : ILogger {
             override fun error(t: Throwable?, format: String?, vararg args: Any) {
                 if (t != null) throw t
-                logger.error(checkedFormat(format!!, args))
+                logger.log(errorRecordOf(checkedFormat(format!!, args)))
             }
             override fun warning(format: String, vararg args: Any) {
-                logger.warn(checkedFormat(format, args))
+                logger.log(warnRecordOf(checkedFormat(format, args)))
             }
             override fun info(format: String, vararg args: Any) {
-                logger.info(checkedFormat(format, args))
+                logger.log(infoRecordOf(checkedFormat(format, args)))
             }
             override fun verbose(format: String, vararg args: Any) {
-                logger.info(checkedFormat(format, args))
+                logger.log(infoRecordOf(checkedFormat(format, args)))
             }
         }
     }

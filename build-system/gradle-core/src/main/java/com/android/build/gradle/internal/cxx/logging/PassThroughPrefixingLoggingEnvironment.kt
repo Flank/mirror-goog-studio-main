@@ -15,14 +15,24 @@
  */
 
 package com.android.build.gradle.internal.cxx.logging
-import com.android.build.gradle.internal.cxx.logging.LoggingLevel.*
 
-data class LoggingRecord(
-    val level : LoggingLevel,
-    val message : String)
+import java.io.File
 
-fun LoggingLevel.recordOf(message : String) = LoggingRecord(this, message)
-
-fun errorRecordOf(message : String) = ERROR.recordOf(message)
-fun warnRecordOf(message : String) = WARN.recordOf(message)
-fun infoRecordOf(message : String) = INFO.recordOf(message)
+/**
+ * [PassThroughDeduplicatingLoggingEnvironment] that attach a filename and/or tag string to the
+ * message. The point of this is to issue errors that have an associated filename that the user
+ * can click on in Android Studio.
+ */
+class PassThroughPrefixingLoggingEnvironment(
+    val file : File? = null,
+    val tag : String? = null)
+    : PassThroughDeduplicatingLoggingEnvironment() {
+    override fun log(message: LoggingMessage) {
+        val newFile = message.file ?: file
+        val newTag = message.tag ?: tag
+        super.log(message.copy(
+            file = newFile,
+            tag = newTag
+        ))
+    }
+}

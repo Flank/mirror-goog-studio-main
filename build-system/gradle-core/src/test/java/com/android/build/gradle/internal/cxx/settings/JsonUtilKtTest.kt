@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.cxx.settings
 
 import com.android.build.gradle.internal.cxx.RandomInstanceGenerator
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -164,5 +165,13 @@ class JsonUtilKtTest {
         }""".trimIndent()
         val value = createCmakeSettingsJsonFromString(json)
         value.nullCheck()
+    }
+
+    @Test
+    fun `check parse error becomes errorln`() {
+        PassThroughDeduplicatingLoggingEnvironment().apply {
+            createCmakeSettingsJsonFromString("{")
+            assertThat(errors.single()).isEqualTo("End of input at line 1 column 2 path \$.")
+        }
     }
 }

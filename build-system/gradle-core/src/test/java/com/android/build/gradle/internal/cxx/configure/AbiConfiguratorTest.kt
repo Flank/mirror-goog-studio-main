@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.cxx.configure
 
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.logging.RecordingLoggingEnvironment
+import com.android.build.gradle.internal.cxx.logging.PassThroughDeduplicatingLoggingEnvironment
 import com.google.common.collect.Sets
 import com.google.common.truth.Truth.assertThat
 import org.junit.After
@@ -30,7 +30,7 @@ class AbiConfiguratorTest {
         val ALL_ABI_COMMA_STRING = ALL_ABI_AS_STRING.sorted().joinToString(", ")
     }
 
-    private val logger = RecordingLoggingEnvironment()
+    private val logger = PassThroughDeduplicatingLoggingEnvironment()
 
     fun configure(
         ndkHandlerSupportedAbis: Collection<Abi> = ALL_ABI,
@@ -71,7 +71,7 @@ class AbiConfiguratorTest {
         configure(
             externalNativeBuildAbiFilters = setOf("x86"))
         assertThat(logger.errors).isEmpty()
-        assertThat(logger.warnings.first()).isEqualTo(
+        assertThat(logger.warnings.first().toString()).isEqualTo(
             "This app only has 32-bit [x86] native libraries. Beginning August 1, " +
                     "2019 Google Play store requires that all apps that include native " +
                     "libraries must provide 64-bit versions. For more information, " +
@@ -103,7 +103,7 @@ class AbiConfiguratorTest {
     fun testInvalidAbiInBuildGradleDsl() {
         val configurator = configure(
             externalNativeBuildAbiFilters = setOf("x87"))
-        assertThat(logger.errors.first()).isEqualTo(
+        assertThat(logger.errors.first().toString()).isEqualTo(
                 "ABIs [x87] are not supported for platform. Supported ABIs " +
                 "are [$ALL_ABI_COMMA_STRING].")
         assertThat(configurator.validAbis).isEmpty()
