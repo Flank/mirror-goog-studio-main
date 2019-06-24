@@ -183,8 +183,8 @@ class JavaCompileCreationAction(
                     separateTaskAnnotationProcessorOutputDirectory
                 ).builtBy(separateTaskAnnotationProcessorOutputDirectory)
 
-
-            listOf(variantScope.variantData.javaSources, generatedSources)
+            // Wrap sources in Callable to evaluate them just before execution, b/117161463.
+            Callable { listOf(variantScope.variantData.javaSources, generatedSources) }
         } else {
             // Configure properties for annotation processing, because this task is actually
             // going to perform annotation processing (i.e., annotation processing is not done
@@ -193,10 +193,10 @@ class JavaCompileCreationAction(
                 variantScope,
                 annotationProcessorOutputDirectory
             )
-           listOf(variantScope.variantData.javaSources)
+            // Wrap sources in Callable to evaluate them just before execution, b/117161463.
+            Callable { listOf(variantScope.variantData.javaSources) }
         }
-        // Wrap sources in Callable to evalute them just before execution, b/117161463.
-        task.source = task.project.files(Callable { sourcesToCompile }).asFileTree
+        task.source = task.project.files(sourcesToCompile).asFileTree
 
         task.options.isIncremental =
             compileOptions.incremental ?: DEFAULT_INCREMENTAL_COMPILATION
