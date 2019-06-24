@@ -420,9 +420,10 @@
   <migrate-dependency old-group-name="com.android.databinding" old-artifact-name="compiler" new-group-name="androidx.databinding" new-artifact-name="databinding-compiler" base-version="1.0.0"/>
   <migrate-dependency old-group-name="com.android.databinding" old-artifact-name="compilerCommon" new-group-name="androidx.databinding" new-artifact-name="databinding-compiler-common" base-version="1.0.0"/>
   <migrate-dependency old-group-name="com.android.databinding" old-artifact-name="library" new-group-name="androidx.databinding" new-artifact-name="databinding-runtime" base-version="1.0.0"/>
-  <!-- TODO: workmanager isn't being released as an androidx group yet
-  <migrate-dependency old-group-name="android.arch.background.workmanager" old-artifact-name="workmanager" new-group-name="androidx.work" new-artifact-name="work-runtime" base-version="1.0.0"/>
-  <migrate-dependency old-group-name="android.arch.background.workmanager" old-artifact-name="workmanager-firebase" new-group-name="androidx.work" new-artifact-name="work-runtime-firebase" base-version="1.0.0"/-->
+  <migrate-dependency old-group-name="android.arch.work" old-artifact-name="work-runtime" new-group-name="androidx.work" new-artifact-name="work-runtime" base-version="2.0.1"/>
+  <migrate-dependency old-group-name="android.arch.work" old-artifact-name="work-runtime-ktx" new-group-name="androidx.work" new-artifact-name="work-runtime-ktx" base-version="2.0.1"/>
+  <migrate-dependency old-group-name="android.arch.work" old-artifact-name="work-testing" new-group-name="androidx.work" new-artifact-name="work-testing" base-version="2.0.1"/>
+  <migrate-dependency old-group-name="android.arch.work" old-artifact-name="work-rxjava2" new-group-name="androidx.work" new-artifact-name="work-rxjava2" base-version="2.0.1"/>
   <migrate-dependency old-group-name="android.arch.navigation" old-artifact-name="navigation-common" new-group-name="androidx.navigation" new-artifact-name="navigation-common" base-version="2.0.0-rc02"/>
   <migrate-dependency old-group-name="android.arch.navigation" old-artifact-name="navigation-common-ktx" new-group-name="androidx.navigation" new-artifact-name="navigation-common-ktx" base-version="2.0.0-rc02"/>
   <migrate-dependency old-group-name="android.arch.navigation" old-artifact-name="navigation-fragment" new-group-name="androidx.navigation" new-artifact-name="navigation-fragment" base-version="2.0.0-rc02"/>
