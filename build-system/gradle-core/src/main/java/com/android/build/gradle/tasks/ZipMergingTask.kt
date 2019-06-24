@@ -28,7 +28,7 @@ import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -41,11 +41,11 @@ import java.util.zip.Deflater
 @CacheableTask
 abstract class ZipMergingTask : NonIncrementalTask() {
 
-    @get:InputFile
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val libraryInputFile: RegularFileProperty
 
-    @get:InputFile
+    @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
     @get:Optional
     abstract val javaResInputFile: RegularFileProperty
@@ -81,8 +81,9 @@ abstract class ZipMergingTask : NonIncrementalTask() {
             if (lib.exists()) {
                 it.addJar(lib.toPath())
             }
-            if (javaResInputFile.isPresent) {
-                it.addJar(javaResInputFile.get().asFile.toPath())
+            val javaRes = javaResInputFile.orNull?.asFile
+            if (javaRes?.exists() == true) {
+                it.addJar(javaRes.toPath())
             }
         }
     }
