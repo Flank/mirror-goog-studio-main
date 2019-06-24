@@ -25,8 +25,7 @@
 
 using profiler::proto::AllocationContextsResponse;
 using profiler::proto::AllocationsInfo;
-using profiler::proto::DumpDataRequest;
-using profiler::proto::DumpDataResponse;
+using profiler::proto::DumpStartStatus;
 using profiler::proto::ForceGarbageCollectionRequest;
 using profiler::proto::ForceGarbageCollectionResponse;
 using profiler::proto::LegacyAllocationContextsRequest;
@@ -149,42 +148,21 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     TriggerHeapDumpResponse* response) {
   Trace trace("MEM:TriggerHeapDump");
   auto result = collectors_.find(request->session().pid());
+  auto* status = response->mutable_status();
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response, TriggerHeapDumpResponse::FAILURE_UNKNOWN)
+      result, collectors_, status, DumpStartStatus::FAILURE_UNKNOWN)
 
   if ((result->second).IsRunning()) {
     if ((result->second).TriggerHeapDump(response)) {
-      response->set_status(TriggerHeapDumpResponse::SUCCESS);
+      status->set_status(DumpStartStatus::SUCCESS);
     } else {
-      response->set_status(TriggerHeapDumpResponse::IN_PROGRESS);
+      status->set_status(DumpStartStatus::IN_PROGRESS);
     }
   } else {
-    response->set_status(TriggerHeapDumpResponse::NOT_PROFILING);
+    status->set_status(DumpStartStatus::NOT_PROFILING);
   }
 
   return ::grpc::Status::OK;
-}
-
-::grpc::Status MemoryServiceImpl::GetHeapDump(::grpc::ServerContext* context,
-                                              const DumpDataRequest* request,
-                                              DumpDataResponse* response) {
-  Trace trace("MEM:GetHeapDump");
-  auto result = collectors_.find(request->session().pid());
-  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response, DumpDataResponse::FAILURE_UNKNOWN)
-
-  (result->second).GetHeapDumpData(request->dump_time(), response);
-  switch (response->status()) {
-    case DumpDataResponse::NOT_READY:
-    case DumpDataResponse::SUCCESS:
-      return ::grpc::Status::OK;
-    case DumpDataResponse::NOT_FOUND:
-      return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
-                            "The requested file_id was not matched to a file.");
-    default:
-      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
-                            "Unknown issue when attempting to retrieve file.");
-  }
 }
 
 ::grpc::Status MemoryServiceImpl::TrackAllocations(

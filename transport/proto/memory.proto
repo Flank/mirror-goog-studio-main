@@ -39,8 +39,6 @@ service MemoryService {
   }
   rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
   }
-  rpc GetHeapDump(DumpDataRequest) returns (DumpDataResponse) {
-  }
   // List all heap dump records for an app within a specified time request.
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
@@ -64,8 +62,7 @@ service MemoryService {
   // ids provided in the request.
   rpc GetLegacyAllocationContexts(LegacyAllocationContextsRequest)
       returns (LegacyAllocationContextsResponse) {}
-  // Pre-O only: Used by Studio only for exporting legacy tracking data.
-  rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
+
   // Pre-O only: Import saved allocation records.
   rpc ImportLegacyAllocations(ImportLegacyAllocationsRequest)
       returns (ImportLegacyAllocationsResponse) {}
@@ -188,34 +185,10 @@ message TriggerHeapDumpRequest {
 }
 
 message TriggerHeapDumpResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    IN_PROGRESS = 2;
-    NOT_PROFILING = 3;
-    FAILURE_UNKNOWN = 4;
-  }
-  Status status = 1;
+  DumpStartStatus status = 1;
   // Returns the HeapDumpInfo immediately so the caller can
   // optionally track its completion
   HeapDumpInfo info = 2;
-}
-
-message DumpDataRequest {
-  Session session = 1;
-  int64 dump_time = 2;
-}
-
-message DumpDataResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    NOT_READY = 2;
-    NOT_FOUND = 3;
-    FAILURE_UNKNOWN = 4;
-  }
-  Status status = 1;
-  bytes data = 2;
 }
 
 message ImportHeapDumpRequest {

@@ -43,7 +43,8 @@ message Command {
     GET_CPU_CORE_CONFIG = 303;
 
     // Memory Profiler Prefix = 400
-    GC = 401; // No payload associated with GC command
+    GC = 401; // No payload
+    HEAP_DUMP = 402;  // No payload
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
@@ -83,6 +84,7 @@ message Command {
 
     // Memory Profiler Prefix = 400
     // 401 Reserved for CommandType.GC
+    // 402 Reserved for CommandType.HEAP_DUMP
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600

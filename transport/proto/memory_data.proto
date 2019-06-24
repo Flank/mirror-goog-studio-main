@@ -37,6 +37,41 @@ message MemoryGcData {
   // TODO add deallocation stats
 }
 
+message DumpStartStatus {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    IN_PROGRESS = 2;
+    NOT_PROFILING = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+}
+
+message DumpEndStatus {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    FAILURE = 2;
+  }
+  Status status = 1;
+}
+
+message MemoryHeapDumpData {
+  message DumpStarted {
+    DumpStartStatus status = 1;
+  }
+
+  message DumpEnded {
+    DumpEndStatus status = 1;
+  }
+
+  oneof union {
+    DumpStarted dump_started = 1;
+    DumpEnded dump_ended = 2;
+  }
+}
+
 message AllocatedClass {
   int32 class_id = 1;
   string class_name = 2;

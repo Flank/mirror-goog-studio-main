@@ -48,13 +48,13 @@ class MemoryCache {
   void SaveAllocationSamplingRateEvent(
       const proto::AllocationSamplingRateEvent& event);
 
-  // Saves a new HeapDumpInfo sample based on the dump_file_name and
-  // request_time parameters. This method returns false if a heap dump
-  // is still in progress (e.g. a matching EndHeapDump has not been
-  // called from a previous StartHeapDump). Otherwise this method returns
-  // true indicating a HeapDumpInfo has been added. On return, the response
-  // parameter is populated with the most recent HeapDumpInfo.
-  bool StartHeapDump(const std::string& dump_file_name, int64_t request_time,
+  // Saves a new HeapDumpInfo sample based on the |request_time|.
+  // This method returns false if a heap dump is still in progress (e.g. a
+  // matching EndHeapDump has not been called from a previous StartHeapDump).
+  // Otherwise this method returns true indicating a HeapDumpInfo has been
+  // added. On return, the response parameter is populated with the most recent
+  // HeapDumpInfo.
+  bool StartHeapDump(int64_t request_time,
                      proto::TriggerHeapDumpResponse* response);
 
   bool EndHeapDump(int64_t end_time, bool success);
@@ -65,8 +65,6 @@ class MemoryCache {
                       proto::MemoryData* response);
   void LoadMemoryJvmtiData(int64_t start_time_exl, int64_t end_time_inc,
                            proto::MemoryData* response);
-  void ReadHeapDumpFileContents(int64_t dump_time,
-                                proto::DumpDataResponse* response);
 
  private:
   Clock* clock_;

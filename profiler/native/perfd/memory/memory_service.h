@@ -63,11 +63,6 @@ class MemoryServiceImpl final
       const ::profiler::proto::TriggerHeapDumpRequest* request,
       ::profiler::proto::TriggerHeapDumpResponse* response) override;
 
-  ::grpc::Status GetHeapDump(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::DumpDataRequest* request,
-      ::profiler::proto::DumpDataResponse* response) override;
-
   ::grpc::Status TrackAllocations(
       ::grpc::ServerContext* context,
       const ::profiler::proto::TrackAllocationsRequest* request,
@@ -98,14 +93,6 @@ class MemoryServiceImpl final
       ::grpc::ServerContext* context,
       const ::profiler::proto::LegacyAllocationContextsRequest* request,
       ::profiler::proto::LegacyAllocationContextsResponse* response) override {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                          "Not implemented on device");
-  }
-
-  ::grpc::Status GetLegacyAllocationDump(
-      ::grpc::ServerContext* context,
-      const ::profiler::proto::DumpDataRequest* request,
-      ::profiler::proto::DumpDataResponse* response) override {
     return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                           "Not implemented on device");
   }

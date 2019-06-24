@@ -27,7 +27,6 @@
 #include "utils/thread_name.h"
 #include "utils/trace.h"
 
-using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::TrackAllocationsResponse;
 using ::profiler::proto::TriggerHeapDumpResponse;
 
@@ -146,10 +145,10 @@ bool MemoryCollector::TriggerHeapDump(TriggerHeapDumpResponse* response) {
   if (!is_heap_dump_running_.exchange(true)) {
     int64_t request_time = clock_->GetCurrentTime();
     std::stringstream ss;
-    ss << pid_ << "_" << request_time << ".hprof";
+    ss << request_time;
     auto file = file_cache_->GetFile(ss.str());
 
-    if (!memory_cache_.StartHeapDump(file->name(), request_time, response)) {
+    if (!memory_cache_.StartHeapDump(request_time, response)) {
       Log::V("StartHeapDumpSample failed.");
       return false;
     }
@@ -190,11 +189,6 @@ void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
   }
 
   is_heap_dump_running_.exchange(false);
-}
-
-void MemoryCollector::GetHeapDumpData(int64_t dump_time,
-                                      DumpDataResponse* response) {
-  memory_cache_.ReadHeapDumpFileContents(dump_time, response);
 }
 
 void MemoryCollector::TrackAllocations(int64_t request_time, bool enabled,

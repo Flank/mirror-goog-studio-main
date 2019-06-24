@@ -26,7 +26,6 @@ using ::profiler::proto::AllocationsInfo;
 using ::profiler::proto::BatchAllocationContexts;
 using ::profiler::proto::BatchAllocationEvents;
 using ::profiler::proto::BatchJNIGlobalRefEvent;
-using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
 using ::profiler::proto::TrackAllocationsResponse;
@@ -93,8 +92,7 @@ void MemoryCache::SaveAllocationSamplingRateEvent(
   alloc_sampling_rate_events_.Add(event);
 }
 
-bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
-                                int64_t request_time,
+bool MemoryCache::StartHeapDump(int64_t request_time,
                                 TriggerHeapDumpResponse* response) {
   std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
 
@@ -108,7 +106,6 @@ bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
   HeapDumpInfo info;
   info.set_start_time(request_time);
   info.set_end_time(kUnfinishedTimestamp);
-  info.set_file_name(dump_file_name);
   response->mutable_info()->CopyFrom(info);
   heap_dump_infos_.Add(info);
 
@@ -288,41 +285,6 @@ void MemoryCache::LoadMemoryJvmtiData(int64_t start_time_exl,
   }
 
   response->set_end_timestamp(end_timestamp);
-}
-
-void MemoryCache::ReadHeapDumpFileContents(int64_t dump_time,
-                                           DumpDataResponse* response) {
-  std::string heap_dump_file_name;
-  {
-    std::lock_guard<std::mutex> lock(heap_dump_infos_mutex_);
-
-    bool found = false;
-    size_t found_index = -1;
-    for (size_t i = 0; i < heap_dump_infos_.size(); ++i) {
-      if (heap_dump_infos_.Get(i).start_time() == dump_time) {
-        found = true;
-        found_index = i;
-        break;
-      }
-    }
-
-    if (found) {
-      const HeapDumpInfo& info = heap_dump_infos_.Get(found_index);
-      if (info.end_time() == kUnfinishedTimestamp) {
-        response->set_status(DumpDataResponse::NOT_READY);
-        return;
-      } else {
-        heap_dump_file_name.assign(info.file_name());
-      }
-    } else {
-      response->set_status(DumpDataResponse::NOT_FOUND);
-      return;
-    }
-  }
-
-  auto file = file_cache_->GetFile(heap_dump_file_name);
-  response->mutable_data()->append(file->Contents());
-  response->set_status(DumpDataResponse::SUCCESS);
 }
 
 }  // namespace profiler
