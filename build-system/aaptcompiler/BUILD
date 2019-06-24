@@ -11,7 +11,6 @@ kotlin_library(
         "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/build-system/aapt2-proto",
         "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",

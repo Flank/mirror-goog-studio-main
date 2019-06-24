@@ -18,7 +18,6 @@ package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResValue
 import com.android.aaptcompiler.android.hostToDevice
-import com.android.resources.ResourceType
 
 open class Value {
   var source: Source = Source("")
@@ -33,7 +32,7 @@ abstract class Item : Value() {
   abstract fun flatten(): ResValue?
 }
 
-class Reference(var name: ResourceName = ResourceName("", ResourceType.RAW, "")): Item() {
+class Reference(var name: ResourceName = ResourceName("", AaptResourceType.RAW, "")): Item() {
   enum class Type {
     RESOURCE,
     ATTRIBUTE
