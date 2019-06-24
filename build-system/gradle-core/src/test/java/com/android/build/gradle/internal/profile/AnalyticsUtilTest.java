@@ -53,7 +53,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName);
+                AnalyticsUtil::getPotentialTaskExecutionTypeName,
+                true);
     }
 
     @Test
@@ -61,7 +62,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Transform.class,
                 AnalyticsUtil::getTransformType,
-                AnalyticsUtil::getPotentialTransformTypeName);
+                AnalyticsUtil::getPotentialTransformTypeName,
+                false);
     }
 
     @Test
@@ -142,7 +144,8 @@ public class AnalyticsUtilTest {
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
             @NonNull Class<T> itemClass,
             @NonNull Function<Class<T>, U> mappingFunction,
-            @NonNull Function<Class<T>, String> calculateExpectedEnumName)
+            @NonNull Function<Class<T>, String> calculateExpectedEnumName,
+            boolean checkAbstractClasses)
             throws IOException {
         ClassPath classPath = ClassPath.from(this.getClass().getClassLoader());
 
@@ -155,7 +158,8 @@ public class AnalyticsUtilTest {
                         .filter(
                                 clazz ->
                                         TypeToken.of(clazz).getTypes().contains(taskInterface)
-                                                && !Modifier.isAbstract(clazz.getModifiers())
+                                                && (!Modifier.isAbstract(clazz.getModifiers())
+                                                        || checkAbstractClasses)
                                                 && mapsToUnknownProtoValue(clazz, mappingFunction))
                         .collect(Collectors.toList());
 
@@ -321,7 +325,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Plugin.class,
                 (pluginClass) -> AnalyticsUtil.otherPluginToProto(pluginClass.getName()),
-                (pluginClass) -> AnalyticsUtil.getOtherPluginEnumName(pluginClass.getName()));
+                (pluginClass) -> AnalyticsUtil.getOtherPluginEnumName(pluginClass.getName()),
+                false);
     }
 
     @Test

@@ -27,14 +27,13 @@ import java.io.File;
 import java.util.Objects;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Pre build task that checks that there are not differences between artifact versions between the
  * runtime classpath of tested variant, and runtime classpath of test variant.
  */
 @CacheableTask
-public class TestPreBuildTask extends ClasspathComparisionTask {
+public class TestPreBuildTask extends ClasspathComparisonTask {
 
     @Override
     void onDifferentVersionsFound(

@@ -29,14 +29,13 @@ import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.utils.FileUtils;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.TaskAction;
 
 /**
  * Pre build task that performs comparison of runtime and compile classpath for application. If
  * there are any differences between the two, that could lead to runtime issues.
  */
 @CacheableTask
-public class AppClasspathCheckTask extends ClasspathComparisionTask {
+public class AppClasspathCheckTask extends ClasspathComparisonTask {
 
     private EvalIssueReporter reporter;
 
