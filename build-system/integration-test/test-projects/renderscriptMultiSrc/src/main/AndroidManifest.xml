@@ -17,8 +17,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.android.rs.hellocompute">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />    
-    <uses-sdk android:minSdkVersion="14" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <application android:label="RsHelloCompute">
         <activity android:name="HelloCompute">
             <intent-filter>

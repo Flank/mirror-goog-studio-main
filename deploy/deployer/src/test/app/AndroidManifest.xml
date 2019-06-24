@@ -3,7 +3,6 @@
           package='%PACKAGE'
           android:versionCode='%VERSION'
           android:versionName='1.0'>
-    <uses-sdk android:minSdkVersion="19"/>
     <application android:label='A Hello Android'>
         <activity android:name='com.example.simpleapp.MainActivity'>
              <intent-filter>

@@ -18,7 +18,6 @@
     package="com.example.android.rs.hellocomputendk">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-sdk android:minSdkVersion="14" />
     <application android:label="HelloComputeNDK">
         <activity android:name="HelloComputeNDK">
             <intent-filter>
