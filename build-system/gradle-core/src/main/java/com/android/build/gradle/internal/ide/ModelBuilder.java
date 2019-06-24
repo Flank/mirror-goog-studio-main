@@ -421,7 +421,7 @@ public class ModelBuilder<Extension extends BaseExtension>
                 cloneSigningConfigs(extension.getSigningConfigs()),
                 aaptOptions,
                 artifactMetaDataList,
-                extraModelInfo.getSyncIssueHandler().getSyncIssues(),
+                ImmutableList.of(),
                 extension.getCompileOptions(),
                 lintOptions,
                 project.getBuildDir(),
