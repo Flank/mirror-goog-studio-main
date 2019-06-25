@@ -15,7 +15,7 @@
 
 
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
-    <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
+    <dependency mavenUrl="android.arch.lifecycle:extensions:+"/>
 
     <#include "../common/recipe_theme.xml.ftl" />
     <#include "../common/recipe_manifest_strings.xml.ftl" />

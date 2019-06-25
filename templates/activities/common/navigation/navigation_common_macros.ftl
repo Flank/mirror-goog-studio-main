@@ -20,7 +20,7 @@
 <#macro navigationDependencies>
     <dependency mavenUrl="android.arch.navigation:navigation-fragment:+" />
     <dependency mavenUrl="android.arch.navigation:navigation-ui:+" />
-    <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
+    <dependency mavenUrl="android.arch.lifecycle:extensions:+"/>
     <#if generateKotlin>
         <dependency mavenUrl="android.arch.navigation:navigation-fragment-ktx:+" />
         <dependency mavenUrl="android.arch.navigation:navigation-ui-ktx:+" />

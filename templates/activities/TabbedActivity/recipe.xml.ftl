@@ -16,7 +16,7 @@
     </#if>
 
     <#if !(hasDependency('android.arch.lifecycle:extensions'))>
-        <dependency mavenUrl="android.arch.lifecycle:extensions:1.+" />
+        <dependency mavenUrl="android.arch.lifecycle:extensions:+" />
     </#if>
 
     <#include "../common/recipe_manifest.xml.ftl" />

@@ -3,9 +3,9 @@
 <recipe>
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
-    <dependency mavenUrl="android.arch.lifecycle:extensions:1.+"/>
+    <dependency mavenUrl="android.arch.lifecycle:extensions:+"/>
     <#if generateKotlin && useAndroidX>
-        <dependency mavenUrl="androidx.lifecycle:lifecycle-viewmodel-ktx:1.+"/>
+        <dependency mavenUrl="androidx.lifecycle:lifecycle-viewmodel-ktx:+"/>
     </#if>
 
     <instantiate from="root/res/layout/blank_fragment.xml.ftl"
