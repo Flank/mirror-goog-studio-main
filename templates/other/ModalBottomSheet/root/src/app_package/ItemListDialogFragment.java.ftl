@@ -1,10 +1,9 @@
 package ${packageName};
 
-import android.content.Context;
 import android.os.Bundle;
 import ${getMaterialComponentName('android.support.annotation.Nullable', useAndroidX)};
+import ${getMaterialComponentName('android.support.annotation.NonNull', useAndroidX)};
 import ${getMaterialComponentName('android.support.design.widget.BottomSheetDialog', useMaterial2)}Fragment;
-import ${getMaterialComponentName('android.support.v4.app.Fragment', useAndroidX)};
 <#if columnCount == "1">
 import ${getMaterialComponentName('android.support.v7.widget.LinearLayoutManager', useAndroidX)};
 <#else>
@@ -25,13 +24,11 @@ import ${applicationPackage}.R;
  * <pre>
  *     ${className}.newInstance(30).show(getSupportFragmentManager(), "dialog");
  * </pre>
- * <p>You activity (or fragment) needs to implement {@link ${className}.Listener}.</p>
  */
 public class ${className} extends BottomSheetDialogFragment {
 
     // TODO: Customize parameter argument names
     private static final String ARG_ITEM_COUNT = "item_count";
-    private Listener mListener;
 
     // TODO: Customize parameters
     public static ${className} newInstance(int itemCount) {
@@ -50,7 +47,7 @@ public class ${className} extends BottomSheetDialogFragment {
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         final RecyclerView recyclerView = (RecyclerView) view;
 <#if columnCount == "1">
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -60,27 +57,6 @@ public class ${className} extends BottomSheetDialogFragment {
         recyclerView.setAdapter(new ${objectKind}Adapter(getArguments().getInt(ARG_ITEM_COUNT)));
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        final Fragment parent = getParentFragment();
-        if (parent != null) {
-            mListener = (Listener) parent;
-        } else {
-            mListener = (Listener) context;
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        mListener = null;
-        super.onDetach();
-    }
-
-    public interface Listener {
-        void on${objectKind}Clicked(int position);
-    }
-
     private class ViewHolder extends RecyclerView.ViewHolder {
 
         final TextView text;
@@ -88,18 +64,8 @@ public class ${className} extends BottomSheetDialogFragment {
         ViewHolder(LayoutInflater inflater, ViewGroup parent) {
             // TODO: Customize the item layout
             super(inflater.inflate(R.layout.${itemLayout}, parent, false));
-            text = (TextView) itemView.findViewById(R.id.text);
-            text.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mListener != null) {
-                        mListener.on${objectKind}Clicked(getAdapterPosition());
-                        dismiss();
-                    }
-                }
-            });
+            text = itemView.findViewById(R.id.text);
         }
-
     }
 
     private class ${objectKind}Adapter extends RecyclerView.Adapter<ViewHolder> {
@@ -110,8 +76,9 @@ public class ${className} extends BottomSheetDialogFragment {
             mItemCount = itemCount;
         }
 
+        @NonNull
         @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             return new ViewHolder(LayoutInflater.from(parent.getContext()), parent);
         }
 

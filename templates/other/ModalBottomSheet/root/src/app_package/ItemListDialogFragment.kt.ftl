@@ -1,6 +1,5 @@
 package ${escapeKotlinIdentifiers(packageName)}
 
-import android.content.Context
 import android.os.Bundle
 import ${getMaterialComponentName('android.support.design.widget.BottomSheetDialog', useMaterial2)}Fragment
 <#if columnCount == "1">
@@ -30,58 +29,27 @@ const val ARG_ITEM_COUNT = "item_count"
  * <pre>
  *    ${className}.newInstance(30).show(supportFragmentManager, "dialog")
  * </pre>
- *
- * You activity (or fragment) needs to implement [${className}.Listener].
  */
 class ${className} : BottomSheetDialogFragment() {
-    private var mListener: Listener? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.${listLayout}, container, false)
     }
 
-    override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 <#if columnCount == "1">
         list.layoutManager = LinearLayoutManager(context)
 <#else>
         list.layoutManager = GridLayoutManager(context, ${columnCount})
 </#if>
-        list.adapter = ${objectKind}Adapter(arguments?.getInt(ARG_ITEM_COUNT))
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        val parent = parentFragment
-        if (parent != null) {
-            mListener = parent as Listener
-        } else {
-            mListener = context as Listener
-        }
-    }
-
-    override fun onDetach() {
-        mListener = null
-        super.onDetach()
-    }
-
-    interface Listener {
-        fun on${objectKind}Clicked(position: Int)
+        list.adapter = arguments?.getInt(ARG_ITEM_COUNT)?.let { ItemAdapter(it) }
     }
 
     private inner class ViewHolder internal constructor(inflater: LayoutInflater, parent: ViewGroup)
         : RecyclerView.ViewHolder(inflater.inflate(R.layout.${itemLayout}, parent, false)) {
 
         internal val text: TextView = itemView.text
-
-        init {
-            text.setOnClickListener {
-                mListener?.let {
-                    it.on${objectKind}Clicked(adapterPosition)
-                    dismiss()
-                }
-            }
-        }
     }
 
     private inner class ${objectKind}Adapter internal constructor(private val mItemCount: Int) : RecyclerView.Adapter<ViewHolder>() {
