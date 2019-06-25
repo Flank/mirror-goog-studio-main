@@ -41,14 +41,16 @@ public interface MergeOutputWriter extends OpenableCloseable {
      *
      * @param path the path to create
      * @param data the path's data
+     * @param compress whether the data will be compressed
      */
-    void create(@NonNull String path, @NonNull InputStream data);
+    void create(@NonNull String path, @NonNull InputStream data, boolean compress);
 
     /**
      * Replaces a path's contents with new contents.
      *
      * @param path the path to replace
      * @param data the new path's data
+     * @param compress whether the data will be compressed
      */
-    void replace(@NonNull String path, @NonNull InputStream data);
+    void replace(@NonNull String path, @NonNull InputStream data, boolean compress);
 }

@@ -18,8 +18,12 @@ package com.android.build.gradle.integration.packaging
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
+import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ApkSubject.assertThat
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.internal.packaging.ApkCreatorType
+import com.android.builder.internal.packaging.ApkCreatorType.APK_FLINGER
+import com.android.builder.internal.packaging.ApkCreatorType.APK_Z_FILE_CREATOR
 import com.android.tools.build.apkzlib.zip.CompressionMethod
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
@@ -27,10 +31,19 @@ import com.google.common.truth.Expect
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
 import java.io.File
 import java.nio.file.Files
 
-class NoCompressTest {
+@RunWith(FilterableParameterized::class)
+class NoCompressTest(val apkCreatorType: ApkCreatorType) {
+
+    companion object {
+        @Parameterized.Parameters(name = "apkCreatorType_{0}")
+        @JvmStatic
+        fun params() = listOf(APK_Z_FILE_CREATOR, APK_FLINGER)
+    }
 
     private val content = ByteArray(1000)
 
@@ -52,7 +65,8 @@ class NoCompressTest {
                 .withFile("src/main/assets/a.no", content)
                 .withFile("src/main/res/raw/r_yes.yes", content)
                 .withFile("src/main/res/raw/r_no.no", content)
-        ).create()
+        ).addGradleProperties(getGradleProperties())
+        .create()
 
     @Test
     fun noCompressIsAccepted() {
@@ -91,4 +105,8 @@ class NoCompressTest {
         expect.that(get(path)?.centralDirectoryHeader?.compressionInfoWithWait?.method)
             .named("Compression method of $path")
 
+    private fun getGradleProperties() = when (apkCreatorType) {
+        APK_Z_FILE_CREATOR -> "${BooleanOption.USE_APK_FLINGER.propertyName}=false"
+        APK_FLINGER -> "${BooleanOption.USE_APK_FLINGER.propertyName}=true"
+    }
 }

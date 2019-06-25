@@ -61,8 +61,9 @@ public class DelegateIncrementalFileMergerOutputTest {
     public void create() {
         ImmutableList<IncrementalFileMergerInput> inputs = ImmutableList.of();
 
-        delegate.create("foo", inputs);
-        Mockito.verify(mockOutput).create(Matchers.eq("foo"), Matchers.same(inputs));
+        delegate.create("foo", inputs, true);
+        Mockito.verify(mockOutput)
+                .create(Matchers.eq("foo"), Matchers.same(inputs), Matchers.eq(true));
     }
 
     @Test
@@ -70,10 +71,12 @@ public class DelegateIncrementalFileMergerOutputTest {
         ImmutableList<String> prevNames = ImmutableList.of();
         ImmutableList<IncrementalFileMergerInput> inputs = ImmutableList.of();
 
-        delegate.update("foo", prevNames, inputs);
-        Mockito.verify(mockOutput).update(
-                Matchers.eq("foo"),
-                Matchers.same(prevNames),
-                Matchers.same(inputs));
+        delegate.update("foo", prevNames, inputs, true);
+        Mockito.verify(mockOutput)
+                .update(
+                        Matchers.eq("foo"),
+                        Matchers.same(prevNames),
+                        Matchers.same(inputs),
+                        Matchers.eq(true));
     }
 }

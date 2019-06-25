@@ -33,6 +33,7 @@ import com.android.builder.merge.IncrementalFileMergerState
 import com.android.builder.merge.MergeOutputWriters
 import com.android.builder.merge.RenameIncrementalFileMergerInput
 import com.android.builder.merge.StreamMergeAlgorithms
+import com.android.builder.packaging.PackagingUtils
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableList
 import java.io.File
@@ -62,7 +63,8 @@ class MergeJavaResourcesDelegate(
     private val packagingOptions: ParsedPackagingOptions,
     private val mergedType: ContentType,
     private val incrementalStateFile: File,
-    private val isIncremental: Boolean
+    private val isIncremental: Boolean,
+    private val noCompress: Collection<String>
 ) {
 
     private var inputs: MutableList<IncrementalFileMergerInput>
@@ -220,17 +222,19 @@ class MergeJavaResourcesDelegate(
         val output = object : DelegateIncrementalFileMergerOutput(baseOutput) {
             override fun create(
                 path: String,
-                inputs: List<IncrementalFileMergerInput>
+                inputs: List<IncrementalFileMergerInput>,
+                compress: Boolean
             ) {
-                super.create(path, filter(path, inputs))
+                super.create(path, filter(path, inputs), compress)
             }
 
             override fun update(
                 path: String,
                 prevInputNames: List<String>,
-                inputs: List<IncrementalFileMergerInput>
+                inputs: List<IncrementalFileMergerInput>,
+                compress: Boolean
             ) {
-                super.update(path, prevInputNames, filter(path, inputs))
+                super.update(path, prevInputNames, filter(path, inputs), compress)
             }
 
             private fun filter(
@@ -250,7 +254,12 @@ class MergeJavaResourcesDelegate(
         }
 
         saveMergeState(
-            IncrementalFileMerger.merge(ImmutableList.copyOf(inputs), output, loadMergeState())
+            IncrementalFileMerger.merge(
+                inputs.toList(),
+                output,
+                loadMergeState(),
+                PackagingUtils.getNoCompressPredicateForExtensions(noCompress)
+            )
         )
     }
 }

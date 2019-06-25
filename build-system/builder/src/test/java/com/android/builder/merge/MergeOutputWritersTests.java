@@ -43,10 +43,10 @@ public class MergeOutputWritersTests {
 
         MergeOutputWriter w = MergeOutputWriters.toDirectory(dir);
         w.open();
-        w.create("a", new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
-        w.create("b/c", new ByteArrayInputStream(new byte[] { 4, 5 }));
-        w.create("d e/f g", new ByteArrayInputStream(new byte[] { 6, 7, 8, 9 }));
-        w.create("h/i/j", new ByteArrayInputStream(new byte[] { 10 }));
+        w.create("a", new ByteArrayInputStream(new byte[] {1, 2, 3}), true);
+        w.create("b/c", new ByteArrayInputStream(new byte[] {4, 5}), false);
+        w.create("d e/f g", new ByteArrayInputStream(new byte[] {6, 7, 8, 9}), true);
+        w.create("h/i/j", new ByteArrayInputStream(new byte[] {10}), false);
         w.close();
 
         File a = new File(dir, "a");
@@ -149,10 +149,10 @@ public class MergeOutputWritersTests {
 
         MergeOutputWriter w = MergeOutputWriters.toDirectory(dir);
         w.open();
-        w.replace("a", new ByteArrayInputStream(new byte[] { 4, 9 }));
-        w.replace("b/c", new ByteArrayInputStream(new byte[] { 16, 25 }));
-        w.replace("d e/f g", new ByteArrayInputStream(new byte[] { 36, 49 }));
-        w.replace("h/i/j", new ByteArrayInputStream(new byte[] { 64 }));
+        w.replace("a", new ByteArrayInputStream(new byte[] {4, 9}), true);
+        w.replace("b/c", new ByteArrayInputStream(new byte[] {16, 25}), false);
+        w.replace("d e/f g", new ByteArrayInputStream(new byte[] {36, 49}), true);
+        w.replace("h/i/j", new ByteArrayInputStream(new byte[] {64}), false);
         w.close();
 
         assertTrue(a.isFile());
@@ -178,9 +178,9 @@ public class MergeOutputWritersTests {
 
         MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
         w.open();
-        w.create("a", new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
-        w.create("b/c", new ByteArrayInputStream(new byte[] { 4, 5 }));
-        w.create("d e/f g", new ByteArrayInputStream(new byte[] { 6, 7, 8, 9 }));
+        w.create("a", new ByteArrayInputStream(new byte[] {1, 2, 3}), true);
+        w.create("b/c", new ByteArrayInputStream(new byte[] {4, 5}), false);
+        w.create("d e/f g", new ByteArrayInputStream(new byte[] {6, 7, 8, 9}), true);
         w.close();
 
         try (ZFile zf = ZFile.openReadOnly(zipFile)) {
@@ -236,9 +236,9 @@ public class MergeOutputWritersTests {
 
         MergeOutputWriter w = MergeOutputWriters.toZip(zipFile);
         w.open();
-        w.replace("a", new ByteArrayInputStream(new byte[] { 4, 9 }));
-        w.replace("b/c", new ByteArrayInputStream(new byte[] { 16, 25 }));
-        w.replace("d e/f g", new ByteArrayInputStream(new byte[] { 36, 49 }));
+        w.replace("a", new ByteArrayInputStream(new byte[] {4, 9}), true);
+        w.replace("b/c", new ByteArrayInputStream(new byte[] {16, 25}), false);
+        w.replace("d e/f g", new ByteArrayInputStream(new byte[] {36, 49}), true);
         w.close();
 
         try (ZFile zf = ZFile.openReadOnly(zipFile)) {

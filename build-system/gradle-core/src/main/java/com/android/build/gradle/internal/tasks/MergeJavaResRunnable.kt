@@ -75,7 +75,8 @@ class MergeJavaResRunnable @Inject constructor(val params: Params) : Runnable {
                 ParsedPackagingOptions(params.packagingOptions),
                 params.contentType,
                 params.incrementalStateFile,
-                params.isIncremental
+                params.isIncremental,
+                params.noCompress
             )
         mergeJavaResDelegate.run()
         cacheUpdates.forEach(Runnable::run)
@@ -92,6 +93,7 @@ class MergeJavaResRunnable @Inject constructor(val params: Params) : Runnable {
         val isIncremental: Boolean,
         val cacheDir: File,
         val changedInputs: Map<File, FileStatus>?,
-        val contentType: ContentType
+        val contentType: ContentType,
+        val noCompress: Collection<String>
     ): Serializable
 }

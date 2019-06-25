@@ -45,11 +45,15 @@ public interface IncrementalFileMergerOutput extends OpenableCloseable {
      *
      * @param path the OS-independent path
      * @param inputs the inputs where the paths exists and that should be combined to generate the
-     * output; the inputs are provided in the same order they were provided to
-     * {@link IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
-     * IncrementalFileMergerState)}
+     *     output; the inputs are provided in the same order they were provided to {@link
+     *     IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
+     *     IncrementalFileMergerState)}
+     * @param compress whether the data will be compressed
      */
-    void create(@NonNull String path, @NonNull List<IncrementalFileMergerInput> inputs);
+    void create(
+            @NonNull String path,
+            @NonNull List<IncrementalFileMergerInput> inputs,
+            boolean compress);
 
     /**
      * A path needs to be updated.
@@ -57,12 +61,14 @@ public interface IncrementalFileMergerOutput extends OpenableCloseable {
      * @param path the OS-independent path
      * @param prevInputNames the previous inputs used to create or update the path
      * @param inputs the inputs where the paths exists and that should be combined to generate the
-     * output; the inputs are provided in the same order they were provided to
-     * {@link IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
-     * IncrementalFileMergerState)}
+     *     output; the inputs are provided in the same order they were provided to {@link
+     *     IncrementalFileMerger#merge(List, IncrementalFileMergerOutput,
+     *     IncrementalFileMergerState)}
+     * @param compress whether the data will be compressed
      */
     void update(
             @NonNull String path,
             @NonNull List<String> prevInputNames,
-            @NonNull List<IncrementalFileMergerInput> inputs);
+            @NonNull List<IncrementalFileMergerInput> inputs,
+            boolean compress);
 }

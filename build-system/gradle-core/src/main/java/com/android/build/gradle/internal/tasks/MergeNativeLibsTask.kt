@@ -128,7 +128,8 @@ open class MergeNativeLibsTask
                     false,
                     cacheDir,
                     null,
-                    NATIVE_LIBS
+                    NATIVE_LIBS,
+                    listOf()
                 )
             )
         }
@@ -153,7 +154,8 @@ open class MergeNativeLibsTask
                     true,
                     cacheDir,
                     changedInputs,
-                    NATIVE_LIBS
+                    NATIVE_LIBS,
+                    listOf()
                 )
             )
         }

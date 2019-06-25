@@ -98,6 +98,10 @@ abstract class ProcessAndroidAppResourcesTask
 
     @get:Internal lateinit var outputScope: OutputScope private set
 
+    @get:Input
+    lateinit var noCompress: List<String>
+        private set
+
     override fun doTaskAction() {
         val staticLibraries = ImmutableList.builder<File>()
         staticLibraries.addAll(libraryDependencies.files)
@@ -110,7 +114,7 @@ abstract class ProcessAndroidAppResourcesTask
         val config = AaptPackageConfig(
                 androidJarPath = androidJar.get().absolutePath,
                 manifestFile = (File(manifestFileDirectory.get().asFile, SdkConstants.ANDROID_MANIFEST_XML)),
-                options = AaptOptions(null, false, null),
+                options = AaptOptions(noCompress, false, null),
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
@@ -197,6 +201,9 @@ abstract class ProcessAndroidAppResourcesTask
             task.errorFormatMode = SyncOptions.getErrorFormatMode(
                 variantScope.globalScope.projectOptions
             )
+            task.noCompress =
+                variantScope.globalScope.extension.aaptOptions.noCompress?.toList()?.sorted() ?:
+                        listOf()
         }
     }
 

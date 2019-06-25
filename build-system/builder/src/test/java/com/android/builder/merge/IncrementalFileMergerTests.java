@@ -16,15 +16,12 @@
 
 package com.android.builder.merge;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.resources.FileStatus;
-import com.android.utils.Pair;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +51,7 @@ public class IncrementalFileMergerTests {
         i0.add("root_file", FileStatus.NEW);
         i0.add("dir/level_1_file", FileStatus.NEW);
         i0.add("empty/dir/level_2_file", FileStatus.NEW);
+        i0.add("file.no_compress", FileStatus.NEW);
 
 
         IncrementalFileMergerTestOutput out = new IncrementalFileMergerTestOutput();
@@ -62,28 +60,29 @@ public class IncrementalFileMergerTests {
                 IncrementalFileMerger.merge(
                         ImmutableList.of(i0),
                         out,
-                        new IncrementalFileMergerState());
+                        new IncrementalFileMergerState(),
+                        it -> it.endsWith(".no_compress"));
 
-        assertEquals(0, out.removed.size());
-        assertEquals(0, out.updated.size());
-        assertEquals(3, out.created.size());
-        assertNotNull(out.created.get("root_file"));
-        assertEquals(1, out.created.get("root_file").size());
-        assertSame(i0, out.created.get("root_file").get(0));
-        assertNotNull(out.created.get("dir/level_1_file"));
-        assertEquals(1, out.created.get("dir/level_1_file").size());
-        assertSame(i0, out.created.get("dir/level_1_file").get(0));
-        assertNotNull(out.created.get("empty/dir/level_2_file"));
-        assertEquals(1, out.created.get("empty/dir/level_2_file").size());
-        assertSame(i0, out.created.get("empty/dir/level_2_file").get(0));
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated())
+                .containsExactly(
+                        new CreateParams("root_file", ImmutableList.of(i0), true),
+                        new CreateParams("dir/level_1_file", ImmutableList.of(i0), true),
+                        new CreateParams("empty/dir/level_2_file", ImmutableList.of(i0), true),
+                        new CreateParams("file.no_compress", ImmutableList.of(i0), false));
 
-        assertEquals(ImmutableList.of("i0"), newState.getInputNames());
-        assertEquals(
-                ImmutableSet.of("root_file", "dir/level_1_file", "empty/dir/level_2_file"),
-                newState.filesOf("i0"));
-        assertEquals(ImmutableList.of("i0"), newState.inputsFor("root_file"));
-        assertEquals(ImmutableList.of("i0"), newState.inputsFor("dir/level_1_file"));
-        assertEquals(ImmutableList.of("i0"), newState.inputsFor("empty/dir/level_2_file"));
+        assertThat(newState.getInputNames()).containsExactly("i0");
+        assertThat(newState.filesOf("i0"))
+                .containsExactly(
+                        "root_file",
+                        "dir/level_1_file",
+                        "empty/dir/level_2_file",
+                        "file.no_compress");
+        assertThat(newState.inputsFor("root_file")).containsExactly("i0");
+        assertThat(newState.inputsFor("dir/level_1_file")).containsExactly("i0");
+        assertThat(newState.inputsFor("empty/dir/level_2_file")).containsExactly("i0");
+        assertThat(newState.inputsFor("file.no_compress")).containsExactly("i0");
     }
 
     @Test
@@ -103,21 +102,16 @@ public class IncrementalFileMergerTests {
                 IncrementalFileMerger.merge(
                         ImmutableList.of(i0, i1),
                         out,
-                        new IncrementalFileMergerState());
+                        new IncrementalFileMergerState(),
+                        it -> false);
 
-        assertEquals(0, out.removed.size());
-        assertEquals(0, out.updated.size());
-        assertEquals(3, out.created.size());
-        assertNotNull(out.created.get("root_file"));
-        assertEquals(1, out.created.get("root_file").size());
-        assertSame(i0, out.created.get("root_file").get(0));
-        assertNotNull(out.created.get("dir/level_1_file"));
-        assertEquals(2, out.created.get("dir/level_1_file").size());
-        assertSame(i0, out.created.get("dir/level_1_file").get(0));
-        assertSame(i1, out.created.get("dir/level_1_file").get(1));
-        assertNotNull(out.created.get("empty/dir/level_2_file"));
-        assertEquals(1, out.created.get("empty/dir/level_2_file").size());
-        assertSame(i1, out.created.get("empty/dir/level_2_file").get(0));
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated())
+                .containsExactly(
+                        new CreateParams("root_file", ImmutableList.of(i0), true),
+                        new CreateParams("dir/level_1_file", ImmutableList.of(i0, i1), true),
+                        new CreateParams("empty/dir/level_2_file", ImmutableList.of(i1), true));
 
         assertEquals(ImmutableList.of("i0", "i1"), newState.getInputNames());
         assertEquals(ImmutableSet.of("root_file", "dir/level_1_file"), newState.filesOf("i0"));
@@ -138,9 +132,7 @@ public class IncrementalFileMergerTests {
 
         IncrementalFileMergerState afterFullState =
                 IncrementalFileMerger.merge(
-                        ImmutableList.of(i0),
-                        out,
-                        new IncrementalFileMergerState());
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState(), it -> false);
 
         i0 = new IncrementalFileMergerTestInput("i0");
         i0.add("root_file");
@@ -148,14 +140,12 @@ public class IncrementalFileMergerTests {
         out = new IncrementalFileMergerTestOutput();
 
         IncrementalFileMergerState afterIncState =
-                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState);
+                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState, it -> false);
 
-        assertEquals(0, out.removed.size());
-        assertEquals(0, out.updated.size());
-        assertEquals(1, out.created.size());
-        assertNotNull(out.created.get("foo"));
-        assertEquals(1, out.created.get("foo").size());
-        assertEquals(i0, out.created.get("foo").get(0));
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated())
+                .containsExactly(new CreateParams("foo", ImmutableList.of(i0), true));
 
         assertEquals(ImmutableList.of("i0"), afterIncState.getInputNames());
         assertEquals(ImmutableSet.of("root_file", "foo"), afterIncState.filesOf("i0"));
@@ -173,9 +163,7 @@ public class IncrementalFileMergerTests {
 
         IncrementalFileMergerState afterFullState =
                 IncrementalFileMerger.merge(
-                        ImmutableList.of(i0),
-                        out,
-                        new IncrementalFileMergerState());
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState(), it -> false);
 
         i0 = new IncrementalFileMergerTestInput("i0");
         i0.add("root_file");
@@ -183,12 +171,11 @@ public class IncrementalFileMergerTests {
         out = new IncrementalFileMergerTestOutput();
 
         IncrementalFileMergerState afterIncState =
-                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState);
+                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState, it -> false);
 
-        assertEquals(1, out.removed.size());
-        assertEquals(0, out.updated.size());
-        assertEquals(0, out.created.size());
-        assertEquals(ImmutableSet.of("foo"), out.removed);
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated()).isEmpty();
+        assertThat(out.getRemoved()).containsExactly("foo");
 
         assertEquals(ImmutableList.of("i0"), afterIncState.getInputNames());
         assertEquals(ImmutableSet.of("root_file"), afterIncState.filesOf("i0"));
@@ -206,9 +193,7 @@ public class IncrementalFileMergerTests {
 
         IncrementalFileMergerState afterFullState =
                 IncrementalFileMerger.merge(
-                        ImmutableList.of(i0),
-                        out,
-                        new IncrementalFileMergerState());
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState(), it -> false);
 
         i0 = new IncrementalFileMergerTestInput("i0");
         i0.add("root_file");
@@ -216,12 +201,14 @@ public class IncrementalFileMergerTests {
         out = new IncrementalFileMergerTestOutput();
 
         IncrementalFileMergerState afterIncState =
-                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState);
+                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterFullState, it -> false);
 
-        assertEquals(0, out.removed.size());
-        assertEquals(1, out.updated.size());
-        assertEquals(0, out.created.size());
-        assertEquals(Pair.of(ImmutableList.of("i0"), ImmutableList.of(i0)), out.updated.get("foo"));
+        assertThat(out.getCreated()).isEmpty();
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated())
+                .containsExactly(
+                        new UpdateParams(
+                                "foo", ImmutableList.of("i0"), ImmutableList.of(i0), true));
 
         assertEquals(ImmutableList.of("i0"), afterIncState.getInputNames());
         assertEquals(ImmutableSet.of("root_file", "foo"), afterIncState.filesOf("i0"));
@@ -239,42 +226,49 @@ public class IncrementalFileMergerTests {
 
         IncrementalFileMergerState afterInitialState =
                 IncrementalFileMerger.merge(
-                        ImmutableList.of(i0), out, new IncrementalFileMergerState());
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState(), it -> false);
 
         // After merging, we should get both files created in the output.
-        assertEquals(0, out.removed.size());
-        assertEquals(0, out.updated.size());
-        assertEquals(2, out.created.size());
-        assertEquals(ImmutableList.of(i0), out.created.get("untouched_file"));
-        assertEquals(ImmutableList.of(i0), out.created.get("touched_file_after_i1"));
-        out.created.clear();
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getUpdated()).isEmpty();
+        assertThat(out.getCreated())
+                .containsExactly(
+                        new CreateParams("untouched_file", ImmutableList.of(i0), true),
+                        new CreateParams("touched_file_after_i1", ImmutableList.of(i0), true));
+        out.getCreated().clear();
 
         i0 = new IncrementalFileMergerTestInput("i0");
         IncrementalFileMergerTestInput i1 = new IncrementalFileMergerTestInput("i1");
         i1.add("touched_file_after_i1", FileStatus.NEW);
 
         IncrementalFileMergerState afterAdd1State =
-                IncrementalFileMerger.merge(ImmutableList.of(i0, i1), out, afterInitialState);
+                IncrementalFileMerger.merge(
+                        ImmutableList.of(i0, i1), out, afterInitialState, it -> false);
 
         // After adding i1, we should get an update on the touched_file_after_i1.
-        assertEquals(0, out.removed.size());
-        assertEquals(1, out.updated.size());
-        assertEquals(0, out.created.size());
-        assertEquals(
-                Pair.of(ImmutableList.of("i0"), ImmutableList.of(i0, i1)),
-                out.updated.get("touched_file_after_i1"));
-        out.updated.clear();
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getCreated()).isEmpty();
+        assertThat(out.getUpdated())
+                .containsExactly(
+                        new UpdateParams(
+                                "touched_file_after_i1",
+                                ImmutableList.of("i0"),
+                                ImmutableList.of(i0, i1),
+                                true));
+        out.getUpdated().clear();
 
-        IncrementalFileMergerState afterRemovingI1State =
-                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterAdd1State);
+        IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterAdd1State, it -> false);
 
         // After removing i1, we should get an update on the touched_file_after_i1.
-        assertEquals(0, out.removed.size());
-        assertEquals(1, out.updated.size());
-        assertEquals(0, out.created.size());
-        assertEquals(
-                Pair.of(ImmutableList.of("i0", "i1"), ImmutableList.of(i0)),
-                out.updated.get("touched_file_after_i1"));
+        assertThat(out.getRemoved()).isEmpty();
+        assertThat(out.getCreated()).isEmpty();
+        assertThat(out.getUpdated())
+                .containsExactly(
+                        new UpdateParams(
+                                "touched_file_after_i1",
+                                ImmutableList.of("i0", "i1"),
+                                ImmutableList.of(i0),
+                                true));
     }
 
     private void randomTest(
@@ -434,37 +428,40 @@ public class IncrementalFileMergerTests {
 
             IncrementalFileMergerTestOutput out = new IncrementalFileMergerTestOutput();
             IncrementalFileMergerState newState =
-                    IncrementalFileMerger.merge(ImmutableList.copyOf(inputsToMerge), out, state);
+                    IncrementalFileMerger.merge(
+                            ImmutableList.copyOf(inputsToMerge), out, state, it -> false);
             outs.add(out);
 
             /*
              * Merge has completed. Update the generated outputs.
              */
-            for (String r : out.removed) {
-                assertTrue(generated.containsKey(r));
+            for (String r : out.getRemoved()) {
+                assertThat(generated).containsKey(r);
                 generated.remove(r);
             }
 
-            for (String u : out.updated.keySet()) {
-                Pair<ImmutableList<String>, ImmutableList<IncrementalFileMergerInput>> p;
-                p = out.updated.get(u);
-
+            for (UpdateParams updateParams : out.getUpdated()) {
                 List<String> names =
-                        p.getSecond().stream()
+                        updateParams
+                                .getInputs()
+                                .stream()
                                 .map(IncrementalFileMergerInput::getName)
                                 .collect(Collectors.toList());
-                assertTrue(generated.containsKey(u));
-                assertEquals(generated.get(u), p.getFirst());
-                generated.put(u, names);
+                assertThat(generated).containsKey(updateParams.getPath());
+                assertThat(generated.get(updateParams.getPath()))
+                        .isEqualTo(updateParams.getPrevInputNames());
+                generated.put(updateParams.getPath(), names);
             }
 
-            for (String c : out.created.keySet()) {
+            for (CreateParams createParams : out.getCreated()) {
                 List<String> names =
-                        out.created.get(c).stream()
+                        createParams
+                                .getInputs()
+                                .stream()
                                 .map(IncrementalFileMergerInput::getName)
                                 .collect(Collectors.toList());
-                assertFalse(generated.containsKey(c));
-                generated.put(c, names);
+                assertThat(generated).doesNotContainKey(createParams.getPath());
+                generated.put(createParams.getPath(), names);
             }
 
             /*

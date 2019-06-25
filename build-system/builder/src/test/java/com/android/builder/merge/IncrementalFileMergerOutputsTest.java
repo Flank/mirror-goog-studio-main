@@ -63,47 +63,50 @@ public class IncrementalFileMergerOutputsTest {
 
     private List<byte[]> replacesData = new ArrayList<>();
 
-    private MergeOutputWriter writer = new MergeOutputWriter() {
-        @Override
-        public void remove(@NonNull String path) {
-            assertTrue(opens.size() == closes.size() + 1);
-            removes.add(path);
-        }
+    private MergeOutputWriter writer =
+            new MergeOutputWriter() {
+                @Override
+                public void remove(@NonNull String path) {
+                    assertTrue(opens.size() == closes.size() + 1);
+                    removes.add(path);
+                }
 
-        @Override
-        public void create(@NonNull String path, @NonNull InputStream data) {
-            assertTrue(opens.size() == closes.size() + 1);
-            creates.add(path);
-            try {
-                createsData.add(ByteStreams.toByteArray(data));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
+                @Override
+                public void create(
+                        @NonNull String path, @NonNull InputStream data, boolean compress) {
+                    assertTrue(opens.size() == closes.size() + 1);
+                    creates.add(path);
+                    try {
+                        createsData.add(ByteStreams.toByteArray(data));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
 
-        @Override
-        public void replace(@NonNull String path, @NonNull InputStream data) {
-            assertTrue(opens.size() == closes.size() + 1);
-            replaces.add(path);
-            try {
-                replacesData.add(ByteStreams.toByteArray(data));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
+                @Override
+                public void replace(
+                        @NonNull String path, @NonNull InputStream data, boolean compress) {
+                    assertTrue(opens.size() == closes.size() + 1);
+                    replaces.add(path);
+                    try {
+                        replacesData.add(ByteStreams.toByteArray(data));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
 
-        @Override
-        public void open() {
-            assertTrue(opens.size() == closes.size());
-            opens.add(null);
-        }
+                @Override
+                public void open() {
+                    assertTrue(opens.size() == closes.size());
+                    opens.add(null);
+                }
 
-        @Override
-        public void close() {
-            assertTrue(opens.size() == closes.size() + 1);
-            closes.add(null);
-        }
-    };
+                @Override
+                public void close() {
+                    assertTrue(opens.size() == closes.size() + 1);
+                    closes.add(null);
+                }
+            };
 
     private IncrementalFileMergerOutput out =
             IncrementalFileMergerOutputs.fromAlgorithmAndWriter(alg, writer);
@@ -134,7 +137,7 @@ public class IncrementalFileMergerOutputsTest {
         i0.open();
         i1.open();
         out.open();
-        out.create("/blah", ImmutableList.of(i0, i1));
+        out.create("/blah", ImmutableList.of(i0, i1), true);
         out.close();
         i1.close();
         i0.close();
@@ -162,7 +165,7 @@ public class IncrementalFileMergerOutputsTest {
         i0.open();
         i1.open();
         out.open();
-        out.update("/blah", ImmutableList.of("foobar"), ImmutableList.of(i0, i1));
+        out.update("/blah", ImmutableList.of("foobar"), ImmutableList.of(i0, i1), true);
         out.close();
         i1.close();
         i0.close();

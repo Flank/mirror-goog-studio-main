@@ -57,15 +57,19 @@ public class DelegateIncrementalFileMergerOutput implements IncrementalFileMerge
     }
 
     @Override
-    public void create(@NonNull String path, @NonNull List<IncrementalFileMergerInput> inputs) {
-        delegate.create(path, inputs);
+    public void create(
+            @NonNull String path,
+            @NonNull List<IncrementalFileMergerInput> inputs,
+            boolean compress) {
+        delegate.create(path, inputs, compress);
     }
 
     @Override
     public void update(
             @NonNull String path,
             @NonNull List<String> prevInputNames,
-            @NonNull List<IncrementalFileMergerInput> inputs) {
-        delegate.update(path, prevInputNames, inputs);
+            @NonNull List<IncrementalFileMergerInput> inputs,
+            boolean compress) {
+        delegate.update(path, prevInputNames, inputs, compress);
     }
 }

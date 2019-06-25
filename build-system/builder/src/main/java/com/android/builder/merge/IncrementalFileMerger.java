@@ -23,11 +23,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
  * Class performing an incremental merge operation. This class is a utility with only one method,
- * {@link #merge(List, IncrementalFileMergerOutput, IncrementalFileMergerState)}. See
+ * {@link #merge(List, IncrementalFileMergerOutput, IncrementalFileMergerState, Predicate)}. See
  * package description for a discussion on merging concepts.
  */
 public final class IncrementalFileMerger {
@@ -38,24 +39,26 @@ public final class IncrementalFileMerger {
     private IncrementalFileMerger() {}
 
     /**
-     * Performs an incremental merge operation. An incremental merge operation is done by
-     * applying a set of changes represented by a list of instances of
-     * {@link IncrementalFileMergerInput} to a current state represented by an instance of
-     * {@link IncrementalFileMergerState}. All changes that need to be made to the output as a
-     * consequence of the inputs are reported to {@code output}.
+     * Performs an incremental merge operation. An incremental merge operation is done by applying a
+     * set of changes represented by a list of instances of {@link IncrementalFileMergerInput} to a
+     * current state represented by an instance of {@link IncrementalFileMergerState}. All changes
+     * that need to be made to the output as a consequence of the inputs are reported to {@code
+     * output}.
      *
      * <p>See package description for details.
      *
      * @param inputs all inputs representing changes to the inputs
      * @param output object receiving information about all changes that need to be made to the
-     * output
+     *     output
      * @param state state of the previous merge; an empty state if this is the first merge
+     * @param noCompressPredicate a predicate indicating whether paths should be uncompressed
      */
     @NonNull
     public static IncrementalFileMergerState merge(
             @NonNull List<IncrementalFileMergerInput> inputs,
             @NonNull IncrementalFileMergerOutput output,
-            @NonNull IncrementalFileMergerState state) {
+            @NonNull IncrementalFileMergerState state,
+            @NonNull Predicate<String> noCompressPredicate) {
 
         IncrementalFileMergerState.Builder newState = new IncrementalFileMergerState.Builder(state);
         newState.setInputNames(getInputNames(inputs));
@@ -72,9 +75,9 @@ public final class IncrementalFileMerger {
         output.open();
         inputs.forEach(IncrementalFileMergerInput::open);
         if (inputNames.equals(state.getInputNames())) {
-            mergeNoChangedInputs(inputs, output, state, newState);
+            mergeNoChangedInputs(inputs, output, state, newState, noCompressPredicate);
         } else {
-            mergeChangedInputs(inputs, output, state, newState);
+            mergeChangedInputs(inputs, output, state, newState, noCompressPredicate);
         }
 
         inputs.forEach(IncrementalFileMergerInput::close);
@@ -88,15 +91,17 @@ public final class IncrementalFileMerger {
      *
      * @param inputs all inputs representing changes to the inputs
      * @param output object receiving information about all changes that need to be made to the
-     * output
+     *     output
      * @param state state of the previous merge; an empty state if this is the first merge
      * @param newState the new state of the merge; has the new inputs already set
+     * @param noCompressPredicate a predicate indicating whether paths should be uncompressed
      */
     private static void mergeNoChangedInputs(
             @NonNull List<IncrementalFileMergerInput> inputs,
             @NonNull IncrementalFileMergerOutput output,
             @NonNull IncrementalFileMergerState state,
-            @NonNull IncrementalFileMergerState.Builder newState) {
+            @NonNull IncrementalFileMergerState.Builder newState,
+            @NonNull Predicate<String> noCompressPredicate) {
 
         /*
          * Make the set of all impacted paths.
@@ -111,25 +116,33 @@ public final class IncrementalFileMerger {
             ImmutableList<String> prevInputNames = state.inputsFor(path);
             List<IncrementalFileMergerInput> inputsForFile = getInputsForFile(path, inputs, state);
 
-            updateChangedFile(inputsForFile, prevInputNames, output, path, newState);
+            updateChangedFile(
+                    inputsForFile,
+                    prevInputNames,
+                    output,
+                    path,
+                    newState,
+                    !noCompressPredicate.test(path));
         }
     }
 
     /**
-     * Merges the changes when the inputs themselves have changed. This means that input sets
-     * may have been added, removed or changed order.
+     * Merges the changes when the inputs themselves have changed. This means that input sets may
+     * have been added, removed or changed order.
      *
      * @param inputs all inputs representing changes to the inputs
      * @param output object receiving information about all changes that need to be made to the
-     * output
+     *     output
      * @param state state of the previous merge; an empty state if this is the first merge
      * @param newState the new state of the merge; has the new inputs already set
+     * @param noCompressPredicate a predicate indicating whether paths should be uncompressed
      */
     private static void mergeChangedInputs(
             @NonNull List<IncrementalFileMergerInput> inputs,
             @NonNull IncrementalFileMergerOutput output,
             @NonNull IncrementalFileMergerState state,
-            @NonNull IncrementalFileMergerState.Builder newState) {
+            @NonNull IncrementalFileMergerState.Builder newState,
+            @NonNull Predicate<String> noCompressPredicate) {
         /*
          * We temporarily extend the new state with all input names, including the ones that were
          * in the state and the new ones. At the end we will remove all names that are not in
@@ -187,7 +200,13 @@ public final class IncrementalFileMerger {
             }
 
             if (changed) {
-                updateChangedFile(inputsForFile, prevInputNames, output, path, newState);
+                updateChangedFile(
+                        inputsForFile,
+                        prevInputNames,
+                        output,
+                        path,
+                        newState,
+                        !noCompressPredicate.test(path));
             }
         }
 
@@ -205,24 +224,26 @@ public final class IncrementalFileMerger {
      * @param output output to write to
      * @param path file path
      * @param newState new merger state to update
+     * @param compress whether the data will be compressed
      */
     private static void updateChangedFile(
             @NonNull List<IncrementalFileMergerInput> inputsForFile,
             @NonNull ImmutableList<String> prevInputNames,
             @NonNull IncrementalFileMergerOutput output,
             @NonNull String path,
-            @NonNull IncrementalFileMergerState.Builder newState) {
+            @NonNull IncrementalFileMergerState.Builder newState,
+            boolean compress) {
         if (inputsForFile.isEmpty()) {
             // No current inputs have this file, remove it.
             output.remove(path);
             newState.remove(path);
         } else if (prevInputNames.isEmpty()) {
             // No old inputs had the file, create a new one.
-            output.create(path, ImmutableList.copyOf(inputsForFile));
+            output.create(path, ImmutableList.copyOf(inputsForFile), compress);
             newState.set(path, getInputNames(inputsForFile));
         } else {
             // Both new and old inputs have the file, update it.
-            output.update(path, prevInputNames, ImmutableList.copyOf(inputsForFile));
+            output.update(path, prevInputNames, ImmutableList.copyOf(inputsForFile), compress);
             newState.set(path, getInputNames(inputsForFile));
         }
     }

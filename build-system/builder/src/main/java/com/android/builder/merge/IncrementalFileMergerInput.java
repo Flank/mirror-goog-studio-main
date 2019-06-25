@@ -22,28 +22,28 @@ import com.android.builder.files.RelativeFile;
 import com.android.ide.common.resources.FileStatus;
 import com.google.common.collect.ImmutableSet;
 import java.io.InputStream;
+import java.util.function.Predicate;
 
 /**
- * Input for an incremental merge operation (see
- * {@link IncrementalFileMerger#merge(java.util.List, IncrementalFileMergerOutput,
- * IncrementalFileMergerState)}.
+ * Input for an incremental merge operation (see {@link IncrementalFileMerger#merge(java.util.List,
+ * IncrementalFileMergerOutput, IncrementalFileMergerState, Predicate)}.
  *
  * <p>An input represents a relative tree and a set of changed paths. Note that deleted paths are
  * reported in the changes, although they are no longer part of the relative tree because, well,
  * they were deleted :)
  *
- * <p>The input contains <i>both</i> the updated relative files (see {@link #getUpdatedPaths()})
- * and the current set of relative files (see {@link #getAllPaths()}.
+ * <p>The input contains <i>both</i> the updated relative files (see {@link #getUpdatedPaths()}) and
+ * the current set of relative files (see {@link #getAllPaths()}.
  *
  * <p>Each {@link IncrementalFileMergerInput} is identified by a name and a contains a set of
- * updates on {@link RelativeFile}. These are usually obtained using the methods from
- * {@link com.android.builder.files.IncrementalRelativeFileSets}.
+ * updates on {@link RelativeFile}. These are usually obtained using the methods from {@link
+ * com.android.builder.files.IncrementalRelativeFileSets}.
  *
  * <p>The input is responsible for reading input files given their paths to the input. This makes
  * the actual source of the data invisible to the user.
  *
- * <p>Because not all methods are necessarily needed for every merge operation, it is recommended
- * to use {@link LazyIncrementalFileMergerInput} as implementation.
+ * <p>Because not all methods are necessarily needed for every merge operation, it is recommended to
+ * use {@link LazyIncrementalFileMergerInput} as implementation.
  */
 public interface IncrementalFileMergerInput extends OpenableCloseable {
 

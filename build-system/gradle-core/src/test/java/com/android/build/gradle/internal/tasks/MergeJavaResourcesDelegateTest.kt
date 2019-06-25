@@ -41,12 +41,16 @@ import com.android.tools.build.apkzlib.utils.CachedSupplier
 import com.android.tools.build.apkzlib.zip.ZFile
 import com.android.utils.FileUtils
 import com.google.common.collect.ImmutableMap
+import com.google.common.truth.Truth.assertThat
 import java.io.ByteArrayInputStream
 import java.io.File
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import zipflinger.JarFlinger
+import zipflinger.ZipArchive
+import java.util.zip.Deflater
 
 /** Test cases for [MergeJavaResourcesDelegate].  */
 class MergeJavaResourcesDelegateTest {
@@ -97,7 +101,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             RESOURCES,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         delegate.run()
@@ -111,6 +116,51 @@ class MergeJavaResourcesDelegateTest {
         // regression test for b/65337573
         assertThat(File(outputFile, "fileEndingWithDot.")).doesNotExist()
         assertThat(File(outputFile, "fileNotEndingWithDot")).doesNotExist()
+    }
+
+    @Test
+    fun testMergeResourcesWithNoCompress() {
+        // Create jar file containing java resources to be merged
+        val jarFile = File(tmpDir.root, "jarFile.jar")
+        JarFlinger(jarFile.toPath()).use {
+            // compress all entries in input jar file
+            it.setCompressionLevel(Deflater.BEST_SPEED)
+            it.addEntry("from_jar.compress", ByteArrayInputStream(ByteArray(100)))
+            it.addEntry("from_jar.no_compress", ByteArrayInputStream(ByteArray(100)))
+        }
+        val jarInput = createIncrementalFilerMergerInputFromJar(jarFile)
+
+        // Create directory containing java resources to be merged
+        val dir = File(tmpDir.root, "dir")
+        FileUtils.createFile(File(dir, "from_dir.compress"), "foo".repeat(100))
+        FileUtils.createFile(File(dir, "from_dir.no_compress"), "foo".repeat(100))
+        val dirInput = createIncrementalFilerMergerInputFromDir(dir)
+
+        val contentMap = mutableMapOf(
+            Pair(jarInput, createQualifiedContent(jarFile, SUB_PROJECTS, RESOURCES)),
+            Pair(dirInput, createQualifiedContent(dir, PROJECT, RESOURCES))
+        )
+
+        val delegate = MergeJavaResourcesDelegate(
+            listOf(jarInput, dirInput),
+            outputFile,
+            contentMap,
+            ParsedPackagingOptions(packagingOptions),
+            RESOURCES,
+            incrementalStateFile,
+            isIncremental = true,
+            noCompress = listOf(".no_compress")
+        )
+
+        delegate.run()
+
+        // Make sure the output is a jar with entries having the expected compression
+        assertThat(outputFile).isFile()
+        val entries = ZipArchive.listEntries(outputFile)
+        assertThat(entries["from_jar.compress"]?.isCompressed).isTrue()
+        assertThat(entries["from_dir.compress"]?.isCompressed).isTrue()
+        assertThat(entries["from_jar.no_compress"]?.isCompressed).isFalse()
+        assertThat(entries["from_dir.no_compress"]?.isCompressed).isFalse()
     }
 
 
@@ -144,7 +194,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             NATIVE_LIBS,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         delegate.run()
@@ -177,7 +228,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             RESOURCES,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         // check that no incremental info saved before first merge
@@ -219,7 +271,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             RESOURCES,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         incrementalDelegate.run()
@@ -247,7 +300,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             NATIVE_LIBS,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         // check that no incremental info saved before first merge
@@ -287,7 +341,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             NATIVE_LIBS,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         incrementalDelegate.run()
@@ -321,7 +376,8 @@ class MergeJavaResourcesDelegateTest {
             ParsedPackagingOptions(packagingOptions),
             RESOURCES,
             incrementalStateFile,
-            isIncremental = true
+            isIncremental = true,
+            noCompress = listOf()
         )
 
         delegate.run()

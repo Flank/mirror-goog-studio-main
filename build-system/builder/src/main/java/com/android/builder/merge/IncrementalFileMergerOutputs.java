@@ -78,13 +78,15 @@ public final class IncrementalFileMergerOutputs {
 
             @Override
             public void create(
-                    @NonNull String path, @NonNull List<IncrementalFileMergerInput> inputs) {
+                    @NonNull String path,
+                    @NonNull List<IncrementalFileMergerInput> inputs,
+                    boolean compress) {
                 try (Closer closer = Closer.create()) {
                     List<InputStream> inStreams =
                             inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
                     InputStream mergedStream =
                             algorithm.merge(path, ImmutableList.copyOf(inStreams), closer);
-                    writer.create(path, mergedStream);
+                    writer.create(path, mergedStream, compress);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -94,13 +96,14 @@ public final class IncrementalFileMergerOutputs {
             public void update(
                     @NonNull String path,
                     @NonNull List<String> prevInputNames,
-                    @NonNull List<IncrementalFileMergerInput> inputs) {
+                    @NonNull List<IncrementalFileMergerInput> inputs,
+                    boolean compress) {
                 try (Closer closer = Closer.create()) {
                     List<InputStream> inStreams =
                             inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
                     InputStream mergedStream =
                             algorithm.merge(path, ImmutableList.copyOf(inStreams), closer);
-                    writer.replace(path, mergedStream);
+                    writer.replace(path, mergedStream, compress);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

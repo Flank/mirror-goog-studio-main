@@ -179,7 +179,7 @@ public class PackagingUtils {
     }
 
     @NonNull
-    private static Predicate<String> getNoCompressPredicateForExtensions(
+    public static Predicate<String> getNoCompressPredicateForExtensions(
             @NonNull Iterable<String> noCompressExtensions) {
         return name -> {
             for (String extension : noCompressExtensions) {

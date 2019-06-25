@@ -132,7 +132,7 @@ public final class MergeOutputWriters {
             }
 
             @Override
-            public void create(@NonNull String path, @NonNull InputStream data) {
+            public void create(@NonNull String path, @NonNull InputStream data, boolean compress) {
                 Preconditions.checkState(isOpen, "Writer closed");
 
                 File f = toFile(path);
@@ -146,7 +146,7 @@ public final class MergeOutputWriters {
             }
 
             @Override
-            public void replace(@NonNull String path, @NonNull InputStream data) {
+            public void replace(@NonNull String path, @NonNull InputStream data, boolean compress) {
                 Preconditions.checkState(isOpen, "Writer closed");
 
                 File f = toFile(path);
@@ -213,22 +213,22 @@ public final class MergeOutputWriters {
             }
 
             @Override
-            public void create(@NonNull String path, @NonNull InputStream data) {
+            public void create(@NonNull String path, @NonNull InputStream data, boolean compress) {
                 Preconditions.checkState(zipFile != null, "Writer not open");
 
                 try {
-                    zipFile.add(path, data);
+                    zipFile.add(path, data, compress);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
             }
 
             @Override
-            public void replace(@NonNull String path, @NonNull InputStream data) {
+            public void replace(@NonNull String path, @NonNull InputStream data, boolean compress) {
                 Preconditions.checkState(zipFile != null, "Writer not open");
 
                 try {
-                    zipFile.add(path, data);
+                    zipFile.add(path, data, compress);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

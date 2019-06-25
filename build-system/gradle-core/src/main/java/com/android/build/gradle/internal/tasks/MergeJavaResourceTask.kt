@@ -99,6 +99,10 @@ open class MergeJavaResourceTask
     lateinit var packagingOptions: SerializablePackagingOptions
         private set
 
+    @get:Input
+    lateinit var noCompress: List<String>
+        private set
+
     private lateinit var intermediateDir: File
 
     @get:OutputDirectory
@@ -136,7 +140,8 @@ open class MergeJavaResourceTask
                     false,
                     cacheDir,
                     null,
-                    RESOURCES
+                    RESOURCES,
+                    noCompress
                 )
             )
         }
@@ -161,7 +166,8 @@ open class MergeJavaResourceTask
                     true,
                     cacheDir,
                     changedInputs,
-                    RESOURCES
+                    RESOURCES,
+                    noCompress
                 )
             )
         }
@@ -252,6 +258,9 @@ open class MergeJavaResourceTask
                 variantScope.getIncrementalDir("${variantScope.fullVariantName}-mergeJavaRes")
             task.cacheDir = File(task.intermediateDir, "zip-cache")
             task.incrementalStateFile = File(task.intermediateDir, "merge-state")
+            task.noCompress =
+                variantScope.globalScope.extension.aaptOptions.noCompress?.toList()?.sorted() ?:
+                        listOf()
         }
     }
 
