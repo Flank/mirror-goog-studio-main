@@ -263,7 +263,7 @@ class ZipMap {
         // If zip entries have data descriptor, we need to go an fetch every single entry to look if
         // the "optional" marker is there. Adjust zip entry area accordingly.
 
-        ByteBuffer dataDescriptorBuffer = ByteBuffer.allocate(28).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer dataDescriptorBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(dataDescriptorBuffer);
         dataDescriptorBuffer.rewind();
 
@@ -274,16 +274,10 @@ class ZipMap {
             dataDescriptorBuffer.rewind();
         }
 
-        // TODO: Zip64 -> fields here are 8 bytes long instead of 4 bytes long.
-        dataDescriptorBuffer.getInt(); // crc32
-        long compressedSize = dataDescriptorBuffer.getInt(); // compressed size
-        long uncompresseSize = dataDescriptorBuffer.getInt(); // uncompressed size
-
-        long payloadSize = isCompressed ? compressedSize : uncompresseSize;
         Location adjustedLocation =
                 new Location(
                         entry.getLocation().first,
-                        entry.getLocation().size() + payloadSize + dataDescriptorLength);
+                        entry.getLocation().size() + dataDescriptorLength);
         entry.setLocation(adjustedLocation);
     }
 

@@ -16,6 +16,7 @@
 
 package zipflinger;
 
+import java.io.File;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,6 +44,14 @@ public class TestParsing extends TestBase {
 
         entry = entries.get("empty2.txt");
         Assert.assertEquals("First entry location", new Location(83, 84), entry.getLocation());
+    }
+
+    @Test
+    public void testZipWithLargeEntriesAndDataDescriptors() throws Exception {
+        File target = getFile("largeEntriesDD.zip");
+        ZipCreator.createZip(42, 1_000_000, target.toString());
+        ZipMap map = ZipMap.from(target, true);
+        map.getEntries();
     }
 
     // Gradle Plug-in features a "resource stripped" which generates invalid extra field (e.g:size=1)
