@@ -24,8 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.utils.FileUtils
-import com.google.gson.GsonBuilder
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
@@ -38,8 +37,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import java.io.File
-import java.util.LinkedList
-import java.util.zip.ZipFile
 
 // TODO: Make incremental
 abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
@@ -71,28 +68,31 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
         val depsUsageFinder =
             DependencyUsageFinder(classFinder, variantClassHolder, variantDepsHolder)
-        val graphAnalyzer = DependencyGraphAnalyzer(
-            variantName,
-            externalArtifactCollection,
-            classFinder,
-            depsUsageFinder)
 
-        val reporter = DependencyUsageReporter(
-            variantClassHolder,
-            variantDepsHolder,
-            classFinder,
-            depsUsageFinder,
-            graphAnalyzer)
+        val compileClasspathConfig = project.configurations.getAt("${variantName}CompileClasspath")
+        if (compileClasspathConfig.isCanBeResolved) {
+            val graphAnalyzer = DependencyGraphAnalyzer(
+                compileClasspathConfig,
+                depsUsageFinder)
 
-        reporter.writeUnusedDependencies(
-            File(
-                outputDirectory.asFile.get(),
-                "dependenciesReport.json"))
+            val reporter = DependencyUsageReporter(
+                variantClassHolder,
+                variantDepsHolder,
+                classFinder,
+                depsUsageFinder,
+                graphAnalyzer)
 
-        reporter.writeMisconfiguredDependencies(
-            File(
-                outputDirectory.asFile.get(),
-                "apiToImplementation.json"))
+            reporter.writeUnusedDependencies(
+                File(
+                    outputDirectory.asFile.get(),
+                    "dependenciesReport.json"))
+
+            // TODO: Report misconfigured dependencies only for library modules
+            reporter.writeMisconfiguredDependencies(
+                File(
+                    outputDirectory.asFile.get(),
+                    "apiToImplementation.json"))
+        }
     }
 
     class VariantDependenciesHolder(
@@ -105,7 +105,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
         private fun getDependenciesIds(dependencies: Collection<Dependency>?) =
             dependencies?.mapNotNull { buildDependencyId(it) }?.toSet() ?: emptySet()
 
-        private fun buildDependencyId(dependency: Dependency): String? {
+        @VisibleForTesting
+        internal fun buildDependencyId(dependency: Dependency): String? {
             if (dependency.group == null) {
                 return null
             }
@@ -151,149 +152,6 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
         /** Returns classes not exposed in any public method/fields/etc in our variant code. */
         fun getPrivateClasses() = classesByType[CLASS_TYPE.PRIVATE] ?: emptySet()
-    }
-
-    /** Finds where a class is coming from. */
-    class ClassFinder(private val externalArtifactCollection: ArtifactCollection) {
-
-        private val classToDependency: Map<String, String> by lazy {
-            val map = mutableMapOf<String, String>()
-            externalArtifactCollection
-                .filter { it.file.name.endsWith(SdkConstants.DOT_JAR) }
-                .forEach { artifact ->
-                    val classNamesInJar = getClassFilesInJar(artifact.file)
-                    classNamesInJar.forEach { artifactClass ->
-                        map[artifactClass] = artifact.id.componentIdentifier.displayName
-                    }
-                }
-            map
-        }
-
-        /** Returns the dependency that contains {@code className} or null if we can't find it. */
-        fun find(className: String) = classToDependency[className]
-
-        fun findClassesInDependency(dependencyId: String) =
-            classToDependency.filterValues { it == dependencyId }.keys
-
-        private fun getClassFilesInJar(jarFile: File): List<String> {
-            val classes = mutableListOf<String>()
-
-            val zipFile = ZipFile(jarFile)
-
-            val entries = zipFile.entries()
-            while (entries.hasMoreElements()) {
-                val entry = entries.nextElement()
-                if (entry.name.endsWith(SdkConstants.DOT_CLASS)) {
-                    classes.add(entry.name)
-                }
-            }
-
-            return classes
-        }
-    }
-
-    /** Finds used/unused dependencies in our variant. */
-    class DependencyUsageFinder(
-        private val classFinder: ClassFinder,
-        private val variantClasses: VariantClassesHolder,
-        private val variantDependencies: VariantDependenciesHolder) {
-
-        /** All the dependencies required across our code base. */
-        val requiredDependencies: Set<String> =
-            variantClasses.getUsedClasses().mapNotNull { classFinder.find(it) }.toSet()
-
-        /** Dependencies we direct declare and are being used. */
-        val usedDirectDependencies: Set<String> =
-            variantDependencies.all.intersect(requiredDependencies)
-
-        /** Dependencies we direct declare and are not being used. */
-        val unusedDirectDependencies: Set<String> =
-            variantDependencies.all.minus(requiredDependencies)
-
-    }
-
-    /** Find required dependencies that are being included indirectly and would be unreachable if
-     *  we remove unused direct dependencies. */
-    class DependencyGraphAnalyzer(
-        private val variantName: String,
-        private val externalArtifactCollection: ArtifactCollection,
-        private val classFinder: ClassFinder,
-        private val depsUsageFinder: DependencyUsageFinder) {
-
-        private val inferredGraph = computeInferredDependencyGraph(classFinder)
-
-        fun findIndirectRequiredDependencies(): Set<String> {
-            return depsUsageFinder.requiredDependencies.minus(findAccessibleDependencies())
-        }
-
-        private fun findAccessibleDependencies(): Set<String> {
-            val visited = mutableSetOf<String>()
-            val queue = LinkedList<String>()
-            queue.push(variantName)
-
-            while (!queue.isEmpty()) {
-                val module = queue.pop()
-                visited.add(module)
-                inferredGraph[module]?.forEach {
-                    if (!visited.contains(it)) {
-                        queue.push(it)
-                    }
-                }
-            }
-
-            return visited
-        }
-
-        private fun computeInferredDependencyGraph(classFinder: ClassFinder)
-                : Map<String, Set<String>> {
-            val graph = mutableMapOf<String, Set<String>>()
-
-            // Add APP's direct dependencies to the graph
-            graph[variantName] = depsUsageFinder.usedDirectDependencies
-
-            // Build the dependency graph from all transitive artifacts
-            externalArtifactCollection
-                .filter { it.file.name.endsWith(SdkConstants.DOT_JAR) }
-                .forEach { artifact ->
-                    val libraryId = artifact.id.componentIdentifier.displayName
-
-                    graph[libraryId] = classFinder.findClassesInDependency(libraryId)
-                        .mapNotNull { classFinder.find(it) }
-                        .toSet()
-                }
-
-            return graph
-        }
-    }
-
-    class DependencyUsageReporter(
-        private val variantClasses: VariantClassesHolder,
-        private val variantDependencies: VariantDependenciesHolder,
-        private val classFinder: ClassFinder,
-        private val depsUsageFinder: DependencyUsageFinder,
-        private val graphAnalyzer: DependencyGraphAnalyzer) {
-
-        fun writeUnusedDependencies(destinationFile: File) {
-            val report = mapOf(
-                "remove" to depsUsageFinder.unusedDirectDependencies,
-                "add" to graphAnalyzer.findIndirectRequiredDependencies())
-
-            writeToFile(report, destinationFile)
-        }
-
-        fun writeMisconfiguredDependencies(destinationFile: File) {
-            val misconfiguredDependencies = variantClasses.getPrivateClasses()
-                .mapNotNull { classFinder.find(it) }
-                .filter { variantDependencies.api.contains(it) }
-
-            writeToFile(misconfiguredDependencies, destinationFile)
-        }
-
-        private fun writeToFile(output: Any, destinationFile: File) {
-            val gson = GsonBuilder().setPrettyPrinting().create()
-            FileUtils.writeToFile(destinationFile, gson.toJson(output))
-            println(destinationFile.path)
-        }
     }
 
     class CreationAction(val scope: VariantScope) :

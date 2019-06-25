@@ -89,8 +89,7 @@ class DependenciesAnalyzer {
             name: String?,
             signature: String?,
             superName: String?,
-            interfaces: Array<out String>?
-        ) {
+            interfaces: Array<out String>?) {
             if (superName != null) {
                 // superName can be null if what we are analyzing is 'java.lang.Object'
                 val type = getTypeFromPackageName(superName)
@@ -113,8 +112,7 @@ class DependenciesAnalyzer {
             name: String?,
             desc: String?,
             signature: String?,
-            value: Any?
-        ): FieldVisitor {
+            value: Any?): FieldVisitor {
             if (desc != null) {
                 addTypeName(Type.getType(desc), access)
             }
@@ -136,8 +134,7 @@ class DependenciesAnalyzer {
             name: String?,
             desc: String?,
             signature: String?,
-            exceptions: Array<out String>?
-        ): MethodVisitor {
+            exceptions: Array<out String>?): MethodVisitor {
             val methodType = Type.getMethodType(desc)
 
             // Return type
@@ -167,8 +164,7 @@ class DependenciesAnalyzer {
             typeRef: Int,
             typePath: TypePath?,
             desc: String?,
-            visible: Boolean
-        ): AnnotationVisitor {
+            visible: Boolean): AnnotationVisitor {
             addType(Type.getType(desc).className)
             return AnnotationDependenciesVisitor()
         }
@@ -245,8 +241,7 @@ class DependenciesAnalyzer {
                 typeRef: Int,
                 typePath: TypePath?,
                 desc: String?,
-                visible: Boolean
-            ): AnnotationVisitor {
+                visible: Boolean): AnnotationVisitor {
                 addType(Type.getType(desc).className)
                 return AnnotationDependenciesVisitor()
             }
@@ -259,8 +254,7 @@ class DependenciesAnalyzer {
                 signature: String?,
                 start: Label?,
                 end: Label?,
-                index: Int
-            ) {
+                index: Int) {
                 if (desc != null) {
                     addTypeName(Type.getType(desc))
                 }
@@ -277,8 +271,7 @@ class DependenciesAnalyzer {
             override fun visitParameterAnnotation(
                 parameter: Int,
                 desc: String?,
-                visible: Boolean
-            ): AnnotationVisitor {
+                visible: Boolean): AnnotationVisitor {
                 addTypeName(Type.getType(desc))
                 return AnnotationDependenciesVisitor()
             }
@@ -287,8 +280,7 @@ class DependenciesAnalyzer {
                 typeRef: Int,
                 typePath: TypePath?,
                 desc: String?,
-                visible: Boolean
-            ): AnnotationVisitor {
+                visible: Boolean): AnnotationVisitor {
                 addTypeName(Type.getType(desc))
                 return AnnotationDependenciesVisitor()
             }
