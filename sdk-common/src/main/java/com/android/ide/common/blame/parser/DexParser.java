@@ -35,18 +35,6 @@ public class DexParser implements PatternAwareOutputParser {
     public static final String ERROR_INVOKE_DYNAMIC =
             "invalid opcode ba - invokedynamic requires --min-sdk-version >= 26";
 
-    public static final String ENABLE_DESUGARING =
-            "The dependency contains Java 8 bytecode. Please enable desugaring by "
-                    + "adding the following to build.gradle\n"
-                    + "android {\n"
-                    + "    compileOptions {\n"
-                    + "        sourceCompatibility 1.8\n"
-                    + "        targetCompatibility 1.8\n"
-                    + "    }\n"
-                    + "}\n"
-                    + "See https://developer.android.com/studio/write/java8-support.html for "
-                    + "details. Alternatively, increase the minSdkVersion to 26 or above.\n";
-
     public static final String DEX_LIMIT_EXCEEDED_ERROR =
             "The number of method references in a .dex file cannot exceed 64K.\n"
                     + "Learn how to resolve this issue at "
@@ -188,7 +176,7 @@ public class DexParser implements PatternAwareOutputParser {
             messages.add(
                     new Message(
                             Message.Kind.ERROR,
-                            ENABLE_DESUGARING,
+                            getEnableDesugaringHint(26),
                             exceptionWithStacktrace,
                             DEX_TOOL_NAME,
                             ImmutableList.of(SourceFilePosition.UNKNOWN)));
@@ -210,6 +198,21 @@ public class DexParser implements PatternAwareOutputParser {
                             ImmutableList.of(SourceFilePosition.UNKNOWN)));
             return true;
         }
+    }
+
+    public static String getEnableDesugaringHint(int minSdkVersion) {
+        return "The dependency contains Java 8 bytecode. Please enable desugaring by "
+                + "adding the following to build.gradle\n"
+                + "android {\n"
+                + "    compileOptions {\n"
+                + "        sourceCompatibility 1.8\n"
+                + "        targetCompatibility 1.8\n"
+                + "    }\n"
+                + "}\n"
+                + "See https://developer.android.com/studio/write/java8-support.html for "
+                + "details. Alternatively, increase the minSdkVersion to "
+                + minSdkVersion
+                + " or above.\n";
     }
 
     private static void consumeStacktrace(

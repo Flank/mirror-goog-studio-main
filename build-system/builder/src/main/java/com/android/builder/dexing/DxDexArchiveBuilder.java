@@ -137,7 +137,7 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
         msg.append(System.lineSeparator());
         if (t instanceof SimException
                 && t.getMessage().startsWith(DexParser.ERROR_INVOKE_DYNAMIC)) {
-            msg.append(DexParser.ENABLE_DESUGARING);
+            msg.append(DexParser.getEnableDesugaringHint(26));
         }
 
         return new DexArchiveBuilderException(msg.toString(), t);

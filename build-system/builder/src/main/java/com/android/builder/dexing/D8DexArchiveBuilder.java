@@ -40,6 +40,12 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     private static final String INVOKE_CUSTOM =
             "Invoke-customs are only supported starting with Android O";
 
+    private static final String DEFAULT_INTERFACE_METHOD =
+            "Default interface methods are only supported starting with Android N (--min-api 24)";
+
+    private static final String STATIC_INTERFACE_METHOD =
+            "Static interface methods are only supported starting with Android N (--min-api 24)";
+
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
     @NonNull private final ClassFileProviderFactory bootClasspath;
@@ -133,7 +139,15 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
         protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
 
             if (diagnostic.getDiagnosticMessage().startsWith(INVOKE_CUSTOM)) {
-                addHint(DexParser.ENABLE_DESUGARING);
+                addHint(DexParser.getEnableDesugaringHint(26));
+            }
+
+            if (diagnostic.getDiagnosticMessage().startsWith(DEFAULT_INTERFACE_METHOD)) {
+                addHint(DexParser.getEnableDesugaringHint(24));
+            }
+
+            if (diagnostic.getDiagnosticMessage().startsWith(STATIC_INTERFACE_METHOD)) {
+                addHint(DexParser.getEnableDesugaringHint(24));
             }
 
             return super.convertToMessage(kind, diagnostic);
