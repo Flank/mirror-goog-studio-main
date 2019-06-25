@@ -116,8 +116,35 @@ open class ResTableConfig(
     screenLayout2FromScreenConfig2(screenConfig2),
     colorModeFromScreenConfig2(screenConfig2),
     false,
-    localeNumberSystem
-  )
+    localeNumberSystem)
+
+  constructor(other: ResTableConfig): this(
+    other.size,
+    other.mcc,
+    other.mnc,
+    other.language.copyOf(),
+    other.country.copyOf(),
+    other.orientation,
+    other.touchscreen,
+    other.density,
+    other.keyboard,
+    other.navigation,
+    other.inputFlags,
+    other.screenWidth,
+    other.screenHeight,
+    other.sdkVersion,
+    other.minorVersion,
+    other.screenLayout,
+    other.uiMode,
+    other.smallestScreenWidthDp,
+    other.screenWidthDp,
+    other.screenHeightDp,
+    other.localeScript.copyOf(),
+    other.localeVariant.copyOf(),
+    other.screenLayout2,
+    other.colorMode,
+    other.localeScriptWasComputed,
+    other.localeNumberSystem.copyOf())
 
   init {
     Preconditions.checkState(language.size == 2)
@@ -1363,29 +1390,29 @@ open class ResTableConfig(
     // Flags indicating a set of config values.  These flag constants must
     // match the corresponding ones in android.content.pm.ActivityInfo and
     // attrs_manifest.xml.
-    val CONFIG_MCC = ACONFIGURATION_MCC.toInt()
-    val CONFIG_MNC = ACONFIGURATION_MNC.toInt()
-    val CONFIG_LOCALE = ACONFIGURATION_LOCALE.toInt()
-    val CONFIG_TOUCHSCREEN = ACONFIGURATION_TOUCHSCREEN.toInt()
-    val CONFIG_KEYBOARD = ACONFIGURATION_KEYBOARD.toInt()
-    val CONFIG_KEYBOARD_HIDDEN = ACONFIGURATION_KEYBOARD_HIDDEN.toInt()
-    val CONFIG_NAVIGATION = ACONFIGURATION_NAVIGATION.toInt()
-    val CONFIG_ORIENTATION = ACONFIGURATION_ORIENTATION.toInt()
-    val CONFIG_DENSITY = ACONFIGURATION_DENSITY.toInt()
-    val CONFIG_SCREEN_SIZE = ACONFIGURATION_SCREEN_SIZE.toInt()
-    val CONFIG_SMALLEST_SCREEN_SIZE = ACONFIGURATION_SMALLEST_SCREEN_SIZE.toInt()
-    val CONFIG_VERSION = ACONFIGURATION_VERSION.toInt()
-    val CONFIG_SCREEN_LAYOUT = ACONFIGURATION_SCREEN_LAYOUT.toInt()
-    val CONFIG_UI_MODE = ACONFIGURATION_UI_MODE.toInt()
-    val CONFIG_LAYOUTDIR = ACONFIGURATION_LAYOUTDIR.toInt()
-    val CONFIG_SCREEN_ROUND = ACONFIGURATION_SCREEN_ROUND.toInt()
-    val CONFIG_COLOR_MODE = ACONFIGURATION_COLOR_MODE.toInt()
+    const val CONFIG_MCC = ACONFIGURATION_MCC.toInt()
+    const val CONFIG_MNC = ACONFIGURATION_MNC.toInt()
+    const val CONFIG_LOCALE = ACONFIGURATION_LOCALE.toInt()
+    const val CONFIG_TOUCHSCREEN = ACONFIGURATION_TOUCHSCREEN.toInt()
+    const val CONFIG_KEYBOARD = ACONFIGURATION_KEYBOARD.toInt()
+    const val CONFIG_KEYBOARD_HIDDEN = ACONFIGURATION_KEYBOARD_HIDDEN.toInt()
+    const val CONFIG_NAVIGATION = ACONFIGURATION_NAVIGATION.toInt()
+    const val CONFIG_ORIENTATION = ACONFIGURATION_ORIENTATION
+    const val CONFIG_DENSITY = ACONFIGURATION_DENSITY
+    const val CONFIG_SCREEN_SIZE = ACONFIGURATION_SCREEN_SIZE
+    const val CONFIG_SMALLEST_SCREEN_SIZE = ACONFIGURATION_SMALLEST_SCREEN_SIZE
+    const val CONFIG_VERSION = ACONFIGURATION_VERSION
+    const val CONFIG_SCREEN_LAYOUT = ACONFIGURATION_SCREEN_LAYOUT
+    const val CONFIG_UI_MODE = ACONFIGURATION_UI_MODE
+    const val CONFIG_LAYOUTDIR = ACONFIGURATION_LAYOUTDIR
+    const val CONFIG_SCREEN_ROUND = ACONFIGURATION_SCREEN_ROUND
+    const val CONFIG_COLOR_MODE = ACONFIGURATION_COLOR_MODE
 
-    val SCREEN_CONFIG_MIN_SIZE = 32
-    val SCREEN_DP_MIN_SIZE = 36
-    val LOCALE_MIN_SIZE = 48
-    val SCREEN_CONFIG_EXTENSION_MIN_SIZE = 52
-    val NUMBER_SYSTEM_MIN_SIZE = 60
+    const val SCREEN_CONFIG_MIN_SIZE = 32
+    const val SCREEN_DP_MIN_SIZE = 36
+    const val LOCALE_MIN_SIZE = 48
+    const val SCREEN_CONFIG_EXTENSION_MIN_SIZE = 52
+    const val NUMBER_SYSTEM_MIN_SIZE = 60
 
     internal fun langsAreEquivalent(lang1: ByteArray, lang2: ByteArray) =
       when {

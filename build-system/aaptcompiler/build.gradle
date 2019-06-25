@@ -3,6 +3,7 @@ apply plugin: 'clone-artifacts'
 
 dependencies {
     compile project(':base:build-system:aapt2-proto')
+    compile project(':base:layoutlib-api')
 
     compile libs.guava
     compile libs.kotlin_stdlib
