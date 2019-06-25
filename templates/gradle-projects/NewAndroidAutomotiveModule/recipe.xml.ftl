@@ -13,11 +13,11 @@
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
-    <instantiate from="root/test/app_package/ExampleInstrumentedTest.${ktOrJavaExt}.ftl"
+    <instantiate from="root://gradle-projects/NewAndroidModule/root/test/app_package/ExampleInstrumentedTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.${ktOrJavaExt}" />
 
 <#if unitTestsSupported>
-    <instantiate from="root/test/app_package/ExampleUnitTest.${ktOrJavaExt}.ftl"
+    <instantiate from="root://gradle-projects/NewAndroidModule/root/test/app_package/ExampleUnitTest.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.${ktOrJavaExt}" />
     <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
 </#if>

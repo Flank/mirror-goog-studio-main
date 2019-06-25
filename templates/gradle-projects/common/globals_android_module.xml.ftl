@@ -5,4 +5,7 @@
     <global id="nativeSrcOut" value="${escapeXmlAttribute(projectOut)}/src/main/cpp" />
     <global id="manifestOut" value="${manifestDir}" />
     <global id="resOut" value="${resDir}" />
+ 
+    <#assign useAndroidX=isAndroidxEnabled()>
+    <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
 </globals>
