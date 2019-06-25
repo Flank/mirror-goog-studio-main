@@ -124,7 +124,8 @@ data class CxxProjectModelData(
     override val isCmakeBuildCohabitationEnabled: Boolean = false,
     override val isNativeCompilerSettingsCacheEnabled: Boolean = false,
     override val rootBuildGradleFolder: File = File("."),
-    override val sdkFolder: File = File(".")
+    override val sdkFolder: File = File("."),
+    override val chromeTraceJsonFolder: File? = null
 ) : CxxProjectModel
 
 private fun CxxProjectModel.toData() = CxxProjectModelData(

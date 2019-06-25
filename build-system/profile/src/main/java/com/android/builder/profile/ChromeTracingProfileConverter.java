@@ -19,6 +19,7 @@ package com.android.builder.profile;
 import com.android.annotations.NonNull;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
+import com.android.utils.PathUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.stream.JsonWriter;
@@ -29,6 +30,8 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +42,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Utility for converting profile data to chrome tracing format.
@@ -46,6 +50,23 @@ import java.util.stream.Collectors;
  * Produced files can be opened in chrome://tracing
  */
 public class ChromeTracingProfileConverter {
+
+    /**
+     * Name of directory containing extra Chrome trace files that should be merged into the final
+     * JSON trace file. The content of this directory should be some gzipped JSON files following
+     * the Chrome trace format
+     * (https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU).
+     *
+     * <p>Other parts of AGP can output trace files into "PROFILE_DIRECTORY/extra_chrome_trace" (see
+     * https://android.googlesource.com/platform/tools/base/+/studio-master-dev/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/profile/ProfilerInitializer.java
+     * ) and they will all be picked up by {@link ChromeTracingProfileConverter}. One should use the
+     * helper data class {@link ChromeTraceJson} to generate such a JSON file to ensure
+     * compatibility with the merger.
+     *
+     * <p>The directory is deleted at end of every build cycle to save disk space and prevent stale
+     * result to tamper future builds.
+     */
+    public static final String EXTRA_CHROME_TRACE_DIRECTORY = "extra_chrome_trace";
 
     public static void main(String[] args)  {
         try {
@@ -110,7 +131,7 @@ public class ChromeTracingProfileConverter {
         if (fileName.endsWith(".rawproto")) {
             fileName = fileName.substring(0, fileName.length() - ".rawproto".length());
         }
-        return protoFile.getParent().resolve(fileName + ".json");
+        return protoFile.getParent().resolve(fileName + ".json.gz");
     }
 
     public static void toJson(@NonNull Path protoFile) throws IOException, AbnormalExitException {
@@ -132,7 +153,11 @@ public class ChromeTracingProfileConverter {
                 profile.getProjectList().stream()
                         .collect(Collectors.toMap(GradleBuildProject::getId, ProjectHolder::new));
 
-        try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(out))) {
+        try (JsonWriter writer =
+                new JsonWriter(
+                        new OutputStreamWriter(
+                                new GZIPOutputStream(Files.newOutputStream(out)),
+                                StandardCharsets.UTF_8))) {
             writer.beginObject();
             writer.name("traceEvents");
             writer.beginArray();
@@ -228,6 +253,9 @@ public class ChromeTracingProfileConverter {
                         .name("dur").value(duration == 0 ? 100 : duration)
                         .endObject();
             }
+            Path extraChromeTraceDir = protoFile.getParent().resolve(EXTRA_CHROME_TRACE_DIRECTORY);
+            MergeExtraTraceFilesKt.mergeExtraTraceFiles(2, writer, extraChromeTraceDir);
+            PathUtils.deleteRecursivelyIfExists(extraChromeTraceDir);
             writer.endArray();
             writeStackFrames(writer, profile);
             writer.endObject();

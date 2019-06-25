@@ -19,9 +19,11 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.cxx.configure.CXX_DEFAULT_CONFIGURATION_SUBFOLDER
 import com.android.build.gradle.internal.cxx.configure.CXX_LOCAL_PROPERTIES_CACHE_DIR
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import com.android.build.gradle.internal.profile.ProfilerInitializer
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
+import com.android.builder.profile.ChromeTracingProfileConverter
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -62,5 +64,14 @@ fun createCxxProjectModel(global : GlobalScope) : CxxProjectModel {
             localPropertyFile(CXX_LOCAL_PROPERTIES_CACHE_DIR) ?:
             join(global.project.rootDir, CXX_DEFAULT_CONFIGURATION_SUBFOLDER)
         }
+        override val chromeTraceJsonFolder: File?
+            get() {
+                if (!option(BooleanOption.ENABLE_PROFILE_JSON)) return null
+                val gradle = global.project.gradle
+                val profileDir: File = option(StringOption.PROFILE_OUTPUT_DIR)
+                    ?.let { gradle.rootProject.file(it) }
+                    ?: gradle.rootProject.buildDir.resolve(ProfilerInitializer.PROFILE_DIRECTORY)
+                return profileDir.resolve(ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY)
+            }
     }
 }

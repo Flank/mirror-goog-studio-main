@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.NativeAndroidProject
@@ -41,7 +42,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import java.io.File
-import java.util.zip.ZipFile
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.util.zip.GZIPInputStream
 
 /** Assemble tests for Cmake.  */
 @RunWith(Parameterized::class)
@@ -252,28 +255,16 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
     }
 
     @Test
-    fun generateAttributionFile() {
+    fun generatedChromeTraceFileContainsNativeBuildInformation() {
         // Disable this test for Gradle since it somehow fails if multiple tests are executed
         // at the same time. See b/133222337
         Assume.assumeTrue(TestUtils.runningFromBazel())
-        project.execute("clean", "assembleDebug")
-        val directories = join(project.testDir, ".cxx", "attribution").listFiles()
-        assertThat(directories!!.size).isEqualTo(1)
-        val attributionFiles = directories[0].listFiles().sorted()
-        assertThat(attributionFiles.size).isEqualTo(2)
-        val traceFile = attributionFiles[0]
-        assertThat(traceFile.name).matches("ninja_build_log_\\d+\\.json.gz")
-        val attributionFile = attributionFiles[1]
-        assertThat(attributionFile.name).matches("ninja_build_log_\\d+\\.zip")
-        ZipFile(attributionFile).use { z ->
-            assertThat(
-                z.entries()
-                    .toList()
-                    .map { it.name })
-                // It's expected that there is no module name because the Gradle test fixture
-                // sets up project in non-standard manner: there is only one top level nameless
-                // module
-                .containsExactly("/debug/armeabi-v7a", "/debug/x86_64")
-        }
+        project.executor()
+            .with(BooleanOption.ENABLE_PROFILE_JSON, true)
+            .run("clean", "assembleDebug")
+        val traceFile = join(project.testDir, "build", "android-profile").listFiles()!!
+            .first { it.name.endsWith("json.gz") }
+        Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
+            .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
     }
 }

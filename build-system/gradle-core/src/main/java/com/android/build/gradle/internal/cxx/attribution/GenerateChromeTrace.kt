@@ -17,17 +17,14 @@
 package com.android.build.gradle.internal.cxx.attribution
 
 import com.android.build.gradle.internal.cxx.logging.warnln
+import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.builder.profile.ChromeTraceJson
+import com.android.builder.profile.TraceEventJson
 import com.google.common.base.Throwables
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.LongSerializationPolicy
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
-import java.util.zip.GZIPOutputStream
 import java.util.zip.ZipFile
 import java.util.zip.ZipInputStream
 
@@ -38,30 +35,74 @@ fun generateChromeTrace(
     file: File,
     outputFile: File = File(file.parentFile, file.nameWithoutExtension + ".json.gz")
 ) {
-    try {
-        val allAttributions = readZipContent(file)
-        val allEvents = mutableListOf<TraceEventJson>()
-        allAttributions.entries
-            .sortedBy { (_, tasks) -> tasks.firstOrNull()?.startTimeMs ?: 0 }
-            .forEachIndexed { pid, (key, tasksForAnAbi) ->
-                allEvents.addProcessNameMetaEvent(pid, key)
-                squashTasks(tasksForAnAbi).forEachIndexed { tid, tasks ->
-                    allEvents.addThreadNameMetaEvent(pid, tid)
-                    tasks.forEach { task ->
-                        allEvents.addTaskEvent(pid, tid, task)
-                    }
-                }
-            }
-        ChromeTraceJson(allEvents).storeToFile(outputFile)
+    val allAttributions = try {
+        readZipContent(file)
     } catch (e: Throwable) {
         warnln(
-            "Cannot output native build attribution in Chrome trace format. " +
+            "Cannot parse native build attribution zip file. " +
+                    "Exception: ${Throwables.getStackTraceAsString(e)}"
+        )
+        return
+    }
+    generateChromeTrace(outputFile, allAttributions)
+}
+
+fun generateChromeTrace(
+    abiModel: CxxAbiModel,
+    ninjaLogFile: File,
+    linesToSkip: Int,
+    buildStartTime: Long,
+    extraChromeTraceDir: File
+) {
+    val attributionKey = AttributionKey.fromAbi(abiModel)
+    try {
+        extraChromeTraceDir.mkdirs()
+        val allTasks = mutableListOf<AttributionTask>()
+        ninjaLogFile.useLines(StandardCharsets.UTF_8) { lines ->
+            lines.drop(linesToSkip).forEach { line ->
+                if (!line.startsWith("# ")) allTasks.collectTask(line, buildStartTime)
+            }
+        }
+
+        generateChromeTrace(
+            extraChromeTraceDir.resolve(
+                "external_native_build-$buildStartTime-${attributionKey.filename}.json.gz"
+            ),
+            mapOf(attributionKey to allTasks)
+        )
+    } catch (e: Throwable) {
+        warnln(
+            "Cannot generate Chrome trace file for $attributionKey. " +
                     "Exception: ${Throwables.getStackTraceAsString(e)}"
         )
     }
 }
 
-private fun readZipContent(file: File): MutableMap<AttributionKey, List<AttributionTask>> {
+fun generateChromeTrace(
+    outputFile: File,
+    allAttributions: Map<AttributionKey, List<AttributionTask>>
+) = try {
+    val allEvents = mutableListOf<TraceEventJson>()
+    allAttributions.entries
+        .sortedBy { (_, tasks) -> tasks.firstOrNull()?.startTimeMs ?: 0 }
+        .forEachIndexed { pid, (key, tasksForAnAbi) ->
+            allEvents.addProcessNameMetaEvent(pid, key)
+            squashTasks(tasksForAnAbi).forEachIndexed { tid, tasks ->
+                allEvents.addThreadNameMetaEvent(pid, tid)
+                tasks.forEach { task ->
+                    allEvents.addTaskEvent(pid, tid, task)
+                }
+            }
+        }
+    ChromeTraceJson(allEvents).storeToFile(outputFile)
+} catch (e: Throwable) {
+    warnln(
+        "Cannot output native build attribution in Chrome trace format. " +
+                "Exception: ${Throwables.getStackTraceAsString(e)}"
+    )
+}
+
+private fun readZipContent(file: File): Map<AttributionKey, List<AttributionTask>> {
     val allAttributions = mutableMapOf<AttributionKey, List<AttributionTask>>()
     val zipFile = ZipFile(file)
     ZipInputStream(FileInputStream(file)).use {
@@ -80,20 +121,7 @@ private fun readZipContent(file: File): MutableMap<AttributionKey, List<Attribut
                                     .takeWhile { c -> Character.isDigit(c) }
                                     .toLong()
                             } else {
-                                val (start, end, _, output) = line.split('\t')
-                                val outputFile = File(output)
-                                add(
-                                    AttributionTask(
-                                        outputFile.name,
-                                        when (outputFile.extension) {
-                                            "o" -> OperationType.COMPILE
-                                            else -> OperationType.LINK
-                                        },
-                                        start.toLong() + startingTimestamp,
-                                        end.toLong() + startingTimestamp,
-                                        output
-                                    )
-                                )
+                                collectTask(line, startingTimestamp)
                             }
                         }
                     }
@@ -101,6 +129,26 @@ private fun readZipContent(file: File): MutableMap<AttributionKey, List<Attribut
         }
     }
     return allAttributions
+}
+
+private fun MutableList<AttributionTask>.collectTask(
+    line: String,
+    startingTimestamp: Long
+) {
+    val (start, end, _, output) = line.split('\t')
+    val outputFile = File(output)
+    add(
+        AttributionTask(
+            outputFile.name,
+            when (outputFile.extension) {
+                "o" -> OperationType.COMPILE
+                else -> OperationType.LINK
+            },
+            start.toLong() + startingTimestamp,
+            end.toLong() + startingTimestamp,
+            output
+        )
+    )
 }
 
 /**
@@ -177,48 +225,38 @@ private fun squashTasks(tasks: List<AttributionTask>): List<List<AttributionTask
     return result
 }
 
-private data class AttributionKey(val module: String, val variant: String, val abi: String) {
+private val illegalChars = Regex("[:\\\\/\"'|?*<>]")
+
+data class AttributionKey(val module: String, val variant: String, val abi: String) {
     override fun toString(): String = "$module / $variant / $abi"
+    val filename: String
+        get() = "${module.replace(illegalChars, "_")}-${variant.replace(illegalChars, "_")}-$abi"
+
+    companion object {
+        fun fromAbi(abi: CxxAbiModel): AttributionKey = AttributionKey(
+            abi.variant.module.gradleModulePathName,
+            abi.variant.variantName,
+            abi.abi.tag
+        )
+    }
 }
 
-private enum class OperationType {
+enum class OperationType {
     COMPILE, LINK;
 
     val colorName: String
         get() = when (this) {
+            // For all possible colors, see
+            // https://github.com/catapult-project/catapult/blob/master/tracing/tracing/base/color_scheme.html
             COMPILE -> "thread_state_runnable"
             LINK -> "thread_state_running"
         }
 }
 
-private data class AttributionTask(
+data class AttributionTask(
     val name: String,
     val type: OperationType,
     val startTimeMs: Long,
     val endTimeMs: Long,
     val output: String
 )
-
-/**
- * A POJO corresponding to the JSON format used by Chrome. See
- * https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/edit#heading=h.uxpopqvbjezh
- */
-private data class TraceEventJson(
-    val pid: Int,
-    val tid: Int,
-    val ts: Long,
-    val ph: String,
-    val cat: String? = null,
-    val name: String? = null,
-    val cname: String? = null,
-    val args: Map<String, String>? = null
-)
-
-private data class ChromeTraceJson(val traceEvents: List<TraceEventJson>) {
-    fun storeToFile(file: File) =
-        OutputStreamWriter(GZIPOutputStream(FileOutputStream(file)), StandardCharsets.UTF_8)
-            .use { gson.toJson(this, it) }
-}
-
-private val gson: Gson =
-    GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING).create()

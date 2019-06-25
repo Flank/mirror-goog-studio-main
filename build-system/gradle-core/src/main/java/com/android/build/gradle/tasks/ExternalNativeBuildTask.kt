@@ -16,27 +16,19 @@
 
 package com.android.build.gradle.tasks
 
-import com.android.build.gradle.internal.cxx.attribution.collectNinjaLogs
-import com.android.build.gradle.internal.cxx.logging.infoln
-import com.android.build.gradle.internal.cxx.logging.warnln
-import com.android.build.gradle.internal.cxx.model.getCxxBuildModel
-import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
-import com.android.build.gradle.internal.cxx.services.runWhenBuildFinishes
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
-import com.google.common.base.Preconditions.checkElementIndex
-import com.google.common.base.Preconditions.checkNotNull
-import com.google.common.base.Preconditions.checkState
 import com.android.build.gradle.internal.core.Abi
-import com.android.build.gradle.internal.cxx.attribution.*
+import com.android.build.gradle.internal.cxx.attribution.generateChromeTrace
 import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons
 import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini
 import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini
 import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnvironment
-import com.android.build.gradle.internal.cxx.logging.errorln
-import com.android.build.gradle.internal.cxx.model.CxxBuildModel
+import com.android.build.gradle.internal.cxx.logging.infoln
+import com.android.build.gradle.internal.cxx.model.ninjaLogFile
+import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
 import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
@@ -44,20 +36,23 @@ import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.process.BuildCommandException
 import com.android.ide.common.process.ProcessInfoBuilder
 import com.android.utils.FileUtils
-import com.android.utils.*
+import com.android.utils.tokenizeCommandLineToEscaped
 import com.google.common.base.Joiner
+import com.google.common.base.Preconditions.checkElementIndex
+import com.google.common.base.Preconditions.checkNotNull
+import com.google.common.base.Preconditions.checkState
 import com.google.common.base.Strings
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import com.google.common.io.Files
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
-import java.io.File
-import java.io.IOException
-import java.util.function.Supplier
 import org.gradle.api.GradleException
 import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
+import java.io.IOException
+import java.time.Clock
 import kotlin.streams.toList
 
 /**
@@ -70,7 +65,6 @@ import kotlin.streams.toList
  */
 open class ExternalNativeBuildTask : NonIncrementalTask() {
 
-    private lateinit var cxxBuildModel: Supplier<CxxBuildModel>
     private lateinit var evalIssueReporter: EvalIssueReporter
     private lateinit var generator: Provider<ExternalNativeJsonGenerator>
 
@@ -384,29 +378,27 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
                     String.format("Build $logFileSuffix"))
             }
 
-            if (generator.get().nativeBuildSystem === NativeBuildSystem.CMAKE) {
-                val cxxAbiModelOptional = generator
-                    .get()
-                    .abis
-                    .stream()
-                    .filter { abiModel -> abiModel.abi.tag == abiName }
-                    .findFirst()
-                if (cxxAbiModelOptional.isPresent) {
-                    val buildModel = cxxBuildModel.get()
-                    appendTimestampAndBuildIdToNinjaLog(buildModel, cxxAbiModelOptional.get())
-                    buildModel.runWhenBuildFinishes(
-                        "CollectNinjaLogs"
-                    ) {
-                        try {
-                            collectNinjaLogs(buildModel)
-                        } catch (e: IOException) {
-                            warnln("Cannot collect ninja logs for build attribution.")
+            val generateChromeTraces =
+                generator.get().takeIf { it.nativeBuildSystem == NativeBuildSystem.CMAKE }
+                    ?.abis
+                    ?.firstOrNull { it.abi.tag == abiName }
+                    ?.let { abiModel ->
+                        abiModel.variant.module.project.chromeTraceJsonFolder?.let { traceFolder ->
+                            val ninjaFile = abiModel.ninjaLogFile
+                            val lineToSkip =
+                                if (ninjaFile.canRead()) ninjaFile.readLines().size else 0
+                            val buildStartTime = Clock.systemUTC().millis()
+                            fun() {
+                                generateChromeTrace(
+                                    abiModel,
+                                    ninjaFile,
+                                    lineToSkip,
+                                    buildStartTime,
+                                    traceFolder
+                                )
+                            }
                         }
                     }
-                } else {
-                    warnln("Cannot locate ABI ${abiName!!} for generating build attribution metrics.")
-                }
-            }
 
             createProcessOutputJunction(
                 buildStep.outputFolder,
@@ -419,6 +411,8 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
                 .logStderrToInfo()
                 .logStdoutToInfo()
                 .execute()
+
+            generateChromeTraces?.invoke()
         }
     }
 
@@ -447,7 +441,6 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
 
             val scope = variantScope
 
-            task.cxxBuildModel = Supplier { getCxxBuildModel(scope.globalScope.project.gradle) }
             task.dependsOn(
                 generateTask, scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, JNI)
             )

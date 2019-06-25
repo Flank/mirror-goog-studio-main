@@ -22,9 +22,12 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.profile.ChromeTracingProfileConverter;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
+import com.android.utils.PathUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +36,8 @@ import java.util.Objects;
 import org.gradle.BuildAdapter;
 import org.gradle.api.Project;
 import org.gradle.api.invocation.Gradle;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.initialization.BuildCompletionListener;
 
 /**
@@ -43,7 +48,7 @@ import org.gradle.initialization.BuildCompletionListener;
  */
 public final class ProfilerInitializer {
 
-    private static final String PROFILE_DIRECTORY = "android-profile";
+    public static final String PROFILE_DIRECTORY = "android-profile";
 
     private static final DateTimeFormatter PROFILE_FILE_NAME =
             DateTimeFormatter.ofPattern("'profile-'YYYY-MM-dd-HH-mm-ss-SSS'.rawproto'", Locale.US);
@@ -97,6 +102,7 @@ public final class ProfilerInitializer {
     private static final class ProfileShutdownListener extends BuildAdapter
             implements BuildCompletionListener {
 
+        private static final Logger logger = Logging.getLogger(ProfileShutdownListener.class);
         private final Gradle gradle;
         @Nullable private String profileDirProperty;
         @Nullable private Path profileDir = null;
@@ -120,6 +126,22 @@ public final class ProfilerInitializer {
                 // If profile json is enabled but no directory is given for the profile outputs, default to build/android-profile
                 this.profileDir =
                         gradle.getRootProject().getBuildDir().toPath().resolve(PROFILE_DIRECTORY);
+            }
+            if (this.profileDir != null) {
+                // Proactively delete the folder containing extra chrome traces to be merged.
+                Path extraChromeTracePath =
+                        this.profileDir.resolve(
+                                ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY);
+                try {
+                    PathUtils.deleteRecursivelyIfExists(extraChromeTracePath);
+                } catch (IOException e) {
+                    logger.warn(
+                            String.format(
+                                    "Cannot extra Chrome trace directory %s. The generated Chrome trace "
+                                            + "file may contain stale data.",
+                                    extraChromeTracePath),
+                            e);
+                }
             }
         }
 

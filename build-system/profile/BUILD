@@ -1,8 +1,8 @@
-load("//tools/base/bazel:coverage.bzl", "coverage_java_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
-java_library(
+kotlin_library(
     name = "profile",
-    srcs = glob(["src/main/java/**"]),
+    srcs = ["src/main/java"],
     visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
@@ -13,12 +13,14 @@ java_library(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
 
-coverage_java_test(
+kotlin_test(
     name = "tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = ["src/test/java"],
+    coverage = True,
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],

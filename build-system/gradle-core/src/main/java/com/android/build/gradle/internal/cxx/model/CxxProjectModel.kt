@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.cxx.model
 
-import com.android.Version
 import com.android.utils.FileUtils.join
 import java.io.File
 
@@ -35,17 +34,6 @@ interface CxxProjectModel {
      *   ex, source-root/.cxx
      */
     val cxxFolder: File get() = join(rootBuildGradleFolder, ".cxx")
-
-    /**
-     * Folder for storing build attribution data for the entire project
-     *   ex, source-root/.cxx/attribution
-     */
-    val buildAttributionFolder: File
-        get() = join(
-            cxxFolder,
-            "attribution",
-            Version.ANDROID_GRADLE_PLUGIN_VERSION
-        )
 
     /**
      * Location of project-wide compiler settings cache
@@ -80,4 +68,11 @@ interface CxxProjectModel {
      * When true, CMake Build Cohabitation is turned on.
      */
     val isCmakeBuildCohabitationEnabled: Boolean
+
+    /**
+     * Directory containing all build attribution file in Chrome trace format. See
+     * [com.android.builder.profile.ChromeTracingProfileConverter.EXTRA_CHROME_TRACE_DIRECTORY].
+     * If null, it means user has not requested generation of build attribution file.
+     */
+    val chromeTraceJsonFolder: File?
 }
