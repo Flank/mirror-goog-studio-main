@@ -14,58 +14,55 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.application
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.PathSubject.assertThat;
-
-import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.utils.FileUtils;
-import java.io.File;
-import java.io.IOException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.utils.FileUtils
+import java.io.File
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 /**
  * Checks that we obey project.buildDir in the DSL.
  *
- * <p>This means we don't read it too early, before the user had a chance to change it.
+ *
+ * This means we don't read it too early, before the user had a chance to change it.
  */
-public class BuildDirTest {
+class BuildDirTest {
 
-    @Rule
-    public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-                    .create();
+    @get:Rule
+    var project = GradleTestProject.builder()
+        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+        .create()
 
-    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @get:Rule
+    var temporaryFolder = TemporaryFolder()
 
     @Test
-    public void buildDirIsObeyed() throws Exception {
-        File buildDir = changeBuildDir();
+    fun buildDirIsObeyed() {
+        val buildDir = changeBuildDir()
 
-        project.execute("assembleDebug");
+        project.execute("assembleDebug")
 
-        assertThat(buildDir).isDirectory();
-        assertThat(project.file("build")).doesNotExist();
+        assertThat(buildDir).isDirectory()
+        assertThat(project.file("build")).doesNotExist()
     }
 
-    @NonNull
-    private File changeBuildDir() throws IOException {
-        File buildDir = temporaryFolder.newFolder();
-        FileUtils.deletePath(buildDir);
-        assertThat(buildDir).doesNotExist();
+    private fun changeBuildDir(): File {
+        val buildDir = temporaryFolder.newFolder()
+        FileUtils.deletePath(buildDir)
+        assertThat(buildDir).doesNotExist()
+
+        val newBuildDir = buildDir.absolutePath.replace(File.separatorChar, '/')
 
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                String.format(
-                        "project.buildDir = '%s'",
-                        buildDir.getAbsolutePath().replace(File.separatorChar, '/')));
-        return buildDir;
+            project.buildFile,
+            "project.buildDir = '$newBuildDir'"
+        )
+        return buildDir
     }
 }
