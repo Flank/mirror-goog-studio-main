@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -95,7 +94,7 @@ abstract class ProcessAndroidAppResourcesTask
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory abstract val rClassSource: DirectoryProperty
-    @get:OutputFile abstract val resourceApUnderscore: RegularFileProperty
+    @get:OutputFile abstract val resourceApUnderscoreDirectory: DirectoryProperty
 
     @get:Internal lateinit var outputScope: OutputScope private set
 
@@ -115,7 +114,7 @@ abstract class ProcessAndroidAppResourcesTask
                 staticLibraryDependencies = staticLibraries.build(),
                 imports = ImmutableList.copyOf(sharedLibraryDependencies.asIterable()),
                 sourceOutputDir = rClassSource.get().asFile,
-                resourceOutputApk = resourceApUnderscore.get().asFile,
+                resourceOutputApk = resourceApUnderscoreDirectory.get().file("res.apk").asFile,
                 variantType = VariantTypeImpl.LIBRARY,
                 intermediateDir = aaptIntermediateDir)
 
@@ -147,15 +146,11 @@ abstract class ProcessAndroidAppResourcesTask
                 ProcessAndroidAppResourcesTask::rClassSource,
                 fileName = "out"
             )
-            // TODO: This is not correct, other location expect a directory for this type.
-            variantScope.artifacts.producesFile(
+            variantScope.artifacts.producesDir(
                 InternalArtifactType.PROCESSED_RES,
                 BuildArtifactsHolder.OperationType.INITIAL,
                 taskProvider,
-                ProcessAndroidAppResourcesTask::resourceApUnderscore,
-                "res.apk"
-
-            )
+               ProcessAndroidAppResourcesTask::resourceApUnderscoreDirectory)
         }
 
         override fun configure(task: ProcessAndroidAppResourcesTask) {
