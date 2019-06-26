@@ -30,6 +30,7 @@ import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getBuild
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonGenerationLoggingRecordFile;
 import static com.android.build.gradle.internal.cxx.model.GetCxxBuildModelKt.getCxxBuildModel;
+import static com.android.build.gradle.internal.cxx.services.CxxBuildModelListenerServiceKt.executeListenersOnceBeforeJsonGeneration;
 import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelServiceKt.registerAbi;
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
 import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
@@ -94,14 +95,19 @@ import org.gradle.api.tasks.PathSensitivity;
  * Base class for generation of native JSON.
  */
 public abstract class ExternalNativeJsonGenerator {
+
+    @NonNull protected final CxxBuildModel build;
     @NonNull protected final CxxVariantModel variant;
     @NonNull protected final List<CxxAbiModel> abis;
     @NonNull protected final GradleBuildVariant.Builder stats;
 
+
     ExternalNativeJsonGenerator(
+            @NonNull CxxBuildModel build,
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
             @NonNull GradleBuildVariant.Builder stats) {
+        this.build = build;
         this.variant = variant;
         this.abis = abis;
         this.stats = stats;
@@ -238,6 +244,10 @@ public abstract class ExternalNativeJsonGenerator {
                         abi.getAbiPlatformVersion(),
                         abi.getAbi().getTag(),
                         abi.getAbiPlatformVersion());
+                if (!executeListenersOnceBeforeJsonGeneration(build)) {
+                    infoln("Errors seen in validation before JSON generation started");
+                    return;
+                }
                 ProcessInfoBuilder processBuilder = getProcessBuilder(abi);
 
                 // See whether the current build command matches a previously written build command.
@@ -447,6 +457,8 @@ public abstract class ExternalNativeJsonGenerator {
                             createCxxAbiModel(
                                     variant, abi, scope.getGlobalScope(), scope.getVariantData()));
             abis.add(model);
+
+            // Register this ABI with the complete build model.
             registerAbi(cxxBuildModel, model);
 
             // Register callback to write Json after generation finishes.
@@ -461,13 +473,14 @@ public abstract class ExternalNativeJsonGenerator {
 
         switch (module.getBuildSystem()) {
             case NDK_BUILD:
-                return new NdkBuildExternalNativeJsonGenerator(variant, abis, stats);
+                return new NdkBuildExternalNativeJsonGenerator(cxxBuildModel, variant, abis, stats);
             case CMAKE:
                 CxxCmakeModuleModel cmake = Objects.requireNonNull(variant.getModule().getCmake());
                 Revision cmakeRevision = cmake.getMinimumCmakeVersion();
                 stats.setNativeCmakeVersion(cmakeRevision.toString());
                 if (isCmakeForkVersion(cmakeRevision)) {
-                    return new CmakeAndroidNinjaExternalNativeJsonGenerator(variant, abis, stats);
+                    return new CmakeAndroidNinjaExternalNativeJsonGenerator(
+                            cxxBuildModel, variant, abis, stats);
                 }
 
                 if (cmakeRevision.getMajor() < 3
@@ -478,7 +491,8 @@ public abstract class ExternalNativeJsonGenerator {
                                     + ". Try 3.7.0 or later.");
                 }
 
-                return new CmakeServerExternalNativeJsonGenerator(variant, abis, stats);
+                return new CmakeServerExternalNativeJsonGenerator(
+                        cxxBuildModel, variant, abis, stats);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }

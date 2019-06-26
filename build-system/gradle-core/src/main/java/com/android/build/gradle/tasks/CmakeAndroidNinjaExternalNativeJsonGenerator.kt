@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks
 
 import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
@@ -25,12 +26,12 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant
  * This strategy uses the older custom CMake (version 3.6) that directly generates the JSON file as
  * part of project configuration.
  */
-internal class CmakeAndroidNinjaExternalNativeJsonGenerator
-    (
+internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
+    build: CxxBuildModel,
     variant: CxxVariantModel,
     abis: List<CxxAbiModel>,
     stats: GradleBuildVariant.Builder
-) : CmakeExternalNativeJsonGenerator(variant, abis, stats) {
+) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
 
     override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
         val logPrefix = "${variant.variantName}|${abi.abi.tag} :"

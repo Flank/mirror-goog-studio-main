@@ -45,6 +45,7 @@ import com.android.builder.model.ProductFlavor
 import com.android.repository.Revision
 import com.android.utils.FileUtils.join
 import org.gradle.api.Project
+import org.gradle.api.invocation.Gradle
 import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
@@ -173,6 +174,11 @@ open class BasicModuleModelMock {
         CmakeLocator::class.java,
         throwUnmocked
     )
+
+    val gradle = mock(
+        Gradle::class.java
+    )
+    val build = getCxxBuildModel(gradle)
     private fun <T> any(): T {
         Mockito.any<T>()
         return uninitialized()
@@ -240,6 +246,7 @@ open class BasicModuleModelMock {
     init {
         val ndkFolder = join(sdkDir, "ndk", ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)
         val meta = join(ndkFolder, "meta")
+        setCxxBuildModel(null)
         meta.mkdirs()
         File(meta, "platforms.json").writeText(platformsJson)
         File(meta, "abis.json").writeText(abisJson)
@@ -305,6 +312,8 @@ open class BasicModuleModelMock {
         doReturn(Revision.parseRevision(ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION)).`when`(ndkInstallStatus.getOrThrow()).revision
         doReturn(join(sdkDir, "cmake", defaultCmakeVersion.toString())).`when`(cmakeFinder)
             .findCmakePath(any(), any(), any(), any())
+
+        doReturn(null).`when`(gradle).parent
 
         mockModule("app1")
     }

@@ -26,6 +26,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.cxx.configure.CommandLineArgument;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel;
 import com.android.build.gradle.internal.cxx.model.CxxCmakeModuleModel;
 import com.android.build.gradle.internal.cxx.model.CxxModuleModelKt;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
@@ -55,10 +56,11 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     @NonNull protected final CxxCmakeModuleModel cmake;
 
     CmakeExternalNativeJsonGenerator(
+            @NonNull CxxBuildModel build,
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, stats);
+        super(build, variant, abis, stats);
         this.stats.setNativeBuildSystemType(GradleNativeAndroidModule.NativeBuildSystemType.CMAKE);
         this.cmake = Objects.requireNonNull(variant.getModule().getCmake());
 
@@ -111,7 +113,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         List<CommandLineArgument> arguments = Lists.newArrayList();
         arguments.addAll(getFinalCmakeCommandLineArguments(abi));
         builder.addArgs(convertCmakeCommandLineArgumentsToStringList(arguments));
-
         return builder;
     }
 

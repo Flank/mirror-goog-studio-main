@@ -66,6 +66,7 @@ import com.android.build.gradle.internal.cxx.json.StringTable;
 import com.android.build.gradle.internal.cxx.logging.PassThroughPrintWriterLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.logging.ThreadLoggingEnvironment;
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel;
+import com.android.build.gradle.internal.cxx.model.CxxBuildModel;
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel;
 import com.android.ide.common.process.ProcessException;
 import com.android.repository.Revision;
@@ -102,10 +103,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
 
     public CmakeServerExternalNativeJsonGenerator(
+            @NonNull CxxBuildModel build,
             @NonNull CxxVariantModel variant,
             @NonNull List<CxxAbiModel> abis,
             @NonNull GradleBuildVariant.Builder stats) {
-        super(variant, abis, stats);
+        super(build, variant, abis, stats);
     }
 
     /**

@@ -18,8 +18,20 @@ package com.android.build.gradle.internal.cxx.services
 
 import com.android.build.gradle.internal.scope.GlobalScope
 
+
 /**
- * Create the default service registry.
+ * Create the default service registry for build model.
+ */
+fun createBuildModelServiceRegistry() : CxxServiceRegistry {
+    val registry = CxxServiceRegistryBuilder()
+    createCompleteModelService(registry)
+    createFinishListenerService(registry)
+    createBuildModelListenerService(registry)
+    return registry.build()
+}
+
+/**
+ * Create the default module-level service registry.
  */
 fun createDefaultServiceRegistry(global : GlobalScope) : CxxServiceRegistry {
     val registry = CxxServiceRegistryBuilder()

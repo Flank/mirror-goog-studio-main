@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.cxx.model
 
 import com.android.build.gradle.internal.cxx.services.createBuildModelServiceRegistry
 import com.android.build.gradle.internal.cxx.services.runFinishListeners
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.BuildListener
 import org.gradle.BuildResult
 import org.gradle.api.initialization.Settings
@@ -38,7 +39,7 @@ private object GetCxxBuildModelLock
  */
 fun getCxxBuildModel(gradle: Gradle): CxxBuildModel = synchronized(GetCxxBuildModelLock) {
     if (buildModel == null) {
-        buildModel = object : CxxBuildModel {
+        val model = object : CxxBuildModel {
             override val buildId = UUID.randomUUID()
             override val services = createBuildModelServiceRegistry()
         }
@@ -51,12 +52,20 @@ fun getCxxBuildModel(gradle: Gradle): CxxBuildModel = synchronized(GetCxxBuildMo
             override fun projectsEvaluated(ignored: Gradle) {}
             override fun buildFinished(ignored: BuildResult) {
                 try {
-                    buildModel?.runFinishListeners()
+                    model.runFinishListeners()
                 } finally {
-                    buildModel = null
+                    setCxxBuildModel(null)
                 }
             }
         })
+
+        setCxxBuildModel(model)
     }
     return buildModel!!
 }
+
+/**
+ * Set or clear the current build model.
+ */
+@VisibleForTesting
+fun setCxxBuildModel(model : CxxBuildModel?) { buildModel = model }
