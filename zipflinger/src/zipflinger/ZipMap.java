@@ -233,7 +233,7 @@ class ZipMap {
         if (hasDataDescriptor && accountDataDescriptors) {
             // This is expensive. Fortunately ZIP archive rarely use DD nowadays.
             channel.position(end);
-            parseDataDescriptor(channel, entry, isCompressed);
+            parseDataDescriptor(channel, entry);
         }
     }
 
@@ -257,8 +257,7 @@ class ZipMap {
         entry.setNameBytes(pathBytes);
     }
 
-    private static void parseDataDescriptor(
-            @NonNull FileChannel channel, @NonNull Entry entry, boolean isCompressed)
+    private static void parseDataDescriptor(@NonNull FileChannel channel, @NonNull Entry entry)
             throws IOException {
         // If zip entries have data descriptor, we need to go an fetch every single entry to look if
         // the "optional" marker is there. Adjust zip entry area accordingly.
@@ -270,8 +269,6 @@ class ZipMap {
         int dataDescriptorLength = 12;
         if (dataDescriptorBuffer.getInt() == CentralDirectoryRecord.DATA_DESCRIPTOR_SIGNATURE) {
             dataDescriptorLength += 4;
-        } else {
-            dataDescriptorBuffer.rewind();
         }
 
         Location adjustedLocation =
