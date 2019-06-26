@@ -14,108 +14,86 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.factory.TaskCreationAction;
-import com.android.builder.errors.EvalIssueException;
-import com.android.builder.errors.EvalIssueReporter;
-import com.android.ide.common.repository.GradleVersion;
-import com.android.utils.FileUtils;
-import org.gradle.api.tasks.CacheableTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
+import com.android.builder.errors.EvalIssueException
+import com.android.builder.errors.EvalIssueReporter
+import com.android.ide.common.repository.GradleVersion
+import com.android.utils.FileUtils
+import org.gradle.api.tasks.CacheableTask
 
 /**
  * Pre build task that performs comparison of runtime and compile classpath for application. If
  * there are any differences between the two, that could lead to runtime issues.
  */
 @CacheableTask
-public class AppClasspathCheckTask extends ClasspathComparisonTask {
+abstract class AppClasspathCheckTask : ClasspathComparisonTask() {
 
-    private EvalIssueReporter reporter;
+    private lateinit var reporter: EvalIssueReporter
 
-    @Override
-    void onDifferentVersionsFound(
-            @NonNull String group,
-            @NonNull String module,
-            @NonNull String runtimeVersion,
-            @NonNull String compileVersion) {
+    override fun onDifferentVersionsFound(
+        group: String,
+        module: String,
+        runtimeVersion: String,
+        compileVersion: String
+    ) {
 
-        String suggestedVersion;
-        try {
-            GradleVersion runtime = GradleVersion.parse(runtimeVersion);
-            GradleVersion compile = GradleVersion.parse(compileVersion);
-            if (runtime.compareTo(compile) > 0) {
-                suggestedVersion = runtimeVersion;
+        val suggestedVersion: String = try {
+            val runtime = GradleVersion.parse(runtimeVersion)
+            val compile = GradleVersion.parse(compileVersion)
+            if (runtime > compile) {
+                runtimeVersion
             } else {
-                suggestedVersion = compileVersion;
+                compileVersion
             }
-        } catch (Throwable e) {
+        } catch (e: Throwable) {
             // in case we are unable to parse versions for some reason, choose runtime
-            suggestedVersion = runtimeVersion;
+            runtimeVersion
         }
 
-        String message =
-                String.format(
-                        "Conflict with dependency '%1$s:%2$s' in project '%3$s'. Resolved versions for "
-                                + "runtime classpath (%4$s) and compile classpath (%5$s) differ. This "
-                                + "can lead to runtime crashes. To resolve this issue follow "
-                                + "advice at https://developer.android.com/studio/build/gradle-tips#configure-project-wide-properties. "
-                                + "Alternatively, you can try to fix the problem "
-                                + "by adding this snippet to %6$s:\n"
-                                + "dependencies {\n"
-                                + "    implementation(\"%1$s:%2$s:%7$s\")\n"
-                                + "}\n",
-                        group,
-                        module,
-                        getProject().getPath(),
-                        runtimeVersion,
-                        compileVersion,
-                        getProject().getBuildFile(),
-                        suggestedVersion);
+        val message =
+            """Conflict with dependency '$group:$module' in project '${project.path}'.
+Resolved versions for runtime classpath ($runtimeVersion) and compile classpath ($compileVersion) differ.
+This can lead to runtime crashes.
+To resolve this issue follow advice at https://developer.android.com/studio/build/gradle-tips#configure-project-wide-properties.
+Alternatively, you can try to fix the problem by adding this snippet to ${project.buildFile}:
 
-        reporter.reportError(EvalIssueReporter.Type.GENERIC, new EvalIssueException(message));
+dependencies {
+    implementation("$group:$module:$suggestedVersion")
+}
+"""
+
+        reporter.reportError(EvalIssueReporter.Type.GENERIC, EvalIssueException(message))
     }
 
-    public static class CreationAction extends TaskCreationAction<AppClasspathCheckTask> {
+    class CreationAction(private val variantScope: VariantScope) :
+        TaskCreationAction<AppClasspathCheckTask>() {
 
-        @NonNull private final VariantScope variantScope;
+        override val name: String
+            get() = variantScope.getTaskName("check", "Classpath")
 
-        public CreationAction(@NonNull VariantScope variantScope) {
-            this.variantScope = variantScope;
-        }
+        override val type: Class<AppClasspathCheckTask>
+            get() = AppClasspathCheckTask::class.java
 
-        @NonNull
-        @Override
-        public String getName() {
-            return variantScope.getTaskName("check", "Classpath");
-        }
-
-        @NonNull
-        @Override
-        public Class<AppClasspathCheckTask> getType() {
-            return AppClasspathCheckTask.class;
-        }
-
-        @Override
-        public void configure(@NonNull AppClasspathCheckTask task) {
-            task.setVariantName(variantScope.getFullVariantName());
+        override fun configure(task: AppClasspathCheckTask) {
+            task.variantName = variantScope.fullVariantName
 
             task.runtimeClasspath =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
             task.compileClasspath =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES);
-            task.fakeOutputDirectory =
-                    FileUtils.join(
-                            variantScope.getGlobalScope().getIntermediatesDir(),
-                            getName(),
-                            variantScope.getVariantConfiguration().getDirName());
-            task.reporter = variantScope.getGlobalScope().getErrorHandler();
+                variantScope.getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES)
+            task.fakeOutputDirectory = FileUtils.join(
+                variantScope.globalScope.intermediatesDir,
+                name,
+                variantScope.variantConfiguration.dirName
+            )
+            task.reporter = variantScope.globalScope.errorHandler
         }
     }
 }

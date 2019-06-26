@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import com.android.annotations.NonNull;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.CompileClasspath;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
+import com.google.common.collect.Maps
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import java.io.File
+import java.util.HashMap
 
 /**
  * Abstract class used to compare two configurations, and to report differences in versions of
@@ -38,92 +34,77 @@ import org.gradle.api.tasks.PathSensitivity;
  * differences. E.g. for application, differences in runtime and compile classpath could result in
  * runtime failure.
  */
-abstract class ClasspathComparisonTask extends NonIncrementalTask {
+abstract class ClasspathComparisonTask : NonIncrementalTask() {
 
-    protected ArtifactCollection runtimeClasspath;
-    protected ArtifactCollection compileClasspath;
+    @get:Internal
+    protected lateinit var runtimeClasspath: ArtifactCollection
+    @get:Internal
+    protected lateinit var compileClasspath: ArtifactCollection
     // fake output dir so that the task doesn't run unless an input has changed.
-    protected File fakeOutputDirectory;
+    @get:OutputDirectory
+    var fakeOutputDirectory: File? = null
+        protected set
 
     // even though the files are jars, we don't care about changes to the files, only if files
     // are removed or added. We need to find a better way to declare this.
-    @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getRuntimeClasspath() {
-        return runtimeClasspath.getArtifactFiles();
-    }
+    @get:CompileClasspath
+    @get:PathSensitive(PathSensitivity.NONE)
+    val runtimeClasspathFC: FileCollection
+        get() = runtimeClasspath.artifactFiles
 
     // even though the files are jars, we don't care about changes to the files, only if files
     // are removed or added. We need to find a better way to declare this.
-    @CompileClasspath
-    @PathSensitive(PathSensitivity.NONE)
-    public FileCollection getCompileClasspath() {
-        return compileClasspath.getArtifactFiles();
-    }
+    @get:CompileClasspath
+    @get:PathSensitive(PathSensitivity.NONE)
+    val compileClasspathFC: FileCollection
+        get() = compileClasspath.artifactFiles
 
-    @OutputDirectory
-    public File getFakeOutputDirectory() {
-        return fakeOutputDirectory;
-    }
+    protected abstract fun onDifferentVersionsFound(
+        group: String,
+        module: String,
+        runtimeVersion: String,
+        compileVersion: String
+    )
 
-    abstract void onDifferentVersionsFound(
-            @NonNull String group,
-            @NonNull String module,
-            @NonNull String runtimeVersion,
-            @NonNull String compileVersion);
-
-    @Override
-    protected void doTaskAction() {
-        Set<ResolvedArtifactResult> runtimeArtifacts = runtimeClasspath.getArtifacts();
-        Set<ResolvedArtifactResult> compileArtifacts = compileClasspath.getArtifacts();
+    override fun doTaskAction() {
+        val runtimeArtifacts = runtimeClasspath.artifacts
+        val compileArtifacts = compileClasspath.artifacts
 
         // Store a map of groupId -> (artifactId -> versions)
-        Map<String, Map<String, String>> runtimeIds =
-                Maps.newHashMapWithExpectedSize(runtimeArtifacts.size());
+        val runtimeIds =
+            Maps.newHashMapWithExpectedSize<String, MutableMap<String, String>>(runtimeArtifacts.size)
 
-        for (ResolvedArtifactResult artifact : runtimeArtifacts) {
+        for (artifact in runtimeArtifacts) {
             // only care about external dependencies to compare versions.
-            final ComponentIdentifier componentIdentifier =
-                    artifact.getId().getComponentIdentifier();
-            if (componentIdentifier instanceof ModuleComponentIdentifier) {
-                ModuleComponentIdentifier moduleId =
-                        (ModuleComponentIdentifier) componentIdentifier;
+            val componentIdentifier = artifact.id.componentIdentifier
+            if (componentIdentifier is ModuleComponentIdentifier) {
 
                 // get the sub-map, creating it if needed.
-                Map<String, String> subMap =
-                        runtimeIds.computeIfAbsent(moduleId.getGroup(), s -> new HashMap<>());
+                val subMap = runtimeIds.computeIfAbsent(componentIdentifier.group) {  HashMap() }
 
-                subMap.put(moduleId.getModule(), moduleId.getVersion());
+                subMap[componentIdentifier.module] = componentIdentifier.version
             }
         }
 
-        for (ResolvedArtifactResult artifact : compileArtifacts) {
+        for (artifact in compileArtifacts) {
             // only care about external dependencies to compare versions.
-            final ComponentIdentifier componentIdentifier =
-                    artifact.getId().getComponentIdentifier();
-            if (componentIdentifier instanceof ModuleComponentIdentifier) {
-                ModuleComponentIdentifier moduleId =
-                        (ModuleComponentIdentifier) componentIdentifier;
+            val componentIdentifier = artifact.id.componentIdentifier
+            if (componentIdentifier is ModuleComponentIdentifier) {
 
-                Map<String, String> subMap = runtimeIds.get(moduleId.getGroup());
-                if (subMap == null) {
-                    continue;
-                }
+                val subMap = runtimeIds[componentIdentifier.group] ?: continue
 
-                String runtimeVersion = subMap.get(moduleId.getModule());
-                if (runtimeVersion == null) {
-                    continue;
-                }
+                val runtimeVersion = subMap[componentIdentifier.module] ?: continue
 
-                if (runtimeVersion.equals(moduleId.getVersion())) {
-                    continue;
+                if (runtimeVersion == componentIdentifier.version) {
+                    continue
                 }
 
                 onDifferentVersionsFound(
-                        moduleId.getGroup(),
-                        moduleId.getModule(),
-                        runtimeVersion,
-                        moduleId.getVersion());
+                    componentIdentifier.group,
+                    componentIdentifier.module,
+                    runtimeVersion,
+                    componentIdentifier.version
+                )
             }
         }
     }

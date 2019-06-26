@@ -14,72 +14,61 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.VariantScope;
-import java.io.File;
-import java.util.Objects;
-import org.gradle.api.GradleException;
-import org.gradle.api.tasks.CacheableTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.variant.BaseVariantData
+import java.io.File
+import java.util.Objects
+import org.gradle.api.GradleException
+import org.gradle.api.tasks.CacheableTask
 
 /**
  * Pre build task that checks that there are not differences between artifact versions between the
  * runtime classpath of tested variant, and runtime classpath of test variant.
  */
 @CacheableTask
-public class TestPreBuildTask extends ClasspathComparisonTask {
+abstract class TestPreBuildTask : ClasspathComparisonTask() {
 
-    @Override
-    void onDifferentVersionsFound(
-            @NonNull String group,
-            @NonNull String module,
-            @NonNull String runtimeVersion,
-            @NonNull String compileVersion) {
-        throw new GradleException(
-                String.format(
-                        "Conflict with dependency '%s:%s' in project '%s'. Resolved versions for"
-                                + " app (%s) and test app (%s) differ. See"
-                                + " https://d.android.com/r/tools/test-apk-dependency-conflicts.html"
-                                + " for details.",
-                        group, module, getProject().getPath(), compileVersion, runtimeVersion));
+    override fun onDifferentVersionsFound(
+        group: String,
+        module: String,
+        runtimeVersion: String,
+        compileVersion: String
+    ) {
+        throw GradleException(
+            """Conflict with dependency '$group:$module' in project '${project.path}'.
+Resolved versions for app ($compileVersion) and test app ($runtimeVersion) differ.
+See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details."""
+        )
     }
 
-    public static class CreationAction
-            extends TaskManager.AbstractPreBuildCreationAction<TestPreBuildTask> {
+    class CreationAction(variantScope: VariantScope) :
+        TaskManager.AbstractPreBuildCreationAction<TestPreBuildTask>(variantScope) {
 
-        public CreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
-        }
+        override val type: Class<TestPreBuildTask>
+            get() = TestPreBuildTask::class.java
 
-        @NonNull
-        @Override
-        public Class<TestPreBuildTask> getType() {
-            return TestPreBuildTask.class;
-        }
-
-        @Override
-        public void configure(@NonNull TestPreBuildTask task) {
-            super.configure(task);
-            task.setVariantName(variantScope.getFullVariantName());
+        override fun configure(task: TestPreBuildTask) {
+            super.configure(task)
+            task.variantName = variantScope.fullVariantName
 
             task.runtimeClasspath =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
 
             task.compileClasspath =
-                    Objects.requireNonNull(variantScope.getTestedVariantData())
-                            .getScope()
-                            .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+                Objects.requireNonNull<BaseVariantData>(variantScope.testedVariantData)
+                    .scope
+                    .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
 
-            task.fakeOutputDirectory =
-                    new File(
-                            variantScope.getGlobalScope().getIntermediatesDir(),
-                            "prebuild/" + variantScope.getVariantConfiguration().getDirName());
+            task.fakeOutputDirectory = File(
+                variantScope.globalScope.intermediatesDir,
+                "prebuild/${variantScope.variantConfiguration.dirName}"
+            )
         }
     }
 }
