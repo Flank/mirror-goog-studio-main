@@ -181,7 +181,8 @@ class R8MainDexListTransformTest {
             includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
             dexingType = dexingType,
-            useFullR8 = false
+            useFullR8 = false,
+            duplicateClassesCheck = FakeFileCollection()
         )
     }
 }

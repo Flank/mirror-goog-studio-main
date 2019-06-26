@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.PostprocessingFeatures
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_DEX_WITH_RESOURCES
 import com.android.build.gradle.internal.pipeline.TransformManager.CONTENT_JARS
+import com.android.build.gradle.internal.scope.InternalArtifactType.DUPLICATE_CLASSES_CHECK
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.getPlatformRules
 import com.android.build.gradle.internal.transforms.TransformInputUtil.getAllFiles
@@ -72,7 +73,8 @@ class R8Transform(
     includeFeaturesInScopes: Boolean,
     private val messageReceiver: MessageReceiver,
     private val dexingType: DexingType,
-    private val useFullR8: Boolean = false
+    private val useFullR8: Boolean = false,
+    private val duplicateClassesCheck: FileCollection
 ) :
         ProguardConfigurable(proguardConfigurationFiles, variantType, includeFeaturesInScopes) {
 
@@ -103,7 +105,8 @@ class R8Transform(
                 scope.consumesFeatureJars(),
                 scope.globalScope.messageReceiver,
                 scope.dexingType,
-                scope.globalScope.projectOptions[BooleanOption.FULL_R8]
+                scope.globalScope.projectOptions[BooleanOption.FULL_R8],
+                scope.artifacts.getFinalProductAsFileCollection(DUPLICATE_CLASSES_CHECK).get()
             )
 
     override fun getName(): String = "r8"
@@ -125,7 +128,8 @@ class R8Transform(
                 SecondaryFile.nonIncremental(allConfigurationFiles),
                 SecondaryFile.nonIncremental(mainDexListFiles),
                 SecondaryFile.nonIncremental(mainDexRulesFiles),
-                SecondaryFile.nonIncremental(inputProguardMapping)
+                SecondaryFile.nonIncremental(inputProguardMapping),
+                SecondaryFile.nonIncremental(duplicateClassesCheck)
         )
 
     override fun getParameterInputs(): MutableMap<String, Any> =

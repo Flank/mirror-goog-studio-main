@@ -2009,6 +2009,7 @@ public abstract class TaskManager {
         }
 
         // ----- Minify next -----
+        maybeCreateCheckDuplicateClassesTask(variantScope);
         CodeShrinker shrinker = maybeCreateJavaCodeShrinkerTransform(variantScope);
         if (shrinker == CodeShrinker.R8) {
             maybeCreateResourcesShrinkerTasks(variantScope);
@@ -2194,10 +2195,6 @@ public abstract class TaskManager {
                         .setEnableDexingArtifactTransform(enableDexingArtifactTransform)
                         .createDexArchiveBuilderTransform();
         transformManager.addTransform(taskFactory, variantScope, preDexTransform);
-
-        if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
-            taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
-        }
 
         createDexMergingTasks(variantScope, dexingType, enableDexingArtifactTransform);
     }
@@ -3652,5 +3649,11 @@ public abstract class TaskManager {
         testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
         testData.setExtraInstrumentationTestRunnerArgs(
                 projectOptions.getExtraInstrumentationTestRunnerArgs());
+    }
+
+    private void maybeCreateCheckDuplicateClassesTask(@NonNull VariantScope variantScope) {
+        if (projectOptions.get(BooleanOption.ENABLE_DUPLICATE_CLASSES_CHECK)) {
+            taskFactory.register(new CheckDuplicateClassesTask.CreationAction(variantScope));
+        }
     }
 }

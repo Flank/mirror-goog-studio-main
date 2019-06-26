@@ -625,7 +625,8 @@ class R8TransformTest(val r8OutputType: R8OutputType) {
             includeFeaturesInScopes = false,
             messageReceiver = NoOpMessageReceiver(),
             dexingType = DexingType.NATIVE_MULTIDEX,
-            useFullR8 = useFullR8
+            useFullR8 = useFullR8,
+            duplicateClassesCheck = FakeFileCollection()
         )
 
         Mockito.`when`(outputProguard.asFile).thenReturn(outputProguardMapping)

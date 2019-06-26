@@ -250,7 +250,8 @@ class DexSplitterTaskTest {
                 variantType = VariantTypeImpl.BASE_APK,
                 includeFeaturesInScopes = false,
                 dexingType = DexingType.NATIVE_MULTIDEX,
-                messageReceiver= NoOpMessageReceiver()
+                messageReceiver= NoOpMessageReceiver(),
+                duplicateClassesCheck = FakeFileCollection()
         )
         val regularFileMock = Mockito.mock(RegularFile::class.java)
         `when`(regularFileMock.asFile).thenReturn(outputProguardMapping)
