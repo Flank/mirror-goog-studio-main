@@ -25,6 +25,7 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
   --max_idle_secs=60 \
   test \
   ${config_options} \
+  --jobs 4 \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
   -- \
@@ -46,7 +47,7 @@ QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   ${config_options} \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
-  --jobs=1 \
+  --jobs 1 \
   --remote_local_fallback_strategy=sandboxed \
   --define external_emulator=true \
   -- \
@@ -62,6 +63,9 @@ if [[ -d "${dist_dir}" ]]; then
   readonly testlogs_dir="$("${script_dir}/bazel" info bazel-testlogs ${config_options})"
   mkdir "${dist_dir}"/testlogs
   (mv "${testlogs_dir}"/* "${dist_dir}"/testlogs/)
+
+  echo "Remove any empty file in testlogs"
+  find  "${dist_dir}"/testlogs/ -size  0 -print0 |xargs -0 rm --
 
 fi
 
