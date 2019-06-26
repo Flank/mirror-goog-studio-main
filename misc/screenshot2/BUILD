@@ -2,7 +2,7 @@ load("//tools/base/sdklib:sdk.bzl", "sdk_java_binary")
 
 java_library(
     name = "screenshot2lib",
-    srcs = glob(["src/main/java/**"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",

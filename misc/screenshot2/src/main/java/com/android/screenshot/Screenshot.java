@@ -295,7 +295,12 @@ public class Screenshot {
         if (toolPath == null) {
             return null;
         }
-        File toolsDir = new File(toolPath);
+        File toolsDir;
+        try {
+            toolsDir = new File(toolPath).getCanonicalFile();
+        } catch (IOException e) {
+            return null;
+        }
         if (!toolsDir.exists()) {
             return null;
         }

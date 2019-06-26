@@ -1,11 +1,34 @@
 load("//tools/base/bazel:bazel.bzl", "fileset", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:utils.bzl", "flat_archive")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
-load("//tools/base/bazel/sdk:sdk_utils.bzl", "tool_start_script")
-load("//tools/base/bazel/sdk:sdk_utils.bzl", "calculate_jar_name_for_sdk_package")
+load("//tools/base/bazel/sdk:sdk_utils.bzl", "calculate_jar_name_for_sdk_package", "tool_start_script")
 
 platforms = ["win", "linux", "mac"]
+
+def _generate_classpath_jar_impl(ctx):
+    runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in [ctx.attr.java_binary]])
+    jars = [calculate_jar_name_for_sdk_package(jar.short_path) for jar in runtime_jars]
+    mffile = ctx.actions.declare_file(ctx.attr.java_binary.label.name + "-manifest")
+    ctx.actions.write(output = mffile, content = "Class-Path: \n " + " \n ".join(jars) + " \n")
+    arguments = ["c", ctx.outputs.classpath_jar.path, "META-INF/MANIFEST.MF=" + mffile.path]
+    outputs = [ctx.outputs.classpath_jar]
+    ctx.action(
+        inputs = [mffile],
+        outputs = outputs,
+        arguments = arguments,
+        executable = ctx.executable._zipper,
+    )
+
+generate_classpath_jar = rule(
+    implementation = _generate_classpath_jar_impl,
+    attrs = {
+        "java_binary": attr.label(allow_single_file = True, mandatory = True),
+        "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable = True),
+        "classpath_jar": attr.output(),
+    },
+)
 
 def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps = [], default_jvm_opts = {}, visibility = None):
     command_name = command_name if command_name else name
@@ -14,6 +37,8 @@ def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps =
         runtime_deps = runtime_deps,
         visibility = visibility,
     )
+    classpath_jar = command_name + "-classpath.jar"
+    generate_classpath_jar(java_binary = command_name, name = command_name + "-classpath", classpath_jar = classpath_jar, visibility = ["//visibility:public"])
     for platform in platforms:
         tool_start_script(
             name = name + "_wrapper_" + platform,
@@ -21,7 +46,7 @@ def sdk_java_binary(name, command_name = None, main_class = None, runtime_deps =
             command_name = command_name,
             default_jvm_opts = default_jvm_opts.get(platform) or "",
             main_class_name = main_class,
-            java_binary = name,
+            classpath_jar = classpath_jar,
             visibility = visibility,
         )
 
@@ -77,10 +102,11 @@ def _package_component_impl(ctx):
         file = bin.files.to_list()[0]
         args.append("tools/bin/%s=%s" % (file.basename, file.path))
         inputs += [file]
+
     runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in ctx.attr.java_libs])
     runtime_jar_names = {}
-    for jar in runtime_jars:
-        name = calculate_jar_name_for_sdk_package(jar)
+    for jar in runtime_jars.to_list() + [j.files.to_list()[0] for j in ctx.attr.other_libs]:
+        name = calculate_jar_name_for_sdk_package(jar.short_path)
         existing = runtime_jar_names.get(name)
         if existing:
             fail("Multiple jars have same name for SDK component with the same name! name= " + name + " jars= " + existing.path + "       " + jar.path)
@@ -103,7 +129,9 @@ package_component = rule(
     implementation = _package_component_impl,
     attrs = {
         "bins": attr.label_list(),
+        "classpaths": attr.label_list(),
         "java_libs": attr.label_list(),
+        "other_libs": attr.label_list(allow_files = True),
         "others": attr.label_keyed_string_dict(allow_files = True),
         "_zipper": attr.label(
             default = Label("@bazel_tools//tools/zip:zipper"),
@@ -131,6 +159,7 @@ def sdk_package(name, binaries, sourceprops, visibility):
             name = "%s_%s" % (name, platform),
             bins = [bin + "_wrapper_" + platform for bin in binaries],
             java_libs = binaries,
+            other_libs = [bin + "-classpath.jar" for bin in binaries],
             others = {
                 "source.properties": "tools/source.properties",
                 name + "_combined_licenses": "tools/NOTICE.txt",

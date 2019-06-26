@@ -49,16 +49,14 @@ def sdk_path(paths):
     })
 
 def expand_template_impl(ctx):
-    runtime_jars = ctx.attr.java_binary[JavaInfo].transitive_runtime_jars
-    jar_names = [calculate_jar_name_for_sdk_package(jar) for jar in runtime_jars]
-    sep = ";" if ctx.attr.is_windows else ":"
+    jar_name = calculate_jar_name_for_sdk_package(ctx.attr.classpath_jar.files.to_list()[0].short_path)
     lib_path = "%APP_HOME%\\lib\\" if ctx.attr.is_windows else "$APP_HOME/lib/"
-    jar_paths = sep.join([lib_path + jar for jar in jar_names])
+    jar_path = lib_path + jar_name
     ctx.actions.expand_template(
         template = ctx.file.template,
         output = ctx.outputs.out,
         substitutions = ctx.attr.substitutions + {
-            "${JARS}": jar_paths,
+            "${JARS}": jar_path,
         },
     )
 
@@ -67,13 +65,13 @@ expand_template = rule(
     attrs = {
         "template": attr.label(mandatory = True, allow_single_file = True),
         "substitutions": attr.string_dict(mandatory = True),
-        "java_binary": attr.label(mandatory = True),
+        "classpath_jar": attr.label(mandatory = True, allow_single_file = True),
         "is_windows": attr.bool(mandatory = True),
         "out": attr.output(mandatory = True),
     },
 )
 
-def tool_start_script(name, platform, command_name, main_class_name, java_binary, default_jvm_opts, visibility):
+def tool_start_script(name, platform, command_name, main_class_name, classpath_jar, default_jvm_opts, visibility):
     is_windows = platform == "win"
     expand_template(
         name = name,
@@ -87,9 +85,19 @@ def tool_start_script(name, platform, command_name, main_class_name, java_binary
             "${PLATFORM}": platform,
             "${COMMAND_UPPER}": command_name.upper(),
         },
-        java_binary = java_binary,
+        classpath_jar = classpath_jar,
         is_windows = is_windows,
     )
+
+def calculate_jar_name_for_sdk_package(path):
+    path = path.replace("/libtools.", "/", maxsplit = 1)
+    if path.endswith("-classpath.jar"):
+        return path[path.rfind("/"):]
+
+    for prefix in sdk_jar_prefix_to_zip_location.keys():
+        if path.startswith(prefix):
+            return sdk_jar_prefix_to_zip_location[prefix] + path[len(prefix):]
+    fail("Unknown path mapping for jar " + path)
 
 sdk_jar_prefix_to_zip_location = {
     "prebuilts/tools/common/m2/repository/": "external/",
@@ -98,12 +106,3 @@ sdk_jar_prefix_to_zip_location = {
     "tools/base/": "",
     "tools/": "",
 }
-
-def calculate_jar_name_for_sdk_package(jar):
-    path = jar.short_path
-    path = path.replace("/libtools.", "/", maxsplit = 1)
-
-    for prefix in sdk_jar_prefix_to_zip_location.keys():
-        if path.startswith(prefix):
-            return sdk_jar_prefix_to_zip_location[prefix] + path[len(prefix):]
-    fail("Unknown path mapping for jar " + jar.path)

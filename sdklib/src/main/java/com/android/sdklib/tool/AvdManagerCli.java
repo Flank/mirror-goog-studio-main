@@ -274,8 +274,12 @@ class AvdManagerCli extends CommandLineParser {
                 File tools;
                 if (!toolsDirProp.isEmpty()) {
                     try {
+                        // Assume we're in something similar to the expected place, "cmdline-tools/1.2.3".
+                        // The parent of that should be the root.
                         tools = new File(toolsDirProp).getCanonicalFile();
-                        mOsSdkFolder = tools.getParent();
+                        if (tools.getParent() != null) {
+                            mOsSdkFolder = tools.getParentFile().getParent();
+                        }
                     } catch (IOException e) {
                         // try using "." below
                     }
