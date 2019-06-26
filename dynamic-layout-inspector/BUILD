@@ -75,6 +75,7 @@ cc_library(
         "src/main/native/agent/component_tree_java_jni.cc",
         "src/main/native/agent/layoutinspector_java_jni.cc",
         "src/main/native/agent/properties_java_jni.cc",
+        "src/main/native/agent/resource_configuration_java_jni.cc",
     ],
     copts = ANDROID_COPTS + [
         # TODO: Remove dependency when agent.h no longer includes

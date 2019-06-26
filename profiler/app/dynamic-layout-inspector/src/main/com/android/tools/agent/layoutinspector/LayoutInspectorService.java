@@ -157,7 +157,7 @@ public class LayoutInspectorService {
             request = allocateSendRequest();
             long event = initComponentTree(request);
             if (root != null) {
-                componentTree.loadTree(event, root);
+                componentTree.writeTree(event, root);
             }
             int id = (int) System.currentTimeMillis();
             sendComponentTree(request, image, image.length, id);
@@ -185,7 +185,7 @@ public class LayoutInspectorService {
             if (view == null) {
                 return;
             }
-            properties.loadProperties(view, event);
+            properties.writeProperties(view, event);
             sendProperties(event, viewId);
         } catch (Throwable ex) {
             sendErrorMessage(ex);

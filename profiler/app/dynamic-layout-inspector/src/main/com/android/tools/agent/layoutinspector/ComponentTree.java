@@ -25,20 +25,22 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-/** Services for loading the view hierarchy into a ComponentTreeEvent protobuf. */
+/** Services for writing the view hierarchy into a ComponentTreeEvent protobuf. */
 class ComponentTree {
     private final StringTable mStringTable = new StringTable();
+    private final ResourceConfiguration mConfiguration = new ResourceConfiguration(mStringTable);
 
     /**
-     * Load the component tree starting with the specified view into the event buffer.
+     * Write the component tree starting with the specified view into the event buffer.
      *
      * @param view the root of the tree to load the component tree for
      * @param event a handle to a ComponentTreeEvent protobuf to pass back in native calls
      */
-    public void loadTree(long event, View view) {
+    public void writeTree(long event, View view) {
         mStringTable.clear();
         Resource layout = Resource.fromResourceId(view, getSourceLayoutResId(view));
         loadView(event, view, false);
+        mConfiguration.writeConfiguration(event, view);
         loadStringTable(event);
         mStringTable.clear();
     }

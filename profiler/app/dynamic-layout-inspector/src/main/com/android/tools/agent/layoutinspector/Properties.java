@@ -27,17 +27,17 @@ import com.android.tools.agent.layoutinspector.property.ViewTypeTree;
 import java.util.Map;
 import java.util.Set;
 
-/** Services for loading the properties of a View into a PropertyEvent protobuf. */
+/** Services for writing the properties of a View into a PropertyEvent protobuf. */
 class Properties {
     private final StringTable mStringTable = new StringTable();
 
     /**
-     * Load the properties of the specified view into the specified properties event buffer.
+     * Write the properties of the specified view into the specified properties event buffer.
      *
      * @param view the view to load the properties for
      * @param event a handle to a PropertyEvent protobuf to pass back in native calls
      */
-    void loadProperties(View view, long event) {
+    void writeProperties(View view, long event) {
         mStringTable.clear();
         ViewTypeTree typeTree = new ViewTypeTree();
         ViewNode<View> node = typeTree.nodeOf(view);

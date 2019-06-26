@@ -31,6 +31,7 @@ message ComponentTreeEvent {
   int32 payload_id = 1;
   View root = 2;
   repeated StringEntry string = 3;
+  ResourceConfiguration resources = 4;
 }
 
 message PropertyEvent {
@@ -38,6 +39,42 @@ message PropertyEvent {
   Resource layout = 2;
   repeated StringEntry string = 3;
   repeated Property property = 4;
+}
+
+message ResourceConfiguration {
+  int32 api_level = 1;
+  int32 api_code_name = 2;
+  int32 app_package_name = 3;
+  Resource theme = 4;
+  Configuration configuration = 5;
+}
+
+message Configuration {
+  float font_scale = 1;
+  int32 country_code = 2;
+  int32 network_code = 3;
+  Locale locale = 4;
+  int32 screen_layout = 5;
+  int32 color_mode = 6;
+  int32 touch_screen = 7;
+  int32 keyboard = 8;
+  int32 keyboard_hidden = 9;
+  int32 hard_keyboard_hidden = 10;
+  int32 navigation = 11;
+  int32 navigation_hidden = 12;
+  int32 ui_mode = 13;
+  int32 smallest_screen_width = 14;
+  int32 density = 15;
+  int32 orientation = 16;
+  int32 screen_width = 17;
+  int32 screen_height = 18;
+}
+
+message Locale {
+  int32 language = 1;
+  int32 country = 2;
+  int32 variant = 3;
+  int32 script = 4;
 }
 
 message View {
