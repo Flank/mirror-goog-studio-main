@@ -491,6 +491,7 @@ def iml_module(
         bundle_data = [],
         test_main_class = None,
         lint_baseline = None,
+        lint_timeout = None,
         back_deps = []):
     if name == "intellij.groovy" or name == "intellij.gradle.java.tests":
         test_srcs = []  # workaround for b/111900968
@@ -557,6 +558,10 @@ def iml_module(
 
     lint_srcs = srcs.javas + srcs.kotlins
     if lint_srcs and lint_baseline:
+        kwargs = {}
+        if lint_timeout:
+            kwargs["timeout"] = lint_timeout
+
         lint_test(
             name = name + "_lint_test",
             srcs = lint_srcs,
@@ -565,6 +570,7 @@ def iml_module(
             custom_rules = ["//tools/base/lint:studio-checks.lint-rules.jar"],
             external_annotations = ["//tools/base/external-annotations:annotations.zip"],
             tags = ["no_windows"],
+            **kwargs
         )
 
     test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
