@@ -24,6 +24,7 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
+import javax.annotation.concurrent.GuardedBy
 
 /**
  * Book keeping object for a Gradle [org.gradle.api.Task] execution.
@@ -43,6 +44,10 @@ open class TaskProfilingRecord {
     private var endTime = Instant.MIN
     private var closeTime = Instant.MIN
     internal val status = AtomicReference(Status.RUNNING)
+
+    // taskSpan is modified by addSpan() and passed to the writer in writeTaskSpan, we need to make
+    // sure we are not modifying them while they are being used by the recordWriter.
+    @get:GuardedBy("this")
     val taskSpans = mutableListOf<GradleBuildProfileSpan>()
 
     /**
@@ -201,6 +206,7 @@ open class TaskProfilingRecord {
             else endTime
         )
 
+    @Synchronized
     fun addSpan(builder: GradleBuildProfileSpan.Builder) {
         builder.parentId = spanBuilder.id
         taskSpans.add(builder.build())
