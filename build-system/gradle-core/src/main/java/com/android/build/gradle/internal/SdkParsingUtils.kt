@@ -40,7 +40,10 @@ fun buildBuildTools(sdkDirectory: File, revision: Revision): BuildToolInfo? {
     val buildToolsPackage = parsePackage(buildToolsXml) ?: return null
     // BuildToolInfo is cheap to build and verify, so we can keep using it.
     val buildToolInfo = BuildToolInfo.fromLocalPackage(buildToolsPackage)
-    // TODO: Check with buildToolInfo.isValid(null) after b/128512140 is fixed.
+    if (!buildToolInfo.isValid(null)) {
+        // The build tools we loaded is missing some expected components.
+        return null
+    }
     if (!buildToolInfo.revision.equals(revision)) {
         // The path we guessed contained a build-tool but it had a different than the requested one.
         return null

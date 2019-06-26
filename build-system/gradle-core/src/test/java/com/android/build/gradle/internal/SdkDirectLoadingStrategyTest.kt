@@ -24,12 +24,15 @@ import com.android.builder.core.ToolsRevisionUtils
 import com.android.builder.internal.compiler.RenderScriptProcessor
 import com.android.repository.Revision
 import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.BuildToolInfo
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.IOException
+import java.lang.IllegalStateException
 import java.util.Properties
 import java.util.function.Supplier
 
@@ -310,6 +313,17 @@ class SdkDirectLoadingStrategyTest {
         if (configureBuildTools) {
             val buildToolsRoot = sdkDir.resolve("build-tools/$buildToolsDirectory")
             buildToolsRoot.mkdirs()
+
+            val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(
+                ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION, buildToolsRoot)
+            for (id in BuildToolInfo.PathId.values()) {
+                if (!id.isPresentIn(ToolsRevisionUtils.DEFAULT_BUILD_TOOLS_REVISION)) {
+                    continue
+                }
+                val buildToolComponent = File(buildToolInfo.getPath(id))
+                buildToolComponent.parentFile.mkdirs()
+                buildToolComponent.createNewFile()
+            }
 
             val buildToolsPackageXml = buildToolsRoot.resolve("package.xml")
             buildToolsPackageXml.createNewFile()

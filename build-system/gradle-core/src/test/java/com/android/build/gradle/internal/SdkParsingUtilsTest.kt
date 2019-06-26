@@ -16,12 +16,15 @@
 
 package com.android.build.gradle.internal
 
+import com.android.builder.core.ToolsRevisionUtils
 import com.google.common.truth.Truth.assertThat
 
 import com.android.repository.Revision
+import com.android.sdklib.BuildToolInfo
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 class SdkParsingUtilsTest {
 
@@ -153,24 +156,45 @@ class SdkParsingUtilsTest {
     fun buildBuildTools_ok() {
         val sdkDir = testFolder.newFolder("sdk")
         val buildToolDir = testFolder.newFolder("sdk", "build-tools", "28.0.3")
+        val revision = Revision.parseRevision("28.0.3")
+        populateBuildToolDirectory(buildToolDir, revision)
+
         val packageXml = buildToolDir.resolve("package.xml")
         packageXml.createNewFile()
         packageXml.writeText(BUILD_TOOL_28_0_3_XML, Charsets.UTF_8)
 
-        val buildTool = buildBuildTools(sdkDir, Revision.parseRevision("28.0.3"))
+        val buildTool = buildBuildTools(sdkDir, revision)
         assertThat(buildTool).isNotNull()
-        assertThat(buildTool!!.revision).isEqualTo(Revision.parseRevision("28.0.3"))
+        assertThat(buildTool!!.revision).isEqualTo(revision)
     }
 
     @Test
     fun buildBuildTools_wrongBuildTool() {
         val sdkDir = testFolder.newFolder("sdk")
         val buildToolDir = testFolder.newFolder("sdk", "build-tools", "28.0.3")
+        populateBuildToolDirectory(buildToolDir, Revision.parseRevision("28.0.2"))
+
         val packageXml = buildToolDir.resolve("package.xml")
         packageXml.createNewFile()
         packageXml.writeText(BUILD_TOOL_28_0_2_XML, Charsets.UTF_8)
 
         val buildTool = buildBuildTools(sdkDir, Revision.parseRevision("28.0.3"))
+        assertThat(buildTool).isNull()
+    }
+
+    @Test
+    fun buildBuildTools_corruptBuildTool() {
+        val sdkDir = testFolder.newFolder("sdk")
+        val buildToolDir = testFolder.newFolder("sdk", "build-tools", "28.0.3")
+        val revision = Revision.parseRevision("28.0.3")
+        populateBuildToolDirectory(
+            buildToolDir, revision, setOf(BuildToolInfo.PathId.CORE_LAMBDA_STUBS))
+
+        val packageXml = buildToolDir.resolve("package.xml")
+        packageXml.createNewFile()
+        packageXml.writeText(BUILD_TOOL_28_0_3_XML, Charsets.UTF_8)
+
+        val buildTool = buildBuildTools(sdkDir, revision)
         assertThat(buildTool).isNull()
     }
 
@@ -246,5 +270,17 @@ class SdkParsingUtilsTest {
 
         val optionalLibraries = parseOptionalLibraries(localPackage!!)
         assertThat(optionalLibraries).isEmpty()
+    }
+
+    private fun populateBuildToolDirectory(buildToolDir: File, buildToolRevision: Revision, skipSet: Set<BuildToolInfo.PathId> = emptySet()) {
+        val buildToolInfo = BuildToolInfo.fromStandardDirectoryLayout(buildToolRevision, buildToolDir)
+        for (id in BuildToolInfo.PathId.values()) {
+            if (!id.isPresentIn(buildToolRevision) || skipSet.contains(id)) {
+                continue
+            }
+            val buildToolComponent = File(buildToolInfo.getPath(id))
+            buildToolComponent.parentFile.mkdirs()
+            buildToolComponent.createNewFile()
+        }
     }
 }

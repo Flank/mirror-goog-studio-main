@@ -136,14 +136,16 @@ public class DefaultSdkLoader implements SdkLoader {
                         buildToolInfo.getRevision()+ ", which will be used to build.");
             }
 
-            if (target == null || buildToolInfo == null) {
+            boolean isBuildToolInfoValid = buildToolInfo != null && buildToolInfo.isValid(logger);
+
+            if (target == null || !isBuildToolInfoValid) {
                 Map<RemotePackage, InstallResultType> installResults = new HashMap<>();
                 RepoManager repoManager = mSdkHandler.getSdkManager(progress);
                 checkNeedsCacheReset(repoManager, sdkLibData);
                 repoManager.loadSynchronously(
                         RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, progress, downloader, settings);
 
-                if (buildToolInfo == null) {
+                if (!isBuildToolInfoValid) {
                     installResults.putAll(
                             installBuildTools(
                                     buildToolRevision, repoManager, downloader, stdOutputProgress));
@@ -174,6 +176,11 @@ public class DefaultSdkLoader implements SdkLoader {
         if (buildToolInfo == null) {
             throw new IllegalStateException(
                     "Failed to find Build Tools revision " + buildToolRevision.toString());
+        } else if (!buildToolInfo.isValid(logger)) {
+            throw new IllegalStateException(
+                    "Installed Build Tools revision "
+                            + buildToolRevision.toString()
+                            + " is corrupted. Remove and install again using the SDK Manager.");
         }
 
         return new TargetInfo(target, buildToolInfo);
