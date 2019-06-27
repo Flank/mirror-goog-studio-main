@@ -285,7 +285,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         //noinspection deprecation Must still be copied.
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
         matchingFallbacks = ImmutableList.copyOf(thatBuildType.getMatchingFallbacks());
-        isDefault.set(thatBuildType.getIsDefault());
+        // we don't want to dynamically link these values. We just want to copy the current value.
+        isDefault.set(thatBuildType.getIsDefault().get());
     }
 
     /** Override as DSL objects have no reason to be compared for equality. */
@@ -695,6 +696,11 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     @Override
     public BuildType initWith(com.android.builder.model.BuildType that) {
+        // we need to avoid doing this because of Property objects that cannot
+        // be set from themselves
+        if (that == this) {
+            return this;
+        }
         dslChecksEnabled.set(false);
         try {
             return (BuildType) super.initWith(that);

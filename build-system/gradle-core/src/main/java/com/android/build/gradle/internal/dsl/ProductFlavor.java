@@ -175,6 +175,12 @@ public class ProductFlavor extends BaseFlavor {
 
     @Override
     protected void _initWith(@NonNull BaseConfig that) {
+        // we need to avoid doing this because of Property objects that cannot
+        // be set from themselves
+        if (this == that) {
+            return;
+        }
+
         super._initWith(that);
 
         if (that instanceof ProductFlavor) {
