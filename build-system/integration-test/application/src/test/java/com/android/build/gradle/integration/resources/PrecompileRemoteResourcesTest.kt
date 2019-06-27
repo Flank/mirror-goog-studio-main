@@ -173,7 +173,7 @@ class PrecompileRemoteResourcesTest {
             .run(":app:assembleDebug")
 
         checkAarResourcesCompilerTransformOutput()
-        checkValuesAndLayoutResourcedAreMerged(
+        checkValuesResourcedAreMerged(
             FileUtils.join(
                 project.getSubproject(":app").intermediatesDir,
                 FD_RES,
@@ -247,11 +247,14 @@ class PrecompileRemoteResourcesTest {
                 }
             }
         }
-        // values and layout resources shouldn't be here
+        // values resources shouldn't be here
         assertThat(outputDir).isNotNull()
-        assertThat(outputDir!!.listFiles()).hasLength(2)
+        assertThat(outputDir!!.listFiles()).hasLength(3)
         assertThat(outputDir.listFiles()!!.map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
             listOf(
+                Aapt2RenamingConventions.compilationRename(
+                    File(File("layout"), "layout_random_name.xml")
+                ),
                 Aapt2RenamingConventions.compilationRename(
                     File(File("drawable-v26"), "ic_launcher_background.xml")
                 ),
@@ -262,13 +265,10 @@ class PrecompileRemoteResourcesTest {
         )
     }
 
-    private fun checkValuesAndLayoutResourcedAreMerged(mergedResDir: File) {
-        assertThat(mergedResDir.listFiles()).hasLength(4)
+    private fun checkValuesResourcedAreMerged(mergedResDir: File) {
+        assertThat(mergedResDir.listFiles()).hasLength(3)
         assertThat(mergedResDir.listFiles()!!.map { file -> file.name }.toSortedSet()).containsExactlyElementsIn(
             listOf(
-                Aapt2RenamingConventions.compilationRename(
-                    File(File("layout"), "layout_random_name.xml")
-                ),
                 Aapt2RenamingConventions.compilationRename(
                     File(File("mipmap-anydpi-v26"), "ic_launcher.xml")
                 ),
@@ -283,6 +283,7 @@ class PrecompileRemoteResourcesTest {
     }
 
     private fun checkAarResourcesAddedToApk(apk: Apk) {
+        assertThatApk(apk).containsResource("layout/layout_random_name.xml")
         assertThatApk(apk).containsResource("drawable-v26/ic_launcher_background.xml")
     }
 }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dependency
 
 import com.android.SdkConstants
 import com.android.SdkConstants.FD_RES
-import com.android.SdkConstants.FD_RES_LAYOUT
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
@@ -57,9 +56,7 @@ abstract class AarResourcesCompilerTransform :
 
         val resourceFolders = if (resourceDir.exists()) {
             resourceDir.listFiles { dir, name ->
-                dir.isDirectory && !name.startsWith(FD_RES_LAYOUT) && !name.startsWith(
-                    FD_RES_VALUES
-                )
+                dir.isDirectory && !name.startsWith(FD_RES_VALUES)
             }
         } else {
             arrayOf<File>()

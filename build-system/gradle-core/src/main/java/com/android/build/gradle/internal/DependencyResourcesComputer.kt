@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal
 
-import com.android.SdkConstants.FD_RES_LAYOUT
 import com.android.SdkConstants.FD_RES_VALUES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
@@ -69,11 +68,10 @@ class DependencyResourcesComputer {
         libraries?.let {
             val libArtifacts = it.artifacts
 
-            // Layout resources can have databinding values so they need to go through the merging
-            // step, same thing for values resources as we impose stricter rules for them different
-            // from aapt.
+            // For values resources we impose stricter rules different from aapt so they need to go
+            // through the merging step.
             val folderFilter = { folder: File ->
-                folder.name.startsWith(FD_RES_LAYOUT) || folder.name.startsWith(FD_RES_VALUES)
+                folder.name.startsWith(FD_RES_VALUES)
             }
 
             // the order of the artifact is descending order, so we need to reverse it.
