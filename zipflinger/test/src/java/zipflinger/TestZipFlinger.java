@@ -124,7 +124,7 @@ public class TestZipFlinger extends TestBase {
 
         exceptionCaught = false;
         try {
-            zipArchive.add(new ZipSource(new File("deadbeed"), null));
+            zipArchive.add(new ZipSource(getFile("newArchive.zip")));
         } catch (IllegalStateException e) {
             exceptionCaught = true;
         }

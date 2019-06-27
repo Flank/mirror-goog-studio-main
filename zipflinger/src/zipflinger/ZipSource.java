@@ -36,11 +36,6 @@ public class ZipSource {
         this.file = file;
     }
 
-    ZipSource(@NonNull File file, @NonNull ZipMap map) {
-        this.file = file;
-        this.map = map;
-    }
-
     @NonNull
     public ZipSourceEntry select(@NonNull String entryName, @NonNull String newName) {
         Entry entry = map.getEntries().get(entryName);
@@ -59,9 +54,8 @@ public class ZipSource {
 
     @NonNull
     public static ZipSource selectAll(@NonNull File file) throws IOException {
-        ZipMap map = ZipMap.from(file, false);
-        ZipSource source = new ZipSource(file, map);
-        for (zipflinger.Entry e : map.getEntries().values()) {
+        ZipSource source = new ZipSource(file);
+        for (zipflinger.Entry e : source.entries().values()) {
             source.select(e.getName(), e.getName());
         }
         return source;
@@ -79,10 +73,6 @@ public class ZipSource {
 
     FileChannel getChannel() {
         return channel;
-    }
-
-    ZipMap getMap() {
-        return map;
     }
 
     List<? extends Source> getSelectedEntries() {
