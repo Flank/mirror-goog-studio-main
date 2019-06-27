@@ -25,9 +25,9 @@
 
 using profiler::proto::AllocationContextsResponse;
 using profiler::proto::AllocationsInfo;
-using profiler::proto::DumpStartStatus;
 using profiler::proto::ForceGarbageCollectionRequest;
 using profiler::proto::ForceGarbageCollectionResponse;
+using profiler::proto::HeapDumpStatus;
 using profiler::proto::LegacyAllocationContextsRequest;
 using profiler::proto::LegacyAllocationEventsRequest;
 using profiler::proto::LegacyAllocationEventsResponse;
@@ -147,19 +147,30 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     ::grpc::ServerContext* context, const TriggerHeapDumpRequest* request,
     TriggerHeapDumpResponse* response) {
   Trace trace("MEM:TriggerHeapDump");
-  auto result = collectors_.find(request->session().pid());
+  int32_t pid = request->session().pid();
+  auto result = collectors_.find(pid);
   auto* status = response->mutable_status();
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, status, DumpStartStatus::FAILURE_UNKNOWN)
+      result, collectors_, status, HeapDumpStatus::FAILURE_UNKNOWN)
 
-  if ((result->second).IsRunning()) {
-    if ((result->second).TriggerHeapDump(response)) {
-      status->set_status(DumpStartStatus::SUCCESS);
+  auto& collector = result->second;
+  if (collector.IsRunning()) {
+    int64_t request_time = clock_->GetCurrentTime();
+
+    auto* cache = collector.memory_cache();
+    bool dump_started = heap_dumper_->TriggerHeapDump(
+        pid, request_time, [this, cache](bool dump_success) {
+          cache->EndHeapDump(clock_->GetCurrentTime(), dump_success);
+        });
+    if (dump_started) {
+      cache->StartHeapDump(request_time, response);
+      status->set_status(HeapDumpStatus::SUCCESS);
+      status->set_start_time(request_time);
     } else {
-      status->set_status(DumpStartStatus::IN_PROGRESS);
+      status->set_status(HeapDumpStatus::IN_PROGRESS);
     }
   } else {
-    status->set_status(DumpStartStatus::NOT_PROFILING);
+    status->set_status(HeapDumpStatus::NOT_PROFILING);
   }
 
   return ::grpc::Status::OK;

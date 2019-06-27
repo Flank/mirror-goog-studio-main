@@ -28,6 +28,8 @@
 #include "perfd/energy/energy_profiler_component.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
+#include "perfd/memory/commands/heap_dump.h"
+#include "perfd/memory/heap_dump_manager.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "perfd/sessions/sessions_manager.h"
@@ -48,6 +50,8 @@ int Perfd::Initialize(Daemon* daemon) {
   static TraceManager trace_manager(daemon->clock(), daemon_config.cpu(),
                                     termination_service);
 
+  static HeapDumpManager heap_dumper(daemon->file_cache());
+
   // Register Components
   daemon->RegisterProfilerComponent(std::unique_ptr<CommonProfilerComponent>(
       new CommonProfilerComponent(daemon)));
@@ -56,8 +60,9 @@ int Perfd::Initialize(Daemon* daemon) {
       new CpuProfilerComponent(daemon->clock(), daemon->file_cache(),
                                daemon_config.cpu(), &trace_manager)));
 
-  daemon->RegisterProfilerComponent(std::unique_ptr<MemoryProfilerComponent>(
-      new MemoryProfilerComponent(daemon->clock(), daemon->file_cache())));
+  daemon->RegisterProfilerComponent(
+      std::unique_ptr<MemoryProfilerComponent>(new MemoryProfilerComponent(
+          daemon->clock(), daemon->file_cache(), &heap_dumper)));
 
   std::unique_ptr<EventProfilerComponent> event_component(
       new EventProfilerComponent(daemon->clock()));
@@ -94,6 +99,11 @@ int Perfd::Initialize(Daemon* daemon) {
   daemon->RegisterCommandHandler(
       proto::Command::STOP_CPU_TRACE, [](proto::Command command) {
         return StopCpuTrace::Create(command, &trace_manager);
+      });
+
+  daemon->RegisterCommandHandler(
+      proto::Command::HEAP_DUMP, [](proto::Command command) {
+        return HeapDump::Create(command, &heap_dumper);
       });
 
   return 0;

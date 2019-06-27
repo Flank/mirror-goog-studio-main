@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "daemon/service_component.h"
+#include "heap_dump_manager.h"
 #include "internal_memory_service.h"
 #include "memory_service.h"
 
@@ -26,9 +27,11 @@ namespace profiler {
 
 class MemoryProfilerComponent final : public ServiceComponent {
  public:
-  explicit MemoryProfilerComponent(Clock* clock, FileCache* file_cache)
+  explicit MemoryProfilerComponent(Clock* clock, FileCache* file_cache,
+                                   HeapDumpManager* dumper)
       : private_service_(&collectors_),
-        public_service_(&private_service_, clock, file_cache, &collectors_) {}
+        public_service_(&private_service_, clock, file_cache, dumper,
+                        &collectors_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }

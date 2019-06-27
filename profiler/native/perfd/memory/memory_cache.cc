@@ -27,6 +27,7 @@ using ::profiler::proto::BatchAllocationContexts;
 using ::profiler::proto::BatchAllocationEvents;
 using ::profiler::proto::BatchJNIGlobalRefEvent;
 using ::profiler::proto::HeapDumpInfo;
+using ::profiler::proto::HeapDumpStatus;
 using ::profiler::proto::MemoryData;
 using ::profiler::proto::TrackAllocationsResponse;
 using ::profiler::proto::TriggerHeapDumpResponse;

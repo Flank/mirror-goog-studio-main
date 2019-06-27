@@ -37,16 +37,12 @@ class MemoryCollector {
 
  public:
   MemoryCollector(int32_t pid, Clock* clock, FileCache* file_cache)
-      : memory_cache_(clock, file_cache, kSamplesCount),
-        clock_(clock),
-        file_cache_(file_cache),
-        pid_(pid) {}
+      : memory_cache_(clock, file_cache, kSamplesCount), pid_(pid) {}
   ~MemoryCollector();
 
   void Start();
   void Stop();
   bool IsRunning();
-  bool TriggerHeapDump(proto::TriggerHeapDumpResponse* response);
   void TrackAllocations(int64_t request_time, bool enabled, bool legacy,
                         proto::TrackAllocationsResponse* response);
   MemoryCache* memory_cache() { return &memory_cache_; }
@@ -54,16 +50,11 @@ class MemoryCollector {
  private:
   MemoryCache memory_cache_;
   MemoryUsageReaderImpl memory_usage_reader_;
-  Clock* clock_;
-  FileCache* file_cache_;
   std::thread server_thread_;
-  std::thread heap_dump_thread_;
   std::atomic_bool is_running_{false};
-  std::atomic_bool is_heap_dump_running_{false};
   int32_t pid_;
 
   void CollectorMain();
-  void HeapDumpMain(std::shared_ptr<File> file);
 };  // MemoryCollector
 
 }  // namespace profiler

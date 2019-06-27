@@ -58,8 +58,9 @@ class ActivityManager {
       std::string *error_string, int32_t timeout_sec,
       bool is_startup_profiling);
 
-  bool TriggerHeapDump(int pid, const std::string &file_path,
-                       std::string *error_string) const;
+  // Virtual to support easier mocking.
+  virtual bool TriggerHeapDump(int pid, const std::string &file_path,
+                               std::string *error_string) const;
 
   // Stops all ongoing profiling.
   void Shutdown();

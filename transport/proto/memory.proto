@@ -163,21 +163,6 @@ message MemoryData {
   repeated BatchJNIGlobalRefEvent jni_reference_event_batches = 9;
   repeated AllocationSamplingRateEvent alloc_sampling_rate_events = 10;
 }
-// Proto for describing a heap dump record.
-// A HeapDumpInfo is returned if either the start_time or end_time falls
-// within the requested time window.
-// e.g. An info can be returned across multiple requests:
-// 1. When a heap dump is first triggered with start_time specified.
-// 2. When the heap dump completes/fails with end_time specified.
-//
-// It is the responsibility of the requester to dedupe a completed info if
-// there was an unfinished info that was previously sent.
-message HeapDumpInfo {
-  int64 start_time = 1;
-  int64 end_time = 2;
-  string file_name = 3;
-  bool success = 4;
-}
 
 message TriggerHeapDumpRequest {
   Session session = 1;
@@ -185,7 +170,7 @@ message TriggerHeapDumpRequest {
 }
 
 message TriggerHeapDumpResponse {
-  DumpStartStatus status = 1;
+  HeapDumpStatus status = 1;
   // Returns the HeapDumpInfo immediately so the caller can
   // optionally track its completion
   HeapDumpInfo info = 2;
