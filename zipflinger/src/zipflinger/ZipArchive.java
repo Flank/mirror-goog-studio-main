@@ -102,7 +102,7 @@ public class ZipArchive implements Closeable {
             for (Source source : sources.getSelectedEntries()) {
                 writeSource(source);
             }
-        } catch (Exception e) {
+        } finally {
             sources.close();
         }
     }
