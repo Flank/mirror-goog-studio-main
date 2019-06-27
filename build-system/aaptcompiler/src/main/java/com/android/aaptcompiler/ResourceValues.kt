@@ -36,7 +36,9 @@ abstract class Item : Value() {
   abstract fun flatten(): ResValue?
 }
 
-// an ID resource. Has no real value, just a place holder.
+/**
+ * An ID resource. Has no real value, just a place holder.
+ */
 class Id: Item() {
   init {
     weak = true
@@ -55,7 +57,14 @@ class Id: Item() {
   }
 }
 
-class Reference(var name: ResourceName = ResourceName("", AaptResourceType.RAW, "")): Item() {
+/**
+ * A reference to another resource. This maps to android::Res_value::TYPE_REFERENCE.
+ *
+ * A reference can be symbolic (with the name set to a valid resource name) or be
+ * numeric (the id is set to a valid resource ID).
+ */
+
+class Reference(var name: ResourceName = ResourceName.EMPTY): Item() {
   enum class Type {
     RESOURCE,
     ATTRIBUTE
@@ -162,7 +171,7 @@ class AttributeResource(var typeMask: Int = 0): Value() {
 
     // Only one type must match between the actual and the expected.
     if ((actualType and (typeMask or Resources.Attribute.FormatFlags.REFERENCE_VALUE) == 0)) {
-      // TODO(@daniellabar): diagnostics
+      // TODO(b/139297538): diagnostics
       return false
     }
 
@@ -177,7 +186,7 @@ class AttributeResource(var typeMask: Int = 0): Value() {
 
       // If the attribute accepts integers, we can't fail here.
       if ((typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
-        // TODO(@daniellabar): diagnostics
+        // TODO(b/139297538): diagnostics
         return false
       }
     }
@@ -196,7 +205,7 @@ class AttributeResource(var typeMask: Int = 0): Value() {
 
       // If the attribute accepts integers, we can't fail here.
       if ((typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
-        // TODO(@daniellabar): diagnostics
+        // TODO(b/139297538): diagnostics
         return false
       }
     }
@@ -225,4 +234,89 @@ data class UntranslatableSection(var startIndex: Int, var endIndex: Int = startI
   fun shift(offset : Int): UntranslatableSection {
     return UntranslatableSection(startIndex + offset, endIndex + offset)
   }
+}
+
+
+/**
+ * A raw, unprocessed string. This may contain quotations, escape sequences, and whitespace. This
+ * shall *NOT* end up in the final resource table.
+ */
+class RawString(val value: StringPool.Ref) : Item() {
+  override fun clone(newPool: StringPool): RawString {
+    val newRaw = RawString(newPool.makeRef(value))
+    newRaw.source = source
+    newRaw.comment = comment
+    return newRaw
+  }
+
+  override fun flatten(): ResValue? {
+    return ResValue(ResValue.DataType.STRING, value.index().hostToDevice())
+  }
+}
+
+/**
+ * A processed string resource. Unlike [StyledString], the string does not contain any spans, and
+ * is represented a single string.
+ *
+ * @param ref The reference to this basic string in the associated [StringPool].
+ * @param untranslatables The list of indexed sections of this string that should not be translated.
+ */
+class BasicString(
+  val ref: StringPool.Ref, val untranslatables: List<UntranslatableSection> = listOf()) : Item() {
+
+  override fun toString(): String {
+    return ref.value()
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other is BasicString) {
+      if (toString() != other.toString()) {
+        return false
+      }
+
+      return untranslatables == other.untranslatables
+    }
+    return false
+  }
+
+  override fun clone(newPool: StringPool): BasicString {
+    val newString = BasicString(newPool.makeRef(ref), untranslatables)
+    newString.comment = comment
+    newString.source = source
+    return newString
+  }
+
+  override fun flatten(): ResValue? {
+    return ResValue(ResValue.DataType.STRING, ref.index().hostToDevice())
+  }
+}
+
+/**
+ * A processed string resource with xml spans. For example: "Hello <b>world!</b>"
+ *
+ * @param ref The reference to this StyledString in the associated [StringPool]. Use
+ * [spans] to find the spans associated with this string.
+ * @param untranslatableSections The list of indexed sections of this string that should not be
+ * translated.
+ */
+class StyledString(
+  val ref: StringPool.StyleRef,
+  val untranslatableSections: List<UntranslatableSection>) : Item() {
+
+  override fun toString(): String {
+    return ref.value()
+  }
+
+  override fun clone(newPool: StringPool): StyledString {
+    val newStyledString = StyledString(newPool.makeRef(ref), untranslatableSections)
+    newStyledString.comment = comment
+    newStyledString.source = source
+    return newStyledString
+  }
+
+  override fun flatten(): ResValue? {
+    return ResValue(ResValue.DataType.STRING, ref.index().hostToDevice())
+  }
+
+  fun spans() = ref.spans()
 }

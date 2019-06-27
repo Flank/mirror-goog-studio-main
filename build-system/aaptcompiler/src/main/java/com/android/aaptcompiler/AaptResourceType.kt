@@ -29,7 +29,7 @@ private const val STYLEABLE_TAG = "styleable"
 private const val TRANSITION_TAG = "transition"
 private const val XML_TAG = "xml"
 
-fun resourceTypefromTag(tag: String) =
+fun resourceTypeFromTag(tag: String) =
   when(tag) {
     ANIM_TAG -> AaptResourceType.ANIM
     ANIMATOR_TAG -> AaptResourceType.ANIMATOR

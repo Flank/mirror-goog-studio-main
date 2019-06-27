@@ -73,6 +73,10 @@ data class ResourceName(
         val maybePck = if (!pck.isNullOrEmpty()) "$pck:" else ""
         return "$maybePck${type.tagName}/$entry"
     }
+
+  companion object {
+    val EMPTY = ResourceName("", AaptResourceType.RAW, "")
+  }
 }
 
 class SourcedResourceName(val name: ResourceName, val line: Int)

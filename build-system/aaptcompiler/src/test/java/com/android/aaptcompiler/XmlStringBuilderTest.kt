@@ -106,15 +106,15 @@ class XmlStringBuilderTest {
   @Test
   fun testUnfinishedSpansCauseError() {
     val stringBuilder = XmlStringBuilder(false)
-    val spanAttempt = stringBuilder.startSpan("b;").append("hi").getFlattenedXml()
+    val spanAttempt = stringBuilder.startSpan("b").append("hi").getFlattenedXml()
     Truth.assertThat(stringBuilder.error).isNotEmpty()
     Truth.assertThat(spanAttempt.success).isFalse()
 
     stringBuilder.clear()
     val spanAttempt2 = stringBuilder
-      .startSpan("b;")
+      .startSpan("b")
       .append("how ")
-      .startSpan("i;")
+      .startSpan("i")
       .append("are you?")
       .endSpan()
       .getFlattenedXml()
@@ -135,7 +135,7 @@ class XmlStringBuilderTest {
     val stringBuilder = XmlStringBuilder(false)
     val spanAttempt = stringBuilder
       .append("Hello, ")
-      .startSpan("b;")
+      .startSpan("b")
       .append("my name is Bob.")
       .endSpan()
       .getFlattenedXml()
@@ -143,16 +143,16 @@ class XmlStringBuilderTest {
     Truth.assertThat(spanAttempt.styleString.str).isEqualTo("Hello, my name is Bob.")
     val spans = spanAttempt.styleString.spans
     Truth.assertThat(spans).hasSize(1)
-    Truth.assertThat(spans[0].name).isEqualTo("b;")
+    Truth.assertThat(spans[0].name).isEqualTo("b")
     Truth.assertThat(spans[0].firstChar).isEqualTo(7)
     // spans are inclusive of their last index.
     Truth.assertThat(spans[0].lastChar).isEqualTo(21)
 
     stringBuilder.clear()
     val spanAttempt2 = stringBuilder
-      .startSpan("i;")
+      .startSpan("i")
       .append("I\\'m running out of things ")
-      .startSpan("b;")
+      .startSpan("b")
       .append("to type!")
       .endSpan()
       .append("...")
@@ -165,10 +165,10 @@ class XmlStringBuilderTest {
     Truth.assertThat(spans2).hasSize(2)
     val firstSpan = spans2[0]
     val lastSpan = spans2[1]
-    Truth.assertThat(firstSpan.name).isEqualTo("i;")
+    Truth.assertThat(firstSpan.name).isEqualTo("i")
     Truth.assertThat(firstSpan.firstChar).isEqualTo(0)
     Truth.assertThat(firstSpan.lastChar).isEqualTo(36)
-    Truth.assertThat(lastSpan.name).isEqualTo("b;")
+    Truth.assertThat(lastSpan.name).isEqualTo("b")
     Truth.assertThat(lastSpan.firstChar).isEqualTo(26)
     Truth.assertThat(lastSpan.lastChar).isEqualTo(33)
   }

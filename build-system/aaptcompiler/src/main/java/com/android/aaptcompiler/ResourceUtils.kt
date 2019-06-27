@@ -296,7 +296,7 @@ fun parseResourceName(value: String) : ResourceNameInfo? {
     return null
   }
 
-  val resourceType = resourceTypefromTag(possibleResourceName.typeName)
+  val resourceType = resourceTypeFromTag(possibleResourceName.typeName)
   resourceType ?: return null
 
   if (possibleResourceName.entry.isEmpty()) {
