@@ -138,13 +138,16 @@ public class ZipArchive implements Closeable {
     // TODO: Zip64 -> Add boolean allowZip64
     @Override
     public void close() throws IOException {
-        if (closed) {
-            throw new IllegalStateException(
-                    String.format("Attempt to close closed archive '%s'", file));
+        try {
+            if (closed) {
+                throw new IllegalStateException(
+                        String.format("Attempt to close closed archive '%s'", file));
+            }
+            closed = true;
+            finishArchive();
+        } finally {
+            writer.close();
         }
-        closed = true;
-        finishArchive();
-        writer.close();
     }
 
     // 1. Fill empty space with virtual entries to be nice to top-down parsers.
