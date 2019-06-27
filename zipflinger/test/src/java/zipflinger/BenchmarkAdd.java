@@ -78,7 +78,7 @@ class BenchmarkAdd extends TestBase {
         ZipArchive archive = new ZipArchive(dst.toFile());
         for (String name : dexes.keySet()) {
             Path path = dexes.get(name);
-            FileSource fileSource = new FileSource(path.toFile(), name, Deflater.BEST_SPEED);
+            FileSource fileSource = new FileSource(path.toFile(), name, Deflater.NO_COMPRESSION);
             archive.add(fileSource);
         }
         archive.close();
