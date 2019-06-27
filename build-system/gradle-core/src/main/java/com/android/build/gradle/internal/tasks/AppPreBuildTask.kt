@@ -14,192 +14,165 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.internal.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import com.android.build.gradle.internal.TaskManager
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.NON_NAMESPACED_MANIFEST
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
+import com.android.build.gradle.internal.scope.VariantScope
+import com.google.common.collect.Maps
+import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
+import org.gradle.api.artifacts.result.ResolvedArtifactResult
+import org.gradle.api.file.FileCollection
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
+import java.io.File
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.google.common.collect.Maps;
-import java.io.File;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
-
-/** Pre build task that does some checks for application variants */
+/** Pre build task that does some checks for application variants  */
 @CacheableTask
-public class AppPreBuildTask extends NonIncrementalTask {
+open class AppPreBuildTask : NonIncrementalTask() {
 
     // list of Android only compile and runtime classpath.
-    private ArtifactCollection compileManifests;
-    private ArtifactCollection compileNonNamespacedManifests;
-    private ArtifactCollection runtimeManifests;
-    private ArtifactCollection runtimeNonNamespacedManifests;
-    private File fakeOutputDirectory;
+    private lateinit var compileManifests: ArtifactCollection
+    private lateinit var compileNonNamespacedManifests: ArtifactCollection
+    private lateinit var runtimeManifests: ArtifactCollection
+    private lateinit var runtimeNonNamespacedManifests: ArtifactCollection
+
+    @get:OutputDirectory
+    lateinit var fakeOutputDirectory: File
+        private set
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
-    public FileCollection getCompileManifests() {
-        return compileManifests.getArtifactFiles();
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    public FileCollection getCompileNonNamespacedManifests() {
-        return compileNonNamespacedManifests.getArtifactFiles();
+    fun getCompileManifests(): FileCollection {
+        return compileManifests.artifactFiles
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
-    public FileCollection getRuntimeManifests() {
-        return runtimeManifests.getArtifactFiles();
+    fun getCompileNonNamespacedManifests(): FileCollection {
+        return compileNonNamespacedManifests.artifactFiles
     }
 
     @InputFiles
     @PathSensitive(PathSensitivity.NAME_ONLY)
-    public FileCollection getRuntimeNonNamespacedManifests() {
-        return runtimeNonNamespacedManifests.getArtifactFiles();
+    fun getRuntimeManifests(): FileCollection {
+        return runtimeManifests.artifactFiles
     }
 
-    @OutputDirectory
-    public File getFakeOutputDirectory() {
-        return fakeOutputDirectory;
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    fun getRuntimeNonNamespacedManifests(): FileCollection {
+        return runtimeNonNamespacedManifests.artifactFiles
     }
 
-    @Override
-    protected void doTaskAction() {
-        Set<ResolvedArtifactResult> compileArtifacts = new HashSet<>();
-        compileArtifacts.addAll(compileManifests.getArtifacts());
-        compileArtifacts.addAll(compileNonNamespacedManifests.getArtifacts());
+    override fun doTaskAction() {
+        val compileArtifacts = mutableSetOf<ResolvedArtifactResult>()
+        compileArtifacts.addAll(compileManifests.artifacts)
+        compileArtifacts.addAll(compileNonNamespacedManifests.artifacts)
 
-        Set<ResolvedArtifactResult> runtimeArtifacts = new HashSet<>();
-        runtimeArtifacts.addAll(runtimeManifests.getArtifacts());
-        runtimeArtifacts.addAll(runtimeNonNamespacedManifests.getArtifacts());
+        val runtimeArtifacts = mutableSetOf<ResolvedArtifactResult>()
+        runtimeArtifacts.addAll(runtimeManifests.artifacts)
+        runtimeArtifacts.addAll(runtimeNonNamespacedManifests.artifacts)
 
         // create a map where the key is either the sub-project path, or groupId:artifactId for
         // external dependencies.
         // For external libraries, the value is the version.
-        Map<String, String> runtimeIds = Maps.newHashMapWithExpectedSize(runtimeArtifacts.size());
+        val runtimeIds = Maps.newHashMapWithExpectedSize<String, String>(runtimeArtifacts.size)
 
         // build a list of the runtime artifacts
-        for (ResolvedArtifactResult artifact : runtimeArtifacts) {
-            handleArtifact(artifact.getId().getComponentIdentifier(), runtimeIds::put);
+        for (artifact in runtimeArtifacts) {
+            handleArtifact(artifact.id.componentIdentifier) { key, value ->
+                runtimeIds[key] = value
+            }
         }
 
         // run through the compile ones to check for provided only.
-        for (ResolvedArtifactResult artifact : compileArtifacts) {
-            final ComponentIdentifier compileId = artifact.getId().getComponentIdentifier();
+        for (artifact in compileArtifacts) {
+            val compileId = artifact.id.componentIdentifier
             handleArtifact(
-                    compileId,
-                    (key, value) -> {
-                        String runtimeVersion = runtimeIds.get(key);
-                        if (runtimeVersion == null) {
-                            String display = compileId.getDisplayName();
-                            throw new RuntimeException(
-                                    "Android dependency '"
-                                            + display
-                                            + "' is set to compileOnly/provided which is not supported");
-                        }
-                    });
+                compileId
+            ) { key, _ ->
+                runtimeIds[key] ?: throw RuntimeException(
+                    "Android dependency '${compileId.displayName}' is set to compileOnly/provided which is not supported"
+                )
+            }
         }
     }
 
-    private void handleArtifact(
-            @NonNull ComponentIdentifier id, @NonNull BiConsumer<String, String> consumer) {
-        if (id instanceof ProjectComponentIdentifier) {
-            consumer.accept(((ProjectComponentIdentifier) id).getProjectPath().intern(), "");
-        } else if (id instanceof ModuleComponentIdentifier) {
-            ModuleComponentIdentifier moduleComponentId = (ModuleComponentIdentifier) id;
-            consumer.accept(
-                    moduleComponentId.getGroup() + ":" + moduleComponentId.getModule(),
-                    moduleComponentId.getVersion());
-        } else if (id instanceof OpaqueComponentArtifactIdentifier) {
-            // skip those for now.
-            // These are file-based dependencies and it's unlikely to be an AAR.
-        } else {
-            getLogger()
-                    .warn(
-                            "Unknown ComponentIdentifier type: "
-                                    + id.getClass().getCanonicalName());
+    private fun handleArtifact(
+        id: ComponentIdentifier,
+        handler: (String, String) -> Unit
+    ) {
+        when (id) {
+            is ProjectComponentIdentifier -> handler(id.projectPath, "")
+            is ModuleComponentIdentifier -> handler("${id.group}:${id.module}", id.version)
+            is OpaqueComponentArtifactIdentifier -> {
+                // skip those for now.
+                // These are file-based dependencies and it's unlikely to be an AAR.
+            }
+            else -> logger
+                .warn(
+                    "Unknown ComponentIdentifier type: ${id.javaClass.canonicalName}."
+                )
         }
     }
 
-    public static TaskManager.AbstractPreBuildCreationAction getCreationAction(
-            @NonNull VariantScope variantScope) {
-        if (variantScope.getType().isBaseModule()
-                && variantScope.getGlobalScope().hasDynamicFeatures()) {
-            return new CheckCreationAction(variantScope);
-        }
+    private class EmptyCreationAction(variantScope: VariantScope) :
+        TaskManager.AbstractPreBuildCreationAction<DefaultTask>(variantScope) {
 
-        return new EmptyCreationAction(variantScope);
+        override val type: Class<DefaultTask>
+            get() = DefaultTask::class.java
     }
 
-    private static class EmptyCreationAction
-            extends TaskManager.AbstractPreBuildCreationAction<DefaultTask> {
+    private class CheckCreationAction(variantScope: VariantScope) :
+        TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask>(variantScope) {
 
-        public EmptyCreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
-        }
+        override val type: Class<AppPreBuildTask>
+            get() = AppPreBuildTask::class.java
 
-        @NonNull
-        @Override
-        public Class<DefaultTask> getType() {
-            return DefaultTask.class;
-        }
-    }
-
-    private static class CheckCreationAction
-            extends TaskManager.AbstractPreBuildCreationAction<AppPreBuildTask> {
-
-        public CheckCreationAction(@NonNull VariantScope variantScope) {
-            super(variantScope);
-        }
-
-        @NonNull
-        @Override
-        public Class<AppPreBuildTask> getType() {
-            return AppPreBuildTask.class;
-        }
-
-        @Override
-        public void configure(@NonNull AppPreBuildTask task) {
-            super.configure(task);
-            task.setVariantName(variantScope.getFullVariantName());
+        override fun configure(task: AppPreBuildTask) {
+            super.configure(task)
+            task.variantName = variantScope.fullVariantName
 
             task.compileManifests =
-                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
-            task.compileNonNamespacedManifests =
-                    variantScope.getArtifactCollection(
-                            COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST);
+                variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST)
+            task.compileNonNamespacedManifests = variantScope.getArtifactCollection(
+                COMPILE_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
+            )
             task.runtimeManifests =
-                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
-            task.runtimeNonNamespacedManifests =
-                    variantScope.getArtifactCollection(
-                            RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST);
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST)
+            task.runtimeNonNamespacedManifests = variantScope.getArtifactCollection(
+                RUNTIME_CLASSPATH, ALL, NON_NAMESPACED_MANIFEST
+            )
 
-            task.fakeOutputDirectory =
-                    new File(
-                            variantScope.getGlobalScope().getIntermediatesDir(),
-                            "prebuild/" + variantScope.getVariantConfiguration().getDirName());
+            task.fakeOutputDirectory = File(
+                variantScope.globalScope.intermediatesDir,
+                "prebuild/${variantScope.variantConfiguration.dirName}"
+            )
+
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        fun getCreationAction(
+            variantScope: VariantScope
+        ): TaskManager.AbstractPreBuildCreationAction<*> {
+            return if (variantScope.type.isBaseModule && variantScope.globalScope.hasDynamicFeatures()) {
+                CheckCreationAction(variantScope)
+            } else EmptyCreationAction(variantScope)
 
         }
     }
