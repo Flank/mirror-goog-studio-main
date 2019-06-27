@@ -23,19 +23,14 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.VariantScope
-import com.google.common.collect.Maps
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.artifacts.component.ComponentIdentifier
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
-import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
-import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 import java.io.File
 
@@ -53,79 +48,30 @@ open class AppPreBuildTask : NonIncrementalTask() {
     lateinit var fakeOutputDirectory: File
         private set
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    fun getCompileManifests(): FileCollection {
-        return compileManifests.artifactFiles
+    @get:Input
+    val compileDependencies: Set<String> by lazy {
+        getAndroidDependencies(compileManifests, compileNonNamespacedManifests)
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    fun getCompileNonNamespacedManifests(): FileCollection {
-        return compileNonNamespacedManifests.artifactFiles
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    fun getRuntimeManifests(): FileCollection {
-        return runtimeManifests.artifactFiles
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    fun getRuntimeNonNamespacedManifests(): FileCollection {
-        return runtimeNonNamespacedManifests.artifactFiles
+    @get:Input
+    val runtimeDependencies: Set<String> by lazy {
+        getAndroidDependencies(runtimeManifests, runtimeNonNamespacedManifests)
     }
 
     override fun doTaskAction() {
-        val compileArtifacts = mutableSetOf<ResolvedArtifactResult>()
-        compileArtifacts.addAll(compileManifests.artifacts)
-        compileArtifacts.addAll(compileNonNamespacedManifests.artifacts)
+        val compileDeps = compileDependencies.toMutableSet()
+        compileDeps.removeAll(runtimeDependencies)
 
-        val runtimeArtifacts = mutableSetOf<ResolvedArtifactResult>()
-        runtimeArtifacts.addAll(runtimeManifests.artifacts)
-        runtimeArtifacts.addAll(runtimeNonNamespacedManifests.artifacts)
-
-        // create a map where the key is either the sub-project path, or groupId:artifactId for
-        // external dependencies.
-        // For external libraries, the value is the version.
-        val runtimeIds = Maps.newHashMapWithExpectedSize<String, String>(runtimeArtifacts.size)
-
-        // build a list of the runtime artifacts
-        for (artifact in runtimeArtifacts) {
-            handleArtifact(artifact.id.componentIdentifier) { key, value ->
-                runtimeIds[key] = value
-            }
-        }
-
-        // run through the compile ones to check for provided only.
-        for (artifact in compileArtifacts) {
-            val compileId = artifact.id.componentIdentifier
-            handleArtifact(
-                compileId
-            ) { key, _ ->
-                runtimeIds[key] ?: throw RuntimeException(
-                    "Android dependency '${compileId.displayName}' is set to compileOnly/provided which is not supported"
-                )
-            }
-        }
-    }
-
-    private fun handleArtifact(
-        id: ComponentIdentifier,
-        handler: (String, String) -> Unit
-    ) {
-        when (id) {
-            is ProjectComponentIdentifier -> handler(id.projectPath, "")
-            is ModuleComponentIdentifier -> handler("${id.group}:${id.module}", id.version)
-            is OpaqueComponentArtifactIdentifier -> {
-                // skip those for now.
-                // These are file-based dependencies and it's unlikely to be an AAR.
-            }
-            else -> logger
-                .warn(
-                    "Unknown ComponentIdentifier type: ${id.javaClass.canonicalName}."
-                )
+        if (compileDeps.isNotEmpty()) {
+            val formattedDependencies = compileDeps.joinToString(
+                prefix = "-> ",
+                separator = "\n-> ",
+                limit = 5,
+                truncated = "... (Total: ${compileDeps.size})"
+            )
+            throw RuntimeException(
+                "The following Android dependencies are set to compileOnly/provided which is not supported:\n$formattedDependencies"
+            )
         }
     }
 
@@ -175,5 +121,29 @@ open class AppPreBuildTask : NonIncrementalTask() {
             } else EmptyCreationAction(variantScope)
 
         }
+    }
+}
+
+private fun getAndroidDependencies(
+    artifactView1: ArtifactCollection,
+    artifactView2: ArtifactCollection
+): Set<String> {
+    val set = mutableSetOf<String>()
+    set.addAll(artifactView1.artifacts.mapNotNull { it.toIdString() })
+    set.addAll(artifactView2.artifacts.mapNotNull { it.toIdString() })
+
+    return set.toSortedSet()
+}
+
+private fun ResolvedArtifactResult.toIdString(): String? {
+    return when (val id = id.componentIdentifier) {
+        is ProjectComponentIdentifier -> id.projectPath
+        is ModuleComponentIdentifier -> id.toString()
+        is OpaqueComponentArtifactIdentifier -> {
+            // skip those for now.
+            // These are file-based dependencies and it's unlikely to be an AAR.
+            null
+        }
+        else -> null
     }
 }

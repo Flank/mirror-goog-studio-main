@@ -92,7 +92,8 @@ public class AppWithProvidedLibTest {
 
         assertThat(result.getFailureMessage())
                 .isEqualTo(
-                        "Android dependency 'project :library' is set to compileOnly/provided which is not supported");
+                        "The following Android dependencies are set to compileOnly/provided which is not supported:\n"
+                                + "-> :library");
     }
 
     @Test
