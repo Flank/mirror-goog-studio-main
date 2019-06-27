@@ -24,22 +24,15 @@ import java.util.zip.Deflater;
 public class BytesSource extends Source {
 
     private ByteBuffer buffer;
-    private final int compressionLevel;
-    private final byte[] bytes;
 
     /**
      * @param bytes
      * @param name
      * @param compressionLevel One of java.util.zip.Deflater compression level.
      */
-    public BytesSource(@NonNull byte[] bytes, @NonNull String name, int compressionLevel) {
+    public BytesSource(@NonNull byte[] bytes, @NonNull String name, int compressionLevel)
+            throws IOException {
         super(name);
-        this.bytes = bytes;
-        this.compressionLevel = compressionLevel;
-    }
-
-    @Override
-    void prepare() throws IOException {
         crc = Crc32.crc32(bytes);
         uncompressedSize = bytes.length;
         if (compressionLevel == Deflater.NO_COMPRESSION) {
@@ -52,6 +45,9 @@ public class BytesSource extends Source {
             compressionFlag = LocalFileHeader.COMPRESSION_DEFLATE;
         }
     }
+
+    @Override
+    void prepare() {}
 
     @Override
     void writeTo(@NonNull ZipWriter writer) throws IOException {
