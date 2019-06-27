@@ -136,19 +136,9 @@ public class TempSdkManager extends ExternalResource {
         File addonsDir = new File(mFakeSdk, SdkConstants.FD_ADDONS);
         addonsDir.mkdir();
 
-        File toolsDir = new File(mFakeSdk, SdkConstants.OS_SDK_TOOLS_FOLDER);
-        toolsDir.mkdir();
-        createSourceProps(toolsDir, PkgProps.PKG_REVISION, "1.0.1");
-        new File(toolsDir, LocalSdk.androidCmdName()).createNewFile();
-        new File(toolsDir, SdkConstants.FN_EMULATOR).createNewFile();
-        new File(toolsDir, SdkConstants.mkSdCardCmdName()).createNewFile();
-
         makePlatformTools(new File(mFakeSdk, SdkConstants.FD_PLATFORM_TOOLS));
         makeBuildTools(mFakeSdk);
 
-        File toolsLibEmuDir = new File(mFakeSdk, SdkConstants.OS_SDK_TOOLS_LIB_FOLDER + "emulator");
-        toolsLibEmuDir.mkdirs();
-        new File(toolsLibEmuDir, "snapshots.img").createNewFile();
         File platformsDir = new File(mFakeSdk, SdkConstants.FD_PLATFORMS);
 
         // Creating a fake target here on down

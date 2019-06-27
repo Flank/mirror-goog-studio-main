@@ -97,7 +97,6 @@ class AvdManagerCli extends CommandLineParser {
     private static final String KEY_SDCARD = "sdcard";
     private static final String KEY_FORCE = "force";
     private static final String KEY_RENAME = "rename";
-    private static final String KEY_SNAPSHOT = "snapshot";
     private static final String KEY_COMPACT = "compact";
     private static final String KEY_EOL_NULL = "null";
     private static final String KEY_TAG = "tag";
@@ -845,7 +844,6 @@ class AvdManagerCli extends CommandLineParser {
                     hardwareConfig,
                     device == null ? null : device.getBootProps(),
                     false,
-                    getFlagSnapshot(),
                     removePrevious,
                     false,
                     mSdkLog);
@@ -1491,9 +1489,6 @@ class AvdManagerCli extends CommandLineParser {
         define(Mode.BOOLEAN, false,
                 VERB_CREATE, OBJECT_AVD, "f", KEY_FORCE,
                 "Forces creation (overwrites an existing AVD)", false);
-        define(Mode.BOOLEAN, false,
-                VERB_CREATE, OBJECT_AVD, "a", KEY_SNAPSHOT,
-                "Place a snapshots file in the AVD, to enable persistence.", false);
         define(Mode.STRING, false,
                 VERB_CREATE, OBJECT_AVD, "b", KEY_ABI,
                 "The ABI to use for the AVD. The default is to auto-select the ABI if the platform has only one ABI for its system images.",
@@ -1570,13 +1565,6 @@ class AvdManagerCli extends CommandLineParser {
      */
     private boolean getFlagForce() {
         return (Boolean) getValue(null, null, KEY_FORCE);
-    }
-
-    /**
-     * Helper to retrieve the --snapshot flag.
-     */
-    private boolean getFlagSnapshot() {
-        return (Boolean) getValue(null, null, KEY_SNAPSHOT);
     }
 
     // -- some helpers for avd action flags

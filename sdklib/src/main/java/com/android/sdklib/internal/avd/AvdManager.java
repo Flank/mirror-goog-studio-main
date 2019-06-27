@@ -325,7 +325,6 @@ public class AvdManager {
     static final String CONFIG_INI = "config.ini"; //$NON-NLS-1$
     private static final String HARDWARE_QEMU_INI = "hardware-qemu.ini";
     private static final String SDCARD_IMG = "sdcard.img"; //$NON-NLS-1$
-    private static final String SNAPSHOTS_IMG = "snapshots.img"; //$NON-NLS-1$
 
     static final String INI_EXTENSION = ".ini"; //$NON-NLS-1$
     private static final Pattern INI_NAME_PATTERN = Pattern.compile("(.+)\\" + //$NON-NLS-1$
@@ -772,7 +771,6 @@ public class AvdManager {
      *        an existing sdcard image or a sdcard size (\d+, \d+K, \dM).
      * @param hardwareConfig the hardware setup for the AVD. Can be null to use defaults.
      * @param bootProps the optional boot properties for the AVD. Can be null.
-     * @param createSnapshot If true copy a blank snapshot image into the AVD.
      * @param removePrevious If true remove any previous files.
      * @param editExisting If true, edit an existing AVD, changing only the minimum required.
      *          This won't remove files unless required or unless {@code removePrevious} is set.
@@ -791,7 +789,6 @@ public class AvdManager {
             @Nullable Map<String,String> hardwareConfig,
             @Nullable Map<String,String> bootProps,
             boolean deviceHasPlayStore,
-            boolean createSnapshot,
             boolean removePrevious,
             boolean editExisting,
             @NonNull ILogger log) {
@@ -851,7 +848,6 @@ public class AvdManager {
 
             createAvdUserdata(systemImage, avdFolder, log);
             createAvdConfigFile(systemImage, configValues, log);
-            createAvdSnapshot(createSnapshot, editExisting, configValues, avdFolder, log);
 
             // Tag and abi type
             IdDisplay tag = systemImage.getTag();
@@ -1891,46 +1887,6 @@ public class AvdManager {
     }
 
     /**
-     * Create the snapshot file for an AVD
-     * @param createSnapshot whether this method should actually do something
-     * @param editExisting true if modifying an existing AVD
-     * @param values settings for the AVD
-     * @param avdFolder where the AVDs live
-     * @param log receives error messages
-     */
-    private void createAvdSnapshot(
-                      boolean            createSnapshot,
-                      boolean            editExisting,
-            @NonNull  Map<String,String> values,
-            @NonNull  File               avdFolder,
-            @NonNull  ILogger            log)
-            throws IOException, AvdMgrException {
-
-        if ( !createSnapshot ) {
-            return;
-        }
-        // Create the snapshot file
-        File snapshotDest = new File(avdFolder, SNAPSHOTS_IMG);
-        if (mFop.isFile(snapshotDest) && editExisting) {
-            log.info("Snapshot image already present, was not changed.\n");
-
-        } else {
-            File toolsLib = new File(mSdkHandler.getLocation(),
-                                     SdkConstants.OS_SDK_TOOLS_LIB_EMULATOR_FOLDER);
-            File snapshotBlank = new File(toolsLib, SNAPSHOTS_IMG);
-            if (!mFop.exists(snapshotBlank)) {
-                log.warning(
-                        "Unable to find a '%2$s%1$s' file to copy into the AVD folder.",
-                        SNAPSHOTS_IMG, toolsLib);
-                throw new AvdMgrException();
-            }
-
-            mFop.copyFile(snapshotBlank, snapshotDest);
-        }
-        values.put(AVD_INI_SNAPSHOT_PRESENT, "true");
-    }
-
-    /**
      * Write the CPU architecture to a new AVD
      * @param systemImage the system image of the AVD
      * @param values settings for the AVD
@@ -2097,13 +2053,10 @@ public class AvdManager {
             LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(log);
             LocalPackage p = mSdkHandler.getLocalPackage(SdkConstants.FD_EMULATOR, progress);
             if (p == null) {
-                p = mSdkHandler.getLocalPackage(SdkConstants.FD_TOOLS, progress);
-            }
-            if (p == null) {
-                progress.logWarning(String.format(
-                        "Unable to find %1$s in the %2$s or %3$s components",
-                        SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR,
-                        SdkConstants.FD_TOOLS));
+                progress.logWarning(
+                        String.format(
+                                "Unable to find %1$s in the %2$s component",
+                                SdkConstants.mkSdCardCmdName(), SdkConstants.FD_EMULATOR));
                 throw new AvdMgrException();
             }
             File mkSdCard = new File(p.getLocation(), SdkConstants.mkSdCardCmdName());

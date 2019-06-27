@@ -124,7 +124,6 @@ public class AvdManagerTest extends TestCase {
                 false,
                 false,
                 false,
-                false,
                 log);
 
         File avdConfigFile = new File(mAvdFolder, "config.ini");
@@ -158,7 +157,6 @@ public class AvdManagerTest extends TestCase {
           false,
           false,
           false,
-          false,
           log);
 
         File avdConfigFile = new File(mAvdFolder, "config.ini");
@@ -177,31 +175,6 @@ public class AvdManagerTest extends TestCase {
                     mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
     }
 
-    public void testCreateAvdWithSnapshot() throws Exception {
-        MockLog log = new MockLog();
-        mAvdManager.createAvd(
-                mAvdFolder,
-                this.getName(),
-                mSystemImageGoogle,
-                null,
-                null,
-                null,
-                null,
-                null,
-                false,
-                true,
-                false,
-                false,
-                log);
-
-        assertTrue("Expected snapshots.img in " + mAvdFolder,
-                mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
-        Map<String, String> properties = AvdManager.parseIniFile(
-                new FileOpFileWrapper(new File(mAvdFolder, "config.ini"), mFileOp, false), null);
-        assertEquals("true", properties.get("snapshot.present"));
-        assertFalse(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
-    }
-
     public void testCreateAvdWithBootProps() throws Exception {
         MockLog log = new MockLog();
         Map<String, String> expected = Maps.newTreeMap();
@@ -218,7 +191,6 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 expected,
-                false,
                 false,
                 false,
                 false,
@@ -248,7 +220,6 @@ public class AvdManagerTest extends TestCase {
                 false,
                 false,
                 false,
-                false,
                 log);
 
         File avdConfigFile = new File(mAvdFolder, "config.ini");
@@ -271,7 +242,6 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 null,
-                false,
                 false,
                 false,
                 false,
@@ -301,7 +271,6 @@ public class AvdManagerTest extends TestCase {
                 false,
                 false,
                 false,
-                false,
                 log);
 
         assertNotNull("Could not create AVD", origAvd);
@@ -328,7 +297,6 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 null,
-                false,
                 false,
                 false,
                 true, // Yes, edit the existing AVD
@@ -376,7 +344,6 @@ public class AvdManagerTest extends TestCase {
           false,
           false,
           false,
-          false,
           log);
 
         assertNotNull("Could not create AVD", origAvd);
@@ -400,7 +367,6 @@ public class AvdManagerTest extends TestCase {
           "222M", // Different SD card size
           newAvdConfig,
           null,
-          false,
           false,
           false,
           false, // Do not remove the original
@@ -474,7 +440,6 @@ public class AvdManagerTest extends TestCase {
           true, // deviceHasPlayStore
           false,
           false,
-          false,
           log);
         File configIniFile = new File(mAvdFolder, "config.ini");
         Map<String, String> baseProperties = AvdManager.parseIniFile(
@@ -492,7 +457,6 @@ public class AvdManagerTest extends TestCase {
           null,
           expected,
           false, // deviceHasPlayStore
-          false,
           true,
           false,
           log);
@@ -511,7 +475,6 @@ public class AvdManagerTest extends TestCase {
           null,
           expected,
           true, // deviceHasPlayStore
-          false,
           true,
           false,
           log);
@@ -530,7 +493,6 @@ public class AvdManagerTest extends TestCase {
           null,
           expected,
           true, // deviceHasPlayStore
-          false,
           true,
           false,
           log);
@@ -550,7 +512,6 @@ public class AvdManagerTest extends TestCase {
           null,
           expected,
           true, // deviceHasPlayStore
-          false,
           true,
           false,
           log);
@@ -569,7 +530,6 @@ public class AvdManagerTest extends TestCase {
           null,
           expected,
           true, // deviceHasPlayStore
-          false,
           true,
           false,
           log);
@@ -604,7 +564,6 @@ public class AvdManagerTest extends TestCase {
           baseHardwareProperties,
           null,
           true,
-          false,
           true,
           false,
           log);
@@ -639,7 +598,6 @@ public class AvdManagerTest extends TestCase {
           null,
           null,
           null,
-          false,
           false,
           false,
           false,

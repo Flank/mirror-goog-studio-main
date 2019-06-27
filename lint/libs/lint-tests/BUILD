@@ -41,7 +41,6 @@ kotlin_test(
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
-        "//prebuilts/studio/sdk:typos",
         "//tools/adt/idea/android/annotations",
         "//tools/base/files/typos",
     ],

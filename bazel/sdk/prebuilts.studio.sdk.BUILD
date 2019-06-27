@@ -157,20 +157,6 @@ java_import(
     ],
 )
 
-filegroup(
-    name = "tools/support-annotations",
-    srcs = sdk_glob(
-        include = ["tools/support/annotations.jar"],
-    ),
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "typos",
-    srcs = sdk_glob(["tools/support/typos-*.txt"]),
-    visibility = ["//visibility:public"],
-)
-
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
     name = "platforms/android-27",

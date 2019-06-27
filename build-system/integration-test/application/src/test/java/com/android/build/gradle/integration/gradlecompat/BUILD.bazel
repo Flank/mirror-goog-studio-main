@@ -16,7 +16,7 @@ TEST_DEPS = [
 OLD_GRADLE_VERSION_FOR_TESTING = "5.3.1"
 
 TEST_DATA = [
-    "//prebuilts/studio/sdk:typos",  #something from the SDK to make the test framework happy.
+    "//prebuilts/studio/sdk:platform-tools",  #something from the SDK to make the test framework happy.
     "//prebuilts/tools/common/kotlin-plugin:Kotlin/kotlinc/build.txt",
     "//tools/external/gradle:gradle-distrib-" + OLD_GRADLE_VERSION_FOR_TESTING,
 ]

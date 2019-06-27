@@ -541,65 +541,10 @@ public final class SdkConstants {
     public static final String OS_SDK_DOCS_FOLDER = FD_DOCS + File.separator;
 
     /**
-     * Path of the tools directory relative to the sdk folder, or to a platform folder. This is an
-     * OS path, ending with a separator.
-     */
-    public static final String OS_SDK_TOOLS_FOLDER = FD_TOOLS + File.separator;
-
-    /**
-     * Path of the lib directory relative to the sdk folder, or to a platform folder. This is an OS
-     * path, ending with a separator.
-     */
-    public static final String OS_SDK_TOOLS_LIB_FOLDER =
-            OS_SDK_TOOLS_FOLDER + FD_LIB + File.separator;
-
-    /**
-     * Path of the lib directory relative to the sdk folder, or to a platform folder. This is an OS
-     * path, ending with a separator.
-     */
-    public static final String OS_SDK_TOOLS_LIB_EMULATOR_FOLDER =
-            OS_SDK_TOOLS_LIB_FOLDER + "emulator" + File.separator; //$NON-NLS-1$
-
-    /**
      * Path of the platform tools directory relative to the sdk folder. This is an OS path, ending
      * with a separator.
      */
     public static final String OS_SDK_PLATFORM_TOOLS_FOLDER = FD_PLATFORM_TOOLS + File.separator;
-
-    /**
-     * Path of the build tools directory relative to the sdk folder. This is an OS path, ending with
-     * a separator.
-     */
-    public static final String OS_SDK_BUILD_TOOLS_FOLDER = FD_BUILD_TOOLS + File.separator;
-
-    /**
-     * Path of the Platform tools Lib directory relative to the sdk folder. This is an OS path,
-     * ending with a separator.
-     */
-    public static final String OS_SDK_PLATFORM_TOOLS_LIB_FOLDER =
-            OS_SDK_PLATFORM_TOOLS_FOLDER + FD_LIB + File.separator;
-
-    /**
-     * Path of the bin folder of proguard folder relative to the sdk folder. This is an OS path,
-     * ending with a separator.
-     */
-    public static final String OS_SDK_TOOLS_PROGUARD_BIN_FOLDER =
-            OS_SDK_TOOLS_FOLDER
-                    + "proguard" //$NON-NLS-1$
-                    + File.separator
-                    + "bin" //$NON-NLS-1$
-                    + File.separator;
-
-    /**
-     * Path of the template gradle wrapper folder relative to the sdk folder. This is an OS path,
-     * ending with a separator.
-     */
-    public static final String OS_SDK_TOOLS_TEMPLATES_GRADLE_WRAPPER_FOLDER =
-            OS_SDK_TOOLS_FOLDER
-                    + FD_TEMPLATES
-                    + File.separator
-                    + FD_GRADLE_WRAPPER
-                    + File.separator;
 
     /* Folder paths relative to a platform or add-on folder */
 
