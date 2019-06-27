@@ -27,10 +27,11 @@ namespace profiler {
 jvmtiEnv* CreateJvmtiEnv(JavaVM* vm) {
   jvmtiEnv* jvmti_env;
   jint jvmti_flag = JVMTI_VERSION_1_2;
-  if (!DeviceInfo::is_user_build()) {
+  if (!DeviceInfo::is_user_build() &&
+      DeviceInfo::api_level() >= DeviceInfo::P) {
     // On non-user-build devices (such as userdebug build), we use flag
     // |kArtTiVersion| as defined in //art/openjdkjvmti/art_jvmti.h to support
-    // non-debuggable apps.
+    // non-debuggable apps. The flag was introduced in Android P (API 28).
     jvmti_flag = JVMTI_VERSION_1_2 | 0x40000000;
   }
   jint result = vm->GetEnv((void**)&jvmti_env, jvmti_flag);
