@@ -57,13 +57,10 @@ See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details
             super.configure(task)
             task.variantName = variantScope.fullVariantName
 
-            task.runtimeClasspath =
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
-
+            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
             task.compileClasspath =
                 Objects.requireNonNull<BaseVariantData>(variantScope.testedVariantData)
-                    .scope
-                    .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
+                    .scope.variantDependencies.runtimeClasspath
 
             task.fakeOutputDirectory = File(
                 variantScope.globalScope.intermediatesDir,

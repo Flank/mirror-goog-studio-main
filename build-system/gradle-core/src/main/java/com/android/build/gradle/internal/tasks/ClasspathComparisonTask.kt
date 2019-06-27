@@ -16,17 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.google.common.collect.Maps
-import org.gradle.api.artifacts.ArtifactCollection
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
-import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.CompileClasspath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import java.io.File
-import java.util.HashMap
 
 /**
  * Abstract class used to compare two configurations, and to report differences in versions of
@@ -37,27 +32,25 @@ import java.util.HashMap
 abstract class ClasspathComparisonTask : NonIncrementalTask() {
 
     @get:Internal
-    protected lateinit var runtimeClasspath: ArtifactCollection
+    protected lateinit var runtimeClasspath: Configuration
+
+    @get:Input
+    val runtimeVersionMap: Map<Info, String> by lazy {
+        runtimeClasspath.toVersionMap()
+    }
+
     @get:Internal
-    protected lateinit var compileClasspath: ArtifactCollection
+    protected lateinit var compileClasspath: Configuration
+
+    @get:Input
+    val compileVersionMap: Map<Info, String> by lazy {
+        compileClasspath.toVersionMap()
+    }
+
     // fake output dir so that the task doesn't run unless an input has changed.
     @get:OutputDirectory
     var fakeOutputDirectory: File? = null
         protected set
-
-    // even though the files are jars, we don't care about changes to the files, only if files
-    // are removed or added. We need to find a better way to declare this.
-    @get:CompileClasspath
-    @get:PathSensitive(PathSensitivity.NONE)
-    val runtimeClasspathFC: FileCollection
-        get() = runtimeClasspath.artifactFiles
-
-    // even though the files are jars, we don't care about changes to the files, only if files
-    // are removed or added. We need to find a better way to declare this.
-    @get:CompileClasspath
-    @get:PathSensitive(PathSensitivity.NONE)
-    val compileClasspathFC: FileCollection
-        get() = compileClasspath.artifactFiles
 
     protected abstract fun onDifferentVersionsFound(
         group: String,
@@ -67,45 +60,31 @@ abstract class ClasspathComparisonTask : NonIncrementalTask() {
     )
 
     override fun doTaskAction() {
-        val runtimeArtifacts = runtimeClasspath.artifacts
-        val compileArtifacts = compileClasspath.artifacts
+        val runtimeMap = runtimeVersionMap
+        for (compileEntry in compileVersionMap.entries) {
+            val runtimeVersion = runtimeMap[compileEntry.key] ?: continue
 
-        // Store a map of groupId -> (artifactId -> versions)
-        val runtimeIds =
-            Maps.newHashMapWithExpectedSize<String, MutableMap<String, String>>(runtimeArtifacts.size)
-
-        for (artifact in runtimeArtifacts) {
-            // only care about external dependencies to compare versions.
-            val componentIdentifier = artifact.id.componentIdentifier
-            if (componentIdentifier is ModuleComponentIdentifier) {
-
-                // get the sub-map, creating it if needed.
-                val subMap = runtimeIds.computeIfAbsent(componentIdentifier.group) {  HashMap() }
-
-                subMap[componentIdentifier.module] = componentIdentifier.version
-            }
-        }
-
-        for (artifact in compileArtifacts) {
-            // only care about external dependencies to compare versions.
-            val componentIdentifier = artifact.id.componentIdentifier
-            if (componentIdentifier is ModuleComponentIdentifier) {
-
-                val subMap = runtimeIds[componentIdentifier.group] ?: continue
-
-                val runtimeVersion = subMap[componentIdentifier.module] ?: continue
-
-                if (runtimeVersion == componentIdentifier.version) {
-                    continue
-                }
-
+            if (runtimeVersion != compileEntry.value) {
                 onDifferentVersionsFound(
-                    componentIdentifier.group,
-                    componentIdentifier.module,
+                    compileEntry.key.group,
+                    compileEntry.key.module,
                     runtimeVersion,
-                    componentIdentifier.version
+                    compileEntry.value
                 )
             }
         }
     }
 }
+
+data class Info(
+    val group: String,
+    val module: String
+)
+
+private fun Configuration.toVersionMap(): Map<Info, String> =
+    incoming.resolutionResult.allComponents
+        .asSequence()
+        .filter { it.id is ModuleComponentIdentifier }
+        .map { it.id as ModuleComponentIdentifier }
+        .map { Info(it.group, it.module) to it.version }
+        .toMap()

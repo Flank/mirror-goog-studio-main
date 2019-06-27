@@ -84,10 +84,8 @@ dependencies {
         override fun configure(task: AppClasspathCheckTask) {
             task.variantName = variantScope.fullVariantName
 
-            task.runtimeClasspath =
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES)
-            task.compileClasspath =
-                variantScope.getArtifactCollection(COMPILE_CLASSPATH, EXTERNAL, CLASSES)
+            task.runtimeClasspath = variantScope.variantDependencies.runtimeClasspath
+            task.compileClasspath = variantScope.variantDependencies.compileClasspath
             task.fakeOutputDirectory = FileUtils.join(
                 variantScope.globalScope.intermediatesDir,
                 name,
