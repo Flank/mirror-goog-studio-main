@@ -93,10 +93,10 @@ public class DexArchiveMergerTest {
     public void test_monoDex_twoDexMerging() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("fst"), "A");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("fst"), "A");
         Path sndArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("snd"), "B");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
         DexArchiveTestUtil.mergeMonoDex(
@@ -114,7 +114,9 @@ public class DexArchiveMergerTest {
         for (int i = 0; i < 100; i++) {
             archives.add(
                     DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                            temporaryFolder.getRoot().toPath().resolve("A" + i), "A" + i));
+                            dexerTool,
+                            temporaryFolder.getRoot().toPath().resolve("A" + i),
+                            "A" + i));
             expectedClasses.add("A" + i);
         }
 
@@ -172,10 +174,10 @@ public class DexArchiveMergerTest {
     public void test_legacyMultiDex_mergeTwo() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("fst"), "A");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("fst"), "A");
         Path sndArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("snd"), "B");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
         DexArchiveTestUtil.mergeLegacyDex(
@@ -195,10 +197,10 @@ public class DexArchiveMergerTest {
     public void test_legacyMultiDex_allInMainDex() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("fst"), "A");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("fst"), "A");
         Path sndArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("snd"), "B");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
         DexArchiveTestUtil.mergeLegacyDex(
@@ -242,10 +244,10 @@ public class DexArchiveMergerTest {
     public void test_nativeMultiDex_mergeTwo() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("fst"), "A");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("fst"), "A");
         Path sndArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                        temporaryFolder.getRoot().toPath().resolve("snd"), "B");
+                        dexerTool, temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
         DexArchiveTestUtil.mergeNativeDex(
@@ -425,7 +427,7 @@ public class DexArchiveMergerTest {
         for (int i = 0; i < numClasses; i++) {
             archives.add(
                     DexArchiveTestUtil.createClassesAndConvertToDexArchive(
-                            archivePath.resolve("A" + i), "A" + i));
+                            dexerTool, archivePath.resolve("A" + i), "A" + i));
         }
         return archives;
     }

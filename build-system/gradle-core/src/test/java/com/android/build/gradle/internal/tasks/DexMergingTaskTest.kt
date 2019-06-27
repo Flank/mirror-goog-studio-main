@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.build.gradle.internal.transforms.NoOpMessageReceiver
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
-import com.android.builder.dexing.DexArchiveBuilderConfig
 import com.android.builder.dexing.DexMergerTool
-import com.android.builder.dexing.DexerTool
 import com.android.builder.dexing.DexingType
-import com.android.dx.command.dexer.DxContext
+import com.android.builder.dexing.r8.ClassFileProviderFactory
 import com.android.testutils.TestInputsGenerator
 import com.android.testutils.truth.MoreTruth.assertThatDex
 import com.android.testutils.truth.PathSubject.assertThat
@@ -269,16 +268,13 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
     TestInputsGenerator.dirWithEmptyClasses(classesInput, classes.toList())
 
     // now convert to dex archive
-    val builder = DexArchiveBuilder.createDxDexBuilder(
-        DexArchiveBuilderConfig(
-            DxContext(System.out, System.err),
-            true,
-            10,
-            0,
-            DexerTool.DX,
-            10,
-            true
-        )
+    val builder = DexArchiveBuilder.createD8DexBuilder(
+        1,
+        true,
+        ClassFileProviderFactory(emptyList()),
+        ClassFileProviderFactory(emptyList()),
+        false,
+        NoOpMessageReceiver()
     )
 
     ClassFileInputs.fromPath(classesInput)
@@ -286,7 +282,7 @@ fun generateArchive(tmp: TemporaryFolder, output: Path, classes: Collection<Stri
             builder.convert(
                 input.entries { p -> true },
                 output,
-                false
+                true
             )
         }
 }

@@ -98,11 +98,12 @@ public final class DexArchiveTestUtil {
      */
     @NonNull
     public static Path createClassesAndConvertToDexArchive(
-            @NonNull Path emptyDir, @NonNull String... classes) throws Exception {
+            @NonNull DexerTool dexerTool, @NonNull Path emptyDir, @NonNull String... classes)
+            throws Exception {
         Path classesInput = emptyDir.resolve("input");
         createClasses(classesInput, Sets.newHashSet(classes));
         Path dexArchive = emptyDir.resolve("dex_archive.jar");
-        convertClassesToDexArchive(classesInput, dexArchive, DexerTool.DX);
+        convertClassesToDexArchive(classesInput, dexArchive, dexerTool);
         return dexArchive;
     }
 
