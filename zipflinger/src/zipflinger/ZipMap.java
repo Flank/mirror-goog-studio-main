@@ -18,10 +18,10 @@ package zipflinger;
 import com.android.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,10 +54,9 @@ class ZipMap {
     }
 
     private void parse() throws IOException {
-        try (RandomAccessFile raf = new RandomAccessFile(file, "r");
-                FileChannel channel = raf.getChannel()) {
+        try (FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
 
-            fileSize = raf.length();
+            fileSize = channel.size();
 
             // TODO: Zip64 -> Retrieve more to get the "zip64 end of central directory locator"
             int sizeToRead = (int) Math.min(fileSize, EOCD_MAX_SIZE);
