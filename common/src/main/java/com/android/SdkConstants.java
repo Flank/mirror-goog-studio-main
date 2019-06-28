@@ -2745,7 +2745,8 @@ public final class SdkConstants {
             AndroidxName.of("android.databinding.", "ViewStubProxy");
     public static final AndroidxName BINDING_ADAPTER_ANNOTATION =
             AndroidxName.of("android.databinding.", "BindingAdapter");
-
+    public static final AndroidxName BINDING_METHODS_ANNOTATION =
+            AndroidxName.of("android.databinding.", "BindingMethods");
     public static final AndroidxName CLASS_LIVE_DATA =
             AndroidxName.of("android.arch.lifecycle.", "LiveData");
     public static final AndroidxName CLASS_OBSERVABLE_BOOLEAN =
