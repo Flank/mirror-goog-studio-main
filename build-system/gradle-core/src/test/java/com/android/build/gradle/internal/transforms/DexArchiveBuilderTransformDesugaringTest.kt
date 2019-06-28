@@ -14,541 +14,572 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms;
+package com.android.build.gradle.internal.transforms
 
-import static com.android.build.api.transform.Status.CHANGED;
-import static com.android.build.api.transform.Status.REMOVED;
-import static com.android.testutils.truth.PathSubject.assertThat;
-import static com.google.common.truth.Truth.assertThat;
+import com.android.build.api.transform.QualifiedContent
+import com.android.build.api.transform.Status
+import com.android.build.api.transform.Status.CHANGED
+import com.android.build.api.transform.Status.REMOVED
+import com.android.build.api.transform.TransformException
+import com.android.build.api.transform.TransformOutputProvider
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.transforms.testdata.Animal
+import com.android.build.gradle.internal.transforms.testdata.CarbonForm
+import com.android.build.gradle.internal.transforms.testdata.Cat
+import com.android.build.gradle.internal.transforms.testdata.Tiger
+import com.android.build.gradle.internal.transforms.testdata.Toy
+import com.android.build.gradle.options.SyncOptions
+import com.android.builder.core.DefaultDexOptions
+import com.android.builder.dexing.DexerTool
+import com.android.builder.utils.FileCache
+import com.android.testutils.TestInputsGenerator
+import com.android.testutils.TestUtils
+import com.android.testutils.truth.MoreTruth
+import com.android.testutils.truth.PathSubject.assertThat
+import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
+import com.google.common.collect.ImmutableSet
+import com.google.common.collect.Iterables
+import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.FileCollection
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
+import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.HashMap
+import java.util.Objects
+import java.util.regex.Pattern
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.Status;
-import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
-import com.android.build.api.transform.TransformInvocation;
-import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.transforms.testdata.Animal;
-import com.android.build.gradle.internal.transforms.testdata.CarbonForm;
-import com.android.build.gradle.internal.transforms.testdata.Cat;
-import com.android.build.gradle.internal.transforms.testdata.Tiger;
-import com.android.build.gradle.internal.transforms.testdata.Toy;
-import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.dexing.DexerTool;
-import com.android.builder.utils.FileCache;
-import com.android.testutils.TestInputsGenerator;
-import com.android.testutils.TestUtils;
-import com.android.testutils.truth.MoreTruth;
-import com.android.utils.FileUtils;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
+class DexArchiveBuilderTransformDesugaringTest {
 
-public class DexArchiveBuilderTransformDesugaringTest {
+    @JvmField
+    @Rule
+    var tmpDir = TemporaryFolder()
 
-    private TransformOutputProvider outputProvider;
-    private Path out;
-    @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
+    private lateinit var outputProvider: TransformOutputProvider
+    private lateinit var out: Path
 
     @Before
-    public void setUp() throws IOException {
-        out = tmpDir.getRoot().toPath().resolve("out");
-        Files.createDirectories(out);
-        outputProvider = new TestTransformOutputProvider(out);
+    @Throws(IOException::class)
+    fun setUp() {
+        out = tmpDir.root.toPath().resolve("out")
+        Files.createDirectories(out)
+        outputProvider = TestTransformOutputProvider(out)
     }
 
     @Test
-    public void testLambdas() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testLambdas() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(CarbonForm.class, Animal.class, Cat.class, Toy.class));
+            input,
+            ImmutableSet.of(
+                CarbonForm::class.java,
+                Animal::class.java,
+                Cat::class.java,
+                Toy::class.java
+            )
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        val dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null, 15, true, false).transform(invocation);
+        val invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null, 15, true, false).transform(invocation)
 
         // it should contain Cat and synthesized lambda class
-        MoreTruth.assertThatDex(getDex(Cat.class)).hasClassesCount(2);
+        MoreTruth.assertThatDex(getDex(Cat::class.java)).hasClassesCount(2)
     }
 
-    interface WithDefault {
-        default void foo() {}
+    internal interface WithDefault {
+        @JvmDefault
+        fun foo() {
+        }
     }
 
-    interface WithStatic {
-        static void bar() {}
+    internal interface WithStatic {
+        companion object {
+            @JvmStatic
+            fun bar() {
+            }
+        }
     }
 
-    static class ImplementsWithDefault implements WithDefault {}
+    internal class ImplementsWithDefault : WithDefault
 
-    static class InvokesDefault {
-        public static void main(String[] args) {
-            new ImplementsWithDefault().foo();
+    internal object InvokesDefault {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            ImplementsWithDefault().foo()
         }
     }
 
     @Test
-    public void testDefaultMethods_minApiBelow24() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testDefaultMethods_minApiBelow24() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(WithDefault.class, WithStatic.class));
+            input, ImmutableSet.of(WithDefault::class.java, WithStatic::class.java)
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        val dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null, 23, true, false).transform(invocation);
+        val invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null, 23, true, false).transform(invocation)
 
         // it contains both original and synthesized
-        MoreTruth.assertThatDex(getDex(WithDefault.class)).hasClassesCount(2);
-        MoreTruth.assertThatDex(getDex(WithStatic.class)).hasClassesCount(2);
+        MoreTruth.assertThatDex(getDex(WithDefault::class.java)).hasClassesCount(2)
+        MoreTruth.assertThatDex(getDex(WithStatic::class.java)).hasClassesCount(2)
     }
 
     @Test
-    public void testDefaultMethods_minApiAbove24() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testDefaultMethods_minApiAbove24() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(WithDefault.class, WithStatic.class));
+            input, ImmutableSet.of(WithDefault::class.java, WithStatic::class.java)
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        val dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null, 24, true, false).transform(invocation);
+        val invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null, 24, true, false).transform(invocation)
 
         // it contains only the original class
-        MoreTruth.assertThatDex(getDex(WithDefault.class)).hasClassesCount(1);
-        MoreTruth.assertThatDex(getDex(WithStatic.class)).hasClassesCount(1);
+        MoreTruth.assertThatDex(getDex(WithDefault::class.java)).hasClassesCount(1)
+        MoreTruth.assertThatDex(getDex(WithStatic::class.java)).hasClassesCount(1)
     }
 
     @Test
-    public void testIncremental_lambdaClass() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testIncremental_lambdaClass() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(CarbonForm.class, Animal.class, Cat.class, Toy.class));
+            input,
+            ImmutableSet.of(
+                CarbonForm::class.java,
+                Animal::class.java,
+                Cat::class.java,
+                Toy::class.java
+            )
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        var dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null).transform(invocation);
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null).transform(invocation)
 
-        File catDex = getDex(Cat.class);
-        File animalDex = getDex(Animal.class);
-        long catTimestamp = catDex.lastModified();
-        long animalTimestamp = animalDex.lastModified();
+        var catDex = getDex(Cat::class.java)
+        var animalDex = getDex(Animal::class.java)
+        val catTimestamp = catDex.lastModified()
+        val animalTimestamp = animalDex.lastModified()
 
-        TestUtils.waitForFileSystemTick();
+        TestUtils.waitForFileSystemTick()
 
-        dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, CHANGED, Toy.class))
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setIncremental(true)
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .build();
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(getChangedStatusMap(input, CHANGED, Toy::class.java))
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setIncremental(true)
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .build()
 
-        getTransform(null).transform(invocation);
-        catDex = getDex(Cat.class);
-        animalDex = getDex(Animal.class);
-        assertThat(catTimestamp).isLessThan(catDex.lastModified());
-        assertThat(animalTimestamp).isEqualTo(animalDex.lastModified());
+        getTransform(null).transform(invocation)
+        catDex = getDex(Cat::class.java)
+        animalDex = getDex(Animal::class.java)
+        assertThat(catTimestamp).isLessThan(catDex.lastModified())
+        assertThat(animalTimestamp).isEqualTo(animalDex.lastModified())
     }
 
     @Test
-    public void testIncremental_lambdaClass_removed() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testIncremental_lambdaClass_removed() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(CarbonForm.class, Animal.class, Cat.class, Toy.class));
+            input,
+            ImmutableSet.of(
+                CarbonForm::class.java,
+                Animal::class.java,
+                Cat::class.java,
+                Toy::class.java
+            )
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        var dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null).transform(invocation);
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null).transform(invocation)
 
-        File catDex = getDex(Cat.class);
-        File animalDex = getDex(Animal.class);
-        long catTimestamp = catDex.lastModified();
-        long animalTimestamp = animalDex.lastModified();
+        var catDex = getDex(Cat::class.java)
+        var animalDex = getDex(Animal::class.java)
+        val catTimestamp = catDex.lastModified()
+        val animalTimestamp = animalDex.lastModified()
 
-        TestUtils.waitForFileSystemTick();
+        TestUtils.waitForFileSystemTick()
 
-        dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, REMOVED, Toy.class))
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setIncremental(true)
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .build();
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(getChangedStatusMap(input, REMOVED, Toy::class.java))
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setIncremental(true)
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .build()
 
-        File toyDex = getDex(Toy.class);
-        getTransform(null).transform(invocation);
-        catDex = getDex(Cat.class);
-        animalDex = getDex(Animal.class);
-        assertThat(catTimestamp).isLessThan(catDex.lastModified());
-        assertThat(animalTimestamp).isEqualTo(animalDex.lastModified());
+        val toyDex = getDex(Toy::class.java)
+        getTransform(null).transform(invocation)
+        catDex = getDex(Cat::class.java)
+        animalDex = getDex(Animal::class.java)
+        assertThat(catTimestamp).isLessThan(catDex.lastModified())
+        assertThat(animalTimestamp).isEqualTo(animalDex.lastModified())
 
-        assertThat(toyDex).doesNotExist();
+        assertThat(toyDex).doesNotExist()
     }
 
     @Test
-    public void testIncremental_changeSuperTypes() throws Exception {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
+    @Throws(Exception::class)
+    fun testIncremental_changeSuperTypes() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input,
-                ImmutableSet.of(CarbonForm.class, Animal.class, Cat.class, Tiger.class, Toy.class));
+            input,
+            ImmutableSet.of(
+                CarbonForm::class.java,
+                Animal::class.java,
+                Cat::class.java,
+                Tiger::class.java,
+                Toy::class.java
+            )
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
+        var dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null).transform(invocation);
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null).transform(invocation)
 
-        File tigerDex = getDex(Tiger.class);
-        File carbonFormDex = getDex(CarbonForm.class);
-        long tigerTimestamp = tigerDex.lastModified();
-        long carbonFormTimestamp = carbonFormDex.lastModified();
+        var tigerDex = getDex(Tiger::class.java)
+        var carbonFormDex = getDex(CarbonForm::class.java)
+        val tigerTimestamp = tigerDex.lastModified()
+        val carbonFormTimestamp = carbonFormDex.lastModified()
 
-        dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, CHANGED, Animal.class))
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setIncremental(true)
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .build();
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(getChangedStatusMap(input, CHANGED, Animal::class.java))
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setIncremental(true)
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .build()
 
-        TestUtils.waitForFileSystemTick();
-        getTransform(null).transform(invocation);
-        tigerDex = getDex(Tiger.class);
-        carbonFormDex = getDex(CarbonForm.class);
-        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified());
-        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified());
+        TestUtils.waitForFileSystemTick()
+        getTransform(null).transform(invocation)
+        tigerDex = getDex(Tiger::class.java)
+        carbonFormDex = getDex(CarbonForm::class.java)
+        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified())
+        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified())
 
-        dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, CHANGED, Cat.class))
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setIncremental(true)
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .build();
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(getChangedStatusMap(input, CHANGED, Cat::class.java))
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setIncremental(true)
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .build()
 
-        TestUtils.waitForFileSystemTick();
-        getTransform(null).transform(invocation);
-        tigerDex = getDex(Tiger.class);
-        carbonFormDex = getDex(CarbonForm.class);
-        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified());
-        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified());
+        TestUtils.waitForFileSystemTick()
+        getTransform(null).transform(invocation)
+        tigerDex = getDex(Tiger::class.java)
+        carbonFormDex = getDex(CarbonForm::class.java)
+        assertThat(tigerTimestamp).isLessThan(tigerDex.lastModified())
+        assertThat(carbonFormTimestamp).isEqualTo(carbonFormDex.lastModified())
     }
 
     @Test
-    public void test_incremental_full_incremental()
-            throws IOException, TransformException, InterruptedException {
-        Path input = tmpDir.getRoot().toPath().resolve("input");
-        TestInputsGenerator.pathWithClasses(input, ImmutableSet.of(CarbonForm.class, Animal.class));
-
-        TransformInput dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(
-                                getChangedStatusMap(
-                                        input, Status.ADDED, CarbonForm.class, Animal.class))
-                        .build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(true)
-                        .build();
-        getTransform(null).transform(invocation);
-        File animalDex = getDex(Animal.class);
-
-        dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null).transform(invocation);
-
-        dirInput =
-                TransformTestHelper.directoryBuilder(input.toFile())
-                        .putChangedFiles(getChangedStatusMap(input, Status.REMOVED, Animal.class))
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .setIncremental(true)
-                        .build();
-        getTransform(null).transform(invocation);
-        assertThat(getDex(CarbonForm.class)).exists();
-        assertThat(animalDex).doesNotExist();
-    }
-
-    @Test
-    public void test_incremental_jarAndDir()
-            throws IOException, TransformException, InterruptedException {
-        Path jar = tmpDir.getRoot().toPath().resolve("input.jar");
-        Path input = tmpDir.getRoot().toPath().resolve("input");
-        TestInputsGenerator.pathWithClasses(jar, ImmutableSet.of(CarbonForm.class, Animal.class));
+    @Throws(IOException::class, TransformException::class, InterruptedException::class)
+    fun test_incremental_full_incremental() {
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                input, ImmutableSet.of(Toy.class, Cat.class, Tiger.class));
+            input,
+            ImmutableSet.of<Class<*>>(CarbonForm::class.java, Animal::class.java)
+        )
 
-        TransformInput dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build();
-        TransformInput jarInput = TransformTestHelper.singleJarBuilder(jar.toFile()).build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .addInput(jarInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null).transform(invocation);
-        long catTimestamp = getDex(Cat.class).lastModified();
-        long toyTimestamp = getDex(Toy.class).lastModified();
+        var dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(
+                getChangedStatusMap(
+                    input, Status.ADDED, CarbonForm::class.java, Animal::class.java
+                )
+            )
+            .build()
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(true)
+            .build()
+        getTransform(null).transform(invocation)
+        val animalDex = getDex(Animal::class.java)
 
-        jarInput =
-                TransformTestHelper.singleJarBuilder(jar.toFile())
-                        .setStatus(Status.CHANGED)
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(dirInput)
-                        .addInput(jarInput)
-                        .setIncremental(true)
-                        .build();
-        TestUtils.waitForFileSystemTick();
-        getTransform(null).transform(invocation);
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null).transform(invocation)
 
-        assertThat(catTimestamp).isLessThan(getDex(Cat.class).lastModified());
-        assertThat(toyTimestamp).isEqualTo(getDex(Toy.class).lastModified());
-    }
-
-    /** Regression test to make sure we do not add unchanged files to cache. */
-    @Test
-    public void test_incremental_notChangedNotAddedToCache() throws Exception {
-        Path jar = tmpDir.getRoot().toPath().resolve("input.jar");
-        TestInputsGenerator.pathWithClasses(jar, ImmutableSet.of(CarbonForm.class, Animal.class));
-
-        TransformInput jarInput =
-                TransformTestHelper.singleJarBuilder(jar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(jarInput)
-                        .setIncremental(false)
-                        .build();
-        FileCache cache = FileCache.getInstanceWithSingleProcessLocking(tmpDir.newFolder());
-        getTransform(cache).transform(invocation);
-        String[] numEntries = Objects.requireNonNull(cache.getCacheDirectory().list());
-
-        File referencedJar = tmpDir.newFile("referenced.jar");
-        TestInputsGenerator.jarWithEmptyClasses(referencedJar.toPath(), ImmutableList.of("A"));
-        TransformInput referencedInput =
-                TransformTestHelper.singleJarBuilder(referencedJar).build();
-
-        jarInput =
-                TransformTestHelper.singleJarBuilder(jar.toFile())
-                        .setStatus(Status.NOTCHANGED)
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .build();
-        invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(jarInput)
-                        .addReferenceInput(referencedInput)
-                        .setIncremental(true)
-                        .build();
-        getTransform(cache).transform(invocation);
-        assertThat(cache.getCacheDirectory().list()).named("cache entries").isEqualTo(numEntries);
+        dirInput = TransformTestHelper.directoryBuilder(input.toFile())
+            .putChangedFiles(getChangedStatusMap(input, Status.REMOVED, Animal::class.java))
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .setIncremental(true)
+            .build()
+        getTransform(null).transform(invocation)
+        assertThat(getDex(CarbonForm::class.java)).exists()
+        assertThat(animalDex).doesNotExist()
     }
 
     @Test
-    public void test_duplicateClasspathEntries() throws Exception {
-
-        Path lib1 = tmpDir.getRoot().toPath().resolve("lib1.jar");
+    @Throws(IOException::class, TransformException::class, InterruptedException::class)
+    fun test_incremental_jarAndDir() {
+        val jar = tmpDir.root.toPath().resolve("input.jar")
+        val input = tmpDir.root.toPath().resolve("input")
         TestInputsGenerator.pathWithClasses(
-                lib1, ImmutableSet.of(ImplementsWithDefault.class, WithDefault.class));
-        Path lib2 = tmpDir.getRoot().toPath().resolve("lib2.jar");
-        TestInputsGenerator.pathWithClasses(lib2, ImmutableSet.of(WithDefault.class));
-        Path app = tmpDir.getRoot().toPath().resolve("app");
-        TestInputsGenerator.pathWithClasses(app, ImmutableSet.of(InvokesDefault.class));
+            jar,
+            setOf(CarbonForm::class.java, Animal::class.java)
+        )
+        TestInputsGenerator.pathWithClasses(
+            input, setOf(Toy::class.java, Cat::class.java, Tiger::class.java)
+        )
 
-        TransformInput lib1Input =
-                TransformTestHelper.singleJarBuilder(lib1.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .build();
-        TransformInput lib2Input =
-                TransformTestHelper.singleJarBuilder(lib2.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .build();
-        TransformInput appInput = TransformTestHelper.directoryBuilder(app.toFile()).build();
+        val dirInput = TransformTestHelper.directoryBuilder(input.toFile()).build()
+        var jarInput = TransformTestHelper.singleJarBuilder(jar.toFile()).build()
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .addInput(jarInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null).transform(invocation)
+        val catTimestamp = getDex(Cat::class.java).lastModified()
+        val toyTimestamp = getDex(Toy::class.java).lastModified()
 
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(lib1Input)
-                        .addInput(lib2Input)
-                        .addInput(appInput)
-                        .setIncremental(false)
-                        .build();
-        getTransform(null, 15, true, true).transform(invocation);
+        jarInput = TransformTestHelper.singleJarBuilder(jar.toFile())
+            .setStatus(Status.CHANGED)
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(dirInput)
+            .addInput(jarInput)
+            .setIncremental(true)
+            .build()
+        TestUtils.waitForFileSystemTick()
+        getTransform(null).transform(invocation)
 
-        MoreTruth.assertThatDex(getDex(InvokesDefault.class)).hasClassesCount(1);
+        assertThat(catTimestamp).isLessThan(getDex(Cat::class.java).lastModified())
+        assertThat(toyTimestamp).isEqualTo(getDex(Toy::class.java).lastModified())
     }
 
-    /** Regression test for b/117062425. */
+    /** Regression test to make sure we do not add unchanged files to cache.  */
     @Test
-    public void test_incrementalDesugaringWithCaching() throws Exception {
-        Path lib1 = tmpDir.getRoot().toPath().resolve("lib1.jar");
-        TestInputsGenerator.pathWithClasses(lib1, ImmutableSet.of(ImplementsWithDefault.class));
-        Path lib2 = tmpDir.getRoot().toPath().resolve("lib2.jar");
-        TestInputsGenerator.pathWithClasses(lib2, ImmutableSet.of(WithDefault.class));
+    @Throws(Exception::class)
+    fun test_incremental_notChangedNotAddedToCache() {
+        val jar = tmpDir.root.toPath().resolve("input.jar")
+        TestInputsGenerator.pathWithClasses(
+            jar,
+            setOf(CarbonForm::class.java, Animal::class.java)
+        )
 
-        TransformInput lib1Input =
-                TransformTestHelper.singleJarBuilder(lib1.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .build();
+        var jarInput = TransformTestHelper.singleJarBuilder(jar.toFile())
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .build()
+        var invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(jarInput)
+            .setIncremental(false)
+            .build()
+        val cache = FileCache.getInstanceWithSingleProcessLocking(tmpDir.newFolder())
+        getTransform(cache).transform(invocation)
+        val numEntries = Objects.requireNonNull(cache.cacheDirectory.list())
+
+        val referencedJar = tmpDir.newFile("referenced.jar")
+        TestInputsGenerator.jarWithEmptyClasses(referencedJar.toPath(), ImmutableList.of("A"))
+        val referencedInput = TransformTestHelper.singleJarBuilder(referencedJar).build()
+
+        jarInput = TransformTestHelper.singleJarBuilder(jar.toFile())
+            .setStatus(Status.NOTCHANGED)
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .build()
+        invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(jarInput)
+            .addReferenceInput(referencedInput)
+            .setIncremental(true)
+            .build()
+        getTransform(cache).transform(invocation)
+        assertThat(cache.cacheDirectory.list()).named("cache entries").isEqualTo(numEntries)
+    }
+
+    @Test
+    @Throws(Exception::class)
+    fun test_duplicateClasspathEntries() {
+
+        val lib1 = tmpDir.root.toPath().resolve("lib1.jar")
+        TestInputsGenerator.pathWithClasses(
+            lib1,
+            setOf(ImplementsWithDefault::class.java, WithDefault::class.java)
+        )
+        val lib2 = tmpDir.root.toPath().resolve("lib2.jar")
+        TestInputsGenerator.pathWithClasses(
+            lib2,
+            setOf(WithDefault::class.java)
+        )
+        val app = tmpDir.root.toPath().resolve("app")
+        TestInputsGenerator.pathWithClasses(
+            app,
+            setOf(InvokesDefault::class.java)
+        )
+
+        val lib1Input = TransformTestHelper.singleJarBuilder(lib1.toFile())
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .build()
+        val lib2Input = TransformTestHelper.singleJarBuilder(lib2.toFile())
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .build()
+        val appInput = TransformTestHelper.directoryBuilder(app.toFile()).build()
+
+        val invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(lib1Input)
+            .addInput(lib2Input)
+            .addInput(appInput)
+            .setIncremental(false)
+            .build()
+        getTransform(null, 15, true, true).transform(invocation)
+
+        MoreTruth.assertThatDex(getDex(InvokesDefault::class.java)).hasClassesCount(1)
+    }
+
+    /** Regression test for b/117062425.  */
+    @Test
+    @Throws(Exception::class)
+    fun test_incrementalDesugaringWithCaching() {
+        val lib1 = tmpDir.root.toPath().resolve("lib1.jar")
+        TestInputsGenerator.pathWithClasses(
+            lib1,
+            setOf(ImplementsWithDefault::class.java)
+        )
+        val lib2 = tmpDir.root.toPath().resolve("lib2.jar")
+        TestInputsGenerator.pathWithClasses(
+            lib2,
+            setOf(WithDefault::class.java)
+        )
+
+        val lib1Input = TransformTestHelper.singleJarBuilder(lib1.toFile())
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .build()
         // Mimics dex that from cache for lib1.jar. Transform invocation should remove it.
-        Files.createFile(out.resolve("lib1.jar.jar"));
+        Files.createFile(out.resolve("lib1.jar.jar"))
 
-        TransformInput lib2Input =
-                TransformTestHelper.singleJarBuilder(lib2.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .setStatus(Status.CHANGED)
-                        .build();
-        TransformInvocation invocation =
-                TransformTestHelper.invocationBuilder()
-                        .setTransformOutputProvider(outputProvider)
-                        .addInput(lib1Input)
-                        .addInput(lib2Input)
-                        .setIncremental(true)
-                        .build();
-        getTransform(null, 15, true, true).transform(invocation);
-        List<Path> lib1DexOutputs =
-                Files.list(out)
-                        .filter(p -> p.getFileName().toString().startsWith("lib1.jar"))
-                        .collect(Collectors.toList());
-        assertThat(lib1DexOutputs).hasSize(1);
+        val lib2Input = TransformTestHelper.singleJarBuilder(lib2.toFile())
+            .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+            .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+            .setStatus(Status.CHANGED)
+            .build()
+        val invocation = TransformTestHelper.invocationBuilder()
+            .setTransformOutputProvider(outputProvider)
+            .addInput(lib1Input)
+            .addInput(lib2Input)
+            .setIncremental(true)
+            .build()
+        getTransform(null, 15, true, true).transform(invocation)
+
+        val lib1DexOutputs = out.toFile().listFiles()!!.filter { it.name.startsWith("lib1.jar") }
+        assertThat(lib1DexOutputs).hasSize(1)
     }
 
-    @NonNull
-    private DexArchiveBuilderTransform getTransform(
-            @Nullable FileCache userCache,
-            int minSdkVersion,
-            boolean isDebuggable,
-            boolean includeAndroidJar) {
-        FileCollection classpath = Mockito.mock(FileCollection.class);
-        Mockito.when(classpath.getFiles())
-                .thenReturn(
-                        includeAndroidJar
-                                ? ImmutableSet.of(TestUtils.getPlatformFile("android.jar"))
-                                : ImmutableSet.of());
-        return new DexArchiveBuilderTransformBuilder()
-                .setAndroidJarClasspath(classpath)
-                .setDexOptions(new DefaultDexOptions())
-                .setMessageReceiver(new NoOpMessageReceiver())
-                .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
-                .setUserLevelCache(userCache)
-                .setMinSdkVersion(minSdkVersion)
-                .setDexer(DexerTool.D8)
-                .setUseGradleWorkers(false)
-                .setInBufferSize(10)
-                .setOutBufferSize(10)
-                .setIsDebuggable(isDebuggable)
-                .setJava8LangSupportType(VariantScope.Java8LangSupport.D8)
-                .setProjectVariant("myVariant")
-                .setIncludeFeaturesInScope(false)
-                .setNumberOfBuckets(2)
-                .createDexArchiveBuilderTransform();
+    private fun getTransform(
+        userCache: FileCache?,
+        minSdkVersion: Int = 15,
+        isDebuggable: Boolean = true,
+        includeAndroidJar: Boolean = false
+    ): DexArchiveBuilderTransform {
+        val classpath = Mockito.mock(FileCollection::class.java)
+        Mockito.`when`(classpath.files)
+            .thenReturn(
+                if (includeAndroidJar)
+                    ImmutableSet.of(TestUtils.getPlatformFile("android.jar"))
+                else
+                    ImmutableSet.of()
+            )
+        return DexArchiveBuilderTransformBuilder()
+            .setAndroidJarClasspath(classpath)
+            .setDexOptions(DefaultDexOptions())
+            .setMessageReceiver(NoOpMessageReceiver())
+            .setErrorFormatMode(SyncOptions.ErrorFormatMode.HUMAN_READABLE)
+            .setUserLevelCache(userCache)
+            .setMinSdkVersion(minSdkVersion)
+            .setDexer(DexerTool.D8)
+            .setUseGradleWorkers(false)
+            .setInBufferSize(10)
+            .setOutBufferSize(10)
+            .setIsDebuggable(isDebuggable)
+            .setJava8LangSupportType(VariantScope.Java8LangSupport.D8)
+            .setProjectVariant("myVariant")
+            .setIncludeFeaturesInScope(false)
+            .setNumberOfBuckets(2)
+            .createDexArchiveBuilderTransform()
     }
 
-    @NonNull
-    private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
-        return getTransform(userCache, 15, true, false);
-    }
-
-    @NonNull
-    private File getDex(@NonNull Class<?> clazz) {
+    private fun getDex(clazz: Class<*>): File {
         return Iterables.getOnlyElement(
-                FileUtils.find(
-                        out.toFile(), Pattern.compile(".*" + clazz.getSimpleName() + "\\.dex")));
+            FileUtils.find(
+                out.toFile(), Pattern.compile(".*" + clazz.simpleName + "\\.dex")
+            )
+        )
     }
 
-    @NonNull
-    private Map<File, Status> getChangedStatusMap(
-            @NonNull Path root, @NonNull Status status, @NonNull Class<?>... classes) {
-        Map<File, Status> statusMap = new HashMap<>();
-        for (Class<?> clazz : classes) {
-            statusMap.put(root.resolve(TestInputsGenerator.getPath(clazz)).toFile(), status);
+    private fun getChangedStatusMap(
+        root: Path, status: Status, vararg classes: Class<*>
+    ): Map<File, Status> {
+        val statusMap = HashMap<File, Status>()
+        for (clazz in classes) {
+            statusMap[root.resolve(TestInputsGenerator.getPath(clazz)).toFile()] = status
         }
-        return statusMap;
+        return statusMap
     }
 }
