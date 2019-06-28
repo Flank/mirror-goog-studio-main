@@ -112,6 +112,7 @@ java_test(
         "test/resource/file4.txt",
         "test/resource/text.txt",
         "test/resource/zip_with_directories.zip",
+        "test/resource/two_files.zip",
     ]),
     jvm_flags = ["-Dtest.suite.jar=testsZipFlinger.jar"],
     test_class = "com.android.testutils.JarTestSuite",

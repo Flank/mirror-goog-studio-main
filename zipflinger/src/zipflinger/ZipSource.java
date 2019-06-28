@@ -23,13 +23,15 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.Deflater;
 
 public class ZipSource {
+    public static final int COMPRESSION_NO_CHANGE = -2;
     private final File file;
     private FileChannel channel;
     private ZipMap map;
 
-    private final List<ZipSourceEntry> selectedEntries = new ArrayList<>();
+    private final List<Source> selectedEntries = new ArrayList<>();
 
     public ZipSource(@NonNull File file) throws IOException {
         this.map = ZipMap.from(file, false);
@@ -37,13 +39,33 @@ public class ZipSource {
     }
 
     @NonNull
-    public ZipSourceEntry select(@NonNull String entryName, @NonNull String newName) {
+    public Source select(@NonNull String entryName, @NonNull String newName) {
+        return select(entryName, newName, COMPRESSION_NO_CHANGE);
+    }
+
+    /**
+     * Select an entry to be copied to the archive managed by zipflinger.
+     *
+     * <p>An entry will remain unchanged and zero-copy will happen when: - compression level is
+     * COMPRESSION_NO_CHANGE. - compression level is 1-9 and the entry is already compressed. -
+     * compression level is Deflater.NO_COMPRESSION and the entry is already uncompressed.
+     *
+     * <p>Otherwise, the entry is deflated/inflated accordingly via transfer to memory, crc
+     * calculation , and written to the target archive.
+     *
+     * @param Name of the entry in the source zip.
+     * @param Name of the entry in the destination zip.
+     * @param The desired compression level.
+     * @return
+     */
+    @NonNull
+    public Source select(@NonNull String entryName, @NonNull String newName, int compressionLevel) {
         Entry entry = map.getEntries().get(entryName);
         if (entry == null) {
             throw new IllegalStateException(
                     String.format("Cannot find '%s' in archive '%s'", entryName, map.getFile()));
         }
-        ZipSourceEntry entrySource = new ZipSourceEntry(newName, entry, this);
+        Source entrySource = newZipSourceEntryFor(newName, entry, this, compressionLevel);
         selectedEntries.add(entrySource);
         return entrySource;
     }
@@ -52,11 +74,10 @@ public class ZipSource {
         return map.getEntries();
     }
 
-    @NonNull
     public static ZipSource selectAll(@NonNull File file) throws IOException {
         ZipSource source = new ZipSource(file);
         for (zipflinger.Entry e : source.entries().values()) {
-            source.select(e.getName(), e.getName());
+            source.select(e.getName(), e.getName(), COMPRESSION_NO_CHANGE);
         }
         return source;
     }
@@ -77,5 +98,23 @@ public class ZipSource {
 
     List<? extends Source> getSelectedEntries() {
         return selectedEntries;
+    }
+
+    Source newZipSourceEntryFor(
+            String newName, Entry entry, ZipSource zipSource, int compressionLevel) {
+        // No change case.
+        if (compressionLevel == COMPRESSION_NO_CHANGE
+                || compressionLevel == Deflater.NO_COMPRESSION && !entry.isCompressed()
+                || compressionLevel != Deflater.NO_COMPRESSION && entry.isCompressed()) {
+            return new ZipSourceEntry(newName, entry, this);
+        }
+
+        // The entry needs to be inflated.
+        if (compressionLevel == Deflater.NO_COMPRESSION) {
+            return new ZipSourceEntryInflater(newName, entry, zipSource);
+        }
+
+        // The entry needs to be deflated.
+        return new ZipSourceEntryDeflater(newName, entry, zipSource, compressionLevel);
     }
 }

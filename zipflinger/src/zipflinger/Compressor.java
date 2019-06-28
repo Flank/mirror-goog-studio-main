@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.Inflater;
+import java.util.zip.InflaterOutputStream;
 
 public class Compressor {
 
@@ -43,5 +45,18 @@ public class Compressor {
     public static ByteBuffer deflate(@NonNull byte[] bytes, int compressionLevel)
             throws IOException {
         return deflate(bytes, 0, bytes.length, compressionLevel);
+    }
+
+    @NonNull
+    public static ByteBuffer inflate(@NonNull byte[] bytes) throws IOException {
+        NoCopyByteArrayOutputStream out = new NoCopyByteArrayOutputStream(bytes.length);
+        Inflater inflater = new Inflater(true);
+
+        try (InflaterOutputStream dout = new InflaterOutputStream(out, inflater)) {
+            dout.write(bytes);
+            dout.flush();
+        }
+
+        return out.getByteBuffer();
     }
 }

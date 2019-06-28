@@ -461,4 +461,32 @@ public class TestZipFlinger extends TestBase {
         Assert.assertTrue(
                 "BEST_SPEED is bigger than BEST_COMPRESSION", speedSize > compressionSize);
     }
+
+
+    @Test
+    public void testZipEntryChangeCompression() throws Exception {
+        Path src = getPath("two_files.zip");
+        Path dst = getPath("testZipEntryChanges.zip");
+        Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
+
+        Map<String, Entry> entries = ZipArchive.listEntries(src.toFile());
+        Assert.assertTrue("Entry compressed", entries.get("uncompressed.random").isCompressed());
+        Assert.assertTrue("Entry !compressed", !entries.get("compressed.random").isCompressed());
+
+        try (ZipArchive archive = new ZipArchive(dst.toFile())) {
+            ZipSource zipSource = new ZipSource(src.toFile());
+            zipSource.select("uncompressed.random", "a", Deflater.NO_COMPRESSION);
+            zipSource.select("uncompressed.random", "b", Deflater.BEST_SPEED);
+            zipSource.select("compressed.random", "c", Deflater.NO_COMPRESSION);
+            zipSource.select("compressed.random", "d", Deflater.BEST_SPEED);
+            archive.add(zipSource);
+        }
+        verifyArchive(dst.toFile());
+
+        entries = ZipArchive.listEntries(dst.toFile());
+        Assert.assertTrue("Entry a was modified", !entries.get("a").isCompressed());
+        Assert.assertTrue("Entry b was not modified", entries.get("b").isCompressed());
+        Assert.assertTrue("Entry c was not modified", !entries.get("c").isCompressed());
+        Assert.assertTrue("Entry d was modified", entries.get("d").isCompressed());
+    }
 }
