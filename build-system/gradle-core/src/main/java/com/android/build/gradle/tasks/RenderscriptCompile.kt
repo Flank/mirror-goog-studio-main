@@ -14,218 +14,175 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks;
+package com.android.build.gradle.tasks
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB;
-import static com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.process.GradleProcessExecutor;
-import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.NdkTask;
-import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.internal.compiler.DirectoryWalker;
-import com.android.builder.internal.compiler.RenderScriptProcessor;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.sdklib.BuildToolInfo;
-import com.android.utils.FileUtils;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
-import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.SkipWhenEmpty;
-import org.gradle.api.tasks.TaskProvider;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.RENDERSCRIPT
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
+import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_LIB
+import com.android.build.gradle.internal.scope.InternalArtifactType.RENDERSCRIPT_SOURCE_OUTPUT_DIR
+import com.google.common.base.Preconditions.checkNotNull
+import com.android.build.gradle.internal.LoggerWrapper
+import com.android.build.gradle.internal.process.GradleProcessExecutor
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.scope.VariantScope
+import com.android.build.gradle.internal.tasks.NdkTask
+import com.android.build.gradle.internal.tasks.TaskInputHelper
+import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
+import com.android.builder.internal.compiler.DirectoryWalker
+import com.android.builder.internal.compiler.RenderScriptProcessor
+import com.android.ide.common.process.LoggedProcessOutputHandler
+import com.android.ide.common.process.ProcessException
+import com.android.ide.common.process.ProcessOutputHandler
+import com.android.sdklib.BuildToolInfo
+import com.android.utils.FileUtils
+import com.google.common.collect.Lists
+import com.google.common.collect.Sets
+import java.io.File
+import java.io.IOException
+import java.util.concurrent.Callable
+import java.util.function.Supplier
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
+import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SkipWhenEmpty
+import org.gradle.api.tasks.TaskProvider
 
 /** Task to compile Renderscript files. Supports incremental update. */
 @CacheableTask
-public abstract class RenderscriptCompile extends NdkTask {
+abstract class RenderscriptCompile : NdkTask() {
 
     // ----- PUBLIC TASK API -----
 
-    private File resOutputDir;
+    @get:OutputDirectory
+    lateinit var resOutputDir: File
 
-    private File objOutputDir;
+    @get:OutputDirectory
+    lateinit var objOutputDir: File
 
     // ----- PRIVATE TASK API -----
 
-    private FileCollection sourceDirs;
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    lateinit var importDirs: FileCollection
 
-    private FileCollection importDirs;
+    private lateinit var targetApi: Supplier<Int>
 
-    private Supplier<Integer> targetApi;
+    @get:Input
+    var isSupportMode: Boolean = false
 
-    private boolean supportMode;
+    @get:Input
+    var useAndroidX: Boolean = false
+        private set
 
-    private boolean useAndroidX;
+    @get:Input
+    var optimLevel: Int = 0
 
-    private int optimLevel;
+    @get:Input
+    var isDebugBuild: Boolean = false
 
-    private boolean debugBuild;
+    @get:Input
+    var isNdkMode: Boolean = false
 
-    private boolean ndkMode;
+    @get:Input
+    val buildToolsVersion: String
+        get() = buildToolInfoProvider.get().revision.toString()
+    private lateinit var buildToolInfoProvider: Provider<BuildToolInfo>
 
-    private Provider<BuildToolInfo> buildToolInfoProvider;
+    @get:OutputDirectory
+    abstract val sourceOutputDir: DirectoryProperty
 
-    @Input
-    public String getBuildToolsVersion() {
-        return buildToolInfoProvider.get().getRevision().toString();
-    }
+    @get:OutputDirectory
+    abstract val libOutputDir: DirectoryProperty
 
-    @OutputDirectory
-    public abstract DirectoryProperty getSourceOutputDir();
+    // get the import folders. If the .rsh files are not directly under the import folders,
+    // we need to get the leaf folders, as this is what llvm-rs-cc expects.
+    // TODO: should "rsh" be a constant somewhere?
+    private val importFolders: Collection<File>
+        get() {
+            val results = Sets.newHashSet<File>()
 
-    @OutputDirectory
-    public File getResOutputDir() {
-        return resOutputDir;
-    }
+            val dirs = Lists.newArrayList<File>()
+            dirs.addAll(importDirs.files)
+            dirs.addAll(sourceDirs.files)
 
-    public void setResOutputDir(File resOutputDir) {
-        this.resOutputDir = resOutputDir;
-    }
+            for (dir in dirs) {
+                DirectoryWalker.builder()
+                    .root(dir.toPath())
+                    .extensions("rsh")
+                    .action { _, path -> results.add(path.parent.toFile()) }
+                    .build()
+                    .walk()
+            }
 
-    @OutputDirectory
-    public File getObjOutputDir() {
-        return objOutputDir;
-    }
+            return results
+        }
 
-    public void setObjOutputDir(File objOutputDir) {
-        this.objOutputDir = objOutputDir;
-    }
-
-    @OutputDirectory
-    public abstract DirectoryProperty getLibOutputDir();
+    private lateinit var sourceDirs: FileCollection
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
     @SkipWhenEmpty
-    public FileCollection getSourceDirs() {
-        return sourceDirs.getAsFileTree();
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getImportDirs() {
-        return importDirs;
-    }
-
-    public void setImportDirs(FileCollection importDirs) {
-        this.importDirs = importDirs;
+    fun getSourceDirs(): FileCollection {
+        return sourceDirs.asFileTree
     }
 
     @Input
-    public Integer getTargetApi() {
-        return targetApi.get();
+    fun getTargetApi(): Int? {
+        return targetApi.get()
     }
 
-    @Input
-    public boolean isSupportMode() {
-        return supportMode;
-    }
-
-    public void setSupportMode(boolean supportMode) {
-        this.supportMode = supportMode;
-    }
-
-    @Input
-    public boolean useAndroidX() {
-        return useAndroidX;
-    }
-
-    @Input
-    public int getOptimLevel() {
-        return optimLevel;
-    }
-
-    public void setOptimLevel(int optimLevel) {
-        this.optimLevel = optimLevel;
-    }
-
-    @Input
-    public boolean isDebugBuild() {
-        return debugBuild;
-    }
-
-    public void setDebugBuild(boolean debugBuild) {
-        this.debugBuild = debugBuild;
-    }
-
-    @Input
-    public boolean isNdkMode() {
-        return ndkMode;
-    }
-
-    public void setNdkMode(boolean ndkMode) {
-        this.ndkMode = ndkMode;
-    }
-
-    @Override
-    protected void doTaskAction() throws IOException, InterruptedException, ProcessException {
+    override fun doTaskAction() {
         // this is full run (always), clean the previous outputs
-        File sourceDestDir = getSourceOutputDir().get().getAsFile();
-        FileUtils.cleanOutputDir(sourceDestDir);
+        val sourceDestDir = sourceOutputDir.get().asFile
+        FileUtils.cleanOutputDir(sourceDestDir)
 
-        File resDestDir = getResOutputDir();
-        FileUtils.cleanOutputDir(resDestDir);
+        val resDestDir = resOutputDir
+        FileUtils.cleanOutputDir(resDestDir)
 
-        File objDestDir = getObjOutputDir();
-        FileUtils.cleanOutputDir(objDestDir);
+        val objDestDir = objOutputDir
+        FileUtils.cleanOutputDir(objDestDir)
 
-        File libDestDir = getLibOutputDir().get().getAsFile();
-        FileUtils.cleanOutputDir(libDestDir);
+        val libDestDir = libOutputDir.get().asFile
+        FileUtils.cleanOutputDir(libDestDir)
 
-        Set<File> sourceDirectories = sourceDirs.getFiles();
+        val sourceDirectories = sourceDirs.files
 
         compileAllRenderscriptFiles(
-                sourceDirectories,
-                getImportFolders(),
-                sourceDestDir,
-                resDestDir,
-                objDestDir,
-                libDestDir,
-                getTargetApi(),
-                isDebugBuild(),
-                getOptimLevel(),
-                isNdkMode(),
-                isSupportMode(),
-                useAndroidX(),
-                getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
-                new LoggedProcessOutputHandler(new LoggerWrapper(getLogger())),
-                buildToolInfoProvider.get());
+            sourceDirectories,
+            importFolders,
+            sourceDestDir,
+            resDestDir,
+            objDestDir,
+            libDestDir,
+            getTargetApi()!!,
+            isDebugBuild,
+            optimLevel,
+            isNdkMode,
+            isSupportMode,
+            useAndroidX,
+            if (ndkConfig == null) null else ndkConfig!!.abiFilters,
+            LoggedProcessOutputHandler(LoggerWrapper(logger)),
+            buildToolInfoProvider.get()
+        )
     }
 
     /**
      * Compiles all the renderscript files found in the given source folders.
      *
-     * <p>Right now this is the only way to compile them as the renderscript compiler requires all
+     *
+     * Right now this is the only way to compile them as the renderscript compiler requires all
      * renderscript files to be passed for all compilation.
      *
-     * <p>Therefore whenever a renderscript file or header changes, all must be recompiled.
+     *
+     * Therefore whenever a renderscript file or header changes, all must be recompiled.
      *
      * @param sourceFolders all the source folders to find files to compile
      * @param importFolders all the import folders.
@@ -241,157 +198,125 @@ public abstract class RenderscriptCompile extends NdkTask {
      * @throws IOException failed
      * @throws InterruptedException failed
      */
-    public void compileAllRenderscriptFiles(
-            @NonNull Collection<File> sourceFolders,
-            @NonNull Collection<File> importFolders,
-            @NonNull File sourceOutputDir,
-            @NonNull File resOutputDir,
-            @NonNull File objOutputDir,
-            @NonNull File libOutputDir,
-            int targetApi,
-            boolean debugBuild,
-            int optimLevel,
-            boolean ndkMode,
-            boolean supportMode,
-            boolean useAndroidX,
-            @Nullable Set<String> abiFilters,
-            @NonNull ProcessOutputHandler processOutputHandler,
-            @NonNull BuildToolInfo buildToolInfo)
-            throws InterruptedException, ProcessException, IOException {
-        checkNotNull(sourceFolders, "sourceFolders cannot be null.");
-        checkNotNull(importFolders, "importFolders cannot be null.");
-        checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.");
-        checkNotNull(resOutputDir, "resOutputDir cannot be null.");
+    fun compileAllRenderscriptFiles(
+        sourceFolders: Collection<File>,
+        importFolders: Collection<File>,
+        sourceOutputDir: File,
+        resOutputDir: File,
+        objOutputDir: File,
+        libOutputDir: File,
+        targetApi: Int,
+        debugBuild: Boolean,
+        optimLevel: Int,
+        ndkMode: Boolean,
+        supportMode: Boolean,
+        useAndroidX: Boolean,
+        abiFilters: Set<String>?,
+        processOutputHandler: ProcessOutputHandler,
+        buildToolInfo: BuildToolInfo
+    ) {
+        checkNotNull(sourceFolders, "sourceFolders cannot be null.")
+        checkNotNull(importFolders, "importFolders cannot be null.")
+        checkNotNull(sourceOutputDir, "sourceOutputDir cannot be null.")
+        checkNotNull(resOutputDir, "resOutputDir cannot be null.")
 
-        String renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC);
-        if (renderscript == null || !new File(renderscript).isFile()) {
-            throw new IllegalStateException("llvm-rs-cc is missing");
+        val renderscript = buildToolInfo.getPath(BuildToolInfo.PathId.LLVM_RS_CC)
+        if (renderscript == null || !File(renderscript).isFile) {
+            throw IllegalStateException("llvm-rs-cc is missing")
         }
 
-        RenderScriptProcessor processor =
-                new RenderScriptProcessor(
-                        sourceFolders,
-                        importFolders,
-                        sourceOutputDir,
-                        resOutputDir,
-                        objOutputDir,
-                        libOutputDir,
-                        buildToolInfo,
-                        targetApi,
-                        debugBuild,
-                        optimLevel,
-                        ndkMode,
-                        supportMode,
-                        useAndroidX,
-                        abiFilters,
-                        new LoggerWrapper(getLogger()));
-        processor.build(new GradleProcessExecutor(getProject()), processOutputHandler);
-    }
-
-
-    // get the import folders. If the .rsh files are not directly under the import folders,
-    // we need to get the leaf folders, as this is what llvm-rs-cc expects.
-    @NonNull
-    private Collection<File> getImportFolders() throws IOException {
-        Set<File> results = Sets.newHashSet();
-
-        Collection<File> dirs = Lists.newArrayList();
-        dirs.addAll(getImportDirs().getFiles());
-        dirs.addAll(sourceDirs.getFiles());
-
-        for (File dir : dirs) {
-            // TODO(samwho): should "rsh" be a constant somewhere?
-            DirectoryWalker.builder()
-                    .root(dir.toPath())
-                    .extensions("rsh")
-                    .action((start, path) -> results.add(path.getParent().toFile()))
-                    .build()
-                    .walk();
-        }
-
-        return results;
+        val processor = RenderScriptProcessor(
+            sourceFolders,
+            importFolders,
+            sourceOutputDir,
+            resOutputDir,
+            objOutputDir,
+            libOutputDir,
+            buildToolInfo,
+            targetApi,
+            debugBuild,
+            optimLevel,
+            ndkMode,
+            supportMode,
+            useAndroidX,
+            abiFilters,
+            LoggerWrapper(logger)
+        )
+        processor.build(GradleProcessExecutor(project), processOutputHandler)
     }
 
     // ----- CreationAction -----
 
-    public static class CreationAction extends VariantTaskCreationAction<RenderscriptCompile> {
+    class CreationAction(scope: VariantScope) :
+        VariantTaskCreationAction<RenderscriptCompile>(scope) {
 
-        public CreationAction(@NonNull VariantScope scope) {
-            super(scope);
+        override val name: String
+            get() = variantScope.getTaskName("compile", "Renderscript")
+
+        override val type: Class<RenderscriptCompile>
+            get() = RenderscriptCompile::class.java
+
+        override fun handleProvider(
+            taskProvider: TaskProvider<out RenderscriptCompile>
+        ) {
+            super.handleProvider(taskProvider)
+            variantScope.taskContainer.renderscriptCompileTask = taskProvider
+            variantScope
+                .artifacts
+                .producesDir(
+                    RENDERSCRIPT_SOURCE_OUTPUT_DIR,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    RenderscriptCompile::sourceOutputDir,
+                    "out"
+                )
+
+            variantScope
+                .artifacts
+                .producesDir(
+                    RENDERSCRIPT_LIB,
+                    BuildArtifactsHolder.OperationType.INITIAL,
+                    taskProvider,
+                    RenderscriptCompile::libOutputDir,
+                    "lib"
+                )
         }
 
-        @NonNull
-        @Override
-        public String getName() {
-            return getVariantScope().getTaskName("compile", "Renderscript");
-        }
+        override fun configure(task: RenderscriptCompile) {
+            super.configure(task)
+            val scope = variantScope
 
-        @NonNull
-        @Override
-        public Class<RenderscriptCompile> getType() {
-            return RenderscriptCompile.class;
-        }
+            val variantData = scope.variantData
+            val config = variantData.variantConfiguration
 
-        @Override
-        public void handleProvider(
-                @NonNull TaskProvider<? extends RenderscriptCompile> taskProvider) {
-            super.handleProvider(taskProvider);
-            getVariantScope().getTaskContainer().setRenderscriptCompileTask(taskProvider);
-            getVariantScope()
-                    .getArtifacts()
-                    .producesDir(
-                            RENDERSCRIPT_SOURCE_OUTPUT_DIR,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            RenderscriptCompile::getSourceOutputDir,
-                            "out");
+            val ndkMode = config.renderscriptNdkModeEnabled
 
-            getVariantScope()
-                    .getArtifacts()
-                    .producesDir(
-                            RENDERSCRIPT_LIB,
-                            BuildArtifactsHolder.OperationType.INITIAL,
-                            taskProvider,
-                            RenderscriptCompile::getLibOutputDir,
-                            "lib");
-        }
+            task.targetApi = TaskInputHelper.memoize { config.renderscriptTarget }
 
-        @Override
-        public void configure(@NonNull RenderscriptCompile renderscriptTask) {
-            super.configure(renderscriptTask);
-            VariantScope scope = getVariantScope();
+            task.isSupportMode = config.renderscriptSupportModeEnabled
+            task.useAndroidX =
+                scope.globalScope.projectOptions.get(BooleanOption.USE_ANDROID_X)
+            task.isNdkMode = ndkMode
+            task.isDebugBuild = config.buildType.isRenderscriptDebuggable
+            task.optimLevel = config.buildType.renderscriptOptimLevel
 
-            BaseVariantData variantData = scope.getVariantData();
-            final GradleVariantConfiguration config = variantData.getVariantConfiguration();
+            task.sourceDirs = scope.globalScope
+                .project
+                .files(Callable { config.renderscriptSourceList })
+            task.importDirs = scope.getArtifactFileCollection(
+                COMPILE_CLASSPATH, ALL, RENDERSCRIPT
+            )
 
-            boolean ndkMode = config.getRenderscriptNdkModeEnabled();
+            task.resOutputDir = scope.renderscriptResOutputDir
+            task.objOutputDir = scope.renderscriptObjOutputDir
 
-            renderscriptTask.targetApi = TaskInputHelper.memoize(config::getRenderscriptTarget);
+            task.ndkConfig = config.ndkConfig
 
-            renderscriptTask.supportMode = config.getRenderscriptSupportModeEnabled();
-            renderscriptTask.useAndroidX =
-                    scope.getGlobalScope().getProjectOptions().get(BooleanOption.USE_ANDROID_X);
-            renderscriptTask.ndkMode = ndkMode;
-            renderscriptTask.debugBuild = config.getBuildType().isRenderscriptDebuggable();
-            renderscriptTask.optimLevel = config.getBuildType().getRenderscriptOptimLevel();
+            task.buildToolInfoProvider =
+                scope.globalScope.sdkComponents.buildToolInfoProvider
 
-            renderscriptTask.sourceDirs =
-                    scope.getGlobalScope()
-                            .getProject()
-                            .files((Callable<Collection<File>>) config::getRenderscriptSourceList);
-            renderscriptTask.importDirs = scope.getArtifactFileCollection(
-                    COMPILE_CLASSPATH, ALL, RENDERSCRIPT);
-
-            renderscriptTask.setResOutputDir(scope.getRenderscriptResOutputDir());
-            renderscriptTask.setObjOutputDir(scope.getRenderscriptObjOutputDir());
-
-            renderscriptTask.setNdkConfig(config.getNdkConfig());
-
-            renderscriptTask.buildToolInfoProvider =
-                    scope.getGlobalScope().getSdkComponents().getBuildToolInfoProvider();
-
-            if (config.getType().isTestComponent()) {
-                renderscriptTask.dependsOn(scope.getTaskContainer().getProcessManifestTask());
+            if (config.type.isTestComponent) {
+                task.dependsOn(scope.taskContainer.processManifestTask!!)
             }
         }
     }
