@@ -32,4 +32,10 @@ class ExternalNativeBuildTaskTest {
             ExternalNativeBuildTask::class.java.methods.single { it.name == "getSoFolder" }
         Truth.assertThat(Modifier.isPublic(soFolder.modifiers)).isTrue()
     }
+
+    @Test
+    fun `reference soFolder to remove Kotlin warning`() {
+        val task : ExternalNativeBuildTask? = null
+        task?.soFolder
+    }
 }
