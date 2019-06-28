@@ -39,6 +39,30 @@ public class DeployerTestUtils {
         return installers;
     }
 
+    public static void prepareStudioInstaller() throws IOException {
+        File root = TestUtils.getWorkspaceRoot();
+        String base = "tools/base/deploy/installer/android-installer";
+        String testInstaller = "test-installer";
+        File baseLocation = new File(root, base);
+        File installer = new File(baseLocation, testInstaller);
+        if (!installer.exists()) {
+            // Running from IJ
+            File devRoot = new File(root, "bazel-genfiles/");
+            baseLocation = new File(devRoot, base);
+            installer = new File(baseLocation, testInstaller);
+        }
+        File x86 = new File(root, "tools/idea/plugins/android/resources/installer/x86");
+        if (!x86.exists()) {
+            Assert.assertTrue(x86.mkdirs());
+        }
+        FileUtils.copyFile(installer, new File(x86, "installer"));
+    }
+
+    public static void removeStudioInstaller() throws IOException {
+        FileUtils.deleteRecursivelyIfExists(
+                new File(TestUtils.getWorkspaceRoot(), "tools/idea/plugins/android"));
+    }
+
     public static File getShell() {
         File root = TestUtils.getWorkspaceRoot();
         String path = "tools/base/deploy/installer/bash_bridge";
