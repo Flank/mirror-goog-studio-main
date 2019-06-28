@@ -21,13 +21,14 @@ import com.android.build.gradle.internal.cxx.model.BasicCmakeMock
 import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
-import com.android.build.gradle.internal.cxx.settings.Token.*
+import com.android.build.gradle.internal.cxx.settings.Token.LiteralToken
+import com.android.build.gradle.internal.cxx.settings.Token.MacroToken
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class LookupSettingFromModelKtTest {
 
-    fun convertWindowsAspectsToLinux(example : String) : String {
+    private fun convertWindowsAspectsToLinux(example : String) : String {
         val result = example.replace("\\", "/")
         return result.substringBeforeLast(".exe")
     }
@@ -47,7 +48,7 @@ class LookupSettingFromModelKtTest {
                 it.global,
                 it.baseVariantData)
 
-            assertThat(abi.resolveMacroValue(Macro.PLATFORM_SYSTEM_VERSION))
+            assertThat(abi.resolveMacroValue(Macro.NDK_SYSTEM_VERSION))
                 .isEqualTo("19")
 
             Macro.values().forEach { macro ->
@@ -71,7 +72,7 @@ class LookupSettingFromModelKtTest {
                 it.global,
                 it.baseVariantData)
 
-            assertThat(abi.resolveMacroValue(Macro.PLATFORM_SYSTEM_VERSION))
+            assertThat(abi.resolveMacroValue(Macro.NDK_SYSTEM_VERSION))
                 .isEqualTo("19")
 
             Macro.values().forEach { macro ->

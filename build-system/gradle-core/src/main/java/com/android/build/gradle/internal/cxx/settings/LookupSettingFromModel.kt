@@ -34,19 +34,19 @@ import java.util.Locale
  */
 fun CxxAbiModel.resolveMacroValue(macro : Macro) : String {
     return when(macro) {
-        Macro.ABI -> abi.tag
-        Macro.ABI_BITNESS -> info.bitness.toString()
-        Macro.ABI_IS_64_BITS -> cmakeBoolean(info.bitness == 64)
-        Macro.ABI_IS_DEFAULT -> cmakeBoolean(info.isDefault)
-        Macro.ABI_IS_DEPRECATED -> cmakeBoolean(info.isDeprecated)
-        Macro.GRADLE_BUILD_ROOT -> cxxBuildFolder.absolutePath
-        Macro.GRADLE_C_FLAGS -> Joiner.on(" ").join(variant.cFlagsList)
-        Macro.GRADLE_CPP_FLAGS -> Joiner.on(" ").join(variant.cppFlagsList)
-        Macro.GRADLE_LIBRARY_OUTPUT_DIRECTORY -> soFolder.absolutePath
+        Macro.NDK_ABI -> abi.tag
+        Macro.NDK_ABI_BITNESS -> info.bitness.toString()
+        Macro.NDK_ABI_IS_64_BITS -> cmakeBoolean(info.bitness == 64)
+        Macro.NDK_ABI_IS_DEFAULT -> cmakeBoolean(info.isDefault)
+        Macro.NDK_ABI_IS_DEPRECATED -> cmakeBoolean(info.isDeprecated)
+        Macro.NDK_BUILD_ROOT -> cxxBuildFolder.absolutePath
+        Macro.NDK_C_FLAGS -> Joiner.on(" ").join(variant.cFlagsList)
+        Macro.NDK_CPP_FLAGS -> Joiner.on(" ").join(variant.cppFlagsList)
+        Macro.NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY -> soFolder.absolutePath
         Macro.NDK_CMAKE_TOOLCHAIN -> getToolchainFile()
-        Macro.PLATFORM -> "android-$abiPlatformVersion"
-        Macro.PLATFORM_CODE -> platformCode()
-        Macro.PLATFORM_SYSTEM_VERSION -> "$abiPlatformVersion"
+        Macro.NDK_PLATFORM -> "android-$abiPlatformVersion"
+        Macro.NDK_PLATFORM_CODE -> platformCode()
+        Macro.NDK_SYSTEM_VERSION -> "$abiPlatformVersion"
         else -> variant.resolveMacroValue(macro)
     }
 }
@@ -69,7 +69,7 @@ private fun CxxAbiModel.platformCode(): String {
  */
 fun CxxVariantModel.resolveMacroValue(macro : Macro) : String {
     return when(macro) {
-        Macro.GRADLE_CMAKE_BUILD_TYPE -> {
+        Macro.NDK_DEFAULT_BUILD_TYPE -> {
             val lower = variantName.toLowerCase(Locale.ROOT)
             when {
                 lower.endsWith("release") -> "Release"
@@ -84,7 +84,7 @@ fun CxxVariantModel.resolveMacroValue(macro : Macro) : String {
                     }
             }
         }
-        Macro.GRADLE_VARIANT_NAME -> variantName
+        Macro.NDK_VARIANT_NAME -> variantName
         else -> module.resolveMacroValue(macro)
     }
 }
@@ -98,23 +98,23 @@ fun CxxModuleModel.resolveMacroValue(macro : Macro) : String {
     // It's also good for example values.
     val placeHolderHash = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519"
     return when(macro) {
-        Macro.BUILT_IN_PROJECT_DIR -> moduleRootFolder.absolutePath
-        Macro.BUILT_IN_THIS_FILE -> join(makeFile.parentFile, "CMakeSettings.json").absolutePath
-        Macro.BUILT_IN_THIS_FILE_DIR -> makeFile.parentFile?.absolutePath ?: ""
-        Macro.BUILT_IN_WORKSPACE_ROOT -> project.rootBuildGradleFolder.absolutePath
-        Macro.CMAKE_EXE -> cmake?.cmakeExe?.absolutePath ?: ""
-        Macro.GRADLE_CONFIGURATION_HASH -> placeHolderHash
-        Macro.GRADLE_MODULE_DIR -> moduleRootFolder.absolutePath
-        Macro.GRADLE_MODULE_NAME -> gradleModulePathName.substringAfterLast(":")
-        Macro.GRADLE_SHORT_CONFIGURATION_HASH -> placeHolderHash.substring(0, 8)
-        Macro.MAX_PLATFORM -> ndkMetaPlatforms?.max?.toString() ?: ""
-        Macro.MIN_PLATFORM -> ndkMetaPlatforms?.min?.toString() ?: ""
+        Macro.ENV_PROJECT_DIR -> moduleRootFolder.absolutePath
+        Macro.ENV_THIS_FILE -> join(makeFile.parentFile, "CMakeSettings.json").absolutePath
+        Macro.ENV_THIS_FILE_DIR -> makeFile.parentFile?.absolutePath ?: ""
+        Macro.ENV_WORKSPACE_ROOT -> project.rootBuildGradleFolder.absolutePath
+        Macro.NDK_CMAKE_EXECUTABLE -> cmake?.cmakeExe?.absolutePath ?: ""
+        Macro.NDK_FULL_CONFIGURATION_HASH -> placeHolderHash
+        Macro.NDK_MODULE_DIR -> moduleRootFolder.absolutePath
+        Macro.NDK_MODULE_NAME -> gradleModulePathName.substringAfterLast(":")
+        Macro.NDK_CONFIGURATION_HASH -> placeHolderHash.substring(0, 8)
+        Macro.NDK_MAX_PLATFORM -> ndkMetaPlatforms?.max?.toString() ?: ""
+        Macro.NDK_MIN_PLATFORM -> ndkMetaPlatforms?.min?.toString() ?: ""
         Macro.NDK_DIR -> ndkFolder.absolutePath
         Macro.NDK_VERSION -> ndkVersion.toString()
         Macro.NDK_VERSION_MAJOR -> ndkVersion.major.toString()
         Macro.NDK_VERSION_MINOR -> ndkVersion.minor.toString()
-        Macro.NINJA_EXE -> cmake?.ninjaExe?.absolutePath ?: ""
-        Macro.SDK_DIR -> project.sdkFolder.absolutePath
+        Macro.NDK_NINJA_EXECUTABLE -> cmake?.ninjaExe?.absolutePath ?: ""
+        Macro.NDK_SDK_DIR -> project.sdkFolder.absolutePath
         else -> project.resolveMacroValue(macro)
     }
 }
@@ -124,10 +124,10 @@ fun CxxModuleModel.resolveMacroValue(macro : Macro) : String {
  */
 fun CxxProjectModel.resolveMacroValue(macro : Macro) : String {
     return when(macro) {
-        Macro.BUILT_IN_WORKSPACE_ROOT -> rootBuildGradleFolder.absolutePath ?: ""
-        Macro.GRADLE_IS_HOSTING -> cmakeBoolean(true)
-        Macro.GRADLE_PROJECT_DIR -> rootBuildGradleFolder.absolutePath
-        Macro.SDK_DIR -> sdkFolder.absolutePath
+        Macro.ENV_WORKSPACE_ROOT -> rootBuildGradleFolder.absolutePath ?: ""
+        Macro.NDK_ANDROID_GRADLE_IS_HOSTING -> cmakeBoolean(true)
+        Macro.NDK_PROJECT_DIR -> rootBuildGradleFolder.absolutePath
+        Macro.NDK_SDK_DIR -> sdkFolder.absolutePath
         else -> throw RuntimeException("The CMakeSettings macro '${macro.ref}' cannot" +
                 " be inferred from C++ build model")
     }

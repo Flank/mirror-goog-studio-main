@@ -29,8 +29,8 @@ fun CMakeSettings.expandInheritEnvironmentMacros(abi: CxxAbiModel) : CMakeSettin
         configuration.copy(
             inheritEnvironments = configuration.inheritEnvironments.map { environment ->
                 val result = environment
-                    .replace(ABI.ref, abi.abi.tag)
-                    .replace(PLATFORM_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
+                    .replace(NDK_ABI.ref, abi.abi.tag)
+                    .replace(NDK_SYSTEM_VERSION.ref, abi.abiPlatformVersion.toString()
                     )
                 result
             }
@@ -50,9 +50,9 @@ fun reifyRequestedConfiguration(
     fun String?.reify() = reifyString(this) { tokenMacro ->
         when(tokenMacro) {
             // Exclude properties that shouldn't be evaluated before the configuration hash.
-            ABI.qualifiedName -> StringPropertyValue(ABI.ref)
-            GRADLE_SHORT_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(GRADLE_SHORT_CONFIGURATION_HASH.ref)
-            GRADLE_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(GRADLE_CONFIGURATION_HASH.ref)
+            NDK_ABI.qualifiedName -> StringPropertyValue(NDK_ABI.ref)
+            NDK_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(NDK_CONFIGURATION_HASH.ref)
+            NDK_FULL_CONFIGURATION_HASH.qualifiedName -> StringPropertyValue(NDK_FULL_CONFIGURATION_HASH.ref)
             else -> resolver.resolve(tokenMacro, configuration.inheritEnvironments)
         }
     }

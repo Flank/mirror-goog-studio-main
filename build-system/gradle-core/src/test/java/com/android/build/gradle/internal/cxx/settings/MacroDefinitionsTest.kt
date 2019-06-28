@@ -22,13 +22,15 @@ import com.android.build.gradle.internal.cxx.model.createCxxAbiModel
 import com.android.build.gradle.internal.cxx.model.createCxxVariantModel
 import com.android.build.gradle.internal.cxx.model.tryCreateCxxModuleModel
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.lang.RuntimeException
 
 class MacroDefinitionsTest {
     @Test
     fun `macro lookup checks`() {
-        Truth.assertThat(Macro.lookup("thisFile")).isEqualTo(Macro.BUILT_IN_THIS_FILE)
-        Truth.assertThat(Macro.lookup("env.thisFile")).isEqualTo(Macro.BUILT_IN_THIS_FILE)
+        Truth.assertThat(Macro.lookup("thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
+        Truth.assertThat(Macro.lookup("env.thisFile")).isEqualTo(Macro.ENV_THIS_FILE)
         Truth.assertThat(Macro.lookup("ndk.version")).isEqualTo(Macro.NDK_VERSION)
     }
 
@@ -45,6 +47,42 @@ class MacroDefinitionsTest {
         Macro.values().forEach { macro->
             Truth.assertThat(macro.description)
                 .doesNotContain("\\")
+        }
+    }
+
+    @Test
+    fun `ensure all qualified names are distinct`() {
+        val seen = mutableSetOf<String>()
+        Macro.values().map { macro->
+            if (seen.contains(macro.tag)) {
+                throw RuntimeException("Tag ${macro.qualifiedName} seen twice")
+            }
+            seen += macro.qualifiedName
+        }
+    }
+
+    @Test
+    fun `ensure kotlin enum names match environment names`() {
+        Macro.values().map { macro->
+            println("$macro=${macro.qualifiedName}")
+
+            val sb = StringBuilder()
+            var lastWasDigit = false
+            for (c in macro.qualifiedName) {
+                when {
+                    c.isDigit() -> {
+                        if (!lastWasDigit) {
+                            sb.append("_")
+                        }
+                        sb.append(c)
+                    }
+                    c.isUpperCase() -> sb.append("_$c")
+                    c == '.' -> sb.append("_")
+                    else -> sb.append(c.toUpperCase())
+                }
+                lastWasDigit = c.isDigit()
+            }
+            assertThat(macro.toString()).isEqualTo(sb.toString())
         }
     }
 

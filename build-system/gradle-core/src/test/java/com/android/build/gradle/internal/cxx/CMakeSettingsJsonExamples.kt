@@ -87,33 +87,33 @@ val PARSABLE_CMAKE_SETTINGS_JSON_DOMAIN = listOf(
                 "name": "$DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                 "inheritEnvironments": ["ndk"],
                 "generator": "some other generator",
-                "buildRoot": "some other build root folder/${GRADLE_VARIANT_NAME.ref}/${ABI.ref}",
+                "buildRoot": "some other build root folder/${NDK_VARIANT_NAME.ref}/${NDK_ABI.ref}",
                 "cmakeExecutable": "my/path/to/cmake",
                 "cmakeToolchain": "my/path/to/toolchain",
                 "variables": [
-                    {"name": "$ANDROID_ABI", "value": "${ABI.ref}"},
-                    {"name": "$ANDROID_PLATFORM", "value": "${PLATFORM_SYSTEM_VERSION.ref}"},
+                    {"name": "$ANDROID_ABI", "value": "${NDK_ABI.ref}"},
+                    {"name": "$ANDROID_PLATFORM", "value": "${NDK_SYSTEM_VERSION.ref}"},
                     {"name": "$CMAKE_LIBRARY_OUTPUT_DIRECTORY", "value":
-                       "${GRADLE_PROJECT_DIR.ref}/build/android/lib/${GRADLE_CMAKE_BUILD_TYPE.ref}/${ABI.ref}" },
+                       "${NDK_PROJECT_DIR.ref}/build/android/lib/${NDK_DEFAULT_BUILD_TYPE.ref}/${NDK_ABI.ref}" },
                     {"name": "$ANDROID_NDK", "value": "${NDK_DIR.ref}"},
                     {"name": "$CMAKE_SYSTEM_NAME", "value": "Android"},
-                    {"name": "$CMAKE_ANDROID_ARCH_ABI", "value": "${ABI.ref}"},
+                    {"name": "$CMAKE_ANDROID_ARCH_ABI", "value": "${NDK_ABI.ref}"},
                     {"name": "$CMAKE_BUILD_TYPE", "value": "MyCustomBuildType"},
-                    {"name": "$CMAKE_SYSTEM_VERSION", "value": "${PLATFORM_SYSTEM_VERSION.ref}"},
+                    {"name": "$CMAKE_SYSTEM_VERSION", "value": "${NDK_SYSTEM_VERSION.ref}"},
                     {"name": "$CMAKE_EXPORT_COMPILE_COMMANDS", "value": "ON"},
                     {"name": "$CMAKE_ANDROID_NDK", "value": "${NDK_DIR.ref}"},
-                    {"name": "$CMAKE_MAKE_PROGRAM", "value": "${NINJA_EXE.ref}"},
+                    {"name": "$CMAKE_MAKE_PROGRAM", "value": "${NDK_NINJA_EXECUTABLE.ref}"},
                     {"name": "$CMAKE_C_FLAGS", "value": "-DTEST_C_FLAG -DTEST_C_FLAG_2"},
                     {"name": "$CMAKE_CXX_FLAGS", "value": "-DTEST_CPP_FLAG"},
                 ]
             }, {
                 "name": "$NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                 "inheritEnvironments": ["ndk"],
-                "buildRoot": "project-build-root/${GRADLE_VARIANT_NAME.ref}"
+                "buildRoot": "project-build-root/${NDK_VARIANT_NAME.ref}"
             }, {
                 "name": "$NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                 "inheritEnvironments": ["ndk"],
-                "buildRoot": "project-build-root/${ABI.ref}"
+                "buildRoot": "project-build-root/${NDK_ABI.ref}"
             } ]
         }""".trimIndent()
 )

@@ -21,9 +21,7 @@ import com.android.build.gradle.internal.cxx.configure.defaultCmakeVersion
 import com.android.build.gradle.internal.cxx.settings.Environment.GRADLE
 import com.android.build.gradle.internal.cxx.settings.Environment.MICROSOFT_BUILT_IN
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK
-import com.android.build.gradle.internal.cxx.settings.Environment.NDK_ABI
 import com.android.build.gradle.internal.cxx.settings.Environment.NDK_EXPOSED_BY_HOST
-import com.android.build.gradle.internal.cxx.settings.Environment.NDK_PLATFORM
 
 /**
  * Define built-in macros for CMakeSettings.json. Built-in means they're defined by the host
@@ -46,59 +44,59 @@ enum class Macro(
     // warnings about this macro.
     val example: String) {
 
-    MIN_PLATFORM(
+    NDK_MIN_PLATFORM(
         description = "The minimum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "minPlatform",
         example = "16"),
-    MAX_PLATFORM(
+    NDK_MAX_PLATFORM(
         description = "The maximum Android platform supported by the current Android NDK.",
         environment = NDK,
         tag = "maxPlatform",
         example = "29"),
-    PLATFORM_SYSTEM_VERSION(
+    NDK_SYSTEM_VERSION(
         description = "The currently targeted Android system version, suitable for passing to " +
                 "CMake in CMAKE_SYSTEM_VERSION.",
-        environment = NDK_PLATFORM,
+        environment = Environment.NDK_PLATFORM,
         tag = "systemVersion",
         example = "19"),
-    PLATFORM(
+    NDK_PLATFORM(
         description = "The currently targeted Android platform string, that can be passed to " +
                 "CMake in ANDROID_PLATFORM.",
-        environment = NDK_PLATFORM,
+        environment = Environment.NDK_PLATFORM,
         tag = "platform",
         example = "android-19"),
-    PLATFORM_CODE(
+    NDK_PLATFORM_CODE(
         description = "The currently targeted Android platform code name.",
-        environment = NDK_PLATFORM,
+        environment = Environment.NDK_PLATFORM,
         tag = "platformCode",
         example = "K"),
-    ABI_BITNESS(
+    NDK_ABI_BITNESS(
         description = "The bitness of the targeted ABI.",
-        environment = NDK_ABI,
+        environment = Environment.NDK_ABI,
         tag = "abiBitness",
         example = "64"),
-    ABI_IS_64_BITS(
+    NDK_ABI_IS_64_BITS(
         description = "Whether the targeted ABI is 64-bits.",
-        environment = NDK_ABI,
+        environment = Environment.NDK_ABI,
         tag = "abiIs64Bits",
         example = "1"),
-    ABI_IS_DEFAULT(
+    NDK_ABI_IS_DEFAULT(
         description = "Whether the targeted ABI is a default ABI in the current Android NDK.",
-        environment = NDK_ABI,
+        environment = Environment.NDK_ABI,
         tag = "abiIsDefault",
         example = "1"),
-    ABI_IS_DEPRECATED(
+    NDK_ABI_IS_DEPRECATED(
         description = "True if the targeted ABI is deprecated in the current Android NDK.",
-        environment = NDK_ABI,
+        environment = Environment.NDK_ABI,
         tag = "abiIsDeprecated",
         example = "0"),
-    ABI(
+    NDK_ABI(
         description = "Currently targeted ABI.",
         environment = GRADLE,
         tag = "abi",
         example = "x86_64"),
-    SDK_DIR(
+    NDK_SDK_DIR(
         description = "Folder of the current Android SDK.",
         environment = GRADLE,
         tag = "sdkDir",
@@ -107,22 +105,22 @@ enum class Macro(
         description = "Folder of the current Android NDK.",
         environment = NDK,
         tag = "dir",
-        example = "${SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION"),
+        example = "${NDK_SDK_DIR.ref}/ndk/$ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION"),
     NDK_CMAKE_TOOLCHAIN(
         description = "Path to the current Android NDK's CMake toolchain.",
         environment = NDK,
-        tag = "toolchain",
+        tag = "cmakeToolchain",
         example = "${NDK_DIR.ref}/build/cmake/android.toolchain.cmake"),
-    CMAKE_EXE(
+    NDK_CMAKE_EXECUTABLE(
         description = "Path to CMake executable.",
         environment = NDK,
         tag = "cmakeExecutable",
-        example = "${SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake"),
-    NINJA_EXE(
-        description = "Path to Ninja executable if one was found.",
+        example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/cmake"),
+    NDK_NINJA_EXECUTABLE(
+        description = "Path to Ninja executable if one was found by Gradle.",
         environment = NDK,
         tag = "ninjaExecutable",
-        example = "${SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja"),
+        example = "${NDK_SDK_DIR.ref}/cmake/$defaultCmakeVersion/bin/ninja"),
     NDK_VERSION(
         description = "Version of NDK.",
         environment = NDK,
@@ -138,83 +136,83 @@ enum class Macro(
         environment = NDK,
         tag = "versionMinor",
         example = ANDROID_GRADLE_PLUGIN_FIXED_DEFAULT_NDK_VERSION.split(".")[1]),
-    GRADLE_PROJECT_DIR(
+    NDK_PROJECT_DIR(
         description = "Folder of the gradle root project build.gradle.",
         environment = GRADLE,
         tag = "projectDir",
         example = "\$PROJECTS/MyProject/Source/Android"),
-    GRADLE_MODULE_DIR(
+    NDK_MODULE_DIR(
         description = "Folder of the module level build.gradle.",
         environment = GRADLE,
         tag = "moduleDir",
         example = "\$PROJECTS/MyProject/Source/Android/app1"),
-    GRADLE_VARIANT_NAME(
+    NDK_VARIANT_NAME(
         description = "Name of the gradle variant.",
         environment = GRADLE,
         tag = "variantName",
         example = "debug"),
-    GRADLE_MODULE_NAME(
+    NDK_MODULE_NAME(
         description = "Name of the gradle module.",
         environment = GRADLE,
         tag = "moduleName",
         example = "app1"),
-    GRADLE_BUILD_ROOT(
+    NDK_BUILD_ROOT(
         description = "The default CMake build root that gradle uses.",
         environment = GRADLE,
         tag = "buildRoot",
-        example = "${GRADLE_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64"),
-    GRADLE_C_FLAGS(
+        example = "${NDK_MODULE_DIR.ref}/.cxx/cmake/debug/x86_64"),
+    NDK_C_FLAGS(
         description = "The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.",
         environment = GRADLE,
         tag = "cFlags",
         example = "-DC_FLAG_DEFINED"),
-    GRADLE_CPP_FLAGS(
+    NDK_CPP_FLAGS(
         description = "The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.gradle.",
         environment = GRADLE,
         tag = "cppFlags",
         example = "-DCPP_FLAG_DEFINED"),
-    GRADLE_LIBRARY_OUTPUT_DIRECTORY(
+    NDK_DEFAULT_LIBRARY_OUTPUT_DIRECTORY(
         description = "The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.",
         environment = GRADLE,
-        tag = "libraryOutputDir",
-        example = "${GRADLE_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
-    GRADLE_CMAKE_BUILD_TYPE(
+        tag = "defaultLibraryOutputDirectory",
+        example = "${NDK_MODULE_DIR.ref}/build/intermediates/cmake/debug/obj/x86_64"),
+    NDK_DEFAULT_BUILD_TYPE(
         description = "The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. " +
                 "May be Debug, Release, RelWithDebInfo, or MinSizeRel.",
         environment = GRADLE,
-        tag = "buildType",
+        tag = "defaultBuildType",
         example = "Debug"),
-    GRADLE_SHORT_CONFIGURATION_HASH(
-        description = "First eight characters of \${ndk.configurationHash}.",
-        environment = GRADLE,
-        tag = "shortConfigurationHash",
-        example = "1m6w461r"),
-    GRADLE_CONFIGURATION_HASH(
-        description = "Hash of this CMakeSettings configuration.",
+    NDK_CONFIGURATION_HASH(
+        description = "First eight characters of \${ndk.fullConfigurationHash}.",
         environment = GRADLE,
         tag = "configurationHash",
+        example = "1m6w461r"),
+    NDK_FULL_CONFIGURATION_HASH(
+        description = "Hash of this CMakeSettings configuration.",
+        environment = GRADLE,
+        tag = "fullConfigurationHash",
         example = "1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519"),
-    BUILT_IN_THIS_FILE(
+    ENV_THIS_FILE(
         description = "Path to this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFile",
         example = "\$PROJECTS/MyProject/CMakeSettings.json"),
-    BUILT_IN_THIS_FILE_DIR(
+    ENV_THIS_FILE_DIR(
         description = "Folder of this CMakeSettings.json file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "thisFileDir",
         example = "\$PROJECTS/MyProject"),
-    BUILT_IN_WORKSPACE_ROOT(
+    ENV_WORKSPACE_ROOT(
         description = "Folder of the project level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "workspaceRoot",
         example = "\$PROJECTS/MyProject/Source/Android"),
-    BUILT_IN_PROJECT_DIR(
+    ENV_PROJECT_DIR(
         description = "Folder of the module level build.gradle file.",
         environment = MICROSOFT_BUILT_IN,
         tag = "projectDir",
         example = "\$PROJECTS/MyProject/Source/Android/app1"),
-    GRADLE_IS_HOSTING(
+    NDK_ANDROID_GRADLE_IS_HOSTING(
         description = "True if Android Gradle Plugin is hosting this CMakeSettings.json.",
         environment = NDK_EXPOSED_BY_HOST,
         tag = "androidGradleIsHosting",

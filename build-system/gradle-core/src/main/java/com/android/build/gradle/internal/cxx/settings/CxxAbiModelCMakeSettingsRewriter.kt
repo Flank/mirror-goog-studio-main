@@ -159,11 +159,11 @@ fun CxxAbiModel.getEffectCmakeSettingsConfiguration() : CMakeSettingsConfigurati
     // Fill in the ABI and configuration hash properties
     fun String.reify() = reifyString(this) { tokenMacro ->
         when(tokenMacro) {
-            ABI.qualifiedName ->
+            NDK_ABI.qualifiedName ->
                 StringPropertyValue(abi.tag)
-            GRADLE_SHORT_CONFIGURATION_HASH.qualifiedName ->
+            NDK_CONFIGURATION_HASH.qualifiedName ->
                 StringPropertyValue(configurationHash.substring(0, 8))
-            GRADLE_CONFIGURATION_HASH.qualifiedName ->
+            NDK_FULL_CONFIGURATION_HASH.qualifiedName ->
                 StringPropertyValue(configurationHash)
             else -> resolver.resolve(tokenMacro, configuration.inheritEnvironments)
         }
@@ -174,7 +174,7 @@ fun CxxAbiModel.getEffectCmakeSettingsConfiguration() : CMakeSettingsConfigurati
     }.removeSubsumedArguments().removeBlankProperties()
 
     return CMakeSettingsConfiguration(
-        name = "Reified ${configuration.name}",
+        name = configuration.name,
         description = "Composite reified CMakeSettings configuration",
         generator = arguments.getGenerator(),
         configurationType = configuration.configurationType,
@@ -223,14 +223,14 @@ fun CMakeSettingsConfiguration.getCmakeCommandLineArguments() : List<CommandLine
 fun CxxAbiModel.getCmakeCommandLineArguments() : List<CommandLineArgument> {
     val result = mutableListOf<CommandLineArgument>()
     result += "-H${variant.module.makeFile.parentFile}".toCmakeArgument()
-    result += "-B${resolveMacroValue(GRADLE_BUILD_ROOT)}".toCmakeArgument()
+    result += "-B${resolveMacroValue(NDK_BUILD_ROOT)}".toCmakeArgument()
 
     result += if (variant.module.cmake!!.minimumCmakeVersion.isCmakeForkVersion()) {
         "-GAndroid Gradle - Ninja".toCmakeArgument()
     } else {
         "-GNinja".toCmakeArgument()
     }
-    result += "-D$CMAKE_BUILD_TYPE=${resolveMacroValue(GRADLE_CMAKE_BUILD_TYPE)}".toCmakeArgument()
+    result += "-D$CMAKE_BUILD_TYPE=${resolveMacroValue(NDK_DEFAULT_BUILD_TYPE)}".toCmakeArgument()
     result += "-D$CMAKE_TOOLCHAIN_FILE=${resolveMacroValue(NDK_CMAKE_TOOLCHAIN)}".toCmakeArgument()
     return result.removeSubsumedArguments().removeBlankProperties()
 }

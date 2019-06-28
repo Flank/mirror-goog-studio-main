@@ -55,11 +55,6 @@ The default CMake build root that gradle uses.
 - example: ${ndk.moduleDir}/.cxx/cmake/debug/x86_64
 - environment: android-gradle
 
-## ${ndk.buildType}
-The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debug, Release, RelWithDebInfo, or MinSizeRel.
-- example: Debug
-- environment: android-gradle
-
 ## ${ndk.cFlags}
 The value of cFlags from android.config.externalNativeBuild.cFlags in build.gradle.
 - example: -DC_FLAG_DEFINED
@@ -70,9 +65,14 @@ Path to CMake executable.
 - example: ${ndk.sdkDir}/cmake/3.10.2/bin/cmake
 - environment: android-ndk
 
+## ${ndk.cmakeToolchain}
+Path to the current Android NDK's CMake toolchain.
+- example: ${ndk.dir}/build/cmake/android.toolchain.cmake
+- environment: android-ndk
+
 ## ${ndk.configurationHash}
-Hash of this CMakeSettings configuration.
-- example: 1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519
+First eight characters of ${ndk.fullConfigurationHash}.
+- example: 1m6w461r
 - environment: android-gradle
 
 ## ${ndk.cppFlags}
@@ -80,14 +80,24 @@ The value of cppFlags from android.config.externalNativeBuild.cppFlags in build.
 - example: -DCPP_FLAG_DEFINED
 - environment: android-gradle
 
+## ${ndk.defaultBuildType}
+The CMAKE_BUILD_TYPE derived from the suffix of gradle variant name. May be Debug, Release, RelWithDebInfo, or MinSizeRel.
+- example: Debug
+- environment: android-gradle
+
+## ${ndk.defaultLibraryOutputDirectory}
+The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.
+- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+- environment: android-gradle
+
 ## ${ndk.dir}
 Folder of the current Android NDK.
 - example: ${ndk.sdkDir}/ndk/20.0.5594570
 - environment: android-ndk
 
-## ${ndk.libraryOutputDir}
-The default CMake CMAKE_LIBRARY_OUTPUT_DIRECTORY that gradle uses.
-- example: ${ndk.moduleDir}/build/intermediates/cmake/debug/obj/x86_64
+## ${ndk.fullConfigurationHash}
+Hash of this CMakeSettings configuration.
+- example: 1m6w461rf3l272y5d5d5c2m651a4i4j1c3n69zm476ys1g403j69363k4519
 - environment: android-gradle
 
 ## ${ndk.maxPlatform}
@@ -111,7 +121,7 @@ Name of the gradle module.
 - environment: android-gradle
 
 ## ${ndk.ninjaExecutable}
-Path to Ninja executable if one was found.
+Path to Ninja executable if one was found by Gradle.
 - example: ${ndk.sdkDir}/cmake/3.10.2/bin/ninja
 - environment: android-ndk
 
@@ -135,20 +145,10 @@ Folder of the current Android SDK.
 - example: $HOME/Library/Android/sdk
 - environment: android-gradle
 
-## ${ndk.shortConfigurationHash}
-First eight characters of ${ndk.configurationHash}.
-- example: 1m6w461r
-- environment: android-gradle
-
 ## ${ndk.systemVersion}
 The currently targeted Android system version, suitable for passing to CMake in CMAKE_SYSTEM_VERSION.
 - example: 19
 - environment: android-ndk-platform-${ndk.systemVersion}
-
-## ${ndk.toolchain}
-Path to the current Android NDK's CMake toolchain.
-- example: ${ndk.dir}/build/cmake/android.toolchain.cmake
-- environment: android-ndk
 
 ## ${ndk.variantName}
 Name of the gradle variant.

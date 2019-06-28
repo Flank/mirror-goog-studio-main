@@ -56,33 +56,33 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "name": "$DIFFERENT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                     "inheritEnvironments": ["ndk"],
                     "generator": "some other generator",
-                    "buildRoot": "some other build root folder/${Macro.GRADLE_VARIANT_NAME.ref}/${Macro.ABI.ref}",
+                    "buildRoot": "some other build root folder/${Macro.NDK_VARIANT_NAME.ref}/${Macro.NDK_ABI.ref}",
                     "cmakeExecutable": "my/path/to/cmake",
                     "cmakeToolchain": "my/path/to/toolchain",
                     "variables": [
-                        {"name": "${CmakeProperty.ANDROID_ABI}", "value": "${Macro.ABI.ref}"},
-                        {"name": "${CmakeProperty.ANDROID_PLATFORM}", "value": "${Macro.PLATFORM_SYSTEM_VERSION.ref}"},
+                        {"name": "${CmakeProperty.ANDROID_ABI}", "value": "${Macro.NDK_ABI.ref}"},
+                        {"name": "${CmakeProperty.ANDROID_PLATFORM}", "value": "${Macro.NDK_SYSTEM_VERSION.ref}"},
                         {"name": "${CmakeProperty.CMAKE_LIBRARY_OUTPUT_DIRECTORY}", "value":
-                           "${Macro.GRADLE_PROJECT_DIR.ref}/build/android/lib/${Macro.GRADLE_CMAKE_BUILD_TYPE.ref}/${Macro.ABI.ref}" },
+                           "${Macro.NDK_PROJECT_DIR.ref}/build/android/lib/${Macro.NDK_DEFAULT_BUILD_TYPE.ref}/${Macro.NDK_ABI.ref}" },
                         {"name": "${CmakeProperty.ANDROID_NDK}", "value": "${Macro.NDK_DIR.ref}"},
                         {"name": "${CmakeProperty.CMAKE_SYSTEM_NAME}", "value": "Android"},
-                        {"name": "${CmakeProperty.CMAKE_ANDROID_ARCH_ABI}", "value": "${Macro.ABI.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_ANDROID_ARCH_ABI}", "value": "${Macro.NDK_ABI.ref}"},
                         {"name": "${CmakeProperty.CMAKE_BUILD_TYPE}", "value": "MyCustomBuildType"},
-                        {"name": "${CmakeProperty.CMAKE_SYSTEM_VERSION}", "value": "${Macro.PLATFORM_SYSTEM_VERSION.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_SYSTEM_VERSION}", "value": "${Macro.NDK_SYSTEM_VERSION.ref}"},
                         {"name": "${CmakeProperty.CMAKE_EXPORT_COMPILE_COMMANDS}", "value": "ON"},
                         {"name": "${CmakeProperty.CMAKE_ANDROID_NDK}", "value": "${Macro.NDK_DIR.ref}"},
-                        {"name": "${CmakeProperty.CMAKE_MAKE_PROGRAM}", "value": "${Macro.NINJA_EXE.ref}"},
+                        {"name": "${CmakeProperty.CMAKE_MAKE_PROGRAM}", "value": "${Macro.NDK_NINJA_EXECUTABLE.ref}"},
                         {"name": "${CmakeProperty.CMAKE_C_FLAGS}", "value": "-DTEST_C_FLAG -DTEST_C_FLAG_2"},
                         {"name": "${CmakeProperty.CMAKE_CXX_FLAGS}", "value": "-DTEST_CPP_FLAG"},
                     ]
                 }, {
                     "name": "$NO_ABI_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                     "inheritEnvironments": ["ndk"],
-                    "buildRoot": "project-build-root/${Macro.GRADLE_VARIANT_NAME.ref}"
+                    "buildRoot": "project-build-root/${Macro.NDK_VARIANT_NAME.ref}"
                 }, {
                     "name": "$NO_VARIANT_IN_BUILD_ROOT_MOCK_CMAKE_SETTINGS_CONFIGURATION",
                     "inheritEnvironments": ["ndk"],
-                    "buildRoot": "project-build-root/${Macro.ABI.ref}"
+                    "buildRoot": "project-build-root/${Macro.NDK_ABI.ref}"
                 } ]
             }""".trimIndent())
         Mockito.doReturn(makefile).`when`(cmake).path
