@@ -19,6 +19,7 @@ package com.android.ide.common.rendering.api;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Rendering parameters for a {@link RenderSession}.
@@ -26,25 +27,43 @@ import java.util.Map;
 public class SessionParams extends RenderParams {
 
     public enum RenderingMode {
-        NORMAL(false, false),
-        V_SCROLL(false, true),
-        H_SCROLL(true, false),
-        FULL_EXPAND(true, true);
+        NORMAL(SizeAction.KEEP, SizeAction.KEEP),
+        V_SCROLL(SizeAction.KEEP, SizeAction.EXPAND),
+        H_SCROLL(SizeAction.EXPAND, SizeAction.KEEP),
+        FULL_EXPAND(SizeAction.EXPAND, SizeAction.EXPAND),
+        // Shrink canvas to the minimum size that is needed to cover the scene
+        SHRINK(SizeAction.SHRINK, SizeAction.SHRINK);
 
-        private final boolean mHorizExpand;
-        private final boolean mVertExpand;
-
-        RenderingMode(boolean horizExpand, boolean vertExpand) {
-            mHorizExpand = horizExpand;
-            mVertExpand = vertExpand;
+        public enum SizeAction {
+            EXPAND,
+            KEEP,
+            SHRINK
         }
 
+        private final SizeAction mHorizAction;
+        private final SizeAction mVertAction;
+
+        RenderingMode(@NotNull SizeAction horizAction, @NotNull SizeAction vertAction) {
+            mHorizAction = horizAction;
+            mVertAction = vertAction;
+        }
+
+        @Deprecated
         public boolean isHorizExpand() {
-            return mHorizExpand;
+            return mHorizAction == SizeAction.EXPAND;
         }
 
+        @Deprecated
         public boolean isVertExpand() {
-            return mVertExpand;
+            return mVertAction == SizeAction.EXPAND;
+        }
+
+        public SizeAction getHorizAction() {
+            return mHorizAction;
+        }
+
+        public SizeAction getVertAction() {
+            return mVertAction;
         }
     }
 
