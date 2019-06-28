@@ -36,6 +36,7 @@ import com.android.builder.core.VariantType
 import com.android.builder.dexing.DexingType
 import com.android.builder.dexing.MainDexListConfig
 import com.android.builder.dexing.ProguardConfig
+import com.android.builder.dexing.ProguardOutputFiles
 import com.android.builder.dexing.R8OutputType
 import com.android.builder.dexing.ToolConfig
 import com.android.builder.dexing.getR8Version
@@ -144,8 +145,13 @@ class R8Transform(
                 "dexingType" to dexingType
         )
 
-    override fun getSecondaryFileOutputs(): MutableCollection<File> =
-        listOfNotNull(outputProguardMapping.get().asFile, mainDexListOutput?.orNull?.asFile).toMutableList()
+    override fun getSecondaryFileOutputs(): MutableCollection<File> {
+        return listOfNotNull(
+            getProguardMapOutput(),
+            mainDexListOutput?.orNull?.asFile,
+            getProguardSeedsOutput(),
+            getProguardUsageOutput()).toMutableList()
+    }
 
     override fun keep(keep: String) {
         proguardConfigurations.add("-keep $keep")
@@ -210,11 +216,19 @@ class R8Transform(
 
         val proguardMappingInput =
                 if (inputProguardMapping.isEmpty) null else inputProguardMapping.singleFile.toPath()
+        var proguardOutputFiles: ProguardOutputFiles? = null
+        if (getProguardMapOutput() != null) {
+            proguardOutputFiles = ProguardOutputFiles(
+                getProguardMapOutput()?.toPath()!!,
+                getProguardSeedsOutput()?.toPath()!!,
+                getProguardUsageOutput()?.toPath()!!
+            )
+        }
         val proguardConfig = ProguardConfig(
                 allConfigurationFiles.files.map { it.toPath() },
-                outputProguardMapping.orNull?.asFile?.toPath(),
                 proguardMappingInput,
-                proguardConfigurations
+                proguardConfigurations,
+                proguardOutputFiles
         )
 
         val mainDexListConfig = if (dexingType == DexingType.LEGACY_MULTIDEX) {
@@ -280,4 +294,12 @@ class R8Transform(
             useFullR8
         )
     }
+
+    private fun getProguardMapOutput(): File? = outputProguardMapping.orNull?.asFile
+
+    private fun getProguardSeedsOutput(): File? =
+        getProguardMapOutput()?.resolveSibling("seeds.txt")
+
+    private fun getProguardUsageOutput(): File? =
+        getProguardMapOutput()?.resolveSibling("usage.txt")
 }

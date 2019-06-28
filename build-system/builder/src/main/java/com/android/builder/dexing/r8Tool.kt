@@ -119,10 +119,18 @@ fun runR8(
         )
     }
 
-    if (proguardConfig.proguardMapOutput != null) {
-        Files.deleteIfExists(proguardConfig.proguardMapOutput)
-        Files.createDirectories(proguardConfig.proguardMapOutput.parent)
-        r8CommandBuilder.setProguardMapOutputPath(proguardConfig.proguardMapOutput)
+    if (proguardConfig.proguardOutputFiles != null) {
+        val proguardOutputFiles = proguardConfig.proguardOutputFiles
+        Files.deleteIfExists(proguardOutputFiles.proguardMapOutput)
+        Files.deleteIfExists(proguardOutputFiles.proguardSeedsOutput)
+        Files.deleteIfExists(proguardOutputFiles.proguardUsageOutput)
+
+        Files.createDirectories(proguardOutputFiles.proguardMapOutput.parent)
+        r8CommandBuilder.setProguardMapOutputPath(proguardOutputFiles.proguardMapOutput)
+        r8CommandBuilder.setProguardSeedsConsumer(
+            StringConsumer.FileConsumer(proguardOutputFiles.proguardSeedsOutput))
+        r8CommandBuilder.setProguardUsageConsumer(
+            StringConsumer.FileConsumer(proguardOutputFiles.proguardUsageOutput))
     }
 
     val compilationMode =
@@ -200,7 +208,7 @@ fun runR8(
         R8.run(r8CommandBuilder.build())
     }
 
-    proguardConfig.proguardMapOutput?.let {
+    proguardConfig.proguardOutputFiles?.proguardMapOutput?.let {
         if (Files.notExists(it)) {
             // R8 might not create a mapping file, so we have to create it, http://b/37053758.
             Files.createFile(it)
@@ -224,9 +232,15 @@ data class MainDexListConfig(
 /** Proguard-related parameters for the R8 tool. */
 data class ProguardConfig(
     val proguardConfigurationFiles: List<Path>,
-    val proguardMapOutput: Path?,
     val proguardMapInput: Path?,
-    val proguardConfigurations: List<String>
+    val proguardConfigurations: List<String>,
+    val proguardOutputFiles: ProguardOutputFiles?
+)
+
+data class ProguardOutputFiles(
+    val proguardMapOutput: Path,
+    val proguardSeedsOutput: Path,
+    val proguardUsageOutput: Path
 )
 
 /** Configuration parameters for the R8 tool. */
