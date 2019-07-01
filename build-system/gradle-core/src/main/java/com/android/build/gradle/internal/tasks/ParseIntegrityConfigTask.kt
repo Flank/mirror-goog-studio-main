@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.google.common.annotations.VisibleForTesting
+import com.android.bundle.AppIntegrityConfigOuterClass.AppIntegrityConfig
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -34,11 +35,12 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import org.w3c.dom.Document
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.Serializable
 import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import javax.xml.parsers.DocumentBuilderFactory
 import javax.inject.Inject
 
 private const val CONFIG_FILE_NAME = "IntegrityConfig.xml"
@@ -79,21 +81,30 @@ abstract class ParseIntegrityConfigTask : NonIncrementalTask() {
     class ParseIntegrityConfigRunnable @Inject constructor(private val params: Params) :
         Runnable {
         override fun run() {
-            //TODO: convert xml to proto.
             params.integrityConfigDir?.let {
                 if (!it.isDirectory) {
                     throw FileNotFoundException("Could not find directory ${it.absolutePath}")
                 }
-                Files.copy(
-                    it.resolve(CONFIG_FILE_NAME).toPath(),
-                    params.appIntegrityConfigProto.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING
-                )
+                val doc = loadXML(it.resolve(CONFIG_FILE_NAME))
+                val configProto = IntegrityConfigParser(doc).parseConfig()
+                storeProto(configProto, params.appIntegrityConfigProto)
             } ?: run {
                 Files.deleteIfExists(params.appIntegrityConfigProto.toPath())
             }
         }
+        private fun loadXML(xmlFile: File): Document {
+            val documentFactory = DocumentBuilderFactory.newInstance()
+            val documentBuilder = documentFactory.newDocumentBuilder()
+            return documentBuilder.parse(xmlFile)
+        }
+
+        private fun storeProto(configProto: AppIntegrityConfig, output: File) {
+            val outputStream = Files.newOutputStream(output.toPath())
+            configProto.writeTo(outputStream)
+        }
+
     }
+
 
     class CreationAction(variantScope: VariantScope) :
         VariantTaskCreationAction<ParseIntegrityConfigTask>(variantScope) {

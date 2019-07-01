@@ -64,8 +64,6 @@ class ParseIntegrityConfigTaskTest {
         ParseIntegrityConfigTask.ParseIntegrityConfigRunnable(params).run()
 
         assertThat(params.appIntegrityConfigProto.exists())
-        FileSubject.assertThat(params.appIntegrityConfigProto)
-            .contains("<integrity_config/>")
     }
 
     @Test
