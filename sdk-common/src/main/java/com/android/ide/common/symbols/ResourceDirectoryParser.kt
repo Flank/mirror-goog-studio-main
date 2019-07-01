@@ -21,6 +21,7 @@ package com.android.ide.common.symbols
 import com.android.SdkConstants.DOT_XML
 import com.android.ide.common.resources.FileResourceNameValidator
 import com.android.ide.common.resources.MergingException
+import com.android.resources.Density
 import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.utils.SdkUtils
@@ -123,6 +124,10 @@ private fun parseResourceDirectory(
 ) {
     assert(resourceDirectory.isDirectory)
 
+    if (!shouldBeParsed(resourceDirectory.name)) {
+        return
+    }
+
     // Compute the pseudo resource type from the resource directory name, discarding any qualifiers.
     // If the directory name is "foo", then the pseudo resource type is "foo". If the directory name
     // is "foo-bar-blah", then the pseudo resource type is "foo".
@@ -193,6 +198,45 @@ private fun parseResourceDirectory(
             }
         }
     }
+}
+
+private val SDK_VERSION_CONFIG_PATTERN = Regex("""v\d+""")
+
+/**
+ * Returns whether files under this directory should be parsed (files under directories with
+ * non-default configurations cannot define new resources). Returns false if the directory should be
+ * skipped.
+ *
+ * @param directoryName the name of the directory (e.g. "values-hdpi-v4", "drawable-portrait")
+ */
+fun shouldBeParsed(directoryName: String): Boolean {
+    // If we're dealing with the 'default' config (i.e. no configuration specified), the directory
+    // needs to be parsed.
+    if (!directoryName.contains('-')) {
+        return true
+    }
+
+    val configs: List<String> = directoryName.substringAfter('-').split('-')
+
+    // The only configs we care about is density and min SDK version (or combination of them).
+    if (configs.size == 1) {
+        val isDensity = Density.getEnum(configs.first()) != null
+        val isSdkVersion = configs.first().matches(SDK_VERSION_CONFIG_PATTERN)
+        return isDensity || isSdkVersion
+    }
+
+    if (configs.size == 2) {
+        // First density, then version (AAPT2 enforces the order)
+        val isFirstDensity = Density.getEnum(configs[0]) != null
+        val isSecondSdkVersion = configs[1].matches(SDK_VERSION_CONFIG_PATTERN)
+
+        // If first is a density config, and the second one is the SDK version, it should be kept.
+        // Otherwise the file should be skipped.
+        return isFirstDensity && isSecondSdkVersion
+    }
+
+    // More than 2 will always have a skippable config.
+    return false
 }
 
 /**

@@ -87,11 +87,14 @@ class ResourceDirectoryParserTest {
 
         makeRandom(directory, "drawable/foo.png")
         makeRandom(directory, "drawable/bar.png")
-        FileUtils.mkdirs(File(directory, "drawable-en"))
-        makeRandom(directory, "drawable-en-hdpi/foo.png")
+        makeRandom(directory, "drawable-hdpi/foo.png")
+        makeRandom(directory, "drawable-hdpi/density_specific.png")
+        makeRandom(directory, "drawable-en/language_specific.png")
+        makeRandom(directory, "drawable-hdpi-en/language_and_density.png")
         makeRandom(directory, "raw/foo.png")
-        makeRandom(directory, "raw-en/foo.png")
+        makeRandom(directory, "raw-hdpi/foo.png")
         makeRandom(directory, "raw-en/bar.png")
+        makeRandom(directory, "raw-hdpi-en/mixed.png")
 
         val platformTable = SymbolTable.builder().tablePackage("android").build()
 
@@ -103,8 +106,8 @@ class ResourceDirectoryParserTest {
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", 0x7f_08_0001))
                         .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_08_0002))
-                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", 0x7f_13_0002))
                         .add(SymbolTestUtils.createSymbol("raw", "foo", "int", 0x7f_13_0001))
+                        .add(SymbolTestUtils.createSymbol("drawable", "density_specific", "int", 0x7f_08_0003))
                         .build()
 
         assertEquals(expected, parsed)
@@ -112,6 +115,41 @@ class ResourceDirectoryParserTest {
 
     @Test
     fun parseValues() {
+        val directory = temporaryFolder.newFolder()
+
+        val values = """
+<resources>
+    <color name="a">#000000</color>
+    <color name="b">#000000</color>
+</resources>""".trimIndent()
+
+        val values_two = """
+<resources>
+    <color name="b">#000000</color>
+    <color name="c">#000000</color>
+</resources>""".trimIndent()
+
+        make(values.toByteArray(), directory, "values/col.xml")
+        make(values_two.toByteArray(), directory, "values/col_two.xml")
+
+        val platformTable = SymbolTable.builder().tablePackage("android").build()
+
+        val parsed =
+                parseResourceSourceSetDirectory(
+                        directory, IdProvider.sequential(), platformTable)
+
+        val expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("color", "a", "int", 0x7f_06_0001))
+                        .add(SymbolTestUtils.createSymbol("color", "b", "int", 0x7f_06_0002))
+                        .add(SymbolTestUtils.createSymbol("color", "c", "int", 0x7f_06_0004))
+                        .build()
+
+        assertEquals(expected, parsed)
+    }
+
+    @Test
+    fun ignoresNonDefaultLanguageConfigs() {
         val directory = temporaryFolder.newFolder()
 
         val values = """
@@ -132,15 +170,14 @@ class ResourceDirectoryParserTest {
         val platformTable = SymbolTable.builder().tablePackage("android").build()
 
         val parsed =
-                parseResourceSourceSetDirectory(
-                        directory, IdProvider.sequential(), platformTable)
+            parseResourceSourceSetDirectory(
+                directory, IdProvider.sequential(), platformTable)
 
         val expected =
-                SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("color", "a", "int", 0x7f_06_0001))
-                        .add(SymbolTestUtils.createSymbol("color", "b", "int", 0x7f_06_0002))
-                        .add(SymbolTestUtils.createSymbol("color", "c", "int", 0x7f_06_0004))
-                        .build()
+            SymbolTable.builder()
+                .add(SymbolTestUtils.createSymbol("color", "a", "int", 0x7f_06_0001))
+                .add(SymbolTestUtils.createSymbol("color", "b", "int", 0x7f_06_0002))
+                .build()
 
         assertEquals(expected, parsed)
     }
@@ -194,5 +231,29 @@ class ResourceDirectoryParserTest {
             assertThat(e.cause!!.cause!!.message)
                 .contains("Error: ':' is not a valid resource name character")
         }
+    }
+
+    @Test
+    fun testSkippableConfigurations() {
+        // Default configurations should not be skipped (and the types shouldn't be checked at this
+        // point).
+        assertThat(shouldBeParsed("values")).isTrue()
+        assertThat(shouldBeParsed("drawables")).isTrue()
+        assertThat(shouldBeParsed("fake")).isTrue()
+
+        // If it's only density or SDK version config (or both) it should be kept.
+        assertThat(shouldBeParsed("values-v4")).isTrue()
+        assertThat(shouldBeParsed("drawables-hdpi")).isTrue()
+        assertThat(shouldBeParsed("drawables-hdpi-v21")).isTrue()
+
+        // Incorrect order and other configs should be skipped.
+        assertThat(shouldBeParsed("values-en")).isFalse()
+        assertThat(shouldBeParsed("values-en-hdpi")).isFalse()
+        assertThat(shouldBeParsed("values-en-v4")).isFalse()
+        assertThat(shouldBeParsed("drawable-v4-hdpi")).isFalse()
+        assertThat(shouldBeParsed("drawable-hdpi-v21-watch")).isFalse()
+        assertThat(shouldBeParsed("fake-fake")).isFalse()
+        assertThat(shouldBeParsed("values-hdpi-fake")).isFalse()
+        assertThat(shouldBeParsed("values-fake-v4")).isFalse()
     }
 }
