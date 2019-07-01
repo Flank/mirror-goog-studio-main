@@ -23,6 +23,7 @@ import "common.proto";
 import "cpu_data.proto";
 import "echo.proto";
 import "layout_inspector.proto";
+import "memory_data.proto";
 
 message Command {
   enum CommandType {
@@ -45,6 +46,7 @@ message Command {
     // Memory Profiler Prefix = 400
     GC = 401; // No payload
     HEAP_DUMP = 402;  // No payload
+    MEMORY_ALLOC_SAMPLING = 403;
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
@@ -85,10 +87,10 @@ message Command {
     // Memory Profiler Prefix = 400
     // 401 Reserved for CommandType.GC
     // 402 Reserved for CommandType.HEAP_DUMP
+    MemoryAllocSamplingData memory_alloc_sampling = 403;
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
-
 
     // Sample Echo Command starts at 1000;
     echo.EchoData echo_data = 1000;

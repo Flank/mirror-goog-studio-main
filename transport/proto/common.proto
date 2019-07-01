@@ -76,6 +76,8 @@ message Event {
     MEMORY_HEAP_DUMP = 403;
     // group_id: hprof id
     MEMORY_HEAP_DUMP_STATUS = 404;
+    // no specified gropu id.
+    MEMORY_ALLOC_SAMPLING = 405;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -174,6 +176,7 @@ message Event {
     MemoryGcData memory_gc = 402;
     MemoryHeapDumpData memory_heapdump = 403;
     MemoryHeapDumpStatusData memory_heapdump_status = 404;
+    MemoryAllocSamplingData memory_alloc_sampling = 405;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

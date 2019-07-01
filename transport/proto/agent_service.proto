@@ -21,7 +21,7 @@ option java_outer_classname = "Agent";
 
 import "commands.proto";
 import "common.proto";
-import "memory.proto";
+import "memory_data.proto";
 
 service AgentService {
   // A simple ping mechanism to notify perfd of the agent's existence, vice
@@ -92,7 +92,7 @@ message AgentConfig {
     // Path to the app dir: usually /data/app/
     string app_dir = 4;
     // The allocation sampling rate to use when starting a profiling session.
-    AllocationSamplingRate sampling_rate = 5;
+    MemoryAllocSamplingData sampling_rate = 5;
   }
   CommonConfig common = 1;
   MemoryConfig mem = 2;

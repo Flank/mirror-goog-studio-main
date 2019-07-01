@@ -82,6 +82,14 @@ message MemoryHeapDumpStatusData {
   HeapDumpStatus status = 1;
 }
 
+message MemoryAllocSamplingData {
+  // Number of allocations between samples.
+  // e.g. when set to 100, we only track 1 out of every 100 allocations.
+  // When set to 0, allocation tracking is turned off.
+  // When set to 1, every allocation is tracked (i.e. full tracking).
+  int32 sampling_num_interval = 1;
+}
+
 message AllocatedClass {
   int32 class_id = 1;
   string class_name = 2;

@@ -195,8 +195,8 @@ public class MemoryTest {
 
         // Set sampling rate.
         stubWrapper.setSamplingRate(myPerfDriver.getSession(), samplingNumInterval);
-        assertThat(androidDriver.waitForInput("sampling_num_interval=" + samplingNumInterval))
-                .isTrue();
+        // printf from the agent signalling that the sample rate has been updated.
+        assertThat(androidDriver.waitForInput("Setting sampling rate")).isTrue();
 
         // Create several instances of MemTestEntity.
         androidDriver.setProperty("allocation.count", Integer.toString(allocationCount));
@@ -256,7 +256,8 @@ public class MemoryTest {
 
         // Set sampling rate back to full.
         stubWrapper.setSamplingRate(myPerfDriver.getSession(), SAMPLING_RATE_FULL);
-        assertThat(androidDriver.waitForInput("sampling_num_interval=1")).isTrue();
+        // printf from the agent signalling that the sample rate has been updated.
+        assertThat(androidDriver.waitForInput("Setting sampling rate")).isTrue();
 
         // Create more instances of MemTestEntity. We keep the previously allocated objects so we
         // can verify a new heap walk was performed.

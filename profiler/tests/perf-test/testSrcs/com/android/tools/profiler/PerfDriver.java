@@ -22,7 +22,7 @@ import com.android.tools.profiler.proto.Agent;
 import com.android.tools.profiler.proto.Agent.AgentConfig.MemoryConfig;
 import com.android.tools.profiler.proto.Common;
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
+import com.android.tools.profiler.proto.Memory.MemoryAllocSamplingData;
 import com.android.tools.profiler.proto.Transport;
 import io.grpc.StatusRuntimeException;
 import java.io.File;
@@ -251,7 +251,7 @@ public class PerfDriver extends ExternalResource {
                             .setAppDir("/")
                             .setMaxStackDepth(50)
                             .setSamplingRate(
-                                    AllocationSamplingRate.newBuilder()
+                                    MemoryAllocSamplingData.newBuilder()
                                             .setSamplingNumInterval(myLiveAllocSamplingRate)
                                             .build())
                             .build();

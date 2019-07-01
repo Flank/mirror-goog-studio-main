@@ -401,6 +401,9 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
  * to filter allocation events.
  */
 void MemoryTrackingEnv::SetSamplingRate(int32_t sampling_num_interval) {
+  Log::V("Update live memory tracking sampling rate from %d to %d",
+         sampling_num_interval_, sampling_num_interval);
+
   if (sampling_num_interval == sampling_num_interval_) {
     // No value change, short circuit.
     return;
@@ -560,10 +563,6 @@ void MemoryTrackingEnv::HandleControlSignal(
       new_sampling_num_interval = request->set_sampling_rate_request()
                                       .sampling_rate()
                                       .sampling_num_interval();
-      Log::V(
-          "Live memory tracking sampling rate updated: "
-          "sampling_num_interval=%d.",
-          new_sampling_num_interval);
       SetSamplingRate(new_sampling_num_interval);
       break;
     case MemoryControlRequest::CONTROL_NOT_SET:

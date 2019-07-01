@@ -58,7 +58,7 @@ message MemoryControlRequest {
   // O+ only: Updates the allocation tracking sampling rate during a live
   // session.
   message SetSamplingRate {
-    AllocationSamplingRate sampling_rate = 1;
+    MemoryAllocSamplingData sampling_rate = 1;
   }
 
   int32 pid = 1;

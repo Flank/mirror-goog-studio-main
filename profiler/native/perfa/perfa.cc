@@ -283,9 +283,22 @@ void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
   Agent::Instance().AddDaemonConnectedCallback([vm, agent_config] {
     MemoryTrackingEnv::Instance(vm, agent_config.mem());
   });
+
   // Transformation of loaded classes may take long. Perform this after other
   // tasks.
   InitializePerfa(jvmti_env, jni_env, agent_config);
+
+  // |BEGIN_SESSION| in SetupPerfa is a special case. We should not expect
+  // other commands to be sent to the agent until after |InitializeProfiler|
+  // is called, so they are registered here.
+  Agent::Instance().RegisterCommandHandler(
+      Command::MEMORY_ALLOC_SAMPLING,
+      [vm, agent_config](const Command* command) -> void {
+        MemoryTrackingEnv::Instance(vm, agent_config.mem())
+            ->SetSamplingRate(
+                command->memory_alloc_sampling().sampling_num_interval());
+      });
+
   // Perf-test currently waits on this message to determine that agent
   // has finished profiler initialization.
   Log::V("Profiler initialization complete on agent.");
@@ -296,6 +309,10 @@ void SetupPerfa(JavaVM* vm, jvmtiEnv* jvmti_env,
   if (agent_config.startup_profiling_enabled()) {
     InitializeProfiler(vm, jvmti_env, agent_config);
   } else {
+    // If startup profiling is not enabled, then we delay performing the agent
+    // initiailization (e.g. BCI, memory tracking) to until we receive the
+    // |BEGIN_SESSION| command. The agent could be attached for other features
+    // and we don't want to always enable profiling right away.
     Agent::Instance().RegisterCommandHandler(
         Command::BEGIN_SESSION,
         [vm, jvmti_env, agent_config](const Command* command) -> void {

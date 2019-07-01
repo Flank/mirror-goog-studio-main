@@ -17,7 +17,7 @@
 package com.android.tools.profiler.memory;
 
 import com.android.tools.profiler.proto.Common.Session;
-import com.android.tools.profiler.proto.MemoryProfiler.AllocationSamplingRate;
+import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryRequest;
 import com.android.tools.profiler.proto.MemoryProfiler.SetAllocationSamplingRateRequest;
@@ -62,7 +62,7 @@ public final class MemoryStubWrapper {
                 SetAllocationSamplingRateRequest.newBuilder()
                         .setSession(session)
                         .setSamplingRate(
-                                AllocationSamplingRate.newBuilder()
+                                Memory.MemoryAllocSamplingData.newBuilder()
                                         .setSamplingNumInterval(samplingNumInterval))
                         .build());
     }

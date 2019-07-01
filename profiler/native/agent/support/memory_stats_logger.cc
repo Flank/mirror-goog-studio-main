@@ -87,7 +87,6 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
           EmptyResponse response;
           return stub.SendEvent(&ctx, request, &response);
         }});
-
   } else {
     Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
         {[start_time, end_time](InternalMemoryService::Stub& stub,
@@ -142,23 +141,35 @@ void EnqueueJNIGlobalRefEvents(const proto::BatchAllocationContexts& contexts,
 void EnqueueAllocationSamplingRateEvent(int64_t timestamp,
                                         int32_t sampling_num_interval) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+    Agent::Instance().SubmitAgentTasks(
+        {[timestamp, sampling_num_interval](AgentService::Stub& stub,
+                                            ClientContext& ctx) {
+          SendEventRequest request;
+          auto* event = request.mutable_event();
+          event->set_pid(getpid());
+          event->set_kind(Event::MEMORY_ALLOC_SAMPLING);
+
+          auto* data = event->mutable_memory_alloc_sampling();
+          data->set_sampling_num_interval(sampling_num_interval);
+
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
+  } else {
+    Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
+        {[timestamp, sampling_num_interval](InternalMemoryService::Stub& stub,
+                                            ClientContext& ctx) {
+          AllocationSamplingRateEventRequest request;
+          request.set_pid(getpid());
+          auto event = request.mutable_event();
+          event->set_timestamp(timestamp);
+          event->mutable_sampling_rate()->set_sampling_num_interval(
+              sampling_num_interval);
+
+          EmptyMemoryReply reply;
+          return stub.RecordAllocationSamplingRateEvent(&ctx, request, &reply);
+        }});
   }
-
-  int32_t pid = getpid();
-  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
-      {[timestamp, sampling_num_interval, pid](
-           InternalMemoryService::Stub& stub, ClientContext& ctx) {
-        AllocationSamplingRateEventRequest request;
-        request.set_pid(pid);
-        auto event = request.mutable_event();
-        event->set_timestamp(timestamp);
-        event->mutable_sampling_rate()->set_sampling_num_interval(
-            sampling_num_interval);
-
-        EmptyMemoryReply reply;
-        return stub.RecordAllocationSamplingRateEvent(&ctx, request, &reply);
-      }});
 }
 
 }  // namespace profiler
