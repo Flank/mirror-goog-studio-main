@@ -178,6 +178,7 @@ public abstract class BaseVariantData {
         allPostJavacGeneratedBytecode = project.files();
 
         taskContainer = scope.getTaskContainer();
+        applicationIdTextResource = project.getResources().getText().fromString("");
     }
 
     @NonNull

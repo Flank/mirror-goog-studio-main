@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.api
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.utils.FileUtils
 import org.junit.Rule
 import org.junit.Test
 
@@ -51,6 +52,34 @@ class ApplicationIdTextResourceTest {
                     """
         )
         project.execute(":base:appIdDebugFeature")
+    }
+
+    @Test
+    fun testGetApplicationIdResourceFromLib() {
+        FileUtils.writeToFile(project.settingsFile,
+            "include ':feature', ':app', ':base', ':instantapp', ':lib'")
+        TestFileUtils.appendToFile(
+            project.getSubproject(":app").buildFile,
+            """
+                dependencies { 
+                    implementation project(':lib')
+                }
+            """)
+        TestFileUtils.appendToFile(
+            project.getSubproject(":lib").buildFile, """
+                    android {
+                        libraryVariants.all { variant ->
+                            def task = task("appId${"$"}variant.name")
+                            task.dependsOn(variant.applicationIdTextResource)
+                            task.doLast {
+                                assert variant.applicationIdTextResource.asString().equals(
+                                    "")
+                            }
+                        }
+                    }
+                    """
+        )
+        project.execute(":lib:appIdDebug")
     }
 
     @Test
