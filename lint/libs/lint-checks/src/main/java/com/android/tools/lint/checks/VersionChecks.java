@@ -1,7 +1,6 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.Lint.getMethodName;
-import static com.android.tools.lint.detector.api.Lint.getNextInstruction;
 import static com.android.tools.lint.detector.api.Lint.skipParentheses;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
@@ -9,7 +8,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Lint;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,15 +54,6 @@ import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastPrefixOperator;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.analysis.AnalyzerException;
 
 /**
  * Utility methods for checking whether a given element is surrounded (or preceded!) by an API check
@@ -88,114 +77,6 @@ public class VersionChecks {
         }
 
         return SdkVersionInfo.getApiByBuildCode(text, true);
-    }
-
-    public static boolean isWithinSdkConditional(
-            @NonNull ClassContext context,
-            @NonNull ClassNode classNode,
-            @NonNull MethodNode method,
-            @NonNull AbstractInsnNode call,
-            int requiredApi) {
-        assert requiredApi != -1;
-
-        if (!containsSimpleSdkCheck(method)) {
-            return false;
-        }
-
-        try {
-            // Search in the control graph, from beginning, up to the target call
-            // node, to see if it's reachable. The call graph is constructed in a
-            // special way: we include all control flow edges, *except* those that
-            // are satisfied by a SDK_INT version check (where the operand is a version
-            // that is at least as high as the one needed for the given call).
-            //
-            // If we can reach the call, that means that there is a way this call
-            // can be reached on some versions, and lint should flag the call/field lookup.
-            //
-            //
-            // Let's say you have code like this:
-            //   if (SDK_INT >= LOLLIPOP) {
-            //       // Call
-            //       return property.hasAdjacentMapping();
-            //   }
-            //   ...
-            //
-            // The compiler will turn this into the following byte code:
-            //
-            //    0:    getstatic #3; //Field android/os/Build$VERSION.SDK_INT:I
-            //    3:    bipush 21
-            //    5:    if_icmple 17
-            //    8:    aload_1
-            //    9:    invokeinterface	#4, 1; //InterfaceMethod
-            //                       android/view/ViewDebug$ExportedProperty.hasAdjacentMapping:()Z
-            //    14:   ifeq 17
-            //    17:   ... code after if loop
-            //
-            // When the call graph is constructed, for an if branch we're called twice; once
-            // where the target is the next instruction (the one taken if byte code check is false)
-            // and one to the jump label (the one taken if the byte code condition is true).
-            //
-            // Notice how at the byte code level, the logic is reversed: the >= instruction
-            // is turned into "<" and we jump to the code *after* the if clause; otherwise
-            // it will just fall through. Therefore, if we take a byte code branch, that means
-            // that the SDK check was *not* satisfied, and conversely, the target call is reachable
-            // if we don't take the branch.
-            //
-            // Therefore, when we build the call graph, we will add call graph nodes for an
-            // if check if :
-            //   (1) it is some other comparison than <, <= or !=.
-            //   (2) if the byte code comparison check is *not* satisfied, this means that the the
-            //       SDK check was successful and that the call graph should only include
-            //       the jump edge
-            //   (3) all other edges are added
-            //
-            // With a flow control graph like that, we can determine whether a target call
-            // is guarded by a given SDK check: that will be the case if we cannot reach
-            // the target call in the call graph
-
-            ApiCheckGraph graph = new ApiCheckGraph(requiredApi);
-            ControlFlowGraph.create(graph, classNode, method);
-
-            // Note: To debug unit tests, you may want to for example do
-            //   ControlFlowGraph.Node callNode = graph.getNode(call);
-            //   Set<ControlFlowGraph.Node> highlight = Sets.newHashSet(callNode);
-            //   Files.write(graph.toDot(highlight), new File("/tmp/graph.gv"), Charsets.UTF_8);
-            // This will generate a graphviz file you can visualize with the "dot" utility
-            AbstractInsnNode first = method.instructions.get(0);
-            return !graph.isConnected(first, call);
-        } catch (AnalyzerException e) {
-            context.log(e, null);
-        }
-
-        return false;
-    }
-
-    private static boolean containsSimpleSdkCheck(@NonNull MethodNode method) {
-        // Look for a compiled version of "if (Build.VERSION.SDK_INT op N) {"
-        InsnList nodes = method.instructions;
-        for (int i = 0, n = nodes.size(); i < n; i++) {
-            AbstractInsnNode instruction = nodes.get(i);
-            if (isSdkVersionLookup(instruction)) {
-                AbstractInsnNode bipush = getNextInstruction(instruction);
-                if (bipush != null && bipush.getOpcode() == Opcodes.BIPUSH) {
-                    AbstractInsnNode ifNode = getNextInstruction(bipush);
-                    if (ifNode != null && ifNode.getType() == AbstractInsnNode.JUMP_INSN) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private static boolean isSdkVersionLookup(@NonNull AbstractInsnNode instruction) {
-        if (instruction.getOpcode() == Opcodes.GETSTATIC) {
-            FieldInsnNode fieldNode = (FieldInsnNode) instruction;
-            return (SDK_INT.equals(fieldNode.name)
-                    && ANDROID_OS_BUILD_VERSION.equals(fieldNode.owner));
-        }
-        return false;
     }
 
     public static boolean isPrecededByVersionCheckExit(
@@ -997,58 +878,5 @@ public class VersionChecks {
             }
         }
         return null;
-    }
-
-    /**
-     * Control flow graph which skips control flow edges that check a given SDK_VERSION requirement
-     * that is not met by a given call
-     */
-    private static class ApiCheckGraph extends ControlFlowGraph {
-        private final int mRequiredApi;
-
-        public ApiCheckGraph(int requiredApi) {
-            mRequiredApi = requiredApi;
-        }
-
-        @Override
-        protected void add(@NonNull AbstractInsnNode from, @NonNull AbstractInsnNode to) {
-            if (from.getType() == AbstractInsnNode.JUMP_INSN
-                    && from.getPrevious() != null
-                    && from.getPrevious().getType() == AbstractInsnNode.INT_INSN) {
-                IntInsnNode intNode = (IntInsnNode) from.getPrevious();
-                if (intNode.getPrevious() != null && isSdkVersionLookup(intNode.getPrevious())) {
-                    JumpInsnNode jumpNode = (JumpInsnNode) from;
-                    int api = intNode.operand;
-                    boolean isJumpEdge = to == jumpNode.label;
-                    boolean includeEdge;
-                    switch (from.getOpcode()) {
-                        case Opcodes.IF_ICMPNE:
-                            includeEdge = api < mRequiredApi || isJumpEdge;
-                            break;
-                        case Opcodes.IF_ICMPLE:
-                            includeEdge = api < mRequiredApi - 1 || isJumpEdge;
-                            break;
-                        case Opcodes.IF_ICMPLT:
-                            includeEdge = api < mRequiredApi || isJumpEdge;
-                            break;
-
-                        case Opcodes.IF_ICMPGE:
-                            includeEdge = api < mRequiredApi || !isJumpEdge;
-                            break;
-                        case Opcodes.IF_ICMPGT:
-                            includeEdge = api < mRequiredApi - 1 || !isJumpEdge;
-                            break;
-                        default:
-                            // unexpected comparison for int API level
-                            includeEdge = true;
-                    }
-                    if (!includeEdge) {
-                        return;
-                    }
-                }
-            }
-
-            super.add(from, to);
-        }
     }
 }

@@ -19,32 +19,19 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldInsnNode;
-import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LdcInsnNode;
-import org.objectweb.asm.tree.LineNumberNode;
-import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
-import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.analysis.Analyzer;
 import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.tree.analysis.BasicInterpreter;
-
-//import org.objectweb.asm.util.Printer;
 
 /**
  * A {@linkplain ControlFlowGraph} is a graph containing a node for each instruction in a method,
@@ -120,47 +107,6 @@ public class ControlFlowGraph {
         return graph;
     }
 
-    /** Checks whether there is a path from the given source node to the given destination node */
-    @SuppressWarnings("MethodMayBeStatic")
-    private boolean isConnected(@NonNull Node from, @NonNull Node to, @NonNull Set<Node> seen) {
-        if (from == to) {
-            return true;
-        } else if (seen.contains(from)) {
-            return false;
-        }
-        seen.add(from);
-
-        List<Node> successors = from.successors;
-        List<Node> exceptions = from.exceptions;
-        if (exceptions != null) {
-            for (Node successor : exceptions) {
-                if (isConnected(successor, to, seen)) {
-                    return true;
-                }
-            }
-        }
-
-        if (successors != null) {
-            for (Node successor : successors) {
-                if (isConnected(successor, to, seen)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /** Checks whether there is a path from the given source node to the given destination node */
-    public boolean isConnected(@NonNull Node from, @NonNull Node to) {
-        return isConnected(from, to, Sets.newIdentityHashSet());
-    }
-
-    /** Checks whether there is a path from the given instruction to the given instruction node */
-    public boolean isConnected(@NonNull AbstractInsnNode from, @NonNull AbstractInsnNode to) {
-        return isConnected(getNode(from), getNode(to));
-    }
-
     /**
      * A {@link Node} is a node in the control flow graph for a method, pointing to the instruction
      * and its possible successors
@@ -195,59 +141,6 @@ public class ControlFlowGraph {
             if (!exceptions.contains(node)) {
                 exceptions.add(node);
             }
-        }
-
-        /**
-         * Represents this instruction as a string, for debugging purposes
-         *
-         * @param includeAdjacent whether it should include a display of adjacent nodes as well
-         * @return a string representation
-         */
-        @NonNull
-        public String toString(boolean includeAdjacent) {
-            StringBuilder sb = new StringBuilder(100);
-
-            sb.append(getId(instruction));
-            sb.append(':');
-
-            if (instruction instanceof LabelNode) {
-                //LabelNode l = (LabelNode) instruction;
-                //sb.append('L' + l.getLabel().getOffset() + ":");
-                //sb.append('L' + l.getLabel().info + ":");
-                sb.append("LABEL");
-            } else if (instruction instanceof LineNumberNode) {
-                sb.append("LINENUMBER ").append(((LineNumberNode) instruction).line);
-            } else if (instruction instanceof FrameNode) {
-                sb.append("FRAME");
-            } else {
-                int opcode = instruction.getOpcode();
-                String opcodeName = getOpcodeName(opcode);
-                sb.append(opcodeName);
-                if (instruction.getType() == AbstractInsnNode.METHOD_INSN) {
-                    sb.append('(').append(((MethodInsnNode) instruction).name).append(')');
-                }
-            }
-
-            if (includeAdjacent) {
-                if (successors != null && !successors.isEmpty()) {
-                    sb.append(" Next:");
-                    for (Node successor : successors) {
-                        sb.append(' ');
-                        sb.append(successor.toString(false));
-                    }
-                }
-
-                if (exceptions != null && !exceptions.isEmpty()) {
-                    sb.append(" Exceptions:");
-                    for (Node exception : exceptions) {
-                        sb.append(' ');
-                        sb.append(exception.toString(false));
-                    }
-                }
-                sb.append('\n');
-            }
-
-            return sb.toString();
         }
     }
 
@@ -304,219 +197,4 @@ public class ControlFlowGraph {
 
         return node;
     }
-
-    /**
-     * Creates a human readable version of the graph
-     *
-     * @param start the starting instruction, or null if not known or to use the first instruction
-     * @return a string version of the graph
-     */
-    @NonNull
-    public String toString(@Nullable Node start) {
-        StringBuilder sb = new StringBuilder(400);
-
-        AbstractInsnNode curr;
-        if (start != null) {
-            curr = start.instruction;
-        } else {
-            if (mNodeMap.isEmpty()) {
-                return "<empty>";
-            } else {
-                curr = mNodeMap.keySet().iterator().next();
-                while (curr.getPrevious() != null) {
-                    curr = curr.getPrevious();
-                }
-            }
-        }
-
-        while (curr != null) {
-            Node node = mNodeMap.get(curr);
-            if (node != null) {
-                sb.append(node.toString(true));
-            }
-            curr = curr.getNext();
-        }
-
-        return sb.toString();
-    }
-
-    @Override
-    public String toString() {
-        return toString(null);
-    }
-
-    // ---- For debugging only ----
-
-    private static Map<Object, String> sIds = null;
-    private static int sNextId = 1;
-
-    private static String getId(Object object) {
-        if (sIds == null) {
-            sIds = Maps.newHashMap();
-        }
-        String id = sIds.get(object);
-        if (id == null) {
-            id = Integer.toString(sNextId++);
-            sIds.put(object, id);
-        }
-        return id;
-    }
-
-    /**
-     * Generates dot output of the graph. This can be used with graphwiz to visualize the graph. For
-     * example, if you save the output as graph1.gv you can run
-     *
-     * <pre>
-     * $ dot -Tps graph1.gv -o graph1.ps
-     * </pre>
-     *
-     * to generate a postscript file, which you can then view with "gv graph1.ps".
-     *
-     * <p>(There are also some online web sites where you can paste in dot graphs and see the
-     * visualization right there in the browser.)
-     *
-     * @return a dot description of this control flow graph, useful for debugging
-     */
-    @SuppressWarnings("unused")
-    public String toDot(@Nullable Set<Node> highlight) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("digraph G {\n");
-
-        AbstractInsnNode instruction = mMethod.instructions.getFirst();
-
-        // Special start node
-        sb.append("  start -> ").append(getId(mNodeMap.get(instruction))).append(";\n");
-        sb.append("  start [shape=plaintext];\n");
-
-        while (instruction != null) {
-            Node node = mNodeMap.get(instruction);
-            if (node != null) {
-                if (node.successors != null) {
-                    for (Node to : node.successors) {
-                        sb.append("  ").append(getId(node)).append(" -> ").append(getId(to));
-                        if (node.instruction instanceof JumpInsnNode) {
-                            sb.append(" [label=\"");
-                            if (((JumpInsnNode) node.instruction).label == to.instruction) {
-                                sb.append("yes");
-                            } else {
-                                sb.append("no");
-                            }
-                            sb.append("\"]");
-                        }
-                        sb.append(";\n");
-                    }
-                }
-                if (node.exceptions != null) {
-                    for (Node to : node.exceptions) {
-                        sb.append(getId(node)).append(" -> ").append(getId(to));
-                        sb.append(" [label=\"exception\"];\n");
-                    }
-                }
-            }
-
-            instruction = instruction.getNext();
-        }
-
-        // Labels
-        sb.append("\n");
-        for (Node node : mNodeMap.values()) {
-            instruction = node.instruction;
-            sb.append("  ").append(getId(node)).append(" ");
-            sb.append("[label=\"").append(dotDescribe(node)).append("\"");
-            if (highlight != null && highlight.contains(node)) {
-                sb.append(",shape=box,style=filled");
-            } else if (instruction instanceof LineNumberNode
-                    || instruction instanceof LabelNode
-                    || instruction instanceof FrameNode) {
-                sb.append(",shape=oval,style=dotted");
-            } else {
-                sb.append(",shape=box");
-            }
-            sb.append("];\n");
-        }
-
-        sb.append("}");
-        return sb.toString();
-    }
-
-    private static String dotDescribe(Node node) {
-        AbstractInsnNode instruction = node.instruction;
-        if (instruction instanceof LabelNode) {
-            return "Label";
-        } else if (instruction instanceof LineNumberNode) {
-            LineNumberNode lineNode = (LineNumberNode) instruction;
-            return "Line " + lineNode.line;
-        } else if (instruction instanceof FrameNode) {
-            return "Stack Frame";
-        } else if (instruction instanceof MethodInsnNode) {
-            MethodInsnNode method = (MethodInsnNode) instruction;
-            String cls = method.owner.substring(method.owner.lastIndexOf('/') + 1);
-            cls = cls.replace('$', '.');
-            return "Call " + cls + "#" + method.name;
-        } else if (instruction instanceof FieldInsnNode) {
-            FieldInsnNode field = (FieldInsnNode) instruction;
-            String cls = field.owner.substring(field.owner.lastIndexOf('/') + 1);
-            cls = cls.replace('$', '.');
-            return "Field " + cls + "#" + field.name;
-        } else if (instruction instanceof TypeInsnNode && instruction.getOpcode() == Opcodes.NEW) {
-            return "New " + ((TypeInsnNode) instruction).desc;
-        }
-        StringBuilder sb = new StringBuilder();
-        String opcodeName = getOpcodeName(instruction.getOpcode());
-        sb.append(opcodeName);
-
-        if (instruction instanceof IntInsnNode) {
-            IntInsnNode in = (IntInsnNode) instruction;
-            sb.append(" ").append(Integer.toString(in.operand));
-        } else if (instruction instanceof LdcInsnNode) {
-            LdcInsnNode ldc = (LdcInsnNode) instruction;
-            sb.append(" ");
-            if (ldc.cst instanceof String) {
-                sb.append("\\\"");
-            }
-            sb.append(ldc.cst);
-            if (ldc.cst instanceof String) {
-                sb.append("\\\"");
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String getOpcodeName(int opcode) {
-        if (sOpcodeNames == null) {
-            sOpcodeNames = new String[255];
-            try {
-                Field[] fields = Opcodes.class.getDeclaredFields();
-                for (Field field : fields) {
-                    if (field.getType() == int.class) {
-                        String name = field.getName();
-                        if (name.startsWith("ASM")
-                                || name.startsWith("V1_")
-                                || name.startsWith("ACC_")
-                                || name.startsWith("T_")
-                                || name.startsWith("H_")
-                                || name.startsWith("F_")) {
-                            continue;
-                        }
-                        int val = field.getInt(null);
-                        if (val >= 0 && val < sOpcodeNames.length) {
-                            sOpcodeNames[val] = field.getName();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        if (opcode >= 0 && opcode < sOpcodeNames.length) {
-            String name = sOpcodeNames[opcode];
-            if (name != null) {
-                return name;
-            }
-        }
-
-        return Integer.toString(opcode);
-    }
-
-    private static String[] sOpcodeNames;
 }

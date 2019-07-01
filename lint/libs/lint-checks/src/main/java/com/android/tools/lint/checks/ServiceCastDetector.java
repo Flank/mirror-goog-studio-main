@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.SourceCodeScanner;
 import com.android.tools.lint.detector.api.UastLintUtils;
+import com.google.common.annotations.VisibleForTesting;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
@@ -352,8 +353,9 @@ public class ServiceCastDetector extends Detector implements SourceCodeScanner {
         return fqcn;
     }
 
+    @VisibleForTesting
     @Nullable
-    private static String getExpectedType(@Nullable String value) {
+    static String getExpectedType(@Nullable String value) {
         if (value == null) {
             return null;
         }

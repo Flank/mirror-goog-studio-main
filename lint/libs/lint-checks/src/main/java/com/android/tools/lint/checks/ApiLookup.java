@@ -26,7 +26,6 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Lint;
-import com.android.utils.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
@@ -73,8 +72,6 @@ public class ApiLookup extends ApiDatabase {
     private static final int CLASS_HEADER_INTERFACES = 5;
 
     @VisibleForTesting static final boolean DEBUG_FORCE_REGENERATE_BINARY = false;
-
-    private final Api<ApiClass> mInfo;
 
     private static final Map<AndroidVersion, WeakReference<ApiLookup>> instances = new HashMap<>();
 
@@ -237,7 +234,7 @@ public class ApiLookup extends ApiDatabase {
             return null;
         }
 
-        return new ApiLookup(client, xmlFile, binaryData, null, target);
+        return new ApiLookup(client, xmlFile, binaryData, target);
     }
 
     private static CacheCreator cacheCreator(File xmlFile) {
@@ -273,9 +270,7 @@ public class ApiLookup extends ApiDatabase {
             @NonNull LintClient client,
             @NonNull File xmlFile,
             @Nullable File binaryFile,
-            @Nullable Api<ApiClass> info,
             @Nullable IAndroidTarget target) {
-        mInfo = info;
         this.target = target;
 
         if (binaryFile != null) {
@@ -297,11 +292,6 @@ public class ApiLookup extends ApiDatabase {
         //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             return getClassVersion(findClass(className));
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(className);
-            if (cls != null) {
-                return cls.getSince();
-            }
         }
 
         return -1;
@@ -350,17 +340,6 @@ public class ApiLookup extends ApiDatabase {
                     return getClassVersion(classNumber);
                 }
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(sourceClass);
-            if (cls != null) {
-                List<Pair<String, Integer>> interfaces = cls.getInterfaces();
-                for (Pair<String, Integer> pair : interfaces) {
-                    String interfaceName = pair.getFirst();
-                    if (interfaceName.equals(destinationClass)) {
-                        return pair.getSecond();
-                    }
-                }
-            }
         }
 
         return -1;
@@ -387,12 +366,6 @@ public class ApiLookup extends ApiDatabase {
 
                 return deprecatedIn != 0 ? deprecatedIn : -1;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(className);
-            if (cls != null) {
-                int deprecatedIn = cls.getDeprecatedIn();
-                return deprecatedIn != 0 ? deprecatedIn : -1;
-            }
         }
 
         return -1;
@@ -417,12 +390,6 @@ public class ApiLookup extends ApiDatabase {
                 int removedIn = Byte.toUnsignedInt(mData[offset]) & API_MASK;
                 return removedIn != 0 ? removedIn : -1;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(className);
-            if (cls != null) {
-                int removedIn = cls.getRemovedIn();
-                return removedIn != 0 ? removedIn : -1;
-            }
         }
 
         return -1;
@@ -439,8 +406,6 @@ public class ApiLookup extends ApiDatabase {
         //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             return findClass(className) >= 0;
-        } else if (mInfo != null) {
-            return mInfo.getClass(className) != null;
         }
 
         return false;
@@ -469,16 +434,6 @@ public class ApiLookup extends ApiDatabase {
                 }
                 return api;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                String signature = name + desc;
-                int since = cls.getMethod(signature, mInfo);
-                if (since == 0) {
-                    since = -1;
-                }
-                return since;
-            }
         }
 
         return -1;
@@ -501,13 +456,6 @@ public class ApiLookup extends ApiDatabase {
             int classNumber = findClass(owner);
             if (classNumber >= 0) {
                 int deprecatedIn = findMemberDeprecatedIn(classNumber, name, desc);
-                return deprecatedIn == 0 ? -1 : deprecatedIn;
-            }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                String signature = name + desc;
-                int deprecatedIn = cls.getMemberDeprecatedIn(signature, mInfo);
                 return deprecatedIn == 0 ? -1 : deprecatedIn;
             }
         }
@@ -533,13 +481,6 @@ public class ApiLookup extends ApiDatabase {
                 int removedIn = findMemberRemovedIn(classNumber, name, desc);
                 return removedIn == 0 ? -1 : removedIn;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                String signature = name + desc;
-                int removedIn = cls.getMemberRemovedIn(signature, mInfo);
-                return removedIn == 0 ? -1 : removedIn;
-            }
         }
 
         return -1;
@@ -554,15 +495,11 @@ public class ApiLookup extends ApiDatabase {
      */
     @Nullable
     public Collection<ApiMember> getRemovedFields(@NonNull String owner) {
+        //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber >= 0) {
                 return getRemovedMembers(classNumber, false);
-            }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                return cls.getAllRemovedFields(mInfo);
             }
         }
         return null;
@@ -577,15 +514,11 @@ public class ApiLookup extends ApiDatabase {
      */
     @Nullable
     public Collection<ApiMember> getRemovedMethods(@NonNull String owner) {
+        //noinspection VariableNotUsedInsideIf
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber >= 0) {
                 return getRemovedMembers(classNumber, true);
-            }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                return cls.getAllRemovedMethods(mInfo);
             }
         }
         return null;
@@ -680,15 +613,6 @@ public class ApiLookup extends ApiDatabase {
                 }
                 return api;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                int since = cls.getField(name, mInfo);
-                if (since == 0) {
-                    since = -1;
-                }
-                return since;
-            }
         }
 
         return -1;
@@ -711,12 +635,6 @@ public class ApiLookup extends ApiDatabase {
                 int deprecatedIn = findMemberDeprecatedIn(classNumber, name, null);
                 return deprecatedIn == 0 ? -1 : deprecatedIn;
             }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                int deprecatedIn = cls.getMemberDeprecatedIn(name, mInfo);
-                return deprecatedIn == 0 ? -1 : deprecatedIn;
-            }
         }
 
         return -1;
@@ -736,12 +654,6 @@ public class ApiLookup extends ApiDatabase {
             int classNumber = findClass(owner);
             if (classNumber >= 0) {
                 int removedIn = findMemberRemovedIn(classNumber, name, null);
-                return removedIn == 0 ? -1 : removedIn;
-            }
-        } else if (mInfo != null) {
-            ApiClass cls = mInfo.getClass(owner);
-            if (cls != null) {
-                int removedIn = cls.getMemberRemovedIn(name, mInfo);
                 return removedIn == 0 ? -1 : removedIn;
             }
         }

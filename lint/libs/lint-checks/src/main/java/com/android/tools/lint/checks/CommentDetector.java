@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.utils.CharSequences.indexOf;
 import static com.android.utils.CharSequences.regionMatches;
 
 import com.android.annotations.NonNull;
@@ -87,12 +86,6 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                             IMPLEMENTATION)
                     .setEnabledByDefault(false);
 
-    /**
-     * The current AST only passes comment nodes for Javadoc so I need to do manual token scanning
-     * instead
-     */
-    private static final boolean USE_AST = true;
-
     private static final String ESCAPE_STRING = "\\u002a\\u002f";
 
     /** Constructs a new {@linkplain CommentDetector} check */
@@ -101,62 +94,13 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
     @Nullable
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
-        if (USE_AST) {
-            return Collections.singletonList(UFile.class);
-        } else {
-            return null;
-        }
+        return Collections.singletonList(UFile.class);
     }
 
     @Nullable
     @Override
     public UElementHandler createUastHandler(@NonNull JavaContext context) {
-        //noinspection ConstantConditions
-        return USE_AST ? new CommentChecker(context) : null;
-    }
-
-    @Override
-    public void afterCheckFile(@NonNull Context context) {
-        if (USE_AST) {
-            return;
-        }
-        if (context instanceof JavaContext) {
-            checkJava((JavaContext) context);
-        }
-    }
-
-    private static void checkJava(@NonNull JavaContext context) {
-        CharSequence source = context.getContents();
-        if (source == null) {
-            return;
-        }
-        // Process the Java source such that we pass tokens to it
-
-        for (int i = 0, n = source.length() - 1; i < n; i++) {
-            char c = source.charAt(i);
-            if (c == '\\') {
-                i += 1;
-            } else if (c == '/') {
-                char next = source.charAt(i + 1);
-                if (next == '/') {
-                    // Line comment
-                    int start = i + 2;
-                    int end = indexOf(source, '\n', start);
-                    if (end == -1) {
-                        end = n;
-                    }
-                    checkComment(context, null, null, null, source, 0, start, end);
-                } else if (next == '*') {
-                    // Block comment
-                    int start = i + 2;
-                    int end = indexOf(source, "*/", start);
-                    if (end == -1) {
-                        end = n;
-                    }
-                    checkComment(context, null, null, null, source, 0, start, end);
-                }
-            }
-        }
+        return new CommentChecker(context);
     }
 
     @Override
@@ -198,25 +142,12 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                         String message =
                                 "Code might be hidden here; found unicode escape sequence "
                                         + "which is interpreted as comment end, compiled code follows";
-                        if (javaContext != null) {
-                            Location location;
-                            if (javaNode != null) {
-                                // Use node when possible, since that allows @SuppressLint,
-                                // noinspection etc to work to suppress it
-                                location =
-                                        javaContext.getRangeLocation(
-                                                javaNode, offset + i - 1, ESCAPE_STRING.length());
-                            } else {
-                                location =
-                                        Location.create(
-                                                context.file,
-                                                source,
-                                                offset + i - 1,
-                                                offset + i - 1 + ESCAPE_STRING.length());
-                            }
+                        if (javaContext != null && javaNode != null) {
+                            Location location =
+                                    javaContext.getRangeLocation(
+                                            javaNode, offset + i - 1, ESCAPE_STRING.length());
                             javaContext.report(EASTER_EGG, javaNode, location, message);
-                        } else {
-                            assert xmlNode != null;
+                        } else if (xmlContext != null && xmlNode != null) {
                             Location location =
                                     xmlContext.getLocation(xmlNode, i, i + ESCAPE_STRING.length());
                             xmlContext.report(EASTER_EGG, xmlNode, location, message);
@@ -241,27 +172,13 @@ public class CommentDetector extends ResourceXmlDetector implements SourceCodeSc
                 String message =
                         "`STOPSHIP` comment found; points to code which must be fixed prior "
                                 + "to release";
-                if (javaContext != null) {
-                    Location location;
-                    if (javaNode != null) {
-                        // Use node when possible, since that allows @SuppressLint, //noinspection etc
-                        // to work to suppress it
-                        location =
-                                javaContext.getRangeLocation(
-                                        javaNode, offset + i - 1, STOPSHIP_COMMENT.length());
-                    } else {
-                        location =
-                                Location.create(
-                                        context.file,
-                                        source,
-                                        offset + i - 1,
-                                        offset + i - 1 + STOPSHIP_COMMENT.length());
-                    }
+                if (javaContext != null && javaNode != null) {
+                    Location location =
+                            javaContext.getRangeLocation(
+                                    javaNode, offset + i - 1, STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();
                     javaContext.report(STOP_SHIP, javaNode, location, message, fix);
-                } else {
-                    assert xmlNode != null;
-
+                } else if (xmlContext != null && xmlNode != null) {
                     Location location =
                             xmlContext.getLocation(xmlNode, i, i + STOPSHIP_COMMENT.length());
                     LintFix fix = createRemoveStopShipFix();

@@ -102,13 +102,6 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
     private static final String POWER_MANAGER = "android/os/PowerManager";
     private static final String NEW_WAKE_LOCK_METHOD = "newWakeLock";
 
-    /**
-     * Print diagnostics during analysis (display flow control graph etc). Make sure you add the
-     * asm-debug or asm-util jars to the runtime classpath as well since the opcode integer to
-     * string mapping display routine looks for it via reflection.
-     */
-    private static final boolean DEBUG = false;
-
     /** Constructs a new {@link WakelockDetector} */
     public WakelockDetector() {}
 
@@ -250,13 +243,6 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
             MyGraph graph = new MyGraph();
             ControlFlowGraph.create(graph, classNode, method);
 
-            if (DEBUG) {
-                // Requires util package
-                //ClassNode clazz = classNode;
-                //clazz.accept(new TraceClassVisitor(new PrintWriter(System.out)));
-                System.out.println(graph.toString(graph.getNode(acquire)));
-            }
-
             int status = dfs(graph.getNode(acquire));
             if ((status & SEEN_RETURN) != 0) {
                 String message;
@@ -348,22 +334,17 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     || opcode == Opcodes.DRETURN
                     || opcode == Opcodes.FRETURN
                     || opcode == Opcodes.ATHROW) {
-                if (DEBUG) {
-                    System.out.println("Found exit via explicit return: " + node.toString(false));
-                }
                 return SEEN_RETURN;
             }
         }
 
-        if (!DEBUG) {
-            // There are no cycles, so no *NEED* for this, though it does avoid
-            // researching shared labels. However, it makes debugging harder (no re-entry)
-            // so this is only done when debugging is off
-            if (node.visit != 0) {
-                return 0;
-            }
-            node.visit = 1;
+        // There are no cycles, so no *NEED* for this, though it does avoid
+        // researching shared labels. However, it makes debugging harder (no re-entry)
+        // so this is only done when debugging is off
+        if (node.visit != 0) {
+            return 0;
         }
+        node.visit = 1;
 
         // Look for the target. This is any method call node which is a release on the
         // lock (later also check it's the same instance, though that's harder).
@@ -382,7 +363,7 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                 // Some non acquire/release method call: if this is not associated with a
                 // try-catch block, it would mean the exception would exit the method,
                 // which would be an error
-                if (node.exceptions == null || node.exceptions.isEmpty()) {
+                if (node.exceptions.isEmpty()) {
                     // Look up the corresponding frame, if any
                     AbstractInsnNode curr = method.getPrevious();
                     boolean foundFrame = false;
@@ -395,11 +376,6 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
                     }
 
                     if (!foundFrame) {
-                        if (DEBUG) {
-                            System.out.println(
-                                    "Found exit via unguarded method call: "
-                                            + node.toString(false));
-                        }
                         return SEEN_RETURN;
                     }
                 }
@@ -414,48 +390,35 @@ public class WakelockDetector extends Detector implements ClassScanner, SourceCo
         boolean implicitReturn = true;
         List<Node> successors = node.successors;
         List<Node> exceptions = node.exceptions;
-        if (exceptions != null) {
-            if (!exceptions.isEmpty()) {
-                implicitReturn = false;
-            }
-            for (Node successor : exceptions) {
-                status = dfs(successor) | status;
-                if ((status & SEEN_RETURN) != 0) {
-                    if (DEBUG) {
-                        System.out.println("Found exit via exception: " + node.toString(false));
-                    }
-                    return status;
-                }
-            }
-
-            if (status != 0) {
-                status |= SEEN_EXCEPTION;
+        if (!exceptions.isEmpty()) {
+            implicitReturn = false;
+        }
+        for (Node successor : exceptions) {
+            status = dfs(successor) | status;
+            if ((status & SEEN_RETURN) != 0) {
+                return status;
             }
         }
 
-        if (successors != null) {
-            if (!successors.isEmpty()) {
-                implicitReturn = false;
-                if (successors.size() > 1) {
-                    status |= SEEN_BRANCH;
-                }
+        if (status != 0) {
+            status |= SEEN_EXCEPTION;
+        }
+
+        if (!successors.isEmpty()) {
+            implicitReturn = false;
+            if (successors.size() > 1) {
+                status |= SEEN_BRANCH;
             }
-            for (Node successor : successors) {
-                status = dfs(successor) | status;
-                if ((status & SEEN_RETURN) != 0) {
-                    if (DEBUG) {
-                        System.out.println("Found exit via branches: " + node.toString(false));
-                    }
-                    return status;
-                }
+        }
+        for (Node successor : successors) {
+            status = dfs(successor) | status;
+            if ((status & SEEN_RETURN) != 0) {
+                return status;
             }
         }
 
         if (implicitReturn) {
             status |= SEEN_RETURN;
-            if (DEBUG) {
-                System.out.println("Found exit: via implicit return: " + node.toString(false));
-            }
         }
 
         return status;

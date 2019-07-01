@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.ServiceCastDetector.getExpectedType;
+
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -285,5 +287,102 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                         manifest().minSdk(24))
                 .run()
                 .expectClean();
+    }
+
+    public void testLookup() {
+        assertEquals(
+                "android.view.accessibility.AccessibilityManager",
+                getExpectedType("ACCESSIBILITY_SERVICE"));
+        assertEquals("android.accounts.AccountManager", getExpectedType("ACCOUNT_SERVICE"));
+        assertEquals("android.app.ActivityManager", getExpectedType("ACTIVITY_SERVICE"));
+        assertEquals("android.app.AlarmManager", getExpectedType("ALARM_SERVICE"));
+        assertEquals("android.appwidget.AppWidgetManager", getExpectedType("APPWIDGET_SERVICE"));
+        assertEquals("android.app.AppOpsManager", getExpectedType("APP_OPS_SERVICE"));
+        assertEquals("android.media.AudioManager", getExpectedType("AUDIO_SERVICE"));
+        assertEquals("android.os.BatteryManager", getExpectedType("BATTERY_SERVICE"));
+        assertEquals("android.bluetooth.BluetoothManager", getExpectedType("BLUETOOTH_SERVICE"));
+        assertEquals("android.hardware.camera2.CameraManager", getExpectedType("CAMERA_SERVICE"));
+        assertEquals(
+                "android.view.accessibility.CaptioningManager",
+                getExpectedType("CAPTIONING_SERVICE"));
+        assertEquals(
+                "android.telephony.CarrierConfigManager",
+                getExpectedType("CARRIER_CONFIG_SERVICE"));
+        assertEquals("android.text.ClipboardManager", getExpectedType("CLIPBOARD_SERVICE"));
+        assertEquals(
+                "android.companion.CompanionDeviceManager",
+                getExpectedType("COMPANION_DEVICE_SERVICE"));
+        assertEquals("android.net.ConnectivityManager", getExpectedType("CONNECTIVITY_SERVICE"));
+        assertEquals("android.hardware.ConsumerIrManager", getExpectedType("CONSUMER_IR_SERVICE"));
+        assertEquals("android.telephony.euicc.EuiccManager", getExpectedType("EUICC_SERVICE"));
+        assertEquals(
+                "android.app.admin.DevicePolicyManager", getExpectedType("DEVICE_POLICY_SERVICE"));
+        assertEquals("android.hardware.display.DisplayManager", getExpectedType("DISPLAY_SERVICE"));
+        assertEquals("android.app.DownloadManager", getExpectedType("DOWNLOAD_SERVICE"));
+        assertEquals("android.os.DropBoxManager", getExpectedType("DROPBOX_SERVICE"));
+        assertEquals(
+                "android.hardware.fingerprint.FingerprintManager",
+                getExpectedType("FINGERPRINT_SERVICE"));
+        assertEquals(
+                "android.os.HardwarePropertiesManager",
+                getExpectedType("HARDWARE_PROPERTIES_SERVICE"));
+        assertEquals(
+                "android.view.inputmethod.InputMethodManager",
+                getExpectedType("INPUT_METHOD_SERVICE"));
+        assertEquals("android.hardware.input.InputManager", getExpectedType("INPUT_SERVICE"));
+        assertEquals("android.net.IpSecManager", getExpectedType("IPSEC_SERVICE"));
+        assertEquals("android.app.job.JobScheduler", getExpectedType("JOB_SCHEDULER_SERVICE"));
+        assertEquals("android.app.KeyguardManager", getExpectedType("KEYGUARD_SERVICE"));
+        assertEquals("android.content.pm.LauncherApps", getExpectedType("LAUNCHER_APPS_SERVICE"));
+        assertEquals("android.view.LayoutInflater", getExpectedType("LAYOUT_INFLATER_SERVICE"));
+        assertEquals("android.location.LocationManager", getExpectedType("LOCATION_SERVICE"));
+        assertEquals(
+                "android.media.projection.MediaProjectionManager",
+                getExpectedType("MEDIA_PROJECTION_SERVICE"));
+        assertEquals("android.media.MediaRouter", getExpectedType("MEDIA_ROUTER_SERVICE"));
+        assertEquals(
+                "android.media.session.MediaSessionManager",
+                getExpectedType("MEDIA_SESSION_SERVICE"));
+        assertEquals("android.media.midi.MidiManager", getExpectedType("MIDI_SERVICE"));
+        assertEquals(
+                "android.app.usage.NetworkStatsManager", getExpectedType("NETWORK_STATS_SERVICE"));
+        assertEquals("android.nfc.NfcManager", getExpectedType("NFC_SERVICE"));
+        assertEquals("android.app.NotificationManager", getExpectedType("NOTIFICATION_SERVICE"));
+        assertEquals("android.net.nsd.NsdManager", getExpectedType("NSD_SERVICE"));
+        assertEquals("android.os.PowerManager", getExpectedType("POWER_SERVICE"));
+        assertEquals("android.print.PrintManager", getExpectedType("PRINT_SERVICE"));
+        assertEquals(
+                "android.content.RestrictionsManager", getExpectedType("RESTRICTIONS_SERVICE"));
+        assertEquals("android.app.SearchManager", getExpectedType("SEARCH_SERVICE"));
+        assertEquals("android.hardware.SensorManager", getExpectedType("SENSOR_SERVICE"));
+        assertEquals("android.content.pm.ShortcutManager", getExpectedType("SHORTCUT_SERVICE"));
+        assertEquals("android.os.storage.StorageManager", getExpectedType("STORAGE_SERVICE"));
+        assertEquals(
+                "android.app.usage.StorageStatsManager", getExpectedType("STORAGE_STATS_SERVICE"));
+        assertEquals(
+                "android.os.health.SystemHealthManager", getExpectedType("SYSTEM_HEALTH_SERVICE"));
+        assertEquals("android.telecom.TelecomManager", getExpectedType("TELECOM_SERVICE"));
+        assertEquals("android.telephony.TelephonyManager", getExpectedType("TELEPHONY_SERVICE"));
+        assertEquals(
+                "android.telephony.SubscriptionManager",
+                getExpectedType("TELEPHONY_SUBSCRIPTION_SERVICE"));
+        assertEquals(
+                "android.view.textclassifier.TextClassificationManager",
+                getExpectedType("TEXT_CLASSIFICATION_SERVICE"));
+        assertEquals(
+                "android.view.textservice.TextServicesManager",
+                getExpectedType("TEXT_SERVICES_MANAGER_SERVICE"));
+        assertEquals("android.media.tv.TvInputManager", getExpectedType("TV_INPUT_SERVICE"));
+        assertEquals("android.app.UiModeManager", getExpectedType("UI_MODE_SERVICE"));
+        assertEquals("android.app.usage.UsageStatsManager", getExpectedType("USAGE_STATS_SERVICE"));
+        assertEquals("android.hardware.usb.UsbManager", getExpectedType("USB_SERVICE"));
+        assertEquals("android.os.UserManager", getExpectedType("USER_SERVICE"));
+        assertEquals("android.os.Vibrator", getExpectedType("VIBRATOR_SERVICE"));
+        assertEquals("android.app.WallpaperManager", getExpectedType("WALLPAPER_SERVICE"));
+        assertEquals(
+                "android.net.wifi.aware.WifiAwareManager", getExpectedType("WIFI_AWARE_SERVICE"));
+        assertEquals("android.net.wifi.p2p.WifiP2pManager", getExpectedType("WIFI_P2P_SERVICE"));
+        assertEquals("android.net.wifi.WifiManager", getExpectedType("WIFI_SERVICE"));
+        assertEquals("android.view.WindowManager", getExpectedType("WINDOW_SERVICE"));
     }
 }
