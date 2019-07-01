@@ -30,7 +30,7 @@ import org.gradle.api.artifacts.component.ModuleComponentSelector
  * Singleton object that maintains AndroidX mappings and configures AndroidX dependency substitution
  * rules.
  */
-object AndroidXDepedencySubstitution {
+object AndroidXDependencySubstitution {
 
     /**
      * Mappings from old dependencies to AndroidX dependencies.

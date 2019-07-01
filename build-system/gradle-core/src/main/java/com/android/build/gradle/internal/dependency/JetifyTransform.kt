@@ -22,7 +22,6 @@ import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
-import com.google.common.base.Verify
 import org.gradle.api.artifacts.transform.ArtifactTransform
 import java.io.File
 import javax.inject.Inject
@@ -109,11 +108,12 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
 
         // Case 4: For the remaining libraries, let's jetify them
         val outputFile = File(outputDirectory, "jetified-" + aarOrJarFile.name)
-        val maybeTransformedFile = try {
-            jetifierProcessor.transform(
-                setOf(FileMapping(aarOrJarFile, outputFile)), false
+        val result = try {
+            jetifierProcessor.transform2(
+                input = setOf(FileMapping(aarOrJarFile, outputFile)),
+                copyUnmodifiedLibsAlso = false,
+                skipLibsWithAndroidXReferences = false
             )
-                .single()
         } catch (exception: Exception) {
             throw RuntimeException(
                 "Failed to transform '$aarOrJarFile' using Jetifier." +
@@ -122,17 +122,19 @@ class JetifyTransform @Inject constructor(blackListOption: String) : ArtifactTra
             )
         }
 
-        // If the aar/jar was transformed, the returned file would be the output file. Otherwise, it
-        // would be the original file.
-        Preconditions.checkState(
-            maybeTransformedFile == aarOrJarFile || maybeTransformedFile == outputFile
-        )
+        return if (result.numberOfLibsModified == 1) {
+            check(result.librariesMap.size == 1)
+            check(result.librariesMap[aarOrJarFile] == outputFile)
+            check(outputFile.exists())
 
-        // If the file wasn't transformed, returning the original file here also tells Gradle that
-        // the file wasn't transformed. In either case (whether the file was transformed or not), we
-        // can just return to Gradle the file that was returned from Jetifier.
-        Verify.verify(maybeTransformedFile.exists(), "$outputFile does not exist")
-        return listOf(maybeTransformedFile)
+            listOf(outputFile)
+        } else {
+            check(result.numberOfLibsModified == 0)
+            check(result.librariesMap.size == 1)
+            check(result.librariesMap[aarOrJarFile] == null)
+
+            listOf(aarOrJarFile)
+        }
     }
 }
 

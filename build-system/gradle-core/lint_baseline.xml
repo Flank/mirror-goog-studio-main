@@ -245,14 +245,6 @@
         id="FileComparisons"
         message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
         <location
-            file="src/main/java/com/android/build/gradle/internal/dependency/JetifyTransform.kt"
-            line="128"/>
-    </issue>
-
-    <issue
-        id="FileComparisons"
-        message="Do not compare java.io.File with `equals` or `==`: will not work correctly on case insensitive file systems! See `go/files-howto`.">
-        <location
             file="src/main/java/com/android/build/gradle/internal/ide/NativeArtifactImpl.java"
             line="155"/>
     </issue>

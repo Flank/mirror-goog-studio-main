@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
-import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitution;
+import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution;
 import com.android.build.gradle.internal.dependency.DexingArtifactConfiguration;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.ExtractProGuardRulesTransform;
@@ -158,9 +158,10 @@ public class VariantManager implements VariantModel {
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX =
-            AndroidXDepedencySubstitution.getAndroidXMappings().get("com.android.support:multidex");
+            AndroidXDependencySubstitution.getAndroidXMappings()
+                    .get("com.android.support:multidex");
     protected static final String ANDROIDX_MULTIDEX_MULTIDEX_INSTRUMENTATION =
-            AndroidXDepedencySubstitution.getAndroidXMappings()
+            AndroidXDependencySubstitution.getAndroidXMappings()
                     .get("com.android.support:multidex-instrumentation");
 
     @NonNull private final Project project;
@@ -601,7 +602,7 @@ public class VariantManager implements VariantModel {
 
         // If Jetifier is enabled, replace old support libraries with AndroidX.
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_JETIFIER)) {
-            AndroidXDepedencySubstitution.replaceOldSupportLibraries(project);
+            AndroidXDependencySubstitution.replaceOldSupportLibraries(project);
         }
 
         /*

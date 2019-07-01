@@ -42,7 +42,7 @@ class AndroidXDependencyCheck(private val syncIssueHandler: SyncIssueHandler) :
             val artifactId = artifact.id
             if (artifactId is ModuleComponentIdentifier) {
                 val dependency = "${artifactId.group}:${artifactId.module}:${artifactId.version}"
-                if (AndroidXDepedencySubstitution.isAndroidXDependency(dependency)) {
+                if (AndroidXDependencySubstitution.isAndroidXDependency(dependency)) {
                     androidXDependencies.add(dependency)
                 }
             }

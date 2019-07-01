@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.utils
 
-import com.android.build.gradle.internal.dependency.AndroidXDepedencySubstitution
+import com.android.build.gradle.internal.dependency.AndroidXDependencySubstitution
 
 /**
  * An AndroidX dependency with group and module name (without a version). It also contains
@@ -38,7 +38,7 @@ data class AndroidXDependency(
         @JvmStatic
         fun fromPreAndroidXDependency(oldGroup: String, oldModule: String): AndroidXDependency {
             val androidXDependencyString =
-                AndroidXDepedencySubstitution.androidXMappings["$oldGroup:$oldModule"]!!
+                AndroidXDependencySubstitution.androidXMappings["$oldGroup:$oldModule"]!!
             val groupModuleVersion = androidXDependencyString.split(':')
             return AndroidXDependency(
                 group = groupModuleVersion[0],
