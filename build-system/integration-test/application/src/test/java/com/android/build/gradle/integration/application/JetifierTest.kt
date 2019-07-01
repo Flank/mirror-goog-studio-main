@@ -159,7 +159,8 @@ class JetifierTest(private val withKotlin: Boolean) {
         val apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG)
 
         apk.use {
-            // Check that the android.arch.navigation library has been jetified
+            // Check that the android.arch.navigation library has been replaced with AndroidX
+            // (either via dependency substitution or via Jetifier).
             assertThat(apk).hasClass("Landroidx/navigation/fragment/NavHostFragment;")
                 .that().hasSuperclass("Landroidx/fragment/app/Fragment;")
         }

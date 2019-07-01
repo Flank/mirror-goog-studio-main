@@ -22,7 +22,6 @@ import com.android.tools.build.jetifier.processor.FileMapping
 import com.android.tools.build.jetifier.processor.Processor
 import com.google.common.base.Preconditions
 import com.google.common.base.Splitter
-import org.gradle.api.artifacts.transform.ArtifactTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
@@ -34,12 +33,15 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 
 /**
- * [ArtifactTransform] to convert a third-party library that uses old support libraries into an
- * equivalent library that uses new support libraries.
+ * [TransformAction] to convert a third-party library that uses old support libraries into an
+ * equivalent library that uses AndroidX.
  */
 abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
 
     interface Parameters : GenericTransformParameters {
+        @get:Input
+        val skipIfPossible: Property<Boolean>
+
         @get:Input
         val blackListOption: Property<String>
     }
@@ -129,7 +131,7 @@ abstract class JetifyTransform : TransformAction<JetifyTransform.Parameters> {
             jetifierProcessor.transform2(
                 input = setOf(FileMapping(aarOrJarFile, outputFile)),
                 copyUnmodifiedLibsAlso = true,
-                skipLibsWithAndroidXReferences = false
+                skipLibsWithAndroidXReferences = parameters.skipIfPossible.get()
             )
         } catch (exception: Exception) {
             throw RuntimeException(

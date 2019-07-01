@@ -154,6 +154,9 @@ enum class BooleanOption(
     ENABLE_DESUGAR("android.enableDesugar", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.DESUGAR_TOOL)),
     ENABLE_D8("android.enableD8", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.LEGACY_DEXER)),
 
+    /** Whether Jetifier will skip libraries that already support AndroidX. */
+    JETIFIER_SKIP_IF_POSSIBLE("android.jetifier.skipIfPossible", true, FeatureStage.SoftlyEnforced(DeprecationReporter.DeprecationTarget.IN_A_FUTURE_RELEASE)),
+
     ; // end of enums
 
     override val status = stage.status

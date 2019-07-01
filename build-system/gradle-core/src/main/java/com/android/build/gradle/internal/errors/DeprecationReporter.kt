@@ -29,6 +29,7 @@ interface DeprecationReporter {
 
     /** Enum for deprecated element removal target.  */
     enum class DeprecationTarget  constructor(val removalTime: String) {
+        IN_A_FUTURE_RELEASE("in a future release"),
         // deprecation of compile in favor of api/implementation
         CONFIG_NAME("soon"),
         // deprecation due to the move to the new DSL.

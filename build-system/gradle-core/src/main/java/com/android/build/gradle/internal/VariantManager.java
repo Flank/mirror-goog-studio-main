@@ -588,6 +588,8 @@ public class VariantManager implements VariantModel {
         // The aars/jars may need to be processed (e.g., jetified to AndroidX) before they can be
         // used
         // Arguments passed to an ArtifactTransform must not be null
+        final boolean jetifierSkipIfPossible =
+                globalScope.getProjectOptions().get(BooleanOption.JETIFIER_SKIP_IF_POSSIBLE);
         final String jetifierBlackList =
                 Strings.nullToEmpty(
                         globalScope.getProjectOptions().get(StringOption.JETIFIER_BLACKLIST));
@@ -596,6 +598,7 @@ public class VariantManager implements VariantModel {
                     JetifyTransform.class,
                     spec -> {
                         spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
                         spec.getParameters().getBlackListOption().set(jetifierBlackList);
                         spec.getFrom().attribute(ARTIFACT_FORMAT, AAR.getType());
                         spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_AAR.getType());
@@ -604,6 +607,7 @@ public class VariantManager implements VariantModel {
                     JetifyTransform.class,
                     spec -> {
                         spec.getParameters().getProjectName().set(project.getName());
+                        spec.getParameters().getSkipIfPossible().set(jetifierSkipIfPossible);
                         spec.getParameters().getBlackListOption().set(jetifierBlackList);
                         spec.getFrom().attribute(ARTIFACT_FORMAT, JAR.getType());
                         spec.getTo().attribute(ARTIFACT_FORMAT, PROCESSED_JAR.getType());
