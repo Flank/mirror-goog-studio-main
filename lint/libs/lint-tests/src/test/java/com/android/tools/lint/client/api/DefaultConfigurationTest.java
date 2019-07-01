@@ -21,10 +21,10 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
+import com.android.tools.lint.checks.ActionsXmlDetector;
 import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.checks.FieldGetterDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
-import com.android.tools.lint.checks.MathDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.TypoDetector;
@@ -55,7 +55,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "    <issue id=\"ObsoleteLayoutParam\">\n"
                                 + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
                                 + "    </issue>\n"
-                                + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
+                                + "    <issue id=\"ValidActionsXml\" severity=\"ignore\" />\n"
                                 + "    <issue id=\"FieldGetter\" severity=\"error\" />\n"
                                 + "    <issue id=\"SdCardPath,ContentDescription\" severity=\"ignore\" />"
                                 + "    <issue id=\"NewApi\">\n"
@@ -64,13 +64,13 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "</lint>");
         assertTrue(configuration.isEnabled(ObsoleteLayoutParamsDetector.ISSUE));
         assertFalse(configuration.isEnabled(SdCardDetector.ISSUE));
-        assertFalse(configuration.isEnabled(MathDetector.ISSUE));
+        assertFalse(configuration.isEnabled(ActionsXmlDetector.ISSUE));
         assertFalse(configuration.isEnabled(AccessibilityDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE));
         assertEquals(Severity.WARNING, AccessibilityDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.WARNING, FieldGetterDetector.ISSUE.getDefaultSeverity());
         assertEquals(Severity.ERROR, configuration.getSeverity(FieldGetterDetector.ISSUE));
-        assertEquals(Severity.IGNORE, configuration.getSeverity(MathDetector.ISSUE));
+        assertEquals(Severity.IGNORE, configuration.getSeverity(ActionsXmlDetector.ISSUE));
     }
 
     public void testAllIds() throws Exception {
@@ -80,12 +80,12 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                                 + "<lint>\n"
                                 + "    <issue id=\"all\" severity=\"ignore\" />\n"
-                                + "    <issue id=\"FloatMath\" severity=\"error\" />\n"
+                                + "    <issue id=\"ValidActionsXml\" severity=\"error\" />\n"
                                 + "</lint>");
         assertEquals(Severity.IGNORE, configuration.getSeverity(AccessibilityDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(FieldGetterDetector.ISSUE));
         assertEquals(Severity.IGNORE, configuration.getSeverity(HardcodedValuesDetector.ISSUE));
-        assertEquals(Severity.ERROR, configuration.getSeverity(MathDetector.ISSUE));
+        assertEquals(Severity.ERROR, configuration.getSeverity(ActionsXmlDetector.ISSUE));
     }
 
     public void testNoFlags() throws Exception {
@@ -407,7 +407,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                                 + "      <ignore path=\"res\\layout-xlarge\\activation2.xml\" />\n"
                                 + "      <ignore regexp=\"res/.*/activation2.xml\" />\n"
                                 + "  </issue>\n"
-                                + "  <issue id=\"FloatMath\" severity=\"ignore\" />\n"
+                                + "  <issue id=\"ValidActionsXml\" severity=\"ignore\" />\n"
                                 + "  <issue id=\"SdCardPath\" severity=\"ignore\" />"
                                 + "</lint>\n");
         configuration.startBulkEditing();
@@ -419,7 +419,6 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                 ""
                         + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         + "<lint>\n"
-                        + "    <issue id=\"FloatMath\" severity=\"ignore\" />\n"
                         + "    <issue id=\"ObsoleteLayoutParam\">\n"
                         + "        <ignore path=\"res/layout-xlarge/activation.xml\" />\n"
                         + "        <ignore path=\"res/layout-xlarge/activation2.xml\" />\n"
@@ -429,6 +428,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
                         + "    <issue id=\"Typos\" severity=\"error\">\n"
                         + "        <ignore path=\"foo/bar/Baz.java\" />\n"
                         + "    </issue>\n"
+                        + "    <issue id=\"ValidActionsXml\" severity=\"ignore\" />\n"
                         + "</lint>\n",
                 updated);
     }

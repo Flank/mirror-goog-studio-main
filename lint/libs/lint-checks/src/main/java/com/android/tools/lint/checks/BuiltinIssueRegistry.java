@@ -238,7 +238,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ManifestPermissionAttributeDetector.ISSUE);
         issues.add(ManifestResourceDetector.ISSUE);
         issues.add(ManifestTypoDetector.ISSUE);
-        issues.add(MathDetector.ISSUE);
         issues.add(MediaBrowserServiceCompatVersionDetector.ISSUE);
         issues.add(MergeMarkerDetector.ISSUE);
         issues.add(MergeRootFrameLayoutDetector.ISSUE);
