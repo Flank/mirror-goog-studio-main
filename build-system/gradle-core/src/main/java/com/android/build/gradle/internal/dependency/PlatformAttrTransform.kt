@@ -16,22 +16,19 @@
 
 package com.android.build.gradle.internal.dependency
 
-import com.android.build.gradle.internal.tasks.Blocks
 import com.android.build.gradle.internal.tasks.recordArtifactTransformSpan
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType
-import com.android.utils.FileUtils
 import com.google.common.collect.Lists
-import com.google.common.io.Files
-import org.gradle.api.artifacts.transform.ArtifactTransform
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.Opcodes
-import java.io.File
 import java.io.FileWriter
 import java.util.zip.ZipFile
 
@@ -41,7 +38,7 @@ import java.util.zip.ZipFile
 abstract class PlatformAttrTransform : TransformAction<GenericTransformParameters> {
     @get:Classpath
     @get:InputArtifact
-    abstract val primaryInput: File
+    abstract val primaryInput: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
         recordArtifactTransformSpan(
@@ -50,7 +47,7 @@ abstract class PlatformAttrTransform : TransformAction<GenericTransformParameter
 
             val outputFile = outputs.file("R.txt")
 
-            val attributes = ZipFile(primaryInput).use { zip ->
+            val attributes = ZipFile(primaryInput.get().asFile).use { zip ->
                 // return from let{} is passed as return for use{}
                 zip.getEntry("android/R\$attr.class")?.let {
                     val stream = zip.getInputStream(it)!! // this method does not return null.

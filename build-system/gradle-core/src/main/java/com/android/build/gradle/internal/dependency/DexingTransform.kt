@@ -36,8 +36,10 @@ import org.gradle.api.artifacts.transform.TransformOutputs
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.CompileClasspath
 import org.gradle.api.tasks.Input
@@ -62,7 +64,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
 
     @get:Classpath
     @get:InputArtifact
-    abstract val primaryInput: File
+    abstract val primaryInput: Provider<FileSystemLocation>
 
     protected abstract fun computeClasspathFiles(): List<Path>
 
@@ -71,7 +73,8 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
             parameters.projectName.get(),
             GradleTransformExecutionType.DEX_ARTIFACT_TRANSFORM
         ) {
-            val name = Files.getNameWithoutExtension(primaryInput.name)
+            val inputFile = primaryInput.get().asFile
+            val name = Files.getNameWithoutExtension(inputFile.name)
             val outputDir = outputs.dir(name)
             Closer.create().use { closer ->
 
@@ -88,7 +91,7 @@ abstract class BaseDexingTransform : TransformAction<BaseDexingTransform.Paramet
                     )
                 )
 
-                ClassFileInputs.fromPath(primaryInput.toPath()).use { classFileInput ->
+                ClassFileInputs.fromPath(inputFile.toPath()).use { classFileInput ->
                     classFileInput.entries { true }.use { classesInput ->
                         d8DexBuilder.convert(
                             classesInput,

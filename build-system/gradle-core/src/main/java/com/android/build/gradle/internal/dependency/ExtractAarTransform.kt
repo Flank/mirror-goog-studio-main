@@ -32,6 +32,8 @@ import java.util.jar.Manifest
 import org.gradle.api.artifacts.transform.InputArtifact
 import org.gradle.api.artifacts.transform.TransformAction
 import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Classpath
 
 /** Transform that extracts an AAR file into a directory.  */
@@ -39,18 +41,19 @@ abstract class ExtractAarTransform: TransformAction<GenericTransformParameters> 
 
     @get:Classpath
     @get:InputArtifact
-    abstract val primaryInput: File
+    abstract val primaryInput: Provider<FileSystemLocation>
 
     override fun transform(outputs: TransformOutputs) {
         recordArtifactTransformSpan(
             parameters.projectName.get(),
             GradleTransformExecutionType.EXTRACT_AAR_ARTIFACT_TRANSFORM
         ) {
-            val name = Files.getNameWithoutExtension(primaryInput.name)
+            val inputFile = primaryInput.get().asFile
+            val name = Files.getNameWithoutExtension(inputFile.name)
             val outputDir = outputs.dir(name)
             FileUtils.mkdirs(outputDir)
             val aarExtractor = AarExtractor()
-            aarExtractor.extract(primaryInput, outputDir)
+            aarExtractor.extract(inputFile, outputDir)
 
             // Verify that we have a classes.jar, if we don't just create an empty one.
             val classesJar = File(File(outputDir, FD_JARS), FN_CLASSES_JAR)

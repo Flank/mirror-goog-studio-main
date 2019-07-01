@@ -17,11 +17,15 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.fixtures.FakeGenericTransformParameters
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.testutils.TestResources
 import com.google.common.io.Files
 import com.google.common.truth.Truth
 import com.google.common.truth.Truth.assertThat
 import org.gradle.api.artifacts.transform.TransformOutputs
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -35,9 +39,14 @@ class PlatformAttrTransformTest {
     @Test
     fun testExtraction() {
         val transform = object : PlatformAttrTransform() {
-            override val primaryInput: File
-                get() = TestResources.getFile(
-                    PlatformAttrTransformTest::class.java, "PlatformAttrTransform.jar")
+            override val primaryInput: Provider<FileSystemLocation>
+                get() = FakeGradleProvider(
+                    FakeGradleRegularFile(
+                        TestResources.getFile(
+                            PlatformAttrTransformTest::class.java, "PlatformAttrTransform.jar"
+                        )
+                    )
+                )
 
             override fun getParameters()= FakeGenericTransformParameters()
         }

@@ -17,7 +17,10 @@
 package com.android.build.gradle.internal.dependency
 
 import com.android.build.gradle.internal.fixtures.FakeConfigurableFileCollection
+import com.android.build.gradle.internal.fixtures.FakeGradleDirectory
 import com.android.build.gradle.internal.fixtures.FakeGradleProperty
+import com.android.build.gradle.internal.fixtures.FakeGradleProvider
+import com.android.build.gradle.internal.fixtures.FakeGradleRegularFile
 import com.android.build.gradle.internal.fixtures.FakeTransformOutputs
 import com.android.build.gradle.internal.transforms.testdata.Animal
 import com.android.build.gradle.internal.transforms.testdata.CarbonForm
@@ -26,11 +29,12 @@ import com.android.build.gradle.internal.transforms.testdata.Toy
 import com.android.build.gradle.options.SyncOptions
 import com.android.testutils.TestClassesGenerator
 import com.android.testutils.TestInputsGenerator
-import com.google.common.truth.Truth.assertThat
 import com.android.testutils.apk.Dex
 import com.android.testutils.truth.DexSubject.assertThat
 import com.android.testutils.truth.MoreTruth.assertThatDex
-import org.gradle.api.provider.Property
+import com.google.common.truth.Truth.assertThat
+import org.gradle.api.file.FileSystemLocation
+import org.gradle.api.provider.Provider
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -50,7 +54,10 @@ class DexingTransformTest {
     @Test
     fun testDexingJar() {
         val input = tmp.newFile("classes.jar")
-        val dexingTransform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val dexingTransform = TestDexingTransform(
+            FakeGradleProvider(FakeGradleRegularFile(input)),
+            parameters = TestDexingTransform.TestParameters(12, true)
+        )
         val outputs = FakeTransformOutputs(tmp)
         TestInputsGenerator.jarWithEmptyClasses(input.toPath(), listOf("test/A"))
         dexingTransform.transform(outputs)
@@ -61,7 +68,11 @@ class DexingTransformTest {
     @Test
     fun testDexingDir() {
         val input = tmp.newFolder("classes")
-        val dexingTransform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val dexingTransform =
+            TestDexingTransform(
+                FakeGradleProvider(FakeGradleDirectory(input)),
+                parameters = TestDexingTransform.TestParameters(12, true)
+            )
         val outputs = FakeTransformOutputs(tmp)
 
         TestInputsGenerator.dirWithEmptyClasses(input.toPath(), listOf("test/A"))
@@ -90,7 +101,11 @@ class DexingTransformTest {
                 it.closeEntry()
             }
         }
-        val transform = TestDexingTransform(input, parameters = TestDexingTransform.TestParameters(12, true))
+        val transform =
+            TestDexingTransform(
+                FakeGradleProvider(FakeGradleRegularFile(input)),
+                parameters = TestDexingTransform.TestParameters(12, true)
+            )
         val outputs = FakeTransformOutputs(tmp)
         transform.transform(outputs)
 
@@ -107,7 +122,7 @@ class DexingTransformTest {
             listOf(Animal::class.java, CarbonForm::class.java, Toy::class.java, Cat::class.java)
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
         val dexingTransform = TestDexingTransform(
-            input,
+            FakeGradleProvider(FakeGradleDirectory(input)),
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(12, true, listOf(), true)
         )
@@ -133,7 +148,7 @@ class DexingTransformTest {
         val classes = listOf(Cat::class.java)
         TestInputsGenerator.pathWithClasses(input.toPath(), classes)
         val dexingTransform = TestDexingTransform(
-            input,
+            FakeGradleProvider(FakeGradleRegularFile(input)),
             classpath = listOf(),
             parameters = TestDexingTransform.TestParameters(12, true, listOf(bootclasspath), true)
         )
@@ -149,9 +164,8 @@ class DexingTransformTest {
 
     }
 
-
     private class TestDexingTransform(
-        override val primaryInput: File,
+        override val primaryInput: Provider<FileSystemLocation>,
         private val parameters: TestParameters,
         private val classpath: List<File> = listOf()
     ) : BaseDexingTransform() {
