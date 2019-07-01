@@ -72,6 +72,15 @@ public enum InternalArtifactType implements ArtifactType {
     // This is for external usage. For usage inside a module use ALL_CLASSES
     APP_CLASSES(Kind.FILE),
 
+    // Outputs of Desugar tool for project classes.
+    DESUGAR_PROJECT_CLASSES,
+    // Outputs of Desugar tool for sub-project classes.
+    DESUGAR_SUB_PROJECT_CLASSES,
+    // Outputs of Desugar tool for external (Maven) library classes.
+    DESUGAR_EXTERNAL_LIBS_CLASSES,
+    // Local state output for desugar.
+    DESUGAR_LOCAL_STATE_OUTPUT,
+
     // --- java res ---
     // java processing output
     JAVA_RES,

@@ -108,6 +108,7 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.D8MainDexListTask;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
+import com.android.build.gradle.internal.tasks.DesugarTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.DexArchiveBuilderTask;
 import com.android.build.gradle.internal.tasks.DexFileDependenciesTask;
@@ -155,7 +156,6 @@ import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.BundleTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
-import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
 import com.android.build.gradle.internal.transforms.R8Transform;
@@ -215,7 +215,6 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 
@@ -248,7 +247,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -2069,34 +2067,7 @@ public abstract class TaskManager {
                     new RecalculateStackFramesTask.CreationAction(
                             variantScope, userCache, isTestCoverageEnabled));
 
-            variantScope
-                    .getTransformManager()
-                    .addStream(
-                            OriginalStream.builder(project, "fixed-stack-frames-classes")
-                                    .addContentTypes(TransformManager.CONTENT_CLASS)
-                                    .addScope(Scope.EXTERNAL_LIBRARIES)
-                                    .setFileCollection(
-                                            project.files(
-                                                            variantScope
-                                                                    .getArtifacts()
-                                                                    .getFinalProduct(
-                                                                            InternalArtifactType
-                                                                                    .FIXED_STACK_FRAMES))
-                                                    .getAsFileTree())
-                                    .build());
-
-            DesugarTransform desugarTransform =
-                    new DesugarTransform(
-                            variantScope.getBootClasspath(),
-                            userCache,
-                            minSdk.getFeatureLevel(),
-                            globalScope.getJavaProcessExecutor(),
-                            project.getLogger().isEnabled(LogLevel.INFO),
-                            projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
-                            variantScope.getGlobalScope().getTmpFolder().toPath(),
-                            getProjectVariantId(variantScope),
-                            enableDesugarBugFixForJacoco(variantScope));
-            transformManager.addTransform(taskFactory, variantScope, desugarTransform);
+            taskFactory.register(new DesugarTask.CreationAction(variantScope));
 
             if (minSdk.getFeatureLevel()
                     >= DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
@@ -2348,20 +2319,6 @@ public abstract class TaskManager {
                     .getVariantDependencies()
                     .getRuntimeClasspath()
                     .resolutionStrategy(r -> r.force(jacocoAgentRuntimeDependency));
-        }
-    }
-
-    /**
-     * If a fix in Desugar should be enabled to handle broken bytecode produced by older Jacoco, see
-     * http://b/62623509.
-     */
-    private boolean enableDesugarBugFixForJacoco(@NonNull VariantScope scope) {
-        try {
-            GradleVersion current = GradleVersion.parse(JacocoTask.getJacocoVersion(scope));
-            return JacocoConfigurations.MIN_WITHOUT_BROKEN_BYTECODE.compareTo(current) > 0;
-        } catch (Throwable ignored) {
-            // Cannot determine using version comparison, avoid passing the flag.
-            return true;
         }
     }
 

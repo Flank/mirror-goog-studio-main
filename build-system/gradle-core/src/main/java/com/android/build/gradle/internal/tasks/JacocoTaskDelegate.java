@@ -122,7 +122,8 @@ public class JacocoTaskDelegate {
                             new WorkerExecutorFacade.Configuration(
                                     parameter,
                                     isolationMode,
-                                    jacocoAntTaskConfiguration.getFiles()));
+                                    jacocoAntTaskConfiguration.getFiles(),
+                                    ImmutableList.of()));
                 } else { // We expect *.jar files here
                     if (!file.getName().endsWith(SdkConstants.DOT_JAR)) {
                         continue;
@@ -132,7 +133,8 @@ public class JacocoTaskDelegate {
                             new WorkerExecutorFacade.Configuration(
                                     new WorkerItemParameter(null, file, outputJarsFolder),
                                     isolationMode,
-                                    jacocoAntTaskConfiguration.getFiles()));
+                                    jacocoAntTaskConfiguration.getFiles(),
+                                    ImmutableList.of()));
                 }
             }
         }
@@ -233,7 +235,8 @@ public class JacocoTaskDelegate {
                             new WorkerItemParameter(
                                     toProcess, basePath.toFile(), output.get().getAsFile()),
                             isolationMode,
-                            jacocoAntTaskConfiguration.getFiles()));
+                            jacocoAntTaskConfiguration.getFiles(),
+                            ImmutableList.of()));
         }
 
         for (File jarToProcess : jarsToProcess) {
@@ -242,7 +245,8 @@ public class JacocoTaskDelegate {
                     new WorkerExecutorFacade.Configuration(
                             new WorkerItemParameter(null, jarToProcess, outputJarsFolder),
                             isolationMode,
-                            jacocoAntTaskConfiguration.getFiles()));
+                            jacocoAntTaskConfiguration.getFiles(),
+                            ImmutableList.of()));
         }
     }
 

@@ -59,7 +59,8 @@ interface WorkerExecutorFacade : AutoCloseable, Closeable {
     data class Configuration(
         val parameter: Serializable,
         val isolationMode: IsolationMode = IsolationMode.NONE,
-        val classPath: Iterable<File> = listOf()
+        val classPath: Iterable<File> = listOf(),
+        val jvmArgs: List<String> = listOf()
     )
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2019 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.transforms;
+package com.android.build.gradle.internal.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.core.DesugarProcessArgs;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
@@ -68,6 +69,18 @@ public final class DesugarWorkerItem {
         workerConfiguration.setParams(args.getArgs(isWindows));
     }
 
+    public static class DesugarActionParams implements Serializable {
+        private List<String> args;
+
+        public DesugarActionParams(List<String> args) {
+            this.args = args;
+        }
+
+        public List<String> getArgs() {
+            return args;
+        }
+    }
+
     /**
      * Action running in a separate process to desugar java8 byte codes into java7 compliant byte
      * codes.
@@ -76,8 +89,8 @@ public final class DesugarWorkerItem {
         @NonNull private final List<String> args;
 
         @Inject
-        public DesugarAction(@NonNull List<String> args) {
-            this.args = args;
+        public DesugarAction(@NonNull DesugarActionParams params) {
+            this.args = params.getArgs();
         }
 
         @Override

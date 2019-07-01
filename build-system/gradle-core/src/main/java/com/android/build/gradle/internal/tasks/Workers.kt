@@ -271,8 +271,11 @@ object Workers {
 
             workerExecutor.submit(ActionFacade::class.java) {
                 it.isolationMode = configuration.isolationMode.toGradleIsolationMode()
-                if (!classpath.isEmpty()) {
+                if (classpath.isNotEmpty()) {
                     it.classpath = classpath
+                }
+                if (configuration.jvmArgs.isNotEmpty()) {
+                    it.forkOptions.setJvmArgs(configuration.jvmArgs)
                 }
                 it.params(submissionParameters)
             }

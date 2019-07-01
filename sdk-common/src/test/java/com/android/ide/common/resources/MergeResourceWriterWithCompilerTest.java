@@ -136,7 +136,11 @@ public class MergeResourceWriterWithCompilerTest {
                 public void submit(Class<? extends Runnable> actionClass, Serializable parameter) {
                     submit(
                             actionClass,
-                            new Configuration(parameter, IsolationMode.NONE, ImmutableList.of()));
+                            new Configuration(
+                                    parameter,
+                                    IsolationMode.NONE,
+                                    ImmutableList.of(),
+                                    ImmutableList.of()));
                 }
 
                 @Override

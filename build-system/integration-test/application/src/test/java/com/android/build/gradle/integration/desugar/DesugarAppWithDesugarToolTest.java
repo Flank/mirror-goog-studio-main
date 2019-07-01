@@ -35,6 +35,7 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +66,7 @@ public class DesugarAppWithDesugarToolTest {
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .withGradleBuildCacheDirectory(new File("local-build-cache"))
                     .create();
 
     @Parameterized.Parameters(name = "enableGradleWorkers={0}")
@@ -79,14 +81,14 @@ public class DesugarAppWithDesugarToolTest {
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
-        Truth.assertThat(result.findTask(":transformClassesWithDesugarForDebug")).isNull();
+        Truth.assertThat(result.findTask(":desugarDebug")).isNull();
     }
 
     @Test
     public void taskRunsIfJava8Set() throws IOException, InterruptedException {
         enableJava8();
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
-        assertThat(result.getTask(":transformClassesWithDesugarForDebug")).didWork();
+        assertThat(result.getTask(":desugarDebug")).didWork();
     }
 
     @Test
@@ -160,7 +162,7 @@ public class DesugarAppWithDesugarToolTest {
                 getProjectExecutor()
                         .with(BooleanOption.ENABLE_BUILD_CACHE, false)
                         .run("assembleDebug");
-        assertThat(result.getTask(":transformClassesWithDesugarForDebug")).didWork();
+        assertThat(result.getTask(":desugarDebug")).didWork();
     }
 
     @Test
@@ -226,6 +228,19 @@ public class DesugarAppWithDesugarToolTest {
 
         assertThatApk(project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG))
                 .containsClass("Lcom/example/helloworld/HelloWorldTest;");
+    }
+
+    @Test
+    public void testCachingRelocatable() throws IOException, InterruptedException {
+        enableJava8();
+        getProjectExecutor().withArgument("--build-cache").run("desugarDebug");
+        // change the build dir
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "project.buildDir = new File(projectDir, 'build_2')");
+
+        GradleBuildResult secondRun = getProjectExecutor().withArgument("--build-cache").run("desugarDebug");
+        assertThat(secondRun.getTask(":desugarDebug")).wasFromCache();
     }
 
     private void enableJava8() throws IOException {
