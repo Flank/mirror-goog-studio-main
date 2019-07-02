@@ -69,17 +69,22 @@ public class TypedefRemoverTest {
             + "dXRlckNsYXNzJgEAAQACAAEAAwAAAAAAAgAEAAAAAgAFAAkAAAAKAAEAAQAG"
             + "AAgmCQ==");
 
-    /** The expected binary version of the outer class when the references
-     * to inner class have been removed */
-    public static final byte[] REWRITTEN_OUTER_CLASS = Base64.getDecoder().decode(""
-            + "yv66vgAAADMAFAEAE3Rlc3QvcGtnL091dGVyQ2xhc3MHAAEBABBqYXZhL2xh"
-            + "bmcvT2JqZWN0BwADAQAPT3V0ZXJDbGFzcy5qYXZhAQAIQ09OU1RBTlQBAAFJ"
-            + "AwAAAAEBAAY8aW5pdD4BAAMoKVYMAAkACgoABAALAQAEdGhpcwEAFUx0ZXN0"
-            + "L3BrZy9PdXRlckNsYXNzOwEADUNvbnN0YW50VmFsdWUBAARDb2RlAQASTG9j"
-            + "YWxWYXJpYWJsZVRhYmxlAQAPTGluZU51bWJlclRhYmxlAQAKU291cmNlRmls"
-            + "ZQAhAAIABAAAAAEAGQAGAAcAAQAPAAAAAgAIAAEAAQAJAAoAAQAQAAAALwAB"
-            + "AAEAAAAFKrcADLEAAAACABEAAAAMAAEAAAAFAA0ADgAAABIAAAAGAAEAAAAF"
-            + "AAEAEwAAAAIABQ==");
+    /**
+     * The expected binary version of the outer class when the references to inner class have been
+     * removed
+     */
+    public static final byte[] REWRITTEN_OUTER_CLASS =
+            Base64.getDecoder()
+                    .decode(
+                            ""
+                                    + "yv66vgAAADMAFAEAE3Rlc3QvcGtnL091dGVyQ2xhc3MHAAEBABBqYXZhL2xh"
+                                    + "bmcvT2JqZWN0BwADAQAPT3V0ZXJDbGFzcy5qYXZhAQAIQ09OU1RBTlQBAAFJ"
+                                    + "AwAAAAEBAAY8aW5pdD4BAAMoKVYMAAkACgoABAALAQAEdGhpcwEAFUx0ZXN0"
+                                    + "L3BrZy9PdXRlckNsYXNzOwEADUNvbnN0YW50VmFsdWUBAARDb2RlAQAPTGlu"
+                                    + "ZU51bWJlclRhYmxlAQASTG9jYWxWYXJpYWJsZVRhYmxlAQAKU291cmNlRmls"
+                                    + "ZQAhAAIABAAAAAEAGQAGAAcAAQAPAAAAAgAIAAEAAQAJAAoAAQAQAAAALwAB"
+                                    + "AAEAAAAFKrcADLEAAAACABEAAAAGAAEAAAAFABIAAAAMAAEAAAAFAA0ADgAA"
+                                    + "AAEAEwAAAAIABQ==");
 
     @Test
     public void testRecipeFile() throws IOException {

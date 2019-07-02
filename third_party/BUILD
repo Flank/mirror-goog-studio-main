@@ -466,6 +466,14 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
+    name = "de.undercouch_gradle-download-task",
+    export_artifact = "//prebuilts/tools/common/m2/repository/de/undercouch/gradle-download-task/3.4.3:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.apache.httpcomponents_httpclient"],
+)
+
+# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
+maven_java_library(
     name = "io.grpc_grpc-all",
     export_artifact = "//prebuilts/tools/common/m2/repository/io/grpc/grpc-all/1.0.1:jar",
     visibility = ["//visibility:public"],
@@ -1210,14 +1218,6 @@ maven_java_library(
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
-    name = "de.undercouch_gradle-download-task",
-    export_artifact = "//prebuilts/tools/common/m2/repository/de/undercouch/gradle-download-task/3.4.3:jar",
-    visibility = ["//visibility:public"],
-    exports = [":org.apache.httpcomponents_httpclient"],
-)
-
-# ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
-maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.3.40:jar",
     visibility = ["//visibility:public"],
@@ -1572,7 +1572,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/7.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -1580,7 +1580,7 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/7.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
@@ -1588,15 +1588,19 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-commons",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/7.0:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.ow2.asm_asm-tree"],
+    exports = [
+        ":org.ow2.asm_asm",
+        ":org.ow2.asm_asm-analysis",
+        ":org.ow2.asm_asm-tree",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-tree",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/7.0:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm"],
 )
@@ -1604,9 +1608,13 @@ maven_java_library(
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
 maven_java_library(
     name = "org.ow2.asm_asm-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/6.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/7.0:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.ow2.asm_asm-tree"],
+    exports = [
+        ":org.ow2.asm_asm",
+        ":org.ow2.asm_asm-analysis",
+        ":org.ow2.asm_asm-tree",
+    ],
 )
 
 # ATTENTION: This file is generated from tools/buildSrc/base/dependencies.properties, see top of this file.
