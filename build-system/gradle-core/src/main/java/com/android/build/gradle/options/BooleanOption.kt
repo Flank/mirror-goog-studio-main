@@ -82,7 +82,6 @@ enum class BooleanOption(
     PRECOMPILE_REMOTE_RESOURCES("android.precompileRemoteResources", true),
     // Flag added to work around b/130596259.
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
-    USE_ZIPFLINGER_FOR_JAR_MERGING("android.useZipflingerForJarMerging", false),
     USE_APK_FLINGER("android.useApkFlinger", false),
     /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
     COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", false),
@@ -118,6 +117,7 @@ enum class BooleanOption(
     GENERATE_R_JAVA("android.generateRJava", false),
     USE_RELATIVE_PATH_IN_TEST_CONFIG("android.testConfig.useRelativePath", true, Option.Status.STABLE),
     ENABLE_INCREMENTAL_DATA_BINDING("android.databinding.incremental", true, Option.Status.STABLE),
+    USE_NEW_JAR_CREATOR("android.useNewJarCreator", true),
 
     // ---------------
     // Lifecycle flags: Deprecated stage, feature is stable and we want to get rid of the ability to revert to older code path

@@ -36,7 +36,7 @@ import static com.android.build.gradle.options.BooleanOption.ENABLE_D8;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_D8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_R8_DESUGARING;
 import static com.android.build.gradle.options.BooleanOption.USE_APK_FLINGER;
-import static com.android.build.gradle.options.BooleanOption.USE_ZIPFLINGER_FOR_JAR_MERGING;
+import static com.android.build.gradle.options.BooleanOption.USE_NEW_JAR_CREATOR;
 import static com.android.build.gradle.options.OptionalBooleanOption.ENABLE_R8;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -1398,7 +1398,7 @@ public class VariantScopeImpl implements VariantScope {
     @NonNull
     @Override
     public JarCreatorType getJarCreatorType() {
-        if (globalScope.getProjectOptions().get(USE_ZIPFLINGER_FOR_JAR_MERGING)) {
+        if (globalScope.getProjectOptions().get(USE_NEW_JAR_CREATOR)) {
             return JarCreatorType.JAR_FLINGER;
         } else {
             return JarCreatorType.JAR_MERGER;
