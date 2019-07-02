@@ -134,8 +134,23 @@ public class JarMerger implements JarCreator {
             @Nullable Predicate<String> filterOverride,
             @Nullable Relocator relocator)
             throws IOException {
-        try (ZipInputStream zis =
-                new ZipInputStream(new BufferedInputStream(Files.newInputStream(file)))) {
+        try (BufferedInputStream inputStream =
+                new BufferedInputStream(Files.newInputStream(file))) {
+            addJar(inputStream, filterOverride, relocator);
+        }
+    }
+
+    public void addJar(@NonNull InputStream inputStream) throws IOException {
+        addJar(inputStream, filter, null);
+    }
+
+    public void addJar(
+            @NonNull InputStream inputStream,
+            @Nullable Predicate<String> filterOverride,
+            @Nullable Relocator relocator)
+            throws IOException {
+
+        try (ZipInputStream zis = new ZipInputStream(inputStream)) {
 
             // loop on the entries of the jar file package and put them in the final jar
             ZipEntry entry;

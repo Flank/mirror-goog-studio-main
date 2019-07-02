@@ -41,8 +41,8 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.api.artifact.BuildArtifactSpec;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.crash.ExternalApiUsageException;
-import com.android.build.gradle.internal.dependency.AarCompileClassesTransform;
 import com.android.build.gradle.internal.dependency.AarResourcesCompilerTransform;
+import com.android.build.gradle.internal.dependency.AarToClassTransform;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
 import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
@@ -716,34 +716,39 @@ public class VariantManager implements VariantModel {
                     });
         }
 
-        // API jar(s)
+        // API Jar: Produce a single API jar from the AAR
+        // TODO(b/136244851): Add support for generating a compilation R class.
         Usage apiUsage = project.getObjects().named(Usage.class, Usage.JAVA_API);
         dependencies.registerTransform(
+                AarToClassTransform.class,
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
                     reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, apiUsage);
-                    reg.artifactTransform(
-                            AarCompileClassesTransform.class,
-                            config -> config.params(autoNamespaceDependencies));
+                    reg.parameters(
+                            params -> {
+                                params.getForCompileUse().set(true);
+                                params.getAutoNamespaceDependencies()
+                                        .set(autoNamespaceDependencies);
+                            });
                 });
 
-        // Runtime jars
+        // Produce a single runtime jar from the AAR.
         Usage runtimeUsage = project.getObjects().named(Usage.class, Usage.JAVA_RUNTIME);
         dependencies.registerTransform(
+                AarToClassTransform.class,
                 reg -> {
-                    reg.getFrom().attribute(ARTIFACT_FORMAT, EXPLODED_AAR.getType());
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, TYPE_PROCESSED_AAR);
                     reg.getFrom().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
                     reg.getTo().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
                     reg.getTo().attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
-                    reg.artifactTransform(
-                            AarTransform.class,
-                            config ->
-                                    config.params(
-                                            ArtifactType.CLASSES,
-                                            sharedLibSupport,
-                                            autoNamespaceDependencies));
+                    reg.parameters(
+                            params -> {
+                                params.getForCompileUse().set(false);
+                                params.getAutoNamespaceDependencies()
+                                        .set(autoNamespaceDependencies);
+                            });
                 });
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_PROGUARD_RULES_EXTRACTION)) {
