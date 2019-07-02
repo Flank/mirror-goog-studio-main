@@ -14,82 +14,69 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.packaging;
+@file:JvmName("ApkCreatorFactories")
 
-import com.android.annotations.NonNull;
-import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory;
-import com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory;
-import com.android.tools.build.apkzlib.zip.ZFileOptions;
-import com.android.tools.build.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor;
-import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.Deflater;
+package com.android.build.gradle.internal.packaging
+
+import com.android.tools.build.apkzlib.zfile.ApkCreatorFactory
+import com.android.tools.build.apkzlib.zfile.ApkZFileCreatorFactory
+import com.android.tools.build.apkzlib.zip.ZFileOptions
+import com.android.tools.build.apkzlib.zip.compress.BestAndDefaultDeflateExecutorCompressor
+import com.android.tools.build.apkzlib.zip.compress.DeflateExecutionCompressor
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
+import java.util.zip.Deflater
 
 /**
- * Constructs a {@link ApkCreatorFactory} based on gradle options.
+ * Time after which background compression threads should be discarded.
  */
-public final class ApkCreatorFactories {
+private const val BACKGROUND_THREAD_DISCARD_TIME_MS: Long = 100
 
-    /**
-     * Time after which background compression threads should be discarded.
-     */
-    private static final long BACKGROUND_THREAD_DISCARD_TIME_MS = 100;
+/**
+ * Maximum number of compression threads.
+ */
+private const val MAXIMUM_COMPRESSION_THREADS = 2
 
-    /**
-     * Maximum number of compression threads.
-     */
-    private static final int MAXIMUM_COMPRESSION_THREADS = 2;
+/**
+ * Creates an [ApkCreatorFactory] based on the definitions in the project. This is only to
+ * be used with the incremental packager.
+ *
+ * @param keepTimestampsInApk whether the timestamps should be kept in the apk
+ * @param debuggableBuild whether the [ApkCreatorFactory] will be used to create a
+ * debuggable archive
+ * @return the factory
+ */
+fun fromProjectProperties(
+    keepTimestampsInApk: Boolean,
+    debuggableBuild: Boolean
+): ApkCreatorFactory {
+    val options = ZFileOptions()
+    options.noTimestamps = !keepTimestampsInApk
+    options.coverEmptySpaceUsingExtraField = true
 
-    /**
-     * Utility class: no constructor.
-     */
-    private ApkCreatorFactories() {
-        /*
-         * Nothing to do.
-         */
+    val compressionExecutor = ThreadPoolExecutor(
+        0, /* Number of always alive threads */
+        MAXIMUM_COMPRESSION_THREADS,
+        BACKGROUND_THREAD_DISCARD_TIME_MS,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingDeque()
+    )
+
+    if (debuggableBuild) {
+        options.compressor = DeflateExecutionCompressor(
+            compressionExecutor,
+            options.tracker,
+            Deflater.BEST_SPEED
+        )
+    } else {
+        options.compressor = BestAndDefaultDeflateExecutorCompressor(
+            compressionExecutor,
+            options.tracker,
+            1.0
+        )
+        options.autoSortFiles = true
     }
 
-    /**
-     * Creates an {@link ApkCreatorFactory} based on the definitions in the project. This is only to
-     * be used with the incremental packager.
-     *
-     * @param keepTimestampsInApk whether the timestamps should be kept in the apk
-     * @param debuggableBuild whether the {@link ApkCreatorFactory} will be used to create a
-     *     debuggable archive
-     * @return the factory
-     */
-    @NonNull
-    public static ApkCreatorFactory fromProjectProperties(
-            boolean keepTimestampsInApk, boolean debuggableBuild) {
-        ZFileOptions options = new ZFileOptions();
-        options.setNoTimestamps(!keepTimestampsInApk);
-        options.setCoverEmptySpaceUsingExtraField(true);
-
-        ThreadPoolExecutor compressionExecutor =
-                new ThreadPoolExecutor(
-                        0, /* Number of always alive threads */
-                        MAXIMUM_COMPRESSION_THREADS,
-                        BACKGROUND_THREAD_DISCARD_TIME_MS,
-                        TimeUnit.MILLISECONDS,
-                        new LinkedBlockingDeque<>());
-
-        if (debuggableBuild) {
-            options.setCompressor(
-                    new DeflateExecutionCompressor(
-                            compressionExecutor,
-                            options.getTracker(),
-                            Deflater.BEST_SPEED));
-        } else {
-            options.setCompressor(
-                    new BestAndDefaultDeflateExecutorCompressor(
-                            compressionExecutor,
-                            options.getTracker(),
-                            1.0));
-            options.setAutoSortFiles(true);
-        }
-
-        return new ApkZFileCreatorFactory(options);
-    }
+    return ApkZFileCreatorFactory(options)
 }
