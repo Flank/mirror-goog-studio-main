@@ -20,7 +20,7 @@ import java.text.NumberFormat;
 
 public class Location implements Comparable<Location> {
 
-    public static final Location INVALID = new Location(0, 0);
+    public static final Location INVALID = new Location(Long.MAX_VALUE, Long.MAX_VALUE);
 
     public final long first;
     public final long last;

@@ -47,6 +47,14 @@ public class TestParsing extends TestBase {
     }
 
     @Test
+    public void testDataDescriptorInvalideLocation() throws Exception {
+        ZipMap map = ZipMap.from(getFile("zip_with_fd.zip"), false);
+        Map<String, Entry> entries = map.getEntries();
+        Entry entry = entries.get("empty.txt");
+        Assert.assertEquals("Entry is valid", entry.getLocation(), Location.INVALID);
+    }
+
+    @Test
     public void testZipWithLargeEntriesAndDataDescriptors() throws Exception {
         File target = getFile("largeEntriesDD.zip");
         ZipCreator.createZip(42, 1_000_000, target.toString());

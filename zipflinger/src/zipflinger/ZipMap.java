@@ -240,10 +240,14 @@ class ZipMap {
         boolean hasDataDescriptor =
                 ((flags & CentralDirectoryRecord.DATA_DESCRIPTOR_FLAG)
                         == CentralDirectoryRecord.DATA_DESCRIPTOR_FLAG);
-        if (hasDataDescriptor && accountDataDescriptors) {
-            // This is expensive. Fortunately ZIP archive rarely use DD nowadays.
-            channel.position(end);
-            parseDataDescriptor(channel, entry);
+        if (hasDataDescriptor) {
+            if (accountDataDescriptors) {
+                // This is expensive. Fortunately ZIP archive rarely use DD nowadays.
+                channel.position(end);
+                parseDataDescriptor(channel, entry);
+            } else {
+                entry.setLocation(Location.INVALID);
+            }
         }
     }
 
