@@ -1,7 +1,7 @@
 package com.android.aaptcompiler
 
 import com.android.aapt.Resources
-import com.android.resources.ResourceType
+import com.android.aaptcompiler.android.stringToInt
 import com.android.resources.ResourceVisibility
 import java.io.InputStream
 import javax.xml.XMLConstants
@@ -34,7 +34,10 @@ private const val XLIFF_NS_URI = "urn:oasis:names:tc:xliff:document:1.2"
  *   will be an empty string if no comment was supplied.
  */
 private class ParsedResource(
-  val config: ConfigDescription, val source: Source, val comment: String) {
+  var config: ConfigDescription, val source: Source, val comment: String) {
+
+  constructor() : this(ConfigDescription(), Source(""), "")
+
   /** The name of the resource extraccted from the xml. */
   var name: ResourceName = ResourceName.EMPTY
   /** The product name for the given resource value. */
@@ -255,7 +258,7 @@ class TableExtractor(
         error = true
       }
 
-      if (!addResourcesToTable(parsedResource)) {
+      if (!addResourceToTable(parsedResource)) {
         error = true
       }
     }
@@ -398,7 +401,40 @@ class TableExtractor(
     }
 
     if (canBeBag) {
-      // TODO(b132800341): add Bag parsing methods.
+      val parseBagMethod = when(resourceTypeName) {
+        "add-resource" -> ::parseAddResource
+        "array" -> ::parseArray
+        "attr" -> ::parseAttr
+        "configVarying" -> ::parseConfigVarying
+        "declare-styleable" -> ::parseDeclareStyleable
+        "integer-array" -> ::parseIntegerArray
+        "java-symbol" -> ::parseSymbol
+        "overlayable" -> ::parseOverlayable
+        "plurals" -> ::parsePlural
+        "public" -> ::parsePublic
+        "public-group" -> ::parsePublicGroup
+        "string-array" -> ::parseStringArray
+        "style" -> ::parseStyle
+        "symbol" -> ::parseSymbol
+        else -> null
+      }
+
+      if (parseBagMethod != null) {
+        // ensure we have a name (unless this is a <public-group> or <overlayable>).
+        if (resourceTypeName != "public-group" && resourceTypeName != "overlayable") {
+          if (nameAttribute == null) {
+            walkToEndOfElement(element, eventReader)
+            // TODO(b/139297538): diagnostics
+            return false
+          }
+
+          parsedResource.name = parsedResource.name.copy(entry=nameAttribute.value)
+        }
+
+        // Call the associated parse method. The type will be filled in by the parse function
+        return parseBagMethod(element, eventReader, parsedResource)
+      }
+
     }
 
     if (canBeItem) {
@@ -594,6 +630,83 @@ class TableExtractor(
   }
 
   /**
+   * Parses the xml element specified by {@code element} as a Enum or Flag value of an Attribute.
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param tag The name of the flag or enum item.
+   * @return The child resource if the parsing was successful, or {@code null} if the parsing
+   *   failed.
+   */
+  private fun parseEnumOrFlagItem(
+    element: StartElement, eventReader: XMLEventReader, tag: String): AttributeResource.Symbol? {
+    val elementSource = source.withLine(element.location.lineNumber)
+
+    walkToEndOfElement(element, eventReader)
+
+    val nameAttribute = element.getAttributeByName(QName("name"))
+    if (nameAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      return null
+    }
+
+    val valueAttribute = element.getAttributeByName(QName("value"))
+    if (valueAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      return null
+    }
+
+    val resValue = stringToInt(valueAttribute.value)
+    if (resValue == null) {
+      // TODO(b/139297538): diagnostics
+      return null
+    }
+
+    val reference = Reference()
+    reference.name = ResourceName("", AaptResourceType.ID, nameAttribute.value)
+    return AttributeResource.Symbol(reference, resValue.data)
+  }
+
+  /**
+   * Parses the xml element specified by {@code element} as an [Item] under the style.
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param style The parent style of which this resource is a part.
+   * @return The child resource if the parsing was successful, or {@code null} if the parsing
+   *   failed.
+   */
+  private fun parseStyleItem(
+    element: StartElement, eventReader: XMLEventReader, style: Style): Boolean {
+    val itemSource = source.withLine(element.location.lineNumber)
+
+    val nameAttribute = element.getAttributeByName(QName("name"))
+    if (nameAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val key = parseXmlAttributeName(nameAttribute.value)
+
+    resolvePackage(element, key)
+    key.source = itemSource
+
+    val xmlItem = parseXml(element, eventReader, 0, true)
+    if (xmlItem == null) {
+      // TODO(b/139297538): diagnostics
+      return false
+    }
+
+    style.entries.add(Style.Entry(key, xmlItem))
+    return true
+  }
+
+  /**
    * Parses the XML subtree as a StyleString (flattened XML representation for strings with
    * formatting).
    *
@@ -682,12 +795,1094 @@ class TableExtractor(
   }
 
   /**
+   * Parses the xml with a "symbol" tag
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the parsed symbol will be stored, if the parsing was successful.
+   * @return Whether of not the parsing was successful.
+   */
+  private fun parseSymbol(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    // Symbols should have the default config
+    if (parsedResource.config != ConfigDescription()) {
+      // TODO(b/139297538): diagnostics warn
+    }
+
+    if (!parseSymbolImpl(element, eventReader, parsedResource)) {
+      return false
+    }
+
+    parsedResource.visibility = ResourceVisibility.PRIVATE
+    return true
+  }
+
+  /**
+   * Parses the xml with an "add-resource" tag.
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the parsed symbol will be stored, if the parsing was successful.
+   * @return Whether of not the parsing was successful.
+   */
+  private fun parseAddResource(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    if (parseSymbolImpl(element, eventReader, parsedResource)) {
+      parsedResource.visibility = ResourceVisibility.UNDEFINED
+      parsedResource.allowNew = true
+      return true
+    }
+    return false
+  }
+
+  /**
+   * Parses the xml as a Symbol represented by the specified start element. Then, stores the
+   * value in the parsed resource.
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the parsed symbol will be stored, if the parsing was successful.
+   * @return Whether of not the parsing was successful.
+   */
+  private fun parseSymbolImpl(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    val typeAttribute = element.getAttributeByName(QName("type"))
+    if (typeAttribute == null) {
+      walkToEndOfElement(element, eventReader)
+      // TODO(b/139297538): diagnostics
+      return false
+    }
+
+    val parsedType = resourceTypeFromTag(typeAttribute.value)
+    if (parsedType == null) {
+      walkToEndOfElement(element, eventReader)
+      // TODO(b/139297538): diagnostics
+      return false
+    }
+
+    parsedResource.name = parsedResource.name.copy(type = parsedType)
+    walkToEndOfElement(element, eventReader)
+    return true
+  }
+
+  /**
+   * Parses the xml represented by the "attr" tag.
+   *
+   * @param element The start element that represents the [AttributeResource] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the [AttributeResource] will be stored, if successful.
+   * @return Whether of not the parsing was successful.
+   */
+  private fun parseAttr(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean =
+    parseAttrImpl(element, eventReader, parsedResource, false)
+
+  /**
+   * parses the xml as a [AttributeResource] represented by the specified start element. Then stores
+   * the value in the parsed resource.
+   *
+   * @param element The start element that represents the symbol to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the parsed symbol will be stored, if the parsing was successful.
+   * @param isWeak whether or not the resource should be parsed as a weak attr (declaration).
+   * @return Whether of not the parsing was successful.
+   */
+  private fun parseAttrImpl(
+    element: StartElement,
+    eventReader: XMLEventReader,
+    parsedResource: ParsedResource,
+    isWeak: Boolean): Boolean {
+    parsedResource.name = parsedResource.name.copy(type = AaptResourceType.ATTR)
+
+    // Attributes only end up in default configuration
+    val defaultConfig = ConfigDescription()
+    if (parsedResource.config != defaultConfig) {
+      // TODO(b/139297538): diagnostics warn
+      parsedResource.config = defaultConfig
+    }
+
+    var typeMask = 0
+
+    val formatAttribute = element.getAttributeByName(QName("format"))
+    if (formatAttribute != null) {
+      typeMask = parseFormatAttribute(formatAttribute.value)
+      if (typeMask == 0) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+    }
+
+    var min: Int? = null
+    var max: Int? = null
+
+    val minAttribute = element.getAttributeByName(QName("min"))
+    val maxAttribute = element.getAttributeByName(QName("max"))
+
+    if (minAttribute != null) {
+      val minString = minAttribute.value.trim()
+      if (minString.isNotEmpty()) {
+        val minRes = stringToInt(minString)
+        if (minRes != null) {
+          min = minRes.data
+        }
+      }
+
+      if (min == null) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+    }
+
+    if (maxAttribute != null) {
+      val maxString = maxAttribute.value.trim()
+      if (maxString.isNotEmpty()) {
+        val maxRes = stringToInt(maxString)
+        if (maxRes != null) {
+          max = maxRes.data
+        }
+      }
+
+      if (max == null) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+    }
+
+    if ((min != null || max != null) &&
+      (typeMask and Resources.Attribute.FormatFlags.INTEGER_VALUE) == 0) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val symbolMap = mutableMapOf<String, AttributeResource.Symbol>()
+
+    var comment = ""
+    var error = false
+
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+      if (event.eventType == XMLStreamConstants.COMMENT) {
+        comment = (event as Comment).text.trim()
+        continue
+      }
+
+      if (event.isEndElement) {
+        break
+      }
+
+      if (!event.isStartElement) {
+        // skip text
+        continue
+      }
+
+      val childElement = event.asStartElement()
+
+      val childSource = source.withLine(event.location.lineNumber)
+      val childName = childElement.name
+      if (childName.namespaceURI.isEmpty() &&
+        (childName.localPart == "flag" || childName.localPart == "enum")) {
+        var itemError = false
+        when (childName.localPart) {
+          "enum" -> {
+            if ((typeMask and Resources.Attribute.FormatFlags.FLAGS_VALUE) != 0) {
+              // TODO(b/139297538): diagnostics
+              error = true
+              itemError = true
+            }
+            typeMask = typeMask or Resources.Attribute.FormatFlags.ENUM_VALUE
+          }
+          "flag" -> {
+            if ((typeMask and Resources.Attribute.FormatFlags.ENUM_VALUE) != 0) {
+              error = true
+              itemError = true
+            }
+            typeMask = typeMask or Resources.Attribute.FormatFlags.FLAGS_VALUE
+          }
+        }
+
+        if (itemError) {
+          continue
+        }
+
+        val symbol = parseEnumOrFlagItem(childElement, eventReader, childName.localPart)
+        if (symbol != null) {
+          val childResource = ParsedResource(defaultConfig, childSource, "")
+          childResource.name = symbol.symbol.name
+          childResource.value = Id()
+
+          parsedResource.children.add(childResource)
+
+          symbol.symbol.comment = comment
+          symbol.symbol.source = childSource
+
+          val symbolName = symbol.symbol.name.toString()
+          if (symbolMap.contains(symbolName)) {
+            // TODO(b/139297538): diagnostics
+            error = true
+          }
+          symbolMap[symbolName] = symbol
+        } else {
+          error = true
+        }
+      } else{
+        if (!shouldIgnoreElement(childName)) {
+          // TODO(b/139297538): diagnostics
+          error = true
+        }
+        walkToEndOfElement(childElement, eventReader)
+      }
+      comment = ""
+    }
+
+    if (error) {
+      return false
+    }
+
+    val resource = AttributeResource(
+      if (typeMask == 0) Resources.Attribute.FormatFlags.ANY_VALUE else typeMask)
+    resource.weak = isWeak
+    resource.symbols.addAll(symbolMap.values)
+    resource.minInt = min ?: Int.MIN_VALUE
+    resource.maxInt = max ?: Int.MAX_VALUE
+    parsedResource.value = resource
+    return true
+  }
+
+  /**
+   * Parse the xml that is contained by the "array" tag. The valid format of the child items will be
+   * parsed from the format attribute of {@code element}
+   *
+   * @param element The start element of the [ArrayResource] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the read resource will be placed.
+   */
+  private fun parseArray(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    var resourceFormat = Resources.Attribute.FormatFlags.ANY_VALUE
+    val formatAttribute = element.getAttributeByName(QName("format"))
+    if (formatAttribute != null) {
+      resourceFormat = parseFormatNoEnumsOrFlags(formatAttribute.value)
+      if (resourceFormat == 0) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+    }
+    return parseArrayImpl(element, eventReader, parsedResource, resourceFormat)
+  }
+
+  /**
+   * Parse the xml that is contained by the "integer-array" tag.
+   *
+   * @param element The start element of the [ArrayResource] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the read resource will be placed.
+   */
+  private fun parseIntegerArray(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource) =
+    parseArrayImpl(
+      element, eventReader, parsedResource, Resources.Attribute.FormatFlags.INTEGER_VALUE)
+
+  /**
+   * Parse the xml that is contained by the "string-array" tag.
+   *
+   * @param element The start element of the [ArrayResource] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the read resource will be placed.
+   */
+  private fun parseStringArray(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource) =
+    parseArrayImpl(
+      element, eventReader, parsedResource, Resources.Attribute.FormatFlags.STRING_VALUE)
+
+  /**
+   * Parse the xml as an [ArrayResource].
+   *
+   * @param element The start element of the [ArrayResource] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource where the read resource will be placed.
+   * @param resourceFormat A type mask that specifies which formats are valid for the child elements
+   *   of the array to be interpreted as.
+   * @return Whether or not the parsing was successful.
+   */
+  private fun parseArrayImpl(
+    element: StartElement,
+    eventReader: XMLEventReader,
+    parsedResource: ParsedResource,
+    resourceFormat: Int): Boolean {
+
+    parsedResource.name = parsedResource.name.copy(type = AaptResourceType.ARRAY)
+
+    val array = ArrayResource()
+    var translatable = options.translatable
+
+    val translatableAttribute = element.getAttributeByName(QName("translatable"))
+    if (translatableAttribute != null) {
+      val translatableValue = parseAsBool(translatableAttribute.value)
+      if (translatableValue == null) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+      translatable = translatableValue
+    }
+    array.translatable = translatable
+
+    var error = false
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+      if (event.isEndElement) {
+        break
+      }
+
+      if (!event.isStartElement) {
+        // Skip text and comments
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childSource = source.withLine(childElement.location.lineNumber)
+      val childName = childElement.name
+      when {
+        childName.namespaceURI.isEmpty() && childName.localPart == "item" -> {
+          val childItem = parseXml(childElement, eventReader, resourceFormat, false)
+          if (childItem != null) {
+            childItem.source = childSource
+            array.elements.add(childItem)
+          } else {
+            // TODO(b/139297538): diagnostics
+            error = true
+          }
+        }
+        !shouldIgnoreElement(childName) -> {
+          // TODO(b/139297538): diagnostics
+          error = true
+          walkToEndOfElement(childElement, eventReader)
+        }
+        else -> {
+          walkToEndOfElement(childElement, eventReader)
+        }
+      }
+    }
+
+    if (error) {
+      return false
+    }
+
+    parsedResource.value = array
+    return true
+  }
+
+  /**
+   * Parses the xml contained in a "configVarying" tag.
+   *
+   * @param element The start element of the [Style] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parseConfigVarying(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource) =
+    parseStyleImpl(element, eventReader, parsedResource, AaptResourceType.CONFIG_VARYING)
+
+  /**
+   * Parses the xml contained in a "style" tag.
+   *
+   * @param element The start element of the [Style] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parseStyle(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource) =
+    parseStyleImpl(element, eventReader, parsedResource, AaptResourceType.STYLE)
+
+  /**
+   * Parses the xml element as a [Style].
+   *
+   * @param element The start element of the [Style] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @param type The actual type of the [Style] being parsed, which is reflected in the
+   *   [ResourceName] of the parsed resource.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parseStyleImpl(
+    element: StartElement,
+    eventReader: XMLEventReader,
+    parsedResource: ParsedResource,
+    type: AaptResourceType): Boolean {
+
+    parsedResource.name = parsedResource.name.copy(type = type)
+
+    val style = Style()
+
+    val parentAttribute = element.getAttributeByName(QName("parent"))
+    if (parentAttribute != null) {
+      // If the parent is empty, we don't have a parent but we don't attempt to infer one either.
+      if (parentAttribute.value.isNotEmpty()) {
+        val parseResult = parseStyleParentReference(parentAttribute.value)
+        if (parseResult.parent == null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(element, eventReader)
+          return false
+        }
+        style.parent = parseResult.parent
+
+        // Transform the namespace prefix to the actual package name, and mark the reference as
+        // private if appropriate.
+        resolvePackage(element, style.parent!!)
+      }
+    } else {
+      // No parent was specified, so try inferring it from the style name.
+      val styleName = parsedResource.name.entry!!
+      val marker = styleName.lastIndexOf('.')
+      if (marker != -1) {
+        style.parentInferred = true
+        style.parent =
+          Reference(ResourceName("", AaptResourceType.STYLE, styleName.substring(0, marker)))
+      }
+    }
+
+    var error = false
+
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+
+      if (event.isEndElement) {
+        break
+      }
+
+      if (!event.isStartElement) {
+        // skip text and comments
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childName = childElement.name
+
+      if (childName.namespaceURI.isEmpty() && childName.localPart == "item") {
+        if (!parseStyleItem(childElement, eventReader, style)) {
+          error = true
+        }
+      } else {
+        if (!shouldIgnoreElement(childName)) {
+          // TODO(b/139297538): diagnostics
+          error = true
+        }
+        walkToEndOfElement(childElement, eventReader)
+      }
+    }
+
+    if (error) {
+      return false
+    }
+
+    parsedResource.value = style
+    return true
+  }
+
+  /**
+   * Parses the xml element contained by a "declare-styleable" tag as a [Styleable] resource.
+   *
+   * @param element The start element of the [Styleable] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parseDeclareStyleable(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    parsedResource.name = parsedResource.name.copy(type = AaptResourceType.STYLEABLE)
+
+    // Declare-styleable is private by default, because it technically only exists in R.java
+    // TODO(b/139297538): verify correctness of C++ code.
+    parsedResource.visibility = ResourceVisibility.PUBLIC
+
+    // Declare-stylable only ends up in the default config
+    val defaultConfig = ConfigDescription()
+    if (parsedResource.config != defaultConfig) {
+      // TODO(b/139297538): diagnostics
+      parsedResource.config = defaultConfig
+    }
+
+    val styleable = Styleable()
+
+    var comment = ""
+    var error = false
+
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+
+      if (event.eventType == XMLStreamConstants.COMMENT) {
+        comment = (event as Comment).text.trim()
+        continue
+      }
+
+      if (event.isEndElement) {
+        // We're done here
+        break
+      }
+
+      if (!event.isStartElement) {
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childName = childElement.name
+      val itemSource = source.withLine(childElement.location.lineNumber)
+
+      if (childName.namespaceURI.isEmpty() && childName.localPart == "attr") {
+        val nameAttribute = childElement.getAttributeByName(QName("name"))
+        if (nameAttribute == null) {
+          // TODO(b/139297538): diagnostics
+          error = true
+          walkToEndOfElement(childElement, eventReader)
+          continue
+        }
+
+        // If this is a declaration, the package name may be in the name. Separate these out.
+        // Eg. <attr name="android:text" />
+        val nameReference = parseXmlAttributeName(nameAttribute.value)
+        resolvePackage(childElement, nameReference)
+
+        // Create the ParsedResource that will add the attribute to the table.
+        val childResource = ParsedResource(defaultConfig, itemSource, comment)
+        childResource.name = nameReference.name
+
+        if (!parseAttrImpl(childElement, eventReader, childResource, true)) {
+          error = true
+          continue
+        }
+
+        nameReference.comment = childResource.comment
+        nameReference.source = itemSource
+        styleable.entries.add(nameReference)
+
+        parsedResource.children.add(childResource)
+
+      } else {
+        if (!shouldIgnoreElement(childName)) {
+          // TODO(b/139297538): diagnostics
+          error = true
+
+        }
+        walkToEndOfElement(childElement, eventReader)
+      }
+
+      comment = ""
+    }
+
+    if (error) {
+      return false
+    }
+
+    parsedResource.value = styleable
+    return true
+  }
+
+  /**
+   * Parses the xml element surrounded by the "overlayable" tag as an [Overlayable] resource.
+   *
+   * @param element The start element of the [Overlayable] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parseOverlayable(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+
+    val defaultConfig = ConfigDescription()
+    if (parsedResource.config != defaultConfig) {
+      // TODO(b/139297538): diagnostics warn
+    }
+
+    val nameAttribute = element.getAttributeByName(QName(null, "name"))
+    if (nameAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      return false
+    }
+
+    val actorAttribute = element.getAttributeByName(QName(null, "actor"))
+    if (actorAttribute != null && actorAttribute.value.startsWith(Overlayable.ACTOR_SCHEME_URI)) {
+      // TODO(b/139297538): diagnostics
+      return false
+    }
+
+    val overlayable = Overlayable(nameAttribute.value, actorAttribute?.value ?: "", source)
+
+    var error = false
+    var comment = ""
+    var currentPolicies: Int = OverlayableItem.Policy.NONE
+    var depth = 1
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+
+      if (event.isEndElement) {
+        --depth
+        if (depth == 0) {
+          // Break the loop, exiting <overlayable>
+          break
+        }
+        // Clear the current policies when exiting the <policy> tags.
+        currentPolicies = OverlayableItem.Policy.NONE
+        continue
+      }
+
+      if (event.eventType == XMLStreamConstants.COMMENT) {
+        comment = (event as Comment).text.trim()
+        continue
+      }
+
+      if (!event.isStartElement) {
+        // Skip whitespace and text
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childName = childElement.name
+      when {
+        childName.namespaceURI == XMLConstants.NULL_NS_URI && childName.localPart == "item" -> {
+          val childResource =
+            parseOverlayableItem(childElement, eventReader, currentPolicies, overlayable, comment)
+          comment = ""
+          if (childResource == null) {
+            error = true
+          } else {
+            parsedResource.children.add(childResource)
+          }
+        }
+        childName.namespaceURI == XMLConstants.NULL_NS_URI &&
+          childName.localPart == "policy" -> {
+
+          ++depth
+          val newPolicy = parsePoliciesFromElement(childElement, currentPolicies)
+
+          if (newPolicy == null) {
+            error = true
+            currentPolicies = OverlayableItem.Policy.NONE
+          } else {
+            currentPolicies = newPolicy
+          }
+          comment = ""
+        }
+        !shouldIgnoreElement(childName) -> {
+          // TODO(b/139297538): diagnostics
+          error = true
+        }
+        else -> comment = ""
+      }
+    }
+
+    return !error
+  }
+
+  /**
+   * Parses the xml element as a [OverlayableItem] within an [Overlayable] resource.
+   *
+   * @param element The start element of the [OverlayableItem] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param policies The policies of the current policy block that this [OverlayableItem] is a part
+   *   of. The value of policies should be non-zero.
+   * @param overlayable The overlayable which the parsed resource will be a part of.
+   * @param comment The comment that applies to this element.
+   * @return The parsedResource representing the parsed Overlayable Item. If their is an issue
+   *   parsing, then {@code null} is returned.
+   */
+  private fun parseOverlayableItem(
+    element: StartElement,
+    eventReader: XMLEventReader,
+    policies: Int,
+    overlayable: Overlayable,
+    comment: String): ParsedResource? {
+
+    if (policies == OverlayableItem.Policy.NONE) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return null
+    }
+
+    // Items specify the name and type of resource that should be overlayable.
+    val nameAttribute = element.getAttributeByName(QName(null, "name"))
+    if (nameAttribute == null || nameAttribute.value.isNullOrEmpty()) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return null
+    }
+
+    val typeAttribute = element.getAttributeByName(QName(null, "type"))
+    if (typeAttribute == null || typeAttribute.value.isNullOrEmpty()) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return null
+    }
+
+    val type = resourceTypeFromTag(typeAttribute.value)
+    if (type == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return null
+    }
+
+    val overlayableItem =
+      OverlayableItem(overlayable, policies, comment, source.withLine(element.location.lineNumber))
+    val childResource = ParsedResource()
+    childResource.name = childResource.name.copy(type = type, entry = nameAttribute.value)
+    childResource.overlayableItem = overlayableItem
+
+    walkToEndOfElement(element, eventReader)
+
+    return childResource
+  }
+
+  /**
+   * Parses the "type" attribute of the <policy> block for policies. This does not move the
+   * xml parser, as this does not read
+   *
+   * @param element The start element of the <policy> block.
+   * @param oldPolicies The current policies to be overwritten. As nested policy blocks are not
+   *   allowed, the oldPolicies is expected to be [OverlayableItem.Policy.NONE].
+   * @return The new policy values or null if an error occurred.
+   */
+  private fun parsePoliciesFromElement(
+    element: StartElement, oldPolicies: Int): Int? {
+
+    if (oldPolicies != OverlayableItem.Policy.NONE) {
+      // If the policy list is not empty, then we are currently inside a policy element.
+      // TODO(b/139297538): diagnostics
+      return null
+    }
+
+    val typeAttribute = element.getAttributeByName(QName(null, "type"))
+    if (typeAttribute == null || typeAttribute.value.isNullOrEmpty()) {
+      // TODO(b/139297538): diagnostics
+      return null
+    }
+
+    var newPolicy = OverlayableItem.Policy.NONE
+    // Parse the polices separated by vertical bar characters to allow for specifying multiple
+    // policies. Items within the policy tag will have the specified policy.
+    for (string in typeAttribute.value.split('|')) {
+      newPolicy = newPolicy or when(string.trim()) {
+        "odm" -> OverlayableItem.Policy.ODM
+        "oem" -> OverlayableItem.Policy.OEM
+        "product" -> OverlayableItem.Policy.PRODUCT
+        "public" -> OverlayableItem.Policy.PUBLIC
+        "signature" -> OverlayableItem.Policy.SIGNATURE
+        "system" -> OverlayableItem.Policy.SYSTEM
+        "vendor" -> OverlayableItem.Policy.VENDOR
+        else -> {
+          // TODO(b/139297538): diagnostics
+          return null
+        }
+      }
+    }
+
+    return newPolicy
+  }
+
+  /**
+   * Parses the {@code element} as a [Plural] resource.
+   *
+   * @param element The start element of the [Plural] to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parsePlural(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    parsedResource.name = parsedResource.name.copy(type=AaptResourceType.PLURALS)
+
+    val plural = Plural()
+
+    var error = false
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+
+      if (event.isEndElement) {
+        // We're done with the plural
+        break
+      }
+
+      if (!event.isStartElement) {
+        // Skip text and comments.
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childName = childElement.name
+      if (childName.namespaceURI.isEmpty() && childName.localPart == "item") {
+        val quantityAttribute = childElement.getAttributeByName(QName("quantity"))
+        if (quantityAttribute == null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(childElement, eventReader)
+          error = true
+          continue
+        }
+
+        val trimmedQuantity = quantityAttribute.value.trim()
+        val pluralType = when (trimmedQuantity) {
+          "zero" -> Plural.Type.ZERO
+          "one" -> Plural.Type.ONE
+          "two" -> Plural.Type.TWO
+          "few" -> Plural.Type.FEW
+          "many" -> Plural.Type.MANY
+          "other" -> Plural.Type.OTHER
+          else -> null
+        }
+
+        if (pluralType == null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(childElement, eventReader)
+          error = true
+          continue
+        }
+
+        val pluralIndex = pluralType.ordinal
+        if (plural.values[pluralIndex] != null) {
+          // TODO(b/139297538): diagnostics duplicate
+          error = true
+          walkToEndOfElement(childElement, eventReader)
+          continue
+        }
+
+        plural.values[pluralIndex] =
+          parseXml(childElement, eventReader, Resources.Attribute.FormatFlags.STRING_VALUE, false)
+        if (plural.values[pluralIndex] == null) {
+          error = true
+        }
+      } else {
+        if (!shouldIgnoreElement(childName)) {
+          // TODO(b/139297538): diagnostics
+          error = true
+        }
+        walkToEndOfElement(childElement, eventReader)
+      }
+    }
+
+    if (error) {
+      return false
+    }
+
+    parsedResource.value = plural
+    return true
+  }
+
+  /**
+   * Parses the {@code element} as a public resource.
+   *
+   * @param element The start element of the resource to be parsed.
+   * @param eventReader The xml to be read. The event reader should have just pulled the
+   *   {@code StartElement} element. After this method is invoked the eventReader will be placed
+   *   after the corresponding end tag for element.
+   * @param parsedResource Where the parsed resource will be placed.
+   * @return returns whether or not the parsing was a success.
+   */
+  private fun parsePublic(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+
+    if (options.visibility != null ) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    if (parsedResource.config != ConfigDescription()) {
+      // TODO(b/139297538): diagnostics warn
+    }
+
+    val typeAttribute = element.getAttributeByName(QName("type"))
+    if (typeAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val parsedType = resourceTypeFromTag(typeAttribute.value)
+    if (parsedType == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    parsedResource.name = parsedResource.name.copy(type = parsedType)
+
+    val idAttribute = element.getAttributeByName(QName("id"))
+    if (idAttribute != null) {
+      val id = parseResourceId(idAttribute.value)
+      if (id == null) {
+        // TODO(b/139297538): diagnostics
+        walkToEndOfElement(element, eventReader)
+        return false
+      }
+      parsedResource.resourceId = id
+    }
+
+    if (parsedType == AaptResourceType.ID) {
+      // An ID marked as public is also the definition of an ID.
+      parsedResource.value = Id()
+    }
+
+    parsedResource.visibility = ResourceVisibility.PUBLIC
+    walkToEndOfElement(element, eventReader)
+    return true
+  }
+
+  /**
+   * parses the {@code element} as a PublicGroup resource. The {@code eventReader} will be after the
+   * corresponding end of {@code element}
+   */
+  private fun parsePublicGroup(
+    element: StartElement, eventReader: XMLEventReader, parsedResource: ParsedResource): Boolean {
+    if (options.visibility != null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    if (parsedResource.config != ConfigDescription()) {
+      // TODO(b/139297538): diagnostics warn
+    }
+
+    val typeAttribute = element.getAttributeByName(QName("type"))
+    if (typeAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val parsedType = resourceTypeFromTag(typeAttribute.value)
+    if (parsedType == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val idAttribute = element.getAttributeByName(QName("first-id"))
+    if (idAttribute == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    val idVal = parseResourceId(idAttribute.value)
+    if (idVal == null) {
+      // TODO(b/139297538): diagnostics
+      walkToEndOfElement(element, eventReader)
+      return false
+    }
+
+    var childId = idVal
+
+    var comment = ""
+    var error = false
+    while (eventReader.hasNext()) {
+      val event = eventReader.nextEvent()
+
+      if (event.isEndElement) {
+        // we're done with the public group.
+        break
+      }
+
+      if (event.eventType == XMLStreamConstants.COMMENT) {
+        comment = (event as Comment).text
+        continue
+      }
+
+      if (!event.isStartElement) {
+        // Skip text.
+        continue
+      }
+
+      val childElement = event.asStartElement()
+      val childName = childElement.name
+      val itemSource = source.withLine(childElement.location.lineNumber)
+      if (childName.namespaceURI.isEmpty() && childName.localPart == "public") {
+        val nameAttribute = childElement.getAttributeByName(QName("name"))
+        if (nameAttribute ==  null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(childElement, eventReader)
+          error = true
+          continue
+        }
+
+        val childIdAttribute = childElement.getAttributeByName(QName("id"))
+        if (childIdAttribute != null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(childElement, eventReader)
+          error = true
+          continue
+        }
+
+        val childTypeAttribute = childElement.getAttributeByName(QName("type"))
+        if (childTypeAttribute != null) {
+          // TODO(b/139297538): diagnostics
+          walkToEndOfElement(childElement, eventReader)
+          error = true
+          continue
+        }
+
+        val childResource = ParsedResource(ConfigDescription(), itemSource, comment)
+        childResource.name = ResourceName("", parsedType, nameAttribute.value)
+        childResource.resourceId = childId
+        childResource.visibility = ResourceVisibility.PUBLIC
+        parsedResource.children.add(childResource)
+
+        ++childId
+        walkToEndOfElement(childElement, eventReader)
+      } else {
+        if (!shouldIgnoreElement(childName)) {
+          // TODO(b/139297538): diagnostics
+          error = true
+        }
+        walkToEndOfElement(childElement, eventReader)
+      }
+    }
+    return !error
+  }
+
+  /**
    * Adds the given parsed resource to the [table] property.
    *
    * @param parsedResource the resource parsed from xml.
    * @return Whether or not the resource was successfully added to the table.
    */
-  private fun addResourcesToTable(parsedResource: ParsedResource): Boolean {
+  private fun addResourceToTable(parsedResource: ParsedResource): Boolean {
     if (parsedResource.visibility != ResourceVisibility.UNDEFINED) {
       val visibility =
         Visibility(parsedResource.source, parsedResource.comment, parsedResource.visibility)
@@ -729,7 +1924,7 @@ class TableExtractor(
     var error = false
 
     for (child in parsedResource.children) {
-      error = error || !addResourcesToTable(child)
+      error = error || !addResourceToTable(child)
     }
     return !error
   }

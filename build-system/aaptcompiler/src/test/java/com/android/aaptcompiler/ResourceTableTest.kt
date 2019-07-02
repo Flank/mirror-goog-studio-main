@@ -242,6 +242,24 @@ class ResourceTableTest {
   }
 
   @Test
+  fun testSetVisibilityWithId() {
+    val table = ResourceTable()
+    val name = parseResourceName("android:string/foo")!!.resourceName
+
+    val visibility1 = Visibility(comment = "private", level = ResourceVisibility.PRIVATE)
+    Truth.assertThat(table.setVisibilityWithId(name, visibility1, 0)).isTrue()
+    visibilityOfResourceTest(table, name, ResourceVisibility.PRIVATE, "private")
+
+    val visibility2 = Visibility(comment = "public", level = ResourceVisibility.PUBLIC)
+    Truth.assertThat(table.setVisibilityWithId(name, visibility2, 0x01020000)).isTrue()
+    visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
+
+    val visibility3 = Visibility(comment = "private2", level = ResourceVisibility.PRIVATE)
+    Truth.assertThat(table.setVisibilityWithId(name, visibility3, 0)).isTrue()
+    visibilityOfResourceTest(table, name, ResourceVisibility.PUBLIC, "public")
+  }
+
+  @Test
   fun testSetAllowNew() {
     val table = ResourceTable()
     val name = parseResourceName("android:string/foo")!!.resourceName

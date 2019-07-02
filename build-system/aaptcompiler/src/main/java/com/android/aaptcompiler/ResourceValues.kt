@@ -320,3 +320,155 @@ class StyledString(
 
   fun spans() = ref.spans()
 }
+
+class ArrayResource: Value() {
+  val elements = mutableListOf<Item>()
+
+  override fun equals(other: Any?): Boolean {
+    if (other is ArrayResource) {
+      return elements == other.elements
+    }
+    return false
+  }
+
+  fun clone(newPool: StringPool): ArrayResource {
+    val newArray = ArrayResource()
+    newArray.source = source
+    newArray.comment = comment
+    for (item in elements) {
+      newArray.elements.add(item.clone(newPool))
+    }
+    return newArray
+  }
+}
+
+class Style: Value() {
+  data class Entry(val key: Reference, val value: Item?)
+
+  var parent: Reference? = null
+
+  // If set to true, the parent was auto inferred from the style's name
+  var parentInferred = false
+
+  val entries = mutableListOf<Entry>()
+
+  fun clone(pool: StringPool): Style {
+    val newStyle = Style()
+    newStyle.parent = parent
+    newStyle.parentInferred = parentInferred
+    newStyle.comment = comment
+    newStyle.source = source
+    for (entry in entries){
+      newStyle.entries.add(
+        Entry(entry.key, entry.value?.clone(pool)))
+    }
+    return newStyle
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other is Style) {
+      if (parent != other.parent) {
+        return false
+      }
+
+      val sortedEntriess = entries.sortedBy { it.key.name }
+      val otherSortedEntries = other.entries.sortedBy { it.key.name }
+
+      return sortedEntriess == otherSortedEntries
+    }
+    return false
+  }
+
+  fun mergeWith(other: Style, pool: StringPool) {
+    if (other.parent != null) {
+      parent = other.parent
+    }
+
+    val sortedEntries = entries.sortedBy { it.key.name }
+    val otherSortedEntries = other.entries.sortedBy { it.key.name }
+
+    val entryIterator = sortedEntries.iterator()
+    val otherIterator = otherSortedEntries.iterator()
+
+    val mergedEntries = mutableListOf<Entry>()
+
+    var carry = if (otherIterator.hasNext()) otherIterator.next() else null
+    while (entryIterator.hasNext()) {
+      val entry = entryIterator.next()
+      var entryOverridden = false
+      while (carry != null && carry.key.name <= entry.key.name) {
+        when {
+          carry.key.name < entry.key.name -> mergedEntries.add(carry)
+          carry.key.name == entry.key.name -> {
+            // The other overrides, when the keys are the same.
+            mergedEntries.add(carry)
+            entryOverridden = true
+          }
+        }
+        carry = if (otherIterator.hasNext()) otherIterator.next() else null
+      }
+
+      if (!entryOverridden) {
+        mergedEntries.add(entry)
+      }
+    }
+
+    if (carry != null) {
+      mergedEntries.add(carry)
+      while (otherIterator.hasNext()) {
+        mergedEntries.add(otherIterator.next())
+      }
+    }
+
+    entries.clear()
+    for (entry in mergedEntries) {
+      entries.add(Style.Entry(entry.key, entry.value?.clone(pool)))
+    }
+  }
+
+  override fun toString(): String {
+    val sb = StringBuilder(parent?.name.toString() +"\n")
+    for (entry in entries) {
+      sb.appendln(entry.key.name.toString() + "    " + entry.value?.toString())
+    }
+    return sb.toString()
+  }
+}
+
+class Plural: Value() {
+  enum class Type{
+    ZERO,
+    ONE,
+    TWO,
+    FEW,
+    MANY,
+    OTHER;
+
+    companion object {
+      val numTypes = Type.values().size
+    }
+  }
+
+  val values = arrayOfNulls<Item?>(Type.numTypes)
+
+  override fun equals(other: Any?): Boolean {
+    if (other is Plural) {
+      return values contentEquals other.values
+    }
+    return false
+  }
+
+  fun clone(newPool: StringPool): Plural {
+    val newPlural = Plural()
+    newPlural.comment = comment
+    newPlural.source = source
+    for (i in 0.until(Type.numTypes)) {
+      newPlural.values[i] = values[i]?.clone(newPool)
+    }
+    return newPlural
+  }
+}
+
+class Styleable: Value() {
+  val entries = mutableListOf<Reference>()
+}

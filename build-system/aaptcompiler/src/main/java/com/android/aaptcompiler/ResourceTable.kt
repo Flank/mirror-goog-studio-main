@@ -300,7 +300,7 @@ class ResourceTable(val validateResources: Boolean = false) {
     val useId = !validateResources && id.isValidDynamicId()
 
     val resourceGroup =
-      tablePackage.findOrCreateGroup(name.type, if(useId) id.getTypeId() else null)
+      tablePackage.findOrCreateGroup(name.type, if (useId) id.getTypeId() else null)
     if (checkId && resourceGroup.id.isTruthy() && resourceGroup.id != id.getTypeId()) {
       // TODO(b/139297538): diagnostics
       return false
@@ -508,6 +508,11 @@ class Overlayable (
   val source: Source) {
 
   constructor(): this("","", Source(""))
+
+  companion object {
+    val ACTOR_SCHEME = "overlay"
+    val ACTOR_SCHEME_URI = "$ACTOR_SCHEME://"
+  }
 }
 
 class OverlayableItem(
@@ -543,7 +548,8 @@ class ResourceTablePackage(var name: String = "", var id: Byte? = null) {
 
   fun findGroup(type: AaptResourceType, groupId: Byte? = null) =
     if (groupId != null) {
-      groups.find {type == it.type && groupId == it.id}
+      groups.find {type == it.type && groupId == it.id} ?:
+        groups.find {type == it.type && it.id == null}
     } else {
       groups.find {type == it.type}
     }
@@ -574,7 +580,8 @@ class ResourceGroup(val type : AaptResourceType) {
 
   fun findEntry(name: String, entryId: Short? = null): ResourceEntry? =
     if (entryId != null) {
-      entries.find {name == it.name && entryId == it.id}
+      entries.find {name == it.name && entryId == it.id} ?:
+        entries.find {name == it.name && it.id == null}
     } else {
       entries.find {name == it.name}
     }

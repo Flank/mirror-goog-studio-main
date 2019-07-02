@@ -522,3 +522,117 @@ fun consumeDigits(string: String): Int {
   }
   return currentIndex
 }
+
+data class ParsedParentInfo(val parent: Reference?, val errorString: String) {
+  companion object {
+    val EMPTY = ParsedParentInfo(null, "")
+  }
+}
+
+fun parseStyleParentReference(str: String): ParsedParentInfo {
+  if (str.isEmpty()) {
+    ParsedParentInfo.EMPTY
+  }
+
+  var name = str
+
+  var hasLeadingIdentifiers = false
+  var privateRef = false
+
+  // Skip over these identifiers. A style's parent is a normal reference.
+  val nameStart = name.codePointAt(0)
+  if (nameStart == '@'.toInt() || nameStart == '?'.toInt()) {
+    hasLeadingIdentifiers = true
+    name = name.substring(1)
+  }
+
+  if (name.codePointAt(0) == '*'.toInt()) {
+    privateRef = true
+    name = name.substring(1)
+  }
+
+  val possibleResourceName = extractResourceName(name)
+
+  // if we have a type make sure it is a Style
+  if (possibleResourceName.typeName.isNotEmpty()) {
+    val parsedType = resourceTypeFromTag(possibleResourceName.typeName)
+    if (parsedType != AaptResourceType.STYLE) {
+      val errorString = "Invalid resource type ${possibleResourceName.typeName} for parent of style"
+      return ParsedParentInfo(null, errorString)
+    }
+  }
+
+  val resourceName =
+    ResourceName(
+      possibleResourceName.packageName, AaptResourceType.STYLE, possibleResourceName.entry)
+
+  if (!hasLeadingIdentifiers &&
+    resourceName.pck!!.isEmpty() &&
+    possibleResourceName.typeName.isNotEmpty()) {
+    val errorString = "Invalid parent reference '$str'"
+    return ParsedParentInfo(null, errorString)
+  }
+
+  val result = Reference()
+  result.name = resourceName
+  result.isPrivate = privateRef
+
+
+  return ParsedParentInfo(result, "")
+}
+
+
+fun parseXmlAttributeName(str: String): Reference {
+  val name = str.trim()
+
+  val result = Reference()
+
+  var startOffset = 0
+  if (name.isNotEmpty() && name.codePointAt(0) == '*'.toInt()) {
+    ++startOffset
+    result.isPrivate = true
+  }
+
+  var packageName = ""
+  var entryName = ""
+  for (i in startOffset..(name.length - 1)) {
+    if (name.codePointAt(i) == ':'.toInt()) {
+      packageName = name.substring(startOffset, i)
+      entryName = name.substring(i+1)
+    }
+  }
+
+  result.name =
+    ResourceName(packageName, AaptResourceType.ATTR, if (entryName.isEmpty()) name else entryName)
+  return result
+}
+
+fun tryParseFlagSymbol(attribute: AttributeResource, value: String): BinaryPrimitive? {
+  val flagsType = ResValue.DataType.INT_HEX
+  var flagsData = 0
+
+  if (value.trim().isEmpty()) {
+    // Empty string is a valid flag (0)
+    return BinaryPrimitive(ResValue(flagsType, flagsData))
+  }
+
+  for (part in value.split('|')) {
+    val trimmedPart = part.trim()
+
+    var flagSet = false
+    for (symbol in attribute.symbols) {
+      // Flag symbols are stored as @package:id/symbol resources,
+      // so we need to match against the 'entry' part of the identifier
+      val flagResourceName = symbol.symbol.name
+      if (trimmedPart == flagResourceName.entry) {
+        flagsData =  flagsData or symbol.value
+        flagSet = true
+        break
+      }
+    }
+    if (!flagSet) {
+      return null
+    }
+  }
+  return BinaryPrimitive(ResValue(flagsType, flagsData))
+}

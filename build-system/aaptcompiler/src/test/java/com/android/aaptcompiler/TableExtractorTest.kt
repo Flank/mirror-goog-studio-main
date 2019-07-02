@@ -2,6 +2,7 @@ package com.android.aaptcompiler
 
 import com.android.aaptcompiler.android.ResValue
 import com.android.aapt.Resources
+import com.android.resources.ResourceVisibility
 import com.google.common.truth.Truth
 import org.junit.Before
 import org.junit.Test
@@ -339,5 +340,638 @@ class TableExtractorTest {
     integer!!
     Truth.assertThat(integer.resValue.dataType).isEqualTo(ResValue.DataType.NULL)
     Truth.assertThat(integer.resValue.data).isEqualTo(ResValue.NullFormat.EMPTY)
+  }
+
+  @Test
+  fun testParseAttr() {
+    val input = """
+      <attr name="foo" format="string"/>
+      <attr name="bar"/>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr1 = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr1).isNotNull()
+    attr1!!
+    Truth.assertThat(attr1.typeMask).isEqualTo(Resources.Attribute.FormatFlags.STRING_VALUE)
+
+    val attr2 = getValue("attr/bar") as? AttributeResource
+    Truth.assertThat(attr2).isNotNull()
+    attr2!!
+    Truth.assertThat(attr2.typeMask).isEqualTo(Resources.Attribute.FormatFlags.ANY_VALUE)
+  }
+
+  // Old AAPT allowed attributes to be defined under different configurations, but ultimately
+  // stored them with the default configuration. Check that we have the same behavior.
+  @Test
+  fun testParseAttrAndDeclareStyleableUnderConfigButRecordAsNoConfig() {
+    val watchConfig = parse("watch")
+    val input = """
+      <attr name="foo" />
+      <declare-styleable name="bar">
+        <attr name="baz" />
+      </declare-styleable>
+    """.trimIndent()
+    Truth.assertThat(testParse(input, watchConfig)).isTrue()
+
+    Truth.assertThat(getValue("attr/foo", watchConfig)).isNull()
+    Truth.assertThat(getValue("attr/baz", watchConfig)).isNull()
+    Truth.assertThat(getValue("styleable/bar", watchConfig)).isNull()
+
+    Truth.assertThat(getValue("attr/foo")).isNotNull()
+    Truth.assertThat(getValue("attr/baz")).isNotNull()
+    Truth.assertThat(getValue("styleable/bar")).isNotNull()
+  }
+
+  @Test
+  fun testParseAttrWithMinMax() {
+    val input = """<attr name="foo" min="10" max="23" format="integer"/>"""
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    attr!!
+    Truth.assertThat(attr.typeMask).isEqualTo(Resources.Attribute.FormatFlags.INTEGER_VALUE)
+    Truth.assertThat(attr.minInt).isEqualTo(10)
+    Truth.assertThat(attr.maxInt).isEqualTo(23)
+  }
+
+  @Test
+  fun failToParseAttrWithMinMaxButNotInteger() {
+    val input = """<attr name="foo" min="10" max="23" format="string"/>"""
+    Truth.assertThat(testParse(input)).isFalse()
+  }
+
+  @Test
+  fun testParseUseAndDeclarationOfAttr() {
+    val input = """
+      <declare-styleable name="Styleable">
+        <attr name="foo" />
+      </declare-styleable>
+      <attr name="foo" format="string"/>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    attr!!
+    Truth.assertThat(attr.typeMask).isEqualTo(Resources.Attribute.FormatFlags.STRING_VALUE)
+  }
+
+  @Test
+  fun testParseDoubleUseOfAttr() {
+    val input = """
+      <declare-styleable name="Theme">
+        <attr name="foo" />
+      </declare-styleable>
+      <declare-styleable name="Window">
+        <attr name="foo" format="boolean"/>
+      </declare-styleable>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    attr!!
+    Truth.assertThat(attr.typeMask).isEqualTo(Resources.Attribute.FormatFlags.BOOLEAN_VALUE)
+  }
+
+  @Test
+  fun testParseEnumAttr() {
+    val input = """
+      <attr name="foo">
+        <enum name="bar" value="0"/>
+        <enum name="bat" value="1"/>
+        <enum name="baz" value="2"/>
+      </attr>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    attr!!
+    Truth.assertThat(attr.typeMask).isEqualTo(Resources.Attribute.FormatFlags.ENUM_VALUE)
+    Truth.assertThat(attr.symbols).hasSize(3)
+
+    val symbol0 = attr.symbols[0]
+    Truth.assertThat(symbol0.symbol.name.entry).isEqualTo("bar")
+    Truth.assertThat(symbol0.value).isEqualTo(0)
+
+    val symbol1 = attr.symbols[1]
+    Truth.assertThat(symbol1.symbol.name.entry).isEqualTo("bat")
+    Truth.assertThat(symbol1.value).isEqualTo(1)
+
+    val symbol2 = attr.symbols[2]
+    Truth.assertThat(symbol2.symbol.name.entry).isEqualTo("baz")
+    Truth.assertThat(symbol2.value).isEqualTo(2)
+  }
+
+  @Test
+  fun testParseFlagAttr() {
+    val input = """
+      <attr name="foo">
+        <flag name="bar" value="0"/>
+        <flag name="bat" value="1"/>
+        <flag name="baz" value="2"/>
+      </attr>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    attr!!
+    Truth.assertThat(attr.typeMask).isEqualTo(Resources.Attribute.FormatFlags.FLAGS_VALUE)
+    Truth.assertThat(attr.symbols).hasSize(3)
+
+    val symbol0 = attr.symbols[0]
+    Truth.assertThat(symbol0.symbol.name.entry).isEqualTo("bar")
+    Truth.assertThat(symbol0.value).isEqualTo(0)
+
+    val symbol1 = attr.symbols[1]
+    Truth.assertThat(symbol1.symbol.name.entry).isEqualTo("bat")
+    Truth.assertThat(symbol1.value).isEqualTo(1)
+
+    val symbol2 = attr.symbols[2]
+    Truth.assertThat(symbol2.symbol.name.entry).isEqualTo("baz")
+    Truth.assertThat(symbol2.value).isEqualTo(2)
+
+    val flagValue = tryParseFlagSymbol(attr, "baz | bat")
+    Truth.assertThat(flagValue).isNotNull()
+    flagValue!!
+    Truth.assertThat(flagValue.resValue.data).isEqualTo(1 or 2)
+  }
+
+  @Test
+  fun failParseEnumNonUniqueKeys() {
+    val input = """
+      <attr name="foo">
+        <enum name="bar" value="0"/>
+        <enum name="bat" value="1"/>
+        <enum name="bat" value="2"/>
+      </attr>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isFalse()
+  }
+
+  @Test
+  fun testParseStyle() {
+    val input = """
+      <style name="foo" parent="@style/fu">
+        <item name="bar">#ffffffff</item>
+        <item name="bat">@string/hey</item>
+        <item name="baz"><b>hey</b></item>
+      </style>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val style = getValue("style/foo") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNotNull()
+    Truth.assertThat(style.parent!!.name)
+      .isEqualTo(parseResourceName("style/fu")!!.resourceName)
+    Truth.assertThat(style.entries).hasSize(3)
+
+    Truth.assertThat(style.entries[0].key.name)
+      .isEqualTo(parseResourceName("attr/bar")!!.resourceName)
+    Truth.assertThat(style.entries[1].key.name)
+      .isEqualTo(parseResourceName("attr/bat")!!.resourceName)
+    Truth.assertThat(style.entries[2].key.name)
+      .isEqualTo(parseResourceName("attr/baz")!!.resourceName)
+  }
+
+  @Test
+  fun testParseStyleWithShorthandParent() {
+    Truth.assertThat(testParse("""<style name="foo" parent="com.app:Theme"/>""")).isTrue()
+
+    val style = getValue("style/foo") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNotNull()
+    Truth.assertThat(style.parent!!.name)
+      .isEqualTo(parseResourceName("com.app:style/Theme")!!.resourceName)
+  }
+
+  @Test
+  fun testParseStyleWithPackageAliasedParent() {
+    val input = """
+      <style xmlns:app="http://schemas.android.com/apk/res/android"
+          name="foo" parent="app:Theme"/>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val style = getValue("style/foo") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNotNull()
+    Truth.assertThat(style.parent!!.name)
+      .isEqualTo(parseResourceName("android:style/Theme")!!.resourceName)
+  }
+
+  @Test
+  fun testParseStyleWithPackageAliasedItems() {
+    val input = """
+      <style xmlns:app="http://schemas.android.com/apk/res/android" name="foo">
+        <item name="app:bar">0</item>
+      </style>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val style = getValue("style/foo") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.entries).hasSize(1)
+    Truth.assertThat(style.entries[0].key.name)
+      .isEqualTo(parseResourceName("android:attr/bar")!!.resourceName)
+  }
+
+  @Test
+  fun testParseStyleWithInferredParent() {
+    Truth.assertThat(testParse("""<style name="foo.bar"/>""")).isTrue()
+
+    val style = getValue("style/foo.bar") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNotNull()
+    Truth.assertThat(style.parentInferred).isTrue()
+    Truth.assertThat(style.parent!!.name)
+      .isEqualTo(parseResourceName("style/foo")!!.resourceName)
+  }
+
+  @Test
+  fun testParseStyleWithOverwrittenInferredParent() {
+    Truth.assertThat(testParse("""<style name="foo.bar" parent=""/>""")).isTrue()
+
+    val style = getValue("style/foo.bar") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNull()
+    Truth.assertThat(style.parentInferred).isFalse()
+  }
+
+  @Test
+  fun testParseStyleWithPrivateParent() {
+    Truth.assertThat(
+      testParse("""<style name="foo" parent="*android:style/bar" />""")).isTrue()
+
+    val style = getValue("style/foo") as? Style
+    Truth.assertThat(style).isNotNull()
+    style!!
+    Truth.assertThat(style.parent).isNotNull()
+    Truth.assertThat(style.parent!!.isPrivate).isTrue()
+  }
+
+  @Test
+  fun testParseAutoGeneratedId() {
+    Truth.assertThat(testParse("""<string name="foo">@+id/bar</string>""")).isTrue()
+    Truth.assertThat(getValue("id/bar")).isNotNull()
+  }
+
+  @Test
+  fun testParseAttributesInDeclareStyleable() {
+    val input = """
+      <declare-styleable name="foo">
+        <attr name="bar" />
+        <attr name="bat" format="string|reference"/>
+        <attr name="baz">
+          <enum name="foo" value="1"/>
+        </attr>
+      </declare-styleable>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val tableResult = table.findResource(parseResourceName("styleable/foo")!!.resourceName)
+    Truth.assertThat(tableResult).isNotNull()
+    Truth.assertThat(tableResult!!.entry.visibility.level).isEqualTo(ResourceVisibility.PUBLIC)
+
+    val attr1 = getValue("attr/bar") as? AttributeResource
+    Truth.assertThat(attr1).isNotNull()
+    Truth.assertThat(attr1!!.weak).isTrue()
+
+    val attr2 = getValue("attr/bat") as? AttributeResource
+    Truth.assertThat(attr2).isNotNull()
+    Truth.assertThat(attr2!!.weak).isTrue()
+
+    val attr3 = getValue("attr/baz") as? AttributeResource
+    Truth.assertThat(attr3).isNotNull()
+    Truth.assertThat(attr3!!.weak).isTrue()
+    Truth.assertThat(attr3.symbols).hasSize(1)
+
+    Truth.assertThat(getValue("id/foo")).isNotNull()
+
+    val styleable = getValue("styleable/foo") as? Styleable
+    Truth.assertThat(styleable).isNotNull()
+    styleable!!
+    Truth.assertThat(styleable.entries).hasSize(3)
+
+    Truth.assertThat(styleable.entries[0].name)
+      .isEqualTo(parseResourceName("attr/bar")!!.resourceName)
+    Truth.assertThat(styleable.entries[1].name)
+      .isEqualTo(parseResourceName("attr/bat")!!.resourceName)
+    Truth.assertThat(styleable.entries[2].name)
+      .isEqualTo(parseResourceName("attr/baz")!!.resourceName)
+  }
+
+  @Test
+  fun testParsePrivateAttributesDeclareStyleable() {
+    val input = """
+      <declare-styleable xmlns:privAndroid="http://schemas.android.com/apk/prv/res/android"
+          name="foo">
+        <attr name="*android:bar" />
+        <attr name="privAndroid:bat" />
+      </declare-styleable>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val styleable = getValue("styleable/foo") as? Styleable
+    Truth.assertThat(styleable).isNotNull()
+    styleable!!
+    Truth.assertThat(styleable.entries).hasSize(2)
+
+    val attr0 = styleable.entries[0]
+    Truth.assertThat(attr0.isPrivate).isTrue()
+    Truth.assertThat(attr0.name.pck).isEqualTo("android")
+
+    val attr1 = styleable.entries[1]
+    Truth.assertThat(attr1.isPrivate).isTrue()
+    Truth.assertThat(attr1.name.pck).isEqualTo("android")
+  }
+
+  @Test
+  fun testParseArray() {
+    val input = """
+      <array name="foo">
+        <item>@string/ref</item>
+        <item>hey</item>
+        <item>23</item>
+      </array>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val array = getValue("array/foo") as? ArrayResource
+    Truth.assertThat(array).isNotNull()
+    array!!
+    Truth.assertThat(array.elements).hasSize(3)
+
+    val item0 = array.elements[0] as? Reference
+    Truth.assertThat(item0).isNotNull()
+    val item1 = array.elements[1] as? BasicString
+    Truth.assertThat(item1).isNotNull()
+    val item2 = array.elements[2] as? BinaryPrimitive
+    Truth.assertThat(item2).isNotNull()
+  }
+
+  @Test
+  fun testParseStringArray() {
+    val input = """
+      <string-array name="foo">
+        <item>"Werk"</item>"
+      </string-array>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val array = getValue("array/foo") as? ArrayResource
+    Truth.assertThat(array).isNotNull()
+    Truth.assertThat(array!!.elements).hasSize(1)
+  }
+
+  @Test
+  fun testParseArrayWithFormat() {
+    val input = """
+      <array name="foo" format="string">
+        <item>100</item>
+      </array>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val array = getValue("array/foo") as? ArrayResource
+    Truth.assertThat(array).isNotNull()
+    array!!
+    Truth.assertThat(array.elements).hasSize(1)
+
+    val str = array.elements[0] as? BasicString
+    Truth.assertThat(str).isNotNull()
+    Truth.assertThat(str!!.toString()).isEqualTo("100")
+  }
+
+  @Test
+  fun testParseArrayWithBadFormat() {
+    val input = """
+      <array name="foo" format="integer">
+        <item>Hi</item>
+      </array>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isFalse()
+  }
+
+  @Test
+  fun testParsePlural() {
+    val input = """
+      <plurals name="foo">
+        <item quantity="other">apples</item>
+        <item quantity="one">apple</item>
+      </plurals>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val plural = getValue("plurals/foo") as? Plural
+    Truth.assertThat(plural).isNotNull()
+    plural!!
+    Truth.assertThat(plural.values[Plural.Type.ZERO.ordinal]).isNull()
+    Truth.assertThat(plural.values[Plural.Type.TWO.ordinal]).isNull()
+    Truth.assertThat(plural.values[Plural.Type.FEW.ordinal]).isNull()
+    Truth.assertThat(plural.values[Plural.Type.MANY.ordinal]).isNull()
+
+    Truth.assertThat(plural.values[Plural.Type.ONE.ordinal]).isNotNull()
+    Truth.assertThat(plural.values[Plural.Type.OTHER.ordinal]).isNotNull()
+  }
+
+  @Test
+  fun testParseCommentsWithResource() {
+    val input = """
+      <!--This is a comment-->
+      <string name="foo">Hi</string>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val value = getValue("string/foo") as? BasicString
+    Truth.assertThat(value).isNotNull()
+    Truth.assertThat(value!!.comment).isEqualTo("This is a comment")
+  }
+
+  @Test
+  fun testDoNotCombineMultipleComments() {
+    val input = """
+      <!--One-->
+      <!--Two-->
+      <string name="foo">Hi</string>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val value = getValue("string/foo") as? BasicString
+    Truth.assertThat(value).isNotNull()
+    Truth.assertThat(value!!.comment).isEqualTo("Two")
+  }
+
+  @Test
+  fun testIgnoreCommentBeforeEndTag() {
+    val input = """
+      <!--One-->
+      <string name="foo">
+        Hi
+      <!--Two-->
+      </string>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val value = getValue("string/foo") as? BasicString
+    Truth.assertThat(value).isNotNull()
+    Truth.assertThat(value!!.comment).isEqualTo("One")
+  }
+
+  @Test
+  fun testParseNestedComments() {
+    // We only care about declare-styleable and enum/flag attributes because comments from those end
+    // up in R.java
+    val input = """
+      <declare-styleable name="foo">
+        <!-- The name of the bar -->
+        <attr name="barName" format="string|reference" />
+      </declare-styleable>
+
+      <attr name="foo">
+        <!-- The very first -->
+        <enum name="one" value="1" />
+      </attr>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val styleable = getValue("styleable/foo") as? Styleable
+    Truth.assertThat(styleable).isNotNull()
+    Truth.assertThat(styleable!!.entries).hasSize(1)
+    Truth.assertThat(styleable.entries[0].comment).isEqualTo("The name of the bar")
+
+    val attr = getValue("attr/foo") as? AttributeResource
+    Truth.assertThat(attr).isNotNull()
+    Truth.assertThat(attr!!.symbols).hasSize(1)
+    Truth.assertThat(attr.symbols[0].symbol.comment).isEqualTo("The very first")
+  }
+
+  @Test
+  fun testParsePublicIdAsDefinition() {
+    // Declaring an id as public should not require a separate definition (as an id has no value)
+    Truth.assertThat(testParse("""<public type="id" name="foo"/>""")).isTrue()
+    Truth.assertThat(getValue("id/foo") as? Id).isNotNull()
+  }
+
+  @Test
+  fun testKeepAllProducts() {
+    val input = """
+      <string name="foo" product="phone">hi</string>
+      <string name="foo" product="no-sdcard">ho</string>
+      <string name="bar" product="">wee</string>
+      <string name="baz">woo</string>
+      <string name="bit" product="phablet">hoot</string>
+      <string name="bot" product="default">yes</string>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    Truth.assertThat(getValue("string/foo", productName = "phone") as? BasicString)
+      .isNotNull()
+    Truth.assertThat(getValue("string/foo", productName = "no-sdcard") as? BasicString)
+      .isNotNull()
+    Truth.assertThat(getValue("string/bar") as? BasicString).isNotNull()
+    Truth.assertThat(getValue("string/baz") as? BasicString).isNotNull()
+    Truth.assertThat(getValue("string/bit", productName = "phablet") as? BasicString)
+      .isNotNull()
+    Truth.assertThat(getValue("string/bot", productName = "default") as? BasicString)
+      .isNotNull()
+  }
+
+  @Test
+  fun testAutoIncrementIdsInPublicGroup() {
+    val input = """
+      <public-group type="attr" first-id="0x01010040">
+        <public name="foo" />
+        <public name="bar" />
+      </public-group>
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val tableResult0 = table.findResource(parseResourceName("attr/foo")!!.resourceName)
+    Truth.assertThat(tableResult0).isNotNull()
+    tableResult0!!
+    Truth.assertThat(tableResult0.tablePackage.id).isNotNull()
+    Truth.assertThat(tableResult0.group.id).isNotNull()
+    Truth.assertThat(tableResult0.entry.id).isNotNull()
+    val actualId0 = resourceIdFromParts(
+      tableResult0.tablePackage.id!!,
+      tableResult0.group.id!!,
+      tableResult0.entry.id!!)
+    Truth.assertThat(actualId0).isEqualTo(0x01010040)
+
+    val tableResult1 = table.findResource(parseResourceName("attr/bar")!!.resourceName)
+    Truth.assertThat(tableResult1).isNotNull()
+    tableResult1!!
+    Truth.assertThat(tableResult1.tablePackage.id).isNotNull()
+    Truth.assertThat(tableResult1.group.id).isNotNull()
+    Truth.assertThat(tableResult1.entry.id).isNotNull()
+    val actualId1 = resourceIdFromParts(
+      tableResult1.tablePackage.id!!,
+      tableResult1.group.id!!,
+      tableResult1.entry.id!!)
+    Truth.assertThat(actualId1).isEqualTo(0x01010041)
+  }
+
+  @Test
+  fun testStrongestSymbolVisibilityWins() {
+    val input = """
+      <!-- private -->
+      <java-symbol type="string" name="foo" />
+      <!-- public -->
+      <public type="string" name="foo" id="0x01020000" />
+      <!-- private2 -->
+      <java-symbol type="string" name="foo" />
+    """.trimIndent()
+    Truth.assertThat(testParse(input)).isTrue()
+
+    val tableResult = table.findResource(parseResourceName("string/foo")!!.resourceName)
+    Truth.assertThat(tableResult).isNotNull()
+
+    val entry = tableResult!!.entry
+    Truth.assertThat(entry.visibility.level).isEqualTo(ResourceVisibility.PUBLIC)
+    Truth.assertThat(entry.visibility.comment).isEqualTo("public")
+  }
+
+  @Test
+  fun testExternalTypesShouldBeReferences() {
+    Truth.assertThat(
+      testParse("""<item type="layout" name="foo">@layout/bar</item>""")).isTrue()
+    Truth.assertThat(
+      testParse("""<item type="layout" name="bar">"this is a string"</item>""")).isFalse()
+  }
+
+  @Test
+  fun testAddResourcesElementShouldAddEntryWithUndefinedSymbol() {
+    Truth.assertThat(testParse("""<add-resource name="bar" type="string" />""")).isTrue()
+
+    val tableResult = table.findResource(parseResourceName("string/bar")!!.resourceName)
+    Truth.assertThat(tableResult).isNotNull()
+    val entry = tableResult!!.entry
+    Truth.assertThat(entry.visibility.level).isEqualTo(ResourceVisibility.UNDEFINED)
+    Truth.assertThat(entry.allowNew).isNotNull()
+  }
+
+  @Test
+  fun testParseItemElementWithFormat() {
+    Truth.assertThat(
+      testParse("""<item name="foo" type="integer" format="float">0.3</item>""")).isTrue()
+
+    val primitive = getValue("integer/foo") as? BinaryPrimitive
+    Truth.assertThat(primitive).isNotNull()
+    Truth.assertThat(primitive!!.resValue.dataType).isEqualTo(ResValue.DataType.FLOAT)
+
+    Truth.assertThat(
+      testParse("""<item name="bar" type="integer" format="fraction">100</item>""")).isFalse()
   }
 }
