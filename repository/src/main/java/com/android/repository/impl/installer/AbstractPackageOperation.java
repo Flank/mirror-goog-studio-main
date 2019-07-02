@@ -25,9 +25,7 @@ import com.android.repository.api.PackageOperation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
-import com.android.repository.impl.manager.LocalRepoLoaderImpl;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.util.InstallerUtil;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -85,7 +83,14 @@ public abstract class AbstractPackageOperation implements PackageOperation {
      * that wouldn't always fit into a system-managed temp directory, but should fit into the SDK
      * directory (since this is where the uncompressed package will be installed anyway).
      */
-    static final String REPO_TEMP_DIR_FN = METADATA_FILENAME_PREFIX + "temp";
+    public static final String REPO_TEMP_DIR_FN = METADATA_FILENAME_PREFIX + "temp";
+
+    /**
+     * Name of the directory used as the base for download intermediates which some package
+     * operations may use to customize their downloader settings.
+     */
+    public static final String DOWNLOAD_INTERMEDIATES_DIR_FN =
+            METADATA_FILENAME_PREFIX + "downloadIntermediates";
 
     /**
      * Prefix used when creating temporary directories.

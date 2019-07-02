@@ -18,7 +18,6 @@ package com.android.repository.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.File;
@@ -107,6 +106,22 @@ public interface Downloader {
     }
 
     /**
+     * For implementations that support resuming partial downloads, sets the directory location
+     * where to download intermediates (i.e. partial) files. If the intermediate directory belongs
+     * to a different file system and or partition, there will be an additional overhead of moving
+     * the intermediate file to its final destination after a full download is complete.
+     *
+     * <p>If the directory is invalid (or inaccessible, or the file system is full), implementors
+     * will ignore this value and use the default behavior.
+     *
+     * <p>By default, implementations use the same intermediate directory as the destination
+     * directory of the download.
+     *
+     * @param intermediatesLocation the path to use for download intermediates
+     */
+    default void setDownloadIntermediatesLocation(@NonNull File intermediatesLocation) {}
+
+    /**
      * Hash the given input stream.
      * @param in The stream to hash. It will be fully consumed but not closed.
      * @param fileSize The expected length of the stream, for progress display purposes.
@@ -114,7 +129,6 @@ public interface Downloader {
      * @return The sha1 hash of the input stream.
      * @throws IOException IF there's a problem reading from the stream.
      */
-    @VisibleForTesting
     @NonNull
     static String hash(@NonNull InputStream in, long fileSize, @NonNull ProgressIndicator progress)
             throws IOException {
