@@ -40,6 +40,8 @@ class LocalFileHeader {
     // This is the extra marker value as what apkzlib uses.
     private static final short ALIGN_SIGNATURE = (short) 0xd935;
 
+    static final long OFFSET_TO_NAME = 26;
+
     public static void fillVirtualEntry(@NonNull ByteBuffer virtualEntry) {
         virtualEntry.order(ByteOrder.LITTLE_ENDIAN);
         virtualEntry.putInt(SIGNATURE);

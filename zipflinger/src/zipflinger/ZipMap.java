@@ -191,7 +191,8 @@ class ZipMap {
         // Retrieve the local header extra size since there are no guarantee it is the same as the
         // central directory size.
         // Semi-paranoid mode: Also check that the local name size is the same as the cd name size.
-        ByteBuffer localFieldBuffer = readLocalFields(start + 26, entry, channel);
+        ByteBuffer localFieldBuffer =
+                readLocalFields(start + LocalFileHeader.OFFSET_TO_NAME, entry, channel);
         int localPathLength = localFieldBuffer.getShort() & 0xFFFF;
         int localExtraLength = localFieldBuffer.getShort() & 0xFFFF;
         if (pathLength != localPathLength) {
