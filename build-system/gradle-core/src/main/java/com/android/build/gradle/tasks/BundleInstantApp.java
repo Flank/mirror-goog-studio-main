@@ -75,7 +75,8 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
                             getPath(),
                             getBundleDirectory().get().getAsFile(),
                             bundleName,
-                            ModuleMetadata.load(applicationId.getSingleFile()).getApplicationId(),
+                            ModuleMetadata.load(applicationMetadataFile.getSingleFile())
+                                    .getApplicationId(),
                             new TreeSet<>(apkDirectories.getFiles())));
         }
     }
@@ -92,8 +93,8 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
 
     @InputFiles
     @NonNull
-    public FileCollection getApplicationId() {
-        return applicationId;
+    public FileCollection getApplicationMetadataFile() {
+        return applicationMetadataFile;
     }
 
     @InputFiles
@@ -103,7 +104,7 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
     }
 
     private String bundleName;
-    private FileCollection applicationId;
+    private FileCollection applicationMetadataFile;
     private FileCollection apkDirectories;
 
     public static class CreationAction extends TaskCreationAction<BundleInstantApp> {
@@ -146,7 +147,7 @@ public abstract class BundleInstantApp extends NonIncrementalTask {
                             + "-"
                             + scope.getVariantConfiguration().getBaseName()
                             + DOT_ZIP;
-            bundleInstantApp.applicationId =
+            bundleInstantApp.applicationMetadataFile =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.PROJECT,
