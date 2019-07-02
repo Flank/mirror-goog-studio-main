@@ -103,6 +103,7 @@ java_test(
 
 java_test(
     name = "testsZipFlinger",
+    size = "small",
     srcs = [
         "test/src/java/zipflinger/TestZipFlinger.java",
     ],
