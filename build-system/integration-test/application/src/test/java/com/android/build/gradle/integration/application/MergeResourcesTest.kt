@@ -96,7 +96,27 @@ class MergeResourcesTest(val apkCreatorType: ApkCreatorType) {
             "debug",
             "raw_me.raw.flat"
         )
-        assertThat(inIntermediate).exists()
+        val inCompiledLocalResources = FileUtils.join(
+            project.getSubproject("library").testDir,
+            "build",
+            "intermediates",
+            "compiled_local_resources",
+            "debug",
+            "out",
+            "raw_me.raw.flat"
+        )
+
+        if (project.booleanOptions.getOrDefault(
+                BooleanOption.PRECOMPILE_LOCAL_RESOURCES,
+                BooleanOption.PRECOMPILE_LOCAL_RESOURCES.defaultValue
+            ) == true
+        ) {
+            assertThat(inIntermediate).doesNotExist()
+            assertThat(inCompiledLocalResources).exists()
+        } else {
+            assertThat(inIntermediate).exists()
+            assertThat(inCompiledLocalResources).doesNotExist()
+        }
 
         /*
          * Create raw/me.raw in application and see that it comes out in the apk, overriding the

@@ -100,7 +100,10 @@ class DependencyResourcesComputer {
      * the linking step.
      */
     @JvmOverloads
-    fun compute(precompileRemoteResources: Boolean = false): List<ResourceSet> {
+    fun compute(
+        precompileRemoteResources: Boolean = false,
+        precompileLocalResources: Boolean = false
+    ): List<ResourceSet> {
         val sourceFolderSets = getResSet()
         var size = sourceFolderSets.size
         localLibraries?.let {
@@ -112,7 +115,8 @@ class DependencyResourcesComputer {
 
         val resourceSetList = ArrayList<ResourceSet>(size)
 
-        addLibraryResources(localLibraries, resourceSetList, false)
+        // TODO(b/137729143): merge the flags and artifacts into one
+        addLibraryResources(localLibraries, resourceSetList, precompileLocalResources)
         addLibraryResources(remoteLibraries, resourceSetList, precompileRemoteResources)
 
         // add the folder based next

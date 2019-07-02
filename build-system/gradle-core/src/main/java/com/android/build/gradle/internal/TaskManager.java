@@ -848,7 +848,8 @@ public abstract class TaskManager {
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
-                                flags),
+                                flags,
+                                isLibrary()),
                         null,
                         null,
                         taskProviderCallback);

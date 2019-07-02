@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.res
 
 import com.android.SdkConstants
+
 import com.android.SdkConstants.FN_RES_BASE
 import com.android.SdkConstants.FN_R_CLASS_JAR
 import com.android.SdkConstants.RES_QUALIFIER_SEP
@@ -247,6 +248,8 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
 
     private var compiledRemoteResources: ArtifactCollection? = null
 
+    private var compiledLocalResources: ArtifactCollection? = null
+
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     // FIXME : make me incremental !
@@ -280,10 +283,10 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
             unprocessedManifest.remove(mainOutput)
 
             val compiledRemoteResourcesDirs =
-                if (getCompiledRemoteResources() == null) emptyList<File>() else {
-                    // the order of the artifact is descending order, so we need to reverse it.
-                    getCompiledRemoteResources()!!.reversed().toImmutableList()
-                }
+                getCompiledRemoteResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
+
+            val compiledLocalResourcesDirs =
+                getCompiledLocalResources()?.reversed()?.toImmutableList() ?: emptyList<File>()
 
             it.submit(
                 AaptSplitInvoker::class.java,
@@ -297,6 +300,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                     true,
                     aapt2ServiceKey,
                     compiledRemoteResourcesDirs,
+                    compiledLocalResourcesDirs,
                     this,
                     rClassOutputJar.orNull?.asFile
                 )
@@ -322,6 +326,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                                 false,
                                 aapt2ServiceKey,
                                 compiledRemoteResourcesDirs,
+                                compiledLocalResourcesDirs,
                                 this
                             )
                         )
@@ -641,6 +646,14 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         AndroidArtifacts.ArtifactType.COMPILED_REMOTE_RESOURCES
                     )
             }
+
+            if (variantScope.isPrecompileLocalResourcesEnabled) {
+                task.compiledLocalResources = variantScope.getArtifactCollection(
+                    RUNTIME_CLASSPATH,
+                    ALL,
+                    AndroidArtifacts.ArtifactType.COMPILED_LOCAL_RESOURCES
+                )
+            }
         }
     }
 
@@ -819,6 +832,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
                         .setUseConditionalKeepRules(params.useConditionalKeepRules)
                         .setUseFinalIds(params.useFinalIds)
                         .addResourceDirectories(params.compiledRemoteResourcesDirs)
+                        .addResourceDirectories(params.compiledLocalResourcesDirs)
 
                     if (params.isNamespaced) {
                         val packagedDependencies = ImmutableList.builder<File>()
@@ -901,6 +915,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
         val generateCode: Boolean,
         val aapt2ServiceKey: Aapt2ServiceKey?,
         val compiledRemoteResourcesDirs: List<File>,
+        val compiledLocalResourcesDirs: List<File>,
         task: LinkApplicationAndroidResourcesTask,
         val rClassOutputJar: File? = null
     ) : Serializable {
@@ -990,6 +1005,13 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: 
     @PathSensitive(PathSensitivity.RELATIVE)
     fun getCompiledRemoteResources(): FileCollection? {
         return compiledRemoteResources?.artifactFiles
+    }
+
+    @Optional
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    fun getCompiledLocalResources(): FileCollection? {
+        return compiledLocalResources?.artifactFiles
     }
 
     @Input
