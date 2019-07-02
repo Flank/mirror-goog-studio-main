@@ -84,6 +84,8 @@ enum class BooleanOption(
     FORCE_JACOCO_OUT_OF_PROCESS("android.forceJacocoOutOfProcess", false, status = Option.Status.STABLE),
     USE_ZIPFLINGER_FOR_JAR_MERGING("android.useZipflingerForJarMerging", false),
     USE_APK_FLINGER("android.useApkFlinger", false),
+    /** When set R classes are treated as compilation classpath in libraries, rather than runtime classpath, with values set to 0. */
+    COMPILE_CLASSPATH_LIBRARY_R_CLASSES("android.useCompileClasspathLibraryRClasses", false),
 
     // ---------------
     // Lifecycle flags: Stable stage, Enabled by default, can be disabled

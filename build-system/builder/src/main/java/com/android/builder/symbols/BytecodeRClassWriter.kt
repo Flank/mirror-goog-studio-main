@@ -17,11 +17,11 @@
 package com.android.builder.symbols
 
 import com.android.SdkConstants
+import com.android.builder.packaging.JarMerger
 import com.android.ide.common.symbols.Symbol
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.canonicalizeValueResourceName
 import com.android.resources.ResourceType
-import com.google.common.base.Splitter
 import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.ClassWriter.COMPUTE_MAXS
 import org.objectweb.asm.MethodVisitor
@@ -40,43 +40,44 @@ import org.objectweb.asm.Opcodes.NEWARRAY
 import org.objectweb.asm.Opcodes.PUTSTATIC
 import org.objectweb.asm.Opcodes.RETURN
 import org.objectweb.asm.Opcodes.T_INT
-import java.io.BufferedOutputStream
+import zipflinger.JarCreator
+import zipflinger.JarFlinger
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.EnumSet
-import java.util.jar.JarOutputStream
-import java.util.zip.ZipEntry
-
-// Any negative time value sets ZipEntry's xdostime to DOSTIME_BEFORE_1980 constant
-private const val TIME_BEFORE_1980 = -1L
 
 @Throws(IOException::class)
 fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path, finalIds: Boolean = false) {
-    val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
-    JarOutputStream(BufferedOutputStream(Files.newOutputStream(outJar))).use { jarOutputStream ->
+    JarFlinger(outJar).use { outStream ->
+        val mergedTables = tables.groupBy { it.tablePackage }.map { SymbolTable.merge(it.value) }
         mergedTables.forEach { table ->
-            val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
-            for (resType in ResourceType.values()) {
-                // Don't write empty R$ classes.
-                val bytes = generateResourceTypeClass(table, resType, finalIds) ?: continue
-                resourceTypes.add(resType)
-                val innerR = internalName(table, resType)
-                val entry = ZipEntry(innerR + SdkConstants.DOT_CLASS)
-                entry.time = TIME_BEFORE_1980
-                jarOutputStream.putNextEntry(entry)
-                jarOutputStream.write(bytes)
-            }
-
-            // Generate and write the main R class file.
-            val packageR = internalName(table, null)
-            val mainREntry = ZipEntry(packageR + SdkConstants.DOT_CLASS)
-            mainREntry.time = TIME_BEFORE_1980
-            jarOutputStream.putNextEntry(mainREntry)
-            jarOutputStream.write(generateOuterRClass(resourceTypes, packageR))
+            exportToCompiledJava(table, outStream, finalIds)
         }
     }
 }
+
+@Throws(IOException::class)
+fun exportToCompiledJava(
+    table: SymbolTable,
+    jarMerger: JarCreator,
+    finalIds: Boolean = false
+) {
+    val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
+    for (resType in ResourceType.values()) {
+        // Don't write empty R$ classes.
+        val bytes = generateResourceTypeClass(table, resType, finalIds) ?: continue
+        resourceTypes.add(resType)
+        val innerR = internalName(table, resType)
+        jarMerger.addEntry(innerR + SdkConstants.DOT_CLASS, bytes.inputStream())
+    }
+
+    // Generate and write the main R class file.
+    val packageR = internalName(table, null)
+    jarMerger.addEntry(
+        packageR + SdkConstants.DOT_CLASS,
+        generateOuterRClass(resourceTypes, packageR).inputStream())
+}
+
 
 private fun generateOuterRClass(resourceTypes: EnumSet<ResourceType>, packageR: String): ByteArray {
     val cw = ClassWriter(COMPUTE_MAXS)

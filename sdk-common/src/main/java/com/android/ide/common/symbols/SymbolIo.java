@@ -900,61 +900,16 @@ public final class SymbolIo {
     public static void writeSymbolListWithPackageName(
             @NonNull Path symbolTable, @Nullable String packageName, @NonNull Path outputFile)
             throws IOException {
-        try (Writer writer = Files.newBufferedWriter(outputFile)) {
-            if (packageName != null) {
-                writer.write(packageName);
-            }
-            if (!Files.exists(symbolTable)) {
-                writer.write('\n');
-                return;
-            }
-            // When a styleable parent is encountered,
-            // consume any children if the line starts with
-            String styleableChildPrefix = null;
-            try (Stream<String> lines = Files.lines(symbolTable)) {
-                Iterator<String> iterator = lines.iterator();
-                while (iterator.hasNext()) {
-                    String line = iterator.next();
-                    if (styleableChildPrefix != null && line.startsWith(styleableChildPrefix)) {
-                        // Extract the child name and write it to the same line.
-                        int start = styleableChildPrefix.length() + 1;
-                        int end = line.indexOf(' ', styleableChildPrefix.length());
-                        if (end != -1) {
-                            writer.write(' ');
-                            writer.write(line, start, end - start);
-                        }
-                        continue;
-                    }
-
-                    // Ignore out-of-order styleable children
-                    if (line.startsWith("int styleable ")) {
-                        continue;
-                    }
-                    // Only keep the type and the name.
-                    // e.g. "int[] styleable AppCompatTheme {750,75..."
-                    // becomes "styleable AppCompatTheme <child> <child>"
-                    int start = line.indexOf(' ') + 1;
-                    if (start == 0) {
-                        continue;
-                    }
-                    int middle = line.indexOf(' ', start) + 1;
-                    if (middle == 0) {
-                        continue;
-                    }
-                    int end = line.indexOf(' ', middle) + 1;
-                    if (end == 0) {
-                        continue;
-                    }
-                    writer.write('\n');
-                    writer.write(line, start, end - start - 1);
-                    if (line.startsWith("int[] ")) {
-                        styleableChildPrefix = "int styleable " + line.substring(middle, end - 1);
-                    } else {
-                        styleableChildPrefix = null;
-                    }
+        try (SymbolListWithPackageNameWriter writer =
+                new SymbolListWithPackageNameWriter(
+                        packageName, Files.newBufferedWriter(outputFile))) {
+            if (Files.exists(symbolTable)) {
+                try (Stream<String> lines = Files.lines(symbolTable)) {
+                    SymbolUtils.readAarRTxt(lines.iterator(), writer);
                 }
+            } else {
+                SymbolUtils.visitEmptySymbolTable(writer);
             }
-            writer.write('\n');
         }
     }
 

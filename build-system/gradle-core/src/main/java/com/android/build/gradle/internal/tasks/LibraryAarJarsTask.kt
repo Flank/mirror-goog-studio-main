@@ -280,16 +280,16 @@ abstract class LibraryAarJarsTask
 
 
         fun getDefaultExcludes(
-            packagePath: String, packageBuildConfig: Boolean
+            packagePath: String, packageBuildConfig: Boolean, packageR: Boolean = false
         ): MutableList<String> {
-            val excludes = mutableListOf(
+            val excludes = ArrayList<String>(5)
+            if (!packageR) {
                 // these must be regexp to match the zip entries
-                ".*/R.class$",
-                ".*/R\\$(.*).class$",
-                "$packagePath/Manifest.class$",
-                "$packagePath/Manifest\\$(.*).class$"
-            )
-
+                excludes.add(".*/R.class$")
+                excludes.add(".*/R\\$(.*).class$")
+            }
+            excludes.add("$packagePath/Manifest.class$")
+            excludes.add("$packagePath/Manifest\\$(.*).class$")
             if (!packageBuildConfig) {
                 excludes.add("$packagePath/BuildConfig.class$")
             }

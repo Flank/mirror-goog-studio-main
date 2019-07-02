@@ -18,14 +18,15 @@ package com.android.ide.common.symbols
 
 import com.android.resources.ResourceType
 
-/** Provides IDs for resource assignment. It is essentially a supplier of unique integer values.  */
+/**
+ * Provides IDs for resource assignment.
+ *
+ * [IdProvider.sequential] gives 'realistic' unique IDs, sequential within type.
+ * [IdProvider.constant] gives the constant ID of 0 (invalid resource)
+ */
 interface IdProvider {
 
-    /**
-     * Provides another unique ID.
-     *
-     * @return an ID that has never been returned from this provider.
-     */
+    /** Provides an ID for the next resource parsed. */
     fun next(resourceType: ResourceType): Int
 
     companion object {
@@ -47,11 +48,11 @@ interface IdProvider {
             }
         }
 
-        /** Obtains a new constant ID provider that provides constant IDs of "-1".  */
+        /** Obtains a new constant ID provider that provides constant IDs of "0".  */
         fun constant(): IdProvider {
             return object : IdProvider{
                 override fun next(resourceType: ResourceType): Int {
-                    return -1
+                    return 0
                 }
             }
         }

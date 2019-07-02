@@ -17,6 +17,7 @@
 
 package com.android.builder.symbols
 
+import com.android.ide.common.symbols.IdProvider
 import com.google.common.annotations.VisibleForTesting
 import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
@@ -26,6 +27,7 @@ import com.android.ide.common.symbols.loadDependenciesSymbolTables
 import com.android.ide.common.symbols.mergeAndRenumberSymbols
 import com.android.ide.common.symbols.parseManifest
 import com.android.utils.FileUtils
+import com.google.common.collect.ImmutableList
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -56,7 +58,10 @@ fun processLibraryMainSymbolTable(
         rClassOutputJar: File?,
         symbolFileOut: File,
         platformSymbols: SymbolTable,
-        namespacedRClass: Boolean) {
+        namespacedRClass: Boolean,
+        generateDependencyRClasses: Boolean,
+        idProvider: IdProvider
+) {
 
     // Parse the manifest only when necessary.
     val finalPackageName = mainPackageName ?: getPackageNameFromManifest(parseManifest(manifestFile))
@@ -70,7 +75,9 @@ fun processLibraryMainSymbolTable(
             depSymbolTables,
             platformSymbols,
             namespacedRClass,
-            symbolFileOut.toPath()
+            symbolFileOut.toPath(),
+            generateDependencyRClasses,
+            idProvider
         )
 
     if (sourceOut != null) {
@@ -92,14 +99,16 @@ internal fun processLibraryMainSymbolTable(
     depSymbolTables: Set<SymbolTable>,
     platformSymbols: SymbolTable,
     namespacedRClass: Boolean,
-    symbolFileOut: Path
+    symbolFileOut: Path,
+    generateDependencyRClasses: Boolean = true,
+    idProvider: IdProvider = IdProvider.sequential()
 ): List<SymbolTable> {
     // Merge all the symbols together.
     // We have to rewrite the IDs because some published R.txt inside AARs are using the
     // wrong value for some types, and we need to ensure there is no collision in the
     // file we are creating.
     val allSymbols: SymbolTable = mergeAndRenumberSymbols(
-        finalPackageName, librarySymbols, depSymbolTables, platformSymbols
+        finalPackageName, librarySymbols, depSymbolTables, platformSymbols, idProvider
     )
 
     val mainSymbolTable = if (namespacedRClass) allSymbols.filter(librarySymbols) else allSymbols
@@ -108,8 +117,10 @@ internal fun processLibraryMainSymbolTable(
     Files.createDirectories(symbolFileOut.parent)
     SymbolIo.writeForAar(mainSymbolTable, symbolFileOut)
 
-    val tablesToWrite =
+    return if (generateDependencyRClasses) {
         RGeneration.generateAllSymbolTablesToWrite(allSymbols, mainSymbolTable, depSymbolTables)
-    return tablesToWrite
+    } else {
+        ImmutableList.of(mainSymbolTable)
+    }
 }
 

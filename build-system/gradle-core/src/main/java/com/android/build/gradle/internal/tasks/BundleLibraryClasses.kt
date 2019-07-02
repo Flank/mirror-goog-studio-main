@@ -26,10 +26,14 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.build.gradle.options.BooleanOption
 import com.android.ide.common.workers.WorkerExecutorFacade
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
@@ -65,12 +69,14 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
         private set
 
     @get:Classpath
-    lateinit var classes: FileCollection
-        private set
+    abstract val classes: ConfigurableFileCollection
 
     @get:Input
     var packageBuildConfig: Boolean = false
         private set
+
+    @get:Input
+    abstract val packageRClass: Property<Boolean>
 
     @Input
     fun getToIgnore() = toIgnoreRegExps.get()
@@ -84,12 +90,13 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
             it.submit(
                 BundleLibraryClassesRunnable::class.java,
                 BundleLibraryClassesRunnable.Params(
-                    packageName.value,
-                    toIgnoreRegExps.get(),
-                    output!!.get().asFile,
-                    classes.files,
-                    packageBuildConfig,
-                    jarCreatorType
+                    packageName = packageName.value,
+                    toIgnore = toIgnoreRegExps.get(),
+                    output = output.get().asFile,
+                    input = classes.files,
+                    packageBuildConfig = packageBuildConfig,
+                    packageRClass = packageRClass.get(),
+                    jarCreatorType = jarCreatorType
                 )
             )
         }
@@ -149,7 +156,13 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
             super.configure(task)
 
             task.packageName = lazy { variantScope.variantConfiguration.packageFromManifest }
-            task.classes = inputs
+            task.classes.from(inputs)
+            val packageRClass =
+                variantScope.globalScope.projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES] && publishedType == PublishedConfigType.API_ELEMENTS
+            task.packageRClass.set(packageRClass)
+            if (packageRClass) {
+                task.classes.from(variantScope.artifacts.getFinalProduct<RegularFile>(InternalArtifactType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR))
+            }
             // FIXME pass this as List<TextResources>
             task.toIgnoreRegExps = TaskInputHelper.memoize(toIgnoreRegExps)
             task.packageBuildConfig = variantScope.globalScope.extension.packageBuildConfig
@@ -166,6 +179,7 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
         val output: File,
         val input: Set<File>,
         val packageBuildConfig: Boolean,
+        val packageRClass: Boolean,
         val jarCreatorType: JarCreatorType
     ) :
         Serializable
@@ -176,8 +190,9 @@ class BundleLibraryClassesRunnable @Inject constructor(private val params: Param
 
         val ignorePatterns =
             (LibraryAarJarsTask.getDefaultExcludes(
-                params.packageName,
-                params.packageBuildConfig
+                packagePath = params.packageName,
+                packageBuildConfig = params.packageBuildConfig,
+                packageR = params.packageRClass
             ) + params.toIgnore)
                 .map { Pattern.compile(it) }
 

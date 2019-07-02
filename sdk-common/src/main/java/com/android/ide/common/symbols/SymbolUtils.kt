@@ -34,8 +34,11 @@ import com.google.common.collect.Lists
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.xml.sax.SAXException
+import java.io.Closeable
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.io.Writer
 import java.util.HashMap
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
@@ -52,7 +55,8 @@ fun mergeAndRenumberSymbols(
     mainPackageName: String,
     librarySymbols: SymbolTable,
     dependencySymbols: Collection<SymbolTable>,
-    platformSymbols: SymbolTable
+    platformSymbols: SymbolTable,
+    idProvider: IdProvider = IdProvider.sequential()
 ): SymbolTable {
 
     /*
@@ -69,9 +73,6 @@ fun mergeAndRenumberSymbols(
     tables.add(librarySymbols)
     tables.addAll(dependencySymbols)
 
-    // the ID value provider.
-    val idProvider = IdProvider.sequential()
-
     // first pass, we use two different multi-map to record all symbols.
     // 1. resourceType -> name. This is for all by the Styleable symbols
     // 2. styleable name -> children. This is for styleable only.
@@ -81,8 +82,14 @@ fun mergeAndRenumberSymbols(
     tables.forEach { table ->
         table.symbols.values().forEach { symbol ->
             when (symbol) {
-                is Symbol.AttributeSymbol -> newSymbolMap.put(ResourceType.ATTR, symbol.canonicalName)
-                is Symbol.NormalSymbol -> newSymbolMap.put(symbol.resourceType, symbol.canonicalName)
+                is Symbol.AttributeSymbol -> newSymbolMap.put(
+                    ResourceType.ATTR,
+                    symbol.canonicalName
+                )
+                is Symbol.NormalSymbol -> newSymbolMap.put(
+                    symbol.resourceType,
+                    symbol.canonicalName
+                )
                 is Symbol.StyleableSymbol -> {
                     arrayToAttrs
                         .getOrPut(symbol.canonicalName) { HashSet() }
@@ -134,7 +141,8 @@ fun mergeAndRenumberSymbols(
             // Resources coming from this module might have the "android:" prefix, but the ones
             // coming from dependencies might have the "android_" prefix.
             if (attribute.startsWith(SdkConstants.ANDROID_NS_NAME_PREFIX)
-                    || attribute.startsWith(ANDROID_UNDERSCORE_PREFIX)) {
+                || attribute.startsWith(ANDROID_UNDERSCORE_PREFIX)
+            ) {
                 val name = attribute.substring(SdkConstants.ANDROID_NS_NAME_PREFIX_LEN)
 
                 val platformSymbol = platformSymbols.symbols.get(ResourceType.ATTR, name)
@@ -179,7 +187,7 @@ fun mergeAndRenumberSymbols(
  */
 @Throws(IOException::class)
 fun loadDependenciesSymbolTables(libraries: Iterable<File>): ImmutableSet<SymbolTable> {
-    return  ImmutableSet.builder<SymbolTable>().apply {
+    return ImmutableSet.builder<SymbolTable>().apply {
         for (dependency in libraries) {
             add(SymbolIo.readSymbolListWithPackageName(dependency.toPath()))
         }
@@ -261,7 +269,8 @@ fun generateKeepRules(
                         || type == AndroidManifest.NODE_SERVICE
                         || type == AndroidManifest.NODE_PROVIDER
                         || type == AndroidManifest.NODE_RECEIVER)
-                && (process == null || process.isEmpty() || process.startsWith(":"))) {
+                && (process == null || process.isEmpty() || process.startsWith(":"))
+            ) {
                 continue
             }
         }
@@ -378,15 +387,19 @@ fun valueStringToInt(valueString: String) =
 
 fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
     if (size == 0) {
-        if (!valuesString.subSequence(1, valuesString.length-1).isBlank()) {
+        if (!valuesString.subSequence(1, valuesString.length - 1).isBlank()) {
             failParseArrayLiteral(size, valuesString)
         }
         return ImmutableList.of()
     }
     val ints = ImmutableList.builder<Int>()
 
-    val values = VALUE_ID_SPLITTER.split(valuesString.subSequence(1,
-        valuesString.length - 1)).iterator()
+    val values = VALUE_ID_SPLITTER.split(
+        valuesString.subSequence(
+            1,
+            valuesString.length - 1
+        )
+    ).iterator()
     for (i in 0 until size) {
         if (!values.hasNext()) {
             failParseArrayLiteral(size, valuesString)
@@ -402,4 +415,183 @@ fun parseArrayLiteral(size: Int, valuesString: String): ImmutableList<Int> {
 
 fun failParseArrayLiteral(size: Int, valuesString: String): Nothing {
     throw IOException("""Values string $valuesString should have $size item(s).""")
+}
+
+/**
+ * A visitor to process symbols in a lightweight way.
+ *
+ * Calls should only be made in the sequence exactly once.
+ * [visit] ([symbol] ([child])*)* [visitEnd]
+ */
+interface SymbolListVisitor {
+    fun visit()
+    fun symbol(resourceType: CharSequence, name: CharSequence)
+    /** Visit a child of a styleable symbol, only ever called after styleable symbols. */
+    fun child(name: CharSequence)
+
+    fun visitEnd()
+}
+
+/**
+ * Read a symbol table from [lines] and generate events for the given [visitor].
+ */
+@Throws(IOException::class)
+fun readAarRTxt(lines: Iterator<String>, visitor: SymbolListVisitor) {
+
+    visitor.visit()
+    // When a styleable parent is encountered,
+    // consume any children if the line starts with
+    var styleableChildPrefix: String? = null
+    while (lines.hasNext()) {
+        val line = lines.next()
+        if (styleableChildPrefix != null && line.startsWith(styleableChildPrefix!!)) {
+            // Extract the child name and write it to the same line.
+            val start = styleableChildPrefix!!.length + 1
+            val end = line.indexOf(' ', styleableChildPrefix!!.length)
+            if (end != -1) {
+                visitor.child(line.substring(start, end))
+            }
+            continue
+        }
+
+        // Ignore out-of-order styleable children
+        if (line.startsWith("int styleable ")) {
+            continue
+        }
+        //          start     middle          end
+        //            |         |              |
+        //      "int[] styleable AppCompatTheme {750,75..."
+
+        // Allows the symbol list with package name writer to only keep the type and the name,
+        // so the example becomes "styleable AppCompatTheme <child> <child>"
+        val start = line.indexOf(' ') + 1
+        if (start == 0) {
+            continue
+        }
+        val middle = line.indexOf(' ', start) + 1
+        if (middle == 0) {
+            continue
+        }
+        val end = line.indexOf(' ', middle) + 1
+        if (end == 0) {
+            continue
+        }
+        visitor.symbol(line.subSequence(start, middle - 1), line.subSequence(middle, end - 1))
+        if (line.startsWith("int[] ")) {
+            styleableChildPrefix = "int styleable " + line.substring(middle, end - 1)
+        } else {
+            styleableChildPrefix = null
+        }
+    }
+    visitor.visitEnd()
+}
+
+/** Generate events of an empty symbol table for the given [visitor] */
+fun visitEmptySymbolTable(visitor: SymbolListVisitor) {
+    visitor.visit()
+    visitor.visitEnd()
+}
+
+/**
+ * Writes symbols in the AGP internal 'Symbol list with package name' format.
+ *
+ * This collapses the styleable children so the subsequent lines have the format
+ * `"<type> <canonical_name>[ <child>[ <child>[ ...]]]"`
+ *
+ * See [SymbolIo.writeSymbolListWithPackageName] for use.
+ *
+ * @param packageName The package name for the project.
+ *                    If not null, it will be written as the first line of output.
+ * @param writer The writer to write the resulting symbol table with package name to.
+ */
+class SymbolListWithPackageNameWriter(
+    private val packageName: String?,
+    private val writer: Writer
+) : SymbolListVisitor,
+    Closeable {
+
+    override fun visit() {
+        packageName?.let { writer.append(it) }
+    }
+
+    override fun symbol(resourceType: CharSequence, name: CharSequence) {
+        writer.append('\n')
+        writer.append(resourceType)
+        writer.append(' ')
+        writer.append(name)
+    }
+
+    override fun child(name: CharSequence) {
+        writer.append(' ')
+        writer.append(name)
+    }
+
+    override fun visitEnd() {
+        writer.append('\n')
+    }
+
+    override fun close() {
+        writer.close()
+    }
+}
+
+/**
+ * Collects symbols in an in-memory SymbolTable.
+ *
+ * @param packageName The package for the symbol table
+ *
+ */
+class SymbolTableBuilder(packageName: String) : SymbolListVisitor {
+    private val symbolTableBuilder: SymbolTable.Builder =
+        SymbolTable.builder().tablePackage(packageName)
+
+    private var currentStyleable: String? = null
+    private var children = ImmutableList.builder<String>()
+
+    private var _symbolTable: SymbolTable? = null
+
+    /**
+     * The collected symbols.
+     * Will throw [IllegalStateException] if called before the symbol table has been visited.
+     */
+    val symbolTable: SymbolTable
+        get() = _symbolTable
+            ?: throw IllegalStateException("Must finish visit before getting table.")
+
+    override fun visit() {
+    }
+
+    override fun symbol(resourceType: CharSequence, name: CharSequence) {
+        symbol(ResourceType.fromClassName(resourceType.toString())!!, name.toString())
+    }
+
+    private fun symbol(resourceType: ResourceType, name: String) {
+        currentStyleable?.let {
+            symbolTableBuilder.add(Symbol.StyleableSymbol(it, ImmutableList.of(), children.build()))
+            currentStyleable = null
+            children = ImmutableList.builder()
+        }
+
+        when (resourceType) {
+            ResourceType.STYLEABLE -> currentStyleable = name
+            ResourceType.ATTR -> symbolTableBuilder.add(Symbol.AttributeSymbol(name, 0))
+            else -> symbolTableBuilder.add(Symbol.NormalSymbol(resourceType, name, 0))
+        }
+    }
+
+    override fun child(name: CharSequence) {
+        children.add(name.toString())
+    }
+
+    override fun visitEnd() {
+        _symbolTable = symbolTableBuilder.build()
+    }
+}
+
+fun rTxtToSymbolTable(inputStream: InputStream, packageName: String): SymbolTable {
+    val symbolTableBuilder = SymbolTableBuilder(packageName)
+    inputStream.bufferedReader().use {
+        readAarRTxt(it.lines().iterator(), symbolTableBuilder)
+    }
+    return symbolTableBuilder.symbolTable
 }

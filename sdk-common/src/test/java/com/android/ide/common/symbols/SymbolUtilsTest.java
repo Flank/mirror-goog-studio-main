@@ -18,12 +18,17 @@ package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
+import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayInputStream;
+import java.io.CharArrayWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -32,6 +37,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 /** Tests for {@link SymbolUtils} class. */
 public class SymbolUtilsTest {
@@ -265,5 +272,130 @@ public class SymbolUtilsTest {
                         "-keep class android.support.v7.widget.Toolbar { <init>(...); }",
                         "-keep class android.support.design.widget.CoordinatorLayout { <init>(...); }",
                         "-keep class android.support.design.widget.FloatingActionButton { <init>(...); }");
+    }
+
+
+    /**
+     * Test to verify that the SymbolUtils.readAarRTxt method calls the correct callbacks on the
+     * visitor
+     */
+    @Test
+    public void testReadAarRTxt() throws IOException {
+        // Given
+        ImmutableList<String> lines =
+                ImmutableList.of(
+                        "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } ",
+                        "int styleable LimitedSizeLinearLayout_android_max_width 0 ",
+                        "int styleable LimitedSizeLinearLayout_android_max_height 1 ",
+                        "int string app_name 0x7f030000");
+        SymbolListVisitor visitor = mock(SymbolListVisitor.class);
+
+        // When
+        SymbolUtils.readAarRTxt(lines.iterator(), visitor);
+
+        // Then
+        InOrder inOrder = Mockito.inOrder(visitor);
+        inOrder.verify(visitor).visit();
+        inOrder.verify(visitor).symbol("styleable", "LimitedSizeLinearLayout");
+        inOrder.verify(visitor).child("android_max_width");
+        inOrder.verify(visitor).child("android_max_height");
+        inOrder.verify(visitor).symbol("string", "app_name");
+        inOrder.verify(visitor).visitEnd();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    /**
+     * Test to verify that the SymbolUtils.readAarRTxt method calls the correct callbacks on the
+     * visitor
+     */
+    @Test
+    public void testReadAarRTxtWithCorruptChildren() throws IOException {
+        // Given
+        ImmutableList<String> lines =
+                ImmutableList.of(
+                        "int[] styleable LimitedSizeLinearLayout { } ",
+                        "int styleable LimitedSizeLinearLayout_android_max_height 1 ",
+                        "int string app_name 0x7f030000",
+                        "int styleable LimitedSizeLinearLayout_android_max_width 0 ");
+        SymbolListVisitor visitor = mock(SymbolListVisitor.class);
+
+        // When
+        SymbolUtils.readAarRTxt(lines.iterator(), visitor);
+
+        // Then
+        InOrder inOrder = Mockito.inOrder(visitor);
+        inOrder.verify(visitor).visit();
+        inOrder.verify(visitor).symbol("styleable", "LimitedSizeLinearLayout");
+        inOrder.verify(visitor).child("android_max_height");
+        inOrder.verify(visitor).symbol("string", "app_name");
+        inOrder.verify(visitor).visitEnd();
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    public void testSymbolListWithPackageNameWriter_BaseCase() {
+        // Given
+        CharArrayWriter charArrayWriter = new CharArrayWriter();
+        try (SymbolListWithPackageNameWriter writer =
+                new SymbolListWithPackageNameWriter("com.example.app", charArrayWriter)) {
+            // When
+            writer.visit();
+            writer.visitEnd();
+        }
+
+        // Then
+        assertThat(charArrayWriter.toString()).isEqualTo("com.example.app\n");
+    }
+
+    @Test
+    public void testSymbolListWithPackageNameWriter_Example() {
+        // Given
+        CharArrayWriter writer = new CharArrayWriter();
+        try (SymbolListWithPackageNameWriter visitor =
+                new SymbolListWithPackageNameWriter("com.example.app", writer)) {
+            // When
+            visitor.visit();
+            visitor.symbol("styleable", "LimitedSizeLinearLayout");
+            visitor.child("android_max_width");
+            visitor.child("android_max_height");
+            visitor.symbol("string", "app_name");
+            visitor.visitEnd();
+        }
+
+        // Then
+        assertThat(writer.toString())
+                .isEqualTo(
+                        "com.example.app\n"
+                                + "styleable LimitedSizeLinearLayout android_max_width android_max_height\n"
+                                + "string app_name\n");
+    }
+
+    @Test
+    public void testSymbolTableBuilder() {
+        // Given
+        SymbolTableBuilder visitor = new SymbolTableBuilder("com.example.app");
+        // When
+        visitor.visit();
+        visitor.symbol("styleable", "LimitedSizeLinearLayout");
+        visitor.child("android_max_width");
+        visitor.child("android_max_height");
+        visitor.symbol("string", "app_name");
+        visitor.visitEnd();
+
+        // Then
+        assertThat(visitor.getSymbolTable())
+                .isEqualTo(
+                        SymbolTable.builder()
+                                .tablePackage("com.example.app")
+                                .add(
+                                        Symbol.createAndValidateSymbol(
+                                                ResourceType.STRING, "app_name", 0))
+                                .add(
+                                        Symbol.createAndValidateStyleableSymbol(
+                                                "LimitedSizeLinearLayout",
+                                                ImmutableList.of(),
+                                                ImmutableList.of(
+                                                        "android_max_width", "android_max_height")))
+                                .build());
     }
 }

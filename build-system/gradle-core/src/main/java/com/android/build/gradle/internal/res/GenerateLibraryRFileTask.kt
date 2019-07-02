@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.res
 import com.android.SdkConstants
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.ExistingBuildElements
@@ -29,14 +30,17 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
+import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
@@ -80,8 +84,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
     @get:OutputFile abstract val symbolsWithPackageNameOutputFile: RegularFileProperty
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.NONE) lateinit var dependencies: FileCollection
-        private set
+    @get:PathSensitive(PathSensitivity.NONE) abstract val dependencies: ConfigurableFileCollection
 
     @get:Input lateinit var packageForR: Provider<String> private set
 
@@ -98,6 +101,9 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
     @get:Input
     var namespacedRClass: Boolean = false
         private set
+
+    @get:Input
+    abstract val compileClasspathLibraryRClasses: Property<Boolean>
 
     @Throws(IOException::class)
     override fun doFullTaskAction() {
@@ -118,6 +124,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                     rClassOutputJar.get().asFile,
                     textSymbolOutputFileProperty.get().asFile,
                     namespacedRClass,
+                    compileClasspathLibraryRClasses.get(),
                     symbolsWithPackageNameOutputFile.get().asFile
                 )
             )
@@ -134,6 +141,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
         val rClassOutputJar: File?,
         val textSymbolOutputFile: File,
         val namespacedRClass: Boolean,
+        val compileClasspathLibraryRClasses: Boolean,
         val symbolsWithPackageNameOutputFile: File
     ) : Serializable
 
@@ -143,6 +151,11 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
 
             val symbolTable = SymbolIo.readRDef(params.localResourcesFile.toPath())
 
+            val idProvider = if (params.compileClasspathLibraryRClasses) {
+                IdProvider.constant()
+            } else {
+                IdProvider.sequential()
+            }
             processLibraryMainSymbolTable(
                 librarySymbols = symbolTable,
                 libraries = params.dependencies,
@@ -152,7 +165,10 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                 rClassOutputJar = params.rClassOutputJar,
                 symbolFileOut = params.textSymbolOutputFile,
                 platformSymbols = androidAttrSymbol,
-                namespacedRClass = params.namespacedRClass)
+                namespacedRClass = params.namespacedRClass,
+                generateDependencyRClasses = !params.compileClasspathLibraryRClasses,
+                idProvider = idProvider
+            )
 
             SymbolIo.writeSymbolListWithPackageName(
                 params.textSymbolOutputFile.toPath(),
@@ -211,16 +227,29 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
         override fun configure(task: GenerateLibraryRFileTask) {
             super.configure(task)
 
+            val projectOptions = variantScope.globalScope.projectOptions
+
             task.platformAttrRTxt = variantScope.globalScope.platformAttrs
 
             task.applicationId = TaskInputHelper.memoizeToProvider(task.project) {
                 variantScope.variantData.variantConfiguration.applicationId
             }
 
-            task.dependencies = variantScope.getArtifactFileCollection(
-                    RUNTIME_CLASSPATH,
+
+            if (!projectOptions[BooleanOption.NAMESPACED_R_CLASS]) {
+                // Only include the dependency symbol tables when not using namespaced R classes.
+                val consumedConfigType =
+                    if (projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES]) {
+                        COMPILE_CLASSPATH
+                    } else {
+                        RUNTIME_CLASSPATH
+                    }
+                task.dependencies.from(variantScope.getArtifactFileCollection(
+                    consumedConfigType,
                     ALL,
-                    AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
+                    AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME
+                ))
+            }
 
             task.packageForR = TaskInputHelper.memoizeToProvider(task.project) {
                 Strings.nullToEmpty(variantScope.variantConfiguration.originalApplicationId)
@@ -230,6 +259,8 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                 InternalArtifactType.MERGED_MANIFESTS, task.manifestFiles)
 
             task.namespacedRClass = variantScope.globalScope.projectOptions[BooleanOption.NAMESPACED_R_CLASS]
+
+            task.compileClasspathLibraryRClasses.set(projectOptions[BooleanOption.COMPILE_CLASSPATH_LIBRARY_R_CLASSES])
 
             task.outputScope = variantScope.outputScope
 

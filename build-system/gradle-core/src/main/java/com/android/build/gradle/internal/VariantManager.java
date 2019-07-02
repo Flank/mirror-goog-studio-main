@@ -716,8 +716,7 @@ public class VariantManager implements VariantModel {
                     });
         }
 
-        // API Jar: Produce a single API jar from the AAR
-        // TODO(b/136244851): Add support for generating a compilation R class.
+        // API Jar: Produce a single API jar that can also contain the library R class from the AAR
         Usage apiUsage = project.getObjects().named(Usage.class, Usage.JAVA_API);
         dependencies.registerTransform(
                 AarToClassTransform.class,
@@ -731,6 +730,11 @@ public class VariantManager implements VariantModel {
                                 params.getForCompileUse().set(true);
                                 params.getAutoNamespaceDependencies()
                                         .set(autoNamespaceDependencies);
+                                params.getGenerateRClassJar()
+                                        .set(
+                                                projectOptions.get(
+                                                        BooleanOption
+                                                                .COMPILE_CLASSPATH_LIBRARY_R_CLASSES));
                             });
                 });
 
@@ -748,6 +752,7 @@ public class VariantManager implements VariantModel {
                                 params.getForCompileUse().set(false);
                                 params.getAutoNamespaceDependencies()
                                         .set(autoNamespaceDependencies);
+                                params.getGenerateRClassJar().set(false);
                             });
                 });
 

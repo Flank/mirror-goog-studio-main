@@ -64,6 +64,7 @@ class BundleLibraryClassesRunnableTest {
                 output = output,
                 input = input,
                 packageBuildConfig = false,
+                packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
@@ -95,12 +96,46 @@ class BundleLibraryClassesRunnableTest {
                 output = output,
                 input = input,
                 packageBuildConfig = false,
+                packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
         assertThatZip(output).contains("A.class")
         assertThatZip(output).doesNotContain("test/R.class")
         assertThatZip(output).doesNotContain("test/R\$string.class")
+        assertThatZip(output).doesNotContain("test/BuildConfig.class")
+        assertThatZip(output).doesNotContain("test/Manifest.class")
+        assertThatZip(output).doesNotContain("test/Manifest\$nested.class")
+    }
+
+    @Test
+    fun testBundleRClass() {
+        val output = tmp.newFolder().resolve("output.jar")
+        val input = setOf(
+            tmp.newFolder().also { dir ->
+                dir.resolve("A.class").createNewFile()
+                dir.resolve("test").mkdirs()
+                dir.resolve("test/R.class").createNewFile()
+                dir.resolve("test/R\$string.class").createNewFile()
+                dir.resolve("test/BuildConfig.class").createNewFile()
+                dir.resolve("test/Manifest.class").createNewFile()
+                dir.resolve("test/Manifest\$nested.class").createNewFile()
+            }
+        )
+        BundleLibraryClassesRunnable(
+            BundleLibraryClassesRunnable.Params(
+                packageName = "test",
+                toIgnore = listOf(),
+                output = output,
+                input = input,
+                packageBuildConfig = false,
+                packageRClass = true,
+                jarCreatorType = JarCreatorType.JAR_FLINGER
+            )
+        ).run()
+        assertThatZip(output).contains("A.class")
+        assertThatZip(output).contains("test/R.class")
+        assertThatZip(output).contains("test/R\$string.class")
         assertThatZip(output).doesNotContain("test/BuildConfig.class")
         assertThatZip(output).doesNotContain("test/Manifest.class")
         assertThatZip(output).doesNotContain("test/Manifest\$nested.class")
@@ -131,6 +166,7 @@ class BundleLibraryClassesRunnableTest {
                 output = output,
                 input = setOf(inputJar),
                 packageBuildConfig = false,
+                packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
@@ -162,6 +198,7 @@ class BundleLibraryClassesRunnableTest {
                 output = output,
                 input = setOf(inputJar),
                 packageBuildConfig = false,
+                packageRClass = false,
                 jarCreatorType = JarCreatorType.JAR_FLINGER
             )
         ).run()
