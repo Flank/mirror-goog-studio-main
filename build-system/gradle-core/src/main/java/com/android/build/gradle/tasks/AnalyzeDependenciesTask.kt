@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.android.builder.core.VariantTypeImpl
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
@@ -59,6 +60,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
     private var apiDirectDependenciesConfiguration: Configuration? = null
     private lateinit var allDirectDependencies: Collection<Dependency>
 
+    private var isVariantLibrary: Boolean? = null
+
     override fun doTaskAction() {
         val variantDepsHolder = VariantDependenciesHolder(
             allDirectDependencies,
@@ -87,11 +90,12 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
                     outputDirectory.asFile.get(),
                     "dependenciesReport.json"))
 
-            // TODO: Report misconfigured dependencies only for library modules
-            reporter.writeMisconfiguredDependencies(
-                File(
-                    outputDirectory.asFile.get(),
-                    "apiToImplementation.json"))
+            // Report misconfigured dependencies only for library modules
+            if (isVariantLibrary == true) {
+                reporter.writeMisconfiguredDependencies(
+                    File(outputDirectory.asFile.get(), "apiToImplementation.json")
+                )
+            }
         }
     }
 
@@ -181,6 +185,8 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
             task.allDirectDependencies = scope
                 .variantDependencies
                 .incomingRuntimeDependencies
+
+            task.isVariantLibrary = (scope.type == VariantTypeImpl.LIBRARY)
         }
 
         override fun handleProvider(taskProvider: TaskProvider<out AnalyzeDependenciesTask>) {
