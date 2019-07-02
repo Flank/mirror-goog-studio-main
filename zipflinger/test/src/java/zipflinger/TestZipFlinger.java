@@ -470,8 +470,8 @@ public class TestZipFlinger extends TestBase {
         Files.copy(src, dst, StandardCopyOption.REPLACE_EXISTING);
 
         Map<String, Entry> entries = ZipArchive.listEntries(src.toFile());
-        Assert.assertTrue("Entry compressed", entries.get("uncompressed.random").isCompressed());
-        Assert.assertTrue("Entry !compressed", !entries.get("compressed.random").isCompressed());
+        Assert.assertTrue("Entry compressed", entries.get("compressed.random").isCompressed());
+        Assert.assertTrue("Entry !compressed", !entries.get("uncompressed.random").isCompressed());
 
         try (ZipArchive archive = new ZipArchive(dst.toFile())) {
             ZipSource zipSource = new ZipSource(src.toFile());
