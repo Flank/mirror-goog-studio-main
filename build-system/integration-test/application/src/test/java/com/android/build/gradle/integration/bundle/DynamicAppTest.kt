@@ -107,6 +107,8 @@ class DynamicAppTest {
     private val mainDexListClassesInBundle: List<String> =
         mainDexClasses.plus("Lcom/example/feature1/Feature1ClassNeededInMainDexList;")
 
+    private val jarClasses:  List<String> = listOf("Lcom/example/Foo/Foo;")
+
     @Test
     @Throws(IOException::class)
     fun `test model contains feature information`() {
@@ -212,6 +214,9 @@ class DynamicAppTest {
             // Legacy multidex is applied to the dex of the base directly for the case
             // when the build author has excluded all the features from fusing.
             assertThat(dex).containsExactlyClassesIn(mainDexClasses)
+
+            val dex2 = Dex(it.getEntry("base/dex/classes2.dex")!!)
+            assertThat(dex2).containsClassesIn(jarClasses)
 
             // The main dex list must also analyze the classes from features.
             val mainDexListInBundle =

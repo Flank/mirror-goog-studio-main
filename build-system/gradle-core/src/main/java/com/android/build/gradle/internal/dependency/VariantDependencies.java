@@ -350,13 +350,9 @@ public class VariantDependencies {
                 runtimeElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                 runtimeElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
                 runtimeElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
-
-                // if the variant is not a library, then the publishing configuration should
-                // not extend from anything. It's mostly there to access the artifacts from
-                // another project but it shouldn't bring any dependencies with it.
-                if (variantType.isAar()) {
-                    runtimeElements.extendsFrom(runtimeClasspath);
-                }
+                // always extend from the runtimeClasspath. Let the FilteringSpec handle what
+                // should be packaged.
+                runtimeElements.extendsFrom(runtimeClasspath);
                 elements.put(RUNTIME_ELEMENTS, runtimeElements);
 
                 Configuration apiElements = configurations.maybeCreate(variantName + "ApiElements");

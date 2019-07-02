@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.internal.tasks.featuresplit
 
+import org.gradle.api.Action
 import com.android.build.api.attributes.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -32,8 +34,10 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.artifacts.result.ResolvedComponentResult
+import org.gradle.api.attributes.AttributeContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -41,7 +45,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 
+private val jarTypeOnly = Action { container: AttributeContainer ->
+    container.attribute(ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.type)
+}
+
 /** Task to write the list of transitive dependencies.  */
+@CacheableTask
 abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
     @get:OutputFile
@@ -49,9 +58,22 @@ abstract class PackagedDependenciesWriterTask : NonIncrementalTask() {
 
     @get:Input
     val content: Set<String> by lazy {
+        // incoming.ResolutionResult will not return direct file dependencies for jars, and so
+        // jars would not be properly marked as packed in an apk. Instead query via artifactView,
+        // in addition filtering only for file based dependencies. This is checked by a
+        // DynamicApp integration test (`test bundleDebug task`), which checks jar deps are properly
+        // packaged.
         runtimeClasspath.incoming.resolutionResult.allComponents
             .asSequence()
             .map { it.toIdString() }
+            .plus(
+                runtimeClasspath.incoming.artifactView { config ->
+                        config.attributes(jarTypeOnly)
+                        config.componentFilter { id ->
+                            !(id is ProjectComponentIdentifier || id is ModuleComponentIdentifier) }}
+                    .artifacts
+                    .asSequence()
+                    .map{ it.toIdString()})
             .toSortedSet()
     }
 
