@@ -17,7 +17,6 @@ package com.android.ddmlib.utils;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.Log;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -89,8 +88,11 @@ public class FilePermissionUtil {
                 return 0644;
             }
         }
-        Log.d("ddms", String.format("Reading file permision of %s as: %s",
-                file.getAbsoluteFile(), PosixFilePermissions.toString(perms)));
+        Log.d(
+                "ddms",
+                String.format(
+                        "Reading file permission of %s as: %s",
+                        file.getAbsoluteFile(), PosixFilePermissions.toString(perms)));
         int result = 0;
         for (PosixFilePermission p : perms) {
             result += numericalPermission(p);
