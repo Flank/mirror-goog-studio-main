@@ -33,7 +33,8 @@ abstract class Parameter<T>(
   open val enabled: () -> Boolean = { true }
   abstract val defaultValue: T
   abstract var value: T
-  lateinit var wizardParameterData: WizardParameterData
+  // should be updated only by [Parameters]
+  internal lateinit var wizardParameterData: WizardParameterData
 
   /**
    * Tells if the [Parameter] should be shown in UI.
