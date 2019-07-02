@@ -47,6 +47,8 @@ message Command {
     GC = 401; // No payload
     HEAP_DUMP = 402;  // No payload
     MEMORY_ALLOC_SAMPLING = 403;
+    START_ALLOC_TRACKING = 404;
+    STOP_ALLOC_TRACKING = 405;
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600
@@ -88,6 +90,8 @@ message Command {
     // 401 Reserved for CommandType.GC
     // 402 Reserved for CommandType.HEAP_DUMP
     MemoryAllocSamplingData memory_alloc_sampling = 403;
+    StartAllocTracking start_alloc_tracking = 404;
+    StopAllocTracking stop_alloc_tracking = 405;
 
     // Energy Profiler Prefix = 500
     // Event Profiler Prefix = 600

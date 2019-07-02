@@ -129,6 +129,7 @@ MemoryTrackingEnv::MemoryTrackingEnv(
       is_live_tracking_(false),
       app_id_(getpid()),
       class_class_tag_(-1),
+      last_tracking_start_time_ns_(-1),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
       max_stack_depth_(mem_config.max_stack_depth()),
@@ -287,6 +288,21 @@ void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref,
                            caller_address);
 }
 
+void MemoryTrackingEnv::HandleStartAllocTracking(
+    const proto::Command& command) {
+  auto& track_data = command.start_alloc_tracking();
+  bool track_result = StartLiveTracking(track_data.request_time());
+  profiler::EnqueueAllocationInfoEvents(command, last_tracking_start_time_ns_,
+                                        track_result);
+}
+
+void MemoryTrackingEnv::HandleStopAllocTracking(const proto::Command& command) {
+  auto& track_data = command.stop_alloc_tracking();
+  bool track_result = StopLiveTracking(track_data.request_time());
+  profiler::EnqueueAllocationInfoEvents(command, last_tracking_start_time_ns_,
+                                        track_result);
+}
+
 /**
  * Starts live allocation tracking. The initialization process involves:
  * - Hooks on requried callbacks for alloc tracking
@@ -299,15 +315,15 @@ void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref,
  * sessions, so we don't know which tag from a previous session is still alive
  * without caching an extra set to track what the agent has tagged.
  */
-void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
+bool MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
   std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
   if (is_live_tracking_) {
-    return;
+    return false;
   }
   Stopwatch stopwatch;
   is_live_tracking_ = true;
-  current_capture_time_ns_ = timestamp;
+  current_capture_time_ns_ = last_tracking_start_time_ns_ = timestamp;
   total_alloc_count_ = 0;
   total_free_count_ = 0;
   tagged_alloc_count_ = 0;
@@ -364,6 +380,8 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   IterateThroughHeap();
   Log::V("Tracking initialization took: %lldns",
          (long long)stopwatch.GetElapsed());
+
+  return true;
 }
 
 /**
@@ -372,11 +390,11 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
  * - Class/Method/Stack data are kept around so they can be referenced across
  *   tracking sessions.
  */
-void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
+bool MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
   std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
   if (!is_live_tracking_) {
-    return;
+    return false;
   }
   is_live_tracking_ = false;
   SetAllocationCallbacksStatus(false);
@@ -393,6 +411,8 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   }
   known_methods_.clear();
   thread_id_map_.clear();
+
+  return true;
 }
 
 /**

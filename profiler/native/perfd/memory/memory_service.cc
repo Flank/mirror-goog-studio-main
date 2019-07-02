@@ -45,6 +45,7 @@ using profiler::proto::SetAllocationSamplingRateRequest;
 using profiler::proto::SetAllocationSamplingRateResponse;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
+using profiler::proto::TrackStatus;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
 
@@ -151,7 +152,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
   auto result = collectors_.find(pid);
   auto* status = response->mutable_status();
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, status, HeapDumpStatus::FAILURE_UNKNOWN)
+      result, collectors_, status, HeapDumpStatus::NOT_PROFILING)
 
   auto& collector = result->second;
   if (collector.IsRunning()) {
@@ -181,8 +182,9 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     TrackAllocationsResponse* response) {
   Trace trace("MEM:TrackAllocations");
   auto result = collectors_.find(request->session().pid());
+  auto* status = response->mutable_status();
   PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
-      result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
+      result, collectors_, status, TrackStatus::NOT_PROFILING)
 
   if ((result->second).IsRunning()) {
     // Legacy allocation tracking is handled in the perfd-proxy layer.
@@ -219,10 +221,10 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     (result->second)
         .TrackAllocations(request->request_time(), request->enabled(),
                           request->legacy(), response);
-    switch (response->status()) {
-      case TrackAllocationsResponse::SUCCESS:
-      case TrackAllocationsResponse::IN_PROGRESS:
-      case TrackAllocationsResponse::NOT_ENABLED:
+    switch (response->status().status()) {
+      case TrackStatus::SUCCESS:
+      case TrackStatus::IN_PROGRESS:
+      case TrackStatus::NOT_ENABLED:
         return ::grpc::Status::OK;
       default:
         return ::grpc::Status(
@@ -230,7 +232,7 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
             "Unknown issues when attempting to set allocation tracking.");
     }
   } else {
-    response->set_status(TrackAllocationsResponse::NOT_PROFILING);
+    status->set_status(TrackStatus::NOT_PROFILING);
     return ::grpc::Status::OK;
   }
 }

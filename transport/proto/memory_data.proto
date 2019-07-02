@@ -69,7 +69,11 @@ message HeapDumpStatus {
     // A heap dump is already in progress.
     IN_PROGRESS = 2;
     // Profilng has not started on the specified pid.
+    // Only used by the legacy pipeline.
+    // TODO investigate whether it can be removed after full migration.
     NOT_PROFILING = 3;
+    // Only used by the legacy pipeline.
+    // TODO investigate whether it can be removed after full migration.
     FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
@@ -88,6 +92,62 @@ message MemoryAllocSamplingData {
   // When set to 0, allocation tracking is turned off.
   // When set to 1, every allocation is tracked (i.e. full tracking).
   int32 sampling_num_interval = 1;
+}
+
+// Proto for describing an allocation tracking record.
+// For the new pipeline, this message will appear in a pair of
+// |MEMORY_ALLOC_TRACKING| events. For the first event, the AllocationsInfo
+// represents the unfinished record (e.g. end_time == LLONG_MAX), while
+// the second event contains the AllocationsInfo that has both the end_time
+// and success fields set.
+message AllocationsInfo {
+  int64 start_time = 1;
+  // Set to LLONG_MAX if the heap dump has not finished.
+  int64 end_time = 2;
+  bool legacy = 3;
+  // Unset if the tracking record is not properly finished (e.g. if the
+  // profilers terminated before a end-tracking request was issued).
+  bool success = 4;
+}
+
+message MemoryAllocTrackingData {
+  AllocationsInfo info = 1;
+}
+
+message TrackStatus {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    IN_PROGRESS = 2;  // A tracking sessin is already in-progress
+    NOT_ENABLED = 3; // A tracking session is not started.
+    // Profilng has not started on the specified pid.
+    // Only used by the legacy pipeline.
+    // TODO investigate whether it can be removed after full migration.
+    NOT_PROFILING = 4;
+    // Only used by the legacy pipeline.
+    // TODO investigate whether it can be removed after full migration.
+    FAILURE_UNKNOWN = 5;
+  }
+  Status status = 1;
+  // If |SUCESS|, the start time of the AllocationInfo message which
+  // can be used to retrieve the record.
+  int64 start_time = 2;
+}
+
+// Return status for the TRACK_ALLOCATIONS command. Caller of the
+// command should query this status message using the command id to
+// check if the command was successful. If |SUCCESS|, the caller can
+// expect to receive a corresponding |MEMORY_ALLOC_TRACKING| event.
+message MemoryAllocTrackingStatusData {
+  TrackStatus status = 1;
+}
+
+message StartAllocTracking {
+  int64 request_time = 1;
+}
+
+message StopAllocTracking {
+  int64 request_time = 1;
 }
 
 message AllocatedClass {

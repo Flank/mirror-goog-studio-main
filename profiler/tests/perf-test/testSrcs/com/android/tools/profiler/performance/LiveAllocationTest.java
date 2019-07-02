@@ -26,6 +26,7 @@ import com.android.tools.perflogger.WindowDeviationAnalyzer;
 import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.memory.MemoryStubWrapper;
+import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
 import java.time.Instant;
 import java.util.Arrays;
@@ -89,8 +90,8 @@ public class LiveAllocationTest {
                     new MemoryStubWrapper(myPerfDriver.getGrpc().getMemoryStub());
             TrackAllocationsResponse trackResponse =
                     myStubWrapper.startAllocationTracking(myPerfDriver.getSession());
-            assertThat(trackResponse.getStatus())
-                    .isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+            assertThat(trackResponse.getStatus().getStatus())
+                    .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
         }
 
         FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();

@@ -30,6 +30,7 @@ using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::HeapDumpStatus;
 using ::profiler::proto::MemoryData;
 using ::profiler::proto::TrackAllocationsResponse;
+using ::profiler::proto::TrackStatus;
 using ::profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
@@ -140,11 +141,12 @@ void MemoryCache::TrackAllocations(int64_t request_time, bool enabled,
                                    TrackAllocationsResponse* response) {
   std::lock_guard<std::mutex> lock(allocations_info_mutex_);
 
+  auto* status = response->mutable_status();
   if (enabled == is_allocation_tracking_enabled_) {
     if (is_allocation_tracking_enabled_) {
-      response->set_status(TrackAllocationsResponse::IN_PROGRESS);
+      status->set_status(TrackStatus::IN_PROGRESS);
     } else {
-      response->set_status(TrackAllocationsResponse::NOT_ENABLED);
+      status->set_status(TrackStatus::NOT_ENABLED);
     }
   } else {
     if (enabled) {
@@ -152,18 +154,21 @@ void MemoryCache::TrackAllocations(int64_t request_time, bool enabled,
       info.set_start_time(request_time);
       info.set_end_time(kUnfinishedTimestamp);
       info.set_legacy(legacy);
-      info.set_status(AllocationsInfo::IN_PROGRESS);
 
       allocations_info_.Add(info);
       response->mutable_info()->CopyFrom(info);
+
+      status->set_start_time(request_time);
     } else {
       assert(allocations_info_.size() > 0);
       AllocationsInfo& info = allocations_info_.back();
       info.set_end_time(request_time);
-      info.set_status(AllocationsInfo::COMPLETED);
+      info.set_success(true);
       response->mutable_info()->CopyFrom(info);
+
+      status->set_start_time(info.start_time());
     }
-    response->set_status(TrackAllocationsResponse::SUCCESS);
+    status->set_status(TrackStatus::SUCCESS);
     is_allocation_tracking_enabled_ = enabled;
   }
 }

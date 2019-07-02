@@ -17,9 +17,11 @@
 #define MEMORY_STATS_LOGGER_H
 
 #include <unistd.h>
+
 #include <cstdint>
 
 #include "proto/memory_data.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 
 namespace profiler {
 
@@ -29,6 +31,18 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 // Queues garbage collection stats to be sent to perfd.
 // TODO: add count+bytes freed information.
 void EnqueueGcStats(int64_t start_time, int64_t end_time);
+
+// Generates and queues the new-pipelne MEMORY_ALLOC_TRACKING and
+// MEMORY_ALLOC_TRACKING_STATUS events to be sent to the daemon.
+// |track_start_timestamp| is the time when the current allocation
+// tracking capture was first enabled, which is the id used for grouping
+// the start and end tracking event.
+// |command_success| indicates whether the start/stop request was successful.
+// e.g. the start request could fail if tracking is already in progress, in
+// which case no new AllocationsInfo will be generated.
+void EnqueueAllocationInfoEvents(const proto::Command& command,
+                                 int64_t track_start_timestamp,
+                                 bool command_success);
 
 // Queues the BatchAllocationContexts and BatchAllocationEvents to be sent to
 // perfd.

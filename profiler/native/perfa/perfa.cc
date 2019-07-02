@@ -298,6 +298,18 @@ void InitializeProfiler(JavaVM* vm, jvmtiEnv* jvmti_env,
             ->SetSamplingRate(
                 command->memory_alloc_sampling().sampling_num_interval());
       });
+  Agent::Instance().RegisterCommandHandler(
+      Command::START_ALLOC_TRACKING,
+      [vm, agent_config](const Command* command) -> void {
+        MemoryTrackingEnv::Instance(vm, agent_config.mem())
+            ->HandleStartAllocTracking(*command);
+      });
+  Agent::Instance().RegisterCommandHandler(
+      Command::STOP_ALLOC_TRACKING,
+      [vm, agent_config](const Command* command) -> void {
+        MemoryTrackingEnv::Instance(vm, agent_config.mem())
+            ->HandleStopAllocTracking(*command);
+      });
 
   // Perf-test currently waits on this message to determine that agent
   // has finished profiler initialization.

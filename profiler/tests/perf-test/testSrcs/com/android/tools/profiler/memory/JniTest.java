@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler.memory;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
@@ -23,13 +25,10 @@ import com.android.tools.profiler.TestUtils;
 import com.android.tools.profiler.proto.Memory.*;
 import com.android.tools.profiler.proto.MemoryProfiler.MemoryData;
 import com.android.tools.profiler.proto.MemoryProfiler.TrackAllocationsResponse;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.util.HashSet;
 import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JniTest {
     private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
@@ -75,7 +74,7 @@ public class JniTest {
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
                 stubWrapper.startAllocationTracking(myPerfDriver.getSession());
-        assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+        assertThat(trackResponse.getStatus().getStatus()).isEqualTo(TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
         assertThat(androidDriver.waitForInput("Tracking initialization")).isTrue();
 

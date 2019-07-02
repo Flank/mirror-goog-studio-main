@@ -197,35 +197,8 @@ message ListHeapDumpInfosResponse {
   repeated HeapDumpInfo infos = 1;
 }
 
-// Proto for describing an allocation tracking record.
-// Simliar to HeapDumpInfo, an AllocationsInfo is returned if either the
-// start_time or end_time falls within the requested time window.
-// It is the responsibility of the requester to dedupe a completed info if
-// there was an unfinished info that was previously sent.
-message AllocationsInfo {
-  enum Status {
-    UNSPECIFIED = 0;
-    IN_PROGRESS = 1;
-    COMPLETED = 2;
-    FAILURE_UNKNOWN = 3;
-  }
-
-  Status status = 1;
-  int64 start_time = 2;
-  int64 end_time = 3;
-  bool legacy = 4;
-}
-
 message TrackAllocationsResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    IN_PROGRESS = 2;
-    NOT_ENABLED = 3;
-    NOT_PROFILING = 4;
-    FAILURE_UNKNOWN = 5;
-  }
-  Status status = 1;
+  TrackStatus status = 1;
   AllocationsInfo info = 2;
 }
 

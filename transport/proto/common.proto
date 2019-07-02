@@ -78,6 +78,10 @@ message Event {
     MEMORY_HEAP_DUMP_STATUS = 404;
     // no specified gropu id.
     MEMORY_ALLOC_SAMPLING = 405;
+    // group_id: track id (start timestamp)
+    MEMORY_ALLOC_TRACKING = 406;
+    // group_id: track id
+    MEMORY_ALLOC_TRACKING_STATUS = 407;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -177,6 +181,8 @@ message Event {
     MemoryHeapDumpData memory_heapdump = 403;
     MemoryHeapDumpStatusData memory_heapdump_status = 404;
     MemoryAllocSamplingData memory_alloc_sampling = 405;
+    MemoryAllocTrackingData memory_alloc_tracking = 406;
+    MemoryAllocTrackingStatusData memory_alloc_tracking_status = 407;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

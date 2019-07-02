@@ -22,6 +22,7 @@ import com.android.tools.fakeandroid.FakeAndroidDriver;
 import com.android.tools.profiler.MemoryPerfDriver;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.TestUtils;
+import com.android.tools.profiler.proto.Memory;
 import com.android.tools.profiler.proto.Memory.AllocatedClass;
 import com.android.tools.profiler.proto.Memory.AllocationEvent;
 import com.android.tools.profiler.proto.Memory.BatchAllocationContexts;
@@ -62,7 +63,8 @@ public class MemoryTest {
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
                 stubWrapper.startAllocationTracking(myPerfDriver.getSession());
-        assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+        assertThat(trackResponse.getStatus().getStatus())
+                .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
         assertThat(androidDriver.waitForInput("Tracking initialization")).isTrue();
 
@@ -148,7 +150,8 @@ public class MemoryTest {
         // Start memory tracking.
         TrackAllocationsResponse trackResponse =
                 stubWrapper.startAllocationTracking(myPerfDriver.getSession());
-        assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+        assertThat(trackResponse.getStatus().getStatus())
+                .isEqualTo(Memory.TrackStatus.Status.SUCCESS);
         // Ensure the initialization process is finished.
         assertThat(androidDriver.waitForInput("Tracking initialization")).isTrue();
 

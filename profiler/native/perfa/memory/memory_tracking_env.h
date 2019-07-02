@@ -29,6 +29,7 @@
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"
+#include "proto/transport.grpc.pb.h"
 #include "stats.h"
 #include "utils/clock.h"
 #include "utils/log.h"
@@ -99,6 +100,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
   void BeforeGlobalRefDeleted(jobject gref, void* caller_address) override;
 
   void SetSamplingRate(int32_t sampling_num_interval);
+  void HandleStartAllocTracking(const proto::Command& command);
+  void HandleStopAllocTracking(const proto::Command& command);
 
  private:
   // POD for encoding the method/instruction location data into trie.
@@ -118,8 +121,8 @@ class MemoryTrackingEnv : public GlobalRefListener {
   MemoryTrackingEnv& operator=(const MemoryTrackingEnv&) = delete;
 
   void Initialize();
-  void StartLiveTracking(int64_t timestamp);
-  void StopLiveTracking(int64_t timestamp);
+  bool StartLiveTracking(int64_t timestamp);
+  bool StopLiveTracking(int64_t timestamp);
   const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
                                          jclass klass);
   void SendBackClassData();
@@ -217,6 +220,11 @@ class MemoryTrackingEnv : public GlobalRefListener {
   bool is_live_tracking_;
   int32_t app_id_;
   int32_t class_class_tag_;
+  // The time when allocation tracking was last turned on (regardless of
+  // sampling mode).
+  int64_t last_tracking_start_time_ns_;
+  // The time when the sampling mode was last set to full. (e..g this is the
+  // time where the entire heap was last visited)
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   int32_t max_stack_depth_;

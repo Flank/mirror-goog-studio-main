@@ -18,6 +18,10 @@
 
 #include <jni.h>
 
+#include <cassert>
+#include <climits>
+#include <vector>
+
 #include "agent/agent.h"
 #include "utils/clock.h"
 #include "utils/log.h"
@@ -38,6 +42,7 @@ using profiler::proto::InternalMemoryService;
 using profiler::proto::JNIRefEventsRequest;
 using profiler::proto::MemoryData;
 using profiler::proto::SendEventRequest;
+using profiler::proto::TrackStatus;
 
 namespace {
 const SteadyClock& GetClock() {
@@ -100,6 +105,67 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
 
           EmptyMemoryReply reply;
           return stub.RecordGcStats(&ctx, gc_stats_request, &reply);
+        }});
+  }
+}
+
+void EnqueueAllocationInfoEvents(const proto::Command& command,
+                                 int64_t track_start_timestamp,
+                                 bool command_success) {
+  assert(Agent::Instance().agent_config().common().profiler_unified_pipeline());
+
+  bool is_start_command = command.has_start_alloc_tracking();
+  bool request_timestamp = is_start_command
+                               ? command.start_alloc_tracking().request_time()
+                               : command.stop_alloc_tracking().request_time();
+
+  // Task for sending the MEMORY_ALLOC_TRACKING_STATUS event.
+  Agent::Instance().SubmitAgentTasks(
+      {[command, track_start_timestamp, command_success, is_start_command](
+           AgentService::Stub& stub, ClientContext& ctx) {
+        SendEventRequest request;
+        auto* event = request.mutable_event();
+        event->set_pid(getpid());
+        event->set_kind(Event::MEMORY_ALLOC_TRACKING_STATUS);
+        event->set_command_id(command.command_id());
+        auto* status =
+            event->mutable_memory_alloc_tracking_status()->mutable_status();
+        status->set_start_time(track_start_timestamp);
+        if (command_success) {
+          status->set_status(TrackStatus::SUCCESS);
+        } else {
+          status->set_status(is_start_command ? TrackStatus::IN_PROGRESS
+                                              : TrackStatus::NOT_ENABLED);
+        }
+
+        EmptyResponse response;
+        return stub.SendEvent(&ctx, request, &response);
+      }});
+
+  // Task for sending the MEMORY_ALLOC_TRACKING event.
+  if (command_success) {
+    Agent::Instance().SubmitAgentTasks(
+        {[command, track_start_timestamp, is_start_command, request_timestamp](
+             AgentService::Stub& stub, ClientContext& ctx) {
+          SendEventRequest request;
+          auto* event = request.mutable_event();
+          event->set_pid(getpid());
+          event->set_kind(Event::MEMORY_ALLOC_TRACKING);
+          event->set_group_id(track_start_timestamp);
+          auto* info = event->mutable_memory_alloc_tracking()->mutable_info();
+          info->set_start_time(track_start_timestamp);
+          if (is_start_command) {
+            // start event.
+            info->set_end_time(LLONG_MAX);
+          } else {
+            // end event.
+            event->set_is_ended(true);
+            info->set_end_time(request_timestamp);
+            info->set_success(true);
+          }
+
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
         }});
   }
 }
