@@ -23,11 +23,9 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
-import com.android.tools.lint.detector.api.isKotlin
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.java.JavaUQualifiedReferenceExpression
-import org.jetbrains.uast.kotlin.KotlinUQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
 
 class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
 
@@ -55,7 +53,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         context: JavaContext
     ) {
-        val cameraFeatureRequested = determinePropertyString(node, isKotlin(node.sourcePsi))
+        val cameraFeatureRequested = determinePropertyString(node)
         if (FEATURE_CAMERA_STRING == cameraFeatureRequested) {
             val message = "You should look for any camera on the device, not just the rear"
             val fix = fix().name("Switch to look for FEATURE_CAMERA_ANY")
@@ -78,7 +76,7 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         node: UCallExpression,
         context: JavaContext
     ) {
-        val orientationValue = determinePropertyString(node, isKotlin(node.sourcePsi))
+        val orientationValue = determinePropertyString(node) ?: return
         if (UNSUPPORTED_ORIENTATIONS.contains(orientationValue)) {
             val message = "You should not lock orientation of your activities, so that you can " +
                     "support a good user experience for any device or orientation"
@@ -98,14 +96,10 @@ class ChromeOsSourceDetector : Detector(), SourceCodeScanner {
         }
     }
 
-    private fun determinePropertyString(node: UCallExpression, isKotlin: Boolean): String {
-        if (isKotlin) {
-            val argumentExpression = node.valueArguments[0] as KotlinUQualifiedReferenceExpression
-            return argumentExpression.resolvedName ?: ""
-        } else {
-            val argumentExpression = node.valueArguments[0] as JavaUQualifiedReferenceExpression
-            return argumentExpression.resolvedName ?: ""
-        }
+    private fun determinePropertyString(node: UCallExpression): String? {
+        val firstArgument = node.valueArguments.firstOrNull()
+        val reference = firstArgument as? UReferenceExpression ?: return null
+        return reference.resolvedName
     }
 
     companion object {

@@ -32,7 +32,7 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
 
             import android.content.pm.ActivityInfo;
             import android.os.Bundle;
-
+            import static android.content.pm.ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR;
 
             public class MainActivity extends Activity {
 
@@ -41,6 +41,7 @@ class ChromeOsSourceDetectorTest : AbstractCheckTest() {
                     super.onCreate(savedInstanceState);
 
                     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR);
+                    setRequestedOrientation(SCREEN_ORIENTATION_FULL_SENSOR);
                 }
             }
         """).indented())
