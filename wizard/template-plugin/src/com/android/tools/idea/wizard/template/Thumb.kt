@@ -26,34 +26,9 @@ import java.io.File
  * style: (Analog, Digital)
  * adFormat: (Interstitial, Banner)
  * minWidth, minHeight: Int
+ *
+ * Also, make inline class/typealias?
  */
 data class Thumb(
   val path: File
 )
-
-/** A wrapper for collection of [Thumb]s with an optional [get]ter. Implementations usually use [Parameter.value] to choose [Thumb]. */
-class Thumbs(private val thumbs: Collection<Thumb>, val get: () -> Thumb = { thumbs.first() }) {
-  init {
-    require(thumbs.isNotEmpty())
-  }
-}
-
-/**
- * Builder for [Thumbs]. Should be used in internal DSL via [thumb] function.
- */
-class ThumbsBuilder {
-  private val thumbBuilders = arrayListOf<ThumbBuilder>()
-
-  fun thumb(block: ThumbBuilder.() -> Unit): ThumbBuilder =
-    ThumbBuilder().apply(block).also {
-      thumbBuilders.add(it)
-    }
-
-  fun build() = Thumbs(thumbBuilders.map(ThumbBuilder::build))
-
-  class ThumbBuilder {
-    var path: File? = null
-
-    fun build() = Thumb(path!!)
-  }
-}

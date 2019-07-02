@@ -1,6 +1,8 @@
 package com.android.tools.idea.wizard.template
 
-typealias Recipe = () -> Boolean
+import java.io.File
+
+typealias Recipe = RecipeExecutor.(TemplateData) -> Boolean
 
 /**
  * Determines in which context (basically a screen) the template should be shown.
@@ -88,10 +90,28 @@ interface Template {
   val requireAndroidX: Boolean
   val category: Category
   val formFactor: FormFactor
-  /** A list of thumbnails which are drawn in the UI. The first thumb is drawn by default. */
-  val thumbs: Thumbs
   /** Recipe used to generate this [Template] output. It will be called after the user provides values for all [Parameters]. */
   val recipe: Recipe
   /** The template will be shown only in given context. Should include all possible contexts by default. */
   val uiContexts: Collection<WizardUiContext>
+
+  /** Returns a thumbnail which are drawn in the UI. It will be called every time when any parameter is updated. */
+  // TODO(qumeric): consider using IconLoader and/or wizard icons.
+  // TODO(qumeric): rename to pick thumb?
+  fun thumb(): Thumb
+
+  companion object NoActivity: Template {
+    override val parameters: Parameters = Parameters(listOf())
+    override val uiContexts: Collection<WizardUiContext> get() = TODO()
+    override val recipe: Recipe get() = throw UnsupportedOperationException()
+    override val revision: Int = 1
+    override val name: String = "Empty Activity"
+    override val description: String = "Creates a new empty project"
+    override val minSdk: Int = 1
+    override val minCompileSdk: Int = 1
+    override val requireAndroidX: Boolean = false
+    override val category: Category = Category.Activity
+    override val formFactor: FormFactor = FormFactor.Mobile
+    override fun thumb() = Thumb(File("no_activity"))
+  }
 }
