@@ -51,7 +51,7 @@ class TemplateBuilder {
   var category: Category? = null
   var formFactor: FormFactor? = null
   @Suppress("RedundantCompanionReference")
-  var thumb: () -> Thumb = { Template.NoActivity.thumb() }
+  var thumb: () -> Thumb = { Thumb.NoThumb }
   var recipe: Recipe? = null
   var screens: Collection<WizardUiContext> = listOf()
 

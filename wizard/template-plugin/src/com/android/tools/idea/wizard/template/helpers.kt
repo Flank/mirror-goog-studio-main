@@ -13,26 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.idea.wizard.template
 
-import java.io.File
-
-/**
- * Stores information about a thumb which should be displayed in galleries such as New Activity Gallery.
- * TODO(qumeric): consider adding the following information:
- * resizible: (None, Horizontal, Vertical, Both)
- * expandedStyle: (None, Text, List, Picture)
- * style: (Analog, Digital)
- * adFormat: (Interstitial, Banner)
- * minWidth, minHeight: Int
- *
- * Also, make inline class/typealias?
- */
-open class Thumb(val path: File) {
-  /**
-   * Represents absence of thumb (null object pattern).
-   */
-  companion object NoThumb: Thumb(File(""))
-}
+infix fun String.renderIf(predicate: () -> Boolean) = if (predicate()) this else ""
 

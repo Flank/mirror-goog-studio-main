@@ -100,6 +100,9 @@ interface Template {
   // TODO(qumeric): rename to pick thumb?
   fun thumb(): Thumb
 
+  /**
+   * Reprent absence of a [Template] (null object pattern).
+   */
   companion object NoActivity: Template {
     override val parameters: Parameters = Parameters(listOf())
     override val uiContexts: Collection<WizardUiContext> get() = TODO()
@@ -112,6 +115,6 @@ interface Template {
     override val requireAndroidX: Boolean = false
     override val category: Category = Category.Activity
     override val formFactor: FormFactor = FormFactor.Mobile
-    override fun thumb() = Thumb(File("no_activity"))
+    override fun thumb() = Thumb.NoThumb
   }
 }
