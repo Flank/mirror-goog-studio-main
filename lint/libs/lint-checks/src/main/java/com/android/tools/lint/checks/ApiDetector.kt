@@ -1765,7 +1765,15 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
 
                 val containingClass: UClass? = statement.getContainingUClass()
                 if (containingClass != null) {
-                    val target = getTargetApi(if (minSdk < 19) containingClass else statement)
+                    val target =
+                        if (minSdk < 19)
+                            // We only consider @RequiresApi annotations for filtering applicable
+                            // minSdkVersion here, not @TargetApi or @SdkSuppress since we need to
+                            // communicate outwards that this is a problem; class loading alone, not
+                            // just executing the code, is enough to trigger a crash.
+                            getTargetApi(containingClass, ::isRequiresApiAnnotation)
+                        else
+                            getTargetApi(statement)
                     if (target != -1 && api <= target) {
                         return
                     }
@@ -2169,6 +2177,18 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
             return LintFix.create().data(api)
         }
 
+        private fun isTargetAnnotation(fqcn: String): Boolean {
+            return fqcn == FQCN_TARGET_API ||
+                    isRequiresApiAnnotation(fqcn) ||
+                    fqcn == SDK_SUPPRESS_ANNOTATION ||
+                    fqcn == TARGET_API // with missing imports
+        }
+
+        private fun isRequiresApiAnnotation(fqcn: String): Boolean {
+            return REQUIRES_API_ANNOTATION.isEquals(fqcn) ||
+                    fqcn == "RequiresApi" // With missing imports
+        }
+
         /**
          * Returns true if the view tag is possibly a text view. It may not be certain, but will err on
          * the side of caution (for example, any custom view is considered to be a potential text view.)
@@ -2489,12 +2509,16 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                     isPrecededByVersionCheckExit(element, api, true))
         }
 
+        @JvmOverloads
         @JvmStatic
-        fun getTargetApi(scope: UElement?): Int {
+        fun getTargetApi(
+            scope: UElement?,
+            isApiLevelAnnotation: (String) -> Boolean = ::isTargetAnnotation
+        ): Int {
             var current = scope
             while (current != null) {
                 if (current is UAnnotated) {
-                    val targetApi = getTargetApiForAnnotated(current)
+                    val targetApi = getTargetApiForAnnotated(current, isApiLevelAnnotation)
                     if (targetApi != -1) {
                         return targetApi
                     }
@@ -2516,17 +2540,20 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
          * @return the target API level, or -1 if not specified
          */
         private fun getTargetApiForAnnotated(annotated: UAnnotated?): Int {
+            return getTargetApiForAnnotated(annotated, ::isTargetAnnotation)
+        }
+
+        private fun getTargetApiForAnnotated(
+            annotated: UAnnotated?,
+            isApiLevelAnnotation: (String) -> Boolean
+        ): Int {
             if (annotated == null) {
                 return -1
             }
 
             for (annotation in annotated.annotations) {
                 val fqcn = annotation.qualifiedName
-                if (fqcn != null && (fqcn == FQCN_TARGET_API ||
-                            REQUIRES_API_ANNOTATION.isEquals(fqcn) ||
-                            fqcn == SDK_SUPPRESS_ANNOTATION ||
-                            fqcn == TARGET_API)
-                ) { // when missing imports
+                if (fqcn != null && isApiLevelAnnotation(fqcn)) {
                     val attributeList = annotation.attributeValues
                     for (attribute in attributeList) {
                         val expression = attribute.expression
@@ -2570,11 +2597,14 @@ class ApiDetector : ResourceXmlDetector(), SourceCodeScanner, ResourceFolderScan
                         continue
                     }
                     val text = psi.text
-                    if (text.contains("TargetApi(") ||
-                        text.contains("RequiresApi(") ||
-                        text.contains("SdkSuppress(")
-                    ) {
-                        val start = text.indexOf('(')
+                    val start = text.indexOf('(')
+                    if (start == -1) {
+                        continue
+                    }
+                    val colon = text.indexOf(':') // skip over @file: etc
+                    val annotationString =
+                        text.substring(if (colon < start) colon + 1 else 0, start)
+                    if (start != -1 && isApiLevelAnnotation(annotationString)) {
                         val end = text.indexOf(')', start + 1)
                         if (end != -1) {
                             var name = text.substring(start + 1, end)

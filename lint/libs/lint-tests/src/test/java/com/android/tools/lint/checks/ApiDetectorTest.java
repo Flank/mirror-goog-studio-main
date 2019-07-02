@@ -4387,8 +4387,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testExceptionHandlingDalvik() {
         // Regression test for 131349148: Dalvik: java.lang.VerifyError
-
-        //noinspection all // Sample code
         lint().files(
                         java(
                                 "src/test/pkg/CatchTest.java",
@@ -4458,6 +4456,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                         + "        }\n"
                                         + "    }\n"
                                         + "\n"
+                                        + "    @TargetApi(23) // Not enough; we want @RequiresApi instead to communicate outward\n"
+                                        + "    public class C4 {\n"
+                                        + "        public void test() {\n"
+                                        + "            try {\n"
+                                        + "                thrower();\n"
+                                        + "            } catch (CameraAccessException | MediaDrmResetException e) { // ERROR: Wrong class annotation\n"
+                                        + "                logger(e.toString());\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "\n"
                                         + "    private void logger(String e) {\n"
                                         + "    }\n"
                                         + "\n"
@@ -4488,7 +4497,13 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "src/test/pkg/CatchTest.java:48: Error: Exception requires API level 21 (current min is 21): android.hardware.camera2.CameraAccessException, and having a surrounding/preceding version check does not help since prior to API level 19, just loading the class will cause a crash. Consider marking the surrounding class with RequiresApi(19) to ensure that the class is never loaded except when on API 19 or higher. [NewApi]\n"
                                 + "            } catch (CameraAccessException e) { // ERROR: Requires 23; @TargetApi on method not enough\n"
                                 + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
-                                + "5 errors, 0 warnings");
+                                + "src/test/pkg/CatchTest.java:70: Error: Exception requires API level 21 (current min is 23): android.hardware.camera2.CameraAccessException, and having a surrounding/preceding version check does not help since prior to API level 19, just loading the class will cause a crash. Consider marking the surrounding class with RequiresApi(19) to ensure that the class is never loaded except when on API 19 or higher. [NewApi]\n"
+                                + "            } catch (CameraAccessException | MediaDrmResetException e) { // ERROR: Wrong class annotation\n"
+                                + "                     ~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "src/test/pkg/CatchTest.java:70: Error: Exception requires API level 23 (current min is 23): android.media.MediaDrmResetException, and having a surrounding/preceding version check does not help since prior to API level 19, just loading the class will cause a crash. Consider marking the surrounding class with RequiresApi(19) to ensure that the class is never loaded except when on API 19 or higher. [NewApi]\n"
+                                + "            } catch (CameraAccessException | MediaDrmResetException e) { // ERROR: Wrong class annotation\n"
+                                + "                                             ~~~~~~~~~~~~~~~~~~~~~~\n"
+                                + "7 errors, 0 warnings");
     }
 
     @SuppressWarnings("all") // Sample code
