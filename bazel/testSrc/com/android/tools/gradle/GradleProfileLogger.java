@@ -17,20 +17,13 @@
 package com.android.tools.gradle;
 
 import com.android.annotations.NonNull;
-import com.android.testutils.TestUtils;
 import com.android.tools.perflogger.Benchmark;
-import com.google.common.base.Joiner;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class GradleProfileLogger implements BenchmarkListener {
@@ -45,7 +38,6 @@ public class GradleProfileLogger implements BenchmarkListener {
         testLogsDir = new File(new File(home, "test_logs"), "project");
         this.benchmarkRun = benchmarkRun;
         gradle.addArgument("-Pandroid.advanced.profileOutputDir=" + testLogsDir.getAbsolutePath());
-        gradle.addArgument("-Pandroid.enableProfileJson=true");
     }
 
     @Override
@@ -56,17 +48,6 @@ public class GradleProfileLogger implements BenchmarkListener {
     @Override
     public void benchmarkDone() {
         profilerToBenchmarkAdapter.commit();
-        for (Path profileJson : getLogFiles(".json")) {
-            try {
-                Files.copy(
-                        profileJson,
-                        TestUtils.getTestOutputDir()
-                                .toPath()
-                                .resolve(profileJson.getFileName().toString() + ".chrometrace"));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        }
     }
 
     @Override
@@ -77,40 +58,25 @@ public class GradleProfileLogger implements BenchmarkListener {
 
     @Override
     public void iterationDone() {
-        List<Path> rawProtoFiles = getLogFiles(".rawproto");
-
-        if (rawProtoFiles.size() != 1) {
+        File[] rawProtoFiles = testLogsDir.listFiles();
+        if (rawProtoFiles == null) {
+            throw new RuntimeException("Expected one profile output, but got nothing");
+        }
+        if (rawProtoFiles.length != 1) {
             throw new RuntimeException(
-                    "Expected one profile output, but got "
-                            + rawProtoFiles.size()
-                            + ":\n"
-                            + ""
-                            + Joiner.on(", ").join(rawProtoFiles));
+                    "Expected one profile output, but got " + rawProtoFiles.length);
         }
 
         GradleBuildProfile gradleBuildProfile;
 
         try (BufferedInputStream input =
-                new BufferedInputStream(Files.newInputStream(rawProtoFiles.get(0)))) {
+                new BufferedInputStream(new FileInputStream(rawProtoFiles[0]))) {
             gradleBuildProfile = GradleBuildProfile.parseFrom(input);
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            throw new RuntimeException(e);
         }
 
         profilerToBenchmarkAdapter.adapt(iterationStartTime, gradleBuildProfile);
-    }
-
-
-    private List<Path> getLogFiles(String suffix) {
-        try (Stream<Path> files = Files.list(testLogsDir.toPath())) {
-            return files.filter(
-                            it -> {
-                                return it.getFileName().toString().endsWith(suffix);
-                            })
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static void cleanOutputDir(File outputDir) {
