@@ -39,6 +39,8 @@ public class FakeProgressIndicator implements ProgressIndicator {
 
     private boolean mCancellable = true;
 
+    private boolean mIndeterminate = false;
+
     private double mPercent = 0;
 
     private final boolean mValidateMonotonicProgress;
@@ -132,12 +134,12 @@ public class FakeProgressIndicator implements ProgressIndicator {
 
     @Override
     public boolean isIndeterminate() {
-        return false;
+        return mIndeterminate;
     }
 
     @Override
     public void setIndeterminate(boolean indeterminate) {
-
+        mIndeterminate = indeterminate;
     }
 
     public List<String> getInfos() {
