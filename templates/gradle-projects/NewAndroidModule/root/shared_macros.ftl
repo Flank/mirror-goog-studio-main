@@ -2,7 +2,7 @@
 
 <#-- Some common elements used in multiple files -->
 <#macro watchProjectDependencies>
-<#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
+<#if WearprojectName?has_content && Mobileincluded && Wearincluded>
     wearApp project(':${WearprojectName}')
     ${getConfigurationName("compile")} 'com.google.android.gms:play-services-wearable:+'
 </#if>
