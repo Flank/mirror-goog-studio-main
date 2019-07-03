@@ -30,16 +30,11 @@ import static com.android.SdkConstants.FD_RES_LAYOUT;
 import static com.android.SdkConstants.FQCN_GRID_LAYOUT_V7;
 import static com.android.SdkConstants.GRID_LAYOUT;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
-import static com.android.SdkConstants.REQUEST_FOCUS;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TABLE_LAYOUT;
 import static com.android.SdkConstants.TABLE_ROW;
-import static com.android.SdkConstants.TAG_DATA;
-import static com.android.SdkConstants.TAG_IMPORT;
 import static com.android.SdkConstants.TAG_ITEM;
-import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TAG_STYLE;
-import static com.android.SdkConstants.TAG_VARIABLE;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.SdkConstants.VIEW_MERGE;
 import static com.android.resources.ResourceFolderType.LAYOUT;
@@ -57,6 +52,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -421,17 +417,12 @@ public class RequiredAttributeDetector extends LayoutDetector implements SourceC
                 }
 
                 String tag = element.getTagName();
-                if (VIEW_MERGE.equals(tag)
-                        || VIEW_INCLUDE.equals(tag)
-                        || REQUEST_FOCUS.equals(tag)) {
+                if (VIEW_MERGE.equals(tag) || VIEW_INCLUDE.equals(tag)) {
                     return;
                 }
 
-                // Data binding: these tags shouldn't specify width/height
-                if (tag.equals(TAG_LAYOUT)
-                        || tag.equals(TAG_VARIABLE)
-                        || tag.equals(TAG_DATA)
-                        || tag.equals(TAG_IMPORT)) {
+                if (Lint.isLayoutMarkerTag(element)) {
+                    // <requestFocus/>, <tag/>, various data-binding tags, etc
                     return;
                 }
 

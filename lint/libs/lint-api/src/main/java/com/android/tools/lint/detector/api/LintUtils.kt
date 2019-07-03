@@ -19,6 +19,7 @@
 package com.android.tools.lint.detector.api
 
 import com.android.SdkConstants
+import com.android.SdkConstants.AAPT_URI
 import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.ANDROID_PREFIX
 import com.android.SdkConstants.ANDROID_URI
@@ -34,6 +35,13 @@ import com.android.SdkConstants.MANIFEST_PLACEHOLDER_SUFFIX
 import com.android.SdkConstants.NEW_ID_PREFIX
 import com.android.SdkConstants.PREFIX_BINDING_EXPR
 import com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR
+import com.android.SdkConstants.REQUEST_FOCUS
+import com.android.SdkConstants.TAG
+import com.android.SdkConstants.TAG_ATTR
+import com.android.SdkConstants.TAG_DATA
+import com.android.SdkConstants.TAG_IMPORT
+import com.android.SdkConstants.TAG_LAYOUT
+import com.android.SdkConstants.TAG_VARIABLE
 import com.android.SdkConstants.TOOLS_URI
 import com.android.SdkConstants.UTF_8
 import com.android.builder.model.AndroidProject
@@ -1972,6 +1980,35 @@ fun getMethodName(call: UCallExpression): String? {
 /** Returns true if the given element is written in Kotlin  */
 fun isKotlin(element: PsiElement?): Boolean {
     return element != null && isKotlin(element.language)
+}
+
+/**
+ * Checks whether the given [element] is just a marker tag in a layout, not a real view.
+ * Note that merge and include tags are not considered markers since they are replaced
+ * with real views.
+ */
+fun isLayoutMarkerTag(element: Element): Boolean {
+    val tagName = element.localName
+    if (isLayoutMarkerTag(tagName)) {
+        return true
+    }
+    return tagName == TAG_ATTR && element.namespaceURI == AAPT_URI
+}
+
+/**
+ * Checks whether the given [tagName] is just a marker tag in a layout, not a real view.
+ * Note that merge and include tags are not considered markers since they are replaced
+ * with real views.
+ */
+fun isLayoutMarkerTag(tagName: String): Boolean = when (tagName) {
+    REQUEST_FOCUS,
+    TAG,
+    "aapt:attr", // checked with namespace in #isLayoutMarkerTag
+    TAG_LAYOUT,
+    TAG_VARIABLE,
+    TAG_DATA,
+    TAG_IMPORT -> true
+    else -> false
 }
 
 /** Returns true if the given element is written in Java  */

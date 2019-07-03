@@ -569,8 +569,9 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                             + "\n"
                             + "    <EditText\n"
                             + "        android:id=\"@+id/edittext2\"\n"
-                            + "        android:text=\"EditText\" />\n"
-                            + "\n"
+                            + "        android:text=\"EditText\">\n"
+                            + "        <tag id=\"@+id/test\" />\n"
+                            + "    </EditText>\n"
                             + "</LinearLayout>\n");
 
     @SuppressWarnings("all") // Sample code

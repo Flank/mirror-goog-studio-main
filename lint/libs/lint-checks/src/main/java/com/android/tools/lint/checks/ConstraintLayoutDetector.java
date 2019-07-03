@@ -25,7 +25,6 @@ import static com.android.SdkConstants.CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.CONSTRAINT_LAYOUT_LIB_GROUP_ID;
-import static com.android.SdkConstants.REQUEST_FOCUS;
 import static com.android.SdkConstants.TAG_INCLUDE;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
@@ -46,6 +45,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.Lint;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -154,8 +154,8 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                 continue;
             }
 
-            if (REQUEST_FOCUS.equals(elementTagName)) {
-                // <requestFocus/> is just a marker tag and should not have attributes
+            if (Lint.isLayoutMarkerTag(elementTagName)) {
+                // <requestFocus/>, <tag/>, etc should not have constraint attributes
                 continue;
             }
 

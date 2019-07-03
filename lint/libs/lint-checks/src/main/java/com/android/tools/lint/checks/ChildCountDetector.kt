@@ -16,13 +16,10 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants.AAPT_URI
 import com.android.SdkConstants.GRID_VIEW
 import com.android.SdkConstants.HORIZONTAL_SCROLL_VIEW
 import com.android.SdkConstants.LIST_VIEW
-import com.android.SdkConstants.REQUEST_FOCUS
 import com.android.SdkConstants.SCROLL_VIEW
-import com.android.SdkConstants.TAG_ATTR
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
@@ -30,6 +27,7 @@ import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.android.tools.lint.detector.api.isLayoutMarkerTag
 import com.android.utils.iterator
 import org.w3c.dom.Element
 import java.util.Arrays
@@ -87,12 +85,7 @@ class ChildCountDetector : LayoutDetector() {
     override fun visitElement(context: XmlContext, element: Element) {
         var childCount = 0
         for (child in element) {
-            val tagName = child.localName
-            if (REQUEST_FOCUS == tagName) {
-                continue
-            } else if (tagName == TAG_ATTR && child.namespaceURI == AAPT_URI) {
-                continue
-            } else {
+            if (!isLayoutMarkerTag(child)) {
                 childCount++
             }
         }
