@@ -22,6 +22,7 @@ import com.google.gson.GsonBuilder
 import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ComponentIdentifier
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableDependency
 import org.gradle.api.tasks.diagnostics.internal.graph.nodes.RenderableModuleResult
 import java.io.File
@@ -54,39 +55,43 @@ class DependencyGraphAnalyzer(
     private val configuration: Configuration,
     private val depsUsageFinder: DependencyUsageFinder) {
 
+    // Keep a map from dependencyId to the correspondent RenderableDependency
+    val renderableDependencies = mapIdsToRenderableDependencies()
+
+    // TODO: Handle 'project' dependencies
     fun findIndirectRequiredDependencies(): Set<String> {
-        return depsUsageFinder.requiredDependencies.minus(findAccessibleDependencies())
+        /* Get the ids of all required dependencies that are:
+           - valid (they map to a valid RenderableDependency in the renderableDependencies hashmap)
+           - not 'project' dependencies */
+        val requiredRenderableDependencies = depsUsageFinder.requiredDependencies
+            .asSequence()
+            .mapNotNull { renderableDependencies[it] }
+            .filterNot { it.id is ProjectComponentIdentifier }
+            .map { (it.id as ComponentIdentifier).displayName }.toSet()
+
+        /* From the remaining ones, find those that are still available to the module
+           (those that can still be reached in the dependency graph) */
+        val accessibleDependencies = findAccessibleDependencies()
+
+        return requiredRenderableDependencies.minus(accessibleDependencies)
     }
 
     private fun findAccessibleDependencies (): Set<String> {
-        val dependencyGraph = configuration.incoming.resolutionResult.root
-        val renderableGraph = RenderableModuleResult(dependencyGraph)
-
-        val allRenderableDependencies = mutableMapOf<String, RenderableDependency>()
-        val directRenderableDependencies = mutableSetOf<RenderableDependency>()
-
         // Traverse the dependency tree to find the ones that are still accessible
         val visited = mutableSetOf<String>()
         val queue = LinkedList<String>()
 
-        renderableGraph.children.forEach {
-            val componentIdentifier = it.id as ComponentIdentifier
-
-            // TODO: remove dependencies where id is ProjectComponentIdentifier
-
-            // Map the componentIdentifier to the RenderableDependency
-            allRenderableDependencies[componentIdentifier.displayName] = it
-
-            // Save the RenderableDependencies that are direct dependencies and add them in Queue
-            if (depsUsageFinder.usedDirectDependencies.contains(componentIdentifier.displayName)) {
-                directRenderableDependencies.add(it)
-                queue.add(componentIdentifier.displayName)
+        // Initially, Add all direct dependencies in the Queue
+        depsUsageFinder.usedDirectDependencies.forEach {
+            if (renderableDependencies.containsKey(it)) {
+                queue.add(it)
             }
         }
 
+        // Do a BFS to find the reachable (visited) dependencies
         while (!queue.isEmpty()) {
             val componentIdentifier = queue.pop()
-            val dependency = allRenderableDependencies[componentIdentifier]
+            val dependency = renderableDependencies[componentIdentifier]
             visited.add(componentIdentifier)
             dependency?.children?.forEach {
                 val childComponentIdentifier = (it.id as ComponentIdentifier).displayName
@@ -99,6 +104,19 @@ class DependencyGraphAnalyzer(
         return visited
     }
 
+    private fun mapIdsToRenderableDependencies(): Map<String, RenderableDependency> {
+        val dependencyGraph = configuration.incoming.resolutionResult.root
+        val renderableGraph = RenderableModuleResult(dependencyGraph)
+        val renderableDependencies = mutableMapOf<String, RenderableDependency>()
+
+        // Map id to the correspondent RenderableDependency
+        renderableGraph.children.forEach {
+            val componentIdentifier = it.id as ComponentIdentifier
+            renderableDependencies[componentIdentifier.displayName] = it
+        }
+
+        return renderableDependencies
+    }
 }
 
 /** Finds where a class is coming from. */
@@ -107,6 +125,7 @@ class ClassFinder(private val externalArtifactCollection: ArtifactCollection) {
     private val classToDependency: Map<String, String> by lazy {
         val map = mutableMapOf<String, String>()
         externalArtifactCollection
+            .asSequence()
             .filter { it.file.name.endsWith(SdkConstants.DOT_JAR) }
             .forEach { artifact ->
                 val classNamesInJar = getClassFilesInJar(artifact.file)
@@ -147,18 +166,44 @@ class DependencyUsageReporter(
     private val depsUsageFinder: DependencyUsageFinder,
     private val graphAnalyzer: DependencyGraphAnalyzer) {
 
+    // TODO: update the analyzer to detect dependencies in resources
+
+    // Temporary workaround: A list of common prefixes from libraries that are not yet detected
+    // by the analyzer. such as the Kotlin libraries, or popular libraries that are often
+    // used in resources but not referenced in classes.
+    private val dontReportPrefixSet = setOf(
+        // Kotlin libraries are added by default and should not be removed
+        "org.jetbrains.kotlin:",
+        // Some libraries that are often used exclusively in resource files
+        "androidx.gridlayout:gridlayout:",
+        "androidx.appcompat:appcompat:",
+        "de.hdodenhof:circleimageview:")
+
     fun writeUnusedDependencies(destinationFile: File) {
-        val report = mapOf(
-            "remove" to depsUsageFinder.unusedDirectDependencies,
-            "add" to graphAnalyzer.findIndirectRequiredDependencies())
+        val toRemove = depsUsageFinder.unusedDirectDependencies
+            .filter { graphAnalyzer.renderableDependencies.containsKey(it) }
+        val toAdd = graphAnalyzer.findIndirectRequiredDependencies()
+
+        val dontReportTemp = mutableListOf<String>()
+        toRemove.forEach { dependency ->
+            dontReportPrefixSet.forEach {
+                if (dependency.startsWith(it)) {
+                    dontReportTemp.add(dependency)
+                }
+            }
+        }
+
+        val report = mapOf("remove" to toRemove.minus(dontReportTemp), "add" to toAdd)
 
         writeToFile(report, destinationFile)
     }
 
     fun writeMisconfiguredDependencies(destinationFile: File) {
-        val misconfiguredDependencies = variantClasses.getPrivateClasses()
+        val apiDependencies = variantClasses.getPublicClasses()
             .mapNotNull { classFinder.find(it) }
             .filter { variantDependencies.api.contains(it) }
+
+        val misconfiguredDependencies = variantDependencies.api.minus(apiDependencies)
 
         writeToFile(misconfiguredDependencies, destinationFile)
     }

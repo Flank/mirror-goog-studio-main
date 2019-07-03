@@ -59,14 +59,14 @@ class AnalyzeDependenciesTaskUtilsTest {
 
         val variantClassHolder = VariantClassesHolder(fileCollection)
 
-        val privateClasses = variantClassHolder.getPrivateClasses()
+        val publicClasses = variantClassHolder.getPublicClasses()
         val allClasses = variantClassHolder.getUsedClasses()
 
         assertThat(allClasses).containsExactly(
             "com/android/build/gradle/internal/transforms/testdata/Animal.class",
             "java/lang/Object.class",
             "com/android/build/gradle/internal/transforms/testdata/CarbonForm.class")
-        assertThat(privateClasses).containsExactly(
+        assertThat(publicClasses).containsExactly(
             "com/android/build/gradle/internal/transforms/testdata/Animal.class")
     }
 

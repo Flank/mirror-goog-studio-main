@@ -126,7 +126,7 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
     class VariantClassesHolder(private val variantArtifact: FileCollection) {
 
-        private enum class CLASS_TYPE { ALL, PRIVATE }
+        private enum class CLASS_TYPE { ALL, PUBLIC }
 
         private val analyzer = DependenciesAnalyzer()
 
@@ -148,14 +148,14 @@ abstract class AnalyzeDependenciesTask : NonIncrementalTask() {
 
             mapOf(
                 CLASS_TYPE.ALL to classesUsedInVariant,
-                CLASS_TYPE.PRIVATE to classesUsedInVariant.minus(classesExposedByPublicApis))
+                CLASS_TYPE.PUBLIC to classesUsedInVariant.minus(classesExposedByPublicApis))
         }
 
         /** Returns classes used inside our variant code. */
         fun getUsedClasses() = classesByType[CLASS_TYPE.ALL] ?: emptySet()
 
         /** Returns classes not exposed in any public method/fields/etc in our variant code. */
-        fun getPrivateClasses() = classesByType[CLASS_TYPE.PRIVATE] ?: emptySet()
+        fun getPublicClasses() = classesByType[CLASS_TYPE.PUBLIC] ?: emptySet()
     }
 
     class CreationAction(val scope: VariantScope) :
