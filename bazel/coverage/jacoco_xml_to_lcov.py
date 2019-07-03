@@ -125,6 +125,10 @@ def main():
       './tools/data-binding/samples',
       './tools/dx/dalvik/dx/junit-tests',
       './tools/dx/dalvik/dx/tests',
+      './tools/vendor/google/android-apk/testData',
+      './tools/vendor/google/android-apk/testSrc',
+      './tools/vendor/google/android-ndk/testData',
+      './tools/vendor/google/android-ndk/testSrc',
       # generated
       './tools/adt/idea/android-lang-databinding/gen',
       './tools/adt/idea/android-lang/gen',
@@ -140,7 +144,30 @@ def main():
       './tools/studio',
       './tools/swing-testing',
       './tools/swt',
-      './tools/vendor',
+      './tools/vendor/adt_infra_internal',
+      './tools/vendor/galvsoft',
+      './tools/vendor/google/aapt2-prebuilt',
+      './tools/vendor/google/adrt',
+      './tools/vendor/google/CloudEndpoints',
+      './tools/vendor/google/cpp-integration-tests',
+      './tools/vendor/google/docs',
+      './tools/vendor/google/dogfood',
+      './tools/vendor/google/firebase'
+      './tools/vendor/google/games'
+      './tools/vendor/google/GooglePlayLog'
+      './tools/vendor/google/installer'
+      './tools/vendor/google/JenkinsPresubmit'
+      './tools/vendor/google/layoutlib-prebuilt'
+      './tools/vendor/google/lldb-integration-tests'
+      './tools/vendor/google/real-world-integration-test'
+      './tools/vendor/google/scripts'
+      './tools/vendor/google/testing'
+      './tools/vendor/google/TranslationPluginForEclipse'
+      './tools/vendor/google/url-assistant'
+      './tools/vendor/google/WinLauncher2'
+      './tools/vendor/google3',
+      './tools/vendor/intel',
+      './tools/vendor/intellij',
   ]
   # file extensions we care about
   ends = [
