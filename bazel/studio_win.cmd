@@ -2,7 +2,7 @@
 @rem Invoked by Android Build Launchcontrol for continuous builds.
 @rem Windows Android Studio Remote Bazel Execution Script.
 setlocal enabledelayedexpansion
-
+set PATH=c:\tools\msys64\usr\bin;%PATH%
 @rem Expected arguments:
 set OUTDIR=%1
 set DISTDIR=%2
@@ -31,7 +31,7 @@ set TARGETS=
 for /f %%i in (%SCRIPTDIR%targets.win) do set TARGETS=!TARGETS! %%i
 
 @rem Run Bazel
-CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test --keep_going --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof  -- %TARGETS%
+CALL %SCRIPTDIR%bazel.cmd --max_idle_secs=60 test --keep_going --config=remote --build_tag_filters=-no_rbe_windows,-no_windows --test_tag_filters=-no_rbe_windows,%TESTTAGFILTERS% --profile=%DISTDIR%\prof --discard_analysis_cache -- %TARGETS%
 SET EXITCODE=%errorlevel%
 
 IF NOT EXIST %DISTDIR%\ GOTO ENDSCRIPT

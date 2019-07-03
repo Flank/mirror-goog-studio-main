@@ -15,9 +15,7 @@ def singlejar(name, jars, jar_name = None, **kwargs):
     )
 
 def _fileset_impl(ctx):
-    srcs = depset(order = "postorder")
-    for src in ctx.attr.srcs:
-        srcs += src.files
+    srcs = depset(order = "postorder", transitive = [src.files for src in ctx.attr.srcs])
 
     remap = {}
     for a, b in ctx.attr.maps.items():
@@ -31,15 +29,15 @@ def _fileset_impl(ctx):
         label = f.owner if f.is_source else f.owner.relative(f.basename)
         if label in remap:
             dest = remap[label]
-            fd = ctx.new_file(dest)
+            fd = ctx.actions.declare_file(dest)
             cmd += "mkdir -p " + fd.dirname + "\n"
             cmd += "cp -f '" + f.path + "' '" + fd.path + "'\n"
 
-    script = ctx.new_file(ctx.label.name + ".cmd.sh")
-    ctx.file_action(output = script, content = cmd)
+    script = ctx.actions.declare_file(ctx.label.name + ".cmd.sh")
+    ctx.actions.write(output = script, content = cmd)
 
     # Execute the command
-    ctx.action(
+    ctx.actions.run_shell(
         inputs = (
             ctx.files.srcs +
             [script]
@@ -55,11 +53,11 @@ _fileset = rule(
         "srcs": attr.label_list(allow_files = True),
         "maps": attr.string_dict(
             mandatory = True,
-            non_empty = True,
+            allow_empty = False,
         ),
         "outs": attr.output_list(
             mandatory = True,
-            non_empty = True,
+            allow_empty = False,
         ),
     },
     executable = False,
@@ -158,7 +156,7 @@ def _flat_archive_impl(ctx):
         zipper_args.append(name)
         inputs += [file]
 
-    ctx.action(
+    ctx.actions.run(
         inputs = inputs,
         outputs = [ctx.outputs.out],
         executable = ctx.executable._zipper,
@@ -170,7 +168,7 @@ def _flat_archive_impl(ctx):
 flat_archive = rule(
     attrs = {
         "deps": attr.label_keyed_string_dict(
-            non_empty = True,
+            allow_empty = False,
             allow_files = True,
         ),
         "_zipper": attr.label(
@@ -192,7 +190,7 @@ def _dir_archive_impl(ctx):
         else:
             zipper_args.append("{}={}".format(file.short_path[len(prefix) + 1:], file.path))
 
-    ctx.action(
+    ctx.actions.run(
         inputs = ctx.files.files,
         outputs = [ctx.outputs.out],
         executable = ctx.executable._zipper,

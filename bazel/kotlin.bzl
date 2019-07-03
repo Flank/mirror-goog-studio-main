@@ -11,7 +11,7 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
             root += ":" + package_prefixes[root]
         merged += [label_workspace_path(ctx.label) + "/" + root]
 
-    kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
+    kotlin_deps = kotlin_deps.to_list() + ctx.files._kotlin
     args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, ctx.files._bootclasspath + kotlin_deps)
 
     args += ["--module_name", name]
@@ -19,7 +19,7 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
         args += ["--friend_dir", friend.path]
     args += ["--no-jdk"]
 
-    ctx.action(
+    ctx.actions.run(
         inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friends + ctx.files._bootclasspath,
         outputs = [kotlin_jar],
         mnemonic = "kotlinc",
@@ -35,17 +35,16 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
 def _kotlin_jar_impl(ctx):
     class_jar = ctx.outputs.class_jar
 
-    all_deps = depset(ctx.files.deps)
-    all_deps += depset(ctx.files._kotlin)
+    all_deps = depset(direct = ctx.files.deps + ctx.files._kotlin)
     for this_dep in ctx.attr.deps:
         if hasattr(this_dep, "java"):
-            all_deps += this_dep.java.transitive_runtime_deps
+            all_deps = depset(transitive = [all_deps, this_dep.java.transitive_runtime_deps])
 
     merged = [src.path for src in ctx.files.srcs]
     if ctx.attr.package_prefixes:
         merged = [a + ":" + b if b else a for (a, b) in zip(merged, ctx.attr.package_prefixes)]
 
-    args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar, all_deps)
+    args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar, all_deps.to_list())
 
     for dir in ctx.files.friends:
         args += ["--friend_dir", dir.path]
@@ -53,8 +52,8 @@ def _kotlin_jar_impl(ctx):
     if ctx.attr.module_name:
         args += ["--module_name", ctx.attr.module_name]
 
-    ctx.action(
-        inputs = ctx.files.inputs + list(all_deps) + option_files + ctx.files.friends,
+    ctx.actions.run(
+        inputs = ctx.files.inputs + all_deps.to_list() + option_files + ctx.files.friends,
         outputs = [class_jar],
         mnemonic = "kotlinc",
         arguments = args,
@@ -64,7 +63,7 @@ def _kotlin_jar_impl(ctx):
 kotlin_jar = rule(
     attrs = {
         "srcs": attr.label_list(
-            non_empty = True,
+            allow_empty = False,
             allow_files = True,
         ),
         "inputs": attr.label_list(
@@ -76,7 +75,7 @@ kotlin_jar = rule(
         "package_prefixes": attr.string_list(),
         "deps": attr.label_list(
             mandatory = False,
-            allow_files = FileType([".jar"]),
+            allow_files = [".jar"],
         ),
         "module_name": attr.string(),
         "_kotlinc": attr.label(

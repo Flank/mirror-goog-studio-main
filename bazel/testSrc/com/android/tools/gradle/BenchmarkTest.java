@@ -17,6 +17,8 @@
 package com.android.tools.gradle;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.testutils.BazelRunfilesManifestProcessor;
 import com.android.testutils.diff.UnifiedDiff;
 import com.android.tools.gradle.benchmarkassertions.BenchmarkProjectAssertion;
@@ -30,129 +32,148 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BenchmarkTest {
 
     private static final String ROOT = "prebuilts/studio/";
 
-    public static void main(String[] args) throws Exception {
+    private File distribution = null;
+    private File repo = null;
+    private String project = null;
+    private String benchmarkName = null;
+    private String benchmarkBaseName = null;
+    private String benchmarkCodeType = null;
+    private String benchmarkFlag = null;
+    private String benchmarkSize = null;
+    private String benchmarkType = null;
+    private String testProjectGradleRootFromSourceRoot = ".";
+    private List<String> setupDiffs = new ArrayList<>();
+    private int warmUps = 0;
+    private int iterations = 0;
+    private int removeUpperOutliers = 0;
+    private int removeLowerOutliers = 0;
+    private List<String> tasks = new ArrayList<>();
+    private List<String> startups = new ArrayList<>();
+    private List<String> cleanups = new ArrayList<>();
+    private List<File> mutations = new ArrayList<>();
+    private List<String> mutationDiffs = new ArrayList<>();
+    private List<BenchmarkProjectAssertion> pre_mutate_assertions = new ArrayList<>();
+    private List<BenchmarkProjectAssertion> post_mutate_assertions = new ArrayList<>();
+    private List<String> buildProperties = new ArrayList<>();
+    private List<BenchmarkListener> listeners = new ArrayList<>();
+    private boolean fromStudio = false;
 
-        File distribution = null;
-        File repo = null;
-        String project = null;
-        String benchmarkName = null;
-        String benchmarkBaseName = null;
-        String benchmarkCodeType = null;
-        String benchmarkFlag = null;
-        String benchmarkSize = null;
-        String benchmarkType = null;
-        String testProjectGradleRootFromSourceRoot = ".";
-        List<String> setupDiffs = new ArrayList<>();
-        int warmUps = 0;
-        int iterations = 0;
-        int removeUpperOutliers = 0;
-        int removeLowerOutliers = 0;
-        List<String> tasks = new ArrayList<>();
-        List<String> startups = new ArrayList<>();
-        List<String> cleanups = new ArrayList<>();
-        List<File> mutations = new ArrayList<>();
-        List<String> mutationDiffs = new ArrayList<>();
-        List<BenchmarkProjectAssertion> pre_mutate_assertions = new ArrayList<>();
-        List<BenchmarkProjectAssertion> post_mutate_assertions = new ArrayList<>();
-        List<String> buildProperties = new ArrayList<>();
-        List<BenchmarkListener> listeners = new ArrayList<>();
-        boolean fromStudio = false;
+    @Before
+    public void setUp() throws Exception {
 
-        Iterator<String> it = Arrays.asList(args).iterator();
         // See http://cs/android/prebuilts/studio/buildbenchmarks/scenarios.bzl for meaning of
         // these flags.
-        while (it.hasNext()) {
-            String arg = it.next();
-            if (arg.equals("--project") && it.hasNext()) {
-                project = it.next();
-            } else if (arg.equals("--distribution") && it.hasNext()) {
-                distribution = new File(it.next());
-            } else if (arg.equals("--repo") && it.hasNext()) {
-                repo = new File(it.next());
-            } else if (arg.equals("--benchmark_base_name")) {
-                benchmarkBaseName = it.next();
-            } else if (arg.equals("--benchmark_code_type")) {
-                benchmarkCodeType = it.next();
-            } else if (arg.equals("--benchmark_flag")) {
-                benchmarkFlag = it.next();
-            } else if (arg.equals("--benchmark_size")) {
-                benchmarkSize = it.next();
-            } else if (arg.equals("--benchmark_type")) {
-                benchmarkType = it.next();
-            } else if (arg.equals("--warmups") && it.hasNext()) {
-                warmUps = Integer.valueOf(it.next());
-            } else if (arg.equals("--iterations") && it.hasNext()) {
-                iterations = Integer.valueOf(it.next());
-            } else if (arg.equals("--remove_upper_outliers") && it.hasNext()) {
-                removeUpperOutliers = Integer.valueOf(it.next());
-            } else if (arg.equals("--remove_lower_outliers") && it.hasNext()) {
-                removeLowerOutliers = Integer.valueOf(it.next());
-            } else if (arg.equals("--startup_task") && it.hasNext()) {
-                startups.add(it.next());
-            } else if (arg.equals("--task") && it.hasNext()) {
-                tasks.add(it.next());
-            } else if (arg.equals("--cleanup_task") && it.hasNext()) {
-                cleanups.add(it.next());
-            } else if (arg.equals("--benchmark") && it.hasNext()) {
-                benchmarkName = it.next();
-            } else if (arg.equals("--setup-diff") && it.hasNext()) {
-                setupDiffs.add(it.next());
-            } else if (arg.equals("--mutation") && it.hasNext()) {
-                mutations.add(new File(it.next()));
-            } else if (arg.equals("--mutation-diff") && it.hasNext()) {
-                mutationDiffs.add(it.next());
-            } else if (arg.equals("--build_property") && it.hasNext()) {
-                buildProperties.add(it.next());
-            } else if (arg.equals("--listener") && it.hasNext()) {
-                listeners.add(locateListener(it.next()).newInstance());
-            } else if (arg.equals("--from-studio") && it.hasNext()) {
-                fromStudio = Boolean.valueOf(it.next());
-            } else if (arg.equals("--gradle-root") && it.hasNext()) {
-                testProjectGradleRootFromSourceRoot = it.next();
-            } else if (arg.equals("--pre_mutate_assertion") && it.hasNext()) {
-                pre_mutate_assertions.add(instantiateAssertion(it.next()));
-            } else if (arg.equals("--post_mutate_assertion") && it.hasNext()) {
-                post_mutate_assertions.add(instantiateAssertion(it.next()));
-            } else {
-                throw new IllegalArgumentException("Unknown flag: " + arg);
+        String value;
+        project = System.getProperty("project");
+        distribution = getFileProperty("distribution");
+        repo = getFileProperty("repo");
+
+        benchmarkBaseName = getStringProperty("benchmark_base_name");
+        benchmarkCodeType = getStringProperty("benchmark_code_type");
+        benchmarkFlag = getStringProperty("benchmark_flag");
+        benchmarkSize = getStringProperty("benchmark_size");
+        benchmarkType = getStringProperty("benchmark_type");
+
+        warmUps = getIntProperty("warmups");
+        iterations = getIntProperty("iterations");
+        removeUpperOutliers = getIntProperty("remove_upper_outliers");
+        removeLowerOutliers = getIntProperty("remove_lower_outliers");
+
+        value = System.getProperty("startup_task");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(startups, value.split(","));
+        }
+        value = System.getProperty("task");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(tasks, value.split(","));
+        }
+        value = System.getProperty("cleanup_task");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(cleanups, value.split(","));
+        }
+        benchmarkName = System.getProperty("benchmark");
+        value = System.getProperty("setup-diff");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(setupDiffs, value.split(","));
+        }
+        value = System.getProperty("mutation");
+        if (value != null && !value.isEmpty()) {
+            for (String mutation : value.split(",")) {
+                mutations.add(new File(mutation));
             }
         }
+        value = System.getProperty("mutation-diff");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(mutationDiffs, value.split(","));
+        }
+        value = System.getProperty("build_property");
+        if (value != null && !value.isEmpty()) {
+            Collections.addAll(buildProperties, value.split(","));
+        }
+        value = System.getProperty("listener");
+        if (value != null && !value.isEmpty()) {
+            for (String listener : value.split(",")) {
+                listeners.add(locateListener(listener).newInstance());
+            }
+        }
+        value = System.getProperty("from-studio");
+        if (value != null && !value.isEmpty()) {
+            fromStudio = Boolean.valueOf(value);
+        }
+        testProjectGradleRootFromSourceRoot = System.getProperty("gradle-root");
+        value = System.getProperty("pre_mutate_assertion");
+        if (value != null && !value.isEmpty()) {
+            for (String assertion : value.split(",")) {
+                pre_mutate_assertions.add(instantiateAssertion(assertion));
+            }
+        }
+        value = System.getProperty("post_mutate_assertion");
+        if (value != null && !value.isEmpty()) {
+            for (String assertion : value.split(",")) {
+                post_mutate_assertions.add(instantiateAssertion(assertion));
+            }
+        }
+    }
 
-        new BenchmarkTest()
-                .run(
-                        project,
-                        benchmarkName,
-                        distribution,
-                        repo,
-                        benchmarkBaseName,
-                        benchmarkCodeType,
-                        benchmarkFlag,
-                        benchmarkSize,
-                        benchmarkType,
-                        testProjectGradleRootFromSourceRoot,
-                        new BenchmarkRun(
-                                warmUps, iterations, removeUpperOutliers, removeLowerOutliers),
-                        setupDiffs,
-                        mutations,
-                        mutationDiffs,
-                        pre_mutate_assertions,
-                        post_mutate_assertions,
-                        startups,
-                        cleanups,
-                        tasks,
-                        listeners,
-                        buildProperties,
-                        fromStudio);
+    @Nullable
+    private static File getFileProperty(@NonNull String name) {
+        String value;
+        value = System.getProperty(name);
+        if (value != null && !value.isEmpty()) {
+            return new File(value);
+        }
+        return null;
+    }
+
+    @Nullable
+    private static String getStringProperty(@NonNull String name) {
+        String value;
+        value = System.getProperty(name);
+        if (value != null && !value.isEmpty()) {
+            return value;
+        }
+        return null;
+    }
+
+    @Nullable
+    private static Integer getIntProperty(@NonNull String name) {
+        String value;
+        value = System.getProperty(name);
+        if (value != null && !value.isEmpty()) {
+            return Integer.valueOf(value);
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -205,30 +226,11 @@ public class BenchmarkTest {
         }
     }
 
-    public void run(
-            String project,
-            String benchmarkName,
-            File distribution,
-            File repo,
-            String benchmarkBaseName,
-            String benchmarkCodeType,
-            String benchmarkFlag,
-            String benchmarkSize,
-            String benchmarkType,
-            String testProjectGradleRootFromSourceRoot,
-            BenchmarkRun benchmarkRun,
-            List<String> setupDiffs,
-            List<File> mutations,
-            List<String> mutationDiffs,
-            List<BenchmarkProjectAssertion> pre_mutate_assertions,
-            List<BenchmarkProjectAssertion> post_mutate_assertions,
-            List<String> startups,
-            List<String> cleanups,
-            List<String> tasks,
-            List<BenchmarkListener> listeners,
-            List<String> buildProperties,
-            boolean fromStudio)
-            throws Exception {
+    @Test
+    public void run() throws Exception {
+
+        BenchmarkRun benchmarkRun =
+                new BenchmarkRun(warmUps, iterations, removeUpperOutliers, removeLowerOutliers);
 
         BazelRunfilesManifestProcessor.setUpRunfiles();
 

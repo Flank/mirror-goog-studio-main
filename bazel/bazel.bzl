@@ -4,6 +4,7 @@ load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_impl")
 load(":lint.bzl", "lint_test")
 load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
+load("@bazel_tools//tools/jdk:toolchain_utils.bzl", "find_java_runtime_toolchain", "find_java_toolchain")
 
 # This is a custom implementation of label "tags".
 # A label of the form:
@@ -44,7 +45,7 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
     zipper_files = "".join([k + "=" + v.path + "\n" for k, v in relative_paths(ctx, resources, roots)])
     zipper_list = create_option_file(ctx, name + ".res.lst", zipper_files)
     zipper_args += ["@" + zipper_list.path]
-    ctx.action(
+    ctx.actions.run(
         inputs = resources + [zipper_list],
         outputs = [resources_jar],
         executable = ctx.executable._zipper,
@@ -55,8 +56,8 @@ def resources_impl(ctx, name, roots, resources, resources_jar):
 
 def accumulate_provider(provider, deps, runtime, compile_time):
     deps += [provider]
-    runtime += provider.transitive_runtime_jars
-    compile_time += provider.full_compile_jars
+    runtime = depset(transitive = [runtime, provider.transitive_runtime_jars])
+    compile_time = depset(transitive = [compile_time, provider.full_compile_jars])
     return deps, runtime, compile_time
 
 def _iml_module_jar_impl(
@@ -88,7 +89,7 @@ def _iml_module_jar_impl(
     if groovy_srcs:
         groovy_deps = [java_jar] if java_jar else []
         groovy_deps += [kotlin_jar] if kotlin_jar else []
-        groovy_deps += list(transitive_runtime_jars)
+        groovy_deps += transitive_runtime_jars.to_list()
         stub_jar = ctx.actions.declare_file(name + ".groovy_stubs.src.jar")
         groovy_impl(ctx, roots, groovy_srcs, groovy_deps, transitive_runtime_jars, groovy_jar, stub_jar)
         sourcepath += [stub_jar]
@@ -115,15 +116,16 @@ def _iml_module_jar_impl(
     if java_srcs:
         compiled_java = ctx.actions.declare_file(name + ".pjava.jar") if form_srcs else java_jar
         formc_input_jars = [compiled_java] + ([kotlin_jar] if kotlin_jar else [])
+        java_toolchain = find_java_toolchain(ctx, ctx.attr._java_toolchain)
 
         java_provider = java_common.compile(
             ctx,
             source_files = java_srcs,
             output = compiled_java,
             deps = java_deps + kotlin_providers,
-            javac_opts = java_common.default_javac_opts(ctx, java_toolchain_attr = "_java_toolchain"),
-            java_toolchain = ctx.attr._java_toolchain,
-            host_javabase = ctx.attr._host_javabase,
+            javac_opts = java_common.default_javac_opts(java_toolchain = java_toolchain) + ctx.attr.javacopts,
+            java_toolchain = java_toolchain,
+            host_javabase = find_java_runtime_toolchain(ctx, ctx.attr._host_javabase),
             sourcepath = sourcepath,
         )
 
@@ -134,9 +136,9 @@ def _iml_module_jar_impl(
                 ctx,
                 [form.path for form in form_srcs] + [k + "=" + v.path for k, v in form_deps] + [f.path for f in formc_input_jars],
                 java_jar,
-                transitive_runtime_jars,
+                transitive_runtime_jars.to_list(),
             )
-            ctx.action(
+            ctx.actions.run(
                 inputs = [v for _, v in form_deps] + form_srcs + formc_input_jars + option_files + transitive_runtime_jars.to_list(),
                 outputs = [java_jar],
                 mnemonic = "formc",
@@ -157,7 +159,7 @@ def _iml_module_jar_impl(
     if res_zips:
         jars += res_zips
 
-    ctx.action(
+    ctx.actions.run(
         inputs = jars,
         outputs = [output_jar],
         mnemonic = "module",
@@ -169,8 +171,8 @@ def _iml_module_jar_impl(
     providers += [java_common.create_provider(
         compile_time_jars = [output_jar],
         runtime_jars = [output_jar],
-        transitive_compile_time_jars = [output_jar] + list(transitive_compile_time_jars),
-        transitive_runtime_jars = [output_jar] + list(transitive_runtime_jars),
+        transitive_compile_time_jars = [output_jar] + transitive_compile_time_jars.to_list(),
+        transitive_runtime_jars = [output_jar] + transitive_runtime_jars.to_list(),
         use_ijar = False,
     )]
     providers += exports
@@ -189,7 +191,7 @@ def _iml_module_impl(ctx):
 
     for this_dep in ctx.attr.deps:
         if hasattr(this_dep, "module"):
-            transitive_data += this_dep.module.transitive_data
+            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             form_deps += this_dep.module.forms
         if java_common.provider in this_dep:
             java_deps, transitive_runtime_jars, transitive_compile_time_jars = accumulate_provider(
@@ -213,7 +215,7 @@ def _iml_module_impl(ctx):
                 transitive_test_compile_time_jars,
             )
         if hasattr(this_dep, "module"):
-            transitive_data += this_dep.module.transitive_data
+            transitive_data = depset(transitive = [transitive_data, this_dep.module.transitive_data])
             test_form_deps += this_dep.module.test_forms
             test_java_deps, transitive_test_runtime_jars, transitive_test_compile_time_jars = accumulate_provider(
                 this_dep.module.test_provider,
@@ -233,7 +235,7 @@ def _iml_module_impl(ctx):
     module_jars = ctx.outputs.production_jar
     module_runtime = transitive_runtime_jars
 
-    transitive_data += depset(ctx.files.iml_files + ctx.files.data)
+    transitive_data = depset(ctx.files.iml_files + ctx.files.data, transitive = [transitive_data])
 
     main_provider, main_forms = _iml_module_jar_impl(
         ctx,
@@ -379,15 +381,15 @@ def _iml_runtime_impl(ctx):
         if hasattr(dep, "runtime_info"):
             fail("runtime should not depend on runtime")
         if hasattr(dep, "module"):
-            module_runtime += dep.module.module_runtime
+            module_runtime = depset(transitive = [module_runtime, dep.module.module_runtime])
             module_jars = dep.module.module_jars
-            transitive_data += dep.module.transitive_data
+            transitive_data = depset(transitive = [transitive_data, dep.module.transitive_data])
             names = dep.module.names
 
     combined_provider = java_common.merge(providers)
 
     # for name in ctx.attr.iml_module.module.names:
-    module_runtime += combined_provider.transitive_runtime_jars
+    module_runtime = depset(transitive = [module_runtime, combined_provider.transitive_runtime_jars])
 
     return struct(
         providers = [combined_provider],
@@ -493,7 +495,6 @@ def iml_module(
         lint_baseline = None,
         lint_timeout = None,
         back_deps = []):
-
     prod_deps = []
     test_deps = []
     for dep in deps:
@@ -625,25 +626,25 @@ def _iml_project_impl(ctx):
             for name in dep.runtime_info.names:
                 module_runtime[name] = dep.runtime_info.module_runtime
                 module_jars[name] = dep.runtime_info.module_jars
-            transitive_data += dep.runtime_info.transitive_data
+            transitive_data = depset(transitive = [transitive_data, dep.runtime_info.transitive_data])
         if hasattr(dep, "module"):
             fail("Don't depend on modules directly: " + str(dep.label))
 
     for dep in ctx.attr.libraries + ctx.attr.modules:
         if java_common.provider in dep:
-            transitive_data += dep[java_common.provider].transitive_runtime_jars
+            transitive_data = depset(transitive = [transitive_data, dep[java_common.provider].transitive_runtime_jars])
 
     text = ""
-    transitive_data += module_jars.values()
+    transitive_data = depset(direct = module_jars.values(), transitive = [transitive_data])
     for name, files in module_runtime.items():
-        transitive_data += files
+        transitive_data = depset(transitive = [transitive_data, files])
         text += name + ": " + module_jars[name].path
-        for file in files:
+        for file in files.to_list():
             text += ":" + file.path
         text += "\n"
 
-    module_info = ctx.new_file(ctx.label.name + ".module_info")
-    ctx.file_action(
+    module_info = ctx.actions.declare_file(ctx.label.name + ".module_info")
+    ctx.actions.write(
         output = module_info,
         content = text,
     )
@@ -651,8 +652,8 @@ def _iml_project_impl(ctx):
     artifacts = ""
     for dep in ctx.attr.artifacts:
         artifacts += dep.label.name + ": " + dep.artifact.path + "\n"
-    artifact_info = ctx.new_file(ctx.label.name + ".artifact_info")
-    ctx.file_action(
+    artifact_info = ctx.actions.declare_file(ctx.label.name + ".artifact_info")
+    ctx.actions.write(
         output = artifact_info,
         content = artifacts,
     )
@@ -684,9 +685,9 @@ def _iml_project_impl(ctx):
         artifact_info.path,
     ]
 
-    ctx.action(
+    ctx.actions.run(
         mnemonic = "Ant",
-        inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + list(transitive_data),
+        inputs = [ctx.file.build, module_info, artifact_info] + ctx.files.data + ctx.files.artifacts + transitive_data.to_list(),
         outputs = outs,
         executable = ctx.executable.ant,
         # We cannot enable this yet, because Mac's sandbox throws an error
@@ -697,7 +698,7 @@ def _iml_project_impl(ctx):
 _iml_project = rule(
     attrs = {
         "modules": attr.label_list(
-            non_empty = True,
+            allow_empty = False,
         ),
         "artifacts": attr.label_list(
         ),
@@ -713,8 +714,7 @@ _iml_project = rule(
             cfg = "host",
         ),
         "build": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
     },
     outputs = {
@@ -751,7 +751,7 @@ def _iml_artifact_impl(ctx):
         zipper_files = "".join([d + "/" + f.basename + "=" + f.path + "\n" for d, f in zip(ctx.attr.dirs, ctx.files.files)])
         zipper_list = create_option_file(ctx, ctx.label.name + ".files.lst", zipper_files)
         zipper_args += ["@" + zipper_list.path]
-        ctx.action(
+        ctx.actions.run(
             inputs = ctx.files.files + [zipper_list],
             outputs = [files_jar],
             executable = ctx.executable._zipper,
@@ -762,9 +762,9 @@ def _iml_artifact_impl(ctx):
         jars += [files_jar]
     for module in ctx.attr.modules:
         if java_common.provider in module:
-            jars += list(module[java_common.provider].compile_jars)
+            jars += module[java_common.provider].compile_jars.to_list()
 
-    ctx.action(
+    ctx.actions.run(
         inputs = jars,
         outputs = [ctx.outputs.artifact],
         mnemonic = "artifact",

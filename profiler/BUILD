@@ -1,4 +1,4 @@
-load("//tools/base/bazel:bazel.bzl", "java_jarjar")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 java_jarjar(
     name = "perfetto-protos",

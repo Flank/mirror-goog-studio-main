@@ -14,7 +14,7 @@ def _gradle_build_impl(ctx):
     for task in ctx.attr.tasks:
         args += ["--task", task]
 
-    ctx.action(
+    ctx.actions.run(
         inputs = ctx.files.data + ctx.files.repos + [ctx.file.build_file, distribution],
         outputs = outputs,
         mnemonic = "gradlew",
@@ -31,8 +31,7 @@ _gradle_build_rule = rule(
         "output_file_destinations": attr.output_list(),
         "tasks": attr.string_list(),
         "build_file": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "repos": attr.label_list(allow_files = True),
         "output_log": attr.output(),

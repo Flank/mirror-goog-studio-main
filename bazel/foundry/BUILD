@@ -12,7 +12,7 @@ platform(
     remote_execution_properties = """
           properties: {
             name: "container-image"
-            value:"docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:7b3de3e595ff49a3d2f17453152db8fa3b560e20ea67b4a19c1a5919fd024de9"
+            value:"docker://gcr.io/google.com/android-studio-alphasource/rbe-ubuntu16-as@sha256:b346bf48fd581e5445a3fe7982359a957b088c35c6b3735c0a35be0c8db6d2c1"
           }
           properties: {
             name: "dockerNetwork"

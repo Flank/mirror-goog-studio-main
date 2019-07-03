@@ -1,6 +1,6 @@
 load(":functions.bzl", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_java_library")
-load(":bazel.bzl", "java_jarjar")
+load(":utils.bzl", "java_jarjar")
 
 # Enum-like values to determine the language the gen_proto rule will compile
 # the .proto files to.
@@ -41,7 +41,7 @@ def _gen_proto_impl(ctx):
         # Try to generate java protos only if we won't generate cc protos
     elif ctx.attr.target_language == proto_languages.JAVA:
         srcjar = ctx.outputs.outs[0]  # outputs.out size should be 1
-        outs = [ctx.new_file(srcjar.basename + ".jar")]
+        outs = [ctx.actions.declare_file(srcjar.basename + ".jar")]
 
         out_path = outs[0].path
         args += [
@@ -53,13 +53,15 @@ def _gen_proto_impl(ctx):
                 "--plugin=protoc-gen-java_rpc=" + ctx.executable.grpc_plugin.path,
             ]
 
+    tools = []
     if ctx.executable.grpc_plugin != None:
-        inputs += [ctx.executable.grpc_plugin]
+        tools += [ctx.executable.grpc_plugin]
 
-    ctx.action(
+    ctx.actions.run(
         mnemonic = "GenProto",
         inputs = inputs,
         outputs = outs,
+        tools = tools,
         arguments = args,
         executable = ctx.executable.protoc,
     )
@@ -67,7 +69,7 @@ def _gen_proto_impl(ctx):
     if ctx.attr.target_language == proto_languages.JAVA:
         # This is required because protoc only understands .jar extensions, but Bazel
         # requires source JAR files end in .srcjar.
-        ctx.action(
+        ctx.actions.run_shell(
             mnemonic = "FixProtoSrcJar",
             inputs = outs,
             outputs = [srcjar],
@@ -82,7 +84,7 @@ def _gen_proto_impl(ctx):
 _gen_proto_rule = rule(
     attrs = {
         "srcs": attr.label_list(
-            allow_files = FileType([".proto"]),
+            allow_files = [".proto"],
         ),
         "deps": attr.label_list(
             allow_files = False,
@@ -92,19 +94,19 @@ _gen_proto_rule = rule(
             ],
         ),
         "include": attr.label(
-            allow_files = FileType([".proto"]),
+            allow_files = [".proto"],
         ),
         "proto_include_version": attr.string(),
         "protoc": attr.label(
             cfg = "host",
             executable = True,
             mandatory = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "grpc_plugin": attr.label(
             cfg = "host",
             executable = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "target_language": attr.int(),
         "outs": attr.output_list(),

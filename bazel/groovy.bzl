@@ -11,11 +11,11 @@ def groovy_impl(ctx, roots, srcs, groovy_deps, jars, groovy_jar, stub_jar):
         ctx,
         [src.path for src in srcs],
         stub_jar,
-        ":".join([dep.path for dep in jars]),
+        ":".join([dep.path for dep in jars.to_list()]),
     )
 
-    ctx.action(
-        inputs = srcs + list(jars) + stub_option_files,
+    ctx.actions.run(
+        inputs = srcs + jars.to_list() + stub_option_files,
         outputs = [stub_jar],
         mnemonic = "groovystub",
         arguments = stub_args + ["xxx"],
@@ -33,7 +33,7 @@ def groovy_impl(ctx, roots, srcs, groovy_deps, jars, groovy_jar, stub_jar):
         ":".join([dep.path for dep in groovy_deps] + merged),
     )
 
-    ctx.action(
+    ctx.actions.run(
         inputs = srcs + groovy_deps + option_files,
         outputs = [groovy_jar],
         mnemonic = "groovyc",

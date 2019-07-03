@@ -11,23 +11,23 @@ def _maven_pom_impl(ctx):
     if ctx.attr.library:
         if ctx.attr.file or ctx.attr.classified_files:
             fail("Cannot set both file and library for a maven_pom.")
-        jars = jars | depset([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
-        clsjars["sources"] = clsjars["sources"] | ctx.attr.library.java.source_jars
+        jars = depset([jar.class_jar for jar in ctx.attr.library.java.outputs.jars], transitive = [jars])
+        clsjars["sources"] = depset(ctx.attr.library.java.source_jars.to_list(), transitive = [clsjars["sources"]])
         for classifier, library in zip(ctx.attr.classifiers, ctx.attr.classified_libraries):
             if classifier not in clsjars:
                 clsjars[classifier] = depset()
-            clsjars[classifier] += depset([jar.class_jar for jar in library.java.outputs.jars])
+            clsjars[classifier] = depset(direct = [jar.class_jar for jar in library.java.outputs.jars], transitive = [clsjars[classifier]])
 
     if ctx.attr.file:
         if ctx.attr.library or ctx.attr.classified_libraries:
             fail("Cannot set both file and library for a maven_pom.")
-        jars = jars | ctx.attr.file.files
+        jars = depset(transitive = [ctx.attr.file.files, jars])
 
     if ctx.attr.classified_files:
         for classifier, file in zip(ctx.attr.classifiers, ctx.attr.classified_files):
             if classifier not in clsjars:
                 clsjars[classifier] = depset()
-            clsjars[classifier] += file.files
+            clsjars[classifier] = depset(transitive = [file.files, clsjars[classifier]])
 
     if ctx.attr.properties and ctx.files.properties_files:
         fail("Cannot set both properties and properties_files for a maven_pom.")
@@ -42,15 +42,15 @@ def _maven_pom_impl(ctx):
 
     # Transitive deps through the parent attribute
     if ctx.attr.parent:
-        parent_poms = parent_poms | ctx.attr.parent.maven.parent.poms
-        parent_poms = parent_poms | ctx.attr.parent.maven.deps.poms
-        parent_poms = parent_poms | [ctx.file.parent]
-        parent_jars += ctx.attr.parent.maven.parent.jars
-        parent_jars += ctx.attr.parent.maven.deps.jars
-        parent_jars += {ctx.file.parent: ctx.attr.parent.maven.jars}
-        parent_clsjars += ctx.attr.parent.maven.parent.clsjars
-        parent_clsjars += ctx.attr.parent.maven.deps.clsjars
-        parent_clsjars += {ctx.file.parent: ctx.attr.parent.maven.clsjars}
+        parent_poms = depset(transitive = [ctx.attr.parent.maven.parent.poms, parent_poms], order = "postorder")
+        parent_poms = depset(transitive = [ctx.attr.parent.maven.deps.poms, parent_poms], order = "postorder")
+        parent_poms = depset(direct = [ctx.file.parent], transitive = [parent_poms], order = "postorder")
+        parent_jars.update(ctx.attr.parent.maven.parent.jars)
+        parent_jars.update(ctx.attr.parent.maven.deps.jars)
+        parent_jars[ctx.file.parent] = ctx.attr.parent.maven.jars
+        parent_clsjars.update(ctx.attr.parent.maven.parent.clsjars)
+        parent_clsjars.update(ctx.attr.parent.maven.deps.clsjars)
+        parent_clsjars[ctx.file.parent] = ctx.attr.parent.maven.clsjars
     elif hasattr(ctx.attr.source, "maven"):
         parent_poms = ctx.attr.source.maven.parent.poms
         parent_jars = ctx.attr.source.maven.parent.jars
@@ -59,15 +59,15 @@ def _maven_pom_impl(ctx):
     # Transitive deps through deps
     if ctx.attr.deps:
         for label in ctx.attr.deps:
-            deps_poms = deps_poms | label.maven.parent.poms
-            deps_poms = deps_poms | label.maven.deps.poms
-            deps_poms = deps_poms | [label.maven.pom]
-            deps_jars += label.maven.parent.jars
-            deps_jars += label.maven.deps.jars
-            deps_jars += {label.maven.pom: label.maven.jars}
-            deps_clsjars += label.maven.parent.clsjars
-            deps_clsjars += label.maven.deps.clsjars
-            deps_clsjars += {label.maven.pom: label.maven.clsjars}
+            deps_poms = depset(transitive = [label.maven.parent.poms, deps_poms], order = "postorder")
+            deps_poms = depset(transitive = [label.maven.deps.poms, deps_poms], order = "postorder")
+            deps_poms = depset(direct = [label.maven.pom], transitive = [deps_poms], order = "postorder")
+            deps_jars.update(label.maven.parent.jars)
+            deps_jars.update(label.maven.deps.jars)
+            deps_jars[label.maven.pom] = label.maven.jars
+            deps_clsjars.update(label.maven.parent.clsjars)
+            deps_clsjars.update(label.maven.deps.clsjars)
+            deps_clsjars[label.maven.pom] = label.maven.clsjars
     elif hasattr(ctx.attr.source, "maven"):
         deps_poms = ctx.attr.source.maven.deps.poms
         deps_jars = ctx.attr.source.maven.deps.jars
@@ -109,7 +109,7 @@ def _maven_pom_impl(ctx):
     args += ["--deps", ":".join([dep.path for dep in ctx.files.deps])]
     inputs += ctx.files.deps
 
-    ctx.action(
+    ctx.actions.run(
         mnemonic = "GenPom",
         inputs = inputs,
         outputs = [ctx.outputs.pom],
@@ -158,12 +158,10 @@ maven_pom = rule(
         "version": attr.string(),
         "artifact": attr.string(),
         "source": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "properties": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "properties_files": attr.label_list(
             allow_files = True,
@@ -171,8 +169,7 @@ maven_pom = rule(
         ),
         "version_property": attr.string(),
         "parent": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "exclusions": attr.string_list_dict(),
         "_pom": attr.label(
@@ -242,7 +239,7 @@ def maven_java_library(
 
 def _import_with_license_impl(ctx):
     names = []
-    for jar in ctx.attr.dep[DefaultInfo].files:
+    for jar in ctx.attr.dep[DefaultInfo].files.to_list():
         name = jar.basename
         if jar.extension:
             name = jar.basename[:-len(jar.extension) - 1]
@@ -321,33 +318,33 @@ def _maven_repo_impl(ctx):
     args = []
     for artifact in ctx.attr.artifacts:
         if not seen.get(artifact.maven.pom):
-            for pom in artifact.maven.parent.poms:
+            for pom in artifact.maven.parent.poms.to_list():
                 jars = artifact.maven.parent.jars[pom]
                 if not seen.get(pom):
-                    inputs += [pom] + list(jars)
-                    args += [pom.path] + [jar.path for jar in list(jars)]
+                    inputs += [pom] + jars.to_list()
+                    args += [pom.path] + [jar.path for jar in jars.to_list()]
                     clsjars = artifact.maven.parent.clsjars[pom]
                     for classifier in clsjars:
-                        inputs += list(clsjars[classifier])
-                        args += [jar.path + ":" + classifier for jar in list(clsjars[classifier])]
-                    seen += {pom: True}
-            inputs += [artifact.maven.pom] + list(artifact.maven.jars)
-            args += [artifact.maven.pom.path] + [jar.path for jar in list(artifact.maven.jars)]
+                        inputs += clsjars[classifier].to_list()
+                        args += [jar.path + ":" + classifier for jar in clsjars[classifier].to_list()]
+                    seen[pom] = True
+            inputs += [artifact.maven.pom] + artifact.maven.jars.to_list()
+            args += [artifact.maven.pom.path] + [jar.path for jar in artifact.maven.jars.to_list()]
             for classifier in artifact.maven.clsjars:
-                inputs += list(artifact.maven.clsjars[classifier])
-                args += [jar.path + ":" + classifier for jar in list(artifact.maven.clsjars[classifier])]
+                inputs += artifact.maven.clsjars[classifier].to_list()
+                args += [jar.path + ":" + classifier for jar in artifact.maven.clsjars[classifier].to_list()]
 
-            seen += {artifact.maven.pom: True}
-            for pom in artifact.maven.deps.poms:
+            seen[artifact.maven.pom] = True
+            for pom in artifact.maven.deps.poms.to_list():
                 jars = artifact.maven.deps.jars[pom]
                 if not seen.get(pom):
-                    inputs += [pom] + list(jars)
-                    args += [pom.path] + [jar.path for jar in list(jars)]
+                    inputs += [pom] + jars.to_list()
+                    args += [pom.path] + [jar.path for jar in jars.to_list()]
                     if include_sources:
                         clsjars = artifact.maven.deps.clsjars[pom]
-                        inputs += list(clsjars[classifier])
-                        args += [jar.path + ":" + classifier for jar in list(clsjars[classifier])]
-                    seen += {pom: True}
+                        inputs += clsjars[classifier].to_list()
+                        args += [jar.path + ":" + classifier for jar in clsjars[classifier].to_list()]
+                    seen[pom] = True
 
     # Execute the command
     option_file = create_option_file(
@@ -355,8 +352,7 @@ def _maven_repo_impl(ctx):
         ctx.outputs.repo.path + ".lst",
         "\n".join(args),
     )
-
-    ctx.action(
+    ctx.actions.run(
         inputs = inputs + [option_file],
         outputs = [ctx.outputs.repo],
         mnemonic = "mavenrepo",

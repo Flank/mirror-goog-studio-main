@@ -17,13 +17,13 @@ load("@//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "java_proto_libra
 
 java_proto_library(
     name = "java_proto",
-    srcs = glob(["**/perfetto_trace.proto"]),
+    srcs = ["protos/perfetto/trace/perfetto_trace.proto"],
     grpc_support = 1,
 )
 
 cc_grpc_proto_library(
     name = "cc_proto",
-    srcs = glob(["**/perfetto_config.proto"]),
+    srcs = ["protos/perfetto/config/perfetto_config.proto"],
     grpc_support = 1,
     tags = ["no_windows"],
 )

@@ -52,12 +52,12 @@ def expand_template_impl(ctx):
     jar_name = calculate_jar_name_for_sdk_package(ctx.attr.classpath_jar.files.to_list()[0].short_path)
     lib_path = "%APP_HOME%\\lib\\" if ctx.attr.is_windows else "$APP_HOME/lib/"
     jar_path = lib_path + jar_name
+    substitutions = dict(ctx.attr.substitutions)
+    substitutions["${JARS}"] = jar_path
     ctx.actions.expand_template(
         template = ctx.file.template,
         output = ctx.outputs.out,
-        substitutions = ctx.attr.substitutions + {
-            "${JARS}": jar_path,
-        },
+        substitutions = substitutions,
     )
 
 expand_template = rule(

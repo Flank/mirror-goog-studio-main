@@ -1,7 +1,7 @@
-load("//tools/base/bazel:bazel.bzl", "fileset", "iml_module")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
-load("//tools/base/bazel:utils.bzl", "flat_archive")
+load("//tools/base/bazel:utils.bzl", "fileset", "flat_archive")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 load("//tools/base/bazel/sdk:sdk_utils.bzl", "calculate_jar_name_for_sdk_package", "tool_start_script")
 
@@ -9,12 +9,12 @@ platforms = ["win", "linux", "mac"]
 
 def _generate_classpath_jar_impl(ctx):
     runtime_jars = depset(transitive = [java_lib[JavaInfo].transitive_runtime_jars for java_lib in [ctx.attr.java_binary]])
-    jars = [calculate_jar_name_for_sdk_package(jar.short_path) for jar in runtime_jars]
+    jars = [calculate_jar_name_for_sdk_package(jar.short_path) for jar in runtime_jars.to_list()]
     mffile = ctx.actions.declare_file(ctx.attr.java_binary.label.name + "-manifest")
     ctx.actions.write(output = mffile, content = "Class-Path: \n " + " \n ".join(jars) + " \n")
     arguments = ["c", ctx.outputs.classpath_jar.path, "META-INF/MANIFEST.MF=" + mffile.path]
     outputs = [ctx.outputs.classpath_jar]
-    ctx.action(
+    ctx.actions.run(
         inputs = [mffile],
         outputs = outputs,
         arguments = arguments,
@@ -78,7 +78,7 @@ license_aspect = aspect(
 )
 
 def _combine_licenses_impl(ctx):
-    inputs = depset([f for dep in ctx.attr.deps for f in dep.notices]).to_list()
+    inputs = depset(transitive = [dep.notices for dep in ctx.attr.deps]).to_list()
     ctx.actions.run(
         inputs = inputs,
         outputs = [ctx.outputs.out],
@@ -116,7 +116,7 @@ def _package_component_impl(ctx):
     for other_file, other_location in ctx.attr.others.items():
         args.append(other_location + "=" + other_file.files.to_list()[0].path)
         inputs += other_file.files.to_list()
-    ctx.action(
+    ctx.actions.run(
         inputs = inputs,
         outputs = [ctx.outputs.out],
         executable = ctx.executable._zipper,

@@ -1,5 +1,5 @@
 load("//tools/base/bazel:proto.bzl", "cc_grpc_proto_library", "android_java_proto_library")
-load("//tools/base/bazel:bazel.bzl", "java_jarjar")
+load("//tools/base/bazel:utils.bzl", "java_jarjar")
 
 package(default_visibility = ["//tools/base/deploy:__subpackages__"])
 

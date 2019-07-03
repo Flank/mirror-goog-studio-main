@@ -6,7 +6,7 @@ def _jni_library_impl(ctx):
             # cpu value from --cpu, so use that as the directory name.
             cpu = ctx.fragments.cpp.cpu
         for dep in deps:
-            for f in dep.files:
+            for f in dep.files.to_list():
                 inputs.append((cpu, f))
 
     # If two targets in deps share the same files (e.g. in the data attribute)
@@ -14,7 +14,7 @@ def _jni_library_impl(ctx):
     # dedupe the files.
     deduped_inputs = depset(inputs)
     zipper_args = ["c", ctx.outputs.zip.path]
-    for cpu, file in deduped_inputs:
+    for cpu, file in deduped_inputs.to_list():
         # "lib/" is the JNI directory looked for in android
         target = "lib/%s/%s" % (cpu, file.basename)
 
@@ -25,8 +25,8 @@ def _jni_library_impl(ctx):
         name = target + "=" + file.path
         zipper_args.append(name)
 
-    ctx.action(
-        inputs = [f for cpu, f in deduped_inputs],
+    ctx.actions.run(
+        inputs = [f for cpu, f in deduped_inputs.to_list()],
         outputs = [ctx.outputs.zip],
         executable = ctx.executable._zipper,
         arguments = zipper_args,
@@ -40,7 +40,7 @@ def _android_cc_binary_impl(ctx):
         file = binary.files.to_list()[0]
         for out in ctx.outputs.outs:
             if out.path.endswith(cpu + "/" + name):
-                ctx.action(
+                ctx.actions.run_shell(
                     mnemonic = "SplitCp",
                     inputs = [file],
                     outputs = [out],

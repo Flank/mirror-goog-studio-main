@@ -4,7 +4,7 @@ def _jasmin_jar_impl(ctx):
     class_jar = ctx.outputs.class_jar
     args, option_files = create_java_compiler_args(ctx, class_jar, [])
 
-    ctx.action(
+    ctx.actions.run(
         inputs = ctx.files.srcs + option_files,
         outputs = [class_jar],
         mnemonic = "jasmin",

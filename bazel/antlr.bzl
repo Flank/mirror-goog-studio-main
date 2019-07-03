@@ -12,7 +12,7 @@ def _antlr_srcjar_impl(ctx):
     args = ["-o", src_jar.path, "@" + option_file.path]
 
     # Invoke our custom AntlrCompiler.
-    ctx.action(
+    ctx.actions.run(
         inputs = ctx.files.srcs + [option_file],
         outputs = [src_jar],
         mnemonic = "antlr",

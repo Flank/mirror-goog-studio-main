@@ -4,7 +4,7 @@ def _apply_diff_impl(ctx):
     args += ["--input_file", ctx.file.input_file.path]
     args += ["--diff_file", ctx.file.diff_file.path]
 
-    ctx.action(
+    ctx.actions.run(
         inputs = [ctx.file.input_file, ctx.file.diff_file],
         outputs = [ctx.outputs.output_file],
         mnemonic = "diff",
@@ -16,12 +16,10 @@ apply_diff = rule(
     attrs = {
         "output_file": attr.output(),
         "input_file": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "diff_file": attr.label(
-            allow_files = True,
-            single_file = True,
+            allow_single_file = True,
         ),
         "_apply_diff": attr.label(
             executable = True,

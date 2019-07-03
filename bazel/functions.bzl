@@ -2,8 +2,8 @@
 
 def create_option_file(ctx, name, content):
     """ Create the command line options file """
-    options_file = ctx.new_file(name)
-    ctx.file_action(output = options_file, content = content)
+    options_file = ctx.actions.declare_file(name)
+    ctx.actions.write(output = options_file, content = content)
     return options_file
 
 def create_java_compiler_args_srcs(ctx, srcs, path, deps):

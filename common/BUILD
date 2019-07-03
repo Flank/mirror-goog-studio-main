@@ -1,7 +1,7 @@
-load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
+load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_pom")
-load("//tools/base/bazel:utils.bzl", "dir_archive")
+load("//tools/base/bazel:utils.bzl", "dir_archive", "fileset")
 
 # do not generate: resources removed manually
 iml_module(
