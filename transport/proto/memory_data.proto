@@ -150,6 +150,18 @@ message StopAllocTracking {
   int64 request_time = 1;
 }
 
+message MemoryAllocContextsData {
+  BatchAllocationContexts contexts = 1;
+}
+
+message MemoryAllocEventsData {
+  BatchAllocationEvents events = 1;
+}
+
+message MemoryJniRefData {
+  BatchJNIGlobalRefEvent events = 1;
+}
+
 message AllocatedClass {
   int32 class_id = 1;
   string class_name = 2;

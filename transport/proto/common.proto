@@ -82,6 +82,12 @@ message Event {
     MEMORY_ALLOC_TRACKING = 406;
     // group_id: track id
     MEMORY_ALLOC_TRACKING_STATUS = 407;
+    // no specified group id.
+    MEMORY_ALLOC_CONTEXTS = 408;
+    // no specified group id.
+    MEMORY_ALLOC_EVENTS = 409;
+    // no specified group id.
+    MEMORY_JNI_REF_EVENTS = 410;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -183,6 +189,9 @@ message Event {
     MemoryAllocSamplingData memory_alloc_sampling = 405;
     MemoryAllocTrackingData memory_alloc_tracking = 406;
     MemoryAllocTrackingStatusData memory_alloc_tracking_status = 407;
+    MemoryAllocContextsData memory_alloc_contexts = 408;
+    MemoryAllocEventsData memory_alloc_events = 409;
+    MemoryJniRefData memory_jni_ref_events = 410;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

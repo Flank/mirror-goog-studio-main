@@ -173,24 +173,68 @@ void EnqueueAllocationInfoEvents(const proto::Command& command,
 void EnqueueAllocationEvents(const proto::BatchAllocationContexts& contexts,
                              const proto::BatchAllocationEvents& events) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
-  }
+    Agent::Instance().SubmitAgentTasks(
+        {[contexts](AgentService::Stub& stub, ClientContext& ctx) {
+           SendEventRequest request;
+           auto* event = request.mutable_event();
+           event->set_pid(getpid());
+           event->set_kind(Event::MEMORY_ALLOC_CONTEXTS);
+           auto* data = event->mutable_memory_alloc_contexts();
+           data->mutable_contexts()->CopyFrom(contexts);
 
-  AllocationEventsRequest request;
-  request.set_pid(getpid());
-  request.mutable_contexts()->CopyFrom(contexts);
-  request.mutable_events()->CopyFrom(events);
-  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
-      {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
-        EmptyMemoryReply reply;
-        return stub.RecordAllocationEvents(&ctx, request, &reply);
-      }});
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         },
+         [events](AgentService::Stub& stub, ClientContext& ctx) {
+           SendEventRequest request;
+           auto* event = request.mutable_event();
+           event->set_pid(getpid());
+           event->set_kind(Event::MEMORY_ALLOC_EVENTS);
+           auto* data = event->mutable_memory_alloc_events();
+           data->mutable_events()->CopyFrom(events);
+
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         }});
+  } else {
+    AllocationEventsRequest request;
+    request.set_pid(getpid());
+    request.mutable_contexts()->CopyFrom(contexts);
+    request.mutable_events()->CopyFrom(events);
+    Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
+        {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
+          EmptyMemoryReply reply;
+          return stub.RecordAllocationEvents(&ctx, request, &reply);
+        }});
+  }
 }
 
 void EnqueueJNIGlobalRefEvents(const proto::BatchAllocationContexts& contexts,
                                const proto::BatchJNIGlobalRefEvent& events) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+    Agent::Instance().SubmitAgentTasks(
+        {[contexts](AgentService::Stub& stub, ClientContext& ctx) {
+           SendEventRequest request;
+           auto* event = request.mutable_event();
+           event->set_pid(getpid());
+           event->set_kind(Event::MEMORY_ALLOC_CONTEXTS);
+           auto* data = event->mutable_memory_alloc_contexts();
+           data->mutable_contexts()->CopyFrom(contexts);
+
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         },
+         [events](AgentService::Stub& stub, ClientContext& ctx) {
+           SendEventRequest request;
+           auto* event = request.mutable_event();
+           event->set_pid(getpid());
+           event->set_kind(Event::MEMORY_JNI_REF_EVENTS);
+           auto* data = event->mutable_memory_jni_ref_events();
+           data->mutable_events()->CopyFrom(events);
+
+           EmptyResponse response;
+           return stub.SendEvent(&ctx, request, &response);
+         }});
   }
 
   JNIRefEventsRequest request;
