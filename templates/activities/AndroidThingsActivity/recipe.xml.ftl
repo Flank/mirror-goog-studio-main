@@ -15,9 +15,7 @@
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </#if>
 
-<#if !(hasDependency('com.android.support:appcompat-v7'))>
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
-</#if>
 
     <instantiate from="root/src/app_package/SimpleActivity.${ktOrJavaExt}.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />

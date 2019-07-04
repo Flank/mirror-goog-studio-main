@@ -2,9 +2,7 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
-    <#if !(hasDependency('com.android.support:support-v4'))>
-        <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
-    </#if>
+    <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+"/>
 
     <#include "../common/recipe_manifest.xml.ftl" />
 
@@ -27,14 +25,8 @@
                 to="${escapeXmlAttribute(resOut)}/values/drawables.xml" />
     </#if>
 
-    <#if !(hasDependency('com.android.support:design'))>
-        <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
-    </#if>
-
-    <#if !(hasDependency('com.android.support:appcompat-v7'))>
-        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
-    </#if>
-
+    <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
 
     <instantiate from="root/res-buildApi22/layout/navigation_content_main.xml.ftl"

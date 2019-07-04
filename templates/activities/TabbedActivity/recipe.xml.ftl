@@ -2,22 +2,10 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
-
-    <#if !(hasDependency('com.android.support:appcompat-v7'))>
-        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
-    </#if>
-
-    <#if !(hasDependency('com.android.support:design'))>
-        <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
-    </#if>
-
-    <#if !(hasDependency('com.android.support.constraint:constraint-layout'))>
-        <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
-    </#if>
-
-    <#if !(hasDependency('android.arch.lifecycle:extensions'))>
-        <dependency mavenUrl="android.arch.lifecycle:extensions:+" />
-    </#if>
+    <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
+    <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
+    <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+    <dependency mavenUrl="android.arch.lifecycle:extensions:+" />
 
     <#include "../common/recipe_manifest.xml.ftl" />
 

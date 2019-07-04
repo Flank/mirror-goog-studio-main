@@ -2,12 +2,8 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
-<#if !(hasDependency('com.android.support:appcompat-v7'))>
     <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+"/>
-</#if>
-<#if !(hasDependency('com.android.support:design'))>
     <dependency mavenUrl="com.android.support:design:${buildApi}.+"/>
-</#if>
 
     <#include "../common/recipe_manifest.xml.ftl" />
 
