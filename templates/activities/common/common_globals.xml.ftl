@@ -2,11 +2,8 @@
     <#assign theme=applicationTheme!{ "name": "AppTheme"}>
     <#assign themeName=theme.name!'AppTheme'>
     <#assign themeNameNoActionBar=theme.nameNoActionBar!'AppTheme.NoActionBar'>
-    <#assign espresso=hasDependency('com.android.support.test.espresso:espresso-core', 'androidTestCompile')>
     <#assign useAndroidX=isAndroidxEnabled()>
     <#assign useMaterial2=useAndroidX || hasDependency('com.google.android.material:material')>
-    <#assign supportRunner=hasDependency('com.android.support.test:runner', 'androidTestCompile')>
-    <#assign testSupportLib=espresso && supportRunner>
 
     <global id="themeName" type="string" value="${themeName}" />
     <global id="themeExists" type="boolean" value="${(theme.exists!false)?string}" />
@@ -22,7 +19,6 @@
     <global id="useMaterial2" type="boolean" value="${useMaterial2?string}" />
     <global id="useAndroidX" type="boolean" value="${useAndroidX?string}" />
     <global id="hasNoActionBar" type="boolean" value="true" /> <#-- It's overridden in each template if necessary -->
-    <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 
     <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'.')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
