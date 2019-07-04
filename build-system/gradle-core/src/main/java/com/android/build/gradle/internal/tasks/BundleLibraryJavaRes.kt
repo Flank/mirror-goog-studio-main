@@ -28,11 +28,12 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.workers.WorkerExecutor
 import java.io.File
@@ -51,12 +52,16 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
     @get:OutputFile
     abstract val output: RegularFileProperty
 
+    // We cannot use @Classpath as it ignores empty directories which may be used as Java resources.
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     var resources: FileCollection? = null
         private set
 
-    @get:Classpath
+    // We cannot use @Classpath as it ignores empty directories which may be used as Java resources.
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     var resourcesAsJars: FileCollection? = null
         private set

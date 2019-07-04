@@ -19,7 +19,6 @@ Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': 
 Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'resultsDirectories' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.AndroidReportTask': property 'testFailed' is not annotated with an input or output annotation.
 Warning: Task type 'com.android.build.gradle.internal.tasks.ApplicationIdWriterTask': property 'appMetadata' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Task type 'com.android.build.gradle.internal.tasks.BundleLibraryJavaRes': property 'resources' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.CheckManifest': property 'manifest' has @Input annotation used on property of type java.io.File.
 Warning: Task type 'com.android.build.gradle.internal.tasks.CheckProguardFiles': property 'proguardFiles' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Task type 'com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask': property 'buddyApks' is missing a @PathSensitive annotation, defaulting to PathSensitivity.ABSOLUTE.
