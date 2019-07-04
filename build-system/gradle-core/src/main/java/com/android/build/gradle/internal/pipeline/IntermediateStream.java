@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -134,11 +133,8 @@ class IntermediateStream extends TransformStream {
 
     /** Returns a new view of this content as a {@link TransformOutputProvider}. */
     @NonNull
-    TransformOutputProvider asOutput(boolean isIncremental) throws IOException {
-        if (!isIncremental) {
-            FileUtils.deleteIfExists(new File(getRootLocation(), SubStream.FN_FOLDER_CONTENT));
-        }
-        init();
+    TransformOutputProvider asOutput() throws IOException {
+        init(true);
         return new TransformOutputProviderImpl(folderUtils);
     }
 
@@ -150,14 +146,14 @@ class IntermediateStream extends TransformStream {
     @NonNull
     @Override
     TransformInput asNonIncrementalInput() {
-        init();
+        init(false);
         return folderUtils.computeNonIncrementalInputFromFolder();
     }
 
     @NonNull
     @Override
     IncrementalTransformInput asIncrementalInput() {
-        init();
+        init(false);
         return folderUtils.computeIncrementalInputFromFolder();
     }
 
@@ -205,17 +201,21 @@ class IntermediateStream extends TransformStream {
                     if (!project.getTasks().getByName(taskName).getState().getExecuted()) {
                         return ImmutableList.of();
                     }
-                    init();
+                    init(false);
                     return folderUtils.getFiles(streamFilter);
                 };
 
         return project.files(supplier).builtBy(getFileCollection().getBuildDependencies());
     }
 
-    private void init() {
+    private void init(boolean ignoreUnexpectedScopes) {
         if (folderUtils == null) {
             folderUtils =
-                    new IntermediateFolderUtils(getRootLocation(), getContentTypes(), getScopes());
+                    new IntermediateFolderUtils(
+                            getRootLocation(),
+                            getContentTypes(),
+                            getScopes(),
+                            ignoreUnexpectedScopes);
         }
     }
 

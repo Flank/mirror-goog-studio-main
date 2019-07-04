@@ -59,11 +59,13 @@ public class IntermediateFolderUtils {
     public IntermediateFolderUtils(
             @NonNull File rootFolder,
             @NonNull Set<ContentType> types,
-            @NonNull Set<? super Scope> scopes) {
+            @NonNull Set<? super Scope> scopes,
+            boolean ignoreUnexpectedScopes) {
         this.rootFolder = rootFolder;
         this.types = types;
         this.scopes = scopes;
-        updateLists(makeRestrictedCopies(SubStream.loadSubStreams(rootFolder)));
+        updateLists(
+                makeRestrictedCopies(SubStream.loadSubStreams(rootFolder), ignoreUnexpectedScopes));
     }
 
     @NonNull
@@ -160,7 +162,7 @@ public class IntermediateFolderUtils {
     }
 
     public void reload() {
-        updateLists(makeRestrictedCopies(SubStream.loadSubStreams(rootFolder)));
+        updateLists(makeRestrictedCopies(SubStream.loadSubStreams(rootFolder), false));
     }
 
     class IntermediateTransformInput extends IncrementalTransformInput {
@@ -413,7 +415,8 @@ public class IntermediateFolderUtils {
     }
 
     @NonNull
-    private Collection<SubStream> makeRestrictedCopies(@NonNull Collection<SubStream> streams) {
+    private Collection<SubStream> makeRestrictedCopies(
+            @NonNull Collection<SubStream> streams, boolean ignoreUnexpectedScopes) {
         List<SubStream> list = Lists.newArrayListWithCapacity(streams.size());
         outOfScopeStreams = Lists.newArrayList();
 
@@ -445,7 +448,7 @@ public class IntermediateFolderUtils {
                         }
                     }
 
-                    if (foundMatch && foundUnwanted) {
+                    if (foundMatch && foundUnwanted && !ignoreUnexpectedScopes) {
                         // Sort the names, so the error message is stable.
                         List<String> foundScopes =
                                 subStream

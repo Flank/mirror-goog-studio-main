@@ -155,7 +155,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -283,7 +283,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -411,7 +411,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -538,7 +538,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -663,7 +663,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -790,7 +790,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -931,7 +931,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File addedJar = output.getContentLocation("added", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(addedJar.getParentFile());
@@ -1011,7 +1011,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File addedJar = output.getContentLocation("added",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 projectClass.getScopes(), Format.JAR);
@@ -1122,7 +1122,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File addedJar = output.getContentLocation("added",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.PROJECT), Format.JAR);
@@ -1299,7 +1299,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -1379,7 +1379,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // however, we split the output into 2 streams, one for each content type.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File classesOutput = output.getContentLocation("classes",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 projectClass.getScopes(), Format.DIRECTORY);
@@ -1477,7 +1477,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // however, we split the output into 2 streams, one for each content type.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File classesOutput = output.getContentLocation("classes",
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.PROJECT),
@@ -1628,7 +1628,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File jarFile = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
@@ -1766,7 +1766,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = projectClass.asOutput(false);
+        TransformOutputProvider output = projectClass.asOutput();
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -1864,7 +1864,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
-        TransformOutputProvider output2 = scope2.asOutput(false);
+        TransformOutputProvider output2 = scope2.asOutput();
         File scope2RootFolder = output2.getContentLocation("foo", scope2.getContentTypes(),
                 scope2.getScopes(), Format.DIRECTORY);
         mkdirs(scope2RootFolder);
@@ -1895,7 +1895,7 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
-        TransformOutputProvider output4 = scope4.asOutput(false);
+        TransformOutputProvider output4 = scope4.asOutput();
         File scope4RootFolder = output4.getContentLocation("foo", scope4.getContentTypes(),
                 scope4.getScopes(), Format.DIRECTORY);
         mkdirs(scope4RootFolder);
@@ -2391,7 +2391,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(stream);
 
         // use the output version of this stream to create some content.
-        TransformOutputProvider output = stream.asOutput(false);
+        TransformOutputProvider output = stream.asOutput();
         File outputFolder = output.getContentLocation("foo", stream.getContentTypes(),
                 stream.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
@@ -2429,7 +2429,7 @@ public class TransformTaskTest extends TaskTestUtils {
     }
 
     @Test
-    public void oldSubStreamFileIgnored()
+    public void oldContentJsonWithExtraScopes()
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
@@ -2473,12 +2473,31 @@ public class TransformTaskTest extends TaskTestUtils {
                         + "\"present\":true}]";
         FileUtils.createFile(subStreamFile, subStreamFileContents);
         FileSubject.assertThat(subStreamFile).exists();
-        FileSubject.assertThat(subStreamFile).hasContents(subStreamFileContents);
+        Collection<SubStream> subStreams = SubStream.loadSubStreams(transformOutputFolder);
+        assertThat(subStreams)
+                .containsExactly(
+                        new SubStream(
+                                "foo",
+                                0,
+                                ImmutableSet.of(Scope.EXTERNAL_LIBRARIES, Scope.PROJECT),
+                                ImmutableSet.of(DefaultContentType.CLASSES),
+                                Format.DIRECTORY,
+                                true));
 
-        // run the transform
+        // run the transform. Afterwards, the old SubStream should be marked as not being present
+        // in the __content__.json file.
         transformTask.transform(inputBuilder().build());
         FileSubject.assertThat(subStreamFile).exists();
-        FileSubject.assertThat(subStreamFile).hasContents("[]");
+        subStreams = SubStream.loadSubStreams(transformOutputFolder);
+        assertThat(subStreams)
+                .containsExactly(
+                        new SubStream(
+                                "foo",
+                                0,
+                                ImmutableSet.of(Scope.EXTERNAL_LIBRARIES, Scope.PROJECT),
+                                ImmutableSet.of(DefaultContentType.CLASSES),
+                                Format.DIRECTORY,
+                                false));
     }
 
     static InputFileBuilder fileBuilder() {

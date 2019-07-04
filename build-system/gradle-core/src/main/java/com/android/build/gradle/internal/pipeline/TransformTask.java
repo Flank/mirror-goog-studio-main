@@ -257,8 +257,7 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
                                         .addSecondaryInputs(changedSecondaryInputs.getValue())
                                         .addOutputProvider(
                                                 outputStream != null
-                                                        ? outputStream.asOutput(
-                                                                isIncremental.getValue())
+                                                        ? outputStream.asOutput()
                                                         : null)
                                         .setIncrementalMode(isIncremental.getValue())
                                         .build());

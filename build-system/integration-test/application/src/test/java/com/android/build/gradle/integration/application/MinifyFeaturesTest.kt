@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.runner.FilterableParameterized
 import com.android.build.gradle.integration.common.truth.ModelContainerSubject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.getOutputByName
 import com.android.build.gradle.internal.scope.CodeShrinker
 import com.android.build.gradle.options.OptionalBooleanOption
@@ -901,6 +902,25 @@ class MinifyFeaturesTest(
             .hasSingleError(SyncIssue.TYPE_GENERIC)
             .that()
             .hasMessageThatContains("should not be specified in this module.")
+    }
+
+    /** Regression test for https://issuetracker.google.com/79090176 */
+    @Test
+    fun testMinifyEnabledToggling() {
+        Assume.assumeTrue(multiApkMode == MultiApkMode.DYNAMIC_APP)
+        val executor = project.executor()
+            .with(OptionalBooleanOption.ENABLE_R8, codeShrinker == CodeShrinker.R8)
+
+        // first run with minifyEnabled true
+        executor.run("assembleMinified")
+
+        // then run with minifyEnabled false
+        TestFileUtils.searchAndReplace(
+            project.getSubproject(":baseModule").buildFile,
+            "minifyEnabled true",
+            "minifyEnabled false"
+        )
+        executor.run("assembleMinified")
     }
 
     private fun getApkFolderOutput(
