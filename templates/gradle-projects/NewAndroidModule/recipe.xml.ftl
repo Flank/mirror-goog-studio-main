@@ -92,6 +92,10 @@
                    to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
 </#if>
 
+<#if Mobileincluded!false && Wearincluded!false>
+    <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" gradleConfiguration="compile" />
+</#if>
+
 <#if generateKotlin && useAndroidX>
     <dependency mavenUrl="androidx.core:core-ktx:+" />
 </#if>

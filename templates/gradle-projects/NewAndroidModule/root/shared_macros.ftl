@@ -1,12 +1,6 @@
 <#import "root://gradle-projects/common/proguard_macros.ftl" as proguard>
 
 <#-- Some common elements used in multiple files -->
-<#macro watchProjectDependencies>
-<#if WearprojectName?has_content && Mobileincluded && Wearincluded>
-    wearApp project(':${WearprojectName}')
-    ${getConfigurationName("compile")} 'com.google.android.gms:play-services-wearable:+'
-</#if>
-</#macro>
 
 <#macro generateManifest packageName hasApplicationBlock=false>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
