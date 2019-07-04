@@ -2,6 +2,8 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
     <@kt.addAllKotlinDependencies />
+    <dependency mavenUrl="com.google.android.wearable:wearable:+" gradleConfiguration="provided" />
+    
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
     <merge from="root/AndroidManifestPermissions.xml"
@@ -10,9 +12,6 @@
     <merge from="root/AndroidManifestPermissions.xml"
              to="${escapeXmlAttribute(appManifestOut)}/AndroidManifest.xml" />
 </#if>
-
-    <merge from="root/build.gradle.ftl"
-             to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
@@ -26,6 +25,7 @@
 <#if buildApi gte 26>
     <instantiate from="root/res/layout/blank_activity.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
+    <dependency mavenUrl="com.android.support:wear:+" />
 <#else>
     <instantiate from="root/res/layout/blank_activity_prev.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />

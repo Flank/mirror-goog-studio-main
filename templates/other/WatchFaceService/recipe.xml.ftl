@@ -3,6 +3,7 @@
 <recipe>
     <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.google.android.support:wearable:+" />
+    <dependency mavenUrl="com.google.android.wearable:wearable:+" gradleConfiguration="provided" />
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
