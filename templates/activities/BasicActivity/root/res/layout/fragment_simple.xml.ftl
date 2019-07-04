@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+<#if appBarLayoutName??>
+    tools:showIn="@layout/${appBarLayoutName}"
+</#if>
+    tools:context="${packageName}.${fragmentClass}">
 
 <#if isNewProject!false>
-    <fragment
-        android:id="@+id/nav_host_fragment"
-        android:name="androidx.navigation.fragment.NavHostFragment"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello World!"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:defaultNavHost="true"
-        app:navGraph="@navigation/nav_graph" />
+        app:layout_constraintTop_toTopOf="parent" />
+
 </#if>
 </${getMaterialComponentName('android.support.constraint.ConstraintLayout', useAndroidX)}>

@@ -5,6 +5,4 @@
     <global id="simpleLayoutName" value="${contentLayoutName}" />
     <global id="appBarLayoutName" value="${layoutName}" />
     <global id="fragmentClass" value="${activityClass}Fragment" />
-    <global id="firstFragmentClass" value="${layoutToFragment(firstFragmentLayoutName)}" />
-    <global id="secondFragmentClass" value="${layoutToFragment(secondFragmentLayoutName)}" />
 </globals>
