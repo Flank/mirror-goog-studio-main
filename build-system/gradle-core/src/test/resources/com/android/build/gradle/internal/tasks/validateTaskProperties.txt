@@ -63,9 +63,6 @@ Warning: Type 'com.android.build.gradle.internal.tasks.ProcessJavaResTask': prop
 Warning: Type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'bootClasspath' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'classesToFix' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.RecalculateStackFramesTask': property 'referencedClasses' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.name' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.signingReady' is not annotated with an input or output annotation.
-Warning: Type 'com.android.build.gradle.internal.tasks.SigningConfigWriterTask': property 'signingConfig.storeFile' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.SourceSetsTask': property 'extension' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testApks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.internal.tasks.TestServerTask': property 'testedApks' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
@@ -123,9 +120,7 @@ Warning: Type 'com.android.build.gradle.tasks.MergeResources': property 'resourc
 Warning: Type 'com.android.build.gradle.tasks.PackageApplication': static method 'getSize()' should not be annotated with: @Internal
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'jniFolders' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'processedAbiResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.PackageSplitAbi': property 'signingConfig' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.PackageSplitRes': property 'processedResources' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
-Warning: Type 'com.android.build.gradle.tasks.PackageSplitRes': property 'signingConfig' is missing a normalization annotation, defaulting to PathSensitivity.ABSOLUTE.
 Warning: Type 'com.android.build.gradle.tasks.ProcessAndroidResources': property 'manifestFile' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.ProcessAndroidResources': property 'sourceOutputDir' is not annotated with an input or output annotation.
 Warning: Type 'com.android.build.gradle.tasks.ProcessApplicationManifest': static method 'getArtifactName()' should not be annotated with: @Internal

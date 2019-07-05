@@ -81,7 +81,7 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
     private lateinit var tempDirectory: File
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var signingConfig: FileCollection
         private set
 

@@ -23,9 +23,6 @@ import java.io.File;
 import java.io.Serializable;
 import javax.inject.Inject;
 import org.gradle.api.Named;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Optional;
 
 /**
  * DSL object for configuring signing configs.
@@ -62,9 +59,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @InputFile @Optional
     public File getStoreFile() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.getStoreFile();
     }
 
@@ -75,9 +70,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public String getStorePassword() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.getStorePassword();
     }
 
@@ -88,9 +81,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public String getKeyAlias() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.getKeyAlias();
     }
 
@@ -101,9 +92,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public String getKeyPassword() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.getKeyPassword();
     }
 
@@ -114,9 +103,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public String getStoreType() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.getStoreType();
     }
 
@@ -127,9 +114,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public boolean isV1SigningEnabled() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.isV1SigningEnabled();
     }
 
@@ -140,9 +125,7 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Signing Your Applications</a>
      */
     @Override
-    @Input
     public boolean isV2SigningEnabled() {
-        // Getter override to annotate it with Gradle's input annotation.
         return super.isV2SigningEnabled();
     }
 

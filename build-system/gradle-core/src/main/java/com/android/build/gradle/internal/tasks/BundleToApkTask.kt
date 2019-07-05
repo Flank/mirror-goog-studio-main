@@ -59,7 +59,7 @@ abstract class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecuto
     abstract val aapt2FromMaven: ConfigurableFileCollection
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     lateinit var signingConfig: FileCollection
         private set
 

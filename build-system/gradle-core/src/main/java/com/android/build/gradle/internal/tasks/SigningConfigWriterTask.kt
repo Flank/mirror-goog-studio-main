@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
@@ -30,9 +31,10 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 
 /**
- * Task that writes the SigningConfig information and publish it for dynamic-feature modules.
+ * Task that writes the SigningConfig information to a file.
  */
 @CacheableTask
 abstract class SigningConfigWriterTask : NonIncrementalTask() {
@@ -47,12 +49,14 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
 
     @get:Nested
     @get:Optional
-    var signingConfig: SigningConfig? = null
+    var signingConfigData: SigningConfigData? = null
         internal set
 
-
     public override fun doTaskAction() {
-        SigningConfigMetadata.save(outputDirectory.get().asFile, signingConfig)
+        SigningConfigMetadata.save(
+            outputDirectory.get().asFile,
+            signingConfigData?.toSigningConfig()
+        )
     }
 
     class CreationAction(variantScope: VariantScope) :
@@ -82,9 +86,82 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
             )
 
             // convert to a serializable signing config. Objects from DSL are not serializable.
-            task.signingConfig = variantScope.variantConfiguration.signingConfig?.let {
+            val signingConfig = variantScope.variantConfiguration.signingConfig?.let {
                 SigningConfig(it.name).initWith(it)
             }
+            task.signingConfigData = signingConfig?.let { SigningConfigData.fromSigningConfig(it) }
+        }
+    }
+}
+
+/**
+ * A copy of the [SigningConfig] object, which contains the properties that the
+ * [SigningConfigWriterTask] is interested in, together with their input annotations.
+ *
+ * Note that this is the recommended treatment for @Nested objects: Tasks should not share a common
+ * object for input/output specification because different tasks may be interested in different
+ * subsets of the properties as well as different types of input normalization for each property.
+ * Therefore, each task should take a snapshot of the properties and annotate them privately.
+ */
+class SigningConfigData(
+    @get:Input
+    val name: String,
+
+    @get:Input
+    @get:Optional
+    val storeType: String?,
+
+    // When the SigningConfig object is written to disk, only the store file's path is written,
+    // while the store file's contents are ignored. Therefore, only the store file's path is
+    // considered an input.
+    @get:Input
+    @get:Optional
+    val storeFilePath: String?,
+
+    @get:Input
+    @get:Optional
+    val storePassword: String?,
+
+    @get:Input
+    @get:Optional
+    val keyAlias: String?,
+
+    @get:Input
+    @get:Optional
+    val keyPassword: String?,
+
+    @get:Input
+    val v1SigningEnabled: Boolean,
+
+    @get:Input
+    val v2SigningEnabled: Boolean
+) {
+
+    fun toSigningConfig(): SigningConfig {
+        val signingConfig = SigningConfig(name)
+        signingConfig.storeType = storeType
+        signingConfig.storeFile = storeFilePath?.let { File(it) }
+        signingConfig.storePassword = storePassword
+        signingConfig.keyAlias = keyAlias
+        signingConfig.keyPassword = keyPassword
+        signingConfig.isV1SigningEnabled = v1SigningEnabled
+        signingConfig.isV2SigningEnabled = v2SigningEnabled
+        return signingConfig
+    }
+
+    companion object {
+
+        fun fromSigningConfig(signingConfig: SigningConfig): SigningConfigData {
+            return SigningConfigData(
+                name = signingConfig.name,
+                storeType = signingConfig.storeType,
+                storeFilePath = signingConfig.storeFile?.path,
+                storePassword = signingConfig.storePassword,
+                keyAlias = signingConfig.keyAlias,
+                keyPassword = signingConfig.keyPassword,
+                v1SigningEnabled = signingConfig.isV1SigningEnabled,
+                v2SigningEnabled = signingConfig.isV2SigningEnabled
+            )
         }
     }
 }

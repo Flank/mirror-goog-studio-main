@@ -54,7 +54,7 @@ abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExec
     abstract val intermediaryBundleFile: RegularFileProperty
 
     @get:InputFiles
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:Optional
     var signingConfig: FileCollection? = null
         private set

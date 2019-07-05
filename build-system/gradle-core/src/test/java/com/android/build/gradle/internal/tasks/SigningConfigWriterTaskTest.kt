@@ -60,13 +60,13 @@ class SigningConfigWriterTaskTest {
         val signingConfig = SigningConfig("signingConfig_name")
         signingConfig.storePassword = "foobar"
         signingConfig.isV1SigningEnabled = true
-        task.signingConfig = signingConfig
+        task.signingConfigData = SigningConfigData.fromSigningConfig(signingConfig)
 
         task.doTaskAction()
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 
         val config = SigningConfigMetadata.load(files[0])
-        assertThat(config).isEqualTo(task.signingConfig)
+        assertThat(config).isEqualTo(task.signingConfigData?.toSigningConfig())
     }
 }
