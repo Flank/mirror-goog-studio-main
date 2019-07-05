@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template
+package com.android.tools.idea.wizard.template.impl.common.res.menu
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
-  if (predicate)
-    if(trimVertical) str().trim() else str()
-  else
-    ""
+fun simpleMenu(packageName: String, activityClass: String): String =
+"""<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="$packageName.$activityClass" >
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+</menu>
+"""

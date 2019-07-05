@@ -2,7 +2,7 @@ package com.android.tools.idea.wizard.template
 
 import java.io.File
 
-typealias Recipe = RecipeExecutor.(TemplateData) -> Boolean
+typealias Recipe = RecipeExecutor.(TemplateData) -> Unit
 
 /**
  * Determines in which context (basically a screen) the template should be shown.

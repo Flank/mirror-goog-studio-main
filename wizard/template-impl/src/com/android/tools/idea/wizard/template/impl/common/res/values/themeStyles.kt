@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template
+package com.android.tools.idea.wizard.template.impl.common.res.values
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
-  if (predicate)
-    if(trimVertical) str().trim() else str()
-  else
-    ""
+fun themeStyles(themeName: String, useMaterial2: Boolean): String {
+  val parent = if (useMaterial2) "Theme.MaterialComponents.Light" else "Theme.AppCompat.Light"
+  return """<resources>
+  <style name="$themeName" parent="$parent"/>
+</resources>"""
+}

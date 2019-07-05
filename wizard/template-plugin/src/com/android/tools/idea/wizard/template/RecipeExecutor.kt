@@ -26,7 +26,7 @@ interface RecipeExecutor {
   fun copy(from: File, to: File)
 
   /** Writes text into the given output file. */
-  fun save(source: String, to: File)
+  fun save(source: String, to: File, trimVertical: Boolean = true, squishEmptyLines: Boolean = true)
 
   /** Merges the given XML source into the given destination file (or just writes it if the destination file does not exist). */
   fun mergeXml(source: String, to: File)

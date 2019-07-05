@@ -13,10 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template
+package com.android.tools.idea.wizard.template.impl.common
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
-  if (predicate)
-    if(trimVertical) str().trim() else str()
-  else
-    ""
+import com.android.tools.idea.wizard.template.renderIf
+
+fun jniCodeSnippet(includeCppSupport: Boolean): String = renderIf(includeCppSupport) {
+  """
+/**
+ * A native method that is implemented by the 'native-lib' native library,
+ * which is packaged with this application.
+ */
+external fun stringFromJNI(): String
+
+companion object {
+
+  // Used to load the 'native-lib' library on application startup.
+  init {
+    System.loadLibrary("native-lib")
+  }
+}
+"""
+}

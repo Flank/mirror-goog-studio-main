@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template
+package com.android.tools.idea.wizard.template.impl.common.res.values
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
-  if (predicate)
-    if(trimVertical) str().trim() else str()
-  else
-    ""
+val appBarDimens = """
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+</resources>
+
+"""

@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.idea.wizard.template
+package com.android.tools.idea.wizard.template.impl.common
 
-inline fun renderIf(predicate: Boolean, trimVertical: Boolean = true, str: () -> String) =
-  if (predicate)
-    if(trimVertical) str().trim() else str()
-  else
-    ""
+import com.android.tools.idea.wizard.template.renderIf
+
+fun commonActivityBody(isLauncher: Boolean, isLibraryProject: Boolean = false) =
+  renderIf(isLauncher && !isLibraryProject) {
+    """
+    <intent-filter>
+      <action android:name="android.intent.action.MAIN" />
+      <category android:name="android.intent.category.LAUNCHER" />
+    </intent-filter>
+    """
+  }

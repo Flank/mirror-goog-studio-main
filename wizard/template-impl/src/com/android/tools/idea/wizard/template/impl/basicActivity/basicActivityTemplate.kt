@@ -20,11 +20,12 @@ import com.android.tools.idea.wizard.template.Category
 import com.android.tools.idea.wizard.template.CheckBoxWidget
 import com.android.tools.idea.wizard.template.Constraint.*
 import com.android.tools.idea.wizard.template.FormFactor
-import com.android.tools.idea.wizard.template.PackageName
 import com.android.tools.idea.wizard.template.PackageNameWidget
 import com.android.tools.idea.wizard.template.Separator
 import com.android.tools.idea.wizard.template.StringParameter
 import com.android.tools.idea.wizard.template.TextFieldWidget
+import com.android.tools.idea.wizard.template.ModuleTemplateData
+import com.android.tools.idea.wizard.template.TemplateData
 import com.android.tools.idea.wizard.template.activityToLayout
 import com.android.tools.idea.wizard.template.booleanParameter
 import com.android.tools.idea.wizard.template.classToResource
@@ -32,7 +33,6 @@ import com.android.tools.idea.wizard.template.template
 import com.android.tools.idea.wizard.template.layoutToActivity
 import com.android.tools.idea.wizard.template.stringParameter
 import java.io.File
-import java.io.File.separator
 
 val basicActivityTemplate = template {
   revision = 1
@@ -128,17 +128,16 @@ val basicActivityTemplate = template {
     TextFieldWidget(firstFragmentLayoutName),
     TextFieldWidget(secondFragmentLayoutName),
     PackageNameWidget(packageName)
-    // TODO LanguageWidget()
+    // TODO(qumeric): LanguageWidget()
     )
 
   thumb {
     File("template_basic_activity.png")
   }
 
-  recipe = {
-    // TODO: basicActivityRecipe(
-    //  e, data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value, packageName.value,
-    //  menuName.value, activityTitle.value, isLauncher.value, firstFragmentLayoutName.value, secondFragmentLayoutName.value)
-    true
+  recipe = { data: TemplateData ->
+    basicActivityRecipe(
+      data as ModuleTemplateData, activityClass.value, layoutName.value, contentLayoutName.value, packageName.value,
+      menuName.value, activityTitle.value, isLauncher.value, firstFragmentLayoutName.value, secondFragmentLayoutName.value)
   }
 }
