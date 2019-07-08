@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -30,9 +29,7 @@ import com.android.utils.FileUtils
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
@@ -88,7 +85,7 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
     private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     override fun doTaskAction() {
-        val config = SigningConfigMetadata.load(signingConfig)
+        val config = SigningConfigUtils.load(signingConfig)
         workers.use {
             it.submit(
                 BundleToolRunnable::class.java,

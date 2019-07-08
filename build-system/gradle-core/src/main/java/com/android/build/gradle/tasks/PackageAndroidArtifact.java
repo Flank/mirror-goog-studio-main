@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
+import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
@@ -558,7 +558,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
             manifestType = task.manifestType;
             apkFormat = task.apkFormat;
-            signingConfig = SigningConfigMetadata.Companion.getOutputFile(task.signingConfig);
+            signingConfig = SigningConfigUtils.Companion.getOutputFile(task.signingConfig);
             abiFilters = task.abiFilters;
             manifestDirectory = task.getManifests().get().getAsFile();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
@@ -677,7 +677,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
                 new IncrementalPackagerBuilder(params.apkFormat, params.packagerMode)
                         .withOutputFile(outputFile)
                         .withSigning(
-                                SigningConfigMetadata.Companion.load(params.signingConfig),
+                                SigningConfigUtils.Companion.load(params.signingConfig),
                                 params.minSdkVersion,
                                 params.targetApi)
                         .withCreatedBy(params.createdBy)

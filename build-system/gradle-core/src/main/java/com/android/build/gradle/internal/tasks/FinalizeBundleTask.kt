@@ -74,7 +74,7 @@ abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExec
                 Params(
                     intermediaryBundleFile = intermediaryBundleFile.get().asFile,
                     finalBundleFile = finalBundleFile.get().asFile,
-                    signingConfig = SigningConfigMetadata.getOutputFile(signingConfig)
+                    signingConfig = SigningConfigUtils.getOutputFile(signingConfig)
                 )
             )
         }
@@ -89,7 +89,7 @@ abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExec
         override fun run() {
             FileUtils.cleanOutputDir(params.finalBundleFile.parentFile)
 
-            SigningConfigMetadata.load(params.signingConfig)?.let {
+            SigningConfigUtils.load(params.signingConfig)?.let {
                 val certificateInfo =
                     KeystoreHelper.getCertificateInfo(
                         it.storeType,

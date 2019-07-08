@@ -32,7 +32,7 @@ import com.android.build.gradle.internal.scope.MutableTaskContainer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
+import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
@@ -165,7 +165,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withOutputFile(params.getOutput())
                             .withSigning(
-                                    SigningConfigMetadata.Companion.load(params.signingConfigFile),
+                                    SigningConfigUtils.Companion.load(params.signingConfigFile),
                                     params.minSdkVersion)
                             .withCreatedBy(params.createdBy)
                             // .withManifest(manifest)
@@ -216,7 +216,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfigFile = SigningConfigMetadata.Companion.getOutputFile(task.signingConfig);
+            signingConfigFile = SigningConfigUtils.Companion.getOutputFile(task.signingConfig);
             createdBy = task.getCreatedBy();
             aaptOptionsNoCompress = task.aaptOptionsNoCompress;
             jniFolders = task.getJniFolders().getFiles();

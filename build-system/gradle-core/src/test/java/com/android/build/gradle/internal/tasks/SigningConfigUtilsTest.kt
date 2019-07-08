@@ -33,8 +33,8 @@ import java.nio.file.attribute.AclEntryType
 import java.nio.file.attribute.AclFileAttributeView
 import java.nio.file.attribute.PosixFilePermission
 
-/** Tests for the [SigningConfigMetadata]  */
-class SigningConfigMetadataTest {
+/** Tests for [SigningConfigUtils]. */
+class SigningConfigUtilsTest {
     @Rule
     @JvmField
     var temporaryFolder = TemporaryFolder()
@@ -58,12 +58,12 @@ class SigningConfigMetadataTest {
         signingConfig.storeFile = storeFile
         signingConfig.isV2SigningEnabled = true
         signingConfig.isV1SigningEnabled = false
-        SigningConfigMetadata.save(outputDirectory, signingConfig)
+        SigningConfigUtils.save(outputDirectory, signingConfig)
 
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 
-        val config = SigningConfigMetadata.load(files[0])
+        val config = SigningConfigUtils.load(files[0])
         assertThat(config).isEqualTo(signingConfig)
     }
 
@@ -76,7 +76,7 @@ class SigningConfigMetadataTest {
         signingConfig.storeFile = storeFile
         signingConfig.isV2SigningEnabled = true
         signingConfig.isV1SigningEnabled = false
-        SigningConfigMetadata.save(outputDirectory, signingConfig)
+        SigningConfigUtils.save(outputDirectory, signingConfig)
 
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)

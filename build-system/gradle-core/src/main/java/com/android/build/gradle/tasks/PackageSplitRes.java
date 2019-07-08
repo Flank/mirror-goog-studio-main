@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.SigningConfigMetadata;
+import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
@@ -121,7 +121,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
             try (IncrementalPackager pkg =
                     new IncrementalPackagerBuilder(IncrementalPackagerBuilder.ApkFormat.FILE)
                             .withSigning(
-                                    SigningConfigMetadata.Companion.load(params.signingConfigFile))
+                                    SigningConfigUtils.Companion.load(params.signingConfigFile))
                             .withOutputFile(params.output)
                             .withKeepTimestampsInApk(params.keepTimestampsInApk)
                             .withIntermediateDir(intDir)
@@ -161,8 +161,7 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
                                                     .get("archivesBaseName"),
                                     task.signingConfig != null));
             incrementalDir = task.incrementalDir;
-            signingConfigFile =
-                    SigningConfigMetadata.Companion.getOutputFile(task.getSigningConfig());
+            signingConfigFile = SigningConfigUtils.Companion.getOutputFile(task.getSigningConfig());
             keepTimestampsInApk = task.getKeepTimestampsInApk();
         }
 

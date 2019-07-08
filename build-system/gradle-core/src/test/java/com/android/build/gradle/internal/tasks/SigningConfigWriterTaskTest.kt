@@ -22,16 +22,11 @@ import com.android.build.gradle.internal.dsl.SigningConfig
 import java.io.File
 import java.io.IOException
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import org.gradle.api.provider.Provider
-import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.MockitoAnnotations
 
 /** Tests for the [SigningConfigWriterTask]  */
 class SigningConfigWriterTaskTest {
@@ -66,7 +61,7 @@ class SigningConfigWriterTaskTest {
         val files = outputDirectory.listFiles()
         assertThat(files).hasLength(1)
 
-        val config = SigningConfigMetadata.load(files[0])
+        val config = SigningConfigUtils.load(files[0])
         assertThat(config).isEqualTo(task.signingConfigData?.toSigningConfig())
     }
 }

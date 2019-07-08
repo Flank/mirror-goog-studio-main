@@ -32,10 +32,9 @@ import java.nio.file.attribute.AclFileAttributeView
 import java.nio.file.attribute.PosixFilePermission
 
 /**
- * Information containing the signing config metadata that can be consumed by other modules as
- * persisted json file
+ * Utility class to save/load the signing config information to/from a persisted json file.
  */
-class SigningConfigMetadata {
+class SigningConfigUtils {
     companion object {
         private const val PERSISTED_FILE_NAME = "signing-config.json"
 

@@ -53,7 +53,7 @@ abstract class SigningConfigWriterTask : NonIncrementalTask() {
         internal set
 
     public override fun doTaskAction() {
-        SigningConfigMetadata.save(
+        SigningConfigUtils.save(
             outputDirectory.get().asFile,
             signingConfigData?.toSigningConfig()
         )
