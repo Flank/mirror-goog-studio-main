@@ -242,3 +242,10 @@ fun CxxAbiModel.getFinalCmakeCommandLineArguments() : List<CommandLineArgument> 
     return result.removeSubsumedArguments().removeBlankProperties()
 }
 
+/*
+* Returns the Ninja build commands from CMakeSettings.json.
+* Returns an empty string if it does not exist.
+*/
+fun CxxAbiModel.getBuildCommandArguments() : String {
+    return cmake?.effectiveConfiguration?.buildCommandArgs ?: ""
+}

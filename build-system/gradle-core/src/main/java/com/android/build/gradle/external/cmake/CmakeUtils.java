@@ -97,8 +97,13 @@ public class CmakeUtils {
      * targets to build must be substituted using the substituteBuildTargetsCommand method.
      */
     public static String getBuildTargetsCommand(
-            @NonNull File cmakeExecutable, @NonNull File outputFolder) {
+            @NonNull File cmakeExecutable,
+            @NonNull File outputFolder,
+            @NonNull String buildCommandArgs) {
+
         return getNinjaExecutable(cmakeExecutable)
+                + " "
+                + buildCommandArgs
                 + " -C "
                 + "\""
                 + outputFolder.getAbsolutePath()

@@ -35,6 +35,7 @@ import static com.android.build.gradle.internal.cxx.services.CxxCompleteModelSer
 import static com.android.build.gradle.internal.cxx.services.CxxEvalIssueReporterServiceKt.evalIssueReporter;
 import static com.android.build.gradle.internal.cxx.services.CxxModelDependencyServiceKt.jsonGenerationInputDependencyFileCollection;
 import static com.android.build.gradle.internal.cxx.services.CxxSyncListenerServiceKt.executeListenersOnceAfterJsonGeneration;
+import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getBuildCommandArguments;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.rewriteCxxAbiModelWithCMakeSettings;
 
 import com.android.annotations.NonNull;
@@ -251,7 +252,11 @@ public abstract class ExternalNativeJsonGenerator {
                 ProcessInfoBuilder processBuilder = getProcessBuilder(abi);
 
                 // See whether the current build command matches a previously written build command.
-                String currentBuildCommand = processBuilder.toString();
+                String currentBuildCommand =
+                        processBuilder.toString()
+                                + "Build command args:"
+                                + getBuildCommandArguments(abi)
+                                + "\n";
 
                 JsonGenerationInvalidationState invalidationState =
                         new JsonGenerationInvalidationState(

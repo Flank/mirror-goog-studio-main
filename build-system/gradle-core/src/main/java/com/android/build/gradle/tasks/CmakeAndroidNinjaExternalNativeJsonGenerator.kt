@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.tasks
 
+import com.android.build.gradle.internal.cxx.logging.warnln
 import com.android.build.gradle.internal.cxx.services.createProcessOutputJunction
 import com.android.build.gradle.internal.cxx.model.CxxAbiModel
 import com.android.build.gradle.internal.cxx.model.CxxBuildModel
 import com.android.build.gradle.internal.cxx.model.CxxVariantModel
+import com.android.build.gradle.internal.cxx.settings.getBuildCommandArguments
 import com.google.wireless.android.sdk.stats.GradleBuildVariant
 
 /**
@@ -34,6 +36,11 @@ internal class CmakeAndroidNinjaExternalNativeJsonGenerator(
 ) : CmakeExternalNativeJsonGenerator(build, variant, abis, stats) {
 
     override fun executeProcessAndGetOutput(abi: CxxAbiModel): String {
+        // buildCommandArgs is set in CMake server json generation
+        if(abi.getBuildCommandArguments().isNotEmpty()){
+            warnln("buildCommandArgs from CMakeSettings.json is not supported for CMake version 3.6 and below.")
+        }
+
         val logPrefix = "${variant.variantName}|${abi.abi.tag} :"
         return abi.variant.module.createProcessOutputJunction(
             abi.cxxBuildFolder,

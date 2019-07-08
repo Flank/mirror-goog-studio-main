@@ -30,6 +30,7 @@ import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt
 import static com.android.build.gradle.internal.cxx.logging.LoggingEnvironmentKt.warnln;
 import static com.android.build.gradle.internal.cxx.model.CxxAbiModelKt.getJsonFile;
 import static com.android.build.gradle.internal.cxx.model.CxxCmakeAbiModelKt.getCompileCommandsJsonFile;
+import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getBuildCommandArguments;
 import static com.android.build.gradle.internal.cxx.settings.CxxAbiModelCMakeSettingsRewriterKt.getFinalCmakeCommandLineArguments;
 
 import com.android.annotations.NonNull;
@@ -366,8 +367,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // Build targets command.
         assert nativeBuildConfigValue.buildTargetsCommand != null;
+
         nativeBuildConfigValue.buildTargetsCommand =
-                CmakeUtils.getBuildTargetsCommand(cmake.getCmakeExe(), abi.getCxxBuildFolder());
+                CmakeUtils.getBuildTargetsCommand(
+                        cmake.getCmakeExe(),
+                        abi.getCxxBuildFolder(),
+                        getBuildCommandArguments(abi));
 
         CodeModel codeModel = cmakeServer.codemodel();
         if (!ServerUtils.isCodeModelValid(codeModel)) {

@@ -92,6 +92,7 @@ class CxxAbiModelCMakeSettingsRewriterKtTest {
                 .replace('\\', '/')).isEqualTo("my/path/to/cmake")
             assertThat(rewritten.variant.module.cmakeToolchainFile.path
                 .replace('\\', '/')).isEqualTo("my/path/to/toolchain")
+            assertThat(rewritten.getBuildCommandArguments()).isEqualTo("-j 100")
         }
     }
 

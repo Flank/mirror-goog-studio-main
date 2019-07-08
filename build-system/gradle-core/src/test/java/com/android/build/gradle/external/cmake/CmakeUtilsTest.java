@@ -164,13 +164,15 @@ public class CmakeUtilsTest {
                 createFile(cmakeFolder, CmakeUtils.isWindows() ? "cmake.exe" : "cmake");
         createFile(cmakeFolder, CmakeUtils.isWindows() ? "ninja.exe" : "ninja");
 
-        String buildCommand = CmakeUtils.getBuildTargetsCommand(cmakeExecutable, new File("/tmp"));
+        String buildCommand =
+                CmakeUtils.getBuildTargetsCommand(cmakeExecutable, new File("/tmp"), "-j 100");
 
         if (CmakeUtils.isWindows()) {
             assertThat(buildCommand)
-                    .endsWith("ninja.exe -C \"C:\\tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+                    .endsWith("ninja.exe -j 100 -C \"C:\\tmp\" {LIST_OF_TARGETS_TO_BUILD}");
         } else {
-            assertThat(buildCommand).endsWith("ninja -C \"/tmp\" {LIST_OF_TARGETS_TO_BUILD}");
+            assertThat(buildCommand)
+                    .endsWith("ninja -j 100 -C \"/tmp\" {LIST_OF_TARGETS_TO_BUILD}");
         }
     }
 

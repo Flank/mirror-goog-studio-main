@@ -58,6 +58,7 @@ class CmakeSettingsMock : BasicModuleModelMock() {
                     "generator": "some other generator",
                     "buildRoot": "some other build root folder/${Macro.NDK_VARIANT_NAME.ref}/${Macro.NDK_ABI.ref}",
                     "cmakeExecutable": "my/path/to/cmake",
+                    "buildCommandArgs": "-j 100",
                     "cmakeToolchain": "my/path/to/toolchain",
                     "variables": [
                         {"name": "${CmakeProperty.ANDROID_ABI}", "value": "${Macro.NDK_ABI.ref}"},
