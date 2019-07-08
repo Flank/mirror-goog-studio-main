@@ -13,23 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Resource Qualifier for Platform Version.
- */
+/** Resource qualifier for Platform version. */
 public final class VersionQualifier extends ResourceQualifier {
     /** Default version. This means the property is not set. */
     public static final int DEFAULT_VERSION = -1;
 
-    private static final Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");//$NON-NLS-1$
+    private static final Pattern sVersionPattern = Pattern.compile("^v(\\d+)$");
 
     private int mVersion = DEFAULT_VERSION;
 
@@ -37,42 +33,34 @@ public final class VersionQualifier extends ResourceQualifier {
 
     /**
      * Creates and returns a qualifier from the given folder segment. If the segment is incorrect,
-     * <code>null</code> is returned.
-     * @param segment the folder segment from which to create a qualifier.
-     * @return a new {@link VersionQualifier} object or <code>null</code>
+     * {@code null} is returned.
+     *
+     * @param segment the folder segment from which to create a qualifier
+     * @return a new VersionQualifier object or {@code null}
      */
-    public static VersionQualifier getQualifier(String segment) {
+    public static VersionQualifier getQualifier(@NonNull String segment) {
         Matcher m = sVersionPattern.matcher(segment);
         if (m.matches()) {
             String v = m.group(1);
 
-            int code;
             try {
-                code = Integer.parseInt(v);
+                return new VersionQualifier(Integer.parseInt(v));
             } catch (NumberFormatException e) {
-                // looks like the string we extracted wasn't a valid number.
-                return null;
+                // Not a valid version qualifier segment - return null.
             }
-
-            VersionQualifier qualifier = new VersionQualifier();
-            qualifier.mVersion = code;
-            return qualifier;
         }
 
         return null;
     }
 
     /**
-     * Returns the folder name segment for the given value. This is equivalent to calling
-     * {@link #toString()} on a {@link VersionQualifier} object.
+     * Returns the folder name segment for the given version value. This is equivalent to calling
+     * {@code new VersionQualifier(version).toString()}.
+     *
      * @param version the value of the qualifier, as returned by {@link #getVersion()}.
      */
     public static String getFolderSegment(int version) {
-        if (version != DEFAULT_VERSION) {
-            return String.format("v%1$d", version); //$NON-NLS-1$
-        }
-
-        return ""; //$NON-NLS-1$
+        return version == DEFAULT_VERSION ? "" : 'v' + Integer.toString(version);
     }
 
     public VersionQualifier(int apiLevel) {
@@ -113,7 +101,7 @@ public final class VersionQualifier extends ResourceQualifier {
     }
 
     @Override
-    public boolean checkAndSet(String value, FolderConfiguration config) {
+    public boolean checkAndSet(@NonNull String value, @NonNull FolderConfiguration config) {
         VersionQualifier qualifier = getQualifier(value);
         if (qualifier != null) {
             config.setVersionQualifier(qualifier);
@@ -124,27 +112,27 @@ public final class VersionQualifier extends ResourceQualifier {
     }
 
     @Override
-    public boolean equals(Object qualifier) {
+    public boolean equals(@Nullable Object qualifier) {
         return qualifier instanceof VersionQualifier
                 && mVersion == ((VersionQualifier) qualifier).mVersion;
 
     }
 
     @Override
-    public boolean isMatchFor(ResourceQualifier qualifier) {
+    public boolean isMatchFor(@NonNull ResourceQualifier qualifier) {
         if (qualifier instanceof VersionQualifier) {
-            // it is considered a match if our api level is equal or lower to the given qualifier,
+            // It is considered a match if our API level is equal or lower to the given qualifier,
             // or the given qualifier doesn't specify an API Level.
             return mVersion <= ((VersionQualifier) qualifier).mVersion
-                    || ((VersionQualifier)qualifier).mVersion == -1;
+                    || ((VersionQualifier) qualifier).mVersion == DEFAULT_VERSION;
         }
 
         return false;
     }
 
     @Override
-    public boolean isBetterMatchThan(@Nullable ResourceQualifier compareTo,
-            @NonNull ResourceQualifier reference) {
+    public boolean isBetterMatchThan(
+            @Nullable ResourceQualifier compareTo, @NonNull ResourceQualifier reference) {
         if (compareTo == null) {
             return true;
         }
@@ -159,8 +147,8 @@ public final class VersionQualifier extends ResourceQualifier {
             // got new exact value, this is the best!
             return true;
         } else {
-            // in all case we're going to prefer the higher version (since they have been filtered
-            // to not be too high
+            // In all case we're going to prefer the higher version (since they have been filtered
+            // to not be too high.)
             return mVersion > compareQ.mVersion;
         }
     }
@@ -180,19 +168,11 @@ public final class VersionQualifier extends ResourceQualifier {
 
     @Override
     public String getShortDisplayValue() {
-        if (mVersion != DEFAULT_VERSION) {
-            return String.format("API %1$d", mVersion);
-        }
-
-        return ""; //$NON-NLS-1$
+        return mVersion == DEFAULT_VERSION ? "" : "API " + mVersion;
     }
 
     @Override
     public String getLongDisplayValue() {
-        if (mVersion != DEFAULT_VERSION) {
-            return String.format("API Level %1$d", mVersion);
-        }
-
-        return ""; //$NON-NLS-1$
+        return mVersion == DEFAULT_VERSION ? "" : "API Level " + mVersion;
     }
 }
