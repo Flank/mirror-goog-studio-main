@@ -306,7 +306,7 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
     ): List<NativeLibraryValueMini> {
         val librariesToBuild = Lists.newArrayList<NativeLibraryValueMini>()
         val targets = generator.get().variant.buildTargetSet
-        for (libraryValue in config.libraries.values) {
+        loop@for (libraryValue in config.libraries.values) {
             infoln("evaluate library ${libraryValue.artifactName} (${libraryValue.abi})")
             if (targets.isNotEmpty() && !targets.contains(libraryValue.artifactName)) {
                 infoln("not building target ${libraryValue.artifactName!!} because it isn't in targets set")
@@ -335,7 +335,10 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
                 when (Files.getFileExtension(libraryValue.output!!.name)) {
                     "so" -> infoln("building target library ${libraryValue.artifactName!!} because no targets are specified.")
                     "" -> infoln("building target executable ${libraryValue.artifactName!!} because no targets are specified.")
-                    else -> infoln("not building target ${libraryValue.artifactName!!} because the type cannot be determined.")
+                    else -> {
+                        infoln("not building target ${libraryValue.artifactName!!} because the type cannot be determined.")
+                        continue@loop
+                    }
                 }
             }
 
