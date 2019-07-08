@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.resources.configuration
 
 import com.android.resources.Density
@@ -25,9 +24,9 @@ import com.google.common.truth.Truth
 
 /**
  * Custom [Truth] subject for testing [FolderConfiguration] with a nicer API and better failure
- * messages
+ * messages.
  */
-class FolderConfigurationSubject(failureMetadata: FailureMetadata, subject: FolderConfiguration) :
+class FolderConfigurationSubject(failureMetadata: FailureMetadata, subject: FolderConfiguration?) :
     Subject<FolderConfigurationSubject, FolderConfiguration>(failureMetadata, subject) {
 
     fun isMatchFor(folderConfiguration: FolderConfiguration) {
@@ -125,18 +124,11 @@ class FolderConfigurationSubject(failureMetadata: FailureMetadata, subject: Fold
     }
 
     companion object {
-        fun folderConfigurations(): Subject.Factory<FolderConfigurationSubject, FolderConfiguration> {
-            return Subject.Factory<FolderConfigurationSubject, FolderConfiguration> { failureMetadata, subject ->
-                FolderConfigurationSubject(
-                    failureMetadata,
-                    subject
-                )
-            }
-        }
+        private fun folderConfigurations(): Factory<FolderConfigurationSubject, FolderConfiguration> =
+                Factory { failureMetadata, subject -> FolderConfigurationSubject(failureMetadata, subject) }
 
         @JvmStatic
-        fun assertThat(folderConfiguration: FolderConfiguration?): FolderConfigurationSubject {
-            return Truth.assertAbout(folderConfigurations()).that(folderConfiguration)
-        }
+        fun assertThat(folderConfiguration: FolderConfiguration?): FolderConfigurationSubject =
+                Truth.assertAbout(folderConfigurations()).that(folderConfiguration)
     }
 }

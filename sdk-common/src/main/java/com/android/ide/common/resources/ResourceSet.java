@@ -656,7 +656,7 @@ public class ResourceSet extends DataSet<ResourceMergerItem, ResourceFile> {
 
             // normalize it
             if (!mDontNormalizeQualifiers) {
-                folderConfiguration.normalize();
+                folderConfiguration.normalizeByAddingImpliedVersionQualifier();
             }
 
             fd.folderConfiguration = folderConfiguration;

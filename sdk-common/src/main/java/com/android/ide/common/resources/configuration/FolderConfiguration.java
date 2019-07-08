@@ -903,7 +903,7 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         return (ScreenDimensionQualifier)mQualifiers[INDEX_SCREEN_DIMENSION];
     }
 
-    public void setVersionQualifier(VersionQualifier qualifier) {
+    public void setVersionQualifier(@Nullable VersionQualifier qualifier) {
         mQualifiers[INDEX_VERSION] = qualifier == null ? NULL_QUALIFIERS[INDEX_VERSION]
                 : qualifier;
         mQualifierString = null;
@@ -911,13 +911,15 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
 
     @Nullable
     public VersionQualifier getVersionQualifier() {
-        return (VersionQualifier)mQualifiers[INDEX_VERSION];
+        return (VersionQualifier) mQualifiers[INDEX_VERSION];
     }
 
     /**
-     * Normalize a folder configuration based on the API level of its qualifiers.
+     * Normalizes this folder configuration by adding a version qualifier corresponding to the API
+     * level implied by other qualifiers. See also
+     * {@link #normalizeByRemovingRedundantVersionQualifier()}.
      */
-    public void normalize() {
+    public void normalizeByAddingImpliedVersionQualifier() {
         int minSdk = 1;
         for (int i = 0; i < mQualifiers.length; i++) {
             ResourceQualifier qualifier = mQualifiers[i];
@@ -933,10 +935,37 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
             return;
         }
 
-        if (mQualifiers[INDEX_VERSION] == NULL_QUALIFIERS[INDEX_VERSION] ||
-                ((VersionQualifier)mQualifiers[INDEX_VERSION]).getVersion() < minSdk) {
-            mQualifiers[INDEX_VERSION] = new VersionQualifier(minSdk);
-            mQualifierString = null;
+        if (mQualifiers[INDEX_VERSION] == NULL_QUALIFIERS[INDEX_VERSION]
+                || ((VersionQualifier) mQualifiers[INDEX_VERSION]).getVersion() < minSdk) {
+            setVersionQualifier(new VersionQualifier(minSdk));
+        }
+    }
+
+    /**
+     * Normalizes this folder configuration by removing a redundant version qualifier. A version
+     * qualifier is redundant if it is implied by other qualifiers. See also
+     * {@link #normalizeByAddingImpliedVersionQualifier()}.
+     */
+    public void normalizeByRemovingRedundantVersionQualifier() {
+        VersionQualifier versionQualifier = getVersionQualifier();
+        if (versionQualifier == NULL_QUALIFIERS[INDEX_VERSION]) {
+            return;
+        }
+
+        int version = versionQualifier.getVersion();
+        if (version == 1) {
+            setVersionQualifier(null);
+            return;
+        }
+
+        for (int i = 0; i < mQualifiers.length; i++) {
+            if (i != INDEX_VERSION) {
+                ResourceQualifier qualifier = mQualifiers[i];
+                if (qualifier != NULL_QUALIFIERS[i] && qualifier.since() >= version) {
+                    setVersionQualifier(null);
+                    break;
+                }
+            }
         }
     }
 
