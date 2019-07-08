@@ -11,15 +11,8 @@ readonly script_dir="$(dirname "$0")"
 build_tag_filters=-no_linux
 test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only
 
-# If the build number starts with a 'P', this is a pre-submit builder.
-if [[ "${build_number:0:1}" == "P" ]]; then
-  config_options="--config=presubmit"
-else
-  config_options="--config=postsubmit"
-fi
-
 # We want to set local config however still stream results to upsalite
-config_options="${config_options} --config=local --config=cloud_resultstore"
+config_options="--config=local --config=cloud_resultstore"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"

@@ -11,9 +11,7 @@ readonly script_dir="$(dirname "$0")"
 build_tag_filters=-no_linux
 test_tag_filters=perfgate_multi_run,perfgate_only,-no_perfgate,-no_linux,-no_test_linux
 
-config_options="--config=postsubmit"
-
-config_options="${config_options} --config=remote"
+config_options="--config=remote"
 
 # Grab the location of the command_log file for bazel daemon so we can search it later.
 readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log)"
