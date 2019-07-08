@@ -215,7 +215,7 @@ public final class SourcePosition implements Serializable {
         if (mStartOffset != -1 && other.mStartOffset != -1) {
             return mStartOffset - other.mStartOffset;
         }
-        if (mStartLine == other.mStartLine) {
+        if (mStartLine == other.mStartLine && mStartColumn != -1 && other.mStartColumn != -1) {
             return mStartColumn - other.mStartColumn;
         }
         return mStartLine - other.mStartLine;
@@ -229,7 +229,7 @@ public final class SourcePosition implements Serializable {
         if (mEndOffset != -1 && other.mEndOffset != -1) {
             return mEndOffset - other.mEndOffset;
         }
-        if (mEndLine == other.mEndLine) {
+        if (mEndLine == other.mEndLine && mEndColumn != -1 && other.mEndColumn != -1) {
             return mEndColumn - other.mEndColumn;
         }
         return mEndLine - other.mEndLine;

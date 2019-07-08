@@ -89,6 +89,13 @@ public class MergingLogTest {
                                         new SourcePosition(4, 1, 35, 4, 2, 36))))
                 .isEqualTo(position2);
 
+        assertThat(
+                        mergingLog.find(
+                                new SourceFilePosition(
+                                        new SourceFile(absoluteFile("merged/values/values.xml")),
+                                        new SourcePosition(4, -1, -1, 6, -1, -1))))
+                .isEqualTo(position2);
+
         /*
          * Test
          *
