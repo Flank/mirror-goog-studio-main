@@ -22,12 +22,8 @@ echo "Enabled tests (on windows): ${ENABLED_ON_WINDOWS_N} (${PERCENT_ON_WINDOWS}
 echo "Enabled tests (on mac): ${ENABLED_ON_MAC_N} (${PERCENT_ON_MAC}%)"
 
 for arg in $@; do
-  if [ "$arg" = "--list_no_windows_psq" ]; then
-    # List of psq tests that don't run on windows
-    bazel query "${DISABLED_ON_WINDOWS} except attr(\"tags\", \"no_psq\", ${ENABLED})"
-  fi
-  if [ "$arg" = "--list_no_windows_post" ]; then
-    # List of tests that run on post submit but not on windows
+  if [ "$arg" = "--list_no_windows" ]; then
+    # List of tests that don't run on windows
     bazel query "${DISABLED_ON_WINDOWS}"
   fi
 done

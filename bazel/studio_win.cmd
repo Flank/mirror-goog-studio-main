@@ -8,16 +8,13 @@ set OUTDIR=%1
 set DISTDIR=%2
 set BUILDNUMBER=%3
 
-set TESTTAGFILTERSPOST=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only
-set TESTTAGFILTERSPSQ=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-no_psq,-perfgate_only
-set TESTTAGFILTERS=%TESTTAGFILTERSPOST%
+set TESTTAGFILTERS=-no_windows,-no_test_windows,-qa_sanity,-qa_fast,-qa_unreliable,-perfgate_only
 
 set CONFIGOPTIONSPOST=--config=postsubmit
 set CONFIGOPTIONSPSQ=--config=presubmit
 set CONFIGOPTIONS=%CONFIGOPTIONSPOST%
 
 IF "%BUILDNUMBER:~0,1%"=="P" (
-  set TESTTAGFILTERS=%TESTTAGFILTERSPSQ%
   set CONFIGOPTIONS=%CONFIGOPTIONSPSQ%
 )
 

@@ -13,7 +13,6 @@ test_tag_filters=-no_linux,-no_test_linux,-qa_sanity,-qa_fast,-qa_unreliable,-pe
 
 # If the build number starts with a 'P', this is a pre-submit builder.
 if [[ "${build_number:0:1}" == "P" ]]; then
-  test_tag_filters="${test_tag_filters},-no_psq"
   config_options="--config=presubmit"
 else
   config_options="--config=postsubmit"
