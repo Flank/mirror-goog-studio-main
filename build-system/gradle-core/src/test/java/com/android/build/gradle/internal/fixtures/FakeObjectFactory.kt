@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import org.gradle.api.DomainObjectSet
 import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -36,6 +39,21 @@ import java.lang.reflect.Constructor
  *
  */
 class FakeObjectFactory : ObjectFactory {
+    override fun <T : Any?> domainObjectContainer(p0: Class<T>): NamedDomainObjectContainer<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <T : Any?> domainObjectContainer(
+        p0: Class<T>,
+        p1: NamedDomainObjectFactory<T>
+    ): NamedDomainObjectContainer<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun <T : Any?> domainObjectSet(p0: Class<T>): DomainObjectSet<T> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
     override fun <K : Any?, V : Any?> mapProperty(p0: Class<K>, p1: Class<V>): MapProperty<K, V> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
