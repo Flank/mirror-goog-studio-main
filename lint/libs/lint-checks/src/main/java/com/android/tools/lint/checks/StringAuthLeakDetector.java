@@ -62,7 +62,13 @@ public class StringAuthLeakDetector extends Detector implements SourceCodeScanne
         @Override
         public void visitLiteralExpression(@NonNull ULiteralExpression node) {
             if (node.getValue() instanceof String) {
-                Matcher matcher = AUTH_REGEXP.matcher((String) node.getValue());
+                String str = (String) node.getValue();
+                if (str.length() > 512) {
+                    // Java regex matching can be very slow, so abort if the string is too long.
+                    // See https://swtch.com/~rsc/regexp/regexp1.html for details.
+                    return;
+                }
+                Matcher matcher = AUTH_REGEXP.matcher(str);
                 if (matcher.find()) {
                     String password = matcher.group(3);
                     if (password == null || (password.startsWith("%") && password.endsWith("s"))) {
