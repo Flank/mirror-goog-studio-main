@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.cxx
 
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.CmakeProperty.*
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.repository.Revision
 import java.io.File
@@ -54,6 +56,7 @@ class RandomInstanceGenerator {
             )
         }
         provide(File::class.java) { file() }
+        provide(BuildSettingsModel::class.java) { buildSettings() }
     }
     fun <T> oneOf(vararg creators : () -> T) = creators[abs(int()) % creators.size]()
     fun <T> makeListOf(create : ()->T) = (0 until sample(LIST_SIZE_DOMAIN)).map { create() }
@@ -78,6 +81,14 @@ class RandomInstanceGenerator {
         (0 until sample(LIST_SIZE_DOMAIN))
             .map { syntheticOfType(key) to syntheticOfType(value) }
             .toMap()
+    private fun buildSettings() = BuildSettingsModel(
+        (0 until sample(LIST_SIZE_DOMAIN)).map {
+            EnvironmentVariable(
+                name = string(),
+                value = sample(listOf(string(), null))
+            )
+        }
+    )
 
     /**
      * Add a new factory for the given type.

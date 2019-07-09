@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.NativeAndroidProjectSubject.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.FileSubject.assertThat;
+import static com.android.utils.FileUtils.join;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -27,6 +28,9 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.internal.cxx.model.JsonUtilKt;
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel;
+import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -37,6 +41,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
@@ -210,6 +216,65 @@ public class NdkBuildTest {
         // All build outputs should no longer exist, even the non-arm64-v8a outputs
         for (File output : allBuildOutputs) {
             assertThat(output).doesNotExist();
+        }
+    }
+
+    @Test
+    public void buildSettingsIsUsed() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
+
+        File arm64DebugModel =
+                join(
+                        project.getTestDir(),
+                        ".cxx",
+                        "ndkBuild",
+                        "debug",
+                        "arm64-v8a",
+                        "build_model.json");
+        File armeabiDebugModel =
+                join(
+                        project.getTestDir(),
+                        ".cxx",
+                        "ndkBuild",
+                        "debug",
+                        "armeabi-v7a",
+                        "build_model.json");
+
+        // No BuildSettings.json, should have empty BuildSettingsModel
+        for (File file : Arrays.asList(arm64DebugModel, armeabiDebugModel)) {
+            String jsonString = new String(Files.readAllBytes(file.toPath()));
+            BuildSettingsModel buildSettings =
+                    JsonUtilKt.createCxxAbiModelFromJson(jsonString).getBuildSettings();
+
+            assertThat(buildSettings).isEqualTo(new BuildSettingsModel());
+        }
+
+        TestFileUtils.appendToFile(
+                join(
+                        project.getBuildFile().getParentFile(),
+                        "src",
+                        "main",
+                        "jni",
+                        "BuildSettings.json"),
+                "{\""
+                        + "     environmentVariables\":[".trim()
+                        + "         {\"name\":\"GOMA_FALLBACK\",\"value\":\"true\"}, ".trim()
+                        + "         {\"name\":\"INPUT_FILES\",\"value\":\"libc++.so\"}".trim()
+                        + "     ]".trim()
+                        + "}");
+
+        project.execute("clean", "assembleDebug");
+        EnvironmentVariable fallback = new EnvironmentVariable("GOMA_FALLBACK", "true");
+        EnvironmentVariable inputFiles = new EnvironmentVariable("INPUT_FILES", "libc++.so");
+
+        // After writing to BuildSettings.json, environment variables should be set
+        for (File file : Arrays.asList(arm64DebugModel, armeabiDebugModel)) {
+            String jsonString = new String(Files.readAllBytes(file.toPath()));
+            BuildSettingsModel buildSettings =
+                    JsonUtilKt.createCxxAbiModelFromJson(jsonString).getBuildSettings();
+
+            assertThat(buildSettings.getEnvironmentVariables())
+                    .isEqualTo(Arrays.asList(fallback, inputFiles));
         }
     }
 }

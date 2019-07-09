@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.configure.NdkMetaPlatforms
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
 import com.android.build.gradle.internal.cxx.services.CxxServiceRegistry
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
 import com.android.build.gradle.internal.ndk.AbiInfo
 import com.android.build.gradle.internal.ndk.Stl
@@ -247,6 +248,7 @@ private fun CxxVariantModel.toData() =
 internal data class CxxAbiModelData(
     override val abi: Abi = Abi.X86,
     override val abiPlatformVersion: Int = 0,
+    override val buildSettings: BuildSettingsModel = BuildSettingsModel(),
     override val cmake: CxxCmakeAbiModelData? = null,
     override val cxxBuildFolder: File = File("."),
     override val info: AbiInfo = AbiInfo(),
@@ -260,6 +262,7 @@ internal data class CxxAbiModelData(
 private fun CxxAbiModel.toData(): CxxAbiModel = CxxAbiModelData(
     abi = abi,
     abiPlatformVersion = abiPlatformVersion,
+    buildSettings = buildSettings,
     cmake = cmake?.toData(),
     cxxBuildFolder = cxxBuildFolder,
     info = info,

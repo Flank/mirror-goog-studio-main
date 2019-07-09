@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.cxx.logging.IssueReporterLoggingEnviron
 import com.android.build.gradle.internal.cxx.logging.infoln
 import com.android.build.gradle.internal.cxx.model.ninjaLogFile
 import com.android.build.gradle.internal.cxx.process.createProcessOutputJunction
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.getEnvironmentVariableMap
 import com.android.build.gradle.internal.process.GradleProcessExecutor
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI
@@ -378,6 +380,12 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
                     String.format("Build $logFileSuffix"))
             }
 
+            generator.get().abis
+                .firstOrNull { abiModel -> abiModel.abi.tag == abiName }
+                ?.let {
+                    applyBuildSettings(it.buildSettings, processBuilder)
+                }
+
             val generateChromeTraces =
                 generator.get().takeIf { it.nativeBuildSystem == NativeBuildSystem.CMAKE }
                     ?.abis
@@ -414,6 +422,10 @@ open class ExternalNativeBuildTask : NonIncrementalTask() {
 
             generateChromeTraces?.invoke()
         }
+    }
+
+    private fun applyBuildSettings(buildSettings: BuildSettingsModel, processBuilder: ProcessInfoBuilder){
+        processBuilder.addEnvironments(buildSettings.getEnvironmentVariableMap())
     }
 
     class CreationAction(

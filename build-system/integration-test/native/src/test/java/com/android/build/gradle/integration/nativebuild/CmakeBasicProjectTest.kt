@@ -25,6 +25,9 @@ import com.android.build.gradle.integration.common.truth.TruthHelper.assertThatA
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.internal.cxx.model.createCxxAbiModelFromJson
+import com.android.build.gradle.internal.cxx.settings.BuildSettingsModel
+import com.android.build.gradle.internal.cxx.settings.EnvironmentVariable
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.NativeAndroidProject
@@ -266,5 +269,51 @@ class CmakeBasicProjectTest(private val cmakeVersionInDsl: String) {
             .first { it.name.endsWith("json.gz") }
         Truth.assertThat(InputStreamReader(GZIPInputStream(FileInputStream(traceFile))).readText())
             .contains("CMakeFiles/hello-jni.dir/src/main/cxx/hello-jni.c.o")
+    }
+
+    @Test
+    fun buildSettingsIsUsed() {
+        project.execute("clean", "assembleDebug")
+        val x86ModelDebug =
+            join(project.testDir, ".cxx", "cmake", "debug", "x86_64", "build_model.json")
+        val armModelDebug =
+            join(project.testDir, ".cxx", "cmake", "debug", "armeabi-v7a", "build_model.json")
+
+        // No BuildSettings.json, should have empty BuildSettingsModel
+        listOf(x86ModelDebug, armModelDebug)
+            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+            .forEach {
+                assertThat(it).isEqualTo(BuildSettingsModel())
+            }
+
+        TestFileUtils.appendToFile(
+            join(project.buildFile.parentFile, "BuildSettings.json"),
+            """
+            {
+                "environmentVariables": [
+                    {
+                      "name": "GOMA_FALLBACK",
+                      "value": "true"
+                    },
+                    {
+                      "name": "INPUT_FILES",
+                      "value": "path/to/libc++.so"
+                    }
+                ]
+            }""".trimIndent())
+
+        project.execute("clean", "assembleDebug")
+
+        // After writing to BuildSettings.json, environment variables should be set
+        listOf(x86ModelDebug, armModelDebug)
+            .map { createCxxAbiModelFromJson(it.readText()).buildSettings }
+            .forEach {
+                assertThat(it).isEqualTo(
+                    BuildSettingsModel(environmentVariables = listOf(
+                        EnvironmentVariable(name = "GOMA_FALLBACK", value = "true"),
+                        EnvironmentVariable(name = "INPUT_FILES", value = "path/to/libc++.so")
+                    ))
+                )
+            }
     }
 }

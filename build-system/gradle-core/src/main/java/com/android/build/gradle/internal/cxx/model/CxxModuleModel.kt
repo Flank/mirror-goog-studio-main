@@ -165,3 +165,7 @@ val CxxModuleModel.ndkCmakeSettingsJsonFile: File
 /** The user's CMakeSettings.json file next to CMakeLists.txt */
 val CxxModuleModel.cmakeSettingsFile: File
     get() = join(makeFile.parentFile, "CMakeSettings.json")
+
+/** The user's BuildSettings.json file next to CMakeLists.txt */
+val CxxModuleModel.buildSettingsFile : File
+    get() = join(makeFile.parentFile, "BuildSettings.json")

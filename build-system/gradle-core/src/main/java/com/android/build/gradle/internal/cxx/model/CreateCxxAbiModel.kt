@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.cxx.model
 import com.android.build.gradle.internal.core.Abi
 import com.android.build.gradle.internal.cxx.services.createDefaultAbiServiceRegistry
 import com.android.build.gradle.internal.cxx.settings.CMakeSettingsConfiguration
+import com.android.build.gradle.internal.cxx.settings.createBuildSettingsFromFile
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.variant.BaseVariantData
 import com.android.build.gradle.tasks.NativeBuildSystem
@@ -79,6 +80,9 @@ fun createCxxAbiModel(
             } else {
                 null
             }
+        }
+        override val buildSettings by lazy {
+            createBuildSettingsFromFile(variant.module.buildSettingsFile)
         }
     }
 }
