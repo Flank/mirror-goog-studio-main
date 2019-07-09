@@ -21,10 +21,12 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
+import com.google.common.hash.Hashing
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
@@ -118,16 +120,20 @@ class SigningConfigData(
     @get:Optional
     val storeFilePath: String?,
 
-    @get:Input
-    @get:Optional
+    // Don't set the password as @Input because we don't want it to be written to disk. (Although
+    // Gradle typically hashes stuff before storing it to disk, it's better to be prudent.) Instead,
+    // we set the password's hash as @Input (see below).
+    @get:Internal
     val storePassword: String?,
 
     @get:Input
     @get:Optional
     val keyAlias: String?,
 
-    @get:Input
-    @get:Optional
+    // Don't set the password as @Input because we don't want it to be written to disk. (Although
+    // Gradle typically hashes stuff before storing it to disk, it's better to be prudent.) Instead,
+    // we set the password's hash as @Input (see below).
+    @get:Internal
     val keyPassword: String?,
 
     @get:Input
@@ -136,6 +142,16 @@ class SigningConfigData(
     @get:Input
     val v2SigningEnabled: Boolean
 ) {
+
+    @Input
+    @Optional
+    fun getStorePasswordHash(): String? =
+        storePassword?.let { Hashing.sha256().hashUnencodedChars(it).toString() }
+
+    @Input
+    @Optional
+    fun getKeyPasswordHash(): String? =
+        keyPassword?.let { Hashing.sha256().hashUnencodedChars(it).toString() }
 
     fun toSigningConfig(): SigningConfig {
         val signingConfig = SigningConfig(name)

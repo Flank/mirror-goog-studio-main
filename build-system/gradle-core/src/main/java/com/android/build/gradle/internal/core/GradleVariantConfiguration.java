@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -36,6 +35,7 @@ import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.InstantRun;
+import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.annotations.VisibleForTesting;
@@ -82,7 +82,7 @@ public class GradleVariantConfiguration
             @NonNull CoreBuildType buildType,
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type,
-            @Nullable CoreSigningConfig signingConfigOverride,
+            @Nullable SigningConfig signingConfigOverride,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull BooleanSupplier isInExecutionPhase) {
         super(
@@ -158,7 +158,7 @@ public class GradleVariantConfiguration
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
-                @Nullable CoreSigningConfig signingConfigOverride,
+                @Nullable SigningConfig signingConfigOverride,
                 @NonNull EvalIssueReporter issueReporter,
                 @NonNull BooleanSupplier isInExecutionPhase);
     }
@@ -175,7 +175,7 @@ public class GradleVariantConfiguration
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
-                @Nullable CoreSigningConfig signingConfigOverride,
+                @Nullable SigningConfig signingConfigOverride,
                 @NonNull EvalIssueReporter issueReporter,
                 @NonNull BooleanSupplier isInExecutionPhase) {
             return new GradleVariantConfiguration(
@@ -213,7 +213,7 @@ public class GradleVariantConfiguration
                 @NonNull CoreBuildType buildType,
                 @Nullable SourceProvider buildTypeSourceProvider,
                 @NonNull VariantType type,
-                @Nullable CoreSigningConfig signingConfigOverride,
+                @Nullable SigningConfig signingConfigOverride,
                 @NonNull EvalIssueReporter issueReporter,
                 @NonNull BooleanSupplier isInExecutionPhase) {
             return new GradleVariantConfiguration(
@@ -335,12 +335,6 @@ public class GradleVariantConfiguration
     @Nullable
     public Set<String> getSupportedAbis() {
         return mergedNdkConfig.getAbiFilters();
-    }
-
-    @Nullable
-    @Override
-    public CoreSigningConfig getSigningConfig() {
-        return (CoreSigningConfig) super.getSigningConfig();
     }
 
     /**
