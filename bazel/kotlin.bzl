@@ -50,6 +50,9 @@ def _kotlin_jar_impl(ctx):
     for dir in ctx.files.friends:
         args += ["--friend_dir", dir.path]
 
+    if ctx.attr.module_name:
+        args += ["--module_name", ctx.attr.module_name]
+
     ctx.action(
         inputs = ctx.files.inputs + list(all_deps) + option_files + ctx.files.friends,
         outputs = [class_jar],
@@ -75,6 +78,7 @@ kotlin_jar = rule(
             mandatory = False,
             allow_files = FileType([".jar"]),
         ),
+        "module_name": attr.string(),
         "_kotlinc": attr.label(
             executable = True,
             cfg = "host",
@@ -108,6 +112,7 @@ def kotlin_library(
         testonly = None,
         lint_baseline = None,
         lint_classpath = [],
+        module_name = None,
         **kwargs):
     kotlins = native.glob([src + "/**/*.kt" for src in srcs])
     javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
@@ -129,6 +134,7 @@ def kotlin_library(
             friends = friends,
             visibility = visibility,
             testonly = testonly,
+            module_name = module_name,
         )
 
     java_name = name + ".java"

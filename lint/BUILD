@@ -50,6 +50,7 @@ kotlin_library(
     name = "tools.lint-api",
     # TODO: move resources out of java?
     srcs = ["libs/lint-api/src/main/java"],
+    module_name = "lint-api",
     pom = "lint-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-api",
     resources = glob(
@@ -106,6 +107,7 @@ kotlin_library(
     name = "tools.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
     lint_baseline = "libs/lint-checks/lint_baseline.xml",
+    module_name = "lint-checks",
     pom = "lint-checks.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-checks/src/main/resources",
     resources = glob(["libs/lint-checks/src/main/resources/**"]),
@@ -141,6 +143,7 @@ kotlin_library(
     name = "tools.lint-gradle-api",
     # TODO: move resources out of java?
     srcs = ["libs/lint-gradle-api/src/main/java"],
+    module_name = "lint-gradle-api",
     pom = "lint-gradle-api.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle-api",
     resources = glob(
@@ -173,6 +176,7 @@ kotlin_library(
     name = "tools.lint-gradle",
     # TODO: move resources out of java?
     srcs = ["libs/lint-gradle/src/main/java"],
+    module_name = "lint-gradle",
     pom = "lint-gradle.pom",
     resource_strip_prefix = "tools/base/lint/libs/lint-gradle",
     resources = glob(
