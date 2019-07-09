@@ -507,6 +507,9 @@
   <migrate-dependency old-group-name="com.android.support.design.transformation" old-artifact-name="design-transformation" new-group-name="com.google.android.material.transformation" new-artifact-name="material-transformation" base-version="1.0.0"/>
   <migrate-dependency old-group-name="com.android.support.design.typography" old-artifact-name="design-typography" new-group-name="com.google.android.material.typography" new-artifact-name="material-typography" base-version="1.0.0"/>
   <migrate-dependency old-group-name="com.android.support.design.widget" old-artifact-name="design-widget" new-group-name="com.google.android.material.widget" new-artifact-name="material-widget" base-version="1.0.0"/>
+  <!-- Exoplayer -->
+  <migrate-dependency old-group-name="com.android.support" old-artifact-name="media2" new-group-name="androidx.media2" new-artifact-name="media2" base-version="1.0.0-alpha03"/>
+  <migrate-dependency old-group-name="com.android.support" old-artifact-name="media2-exoplayer" new-group-name="androidx.media2" new-artifact-name="media2-exoplayer" base-version="1.0.0-alpha01"/>
 
   <upgrade-dependency group-name="androidx.core" artifact-name="core-ktx" base-version="1.0.0" />
 </migration-map>
