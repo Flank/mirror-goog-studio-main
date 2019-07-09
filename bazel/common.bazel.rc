@@ -17,8 +17,6 @@ test --verbose_failures
 # Local runs require longer timeouts.
 test:local --test_timeout=120,600,1800,7200
 
-build --keep_going
-
 # Don't use JUnit from Bazel.
 test --explicit_java_test_deps
 

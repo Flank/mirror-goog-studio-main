@@ -21,6 +21,7 @@ readonly command_log="$("${script_dir}"/bazel info ${config_options} command_log
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   ${config_options} \
   --build_tag_filters=${build_tag_filters} \
   --test_tag_filters=${test_tag_filters} \

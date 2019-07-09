@@ -13,6 +13,7 @@ readonly command_log="$("${script_dir}"/bazel info command_log)"
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   --config=remote \
   ${auth_options} \
   --test_tag_filters=-no_linux,-no_test_linux,coverage-test,-perfgate_only \

@@ -24,6 +24,7 @@ target_filters=qa_sanity,-qa_unreliable,-no_linux,-no_test_linux,-requires_emula
 "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   ${config_options} \
   --jobs 4 \
   --build_tag_filters=${target_filters} \
@@ -44,6 +45,7 @@ target_filters=qa_sanity_emu,-qa_unreliable,-no_linux,-no_test_linux
 QA_ANDROID_SDK_ROOT=${HOME}/Android_emulator/sdk "${script_dir}/bazel" \
   --max_idle_secs=60 \
   test \
+  --keep_going \
   ${config_options} \
   --build_tag_filters=${target_filters} \
   --test_tag_filters=${target_filters} \
