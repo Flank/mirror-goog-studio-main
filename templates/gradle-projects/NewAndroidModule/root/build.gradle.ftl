@@ -21,7 +21,7 @@ dependencies {
     <@kt.addKotlinDependencies />
 <#if isDynamicFeature>
   implementation project(':${baseFeatureName}')
-<#elseif WearprojectName?has_content && Mobileincluded!false && Wearincluded!false>
+<#elseif (WearprojectName?has_content) && (Mobileincluded!false) && (Wearincluded!false)>
   wearApp project(':${WearprojectName}')
 </#if>
 }

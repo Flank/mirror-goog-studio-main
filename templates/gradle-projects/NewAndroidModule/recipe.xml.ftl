@@ -92,7 +92,7 @@
                    to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
 </#if>
 
-<#if Mobileincluded!false && Wearincluded!false>
+<#if (Mobileincluded!false) && (Wearincluded!false)>
     <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" gradleConfiguration="compile" />
 </#if>
 
