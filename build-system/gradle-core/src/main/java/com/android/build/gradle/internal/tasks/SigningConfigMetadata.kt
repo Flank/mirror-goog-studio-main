@@ -18,10 +18,8 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
 import com.android.build.gradle.internal.cxx.json.PlainFileGsonTypeAdaptor
-import com.android.build.gradle.internal.dsl.SigningConfig
 import com.google.gson.GsonBuilder
 import java.io.File
-import java.io.FileReader
 import java.io.IOException
 import org.apache.commons.io.FileUtils
 import org.gradle.api.file.FileCollection
@@ -33,8 +31,6 @@ import java.nio.file.attribute.AclEntryType
 import java.nio.file.attribute.AclFileAttributeView
 import java.nio.file.attribute.PosixFilePermission
 
-
-
 /**
  * Information containing the signing config metadata that can be consumed by other modules as
  * persisted json file
@@ -44,12 +40,15 @@ class SigningConfigMetadata {
         private const val PERSISTED_FILE_NAME = "signing-config.json"
 
         @Throws(IOException::class)
-        fun load(input: FileCollection?): SigningConfig? {
+        fun load(input: FileCollection?): com.android.builder.model.SigningConfig? {
             return load(getOutputFile(input))
         }
 
         @Throws(IOException::class)
-        fun save(outputDirectory: File, signingConfig: SigningConfig?) {
+        fun save(
+            outputDirectory: File,
+            signingConfig: com.android.build.gradle.internal.dsl.SigningConfig?
+        ) {
             val outputFile = File(outputDirectory, PERSISTED_FILE_NAME)
             // create the file, so we can set the permissions on it.
             outputFile.createNewFile()
@@ -62,7 +61,8 @@ class SigningConfigMetadata {
             } else {
                 // on windows, use AclEntry to set the owner read/write permission.
                 val view = Files.getFileAttributeView(
-                    outputFile.toPath(), AclFileAttributeView::class.java)
+                    outputFile.toPath(), AclFileAttributeView::class.java
+                )
                 val entry = AclEntry.newBuilder()
                     .setType(AclEntryType.ALLOW)
                     .setPrincipal(view.owner)
@@ -78,7 +78,8 @@ class SigningConfigMetadata {
                         AclEntryPermission.WRITE_ATTRIBUTES,
                         AclEntryPermission.WRITE_OWNER,
                         AclEntryPermission.SYNCHRONIZE,
-                        AclEntryPermission.DELETE)
+                        AclEntryPermission.DELETE
+                    )
                     .build()
                 view.acl = listOf(entry)
             }
@@ -89,8 +90,14 @@ class SigningConfigMetadata {
             FileUtils.write(outputFile, gson.toJson(signingConfig), StandardCharsets.UTF_8)
         }
 
+        /**
+         * Loads the SigningConfig object from the given file. This method returns an immutable
+         * [com.android.builder.model.SigningConfig] object instead of a mutable
+         * [com.android.build.gradle.internal.dsl.SigningConfig] object because the consumers
+         * shouldn't modify the returned object.
+         */
         @Throws(IOException::class)
-        fun load(input: File?): SigningConfig? {
+        fun load(input: File?): com.android.builder.model.SigningConfig? {
             if (input == null) return null
             val gsonBuilder = GsonBuilder()
             gsonBuilder.registerTypeAdapter(File::class.java, PlainFileGsonTypeAdaptor())
@@ -98,7 +105,7 @@ class SigningConfigMetadata {
             input.bufferedReader(StandardCharsets.UTF_8).use { fileReader ->
                 return gson.fromJson(
                     fileReader,
-                    SigningConfig::class.java
+                    com.android.build.gradle.internal.dsl.SigningConfig::class.java
                 )
             }
         }
