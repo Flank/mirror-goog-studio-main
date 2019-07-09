@@ -451,6 +451,10 @@ class Plural: Value() {
 
   val values = arrayOfNulls<Item?>(Type.numTypes)
 
+  fun setValue(type: Plural.Type, item: Item) {
+    values[type.ordinal] = item
+  }
+
   override fun equals(other: Any?): Boolean {
     if (other is Plural) {
       return values contentEquals other.values
