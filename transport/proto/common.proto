@@ -88,6 +88,8 @@ message Event {
     MEMORY_ALLOC_EVENTS = 409;
     // no specified group id.
     MEMORY_JNI_REF_EVENTS = 410;
+    // no specified group id.
+    MEMORY_ALLOC_STATS = 411;
 
     // Energy Profiler Prefix = 500
     // no specified group id.
@@ -192,6 +194,7 @@ message Event {
     MemoryAllocContextsData memory_alloc_contexts = 408;
     MemoryAllocEventsData memory_alloc_events = 409;
     MemoryJniRefData memory_jni_ref_events = 410;
+    MemoryAllocStatsData memory_alloc_Stats = 411;
 
     // Energy Profiler Prefix = 500
     // Energy consumption calculated from CPU, network and location activities.

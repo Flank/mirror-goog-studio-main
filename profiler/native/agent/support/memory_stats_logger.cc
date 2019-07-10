@@ -55,25 +55,38 @@ namespace profiler {
 
 void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
   if (Agent::Instance().agent_config().common().profiler_unified_pipeline()) {
-    return;
+    Agent::Instance().SubmitAgentTasks(
+        {[alloc_count, free_count](AgentService::Stub& stub,
+                                   ClientContext& ctx) {
+          SendEventRequest request;
+          auto* event = request.mutable_event();
+          event->set_pid(getpid());
+          event->set_kind(Event::MEMORY_ALLOC_STATS);
+
+          auto* stats = event->mutable_memory_alloc_stats();
+          stats->set_java_allocation_count(alloc_count);
+          stats->set_java_free_count(free_count);
+
+          EmptyResponse response;
+          return stub.SendEvent(&ctx, request, &response);
+        }});
+  } else {
+    int64_t timestamp = GetClock().GetCurrentTime();
+    Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
+        {[alloc_count, free_count, timestamp](InternalMemoryService::Stub& stub,
+                                              ClientContext& ctx) {
+          AllocStatsRequest alloc_stats_request;
+          alloc_stats_request.set_pid(getpid());
+          auto* sample = alloc_stats_request.mutable_alloc_stats_sample();
+          sample->set_timestamp(timestamp);
+          auto* stats = sample->mutable_alloc_stats();
+          stats->set_java_allocation_count(alloc_count);
+          stats->set_java_free_count(free_count);
+
+          EmptyMemoryReply reply;
+          return stub.RecordAllocStats(&ctx, alloc_stats_request, &reply);
+        }});
   }
-
-  int64_t timestamp = GetClock().GetCurrentTime();
-  int32_t pid = getpid();
-  Agent::Instance().wait_and_get_memory_component().SubmitMemoryTasks(
-      {[alloc_count, free_count, pid, timestamp](
-           InternalMemoryService::Stub& stub, ClientContext& ctx) {
-        AllocStatsRequest alloc_stats_request;
-        alloc_stats_request.set_pid(pid);
-        MemoryData::AllocStatsSample* stats =
-            alloc_stats_request.mutable_alloc_stats_sample();
-        stats->set_timestamp(timestamp);
-        stats->set_java_allocation_count(alloc_count);
-        stats->set_java_free_count(free_count);
-
-        EmptyMemoryReply reply;
-        return stub.RecordAllocStats(&ctx, alloc_stats_request, &reply);
-      }});
 }
 
 void EnqueueGcStats(int64_t start_time, int64_t end_time) {

@@ -37,6 +37,11 @@ message MemoryGcData {
   // TODO add deallocation stats
 }
 
+message MemoryAllocStatsData {
+  int32 java_allocation_count = 2;
+  int32 java_free_count = 3;
+}
+
 // Proto for describing a heap dump record.
 // For the new pipeline, this message will appear in a pair of
 // |MEMORY_HEAP_DUMP| events. For the first event, the HeapDumpInfo

@@ -137,8 +137,7 @@ message MemoryData {
 
   message AllocStatsSample {
     int64 timestamp = 1;
-    int32 java_allocation_count = 2;
-    int32 java_free_count = 3;
+    MemoryAllocStatsData alloc_stats = 2;
   }
 
   message GcStatsSample {

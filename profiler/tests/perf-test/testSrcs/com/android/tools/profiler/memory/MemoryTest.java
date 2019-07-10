@@ -255,7 +255,10 @@ public class MemoryTest {
         int allocStatsCount = memoryData.getAllocStatsSamplesCount();
         assertThat(allocStatsCount).isGreaterThan(0);
         int allocCount =
-                memoryData.getAllocStatsSamples(allocStatsCount - 1).getJavaAllocationCount();
+                memoryData
+                        .getAllocStatsSamples(allocStatsCount - 1)
+                        .getAllocStats()
+                        .getJavaAllocationCount();
 
         // Set sampling rate back to full.
         stubWrapper.setSamplingRate(myPerfDriver.getSession(), SAMPLING_RATE_FULL);
@@ -307,7 +310,11 @@ public class MemoryTest {
                         myPerfDriver.getSession(), memoryData.getEndTimestamp(), Long.MAX_VALUE);
         allocStatsCount = memoryData.getAllocStatsSamplesCount();
         assertThat(allocStatsCount).isGreaterThan(0);
-        assertThat(memoryData.getAllocStatsSamples(allocStatsCount - 1).getJavaAllocationCount())
+        assertThat(
+                        memoryData
+                                .getAllocStatsSamples(allocStatsCount - 1)
+                                .getAllocStats()
+                                .getJavaAllocationCount())
                 .isAtLeast(allocCount);
     }
 }
