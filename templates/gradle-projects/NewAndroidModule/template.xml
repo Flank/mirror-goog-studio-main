@@ -20,12 +20,6 @@
         type="boolean"
         default="false" />
 
-    <parameter
-        id="isDynamicInstantApp"
-        name="Is Dynamic Instant App"
-        type="boolean"
-        default="false" />
-
     <thumbs>
         <thumb>mobile-module.png</thumb>
     </thumbs>
