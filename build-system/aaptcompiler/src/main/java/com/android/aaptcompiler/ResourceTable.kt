@@ -242,7 +242,7 @@ class ResourceTable(val validateResources: Boolean = false) {
    * Attempts to find a package having the specified name and ID. If not found, a new package
    * of the specified parameters is created and returned.
    */
-  fun createPackageAllowingDuplicateNames(name: String, id: Byte): ResourceTablePackage? {
+  fun createPackageAllowingDuplicateNames(name: String, id: Byte): ResourceTablePackage {
     val match = packages.find { it.name == name && it.id == id }
     if (match != null) {
       return match
@@ -510,8 +510,15 @@ class Overlayable (
   constructor(): this("","", Source(""))
 
   companion object {
-    val ACTOR_SCHEME = "overlay"
-    val ACTOR_SCHEME_URI = "$ACTOR_SCHEME://"
+    const val ACTOR_SCHEME = "overlay"
+    const val ACTOR_SCHEME_URI = "$ACTOR_SCHEME://"
+  }
+
+  override fun equals(other: Any?): Boolean {
+    if (other is Overlayable) {
+      return name == other.name && actor == other.actor
+    }
+    return false
   }
 }
 
@@ -520,6 +527,13 @@ class OverlayableItem(
   val policies: Int = Policy.NONE,
   val comment: String = "",
   val source: Source = Source("")) {
+
+  override fun equals(other: Any?): Boolean {
+    if (other is OverlayableItem) {
+      return overlayable == other.overlayable && policies == other.policies
+    }
+    return false
+  }
 
   /** Represents the types of overlays that are allowed to overlay the resource. */
   object Policy {
