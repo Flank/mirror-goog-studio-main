@@ -76,15 +76,9 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
     private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
     List<FileCollection> secondaryInputFiles = null;
-    @NonNull private final WorkerExecutor workerExecutor;
 
     public Transform getTransform() {
         return transform;
-    }
-
-    @Inject
-    public TransformTask(@NonNull WorkerExecutor workerExecutor) {
-        this.workerExecutor = workerExecutor;
     }
 
     @Input
@@ -299,11 +293,6 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
         return builder.build();
     }
 
-    @Override
-    public String getProjectName() {
-        return getProject().getName();
-    }
-
     /**
      * Returns a list of non incremental TransformInput.
      * @param streams the streams.
@@ -494,12 +483,6 @@ public abstract class TransformTask extends StreamBasedTask implements Context {
         return inputs.stream()
                 .map(IncrementalTransformInput::asImmutable)
                 .collect(Collectors.toList());
-    }
-
-    @NonNull
-    @Override
-    public WorkerExecutor getWorkerExecutor() {
-        return workerExecutor;
     }
 
     public static class CreationAction<T extends Transform>

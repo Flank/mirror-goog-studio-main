@@ -38,7 +38,7 @@ import org.gradle.api.tasks.TaskProvider;
  * that contained the build environment information needed for data binding, but it is now no longer
  * the case. We'll rename it later.
  */
-public class DataBindingExportBuildInfoTask extends NonIncrementalTask {
+public abstract class DataBindingExportBuildInfoTask extends NonIncrementalTask {
 
     @Internal private Supplier<LayoutXmlProcessor> xmlProcessor;
 

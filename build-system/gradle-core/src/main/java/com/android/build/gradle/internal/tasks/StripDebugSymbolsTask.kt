@@ -37,10 +37,6 @@ import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
-import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.PathMatcher
-import java.nio.file.Paths
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
@@ -48,11 +44,19 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
+import java.io.File
 import java.io.Serializable
+import java.nio.file.FileSystems
+import java.nio.file.PathMatcher
+import java.nio.file.Paths
 import javax.inject.Inject
 
 /**
  * Task to remove debug symbols from native libraries.
+ *
+ * TODO(https://issuetracker.google.com/129217943)
+ * <p>We can not use gradle worker in this task as we use [GradleProcessExecutor], which should
+ * not be serialized.
  */
 @CacheableTask
 abstract class StripDebugSymbolsTask : IncrementalTask() {
@@ -81,20 +85,12 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
 
     private lateinit var stripToolFinderProvider: Provider<SymbolStripExecutableFinder>
 
-    /**
-     * TODO(https://issuetracker.google.com/129217943)
-     *
-     * <p>We can not use gradle worker in this task as we use [GradleProcessExecutor], which should
-     * not be serialized.
-     */
-    private val workers = Workers.withThreads(project.name, path)
-
     override val incremental: Boolean
         get() = true
 
     override fun doFullTaskAction() {
         StripDebugSymbolsDelegate(
-            workers,
+            getWorkerFacadeWithThreads(useGradleExecutor = false),
             inputDir.get().asFile,
             outputDir.get().asFile,
             excludePatterns,
@@ -106,7 +102,7 @@ abstract class StripDebugSymbolsTask : IncrementalTask() {
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
         StripDebugSymbolsDelegate(
-            workers,
+            getWorkerFacadeWithThreads(useGradleExecutor = false),
             inputDir.get().asFile,
             outputDir.get().asFile,
             excludePatterns,

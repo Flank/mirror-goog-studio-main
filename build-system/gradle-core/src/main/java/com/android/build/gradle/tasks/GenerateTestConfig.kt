@@ -27,10 +27,8 @@ import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_MANIF
 import com.android.build.gradle.internal.scope.InternalArtifactType.MERGED_RES
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
@@ -46,7 +44,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -63,7 +60,7 @@ import javax.inject.Inject
  * See DSL documentation at [TestOptions.UnitTestOptions.isIncludeAndroidResources].
  */
 @CacheableTask
-open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor, objectFactory: ObjectFactory) :
+abstract class GenerateTestConfig @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 
     @get:Nested
@@ -73,15 +70,14 @@ open class GenerateTestConfig @Inject constructor(workerExecutor: WorkerExecutor
     @get:OutputDirectory
     val outputDirectory: DirectoryProperty = objectFactory.directoryProperty()
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        workers.submit(
-            GenerateTestConfigRunnable::class.java,
-            GenerateTestConfigParams(testConfigInputs.computeProperties(project.projectDir),
-                outputDirectory.get().asFile)
-        )
-        workers.close()
+        getWorkerFacadeWithWorkers().use {
+            it.submit(
+                GenerateTestConfigRunnable::class.java,
+                GenerateTestConfigParams(testConfigInputs.computeProperties(project.projectDir),
+                    outputDirectory.get().asFile)
+            )
+        }
     }
 
     private class GenerateTestConfigRunnable

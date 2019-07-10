@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.utils.FileUtils
@@ -33,7 +32,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.util.function.Supplier
@@ -52,8 +50,7 @@ import javax.inject.Inject
  * dependency is already a dependency of another feature, its BR class will already have been
  * generated)
  */
-abstract class DataBindingExportFeatureInfoTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : NonIncrementalTask() {
+abstract class DataBindingExportFeatureInfoTask : NonIncrementalTask() {
 
     @get:OutputDirectory abstract val outFolder: DirectoryProperty
 
@@ -64,8 +61,6 @@ abstract class DataBindingExportFeatureInfoTask @Inject constructor(workerExecut
     val resOffset: Int
         get() = resOffsetSupplier.get()
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     /**
      * In a feature, we only need to generate code for its Runtime dependencies as compile
      * dependencies are already available via other dependencies (base feature or another feature)
@@ -74,7 +69,7 @@ abstract class DataBindingExportFeatureInfoTask @Inject constructor(workerExecut
         private set
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 ExportFeatureInfoRunnable::class.java, ExportFeatureInfoParams(
                     outFolder = outFolder.get().asFile,

@@ -36,10 +36,8 @@ import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.zip.Deflater
-import javax.inject.Inject
 
 /**
  * A task that merges the project and runtime dependency class files into a single jar.
@@ -49,8 +47,7 @@ import javax.inject.Inject
  * classes to the correct APKs via the Dex Splitter.
  */
 @CacheableTask
-abstract class MergeClassesTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class MergeClassesTask : NonIncrementalTask() {
 
     @get:Classpath
     abstract var inputFiles: FileCollection
@@ -63,14 +60,12 @@ abstract class MergeClassesTask
     lateinit var jarCreatorType: JarCreatorType
         private set
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
         // We use a delegate here to simplify testing
         MergeClassesDelegate(
             inputFiles.files,
             outputFile.get().asFile,
-            workers,
+            getWorkerFacadeWithWorkers(),
             jarCreatorType
         ).mergeClasses()
     }

@@ -41,7 +41,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ModuleMetadata;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata;
 import com.android.build.gradle.options.SyncOptions;
@@ -63,7 +62,6 @@ import java.util.Comparator;
 import java.util.Set;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 import kotlin.Pair;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
@@ -80,18 +78,9 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
 public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
-
-    @NonNull private final WorkerExecutorFacade workers;
-
-    @Inject
-    public GenerateSplitAbiRes(@NonNull WorkerExecutor workerExecutor) {
-        this.workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
 
     private Supplier<String> applicationId;
     private String outputBaseName;
@@ -187,7 +176,7 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
 
         ImmutableList.Builder<BuildOutput> buildOutputs = ImmutableList.builder();
 
-        try (WorkerExecutorFacade workerExecutor = workers) {
+        try (WorkerExecutorFacade workerExecutor = getWorkerFacadeWithWorkers()) {
             for (String split : splits.keySet()) {
                 File resPackageFile = getOutputFileForSplit(split);
                 File manifestFile = generateSplitManifest(split, splits.get(split));
@@ -282,7 +271,8 @@ public abstract class GenerateSplitAbiRes extends NonIncrementalTask {
 
             fileWriter.append(
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "<manifest"
+                            + " xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                             + "      package=\""
                             + manifestAppId
                             + "\"\n"

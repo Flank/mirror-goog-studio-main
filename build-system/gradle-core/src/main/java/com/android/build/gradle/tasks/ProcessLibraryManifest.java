@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.tasks.manifest.ManifestHelperKt;
 import com.android.builder.model.ApiVersion;
@@ -66,7 +65,6 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /** a Task that only merge a single manifest with its overlays. */
 @CacheableTask
@@ -81,15 +79,13 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
     private OutputScope outputScope;
 
     private final RegularFileProperty manifestOutputFile;
-    private final WorkerExecutor workerExecutor;
 
     private boolean isNamespaced;
 
     @Inject
-    public ProcessLibraryManifest(ObjectFactory objectFactory, WorkerExecutor workerExecutor) {
+    public ProcessLibraryManifest(ObjectFactory objectFactory) {
         super(objectFactory);
         manifestOutputFile = objectFactory.fileProperty();
-        this.workerExecutor = workerExecutor;
     }
 
     @OutputFile
@@ -100,8 +96,7 @@ public abstract class ProcessLibraryManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        try (WorkerExecutorFacade workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor)) {
+        try (WorkerExecutorFacade workers = getWorkerFacadeWithWorkers()) {
             DirectoryProperty manifestOutputDirectory = getManifestOutputDirectory();
             DirectoryProperty aaptFriendlyManifestOutputDirectory =
                     getAaptFriendlyManifestOutputDirectory();

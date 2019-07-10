@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.BuilderConstants
@@ -36,7 +35,6 @@ import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.resources.FileValidity
 import com.android.ide.common.resources.MergedAssetWriter
 import com.android.ide.common.resources.MergingException
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.Lists
@@ -52,17 +50,13 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.util.function.Function
 import java.util.function.Supplier
-import javax.inject.Inject
 
 @CacheableTask
-abstract class MergeSourceSetFolders @Inject constructor(
-    workerExecutor: WorkerExecutor
-) : IncrementalTask() {
+abstract class MergeSourceSetFolders : IncrementalTask() {
 
     // ----- PUBLIC TASK API -----
     @get:OutputDirectory
@@ -95,9 +89,6 @@ abstract class MergeSourceSetFolders @Inject constructor(
 
     private val fileValidity = FileValidity<AssetSet>()
 
-    private val workerExecutor: WorkerExecutorFacade =
-        Workers.preferWorkers(project.name, path, workerExecutor)
-
     override val incremental: Boolean
         @Internal
         get() = true
@@ -117,7 +108,7 @@ abstract class MergeSourceSetFolders @Inject constructor(
 
         val logger = LoggerWrapper(logger)
         try {
-            this.workerExecutor.use { workerExecutor ->
+            getWorkerFacadeWithWorkers().use { workerExecutor ->
                 for (assetSet in assetSets) {
                     // set needs to be loaded.
                     assetSet.loadFromFiles(logger)
@@ -151,7 +142,7 @@ abstract class MergeSourceSetFolders @Inject constructor(
         // create a merger and load the known state.
         val merger = AssetMerger()
         try {
-            this.workerExecutor.use { workerExecutor ->
+            getWorkerFacadeWithWorkers().use { workerExecutor ->
                 if (!/*incrementalState*/merger.loadFromBlob(incrementalFolder!!, true)) {
                     doFullTaskAction()
                     return

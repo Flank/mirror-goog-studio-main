@@ -69,8 +69,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
     private ProcessExecutor processExecutor;
 
-    private String projectName;
-
     private int timeOutInMs = 0;
 
     private Collection<String> installOptions;
@@ -206,14 +204,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
         this.processExecutor = processExecutor;
     }
 
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
     @Input
     public int getTimeOutInMs() {
         return timeOutInMs;
@@ -270,7 +260,6 @@ public abstract class InstallVariantTask extends NonIncrementalTask {
 
             task.setDescription("Installs the " + scope.getVariantData().getDescription() + ".");
             task.setGroup(TaskManager.INSTALL_GROUP);
-            task.setProjectName(scope.getGlobalScope().getProject().getName());
             scope.getArtifacts()
                     .setTaskInputToFinalProduct(InternalArtifactType.APK, task.getApkDirectory());
             task.setTimeOutInMs(

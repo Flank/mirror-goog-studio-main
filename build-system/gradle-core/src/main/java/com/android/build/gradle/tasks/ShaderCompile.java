@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.ShaderProcessor;
@@ -56,7 +55,14 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.util.PatternSet;
 
-/** Task to compile Shaders */
+/**
+ * Task to compile Shaders.
+ *
+ * <p>TODO(b/124424292)
+ *
+ * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
+ * compiling shader files, which should not be serialized.
+ */
 @CacheableTask
 public abstract class ShaderCompile extends NonIncrementalTask {
 
@@ -67,18 +73,6 @@ public abstract class ShaderCompile extends NonIncrementalTask {
             .include("**/*." + ShaderProcessor.EXT_GEOM)
             .include("**/*." + ShaderProcessor.EXT_FRAG)
             .include("**/*." + ShaderProcessor.EXT_COMP);
-
-    private final WorkerExecutorFacade workers;
-
-    /**
-     * TODO(b/124424292)
-     *
-     * <p>We can not use gradle worker in this task as we use {@link GradleProcessExecutor} for
-     * compiling shader files, which should not be serialized.
-     */
-    public ShaderCompile() {
-        this.workers = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
-    }
 
     private Provider<Revision> buildToolInfoRevisionProvider;
 
@@ -115,7 +109,7 @@ public abstract class ShaderCompile extends NonIncrementalTask {
         File destinationDir = getOutputDir().get().getAsFile();
         FileUtils.cleanOutputDir(destinationDir);
 
-        try (WorkerExecutorFacade workers = this.workers) {
+        try (WorkerExecutorFacade workers = getWorkerFacadeWithThreads(false)) {
             compileAllShaderFiles(
                     getSourceDir().get().getAsFile(),
                     destinationDir,

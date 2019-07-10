@@ -26,9 +26,7 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -37,13 +35,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /**
  * Copy the location our various tasks outputs into a single location.
@@ -52,14 +48,6 @@ import org.gradle.workers.WorkerExecutor;
  * folders since they are produced by different tasks.
  */
 public abstract class CopyOutputs extends NonIncrementalTask {
-
-    private final WorkerExecutorFacade workers;
-
-    @Inject
-    public CopyOutputs(WorkerExecutor workerExecutor) {
-        this.workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
 
     @OutputDirectory
     public abstract DirectoryProperty getDestinationDir();
@@ -105,7 +93,7 @@ public abstract class CopyOutputs extends NonIncrementalTask {
     private Callable<BuildElements> copy(InternalArtifactType inputType, DirectoryProperty inputs) {
         return ExistingBuildElements.from(inputType, inputs)
                 .transform(
-                        workers,
+                        getWorkerFacadeWithWorkers(),
                         BuildElementsCopyRunnable.class,
                         (apkInfo, inputFile) ->
                                 new BuildElementsCopyParams(

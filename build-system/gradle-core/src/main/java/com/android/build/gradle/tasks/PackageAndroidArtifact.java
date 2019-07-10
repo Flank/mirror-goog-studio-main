@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.tasks.NewIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigUtils;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
@@ -69,7 +68,6 @@ import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
 import com.android.builder.utils.ZipEntryUtils;
 import com.android.ide.common.resources.FileStatus;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.apkzlib.utils.IOExceptionWrapper;
 import com.android.tools.build.apkzlib.zip.compress.Zip64NotSupportedException;
@@ -125,7 +123,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.work.FileChange;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
-import org.gradle.workers.WorkerExecutor;
 
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends NewIncrementalTask {
@@ -214,14 +211,6 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
     @Nullable protected String buildTargetDensity;
 
     @Nullable protected OutputFileProvider outputFileProvider;
-
-    private final WorkerExecutorFacade workers;
-
-    @Inject
-    public PackageAndroidArtifact(WorkerExecutor workerExecutor) {
-        this.workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
 
     @Input
     public String getProjectBaseName() {
@@ -423,7 +412,7 @@ public abstract class PackageAndroidArtifact extends NewIncrementalTask {
 
         ExistingBuildElements.from(taskInputType, getResourceFiles())
                 .transform(
-                        workers,
+                        getWorkerFacadeWithWorkers(),
                         IncrementalSplitterRunnable.class,
                         (apkInfo, inputFile) ->
                                 new SplitterParams(

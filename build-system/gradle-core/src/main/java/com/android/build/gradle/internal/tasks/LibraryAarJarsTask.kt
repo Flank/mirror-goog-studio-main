@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import zipflinger.JarCreator
 import com.android.builder.packaging.JarMerger
 import com.android.builder.packaging.TypedefRemover
 import com.android.utils.FileUtils
@@ -44,13 +43,12 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
+import zipflinger.JarCreator
 import java.io.File
 import java.util.function.Predicate
 import java.util.function.Supplier
 import java.util.regex.Pattern
 import java.util.zip.Deflater
-import javax.inject.Inject
 
 /**
  * A Task that takes the project/project local jars for CLASSES and RESOURCES, and
@@ -65,8 +63,7 @@ import javax.inject.Inject
 
 // TODO(b/132975663): add workers
 @CacheableTask
-abstract class LibraryAarJarsTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class LibraryAarJarsTask : NonIncrementalTask() {
     abstract var excludeListProvider: Supplier<List<String>>
         protected set
 

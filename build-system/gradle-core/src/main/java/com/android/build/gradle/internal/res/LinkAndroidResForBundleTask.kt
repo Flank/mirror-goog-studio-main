@@ -30,13 +30,10 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
-import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.build.gradle.options.BooleanOption
-
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptOptions
@@ -64,20 +61,15 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.util.function.Supplier
-import javax.inject.Inject
 
 /**
  * Task to link app resources into a proto format so that it can be consumed by the bundle tool.
  */
 @CacheableTask
-abstract class LinkAndroidResForBundleTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class LinkAndroidResForBundleTask : NonIncrementalTask() {
 
     @get:Input
     var debuggable: Boolean = false
@@ -190,7 +182,7 @@ abstract class LinkAndroidResForBundleTask
             aapt2FromMaven = aapt2FromMaven,
             logger = LoggerWrapper(logger)
         )
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 Aapt2ProcessResourcesRunnable::class.java,
                 Aapt2ProcessResourcesRunnable.Params(

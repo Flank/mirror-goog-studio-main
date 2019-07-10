@@ -47,7 +47,6 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,10 +59,7 @@ import javax.inject.Inject
  * rewrite the code.
  */
 @CacheableTask
-abstract class DesugarTask @Inject constructor(
-    objectFactory: ObjectFactory,
-    workerExecutor: WorkerExecutor
-) :
+abstract class DesugarTask @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
     @get: Classpath
     abstract val projectClasses: ConfigurableFileCollection
@@ -91,8 +87,6 @@ abstract class DesugarTask @Inject constructor(
     @get: Input
     val enableBugFixForJacoco: Property<Boolean> = objectFactory.property(Boolean::class.java)
 
-    private val executorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
         val libs = externaLibsClasses.asFile.get().listFiles()!!.toList().sortedBy { it.name }
         DesugarTaskDelegate(
@@ -108,7 +102,7 @@ abstract class DesugarTask @Inject constructor(
             minSdk = minSdk.get(),
             enableBugFixForJacoco = enableBugFixForJacoco.get(),
             verbose = project.logger.isDebugEnabled,
-            executorFacade = executorFacade
+            executorFacade = getWorkerFacadeWithWorkers()
         ).doProcess()
     }
 

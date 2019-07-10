@@ -38,7 +38,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -52,7 +51,7 @@ import javax.inject.Inject
 /**
  * Task that generates the standalone from a bundle.
  */
-abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleToStandaloneApkTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -82,11 +81,9 @@ abstract class BundleToStandaloneApkTask @Inject constructor(workerExecutor: Wor
     lateinit var signingConfig: FileCollection
         private set
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
         val config = SigningConfigUtils.load(signingConfig)
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(

@@ -41,9 +41,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
-/**
- * A task that processes the manifest
- */
+/** A task that processes the manifest */
 public abstract class ManifestProcessorTask extends IncrementalTask {
 
     public ManifestProcessorTask(@NonNull ObjectFactory objectFactory) {

@@ -28,7 +28,7 @@ import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
 
-public class CheckProguardFiles extends NonIncrementalTask {
+public abstract class CheckProguardFiles extends NonIncrementalTask {
 
     private List<File> proguardFiles;
 

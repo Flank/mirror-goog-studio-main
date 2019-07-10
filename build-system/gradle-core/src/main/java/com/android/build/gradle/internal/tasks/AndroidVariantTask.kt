@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Internal
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
 /**
  * Base Android task with a variant name and support for analytics
@@ -32,6 +35,25 @@ abstract class AndroidVariantTask : DefaultTask(), VariantAwareTask {
 
     @Internal("No influence on output, this is for our build stats reporting mechanism")
     override lateinit var variantName: String
+
+    @get:Internal
+    val projectName: String = project.name
+
+    @get:Inject
+    abstract val workerExecutor: WorkerExecutor
+
+    @Internal
+    fun getWorkerFacadeWithWorkers(): WorkerExecutorFacade {
+        return Workers.preferWorkers(projectName, path, workerExecutor)
+    }
+
+    fun getWorkerFacadeWithThreads(useGradleExecutor: Boolean = false): WorkerExecutorFacade {
+        return if (useGradleExecutor) {
+            Workers.preferThreads(projectName, path, workerExecutor)
+        } else {
+            Workers.withThreads(projectName, path)
+        }
+    }
 
     /**
      * Called by subclasses that want to record something.

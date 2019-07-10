@@ -36,7 +36,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.util.concurrent.ForkJoinPool
@@ -45,7 +44,7 @@ import javax.inject.Inject
 /**
  * Task that generates APKs from a bundle. All the APKs are bundled into a single zip file.
  */
-abstract class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleToApkTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NONE)
@@ -65,11 +64,9 @@ abstract class BundleToApkTask @Inject constructor(workerExecutor: WorkerExecuto
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
         val config = SigningConfigUtils.load(signingConfig)
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(

@@ -18,15 +18,14 @@ package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants.FN_LINT_JAR
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
-
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.tasks.factory.TaskCreationAction
-import java.io.File
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
@@ -40,11 +39,16 @@ import javax.inject.Inject
  * publishing is done at config time when we don't know yet what lint.jar file we're going to
  * publish, we have to do this.
  */
-abstract class PrepareLintJarForPublish @Inject constructor(workerExecutor: WorkerExecutor) : DefaultTask() {
+abstract class PrepareLintJarForPublish : DefaultTask() {
     @get:InputFiles lateinit var lintChecks: FileCollection
         private set
     @get:OutputFile abstract val outputLintJar: RegularFileProperty
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+
+    @get:Internal
+    val projectName = project.name
+
+    @get:Inject
+    abstract val workerExecutor: WorkerExecutor
 
     companion object {
         const val NAME = "prepareLintJarForPublish"
@@ -52,7 +56,7 @@ abstract class PrepareLintJarForPublish @Inject constructor(workerExecutor: Work
 
     @TaskAction
     fun prepare() {
-        workers.use {
+        Workers.preferWorkers(projectName, path, workerExecutor).use {
             it.submit(
                 PublishLintJarWorkerRunnable::class.java, PublishLintJarRequest(
                     files = lintChecks.files,

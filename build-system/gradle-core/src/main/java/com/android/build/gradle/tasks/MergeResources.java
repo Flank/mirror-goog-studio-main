@@ -72,7 +72,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import javax.xml.bind.JAXBException;
 import kotlin.Pair;
 import org.gradle.api.GradleException;
@@ -91,7 +90,6 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
 public abstract class MergeResources extends ResourceAwareTask {
@@ -176,21 +174,18 @@ public abstract class MergeResources extends ResourceAwareTask {
         return true;
     }
 
+    @Internal
+    @NonNull
+    public WorkerExecutorFacade getAaptWorkerFacade() {
+        return Workers.INSTANCE.getWorkerForAapt2(getProjectName(), getPath(), getWorkerExecutor());
+    }
+
     @NonNull
     @OutputDirectory
     @Optional
     public abstract DirectoryProperty getDataBindingLayoutInfoOutFolder();
 
-    private final WorkerExecutorFacade workerExecutorFacade;
-
     private SyncOptions.ErrorFormatMode errorFormatMode;
-
-    @Inject
-    public MergeResources(WorkerExecutor workerExecutor) {
-        this.workerExecutorFacade =
-                Workers.INSTANCE.getWorkerForAapt2(
-                        getProject().getName(), getPath(), workerExecutor);
-    }
 
     @Override
     protected void doFullTaskAction() throws IOException, JAXBException {
@@ -214,14 +209,15 @@ public abstract class MergeResources extends ResourceAwareTask {
             mergingLog = new MergingLog(blameLogFolder);
         }
 
-        try (ResourceCompilationService resourceCompiler =
-                getResourceProcessor(
-                        getAapt2FromMaven(),
-                        workerExecutorFacade,
-                        errorFormatMode,
-                        flags,
-                        processResources,
-                        getLogger())) {
+        try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
+                ResourceCompilationService resourceCompiler =
+                        getResourceProcessor(
+                                getAapt2FromMaven(),
+                                workerExecutorFacade,
+                                errorFormatMode,
+                                flags,
+                                processResources,
+                                getLogger())) {
 
             Blocks.recordSpan(
                     getProject().getName(),
@@ -345,14 +341,15 @@ public abstract class MergeResources extends ResourceAwareTask {
             MergingLog mergingLog =
                     getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
 
-            try (ResourceCompilationService resourceCompiler =
-                    getResourceProcessor(
-                            getAapt2FromMaven(),
-                            workerExecutorFacade,
-                            errorFormatMode,
-                            flags,
-                            processResources,
-                            getLogger())) {
+            try (WorkerExecutorFacade workerExecutorFacade = getAaptWorkerFacade();
+                    ResourceCompilationService resourceCompiler =
+                            getResourceProcessor(
+                                    getAapt2FromMaven(),
+                                    workerExecutorFacade,
+                                    errorFormatMode,
+                                    flags,
+                                    processResources,
+                                    getLogger())) {
 
                 File publicFile =
                         getPublicFile().isPresent() ? getPublicFile().get().getAsFile() : null;
@@ -413,12 +410,12 @@ public abstract class MergeResources extends ResourceAwareTask {
                 // Add gradle-specific error message.
                 throw new GradleException(
                         String.format(
-                                "Can't process attribute %1$s=\"%2$s\": "
-                                        + "references to other resources are not supported by "
-                                        + "build-time PNG generation.\n"
+                                "Can't process attribute %1$s=\"%2$s\": references to other"
+                                        + " resources are not supported by build-time PNG"
+                                        + " generation.\n"
                                         + "%3$s\n"
-                                        + "See http://developer.android.com/tools/help/vector-asset-studio.html "
-                                        + "for details.",
+                                        + "See http://developer.android.com/tools/help/vector-asset-studio.html"
+                                        + " for details.",
                                 e.getName(),
                                 e.getValue(),
                                 getPreprocessingReasonDescription(original)));

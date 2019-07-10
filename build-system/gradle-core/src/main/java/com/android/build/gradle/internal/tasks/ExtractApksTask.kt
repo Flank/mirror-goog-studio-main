@@ -35,7 +35,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
@@ -45,13 +44,11 @@ import javax.inject.Inject
  * Task that extract APKs from the apk zip (created with [BundleToApkTask] into a folder. a Device
  * info file indicate which APKs to extract. Only APKs for that particular device are extracted.
  */
-abstract class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class ExtractApksTask : NonIncrementalTask() {
 
     companion object {
         fun getTaskName(scope: VariantScope) = scope.getTaskName("extractApksFor")
     }
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
@@ -72,7 +69,7 @@ abstract class ExtractApksTask @Inject constructor(workerExecutor: WorkerExecuto
 
     override fun doTaskAction() {
 
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(

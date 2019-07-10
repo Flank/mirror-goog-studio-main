@@ -45,7 +45,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Predicate
 import javax.inject.Inject
@@ -54,8 +53,8 @@ import javax.inject.Inject
  * Task to merge native libs from multiple modules
  */
 @CacheableTask
-open class MergeNativeLibsTask
-@Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
+abstract class MergeNativeLibsTask
+@Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 
     // PathSensitivity.ABSOLUTE necessary here because of incorrect incremental info from Gradle
     // when using RELATIVE or NAME_ONLY: https://github.com/gradle/gradle/issues/9320, and we can't
@@ -101,8 +100,6 @@ open class MergeNativeLibsTask
 
     private lateinit var variantScope: VariantScope
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override val incremental: Boolean
         get() = true
 
@@ -114,7 +111,7 @@ open class MergeNativeLibsTask
         get() = getProjectNativeLibs(variantScope)
 
     override fun doFullTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
@@ -140,7 +137,7 @@ open class MergeNativeLibsTask
             doFullTaskAction()
             return
         }
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(

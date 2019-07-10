@@ -16,32 +16,24 @@
 
 package com.android.build.gradle.internal.tasks.databinding
 
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.PROJECT
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import javax.inject.Inject
 
-abstract class DataBindingMergeBaseClassLogTask @Inject
-constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
+abstract class DataBindingMergeBaseClassLogTask: IncrementalTask() {
 
     @get:OutputDirectory
     abstract val outFolder: DirectoryProperty
@@ -54,19 +46,17 @@ constructor(workerExecutor: WorkerExecutor): IncrementalTask() {
     lateinit var externalClassLog: FileCollection
         private set
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     private lateinit var delegate: DataBindingMergeBaseClassLogDelegate
 
     override val incremental: Boolean
         get() = true
 
     override fun doFullTaskAction() {
-        delegate.doFullRun(workers)
+        delegate.doFullRun(getWorkerFacadeWithWorkers())
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        delegate.doIncrementalRun(workers, changedInputs)
+        delegate.doIncrementalRun(getWorkerFacadeWithWorkers(), changedInputs)
     }
 
     class CreationAction(variantScope: VariantScope) :

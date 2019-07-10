@@ -21,7 +21,7 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Base non-incremental task.
  */
-abstract class NonIncrementalTask: AndroidVariantTask() {
+abstract class NonIncrementalTask : AndroidVariantTask() {
 
     @Throws(Exception::class)
     protected abstract fun doTaskAction()

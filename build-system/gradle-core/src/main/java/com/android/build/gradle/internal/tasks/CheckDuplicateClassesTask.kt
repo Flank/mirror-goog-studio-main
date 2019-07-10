@@ -23,22 +23,13 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.artifacts.ArtifactCollection
-import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
-import java.io.IOException
-import java.util.concurrent.ForkJoinPool
-import javax.inject.Inject
 
 /**
  * A task that checks that project external dependencies do not contain duplicate classes. Without
@@ -46,8 +37,7 @@ import javax.inject.Inject
  * is not especially user friendly. Moreover, we would like to fail fast.
  */
 @CacheableTask
-abstract class CheckDuplicateClassesTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
+abstract class CheckDuplicateClassesTask : NonIncrementalTask() {
 
     private lateinit var classesArtifacts: ArtifactCollection
 
@@ -57,10 +47,12 @@ abstract class CheckDuplicateClassesTask @Inject constructor(workerExecutor: Wor
     @Classpath
     fun getClassesFiles(): FileCollection = classesArtifacts.artifactFiles
 
-    private val workers: WorkerExecutorFacade = Workers.preferThreads(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        CheckDuplicateClassesDelegate(classesArtifacts).run(workers)
+        CheckDuplicateClassesDelegate(classesArtifacts).run(
+            getWorkerFacadeWithThreads(
+                useGradleExecutor = true
+            )
+        )
     }
 
     class CreationAction(scope: VariantScope)

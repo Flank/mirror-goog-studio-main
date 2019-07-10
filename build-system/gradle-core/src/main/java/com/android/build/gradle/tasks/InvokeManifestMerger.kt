@@ -34,7 +34,7 @@ import org.gradle.api.tasks.OutputFile
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
  * or overlay manifests
  */
-open class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
+abstract class InvokeManifestMerger : NonIncrementalTask(), Supplier<File> {
 
     @get:InputFile
     var mainManifestFile: File? = null

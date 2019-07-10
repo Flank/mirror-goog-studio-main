@@ -17,18 +17,17 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
-import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.internal.aapt.v2.Aapt2RenamingConventions
 import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -37,23 +36,18 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.SkipWhenEmpty
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import javax.inject.Inject
 
 /**
  * Task to compile a single sourceset's resources in to AAPT intermediate format.
  *
  * The link step handles resource overlays.
  */
-abstract class CompileSourceSetResources
-@Inject constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
+abstract class CompileSourceSetResources : IncrementalTask() {
     @get:Input
     lateinit var aapt2Version: String
         private set
@@ -75,8 +69,6 @@ abstract class CompileSourceSetResources
 
     @get:OutputDirectory
     abstract val partialRDirectory: DirectoryProperty
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -118,8 +110,8 @@ abstract class CompileSourceSetResources
             }
         }
 
-        workers.use {
-            submit(requests)
+        getWorkerFacadeWithWorkers().use {
+            submit(requests, it)
         }
     }
 
@@ -139,9 +131,9 @@ abstract class CompileSourceSetResources
                 }
             }
         }
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             if (!deletes.isEmpty()) {
-                workers.submit(
+                it.submit(
                     Aapt2CompileDeleteRunnable::class.java,
                     Aapt2CompileDeleteRunnable.Params(
                         outputDirectory = outputDirectory.get().asFile,
@@ -150,7 +142,7 @@ abstract class CompileSourceSetResources
                     )
                 )
             }
-            submit(requests)
+            submit(requests, it)
         }
     }
 
@@ -166,7 +158,7 @@ abstract class CompileSourceSetResources
     private fun getPartialR(file: File) =
         File(partialRDirectory.get().asFile, "${Aapt2RenamingConventions.compilationRename(file)}-R.txt")
 
-    private fun submit(requests: List<CompileResourceRequest>) {
+    private fun submit(requests: List<CompileResourceRequest>, workerFacade: WorkerExecutorFacade) {
         if (requests.isEmpty()) {
             return
         }
@@ -175,7 +167,7 @@ abstract class CompileSourceSetResources
             logger = LoggerWrapper(logger)
         )
         for (request in requests) {
-            workers.submit(
+            workerFacade.submit(
                 Aapt2CompileRunnable::class.java,
                 Aapt2CompileRunnable.Params(
                     aapt2ServiceKey,

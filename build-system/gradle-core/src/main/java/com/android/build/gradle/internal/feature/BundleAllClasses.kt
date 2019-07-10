@@ -26,10 +26,8 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
@@ -40,10 +38,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.zip.Deflater
-import javax.inject.Inject
 
 /**
  * Task to jar all classes in a project. This includes pre/post java classes, and compiled
@@ -53,9 +49,8 @@ import javax.inject.Inject
  * - dependent features to compile against these classes without bundling them.
  * - unit tests to compile and run them against these classes.
  */
-abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class BundleAllClasses : NonIncrementalTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
 
     @get:OutputFile
     abstract val outputJar: RegularFileProperty
@@ -106,7 +101,7 @@ abstract class BundleAllClasses @Inject constructor(workerExecutor: WorkerExecut
             project.fileTree(rRClassJarFile).visit(collector)
         }
 
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 // Don't compress because compressing takes extra time, and this jar doesn't go
                 // into any APKs or AARs.

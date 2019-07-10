@@ -39,11 +39,6 @@ public abstract class PackageApplication extends PackageAndroidArtifact {
 
     InternalArtifactType expectedOutputType;
 
-    @Inject
-    public PackageApplication(WorkerExecutor workerExecutor) {
-        super(workerExecutor);
-    }
-
     @Override
     @Internal
     protected InternalArtifactType getInternalArtifactType() {

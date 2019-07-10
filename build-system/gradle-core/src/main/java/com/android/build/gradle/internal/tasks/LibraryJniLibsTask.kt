@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.SdkConstants
-import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_AAR
+import com.android.SdkConstants.DOT_JAR
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.InternalArtifactType.STRIPPED_NATIVE_LIBS
@@ -43,7 +43,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.ByteBuffer
@@ -57,8 +56,7 @@ private val pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so")
  * A task that copies the project native libs (and optionally the native libs from local jars)
  */
 @CacheableTask
-abstract class LibraryJniLibsTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class LibraryJniLibsTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -73,14 +71,12 @@ abstract class LibraryJniLibsTask
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
-    private val workers = Workers.preferThreads(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
         LibraryJniLibsDelegate(
             projectNativeLibs.get().asFile,
             localJarsNativeLibs?.files ?: listOf(),
             outputDirectory.get().asFile,
-            workers
+            getWorkerFacadeWithThreads(useGradleExecutor = true)
         ).copyFiles()
     }
 

@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration
 import com.android.utils.FileUtils
@@ -34,7 +33,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.Serializable
@@ -45,18 +43,14 @@ import javax.inject.Inject
  * read by the DataBindingAnnotationProcessor.
  */
 @CacheableTask
-abstract class DataBindingExportFeatureApplicationIdsTask @Inject constructor(
-    workerExecutor: WorkerExecutor
-) : NonIncrementalTask() {
+abstract class DataBindingExportFeatureApplicationIdsTask : NonIncrementalTask() {
     // where to keep the log of the task
     @get:OutputDirectory abstract val packageListOutFolder: DirectoryProperty
     @get:InputFiles lateinit var featureDeclarations: FileCollection
         private set
 
-    val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 ExportApplicationIdsRunnable::class.java, ExportApplicationIdsParams(
                     featureDeclarations = featureDeclarations.asFileTree.files,

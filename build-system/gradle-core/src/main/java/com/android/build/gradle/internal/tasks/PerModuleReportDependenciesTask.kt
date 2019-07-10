@@ -47,7 +47,7 @@ import javax.inject.Inject
 /**
  * Task that publishes the app dependencies proto for each module.
  */
-open class PerModuleReportDependenciesTask @Inject constructor(objectFactory: ObjectFactory) :
+abstract class PerModuleReportDependenciesTask @Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 
     private lateinit var runtimeClasspath: Configuration

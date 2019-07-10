@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.IntegerOption
 import org.gradle.api.file.FileCollection
@@ -34,7 +33,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.Serializable
@@ -43,10 +41,7 @@ import javax.inject.Inject
 
 /** Task to write the FeatureSetMetadata file.  */
 @CacheableTask
-abstract class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class FeatureSetMetadataWriterTask : NonIncrementalTask() {
 
     @get:InputFiles
     lateinit var inputFiles: FileCollection
@@ -64,7 +59,7 @@ abstract class FeatureSetMetadataWriterTask @Inject constructor(workerExecutor: 
         internal set
 
     public override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 FeatureSetRunnable::class.java,
                 Params(inputFiles.asFileTree.files,

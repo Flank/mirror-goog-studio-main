@@ -42,7 +42,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -51,8 +50,7 @@ import javax.inject.Inject
  * Calculate the main dex list using D8.
  */
 @CacheableTask
-abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
-    NonIncrementalTask() {
+abstract class D8MainDexListTask : NonIncrementalTask() {
 
     @get:Input
     abstract var errorFormat: SyncOptions.ErrorFormatMode
@@ -89,15 +87,13 @@ abstract class D8MainDexListTask @Inject constructor(executor: WorkerExecutor) :
     @get:OutputFile
     abstract val output: RegularFileProperty
 
-    private val workers = Workers.preferWorkers(project.name, path, executor)
-
     override fun doTaskAction() {
 
         val programClasses = inputClasses.files
         val libraryFilesNotInInputs =
             libraryClasses.files.filter { !programClasses.contains(it) } + bootClasspath.files
 
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MainDexListRunnable::class.java,
                 MainDexListRunnable.Params(

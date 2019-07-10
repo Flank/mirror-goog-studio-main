@@ -33,7 +33,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
@@ -48,9 +47,7 @@ import javax.inject.Inject
  * collects information from them and generates the keep rules file.
  */
 @CacheableTask
-abstract class GenerateLibraryProguardRulesTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : NonIncrementalTask() {
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class GenerateLibraryProguardRulesTask : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val proguardOutputFile: RegularFileProperty
@@ -68,7 +65,7 @@ abstract class GenerateLibraryProguardRulesTask @Inject constructor(workerExecut
             ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
             .outputFile
 
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 GenerateProguardRulesRunnable::class.java,
                 GenerateProguardRulesParams(

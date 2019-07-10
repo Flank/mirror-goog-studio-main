@@ -65,7 +65,7 @@ import kotlin.streams.toList
  * It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-open class ExternalNativeBuildTask : NonIncrementalTask() {
+abstract class ExternalNativeBuildTask : NonIncrementalTask() {
 
     private lateinit var evalIssueReporter: EvalIssueReporter
     private lateinit var generator: Provider<ExternalNativeJsonGenerator>

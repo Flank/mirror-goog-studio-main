@@ -49,7 +49,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.concurrent.Callable
 import java.util.function.Predicate
@@ -59,8 +58,8 @@ import javax.inject.Inject
  * Task to merge java resources from multiple modules
  */
 @CacheableTask
-open class MergeJavaResourceTask
-@Inject constructor(workerExecutor: WorkerExecutor, objects: ObjectFactory) : IncrementalTask() {
+abstract class MergeJavaResourceTask
+@Inject constructor(objects: ObjectFactory) : IncrementalTask() {
 
     // PathSensitivity.ABSOLUTE necessary here to support changing java resource file relative
     // paths. A better solution will be custom snapshots from gradle:
@@ -114,8 +113,6 @@ open class MergeJavaResourceTask
     @get:OutputFile
     val outputFile: RegularFileProperty = objects.fileProperty()
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override val incremental: Boolean
         get() = true
 
@@ -126,7 +123,7 @@ open class MergeJavaResourceTask
     private lateinit var unfilteredProjectJavaRes: FileCollection
 
     override fun doFullTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(
@@ -152,7 +149,7 @@ open class MergeJavaResourceTask
             doFullTaskAction()
             return
         }
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MergeJavaResRunnable::class.java,
                 MergeJavaResRunnable.Params(

@@ -27,7 +27,6 @@ import com.android.build.gradle.options.SyncOptions
 import com.android.builder.dexing.ClassFileInputs
 import com.android.builder.dexing.DexArchiveBuilder
 import com.android.builder.dexing.r8.ClassFileProviderFactory
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.sdklib.AndroidVersion
 import com.google.common.util.concurrent.MoreExecutors
 import org.gradle.api.file.ConfigurableFileCollection
@@ -44,7 +43,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -54,11 +52,7 @@ import javax.inject.Inject
  * android test variant for library projects. Once http://b/115334911 is fixed, this can be removed.
  */
 @CacheableTask
-abstract class LibraryDexingTask @Inject constructor(
-    executor: WorkerExecutor) : NonIncrementalTask() {
-
-    private val workers: WorkerExecutorFacade =
-        preferWorkers(project.name, path, executor, MoreExecutors.newDirectExecutorService())
+abstract class LibraryDexingTask : NonIncrementalTask() {
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -85,7 +79,7 @@ abstract class LibraryDexingTask @Inject constructor(
         private set
 
     override fun doTaskAction() {
-        workers.use {
+        preferWorkers(projectName, path, workerExecutor, MoreExecutors.newDirectExecutorService()).use {
             it.submit(
                 DexingRunnable::class.java,
                 DexParams(

@@ -36,7 +36,7 @@ import java.io.File
 
 /** Pre build task that does some checks for application variants  */
 @CacheableTask
-open class AppPreBuildTask : NonIncrementalTask() {
+abstract class AppPreBuildTask : NonIncrementalTask() {
 
     // list of Android only compile and runtime classpath.
     private lateinit var compileManifests: ArtifactCollection

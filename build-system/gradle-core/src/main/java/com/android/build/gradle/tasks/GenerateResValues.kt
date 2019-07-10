@@ -32,7 +32,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
 
 @CacheableTask
-open class GenerateResValues : NonIncrementalTask() {
+abstract class GenerateResValues : NonIncrementalTask() {
 
     // ----- PUBLIC TASK API -----
 

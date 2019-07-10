@@ -41,13 +41,12 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
 
-open class DexFileDependenciesTask
-@Inject constructor(objectFactory: ObjectFactory, private val workerExecutor: WorkerExecutor) :
+abstract class DexFileDependenciesTask
+@Inject constructor(objectFactory: ObjectFactory) :
     NonIncrementalTask() {
 
     @get:OutputDirectory
@@ -73,7 +72,7 @@ open class DexFileDependenciesTask
 
     // TODO: make incremental
     override fun doTaskAction() {
-       Workers.preferWorkers(project.name, path, workerExecutor).use { workerExecutorFacade->
+       getWorkerFacadeWithWorkers().use { workerExecutorFacade->
            val inputs = classes.files.toList()
            val totalClasspath = inputs + classpath.files
            val outDir = outputDirectory.get().asFile

@@ -36,7 +36,7 @@ class AndroidVariantTaskTest {
     private val called= AtomicBoolean(false)
     lateinit var task: TestTask
 
-    open class TestTask @Inject constructor(
+    abstract class TestTask @Inject constructor(
         private val called: AtomicBoolean): AndroidVariantTask() {
 
         fun entryPoint() {

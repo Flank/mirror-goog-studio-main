@@ -40,18 +40,15 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
-import javax.inject.Inject
 
 // TODO(b/135700303): Add workers
 /**
  * Task that splits dex files depending on their feature sources
  */
 @CacheableTask
-abstract class DexSplitterTask
-    @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
+abstract class DexSplitterTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)

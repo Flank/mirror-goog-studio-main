@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.tasks
 
-import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.TaskManager
 import com.android.build.gradle.internal.scope.InternalArtifactType
@@ -29,6 +28,7 @@ import com.android.builder.testing.api.DeviceProvider
 import com.android.sdklib.AndroidVersion
 import com.android.utils.FileUtils
 import com.android.utils.ILogger
+import com.google.common.annotations.VisibleForTesting
 import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
@@ -38,7 +38,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
@@ -48,11 +47,7 @@ import javax.inject.Inject
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-abstract class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
-    private lateinit var projectName: String
+abstract class InstallVariantViaBundleTask : NonIncrementalTask() {
 
     private var minSdkVersion = 0
     private var minSdkCodename: String? = null
@@ -74,7 +69,7 @@ abstract class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: 
     }
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 InstallRunnable::class.java,
                 Params(
@@ -199,7 +194,6 @@ abstract class InstallVariantViaBundleTask  @Inject constructor(workerExecutor: 
 
             task.description = "Installs the " + variantScope.variantData.description + ""
             task.group = TaskManager.INSTALL_GROUP
-            task.projectName = variantScope.globalScope.project.name
 
             variantScope.variantConfiguration.minSdkVersion.let {
                 task.minSdkVersion = it.apiLevel

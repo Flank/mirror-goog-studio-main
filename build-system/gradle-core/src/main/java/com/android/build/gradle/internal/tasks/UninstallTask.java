@@ -36,7 +36,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskProvider;
 
-public class UninstallTask extends NonIncrementalTask {
+public abstract class UninstallTask extends NonIncrementalTask {
 
     private BaseVariantData variant;
 

@@ -33,13 +33,11 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.PerModuleBundleTaskKt;
 import com.android.build.gradle.internal.tasks.SigningConfigUtils;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -58,7 +56,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.tooling.BuildException;
-import org.gradle.workers.WorkerExecutor;
 
 /** Package a abi dimension specific split APK */
 public abstract class PackageSplitAbi extends NonIncrementalTask {
@@ -79,14 +76,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
 
     private boolean keepTimestampsInApk;
 
-    private final WorkerExecutorFacade workers;
-
     private String createdBy;
-
-    @Inject
-    public PackageSplitAbi(WorkerExecutor workerExecutor) {
-        workers = Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
 
     @InputFiles
     public abstract DirectoryProperty getProcessedAbiResources();
@@ -142,7 +132,7 @@ public abstract class PackageSplitAbi extends NonIncrementalTask {
         ExistingBuildElements.from(
                         InternalArtifactType.ABI_PROCESSED_SPLIT_RES, getProcessedAbiResources())
                 .transform(
-                        workers,
+                        getWorkerFacadeWithWorkers(),
                         PackageSplitAbiTransformRunnable.class,
                         (apkInfo, input) ->
                                 new PackageSplitAbiTransformParams(apkInfo, input, this))

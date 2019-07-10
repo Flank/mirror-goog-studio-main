@@ -27,18 +27,16 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Classpath
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
@@ -55,10 +53,8 @@ private val META_INF_PATTERN = Pattern.compile("^META-INF/.*$")
  * Bundle all library classes in a jar. Additional filters can be specified, in addition to ones
  * defined in [LibraryAarJarsTask.getDefaultExcludes].
  */
-abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
+abstract class BundleLibraryClasses : NonIncrementalTask() {
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
     private lateinit var toIgnoreRegExps: Supplier<List<String>>
 
     @get:OutputFile
@@ -86,7 +82,7 @@ abstract class BundleLibraryClasses @Inject constructor(workerExecutor: WorkerEx
         private set
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleLibraryClassesRunnable::class.java,
                 BundleLibraryClassesRunnable.Params(

@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,7 +55,7 @@ import org.gradle.workers.WorkerExecutor;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
-public class JavaPreCompileTask extends NonIncrementalTask {
+public abstract class JavaPreCompileTask extends NonIncrementalTask {
 
     @NonNull private RegularFileProperty processorListFile;
 
@@ -70,11 +69,8 @@ public class JavaPreCompileTask extends NonIncrementalTask {
 
     private boolean isTestComponent;
 
-    private final WorkerExecutorFacade workers;
-
     @Inject
     public JavaPreCompileTask(WorkerExecutor workerExecutor, ObjectFactory objectFactory) {
-        workers = Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
         processorListFile = objectFactory.fileProperty();
     }
 
@@ -110,7 +106,7 @@ public class JavaPreCompileTask extends NonIncrementalTask {
 
     @Override
     protected void doTaskAction() {
-        try (WorkerExecutorFacade workerExecutor = this.workers) {
+        try (WorkerExecutorFacade workerExecutor = getWorkerFacadeWithWorkers()) {
             workerExecutor.submit(
                     PreCompileRunnable.class,
                     new PreCompileParams(
@@ -204,13 +200,13 @@ public class JavaPreCompileTask extends NonIncrementalTask {
                                     + params.annotationProcessorConfigurationName
                                     + " configuration.\n  - "
                                     + Joiner.on("\n  - ").join(violatingProcessorNames)
-                                    + "\nAlternatively, set "
-                                    + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
-                                    + "to continue with previous behavior.  Note that this option "
-                                    + "is deprecated and will be removed in the future.\n"
-                                    + "See "
-                                    + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
-                                    + "for more details.";
+                                    + "\n"
+                                    + "Alternatively, set"
+                                    + " android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath"
+                                    + " = true to continue with previous behavior.  Note that this"
+                                    + " option is deprecated and will be removed in the future.\n"
+                                    + "See https://developer.android.com/r/tools/annotation-processor-error-message.html"
+                                    + " for more details.";
                     if (params.isTestComponent) {
                         Logging.getLogger(JavaPreCompileTask.class).warn(message);
                     } else {

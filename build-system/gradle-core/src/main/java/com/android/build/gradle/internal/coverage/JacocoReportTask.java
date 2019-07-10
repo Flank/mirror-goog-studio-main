@@ -49,7 +49,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.workers.IsolationMode;
-import org.gradle.workers.WorkerExecutor;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
@@ -76,13 +75,6 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
     private String reportName;
 
     private int tabWidth = 4;
-
-    @NonNull private WorkerExecutor executor;
-
-    @Inject
-    public JacocoReportTask(@NonNull WorkerExecutor executor) {
-        this.executor = executor;
-    }
 
     @Deprecated
     public void setCoverageFile(File coverageFile) {
@@ -156,19 +148,20 @@ public abstract class JacocoReportTask extends NonIncrementalTask {
                             "No coverage data to process in directories [%1$s]",
                             getCoverageDirectories().get().getAsFile().getAbsolutePath()));
         }
-        executor.submit(
-                JacocoReportWorkerAction.class,
-                workerConfiguration -> {
-                    workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
-                    workerConfiguration.classpath(jacocoClasspath.getFiles());
-                    workerConfiguration.setParams(
-                            coverageFiles,
-                            getReportDir(),
-                            getClassFileCollection().getFiles(),
-                            getSourceFolders().getFiles(),
-                            getTabWidth(),
-                            getReportName());
-                });
+        getWorkerExecutor()
+                .submit(
+                        JacocoReportWorkerAction.class,
+                        workerConfiguration -> {
+                            workerConfiguration.setIsolationMode(IsolationMode.CLASSLOADER);
+                            workerConfiguration.classpath(jacocoClasspath.getFiles());
+                            workerConfiguration.setParams(
+                                    coverageFiles,
+                                    getReportDir(),
+                                    getClassFileCollection().getFiles(),
+                                    getSourceFolders().getFiles(),
+                                    getTabWidth(),
+                                    getReportName());
+                        });
     }
 
     public static class CreationAction extends VariantTaskCreationAction<JacocoReportTask> {

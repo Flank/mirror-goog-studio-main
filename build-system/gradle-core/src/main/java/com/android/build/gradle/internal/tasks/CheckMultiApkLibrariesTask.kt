@@ -38,7 +38,7 @@ import java.io.File
  * Task to check that no two APKs in a multi-APK project package the same library
  */
 @CacheableTask
-open class CheckMultiApkLibrariesTask : NonIncrementalTask() {
+abstract class CheckMultiApkLibrariesTask : NonIncrementalTask() {
 
     private lateinit var featureTransitiveDeps : ArtifactCollection
 

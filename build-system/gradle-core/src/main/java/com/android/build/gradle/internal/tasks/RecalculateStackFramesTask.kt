@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.tasks
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.scope.AnchorOutputType
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
@@ -25,7 +24,6 @@ import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.builder.utils.FileCache
 import com.android.ide.common.resources.FileStatus
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -34,12 +32,9 @@ import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
-import javax.inject.Inject
 
-abstract class RecalculateStackFramesTask @Inject
-constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
+abstract class RecalculateStackFramesTask  : IncrementalTask() {
 
     @get:OutputDirectory
     abstract val outFolder: DirectoryProperty
@@ -56,8 +51,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     lateinit var referencedClasses: FileCollection
         private set
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     private var userCache: FileCache? = null
 
     private fun createDelegate() = FixStackFramesDelegate(
@@ -67,11 +60,11 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
     override val incremental: Boolean = true
 
     override fun doFullTaskAction() {
-        createDelegate().doFullRun(workers)
+        createDelegate().doFullRun(getWorkerFacadeWithWorkers())
     }
 
     override fun doIncrementalTaskAction(changedInputs: Map<File, FileStatus>) {
-        createDelegate().doIncrementalRun(workers, changedInputs)
+        createDelegate().doIncrementalRun(getWorkerFacadeWithWorkers(), changedInputs)
     }
 
     class CreationAction(

@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
@@ -33,7 +32,6 @@ import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.ConfigurableFileCollection
@@ -53,17 +51,13 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
 import javax.inject.Inject
 
 @CacheableTask
-abstract class GenerateLibraryRFileTask @Inject constructor(
-    objects: ObjectFactory, workerExecutor: WorkerExecutor) : ProcessAndroidResources() {
-
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class GenerateLibraryRFileTask @Inject constructor(objects: ObjectFactory) : ProcessAndroidResources() {
 
     @get:OutputDirectory @get:Optional var sourceOutputDirectory= objects.directoryProperty(); private set
 
@@ -111,7 +105,7 @@ abstract class GenerateLibraryRFileTask @Inject constructor(
                 ExistingBuildElements.from(InternalArtifactType.MERGED_MANIFESTS, manifestFiles))
                 .outputFile
 
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 GenerateLibRFileRunnable::class.java,
                 GenerateLibRFileParams(

@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.SplitList
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.TaskInputHelper
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSetMetadata
 import com.android.build.gradle.internal.utils.toImmutableList
@@ -59,7 +58,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig
 import com.android.builder.internal.aapt.v2.Aapt2Exception
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.symbols.SymbolIo
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
 import com.google.common.collect.ImmutableList
@@ -68,8 +66,8 @@ import org.gradle.api.artifacts.ArtifactCollection
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.file.RegularFile
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
@@ -86,7 +84,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.tooling.BuildException
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.IOException
 import java.io.Serializable
@@ -97,9 +94,7 @@ import java.util.regex.Pattern
 import javax.inject.Inject
 
 @CacheableTask
-abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
-    objects: ObjectFactory,
-    workerExecutor: WorkerExecutor) :
+abstract class LinkApplicationAndroidResourcesTask @Inject constructor(objects: ObjectFactory) :
     ProcessAndroidResources() {
 
     companion object {
@@ -249,8 +244,6 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     // FIXME : make me incremental !
     override fun doFullTaskAction() {
         val outputDirectory = resPackageOutputFolder.get().asFile
@@ -275,7 +268,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
             aapt2FromMaven, LoggerWrapper(logger)
         )
 
-        workers.use {
+        val workers = getWorkerFacadeWithWorkers().use {
             val unprocessedManifest = manifestBuildElements.toMutableList()
             val mainOutput = chooseOutput(manifestBuildElements)
 
@@ -330,6 +323,7 @@ abstract class LinkApplicationAndroidResourcesTask @Inject constructor(
                     }
                 }
             }
+            it
         }
 
         if (multiOutputPolicy === MultiOutputPolicy.SPLITS) {

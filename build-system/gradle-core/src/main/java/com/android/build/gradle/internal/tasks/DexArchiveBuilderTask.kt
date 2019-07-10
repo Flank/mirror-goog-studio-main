@@ -51,7 +51,6 @@ import org.gradle.work.ChangeType
 import org.gradle.work.FileChange
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import javax.inject.Inject
 
@@ -65,10 +64,8 @@ import javax.inject.Inject
  * that jar will be dex'ed.
  */
 @CacheableTask
-abstract class DexArchiveBuilderTask @Inject constructor(
-    objectFactory: ObjectFactory,
-    private val workerExecutor: WorkerExecutor
-) : NewIncrementalTask() {
+abstract class DexArchiveBuilderTask @Inject constructor(objectFactory: ObjectFactory) :
+    NewIncrementalTask() {
 
     @get:CompileClasspath
     abstract val androidJarClasspath: ConfigurableFileCollection

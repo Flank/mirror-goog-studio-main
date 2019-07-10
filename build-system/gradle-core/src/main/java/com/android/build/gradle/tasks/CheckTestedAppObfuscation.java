@@ -28,7 +28,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 
 /** Task to check if Proguard needs to be enabled for test plugin. */
-public class CheckTestedAppObfuscation extends NonIncrementalTask {
+public abstract class CheckTestedAppObfuscation extends NonIncrementalTask {
     FileCollection mappingFile;
 
     @InputFiles

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks
 
-import com.google.common.annotations.VisibleForTesting
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.res.Aapt2CompileRunnable
@@ -28,10 +27,8 @@ import com.android.build.gradle.internal.scope.ExistingBuildElements
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.internal.utils.toImmutableList
-import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
 import com.android.builder.internal.aapt.AaptException
@@ -42,6 +39,7 @@ import com.android.ide.common.resources.CompileResourceRequest
 import com.android.ide.common.resources.FileStatus
 import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
+import com.google.common.annotations.VisibleForTesting
 import com.google.common.collect.ImmutableSet
 import com.google.common.collect.Iterables
 import org.gradle.api.artifacts.ArtifactCollection
@@ -59,15 +57,11 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
-import javax.inject.Inject
-import java.util.function.Function as JavaFunction
 
 @CacheableTask
-abstract class VerifyLibraryResourcesTask @Inject
-constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
+abstract class VerifyLibraryResourcesTask : IncrementalTask() {
 
     @get:OutputDirectory
     lateinit var compiledDirectory: File private set
@@ -107,8 +101,6 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override val incremental: Boolean
         get() = true
 
@@ -145,7 +137,7 @@ constructor(workerExecutor: WorkerExecutor) : IncrementalTask() {
         val aapt2ServiceKey = registerAaptService(aapt2FromMaven, LoggerWrapper(logger))
         // If we're using AAPT2 we need to compile the resources into the compiled directory
         // first as we need the .flat files for linking.
-        workers.use { facade ->
+        getWorkerFacadeWithWorkers().use { facade ->
             compileResources(
                 inputs,
                 compiledDirectory,

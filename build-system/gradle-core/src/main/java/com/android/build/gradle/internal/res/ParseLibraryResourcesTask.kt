@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.SymbolIo
@@ -36,7 +35,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -51,9 +49,7 @@ import javax.inject.Inject
  * TODO(imorlowska): Refactor the parsers to work with workers, so we can parse files in parallel.
  */
 @CacheableTask
-abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : NonIncrementalTask() {
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class ParseLibraryResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -68,7 +64,7 @@ abstract class ParseLibraryResourcesTask @Inject constructor(workerExecutor: Wor
     abstract val librarySymbolsFile: RegularFileProperty
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 ParseResourcesRunnable::class.java,
                 ParseResourcesParams(

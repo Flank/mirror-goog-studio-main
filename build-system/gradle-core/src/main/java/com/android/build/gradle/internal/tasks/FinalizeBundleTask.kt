@@ -33,7 +33,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -44,10 +43,7 @@ import javax.inject.Inject
  *     <li>Signing the bundle if credentials are available and it's not a debuggable variant.
  * </ul>
  */
-abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class FinalizeBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -68,7 +64,7 @@ abstract class FinalizeBundleTask @Inject constructor(workerExecutor: WorkerExec
     abstract val finalBundleFile: RegularFileProperty
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(

@@ -17,13 +17,11 @@ package com.android.build.gradle.internal.res.namespaced
 
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
-import com.android.build.gradle.internal.res.getAapt2FromMaven
 import com.android.build.gradle.internal.res.getAapt2FromMavenAndVersion
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.SyncOptions
 import com.android.builder.core.VariantTypeImpl
@@ -50,17 +48,14 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.function.Supplier
-import javax.inject.Inject
 
 /**
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
+abstract class LinkLibraryAndroidResourcesTask : NonIncrementalTask() {
 
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val manifestFile: RegularFileProperty
     @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val inputResourcesDirectories: ListProperty<Directory>
@@ -91,7 +86,6 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
     lateinit var androidJar: Provider<File>
         private set
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
     override fun doTaskAction() {
@@ -121,7 +115,7 @@ abstract class LinkLibraryAndroidResourcesTask @Inject constructor(workerExecuto
             aapt2FromMaven = aapt2FromMaven,
             logger = LoggerWrapper(logger)
         )
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 Aapt2LinkRunnable::class.java,
                 Aapt2LinkRunnable.Params(aapt2ServiceKey, request, errorFormatMode)

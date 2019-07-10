@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.google.common.base.Suppliers
 import org.gradle.api.file.RegularFileProperty
@@ -30,25 +29,20 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.util.function.Supplier
-import javax.inject.Inject
 
 /**
  * Task to write an android manifest for the res.apk static library
  */
 @CacheableTask
-abstract class StaticLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : NonIncrementalTask() {
+abstract class StaticLibraryManifestTask : NonIncrementalTask() {
 
     @get:Internal lateinit var packageNameSupplier: Supplier<String> private set
     @get:Input val packageName get() = packageNameSupplier.get()
     @get:OutputFile abstract val manifestFile: RegularFileProperty
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 StaticLibraryManifestRunnable::class.java,
                 StaticLibraryManifestRequest(manifestFile.get().asFile, packageName)

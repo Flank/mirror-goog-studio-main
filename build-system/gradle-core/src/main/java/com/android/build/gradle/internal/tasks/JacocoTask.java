@@ -26,7 +26,6 @@ import com.android.builder.dexing.DexerTool;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import javax.inject.Inject;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
@@ -36,20 +35,13 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
 public abstract class JacocoTask extends AndroidVariantTask {
-    @NonNull private final WorkerExecutorFacade workers;
     private FileCollection jacocoAntTaskConfiguration;
     private FileCollection inputClasses;
     private JacocoTaskDelegate delegate;
     private WorkerExecutorFacade.IsolationMode isolationMode;
-
-    @Inject
-    public JacocoTask(@NonNull WorkerExecutor workers) {
-        this.workers = Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workers);
-    }
 
     @InputFiles
     public FileCollection getJacocoAntTaskConfiguration() {
@@ -84,15 +76,14 @@ public abstract class JacocoTask extends AndroidVariantTask {
 
     @TaskAction
     public void run(@NonNull IncrementalTaskInputs inputs) {
-        // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual call to recordTaskAction
+        // TODO extend NewIncrementalTask when moved to new API so that we can remove the manual
+        // call to recordTaskAction
         recordTaskAction(
                 () -> {
-                    try {
+                    try (WorkerExecutorFacade workers = getWorkerFacadeWithWorkers()) {
                         delegate.run(workers, inputs);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
-                    } finally {
-                        workers.close();
                     }
                     return null;
                 });

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.utils.FileUtils
 import org.gradle.api.file.DirectoryProperty
@@ -33,7 +32,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import javax.inject.Inject
@@ -44,9 +42,7 @@ import javax.inject.Inject
  * To account for V1 dependencies, we still copy their layout-info files from the compile classpath.
  */
 @CacheableTask
-abstract class DataBindingMergeDependencyArtifactsTask @Inject constructor(
-    workerExecutor: WorkerExecutor
-) : NonIncrementalTask() {
+abstract class DataBindingMergeDependencyArtifactsTask : NonIncrementalTask() {
     /**
      * Classes available at Runtime. We extract BR files from there so that even if there is no
      * compile time dependency on a particular artifact, we can still generate the BR file for it.
@@ -69,10 +65,8 @@ abstract class DataBindingMergeDependencyArtifactsTask @Inject constructor(
     @get:OutputDirectory
     abstract val outFolder: DirectoryProperty
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 MergeArtifactsRunnable::class.java,
                 MergeArtifactsParams(

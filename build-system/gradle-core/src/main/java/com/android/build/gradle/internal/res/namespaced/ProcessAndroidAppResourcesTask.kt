@@ -24,7 +24,6 @@ import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.SyncOptions
@@ -50,10 +49,8 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
-import javax.inject.Inject
 
 /**
  * Task to link the resource and the AAPT2 static libraries of its dependencies.
@@ -64,9 +61,7 @@ import javax.inject.Inject
  * as well as the generated R classes for this app that can be compiled against.
  */
 @CacheableTask
-abstract class ProcessAndroidAppResourcesTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class ProcessAndroidAppResourcesTask : NonIncrementalTask() {
 
     private lateinit var errorFormatMode: SyncOptions.ErrorFormatMode
 
@@ -125,7 +120,7 @@ abstract class ProcessAndroidAppResourcesTask
         val aapt2ServiceKey = registerAaptService(
             aapt2FromMaven = aapt2FromMaven, logger = LoggerWrapper(logger)
         )
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 Aapt2LinkRunnable::class.java,
                 Aapt2LinkRunnable.Params(aapt2ServiceKey, config, errorFormatMode)

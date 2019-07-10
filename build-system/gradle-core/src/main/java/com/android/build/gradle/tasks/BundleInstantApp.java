@@ -54,26 +54,18 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /** Task to bundle a bundle of feature APKs. */
 public abstract class BundleInstantApp extends NonIncrementalTask {
-    private final WorkerExecutorFacade workers;
-
-    @Inject
-    public BundleInstantApp(WorkerExecutor workerExecutor) {
-        this.workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
 
     @Override
     protected void doTaskAction() throws IOException {
         // FIXME: Make this task incremental.
-        try (WorkerExecutorFacade workers = this.workers) {
+        try (WorkerExecutorFacade workers = getWorkerFacadeWithWorkers()) {
             workers.submit(
                     BundleInstantAppRunnable.class,
                     new BundleInstantAppParams(
-                            getProject().getName(),
+                            getProjectName(),
                             getPath(),
                             getBundleDirectory().get().getAsFile(),
                             bundleName,

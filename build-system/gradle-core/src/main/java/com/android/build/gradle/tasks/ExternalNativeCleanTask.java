@@ -55,7 +55,7 @@ import java.util.Set;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeCleanTask extends NonIncrementalTask {
+public abstract class ExternalNativeCleanTask extends NonIncrementalTask {
     private EvalIssueReporter evalIssueReporter;
     private CxxVariantModel variant;
     private List<CxxAbiModel> abis;

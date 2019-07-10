@@ -21,20 +21,14 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.NonIncrementalTask
-import com.android.build.gradle.internal.tasks.Workers
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
-import java.io.File
-import javax.inject.Inject
 
 /**
  * Task to strip resource namespaces from the library's android manifest. This stripped manifest
@@ -42,8 +36,7 @@ import javax.inject.Inject
  * non-namespaced projects.
  */
 @CacheableTask
-abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(workerExecutor: WorkerExecutor)
-    : NonIncrementalTask() {
+abstract class CreateNonNamespacedLibraryManifestTask : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val outputStrippedManifestFile: RegularFileProperty
@@ -52,10 +45,8 @@ abstract class CreateNonNamespacedLibraryManifestTask @Inject constructor(worker
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val libraryManifest: RegularFileProperty
 
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
-
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 CreateNonNamespacedLibraryManifestRunnable::class.java,
                 CreateNonNamespacedLibraryManifestRequest(

@@ -36,10 +36,6 @@ import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Joiner
 import org.gradle.api.file.ConfigurableFileCollection
-import java.io.File
-import java.io.IOException
-import javax.inject.Inject
-import javax.xml.parsers.ParserConfigurationException
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
@@ -56,16 +52,17 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import org.xml.sax.SAXException
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
+import javax.xml.parsers.ParserConfigurationException
 
 /**
  * Implementation of Resource Shrinking as a task.
  */
 @CacheableTask
-abstract class ShrinkResourcesTask
-@Inject constructor(workerExecutor: WorkerExecutor) : NonIncrementalTask() {
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class ShrinkResourcesTask : NonIncrementalTask() {
 
     private lateinit var buildTypeName: String
 
@@ -134,7 +131,7 @@ abstract class ShrinkResourcesTask
 
         ExistingBuildElements.from(InternalArtifactType.PROCESSED_RES, uncompressedResources)
             .transform(
-                workers,
+                getWorkerFacadeWithWorkers(),
                 SplitterRunnable::class.java
             ) { apkInfo: ApkData, buildInput: File ->
                 SplitterParams(

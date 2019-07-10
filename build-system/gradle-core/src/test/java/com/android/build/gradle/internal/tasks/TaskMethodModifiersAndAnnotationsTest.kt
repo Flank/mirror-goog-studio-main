@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks
 
+import com.android.ide.common.workers.WorkerExecutorFacade
 import com.google.common.reflect.ClassPath
 import com.google.common.reflect.TypeToken
 import com.google.common.truth.Truth
@@ -132,7 +133,6 @@ class TaskMethodModifiersAndAnnotationsTest {
                 "com.android.build.gradle.internal.tasks.IncrementalTask::setIncrementalFolder",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setInstallOptions",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setProcessExecutor",
-                "com.android.build.gradle.internal.tasks.InstallVariantTask::setProjectName",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setTimeOutInMs",
                 "com.android.build.gradle.internal.tasks.InstallVariantTask::setVariantData",
                 "com.android.build.gradle.internal.tasks.LintCompile::setOutputDirectory",
@@ -203,6 +203,21 @@ class TaskMethodModifiersAndAnnotationsTest {
         Truth.assertThat(publicSetters)
             .named("Task public setters")
             .containsExactlyElementsIn(whiteListedSetters)
+    }
+
+    @Test
+    fun checkWorkerFacadeIsNotAField() {
+        val classPath = ClassPath.from(this.javaClass.classLoader)
+        val taskInterface = TypeToken.of(Task::class.java)
+        val workerFacadeFields =
+            classPath
+                .getTopLevelClassesRecursive("com.android.build")
+                .map { classInfo -> classInfo.load() as Class<*> }
+                .filter { clazz -> TypeToken.of(clazz).types.contains(taskInterface) }
+                .flatMap { it.declaredFields.asIterable() }
+                .filter { it.type.name == WorkerExecutorFacade::class.java.name }
+
+        Truth.assertThat(workerFacadeFields).isEmpty()
     }
 
 

@@ -128,13 +128,16 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
      * assert that the object returned is of type ExecutorServiceAdapter as Gradle workers can not
      * be used here because the device tests doesn't run within gradle.
      */
-    private final ExecutorServiceAdapter executor;
+    @NonNull
+    @Internal
+    public ExecutorServiceAdapter getExecutorServiceAdapter() {
+        return Workers.INSTANCE.withThreads(getProjectName(), getPath());
+    }
 
     @Nullable private Collection<String> installOptions;
 
     @Inject
     public DeviceProviderInstrumentTestTask(ObjectFactory objectFactory) {
-        executor = Workers.INSTANCE.withThreads(getProject().getName(), getPath());
         coverageDir = objectFactory.directoryProperty();
     }
 
@@ -282,7 +285,8 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
     public void setCoverageDir(File coverageDir) {
         getLogger()
                 .info(
-                        "DeviceProviderInstrumentTestTask.setCoverageDir is deprecated and has no effect.");
+                        "DeviceProviderInstrumentTestTask.setCoverageDir is deprecated and has no"
+                                + " effect.");
     }
 
     @Internal
@@ -512,7 +516,7 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                             splitSelect,
                                             processExecutor,
                                             executionEnum,
-                                            task.executor);
+                                            task.getExecutorServiceAdapter());
                     break;
                 case HOST:
                     if (shardBetweenDevices) {
@@ -524,12 +528,14 @@ public abstract class DeviceProviderInstrumentTestTask extends NonIncrementalTas
                                                 splitSelect,
                                                 processExecutor,
                                                 numShards,
-                                                task.executor);
+                                                task.getExecutorServiceAdapter());
                     } else {
                         task.testRunnerFactory =
                                 (splitSelect, processExecutor) ->
                                         new SimpleTestRunner(
-                                                splitSelect, processExecutor, task.executor);
+                                                splitSelect,
+                                                processExecutor,
+                                                task.getExecutorServiceAdapter());
                     }
                     break;
                 default:

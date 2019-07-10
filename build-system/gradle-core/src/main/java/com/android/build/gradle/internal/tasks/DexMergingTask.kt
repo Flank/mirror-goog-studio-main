@@ -38,7 +38,6 @@ import com.android.ide.common.blame.parser.DexParser
 import com.android.ide.common.blame.parser.ToolOutputParser
 import com.android.ide.common.process.ProcessException
 import com.android.ide.common.process.ProcessOutput
-import com.android.ide.common.workers.WorkerExecutorFacade
 import com.android.utils.FileUtils
 import com.android.utils.PathUtils.toSystemIndependentPath
 import com.google.common.annotations.VisibleForTesting
@@ -57,7 +56,6 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
@@ -91,10 +89,7 @@ import javax.inject.Inject
  * performance regression.
  */
 @CacheableTask
-abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
-
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class DexMergingTask : NonIncrementalTask() {
 
     @get:Input
     lateinit var dexingType: DexingType
@@ -145,7 +140,7 @@ abstract class DexMergingTask @Inject constructor(workerExecutor: WorkerExecutor
         private set
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 DexMergingTaskRunnable::class.java, DexMergingParams(
                     dexingType,

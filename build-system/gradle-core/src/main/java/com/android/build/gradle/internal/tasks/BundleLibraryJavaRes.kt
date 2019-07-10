@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.BuildArtifactsHolder
 import com.android.build.gradle.internal.scope.InternalArtifactType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction
-import com.android.ide.common.workers.WorkerExecutorFacade
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Input
@@ -35,7 +34,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Files
@@ -44,10 +42,7 @@ import java.util.zip.Deflater
 import javax.inject.Inject
 
 /** Bundle all library Java resources in a jar.  */
-abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
-
-    private val workers: WorkerExecutorFacade = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class BundleLibraryJavaRes : NonIncrementalTask() {
 
     @get:OutputFile
     abstract val output: RegularFileProperty
@@ -81,7 +76,7 @@ abstract class BundleLibraryJavaRes @Inject constructor(workerExecutor: WorkerEx
     private lateinit var unfilteredResources: FileCollection
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleLibraryJavaResRunnable::class.java,
                 BundleLibraryJavaResRunnable.Params(

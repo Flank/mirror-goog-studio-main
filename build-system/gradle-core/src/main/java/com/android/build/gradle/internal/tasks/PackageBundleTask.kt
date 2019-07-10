@@ -42,7 +42,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.io.Serializable
 import java.nio.file.Path
@@ -51,10 +50,7 @@ import javax.inject.Inject
 /**
  * Task that generates the bundle (.aab) with all the modules.
  */
-abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    NonIncrementalTask() {
-
-    private val workers = Workers.preferWorkers(project.name, path, workerExecutor)
+abstract class PackageBundleTask : NonIncrementalTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -100,7 +96,7 @@ abstract class PackageBundleTask @Inject constructor(workerExecutor: WorkerExecu
         get() = bundleFile.get().asFile.name
 
     override fun doTaskAction() {
-        workers.use {
+        getWorkerFacadeWithWorkers().use {
             it.submit(
                 BundleToolRunnable::class.java,
                 Params(

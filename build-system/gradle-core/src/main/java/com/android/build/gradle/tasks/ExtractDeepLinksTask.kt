@@ -34,16 +34,13 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.TaskProvider
-import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.util.stream.Collectors
-import javax.inject.Inject
 
 private val DOT_XML_EXT = Regex("\\.xml$")
 
 @CacheableTask
-abstract class ExtractDeepLinksTask @Inject constructor(workerExecutor: WorkerExecutor) :
-    AndroidVariantTask() {
+abstract class ExtractDeepLinksTask: AndroidVariantTask() {
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)

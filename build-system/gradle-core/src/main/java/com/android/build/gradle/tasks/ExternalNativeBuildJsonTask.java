@@ -29,7 +29,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Nested;
 
 /** Task wrapper around ExternalNativeJsonGenerator. */
-public class ExternalNativeBuildJsonTask extends NonIncrementalTask {
+public abstract class ExternalNativeBuildJsonTask extends NonIncrementalTask {
 
     private EvalIssueReporter evalIssueReporter;
     private Provider<ExternalNativeJsonGenerator> generator;

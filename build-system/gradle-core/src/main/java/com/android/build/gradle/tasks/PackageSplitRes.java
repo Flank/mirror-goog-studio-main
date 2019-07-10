@@ -29,13 +29,11 @@ import com.android.build.gradle.internal.scope.InternalArtifactType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NonIncrementalTask;
 import com.android.build.gradle.internal.tasks.SigningConfigUtils;
-import com.android.build.gradle.internal.tasks.Workers;
 import com.android.build.gradle.internal.tasks.factory.VariantTaskCreationAction;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.ApkCreatorType;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +47,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.workers.WorkerExecutor;
 
 /** Package each split resources into a specific signed apk file. */
 public abstract class PackageSplitRes extends NonIncrementalTask {
@@ -75,21 +72,13 @@ public abstract class PackageSplitRes extends NonIncrementalTask {
         return keepTimestampsInApk;
     }
 
-    private final WorkerExecutorFacade workers;
-
-    @Inject
-    public PackageSplitRes(WorkerExecutor workerExecutor) {
-        this.workers =
-                Workers.INSTANCE.preferWorkers(getProject().getName(), getPath(), workerExecutor);
-    }
-
     @Override
     protected void doTaskAction() {
         ExistingBuildElements.from(
                         InternalArtifactType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                         getProcessedResources())
                 .transform(
-                        workers,
+                        getWorkerFacadeWithWorkers(),
                         PackageSplitResTransformRunnable.class,
                         ((apkInfo, file) ->
                                 new PackageSplitResTransformParams(apkInfo, file, this)))
